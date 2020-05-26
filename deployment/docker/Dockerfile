@@ -14,7 +14,6 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     vim \
     unzip \
     wget \
-    make \
     build-essential \
     cmake \
     libopenblas-dev \
@@ -42,12 +41,12 @@ RUN python3 -m pip --no-cache-dir install \
 #
 # Tensorflow 1.10.0
 #
-# RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
 #
 # Keras 2.1.6
 #
-# RUN python3 -m pip --no-cache-dir install Keras==2.1.6
+RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
 #
 # PyTorch
@@ -68,8 +67,7 @@ RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
 #
 # Install NNI
 #
-RUN git clone -b sapruner https://github.com/suiguoxin/nni/ && cd nni && chmod +x ./install.sh && ./install.sh
-# RUN python3 -m pip --no-cache-dir install nni
+RUN python3 -m pip --no-cache-dir install nni
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 

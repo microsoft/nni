@@ -13,7 +13,7 @@ from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
-from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner, AutoCompressPruner
+from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
 
@@ -131,7 +131,7 @@ def get_trained_model(args, device, train_loader, val_loader, criterion):
         model = LeNet().to(device)
         optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
         scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
-        for epoch in range(args.epochs):
+        for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
@@ -141,8 +141,8 @@ def get_trained_model(args, device, train_loader, val_loader, criterion):
                                     momentum=0.9,
                                     weight_decay=5e-4)
         scheduler = MultiStepLR(
-            optimizer, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)], gamma=0.1)
-        for epoch in range(args.epochs):
+            optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
+        for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
@@ -152,8 +152,8 @@ def get_trained_model(args, device, train_loader, val_loader, criterion):
                                     momentum=0.9,
                                     weight_decay=5e-4)
         scheduler = MultiStepLR(
-            optimizer, milestones=[int(args.epochs*0.5), int(args.epochs*0.75)], gamma=0.1)
-        for epoch in range(args.epochs):
+            optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
+        for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
@@ -245,6 +245,37 @@ def main(args):
     elif args.pruner == 'NetAdaptPruner':
         pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
                                 pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
+    elif args.pruner == 'ADMMPruner':
+        # users are free to change the config here
+        if args.model == 'LeNet':
+            if args.pruning_mode == 'channel':
+                config_list = [{
+                    'sparsity': 0.8,
+                    'op_types': ['Conv2d'],
+                    'op_names': ['conv1']
+                }, {
+                    'sparsity': 0.92,
+                    'op_types': ['Conv2d'],
+                    'op_names': ['conv2']
+                }]
+            elif args.pruning_mode == 'fine_grained':
+                config_list = [{
+                    'sparsity': 0.8,
+                    'op_names': ['conv1']
+                }, {
+                    'sparsity': 0.92,
+                    'op_names': ['conv2']
+                }, {
+                    'sparsity': 0.991,
+                    'op_names': ['fc1']
+                }, {
+                    'sparsity': 0.93,
+                    'op_names': ['fc2']
+                }]
+        else:
+            raise ValueError('Example only implemented for LeNet.')
+        pruner = ADMMPruner(
+            model, config_list, trainer=trainer, optimize_iterations=2, epochs=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
@@ -354,7 +385,7 @@ if __name__ == '__main__':
         description='PyTorch Example for SimulatedAnnealingPruner')
 
     parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner',
-                        help='pruner to use, L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner')
+                        help='pruner to use, L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner')
     parser.add_argument('--pruning-mode', type=str, default='channel',
                         help='pruning mode, channel or fine_grained')
     parser.add_argument('--sparsity', type=float, default=0.3,
@@ -369,13 +400,12 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-step', type=float, default=0.05,
                         help='pruning_step of NetAdaptPruner')
 
-    # LeNet, VGG16 and MobileNetV2 used for these three different datasets respectively
     parser.add_argument('--dataset', type=str, default='mnist',
                         help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
     parser.add_argument('--model', type=str, default='LeNet',
                         help='model to use, LeNet, vgg16, resnet18 or mobilenet_v2')
     parser.add_argument('--fine-tune', type=str2bool, default=True,
-                        help='Whether to fine-tune the pruned model')
+                        help='whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=10,
                         help='epochs to fine tune')
     parser.add_argument('--data-dir', type=str,
@@ -387,8 +417,8 @@ if __name__ == '__main__':
                         help='input batch size for training (default: 64)')
     parser.add_argument('--test-batch-size', type=int, default=64,
                         help='input batch size for testing (default: 64)')
-    parser.add_argument('--epochs', type=int, default=1,
-                        help='number of epochs to train (default: 14)')
+    parser.add_argument('--pretrain-epochs', type=int, default=1,
+                        help='number of epochs to pretrain the model')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', type=str2bool, default=True,

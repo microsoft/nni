@@ -505,9 +505,7 @@ You can view [example](../../../examples/model_compress/admm_pruner_torch.py) fo
 ## AutoCompress Pruner
 For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t
-
-Perform prurification step (the speedup process in nni)
+        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t. Here we use 'speedup' to perform real pruning.
 
 For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
 
@@ -521,10 +519,14 @@ config_list = [{
         'sparsity': 0.5,
         'op_types': ['Conv2d']
     }]
+
 pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator,
             dummy_input=dummy_input, iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
             cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
+
+# Normally pruner.compress() returns the masked model
+# but for AutoCompressPruner, pruner.compress() returns directly the pruned model
 pruner.compress()
 ```
 
