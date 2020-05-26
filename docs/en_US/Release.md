@@ -33,7 +33,7 @@
 
 ### Training Service Updates
 * support pai multiphase  
-* update pai yaml merge logic [PAI Mode]
+* update pai yaml merge logic
 * support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
 
 ### Bug Fix
