@@ -226,7 +226,7 @@ class NetAdaptPruner(Pruner):
         Returns
         -------
         int
-            total number of all the realted (current and the next) op weights 
+            total number of all the realted (current and the next) op weights
         '''
         num_weights = 0
         flag_found = False

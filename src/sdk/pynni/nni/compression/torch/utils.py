@@ -13,8 +13,7 @@ def validate_op_names(model, op_names, logger):
     return True
 
 def validate_op_types(model, op_types, logger):
-    found_types = set(['default']) | set(
-        map(lambda x: type(x[1]).__name__, model.named_modules()))
+    found_types = set(['default']) | set(map(lambda x: type(x[1]).__name__, model.named_modules()))
 
     not_found_op_types = list(set(op_types) - found_types)
     if not_found_op_types:

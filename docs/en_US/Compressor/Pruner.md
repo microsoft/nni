@@ -388,10 +388,10 @@ You can view example for more information
 ## NetAdapt Pruner
 NetAdapt allows a user to automatically simplify a pretrained network to meet the resource budget. 
 For example, given the ovrall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
+![](../../img/algo_NetAdapt.png)
 
 For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
 
-![](../../img/algo_NetAdapt.png)
 
 #### Usage
 
@@ -491,7 +491,7 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=30,
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/admm_pruner_torch.py) for more information
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
 #### User configuration for ADMM Pruner
 
@@ -503,9 +503,9 @@ You can view [example](../../../examples/model_compress/admm_pruner_torch.py) fo
             
 
 ## AutoCompress Pruner
-For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
+For each round t, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t. Here we use 'speedup' to perform real pruning.
+        2. Perform ADMM-based structured pruning to generate pruning result, for the next round. Here we use 'speedup' to perform real pruning.
 
 For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
 

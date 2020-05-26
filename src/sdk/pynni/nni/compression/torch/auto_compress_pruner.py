@@ -24,11 +24,10 @@ class AutoCompressPruner(Pruner):
     """
     This is a Pytorch implementation of AutoCompress pruning algorithm.
 
-    For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
+    For each round t, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t
-
-    Perform prurification step (the speedup process in nni)
+        2. Perform ADMM-based structured pruning to generate pruning result for the next round.
+           Here we use 'speedup' to perform real pruning.
 
     For more details, please refer to the paper: https://arxiv.org/abs/1907.03141.
     """
@@ -202,7 +201,8 @@ class AutoCompressPruner(Pruner):
 
         _logger.info('----------Compression finished--------------')
 
-        os.remove(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'))
+        os.remove(os.path.join(
+            self._experiment_data_dir, 'model_admm_masked.pth'))
         os.remove(os.path.join(self._experiment_data_dir, 'mask.pth'))
 
         return self._model_to_prune

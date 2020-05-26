@@ -197,17 +197,6 @@ def main(args):
         args, device, train_loader, val_loader, criterion)
 
     def fine_tuner(model, epochs):
-        # if args.dataset == 'mnist':
-        #     optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
-        # elif args.dataset == 'cifar10':
-        #     optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
-        #                                 momentum=0.9,
-        #                                 weight_decay=5e-4)
-        # elif args.dataset == 'imagenet':
-        #     # TODO: decay lr
-        #     optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
-        #                                 momentum=0.9,
-        #                                 weight_decay=5e-4)
         for epoch in range(epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
