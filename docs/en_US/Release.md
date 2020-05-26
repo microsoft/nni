@@ -9,7 +9,7 @@
 * improve code storage upload logic among trials in non-local platform
 * support `__version__` for SDK version
 
-### Web UI
+#### Web UI
 *  Show trial error message
 *  finalize homepage layout
 *  Refactor overview's best trials module
@@ -17,21 +17,19 @@
 *  add tooltip for trial concurrency in the overview page
 *  Show top trials for hyper-parameter graph
 
-### Examples
-* TF 2.0 examples
-
-### HPO Updates
+#### HPO Updates
 * Improve PBT on failure handling and support experiment resume for PBT
 
-### NAS Updates
+#### NAS Updates
+* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/tensorflow)
 * Use OrderedDict for LayerChoice
 * Prettify the format of export
 * Replace layer choice with selected module after applied fixed architecture
 
-### Model Compression Updates
+#### Model Compression Updates
 * Model compression PyTorch 1.4 support
 
-### Training Service Updates
+#### Training Service Updates
 * support pai multiphase  
 * update pai yaml merge logic
 * support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
