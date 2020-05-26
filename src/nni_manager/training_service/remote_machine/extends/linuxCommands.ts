@@ -22,10 +22,10 @@ class LinuxCommands extends OsCommands {
             export NNI_PLATFORM=remote NNI_SYS_DIR=${workingDirectory} NNI_OUTPUT_DIR=${workingDirectory} NNI_TRIAL_JOB_ID=${trialJobId} \
             NNI_EXP_ID=${experimentId} NNI_TRIAL_SEQ_ID=${trialSequenceId} NNI_CODE_DIR=${codeDir}
             export MULTI_PHASE=${isMultiPhase}
-
-            cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR
-            cd $NNI_SYS_DIR
-            sh install_nni.sh
+            mkdir -p $NNI_SYS_DIR/code
+            cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR/code
+            sh $NNI_SYS_DIR/install_nni.sh
+            cd $NNI_SYS_DIR/code
             python3 -m nni_trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
                 --job_id_file ${jobIdFileName} \
@@ -93,9 +93,9 @@ class LinuxCommands extends OsCommands {
         return result;
     }
 
-    public killChildProcesses(pidFileName: string): string {
+    public killChildProcesses(pidFileName: string, killSelf: boolean): string {
         // prevent trialkeeper to be killed, so it can save exit code.
-        const command = `list_descendants ()
+        let command = `list_descendants ()
                 {
                 local children=$(ps -o pid= --ppid "$1")
 
@@ -107,6 +107,9 @@ class LinuxCommands extends OsCommands {
                 echo "$children"
                 }
             kill $(list_descendants \`cat '${pidFileName}'\`)`
+        if (killSelf) {
+            command += `\nkill \`cat '${pidFileName}'\``
+        }
         return command;
     }
 
