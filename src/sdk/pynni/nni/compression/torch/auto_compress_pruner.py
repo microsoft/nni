@@ -32,11 +32,12 @@ class AutoCompressPruner(Pruner):
     For more details, please refer to the paper: https://arxiv.org/abs/1907.03141.
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, dummy_input, iterations=3, optimize_mode='maximize', pruning_mode='channel',
+    def __init__(self, model, config_list, trainer, evaluator, dummy_input,
+                 optimize_iterations=3, optimize_mode='maximize', pruning_mode='channel',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
                  # ADMM related
-                 optimize_iterations=30, epochs=5, row=1e-4,
+                 admm_optimize_iterations=30, admm_training_epochs=5, row=1e-4,
                  experiment_data_dir='./'):
         """
         Parameters
@@ -53,7 +54,7 @@ class AutoCompressPruner(Pruner):
             function to evaluate the pruned model
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
-        iterations : int
+        optimize_iterations : int
             number of overall iterations
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
@@ -67,10 +68,10 @@ class AutoCompressPruner(Pruner):
             Simualated Annealing related parameter
         perturbation_magnitude : float
             initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
-        optimize_iteration : int
+        admm_optimize_iterations : int
             ADMM optimize iterations
-        epochs : int
-            training epochs of the first optimization subproblem
+        admm_training_epochs : int
+            training epochs of the first optimization subproblem of ADMMPruner
         row : float
             penalty parameters for ADMM training
         experiment_data_dir : string
@@ -83,7 +84,7 @@ class AutoCompressPruner(Pruner):
         self._trainer = trainer
         self._evaluator = evaluator
         self._dummy_input = dummy_input
-        self._iterations = iterations
+        self._optimize_iterations = optimize_iterations
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for SA algorithm
@@ -93,8 +94,8 @@ class AutoCompressPruner(Pruner):
         self._perturbation_magnitude = perturbation_magnitude
 
         # hyper parameters for ADMM algorithm
-        self._optimize_iterations = optimize_iterations
-        self._epochs = epochs
+        self._admm_optimize_iterations = admm_optimize_iterations
+        self._admm_training_epochs = admm_training_epochs
         self._row = row
 
         # overall pruning rate
@@ -142,9 +143,9 @@ class AutoCompressPruner(Pruner):
         """
         _logger.info('Starting AutoCompress pruning...')
 
-        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._iterations)
+        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._optimize_iterations)
 
-        for i in range(self._iterations):
+        for i in range(self._optimize_iterations):
             _logger.info('Pruning iteration: %d', i)
             _logger.info('Target sparsity this round: %s',
                          1-pow(1-sparsity_each_round, i+1))
@@ -173,8 +174,8 @@ class AutoCompressPruner(Pruner):
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=config_list,
                 trainer=self._trainer,
-                optimize_iterations=self._optimize_iterations,
-                epochs=self._epochs,
+                optimize_iterations=self._admm_optimize_iterations,
+                training_epochs=self._admm_training_epochs,
                 row=self._row,
                 pruning_mode=self._pruning_mode)
             ADMMpruner.compress()

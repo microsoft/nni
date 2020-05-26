@@ -264,16 +264,16 @@ def main(args):
         else:
             raise ValueError('Example only implemented for LeNet.')
         pruner = ADMMPruner(
-            model, config_list, trainer=trainer, optimize_iterations=2, epochs=2)
+            model, config_list, trainer=trainer, optimize_iterations=2, training_epochs=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
             cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'AutoCompressPruner':
         pruner = AutoCompressPruner(
-            model, config_list, trainer=trainer, evaluator=evaluator,
-            dummy_input=dummy_input, iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
-            cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
+            model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
+            optimize_iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5, experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
             "Please use L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner in this example.")

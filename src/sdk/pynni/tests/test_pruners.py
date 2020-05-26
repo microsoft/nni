@@ -181,9 +181,6 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'mean
         elif pruner_name == 'admm':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
         elif pruner_name == 'autocompress':
-            
-            # import torchvision
-            # model = torchvision.models.vgg16(pretrained=False, num_classes=2)
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
         else:
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)

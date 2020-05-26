@@ -498,8 +498,8 @@ You can view [example](../../../examples/model_compress/auto_pruners_torch.py) f
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
 - **trainer:** Function used for the first step of ADMM training.
-- **optimize_iteration:** ADMM optimize iterations.
-- **epochs:** training epochs of the first optimization subproblem.
+- **optimize_iterations:** ADMM optimize iterations.
+- **training_epochs:** training epochs of the first optimization subproblem.
             
 
 ## AutoCompress Pruner
@@ -539,14 +539,14 @@ You can view [example](../../../examples/model_compress/auto_pruners_torch.py) f
 - **trainer:** Function used for the first step of ADMM training.
 - **evaluator:** Function to evaluate the masked model.
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
-- **iterations:** The number of overall iterations.
+- **optimize_iterations:** The number of overall iterations.
 - **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
 - **pruning_mode:** 'channel' or 'fine_grained'.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
 - **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **optimize_iteration:** ADMM optimize iterations.
-- **epochs:** training epochs of the first optimization subproblem.
+- **admm_optimize_iterations:** ADMM optimize iterations.
+- **admm_training_epochs:** training epochs of the first optimization subproblem of ADMMPruner.
 - **experiment_data_dir:** PATH to save experiment data.
 

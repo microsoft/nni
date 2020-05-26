@@ -27,7 +27,7 @@ class ADMMPruner(Pruner):
     For more details, please refer to the paper: https://arxiv.org/abs/1804.03294.
     """
 
-    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, row=1e-4, pruning_mode='channel'):
+    def __init__(self, model, config_list, trainer, optimize_iterations=30, training_epochs=5, row=1e-4, pruning_mode='channel'):
         """
         Parameters
         ----------
@@ -38,10 +38,10 @@ class ADMMPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
                 - op_names : The operation type to prune.
         trainer : function
-            function used for the first step of ADMM training
-        optimize_iteration : int
+            function used for the first optimization subproblem
+        optimize_iterations : int
             ADMM optimize iterations
-        epochs : int
+        training_epochs : int
             training epochs of the first optimization subproblem
         row : float
             penalty parameters for ADMM training
@@ -54,7 +54,7 @@ class ADMMPruner(Pruner):
 
         self._trainer = trainer
         self._optimize_iterations = optimize_iterations
-        self._epochs = epochs
+        self._training_epochs = training_epochs
         self._row = row
 
         self.set_wrappers_attribute("if_calculated", False)
@@ -179,7 +179,7 @@ class ADMMPruner(Pruner):
             print('ADMM iteration : ', k)
 
             # step 1: optimize W with AdamOptimizer
-            for epoch in range(self._epochs):
+            for epoch in range(self._training_epochs):
                 self._trainer(self.bound_model, optimizer=optimizer,
                               criterion=criterion, epoch=epoch, callback=callback)
 
