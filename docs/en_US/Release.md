@@ -8,6 +8,7 @@
 * Improve IPC limitation to 100W
 * improve code storage upload logic among trials in non-local platform
 * support `__version__` for SDK version
+* support windows dev intall
 
 #### Web UI
 *  Show trial error message
@@ -30,13 +31,11 @@
 * Model compression PyTorch 1.4 support
 
 #### Training Service Updates
-* support pai multiphase  
 * update pai yaml merge logic
 * support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
 
 ### Bug Fix
 * fix dev install
-* fix windows dev intall
 * SPOS example crash when the checkpoints do not have state_dict
 * Fix table sort issue when experiment had failed trial
 * Support multi python env (conda, pyenv etc)
