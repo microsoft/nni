@@ -16,6 +16,8 @@ Index of supported pruning algorithms
 * [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
 * [NetAdapt Pruner](#netadapt-pruner)
+* [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
+* [ADMM Pruner](#admm-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
 
 
@@ -405,7 +407,7 @@ pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner,eva
 pruner.compress()
 ```
 
-You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
 #### User configuration for NetAdapt Pruner
 
@@ -446,7 +448,7 @@ pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, pruni
 pruner.compress()
 ```
 
-You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
 #### User configuration for SimulatedAnnealing Pruner
 
@@ -489,7 +491,7 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=30,
 pruner.compress()
 ```
 
-You can view [example](examples/model_compress/admm_pruner_torch.py) for more information
+You can view [example](../../../examples/model_compress/admm_pruner_torch.py) for more information
 
 #### User configuration for ADMM Pruner
 
@@ -526,9 +528,9 @@ pruner = AutoCompressPruner(
 pruner.compress()
 ```
 
-You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
-#### User configuration for ADMM Pruner
+#### User configuration for AutoCompress Pruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
