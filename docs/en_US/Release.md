@@ -11,12 +11,12 @@
 * support windows dev intall
 
 #### Web UI
-*  Show trial error message
-*  finalize homepage layout
-*  Refactor overview's best trials module
-*  Remove multiphase from webui
-*  add tooltip for trial concurrency in the overview page
-*  Show top trials for hyper-parameter graph
+* Show trial error message
+* finalize homepage layout
+* Refactor overview's best trials module
+* Remove multiphase from webui
+* add tooltip for trial concurrency in the overview page
+* Show top trials for hyper-parameter graph
 
 #### HPO Updates
 * Improve PBT on failure handling and support experiment resume for PBT
