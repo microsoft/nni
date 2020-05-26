@@ -407,7 +407,7 @@ pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner,eva
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](https://github.com/suiguoxin/nni/tree/auto-pruners/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for NetAdapt Pruner
 
@@ -448,7 +448,7 @@ pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, pruni
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](https://github.com/suiguoxin/nni/tree/auto-pruners/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for SimulatedAnnealing Pruner
 
@@ -491,7 +491,7 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=30,
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](https://github.com/suiguoxin/nni/tree/auto-pruners/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for ADMM Pruner
 
@@ -530,7 +530,7 @@ pruner = AutoCompressPruner(
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
+You can view [example](https://github.com/suiguoxin/nni/tree/auto-pruners/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for AutoCompress Pruner
 
