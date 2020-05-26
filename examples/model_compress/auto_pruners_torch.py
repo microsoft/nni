@@ -13,53 +13,17 @@ from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
-from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner
+from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner, AutoCompressPruner
 from nni.compression.speedup.torch import ModelSpeedup
 
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-
-
-def test(model, device, criterion, val_loader):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in val_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            # sum up batch loss
-            test_loss += criterion(output, target).item()
-            # get the index of the max log-probability
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-
-    test_loss /= len(val_loader.dataset)
-    accuracy = correct / len(val_loader.dataset)
-
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
-        test_loss, correct, len(val_loader.dataset), 100. * accuracy))
-
-    return accuracy
-
-
-def main(args):
+def get_data(args):
+    '''
+    get data
+    '''
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
     }
 
-    # prepare dataset
     if args.dataset == 'mnist':
         train_loader = torch.utils.data.DataLoader(
             datasets.MNIST(args.data_dir, train=True, download=True,
@@ -119,9 +83,50 @@ def main(args):
             batch_size=args.test_batch_size, shuffle=True, **kwargs)
         criterion = torch.nn.CrossEntropyLoss()
 
-    torch.manual_seed(0)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return train_loader, val_loader, criterion
 
+
+def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+        if callback:
+            callback()
+        if batch_idx % args.log_interval == 0:
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+
+
+def test(model, device, criterion, val_loader):
+    model.eval()
+    test_loss = 0
+    correct = 0
+    with torch.no_grad():
+        for data, target in val_loader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            # sum up batch loss
+            test_loss += criterion(output, target).item()
+            # get the index of the max log-probability
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+
+    test_loss /= len(val_loader.dataset)
+    accuracy = correct / len(val_loader.dataset)
+
+    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.2f}%)\n'.format(
+        test_loss, correct, len(val_loader.dataset), 100. * accuracy))
+
+    return accuracy
+
+
+def get_trained_model(args, device, train_loader, val_loader, criterion):
     if args.model == 'LeNet':
         model = LeNet().to(device)
         optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
@@ -130,11 +135,8 @@ def main(args):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
-        torch.save(model.state_dict(), os.path.join(
-            args.experiment_data_dir, 'model_trained.pth'))
-    elif args.dataset == 'vgg16':
-        model = models.vgg16(pretrained=False, num_classes=10).to(device)
-        # model = VGG(depth=16).to(device)
+    elif args.model == 'vgg16':
+        model = VGG(depth=16).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                     momentum=0.9,
                                     weight_decay=5e-4)
@@ -144,10 +146,6 @@ def main(args):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
-        if args.save_model:
-            torch.save(model.state_dict(), os.path.join(
-                args.experiment_data_dir, 'model_trained.pth'))
-            print('Model trained saved to %s', args.experiment_data_dir)
     elif args.model == 'resnet18':
         model = models.resnet18(pretrained=False, num_classes=10).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
@@ -159,31 +157,66 @@ def main(args):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
             scheduler.step()
-        if args.save_model:
-            torch.save(model.state_dict(), os.path.join(
-                args.experiment_data_dir, 'model_trained.pth'))
-            print('Model trained saved to %s', args.experiment_data_dir)
-    elif args.dataset == 'mobilenet_v2':
+    elif args.model == 'mobilenet_v2':
         model = models.mobilenet_v2(pretrained=True).to(device)
 
+    if args.save_model:
+        torch.save(model.state_dict(), os.path.join(
+            args.experiment_data_dir, 'model_trained.pth'))
+        print('Model trained saved to %s', args.experiment_data_dir)
+
+    return model, optimizer
+
+
+def get_dummy_input(args, device):
+    if args.model == 'LeNet':
+        dummy_input = torch.randn(
+            [args.test_batch_size, 1, 28, 28]).to(device)
+    elif args.model == 'vgg16':
+        dummy_input = torch.randn(
+            [args.test_batch_size, 3, 32, 32]).to(device)
+    elif args.model == 'resnet18':
+        dummy_input = torch.randn(
+            [args.test_batch_size, 3, 32, 32]).to(device)
+    elif args.model == 'mobilenet_v2':
+        dummy_input = torch.randn(
+            [args.test_batch_size, 3, 32, 32]).to(device)
+
+    return dummy_input
+
+
+def main(args):
+    # prepare dataset
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    train_loader, val_loader, criterion = get_data(args)
+
+    torch.manual_seed(0)
+
+    model, optimizer = get_trained_model(
+        args, device, train_loader, val_loader, criterion)
+
     def fine_tuner(model, epochs):
-        if args.dataset == 'mnist':
-            optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
-        elif args.dataset == 'cifar10':
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
-                                        momentum=0.9,
-                                        weight_decay=5e-4)
-        elif args.dataset == 'imagenet':
-            # TODO: decay lr
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
-                                        momentum=0.9,
-                                        weight_decay=5e-4)
+        # if args.dataset == 'mnist':
+        #     optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
+        # elif args.dataset == 'cifar10':
+        #     optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
+        #                                 momentum=0.9,
+        #                                 weight_decay=5e-4)
+        # elif args.dataset == 'imagenet':
+        #     # TODO: decay lr
+        #     optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
+        #                                 momentum=0.9,
+        #                                 weight_decay=5e-4)
         for epoch in range(epochs):
             train(args, model, device, train_loader,
                   criterion, optimizer, epoch)
 
     def short_term_fine_tuner(model):
         return fine_tuner(model, epochs=1)
+
+    def trainer(model, optimizer, criterion, epoch, callback):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
 
     def evaluator(model):
         return test(model, device, criterion, val_loader)
@@ -204,20 +237,29 @@ def main(args):
         'sparsity': args.sparsity,
         'op_types': op_types
     }]
+    dummy_input = get_dummy_input(args, device)
 
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(
             model, config_list)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
-            model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode, cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
+            model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'NetAdaptPruner':
         pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
                                 pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
+    elif args.pruner == 'AutoCompressPruner':
+        pruner = AutoCompressPruner(
+            model, config_list, trainer=trainer, evaluator=evaluator,
+            dummy_input=dummy_input, iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
-            "Please use L1FilterPruner, SimulatedAnnealingPruner or NetAdaptPruner in this example.")
+            "Please use L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner or AutoCompressPruner in this example.")
 
+    # pruner.compress() returns the masked model
+    # but for AutoCompressPruner, pruner.compress() returns directly the pruned model
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
     print('Evaluation result (masked model): %s' % evaluation_result)
@@ -267,26 +309,16 @@ def main(args):
         print('Fined tuned model saved to %s', args.experiment_data_dir)
 
     # model speed up
-    if args.speed_up:
+    if args.speed_up and args.pruner != 'AutoCompressPruner':
         if args.model == 'LeNet':
             model = LeNet().to(device)
-            dummy_input = torch.randn(
-                [args.test_batch_size, 1, 28, 28]).to(device)
         elif args.model == 'vgg16':
-            model = models.vgg16(
-                pretrained=False, num_classes=10).to(device)
-            # model = VGG(depth=16).to(device)
-            dummy_input = torch.randn(
-                [args.test_batch_size, 3, 32, 32]).to(device)
+            model = VGG(depth=16).to(device)
         elif args.model == 'resnet18':
             model = models.resnet18(
                 pretrained=False, num_classes=10).to(device)
-            dummy_input = torch.randn(
-                [args.test_batch_size, 3, 32, 32]).to(device)
         elif args.model == 'mobilenet_v2':
             model = models.mobilenet_v2(pretrained=True).to(device)
-            dummy_input = torch.randn(
-                [args.test_batch_size, 3, 32, 32]).to(device)
 
         model.load_state_dict(torch.load(os.path.join(
             args.experiment_data_dir, 'model_fine_tuned.pth')))

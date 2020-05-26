@@ -164,6 +164,8 @@ class SimulatedAnnealingPruner(Pruner):
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
 
+        config_list = [val for val in config_list if not math.isclose(val['sparsity'], 0, abs_tol=1e-6)]
+
         return config_list
 
     def _rescale_sparsities(self, sparsities, target_sparsity):
@@ -324,8 +326,8 @@ class SimulatedAnnealingPruner(Pruner):
                         self._best_config_list = config_list
                         # if SimulatedAnnealingTuner is used seperately, return the overall best sparsities
                         # else return current sparsities
-                        self._set_modules_wrapper(
-                            pruner.get_modules_wrapper())
+                        # self._set_modules_wrapper(
+                        #     pruner.get_modules_wrapper())
                         self.bound_model = model_masked
                     break
                 # if not, accept with probability e^(-deltaE/current_temperature)

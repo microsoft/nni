@@ -27,7 +27,7 @@ class ADMMPruner(Pruner):
     For more details, please refer to the paper: https://arxiv.org/abs/1804.03294.
     """
 
-    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, row=1e-4, pruning_mode='fine_grained'):
+    def __init__(self, model, config_list, trainer, optimize_iterations=30, epochs=5, row=1e-4, pruning_mode='channel'):
         """
         Parameters
         ----------
@@ -46,7 +46,7 @@ class ADMMPruner(Pruner):
         row : float
             penalty parameters for ADMM training
         pruning_mode : str
-            'channel' or 'fine_grained, by default 'fine_grained'
+            'channel' or 'fine_grained, by default 'channel'
         """
         self._pruning_mode = pruning_mode
 
@@ -118,6 +118,9 @@ class ADMMPruner(Pruner):
 
         return weight.data.mul(mask_weight)
 
+    def get_mask(self, base_mask, weight, num_prune):
+        return L1FilterPruner.get_mask(self, base_mask, weight, num_prune)
+  
     def calc_mask(self, wrapper, **kwargs):
         """
         Calculate the mask of given layer.
@@ -195,3 +198,4 @@ class ADMMPruner(Pruner):
         _logger.info('Compression finished.')
 
         return self.bound_model
+

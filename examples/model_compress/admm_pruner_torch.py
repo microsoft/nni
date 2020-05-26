@@ -134,9 +134,8 @@ def main(args):
             scheduler.step()
         torch.save(model.state_dict(), os.path.join(
             args.experiment_data_dir, 'model_trained.pth'))
-    elif args.dataset == 'vgg16':
-        model = models.vgg16(pretrained=False, num_classes=10).to(device)
-        # model = VGG(depth=16).to(device)
+    elif args.model == 'vgg16':
+        model = VGG(depth=16).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01,
                                     momentum=0.9,
                                     weight_decay=5e-4)
@@ -165,7 +164,7 @@ def main(args):
             torch.save(model.state_dict(), os.path.join(
                 args.experiment_data_dir, 'model_trained.pth'))
             print('Model trained saved to %s', args.experiment_data_dir)
-    elif args.dataset == 'mobilenet_v2':
+    elif args.model == 'mobilenet_v2':
         model = models.mobilenet_v2(pretrained=True).to(device)
 
     def fine_tuner(model, epochs):
@@ -231,7 +230,7 @@ def main(args):
             model, config_list)
     elif args.pruner == 'ADMMPruner':
         pruner = ADMMPruner(
-            model, config_list, trainer=trainer)
+            model, config_list, trainer=trainer, optimize_iterations=2, epochs=2)
 
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
@@ -288,9 +287,7 @@ def main(args):
             dummy_input = torch.randn(
                 [args.test_batch_size, 1, 28, 28]).to(device)
         elif args.model == 'vgg16':
-            model = models.vgg16(
-                pretrained=False, num_classes=10).to(device)
-            # model = VGG(depth=16).to(device)
+            model = VGG(depth=16).to(device)
             dummy_input = torch.randn(
                 [args.test_batch_size, 3, 32, 32]).to(device)
         elif args.model == 'resnet18':
