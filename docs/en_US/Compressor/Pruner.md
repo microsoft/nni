@@ -15,6 +15,9 @@ Index of supported pruning algorithms
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
 * [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+* [NetAdapt Pruner](#netadapt-pruner)
+* [AutoCompress Pruner](#autocompress-pruner)
+
 
 ## Level Pruner
 
@@ -380,5 +383,166 @@ You can view example for more information
 - **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
 
 
+## NetAdapt Pruner
+NetAdapt allows a user to automatically simplify a pretrained network to meet the resource budget. 
+For example, given the ovrall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
 
- 
+For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
+
+![](../../img/algo_NetAdapt.png)
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import NetAdaptPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner,evaluator=evaluator,pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
+pruner.compress()
+```
+
+You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+
+#### User configuration for NetAdapt Pruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **fine_tuner:** Function to short-term fine tune the masked model.
+- **evaluator:** Function to evaluate the masked model.
+- **pruning_mode:** 'channel' or 'fine_grained'.
+- **experiment_data_dir:** PATH to save experiment data.
+
+
+## SimulatedAnnealing Pruner
+
+We implement a guided heuristic search method, Simulated Annealing (SA) algorithm, with enhancement on guided search based on prior experience. 
+The enhanced SA technique is based on the observation that a DNN layer with more number of weights often has a higher degree of model compression with less impact on overall accuracy.
+
+1. Randomly initialize a pruning rate distribution (sparsities).
+2. generate perturbation
+3. Perform fast evaluation on the perturbation
+4. accept the perturbation according to the performance and probability, if not accepted, return to step 2
+5. cool down, current_temperature <- current_temperature * cool_down_rate
+6. repeat step 2~5 while current_temperature > stop_temperature
+
+For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SimulatedAnnealingPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
+pruner.compress()
+```
+
+You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+
+#### User configuration for SimulatedAnnealing Pruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **evaluator:** Function to evaluate the masked model.
+- **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
+- **pruning_mode:** 'channel' or 'fine_grained'.
+- **start_temperature:** Simualated Annealing related parameter.
+- **stop_temperature:** Simualated Annealing related parameter.
+- **cool_down_rate:** Simualated Annealing related parameter.
+- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+- **experiment_data_dir:** PATH to save experiment data.
+
+
+## ADMM Pruner
+Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
+by decomposing an original problem into two subproblems that can be solved separately.
+In weight pruning problem, the two subproblems are solved via gradient descent algorithm and Euclidean projection respectively.
+This solution framework applies both to non-structured and different variations of structured pruning schemes.
+
+For more details, please refer to [A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers](https://arxiv.org/abs/1804.03294).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import ADMMPruner
+config_list = [{
+            'sparsity': 0.8,
+            'op_types': ['Conv2d'],
+            'op_names': ['conv1']
+        }, {
+            'sparsity': 0.92,
+            'op_types': ['Conv2d'],
+            'op_names': ['conv2']
+        }]
+pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=30, epochs=5)
+pruner.compress()
+```
+
+You can view [example](examples/model_compress/admm_pruner_torch.py) for more information
+
+#### User configuration for ADMM Pruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **trainer:** Function used for the first step of ADMM training.
+- **optimize_iteration:** ADMM optimize iterations.
+- **epochs:** training epochs of the first optimization subproblem.
+            
+
+## AutoCompress Pruner
+For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
+        1. Generate sparsities distribution using SimualtedAnnealingPruner
+        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t
+
+Perform prurification step (the speedup process in nni)
+
+For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import ADMMPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = AutoCompressPruner(
+            model, config_list, trainer=trainer, evaluator=evaluator,
+            dummy_input=dummy_input, iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
+pruner.compress()
+```
+
+You can view [example](examples/model_compress/auto_pruners_torch.py) for more information
+
+#### User configuration for ADMM Pruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **trainer:** Function used for the first step of ADMM training.
+- **evaluator:** Function to evaluate the masked model.
+- **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
+- **iterations:** The number of overall iterations.
+- **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
+- **pruning_mode:** 'channel' or 'fine_grained'.
+- **start_temperature:** Simualated Annealing related parameter.
+- **stop_temperature:** Simualated Annealing related parameter.
+- **cool_down_rate:** Simualated Annealing related parameter.
+- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+- **optimize_iteration:** ADMM optimize iterations.
+- **epochs:** training epochs of the first optimization subproblem.
+- **experiment_data_dir:** PATH to save experiment data.
+

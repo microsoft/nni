@@ -34,6 +34,8 @@ class NetAdaptPruner(Pruner):
             Short-term fine tune the pruned model
         3. Pick the best layer to prune
     Long-term fine tune
+
+    For the details of this algorithm, please refer to the paper: https://arxiv.org/abs/1804.03230
     """
 
     def __init__(self, model, config_list, evaluator, fine_tuner, optimize_mode='maximize', pruning_mode='channel', pruning_step=0.05, experiment_data_dir='./'):
@@ -53,7 +55,7 @@ class NetAdaptPruner(Pruner):
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
         pruning_mode : str
-            'channel' or 'fine_grained, by default 'channel'
+            'channel' or 'fine_grained', by default 'channel'
         experiment_data_dir : str
             PATH to save experiment data
         """

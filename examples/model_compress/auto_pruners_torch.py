@@ -242,13 +242,13 @@ def main(args):
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(
             model, config_list)
+    elif args.pruner == 'NetAdaptPruner':
+        pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
+                                pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
             cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
-    elif args.pruner == 'NetAdaptPruner':
-        pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
-                                pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'AutoCompressPruner':
         pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator,
@@ -256,7 +256,7 @@ def main(args):
             cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
-            "Please use L1FilterPruner, SimulatedAnnealingPruner, NetAdaptPruner or AutoCompressPruner in this example.")
+            "Please use L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner in this example.")
 
     # pruner.compress() returns the masked model
     # but for AutoCompressPruner, pruner.compress() returns directly the pruned model
