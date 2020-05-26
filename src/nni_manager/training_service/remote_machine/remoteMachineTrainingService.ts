@@ -96,8 +96,8 @@ class RemoteMachineTrainingService implements TrainingService {
                 }
             }
             if (restServer.getErrorMessage !== undefined) {
-                throw new Error(restServer.getErrorMessage);
                 this.stopping = true;
+                throw new Error(restServer.getErrorMessage);
             }
             await delay(3000);
         }
@@ -394,7 +394,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 if (executor !== undefined) {
                     this.log.info(`killing gpu metric collector on ${executor.name}`);
                     const gpuJobPidPath: string = executor.joinPath(executor.getRemoteScriptsPath(getExperimentId()), 'pid');
-                    await executor.killChildProcesses(gpuJobPidPath);
+                    await executor.killChildProcesses(gpuJobPidPath, true);
                 }
                 executorManager.releaseAllExecutor();
             }
@@ -459,6 +459,10 @@ class RemoteMachineTrainingService implements TrainingService {
                             this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
                             this.timer.unsubscribe(disposable);
                         }
+                    }
+                    if (this.stopping){
+                        this.timer.unsubscribe(disposable);
+                        this.log.debug(`Stopped GPU collector on ${rmMeta.ip}, since experiment is exiting.`);
                     }
                     collectingCount.pop();
                 }
