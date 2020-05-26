@@ -21,7 +21,7 @@
 * Improve PBT on failure handling and support experiment resume for PBT
 
 #### NAS Updates
-* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/tensorflow)
+* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
 * Use OrderedDict for LayerChoice
 * Prettify the format of export
 * Replace layer choice with selected module after applied fixed architecture
@@ -39,6 +39,7 @@
 * fix windows dev intall
 * SPOS example crash when the checkpoints do not have state_dict
 * Fix table sort issue when experiment had failed trial
+* Support multi python env (conda, pyenv etc)
 
 
 ## Release 1.5 - 4/13/2020
