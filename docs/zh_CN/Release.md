@@ -206,8 +206,8 @@
 
 ### 修复的 Bug
 
-- Fix the table sort issue when failed trials haven't metrics. -Issue #1773
-- Maintain selected status(Maximal/Minimal) when the page switched. -PR#1710
+- 修复当失败的 Trial 没有指标时，表格的排序问题。 -Issue #1773
+- 页面切换时，保留选择的（最大、最小）状态。 -PR#1710
 - Make hyper-parameters graph's default metric yAxis more accurate. -PR#1736
 - Fix GPU script permission issue. -Issue #1665
 
@@ -267,7 +267,7 @@
     - UX improvement for showing Error log -Issue #1173
 - Documentation
     
-    - Update the docs structure -Issue #1231
+    - 更新文档结构 -Issue #1231
     - (deprecated) Multi phase document improvement -Issue #1233 -PR #1242 
         + Add configuration example
     + [WebUI description improvement](Tutorial/WebUI.md) -PR #1419
