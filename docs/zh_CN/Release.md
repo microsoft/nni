@@ -2,18 +2,18 @@
 
 ## 发布 1.6 - 5/26/2020
 
-### Major Features
+### 主要功能
 
-#### New Features and improvement
+#### 新功能和改进
 
-* Improve IPC limitation to 100W
-* improve code storage upload logic among trials in non-local platform
-* support `__version__` for SDK version
-* support windows dev intall
+* 将 IPC 限制提高至 100 万
+* 修改非本机训练平台中，将上传代码到存储的逻辑
+* SDK 版本支持 `__version__`
+* 支持 Windows 下开发模式安装
 
-#### Web UI
+#### Web 界面
 
-* Show trial error message
+* 显示 Trial 的错误消息
 * finalize homepage layout
 * Refactor overview's best trials module
 * Remove multiphase from webui
