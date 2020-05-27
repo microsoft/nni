@@ -147,10 +147,10 @@
 
 * [知识蒸馏](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/TrialExample/KDExample.md)算法和使用示例
 * Pruners 
-    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#3-l2filter-pruner)
-    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#1-activationapozrankfilterpruner)
-    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#2-activationmeanrankfilterpruner)
-* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
+    * [L2Filter Pruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#l2filter-pruner)
+    * [ActivationAPoZRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationapozrankfilterpruner)
+    * [ActivationMeanRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#activationmeanrankfilterpruner)
+* [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer)
 
 #### 训练平台
 
@@ -178,12 +178,12 @@
 
 ### 主要功能
 
-* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md) 
+* [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/Overview.md) 
   - 新增特征工程接口
   - 特征选择算法: [Gradient feature selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GradientFeatureSelector.md) & [GBDT selector](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/GBDTSelector.md)
   - [特征工程示例](https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering)
 - 神经网络结构搜索在 NNI 上的应用 
-  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md)
+  - [新的 NAS 接口](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/NasInterface.md)
   - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#p-darts) (PyTorch)
   - 经典模式下的 NAS（每次 Trial 独立运行）
 - 模型压缩 
@@ -216,14 +216,14 @@
 ### 主要功能
 
 * 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
-* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view)
+* [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/Nnictl.md#view)
 * Tuner 可使用专门的 GPU 资源（参考[教程](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/ExperimentConfig.md)中的 `gpuIndices` 了解详情）
 * 改进 WEB 界面 
   - Trial 详情页面可列出每个 Trial 的超参，以及开始结束时间（需要通过 "add column" 添加）
   - 优化大型 Experiment 的显示性能
 - 更多示例 
   - [EfficientNet PyTorch 示例](https://github.com/ultmaster/EfficientNet-PyTorch)
-  - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md)
+  - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README_zh_CN.md)
 - [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或有更多贡献。
 
 ### 修复的 Bug
@@ -332,7 +332,7 @@
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * 支持 Kubeflow v1beta2 操作符 
   * 支持 Kubeflow TFJob/PyTorchJob v1beta2
-* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md) 
+* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/zh_CN/GeneralNasInterfaces.md) 
   * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
   * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
   * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
