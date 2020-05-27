@@ -330,97 +330,97 @@
 * GPU 的高级功能 
   * 在本机或远程模式上，可在同一个 GPU 上运行多个 Trial。
   * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
-* Kubeflow v1beta2 operator 
-  * Support Kubeflow TFJob/PyTorchJob v1beta2
-* [General NAS programming interface](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md) 
-  * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
-  * Provide a new command `nnictl trial codegen` for debugging the NAS code
-  * Tutorial of NAS programming interface, example of NAS on MNIST, customized random tuner for NAS
-* Support resume tuner/advisor's state for experiment resume
-* For experiment resume, tuner/advisor will be resumed by replaying finished trial data
-* Web Portal 
-  * Improve the design of copying trial's parameters
-  * Support 'randint' type in hyper-parameter graph
-  * Use should ComponentUpdate to avoid unnecessary render
+* 支持 Kubeflow v1beta2 操作符 
+  * 支持 Kubeflow TFJob/PyTorchJob v1beta2
+* [通用 NAS 编程接口](https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md) 
+  * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
+  * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
+  * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
+* 支持在恢复 Experiment 时，同时恢复 Tuner 和 Advisor 的状态
+* 在恢复 Experiment 时，Tuner 和 Advisor 会导入已完成的 Trial 的数据。
+* Web 界面 
+  * 改进拷贝 Trial 参数的设计
+  * 在 hyper-parameter 图中支持 'randint' 类型
+  * 使用 ComponentUpdate 来避免不必要的刷新
 
-### Bug fix and other changes
+### Bug 修复和其它更新
 
-* Bug fix that `nnictl update` has inconsistent command styles
-* Support import data for SMAC tuner
-* Bug fix that experiment state transition from ERROR back to RUNNING
-* Fix bug of table entries
-* Nested search space refinement
-* Refine 'randint' type and support lower bound
-* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparision.md)
-* [Comparison of NAS algorithm](CommunitySharings/NasComparision.md)
-* [NNI practice on Recommenders](CommunitySharings/RecommendersSvd.md)
+* 修复 `nnictl update` 不一致的命令行风格
+* SMAC Tuner 支持导入数据
+* 支持 Experiment 状态从 ERROR 回到 RUNNING
+* 修复表格的 Bug
+* 优化嵌套搜索空间
+* 优化 'randint' 类型，并支持下限
+* [比较不同超参搜索调优算法](CommunitySharings/HpoComparision.md)
+* [NAS 算法的对比](CommunitySharings/NasComparision.md)
+* [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
 
-## Release 0.7 - 4/29/2018
+## 发布 0.7 - 4/29/2018
 
 ### 主要功能
 
-* [Support NNI on Windows](Tutorial/InstallationWin.md) 
-  * NNI running on windows for local mode
-* [New advisor: BOHB](Tuner/BohbAdvisor.md) 
-  * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment) 
-  * Generate analysis results report after the experiment execution
-  * Support import data to tuner and advisor for tuning
-* [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig) 
-  * Specify GPU devices for NNI trial jobs by gpuIndices configuration, if gpuIndices is set in experiment configuration file, only the specified GPU devices are used for NNI trial jobs.
-* Web Portal enhancement 
-  * Decimal format of metrics other than default on the Web UI
-  * Hints in WebUI about Multi-phase
-  * Enable copy/paste for hyperparameters as python dict
-  * Enable early stopped trials data for tuners.
-* NNICTL provide better error message 
-  * nnictl provide more meaningful error message for YAML file format error
+* [支持在 Windows 上使用 NNI](Tutorial/InstallationWin.md) 
+  * NNI 可在 Windows 上使用本机模式
+* [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
+  * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
+  * 在 Experiment 执行完后，可生成分析结果报告
+  * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
+* [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
+  * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
+* 改进 Web 界面 
+  * 在 Web 界面上使用十进制格式的指标
+  * 添加多阶段训练相关的提示
+  * 可将超参复制为 Python dict 格式
+  * 可将提前终止的 Trial 数据传入 Tuner。
+* 为 nnictl 提供更友好的错误消息 
+  * 为 YAML 文件格式错误提供更有意义的错误信息
 
 ### 修复的 Bug
 
-* Unable to kill all python threads after nnictl stop in async dispatcher mode
-* nnictl --version does not work with make dev-install
-* All trail jobs status stays on 'waiting' for long time on OpenPAI platform
+* 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
+* nnictl --version 不能在 make dev-install 下使用
+* OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
 
-## Release 0.6 - 4/2/2019
+## 发布 0.6 - 4/2/2019
 
-### Major Features
+### 主要功能
 
-* [Version checking](TrainingService/PaiMode.md) 
-  * check whether the version is consistent between nniManager and trialKeeper
+* [版本检查](TrainingService/PaiMode.md) 
+  * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
-  * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
-* [Separate Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
-  * Adds two pipes to separate message receiving channels for tuner and assessor.
-* Make log collection feature configurable
-* Add intermediate result graph for all trials
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+* [分离 Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
+  * 增加两个管道来分离 Tuner 和 Assessor 的消息
+* 使日志集合功能可配置
+* 为所有 Trial 增加中间结果的视图
 
-### Bug fix
+### 修复的 Bug
 
-* [Add shmMB config key for OpenPAI](https://github.com/microsoft/nni/issues/842)
-* Fix the bug that doesn't show any result if metrics is dict
-* Fix the number calculation issue for float types in hyperband
-* Fix a bug in the search space conversion in SMAC tuner
-* Fix the WebUI issue when parsing experiment.json with illegal format
-* Fix cold start issue in Metis Tuner
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/microsoft/nni/issues/842)
+* 修复在指标为 dict 时，无法显示任何结果的 Bug。
+* 修复 hyperband 中浮点类型的计算问题
+* 修复 SMAC Tuner 中搜索空间转换的错误
+* 修复 Web 界面中解析 Experiment 的错误格式
+* 修复 Metis Tuner 冷启动时的错误
 
-## Release 0.5.2 - 3/4/2019
+## 发布 0.5.2 - 3/4/2019
 
-### Improvements
+### 改进
 
-* Curve fitting assessor performance improvement.
+* 提升 Curve fitting Assessor 的性能。
 
-### Documentation
+### 文档
 
-* Chinese version document: https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/Tutorial/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html
+* 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
+* 调试和维护：https://nni.readthedocs.io/zh/latest/Tutorial/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/zh/latest/sdk_reference.html#tuner
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
-* Fix a race condition bug that does not store trial job cancel status correctly.
-* Fix search space parsing error when using SMAC tuner.
-* Fix cifar10 example broken pipe issue.
+* 修复了在某些极端条件下，不能正确存储任务的取消状态。
+* 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
+* 修复 CIFAR-10 示例中的 broken pipe 问题。
 * Add unit test cases for nnimanager and local training service.
 * Add integration test azure pipelines for remote machine, OpenPAI and kubeflow training services.
 * Support Pylon in OpenPAI webhdfs client.
