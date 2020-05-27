@@ -6,7 +6,7 @@
 
 #### 新功能和改进
 
-* 将 IPC 限制提高至 100 万
+* 将 IPC 限制提高至 100W
 * 修改非本机训练平台中，将上传代码到存储的逻辑
 * SDK 版本支持 `__version__`
 * 支持 Windows 下开发模式安装
@@ -14,79 +14,79 @@
 #### Web 界面
 
 * 显示 Trial 的错误消息
-* finalize homepage layout
-* Refactor overview's best trials module
-* Remove multiphase from webui
-* add tooltip for trial concurrency in the overview page
-* Show top trials for hyper-parameter graph
+* 完善主页布局
+* 重构概述页面的最佳 Trial 模块
+* 从 Web 界面中去掉多阶段支持
+* 在概述页面为 Trial 并发添加工具提示。
+* 在超参图中显示最好的 Trial
 
-#### HPO Updates
+#### 超参优化更新
 
-* Improve PBT on failure handling and support experiment resume for PBT
+* 改进 PBT 的错误处理，并支持恢复 Experiment
 
-#### NAS Updates
+#### NAS 更新
 
-* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
-* Use OrderedDict for LayerChoice
-* Prettify the format of export
-* Replace layer choice with selected module after applied fixed architecture
+* NAS 支持 TensorFlow 2.0 (预览版) [TF2.0 NAS 示例](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
+* LayerChoice 使用 OrderedDict
+* 优化导出格式
+* 应用固定架构后，将 LayerChoice 替换成选择的模块
 
-#### Model Compression Updates
+#### 模型压缩改进
 
-* Model compression PyTorch 1.4 support
+* 模型压缩支持 PyTorch 1.4
 
-#### Training Service Updates
+#### 训练平台改进
 
-* update pai yaml merge logic
-* support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
+* 改进 OpenPAI YAML 的合并逻辑
+* 支持将 Windows 作为[远程模式](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)中的计算节点
 
-### Bug Fix
+### 修复的 Bug
 
-* fix dev install
-* SPOS example crash when the checkpoints do not have state_dict
-* Fix table sort issue when experiment had failed trial
-* Support multi python env (conda, pyenv etc)
+* 修复开发模式安装
+* 当检查点没有 state_dict 时，SPOS 示例会崩溃
+* 修复失败 Trial 造成的表格排序问题
+* 支持多 Python 环境（如 conda，pyenv 等）
 
-## Release 1.5 - 4/13/2020
+## 发布 1.5 - 4/13/2020
 
-### New Features and Documentation
+### 新功能和文档
 
-#### Hyper-Parameter Optimizing
+#### 超参优化
 
-* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
-* Trials can now report infinity and NaN as result
+* 新 Tuner：[Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tuner/PBTTuner.md)
+* Trial 现在可以返回无穷大和 NaN 结果
 
-#### Neural Architecture Search
+#### 神经网络架构搜索
 
-* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
-* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+* 新 NAS 算法：[TextNAS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/TextNAS.md)
+* ENAS 和 DARTS 现在可通过网页[可视化](https://github.com/microsoft/nni/blob/master/docs/zh_CN/NAS/Visualization.md)。
 
-#### Model Compression
+#### 模型压缩
 
-* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
-* Compressors will validate configuration by default
-* Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
-* Model compression examples are refactored and improved
-* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+* 新 Pruner：[GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Pruner.md#gradientrankfilterpruner)
+* 默认情况下，Compressor 会验证配置
+* 重构：可将优化器作为 Pruner 的输入参数，从而更容易支持 DataParallel 和其它迭代剪枝方法。 这是迭代剪枝算法用法上的重大改动。
+* 重构了模型压缩示例
+* 添加了[实现模型压缩算法](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/Framework.md)的文档
 
-#### Training Service
+#### 训练平台
 
-* Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
-* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
+* Kubeflow 现已支持 pytorchjob crd v1 (感谢贡献者 @jiapinai)
+* 实验性的支持 [DLTS](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/DLTSMode.md)
 
-#### Overall Documentation Improvement
+#### 文档的整体改进
 
-* Documentation is significantly improved on grammar, spelling, and wording (thanks external contributor @AHartNtkn)
+* 语法、拼写以及措辞上的修改 (感谢贡献者 @AHartNtkn)
 
-### Fixed Bugs
+### 修复的 Bug
 
-* ENAS cannot have more than one LSTM layers (thanks external contributor @marsggbo)
-* NNI manager's timers will never unsubscribe (thanks external contributor @guilhermehn)
-* NNI manager may exhaust head memory (thanks external contributor @Sundrops)
-* Batch tuner does not support customized trials (#2075)
-* Experiment cannot be killed if it failed on start (#2080)
-* Non-number type metrics break web UI (#2278)
-* A bug in lottery ticket pruner
+* ENAS 不能使用多个 LSTM 层 (感谢贡献者 @marsggbo)
+* NNI 管理器的计时器无法取消订阅 (感谢贡献者 @guilhermehn)
+* NNI 管理器可能会耗尽内存 (感谢贡献者 @Sundrops)
+* 批处理 Tuner 不支持自定义 Trial （#2075）
+* Experiment 启动失败后，无法终止 (#2080)
+* 非数字的指标会破坏网页界面 (#2278)
+* lottery ticket Pruner 中的 Bug
 * Other minor glitches
 
 ## Release 1.4 - 2/19/2020
@@ -128,7 +128,7 @@
 * Add QuickStart guidance for [NAS](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md) and [model compression](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md)
 * Improve documentation for [the supported EfficientNet](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md)
 
-### Bug Fixes
+### 修复的 Bug
 
 * Correctly support NaN in metric data, JSON compliant
 * Fix the out-of-range bug of `randint` type in search space
