@@ -421,72 +421,72 @@
 * 修复了在某些极端条件下，不能正确存储任务的取消状态。
 * 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
 * 修复 CIFAR-10 示例中的 broken pipe 问题。
-* Add unit test cases for nnimanager and local training service.
-* Add integration test azure pipelines for remote machine, OpenPAI and kubeflow training services.
-* Support Pylon in OpenPAI webhdfs client.
+* 为本地训练和 NNI 管理器添加单元测试。
+* 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
+* 在 OpenPAI 客户端中支持 Pylon 路径。
 
-## Release 0.5.1 - 1/31/2018
+## 发布 0.5.1 - 1/31/2018
 
-### Improvements
+### 改进
 
-* Making [log directory](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging
+* 可配置[日志目录](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig_zh_CN.md)。
+* 支持[不同级别的日志](https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig_zh_CN.md)，使其更易于调试。
 
-### Documentation
+### 文档
 
-* Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/zh/latest/
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
-* Fix the bug of installation in python virtualenv, and refactor the installation logic
-* Fix the bug of HDFS access failure on OpenPAI mode after OpenPAI is upgraded.
-* Fix the bug that sometimes in-place flushed stdout makes experiment crash
+* 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。
+* 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
-## Release 0.5.0 - 01/14/2019
-
-### Major Features
-
-#### New tuner and assessor supports
-
-* Support [Metis tuner](Tuner/MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
-* Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](Assessor/CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
-
-#### Training Service Enhancement
-
-* [FrameworkController Training service](TrainingService/FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes 
-  * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
-  * NNI provides unified and simple specification for job definition.
-  * MNIST example for how to use FrameworkController.
-
-#### User Experience improvements
-
-* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode: 
-  * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
-  * Show the link for trial log file on WebUI.
-* Support to show final result's all key-value pairs.
-
-## Release 0.4.1 - 12/14/2018
+## 发布 0.5.0 - 01/14/2019
 
 ### 主要功能
 
-#### New tuner supports
+#### 支持新的 Tuner 和 Assessor
 
-* Support [network morphism](Tuner/NetworkmorphismTuner.md) as a new tuner
+* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
+* 支持 [Curve fitting （曲线拟合）Assessor](Assessor/CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
+* [权重共享的](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md)高级支持：为 NAS Tuner 提供权重共享，当前支持 NFS。
 
-#### Training Service improvements
+#### 改进训练平台
 
-* Migrate [Kubeflow training service](TrainingService/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
-* [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
-* Improvement on local code files uploading to OpenPAI HDFS
-* Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
+* [FrameworkController 训练平台](TrainingService/FrameworkControllerMode.md)：支持使用在 Kubernetes 上使用 FrameworkController 运行。 
+  * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
+  * NNI 为作业定义了统一而简单的规范。
+  * 如何使用 FrameworkController 的 MNIST 示例。
 
-#### NNICTL improvements
+#### 改进用户体验
 
-* Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
+* 为 OpenPAI, Kubeflow 和 FrameworkController 模式提供更好的日志支持。 
+  * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。
+  * 在 WEB 界面上显示 Trial 日志的链接。
+* 支持将最终结果显示为键值对。
 
-#### WebUI improvements
+## 发布 0.4.1 - 12/14/2018
+
+### 主要功能
+
+#### 支持新的 Tuner
+
+* 支持新的 [network morphism](Tuner/NetworkmorphismTuner.md) Tuner。
+
+#### 改进训练平台
+
+* 将 [Kubeflow 训练平台](TrainingService/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
+* 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
+* 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
+
+#### 改进 NNICTL
+
+* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 可使用 **nnictl -v** 来显示安装的 NNI 版本。
+
+#### 改进 WEB 界面
 
 * Enable modify concurrency number during experiment
 * Add feedback link to NNI github 'create issue' page
