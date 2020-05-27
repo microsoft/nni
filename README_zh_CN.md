@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **[NNI v1.5 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **[NNI v1.6 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -233,7 +233,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
    
    ```bash
-   git clone -b v1.5 https://github.com/Microsoft/nni.git
+   git clone -b v1.6 https://github.com/Microsoft/nni.git
    ```
 
 * 运行 MNIST 示例。
@@ -316,8 +316,7 @@ You can use these commands to get more information about the experiment
 经作者许可的一些 NNI 用法示例和相关文档。
 
 * ### **外部代码库** ### 
-   * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
-   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md)
+   * 在 NNI 中运行 [ENAS](examples/nas/enas/README_zh_CN.md)
    * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md)
    * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
