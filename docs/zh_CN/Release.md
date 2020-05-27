@@ -38,7 +38,7 @@
 #### 训练平台改进
 
 * 改进 OpenPAI YAML 的合并逻辑
-* 支持将 Windows 作为[远程模式](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)中的计算节点
+* 支持将 Windows 作为[远程模式](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/RemoteMachineMode.md#windows)中的计算节点
 
 ### 修复的 Bug
 
