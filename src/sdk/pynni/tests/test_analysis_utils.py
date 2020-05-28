@@ -17,7 +17,7 @@ from nni.analysis_utils.topology.torch.mask_conflict import MaskConflict
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 prefix = 'analysis_test'
 model_names = ['alexnet', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg19',
-               'resnet18', 'resnet34', 'squeezenet1_1', 'googlenet',
+               'resnet18', 'resnet34', 'squeezenet1_1',
                'shufflenet_v2_x1_0', 'mobilenet_v2', 'wide_resnet50_2']
 
 channel_dependency_ground_truth = {
