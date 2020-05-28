@@ -6,8 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from models.cifar10.vgg import VGG
-from nni.compression.speedup.torch import ModelSpeedup
-from nni.compression.torch import apply_compression_results
+from nni.compression.torch import apply_compression_results, ModelSpeedup
 
 torch.manual_seed(0)
 use_mask = True

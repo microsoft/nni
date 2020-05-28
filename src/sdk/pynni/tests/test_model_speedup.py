@@ -10,8 +10,7 @@ from torchvision.models.vgg import vgg16
 from torchvision.models.resnet import resnet18
 from unittest import TestCase, main
 
-from nni.compression.torch import L1FilterPruner, apply_compression_results
-from nni.compression.speedup.torch import ModelSpeedup
+from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
 
 torch.manual_seed(0)
 
