@@ -5,8 +5,8 @@ import copy
 import logging
 import torch
 from schema import And, Optional
-from .compressor import Pruner
-from .utils import CompressorSchema
+from ..utils.config_validation import CompressorSchema
+from ..compressor import Pruner
 
 __all__ = ['LevelPruner', 'AGP_Pruner', 'SlimPruner', 'LotteryTicketPruner']
 

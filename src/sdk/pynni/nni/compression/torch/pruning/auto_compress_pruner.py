@@ -8,12 +8,12 @@ import torch
 from schema import And, Optional
 
 from nni.utils import OptimizeMode
-from nni.compression.speedup.torch import ModelSpeedup
+from nni.compression.torch import ModelSpeedup
 
-from .compressor import Pruner
+from ..compressor import Pruner
+from ..utils.config_validation import CompressorSchema
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
 from .admm_pruner import ADMMPruner
-from .utils import CompressorSchema
 
 
 _logger = logging.getLogger(__name__)

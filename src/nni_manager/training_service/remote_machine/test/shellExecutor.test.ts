@@ -8,29 +8,29 @@ import * as fs from 'fs';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { Client } from 'ssh2';
 import { ShellExecutor } from '../shellExecutor';
 import { prepareUnitTest, cleanupUnitTest } from '../../../common/utils';
 
-const LOCALFILE: string = '/tmp/localSshclientUTData';
-const REMOTEFILE: string = '/tmp/remoteSshclientUTData';
-const REMOTEFOLDER: string = '/tmp/remoteSshclientUTFolder';
+const LOCALFILE: string = 'localSshUTData';
+const REMOTEFILE: string = 'remoteSshUTData';
+const REMOTEFOLDER: string = 'remoteSshUTFolder';
 
 async function copyFile(executor: ShellExecutor): Promise<void> {
-    await executor.copyFileToRemote(LOCALFILE, REMOTEFILE);
+    const remoteFullName = executor.joinPath(executor.getTempPath(), REMOTEFILE);
+    await executor.copyFileToRemote(LOCALFILE, remoteFullName);
 }
 
 async function copyFileToRemoteLoop(executor: ShellExecutor): Promise<void> {
-    for (let i: number = 0; i < 10; i++) {
-        // console.log(i);
-        await executor.copyFileToRemote(LOCALFILE, REMOTEFILE);
+    const remoteFullName = executor.joinPath(executor.getTempPath(), REMOTEFILE);
+    for (let i: number = 0; i < 3; i++) {
+        await executor.copyFileToRemote(LOCALFILE, remoteFullName);
     }
 }
 
 async function getRemoteFileContentLoop(executor: ShellExecutor): Promise<void> {
-    for (let i: number = 0; i < 10; i++) {
-        // console.log(i);
-        await executor.getRemoteFileContent(REMOTEFILE);
+    const remoteFullName = executor.joinPath(executor.getTempPath(), REMOTEFILE);
+    for (let i: number = 0; i < 3; i++) {
+        await executor.getRemoteFileContent(remoteFullName);
     }
 }
 
@@ -41,14 +41,16 @@ describe('ShellExecutor test', () => {
         rmMeta = JSON.parse(fs.readFileSync('../../.vscode/rminfo.json', 'utf8'));
         console.log(rmMeta);
     } catch (err) {
-        console.log(`Please configure rminfo.json to enable remote machine test.${err}`);
+        console.log(`Please configure rminfo.json to enable remote machine test. ${err}`);
         skip = true;
     }
 
     before(async () => {
         chai.should();
         chai.use(chaiAsPromised);
-        await cpp.exec(`echo '1234' > ${LOCALFILE}`);
+        if (!fs.existsSync(LOCALFILE)){
+            await cpp.exec(`echo '1234' > ${LOCALFILE}`);
+        }
         prepareUnitTest();
     });
 
@@ -61,26 +63,27 @@ describe('ShellExecutor test', () => {
         if (skip) {
             return;
         }
-        const shellExecutor: ShellExecutor = new ShellExecutor();
-        await shellExecutor.initialize(rmMeta);
-        let result = await shellExecutor.createFolder(REMOTEFOLDER, false);
+        const executor: ShellExecutor = new ShellExecutor();
+        await executor.initialize(rmMeta);
+        const remoteFullPath = executor.joinPath(executor.getTempPath(), REMOTEFOLDER);
+        let result = await executor.createFolder(remoteFullPath, false);
         chai.expect(result).eq(true);
-        result = await shellExecutor.removeFolder(REMOTEFOLDER);
+        const commandResult = await executor.executeScript("dir");
+        chai.expect(commandResult.exitCode).eq(0);
+        result = await executor.removeFolder(remoteFullPath);
         chai.expect(result).eq(true);
+        await executor.close();
     });
 
     it('Test ShellExecutor', async () => {
         if (skip) {
             return;
         }
-        const shellExecutor: ShellExecutor = new ShellExecutor();
-        await shellExecutor.initialize(rmMeta);
-        await copyFile(shellExecutor);
-        await Promise.all([
-            copyFileToRemoteLoop(shellExecutor),
-            copyFileToRemoteLoop(shellExecutor),
-            copyFileToRemoteLoop(shellExecutor),
-            getRemoteFileContentLoop(shellExecutor)
-        ]);
+        const executor: ShellExecutor = new ShellExecutor();
+        await executor.initialize(rmMeta);
+        await copyFile(executor);
+        await copyFileToRemoteLoop(executor);
+        await getRemoteFileContentLoop(executor);
+        await executor.close();
     });
 });

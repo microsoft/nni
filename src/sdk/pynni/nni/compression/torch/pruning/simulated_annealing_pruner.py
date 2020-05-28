@@ -12,11 +12,11 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from .compressor import Pruner, LayerInfo
+from ..compressor import Pruner, LayerInfo
+from ..utils.config_validation import CompressorSchema
+from ..utils.op_dependency import get_layers_no_dependency
 from .pruners import LevelPruner
 from .weight_rank_filter_pruners import L1FilterPruner
-from .utils import CompressorSchema
-from .utils import get_layers_no_dependency
 
 
 _logger = logging.getLogger(__name__)

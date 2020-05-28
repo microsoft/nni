@@ -5,10 +5,10 @@ import logging
 import torch
 from schema import And, Optional
 
-from .compressor import Pruner
+from ..compressor import Pruner
+from ..utils.config_validation import CompressorSchema
 from .pruners import LevelPruner
 from .weight_rank_filter_pruners import L1FilterPruner
-from .utils import CompressorSchema
 
 
 _logger = logging.getLogger(__name__)

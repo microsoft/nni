@@ -14,7 +14,7 @@ from torchvision import datasets, transforms, models
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 from nni.compression.torch import L1FilterPruner, SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
-from nni.compression.speedup.torch import ModelSpeedup
+from nni.compression.torch import ModelSpeedup
 
 
 def get_data(args):
@@ -273,7 +273,8 @@ def main(args):
         pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
             optimize_iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
-            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5, experiment_data_dir=args.experiment_data_dir)
+            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5,
+            experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
             "Please use L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner in this example.")
