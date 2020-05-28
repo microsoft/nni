@@ -11,3 +11,4 @@ scikit-learn==0.20
 
 # analysis_utils
 graphviz
+matplotlib
