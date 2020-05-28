@@ -2,12 +2,10 @@
 # Licensed under the MIT license.
 
 import csv
-import torch
-import queue
 import logging
-import torch.nn as nn
 
-from .graph_from_trace import *
+
+from .graph_from_trace import VisualGraph
 
 
 CONV_TYPE = 'aten::_convolution'
@@ -23,10 +21,10 @@ class ChannelDependency:
         layers in a model.
 
         Parameters
-        ---------- 
-            model: 
+        ----------
+            model:
                 The model to be analyzed.
-            data: 
+            data:
                 The example input data to trace the network architecture.
             graph:
                 if we alreay has the traced graph of the target model, we donnot
@@ -39,7 +37,7 @@ class ChannelDependency:
         self.c2py = self.graph_builder.c2py
         self.dependency = {}
         self.build_channel_dependency()
-        
+
 
     def get_parent_convs(self, node):
         """
@@ -49,7 +47,7 @@ class ChannelDependency:
         ---------
             node:
                 target node.
-    
+
         Returns
         -------
             parent_convs:
@@ -89,29 +87,29 @@ class ChannelDependency:
                     parent_convs = self.get_parent_convs(node)
             dependency_set = set(parent_convs)
             # merge the dependencies
-            for node in parent_convs:
-                if node in self.dependency:
-                    dependency_set.update(self.dependency[node])
+            for parent in parent_convs:
+                if parent in self.dependency:
+                    dependency_set.update(self.dependency[parent])
             # save the dependencies
-            for node in dependency_set:
-                self.dependency[node] = dependency_set
+            for _node in dependency_set:
+                self.dependency[_node] = dependency_set
 
     def filter_prune_check(self, ratios):
         """
         According to the channel dependencies between the conv
-        layers, check if the filter pruning ratio for the conv 
+        layers, check if the filter pruning ratio for the conv
         layers is legal.
 
         Parameters
         ---------
-            ratios: 
-                the prune ratios for the layers. %ratios is a dict, 
-                in which the keys are the names of the target layer 
-                and the values are the prune ratio for the corresponding 
+            ratios:
+                the prune ratios for the layers. %ratios is a dict,
+                in which the keys are the names of the target layer
+                and the values are the prune ratio for the corresponding
                 layers. For example:
                 ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
-                Note: the name of the layers should looks like 
-                the names that model.named_modules() functions 
+                Note: the name of the layers should looks like
+                the names that model.named_modules() functions
                 returns.
 
         Returns
@@ -133,7 +131,7 @@ class ChannelDependency:
         return True
 
     def export(self, filepath):
-        """    
+        """
         export the channel dependencies as a csv file.
         """
         header = ['Dependency Set', 'Convolutional Layers']
@@ -160,7 +158,7 @@ class ChannelDependency:
     def dependency_sets(self):
         """
         Get the list of the dependency set.
-        
+
         Returns
         -------
             dependency_sets:
@@ -183,6 +181,3 @@ class ChannelDependency:
                     tmp_set.add(self.c2py[other].name)
             d_sets.append(tmp_set)
         return d_sets
-                
-
-

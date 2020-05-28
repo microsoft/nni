@@ -2,18 +2,23 @@
 # Licensed under the MIT license.
 
 import os
-import torch
 import copy
 import csv
 import logging
+from collections import OrderedDict
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
 import numpy as np
 import torch.nn as nn
-from collections import OrderedDict
+
 from nni.compression.torch import LevelPruner
 from nni.compression.torch import L1FilterPruner
 from nni.compression.torch import L2FilterPruner
 
-
+# use Agg backend
+matplotlib.use('Agg')
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
@@ -30,12 +35,12 @@ class SensitivityAnalysis:
             model:
                 the model to perform sensitivity analysis
             val_func:
-                validation function for the model. Due to 
+                validation function for the model. Due to
                 different models may need different dataset/criterion
                 , therefore the user need to cover this part by themselves.
-                val_func take the model as the first input parameter, and 
+                val_func take the model as the first input parameter, and
                 return the accuracy as output.
-            sparsities: 
+            sparsities:
                 The sparsity list provided by users.
             prune_type:
                 The pruner type used to prune the conv layers, default is 'l1',
@@ -87,18 +92,18 @@ class SensitivityAnalysis:
 
     def analysis(self, val_args=None, val_kwargs=None, start=0, end=None):
         """
-        This function analyze the sensitivity to pruning for 
+        This function analyze the sensitivity to pruning for
         each conv layer in the target model.
         If %start and %end are not set, we analyze all the conv
-        layers by default. Users can specify several layers to 
+        layers by default. Users can specify several layers to
         analyze or parallelize the analysis process easily through
         the %start and %end parameter.
 
         Parameters
         ----------
-            start: 
+            start:
                 Layer index of the sensitivity analysis start
-            end:  
+            end:
                 Layer index of the sensitivity analysis end
             val_args:
                 args for the val_function
@@ -110,7 +115,7 @@ class SensitivityAnalysis:
         Returns
         -------
             sensitivities:
-                dict object that stores the trajectory of the 
+                dict object that stores the trajectory of the
                 accuracy when the prune ratio changes
         """
         if not end:
@@ -140,8 +145,8 @@ class SensitivityAnalysis:
                 pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
                 val_acc = self.val_func(*val_args, **val_kwargs)
-                logger.info('Layer: %s Sparsity: %.2f Accuracy: %.4f' %
-                            (name, sparsity, val_acc))
+                logger.info('Layer: %s Sparsity: %.2f Accuracy: %.4f',
+                            name, sparsity, val_acc)
 
                 self.sensitivities[name][sparsity] = val_acc
                 pruner._unwrap_model()
@@ -160,24 +165,18 @@ class SensitivityAnalysis:
 
     def visualization(self, outdir, merge=False):
         """
-        # 
         Visualize the sensitivity curves of the model
 
         Parameters
         ----------
-            outdir: 
+            outdir:
                 output directory of the image
             merge:
-                if merge all the sensitivity curves into a 
-                single image. If not, we will draw a picture 
+                if merge all the sensitivity curves into a
+                single image. If not, we will draw a picture
                 for each target layer of the model.
         """
         os.makedirs(outdir, exist_ok=True)
-        import matplotlib
-        # use Agg backend
-        matplotlib.use('Agg')
-        import matplotlib.pyplot as plt
-        from matplotlib.lines import Line2D
         LineStyles = [':', '-.', '--', '-']
         Markers = list(Line2D.markers.keys())
         if not merge:

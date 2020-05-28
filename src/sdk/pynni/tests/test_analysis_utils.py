@@ -2,20 +2,17 @@
 # Licensed under the MIT license.
 
 import os
-import torch
-import torchvision
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision.models as models
-import math
-import numpy as np
 import unittest
 from unittest import TestCase, main
+import torch
+import torch.nn as nn
+import torchvision.models as models
+import numpy as np
+
 from nni.compression.torch import L1FilterPruner
 from nni.analysis_utils.topology.torch.graph_from_trace import VisualGraph
 from nni.analysis_utils.topology.torch.shape_dependency import ChannelDependency
 from nni.analysis_utils.topology.torch.mask_conflict import MaskConflict
-from nni.analysis_utils.sensitivity.torch.sensitivity_analysis import SensitivityAnalysis
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 prefix = 'analysis_test'
@@ -29,17 +26,23 @@ channel_dependency_ground_truth = {
                  {'layer3.0.downsample.0', 'layer3.1.conv2', 'layer3.0.conv2'},
                  {'layer4.0.downsample.0', 'layer4.1.conv2', 'layer4.0.conv2'}],
     'resnet34': [{'conv1', 'layer1.2.conv2', 'layer1.1.conv2', 'layer1.0.conv2'},
-                 {'layer2.3.conv2', 'layer2.0.conv2', 'layer2.0.downsample.0','layer2.1.conv2', 'layer2.2.conv2'},
-                 {'layer3.3.conv2', 'layer3.0.conv2', 'layer3.4.conv2', 'layer3.0.downsample.0', 'layer3.5.conv2', 'layer3.1.conv2', 'layer3.2.conv2'},
+                 {'layer2.3.conv2', 'layer2.0.conv2', 'layer2.0.downsample.0',
+                  'layer2.1.conv2', 'layer2.2.conv2'},
+                 {'layer3.3.conv2', 'layer3.0.conv2', 'layer3.4.conv2', 'layer3.0.downsample.0',
+                  'layer3.5.conv2', 'layer3.1.conv2', 'layer3.2.conv2'},
                  {'layer4.0.downsample.0', 'layer4.1.conv2', 'layer4.2.conv2', 'layer4.0.conv2'}],
     'mobilenet_v2': [{'features.3.conv.2', 'features.2.conv.2'},
                      {'features.6.conv.2', 'features.4.conv.2', 'features.5.conv.2'},
-                     {'features.8.conv.2', 'features.7.conv.2', 'features.10.conv.2', 'features.9.conv.2'},
-                     {'features.11.conv.2', 'features.13.conv.2', 'features.12.conv.2'},
+                     {'features.8.conv.2', 'features.7.conv.2',
+                      'features.10.conv.2', 'features.9.conv.2'},
+                     {'features.11.conv.2', 'features.13.conv.2',
+                      'features.12.conv.2'},
                      {'features.14.conv.2', 'features.16.conv.2', 'features.15.conv.2'}],
     'wide_resnet50_2': [{'layer1.2.conv3', 'layer1.1.conv3', 'layer1.0.conv3', 'layer1.0.downsample.0'},
-                        {'layer2.1.conv3', 'layer2.0.conv3', 'layer2.0.downsample.0', 'layer2.2.conv3', 'layer2.3.conv3'},
-                        {'layer3.3.conv3', 'layer3.0.conv3', 'layer3.2.conv3', 'layer3.0.downsample.0', 'layer3.1.conv3', 'layer3.4.conv3', 'layer3.5.conv3'},
+                        {'layer2.1.conv3', 'layer2.0.conv3', 'layer2.0.downsample.0',
+                         'layer2.2.conv3', 'layer2.3.conv3'},
+                        {'layer3.3.conv3', 'layer3.0.conv3', 'layer3.2.conv3', 'layer3.0.downsample.0',
+                         'layer3.1.conv3', 'layer3.4.conv3', 'layer3.5.conv3'},
                         {'layer4.1.conv3', 'layer4.2.conv3', 'layer4.0.downsample.0', 'layer4.0.conv3'}],
     'alexnet': [],
     'vgg11': [],
@@ -52,6 +55,7 @@ channel_dependency_ground_truth = {
 }
 
 unittest.TestLoader.sortTestMethodsUsing = None
+
 
 class AnalysisUtilsTest(TestCase):
 
@@ -110,7 +114,8 @@ class AnalysisUtilsTest(TestCase):
                 if isinstance(layer, nn.Conv2d):
                     # pruner cannot allow the sparsity to be 0 or 1
                     sparsity = np.random.uniform(0.01, 0.99)
-                    cfg = {'op_types':['Conv2d'], 'op_names':[layername], 'sparsity':sparsity}
+                    cfg = {'op_types': ['Conv2d'], 'op_names': [
+                        layername], 'sparsity': sparsity}
                     cfglist.append(cfg)
             pruner = L1FilterPruner(net, cfglist)
             pruner.compress()
@@ -126,16 +131,20 @@ class AnalysisUtilsTest(TestCase):
             # fix the mask conflict successfully
             for dset in channel_dependency_ground_truth[name]:
                 lset = list(dset)
-                for i in range(len(lset)):
-                    assert fixed_mask[lset[0]]['weight'].size(0) == fixed_mask[lset[i]]['weight'].size(0) 
-                    w_index1 = self.get_pruned_index(fixed_mask[lset[0]]['weight'])
-                    w_index2 = self.get_pruned_index(fixed_mask[lset[i]]['weight'])
+                for i, _ in enumerate(lset):
+                    assert fixed_mask[lset[0]]['weight'].size(
+                        0) == fixed_mask[lset[i]]['weight'].size(0)
+                    w_index1 = self.get_pruned_index(
+                        fixed_mask[lset[0]]['weight'])
+                    w_index2 = self.get_pruned_index(
+                        fixed_mask[lset[i]]['weight'])
                     assert w_index1 == w_index2
                     if hasattr(fixed_mask[lset[0]], 'bias'):
-                        b_index1 = self.get_pruned_index(fixed_mask[lset[0]]['bias'])
-                        b_index2 = self.get_pruned_index(fixed_mask[lset[i]]['bias'])
+                        b_index1 = self.get_pruned_index(
+                            fixed_mask[lset[0]]['bias'])
+                        b_index2 = self.get_pruned_index(
+                            fixed_mask[lset[i]]['bias'])
                         assert b_index1 == b_index2
-
 
 
 if __name__ == '__main__':
