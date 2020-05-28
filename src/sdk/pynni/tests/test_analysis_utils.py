@@ -58,7 +58,7 @@ unittest.TestLoader.sortTestMethodsUsing = None
 
 
 class AnalysisUtilsTest(TestCase):
-
+    @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_channel_dependency(self):
         outdir = os.path.join(prefix, 'dependency')
         os.makedirs(outdir, exist_ok=True)
@@ -102,6 +102,7 @@ class AnalysisUtilsTest(TestCase):
 
         return pruned_indexes
 
+    @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_mask_conflict(self):
         outdir = os.path.join(prefix, 'masks')
         os.makedirs(outdir, exist_ok=True)
