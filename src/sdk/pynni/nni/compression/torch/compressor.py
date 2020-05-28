@@ -4,7 +4,7 @@
 import types
 import logging
 import torch
-from . import default_layers
+from .pruning import default_layers
 
 _logger = logging.getLogger(__name__)
 

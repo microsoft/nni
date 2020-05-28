@@ -4,8 +4,8 @@
 import logging
 import torch
 from schema import And, Optional
-from .utils import CompressorSchema
-from .compressor import Pruner
+from ..utils.config_validation import CompressorSchema
+from ..compressor import Pruner
 
 __all__ = ['ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
 
