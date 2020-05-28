@@ -32,7 +32,7 @@ class PyNode:
             if torch.__version__ >= '1.4.0':
                 # note, the scopeName of node may be empty
                 scopename = re.split('/', scopename)
-                self.name = scopename[-1] if len(scopename) > 0 else ''
+                self.name = scopename[-1] if scopename else ''
             else:
                 self.name = '.'.join(re.findall(r'\[(.*?)\]', scopename))
             # remove the __module prefix

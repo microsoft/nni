@@ -56,7 +56,7 @@ class ChannelDependency:
         parent_convs = []
         queue = []
         queue.append(node)
-        while len(queue) > 0:
+        while queue:
             curnode = queue.pop(0)
             if curnode in self.c2py and self.c2py[curnode].isOp \
                     and curnode.kind() == CONV_TYPE:
