@@ -65,7 +65,7 @@ class AnalysisUtilsTest(TestCase):
         for name in model_names:
             print('Analyze channel dependency for %s' % name)
             model = getattr(models, name)
-            net = model(pretrained=True).to(device)
+            net = model().to(device)
             dummy_input = torch.ones(1, 3, 224, 224).to(device)
             channel_depen = ChannelDependency(net, dummy_input)
             depen_sets = channel_depen.dependency_sets
