@@ -19,7 +19,7 @@
   先决条件：`python 64-bit >=3.5`, `git`, `PowerShell`
 
   ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
+  git clone -b v1.6 https://github.com/Microsoft/nni.git
   cd nni
   powershell -ExecutionPolicy Bypass -file install.ps1
   ```
@@ -31,7 +31,7 @@
 * 通过克隆源代码下载示例。
 
   ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
+  git clone -b v1.6 https://github.com/Microsoft/nni.git
   ```
 
 * 运行 MNIST 示例。
