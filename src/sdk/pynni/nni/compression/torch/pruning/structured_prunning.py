@@ -3,25 +3,32 @@
 
 import logging
 import torch
-from .pruners import WeightMasker
+from .weight_masker import WeightMasker
 
-__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', 'TaylorFOWeightFilterPrunerMasker']
+__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
+    'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
+    'ActivationMeanRankFilterPrunerMasker']
 
 logger = logging.getLogger('torch weight rank filter pruners')
 
-class WeightRankMasker(WeightMasker):
+class StructuredWeightMasker(WeightMasker):
     """
-    A structured pruning base class that prunes the filters with the smallest
+    A structured pruning masker base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
-    def calc_mask(self, weight, bias=None, sparsity=1., wrapper=None):
+    def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
         """
         Calculate the mask of given layer.
-        Filters with the smallest importance criterion of the kernel weights are masked.
         Parameters
         ----------
-        wrapper : Module
-            the module to instrument the compression operation
+        weight : weight tensor
+            module weights
+        bias: bias tensor
+            module bias
+        sparsity: float
+            pruning ratio,  preserved weight ratio is `1 - sparsity`
+        kwargs: dict
+            additional parameters passed from pruner
         Returns
         -------
         dict
@@ -40,13 +47,11 @@ class WeightRankMasker(WeightMasker):
         if filters < 2 or num_prune < 1:
             return mask
 
-        return self.get_mask(mask, weight, num_prune, wrapper)
+        return self.get_mask(mask, weight, num_prune, **kwargs)
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper):
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
         """
         Calculate the mask of given layer.
-        Filters with the smallest importance approximations are masked.
-
         Parameters
         ----------
         base_mask: dict
@@ -55,8 +60,6 @@ class WeightRankMasker(WeightMasker):
             the module weight to be pruned
         num_prune: int
             Num of filters to prune
-        wrapper:
-            the wrapper object of the layer to be pruned
 
         Returns
         -------
@@ -65,7 +68,7 @@ class WeightRankMasker(WeightMasker):
         """
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-class L1FilterPrunerMasker(WeightRankMasker):
+class L1FilterPrunerMasker(StructuredWeightMasker):
     """
     A structured pruning algorithm that prunes the filters of smallest magnitude
     weights sum in the convolution layers to achieve a preset level of network sparsity.
@@ -74,7 +77,7 @@ class L1FilterPrunerMasker(WeightRankMasker):
     https://arxiv.org/abs/1608.08710
     """
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper):
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
@@ -84,12 +87,12 @@ class L1FilterPrunerMasker(WeightRankMasker):
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
-class L2FilterPrunerMasker(WeightRankMasker):
+class L2FilterPrunerMasker(StructuredWeightMasker):
     """
     A structured pruning algorithm that prunes the filters with the
     smallest L2 norm of the weights.
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper):
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
         filters = weight.shape[0]
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
@@ -100,13 +103,13 @@ class L2FilterPrunerMasker(WeightRankMasker):
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
-class FPGMPrunerMasker(WeightRankMasker):
+class FPGMPrunerMasker(StructuredWeightMasker):
     """
     A filter pruner via geometric median.
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper):
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
             base_mask['weight_mask'][idx] = 0.
@@ -157,7 +160,7 @@ class FPGMPrunerMasker(WeightRankMasker):
         x = torch.sqrt(x)
         return x.sum()
 
-class TaylorFOWeightFilterPrunerMasker(WeightRankMasker):
+class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     """
     A structured pruning algorithm that prunes the filters with the smallest
     importance approximations based on the first order taylor expansion on the weight.
@@ -165,11 +168,86 @@ class TaylorFOWeightFilterPrunerMasker(WeightRankMasker):
     "Importance Estimation for Neural Network Pruning", CVPR 2019.
     http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
     """
-
-    def get_mask(self, base_mask, weight, num_prune, wrapper):
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+        wrapper = kwargs['wrapper']
         prune_indices = torch.argsort(wrapper.contribution)[:num_prune]
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
             if base_mask['bias_mask'] is not None:
                 base_mask['bias_mask'][idx] = 0.
         return base_mask
+
+class ActivationAPoZRankFilterPrunerMasker(StructuredWeightMasker):
+    """
+    A structured pruning algorithm that prunes the filters with the
+    smallest APoZ(average percentage of zeros) of output activations.
+    Hengyuan Hu, Rui Peng, Yu-Wing Tai and Chi-Keung Tang,
+    "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
+    https://arxiv.org/abs/1607.03250
+    """
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+        assert 'activations' in kwargs
+        activations = kwargs['activations']
+        apoz = self._calc_apoz(activations)
+        prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
+        for idx in prune_indices:
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
+        return base_mask
+
+    def _calc_apoz(self, activations):
+        """
+        Calculate APoZ(average percentage of zeros) of activations.
+
+        Parameters
+        ----------
+        activations : list
+            Layer's output activations
+
+        Returns
+        -------
+        torch.Tensor
+            Filter's APoZ(average percentage of zeros) of the activations
+        """
+        activations = torch.cat(activations, 0)
+        _eq_zero = torch.eq(activations, torch.zeros_like(activations))
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / torch.numel(_eq_zero[:, 0, :, :])
+        return _apoz
+
+class ActivationMeanRankFilterPrunerMasker(StructuredWeightMasker):
+    """
+    A structured pruning algorithm that prunes the filters with the
+    smallest mean value of output activations.
+    Pavlo Molchanov, Stephen Tyree, Tero Karras, Timo Aila and Jan Kautz,
+    "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
+    https://arxiv.org/abs/1611.06440
+    """
+    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+        assert 'activations' in kwargs
+        activations = kwargs['activations']
+        mean_activation = self._cal_mean_activation(activations)
+        prune_indices = torch.argsort(mean_activation)[:num_prune]
+        for idx in prune_indices:
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
+        return base_mask
+
+    def _cal_mean_activation(self, activations):
+        """
+        Calculate mean value of activations.
+
+        Parameters
+        ----------
+        activations : list
+            Layer's output activations
+
+        Returns
+        -------
+        torch.Tensor
+            Filter's mean value of the output activations
+        """
+        activations = torch.cat(activations, 0)
+        mean_activation = torch.mean(activations, dim=(0, 2, 3))
+        return mean_activation

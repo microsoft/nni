@@ -3,7 +3,8 @@
 
 
 from ..pruning import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, \
-    L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker
+    L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
+    ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker
 
 masker_dict = {
     'level': LevelPrunerMasker,
@@ -11,5 +12,7 @@ masker_dict = {
     'l1': L1FilterPrunerMasker,
     'l2': L2FilterPrunerMasker,
     'fpgm': FPGMPrunerMasker,
-    'taylorfo': TaylorFOWeightFilterPrunerMasker
+    'taylorfo': TaylorFOWeightFilterPrunerMasker,
+    'apoz': ActivationAPoZRankFilterPrunerMasker,
+    'mean_activation': ActivationMeanRankFilterPrunerMasker
 }

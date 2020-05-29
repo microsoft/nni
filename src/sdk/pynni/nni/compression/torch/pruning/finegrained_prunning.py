@@ -3,33 +3,12 @@
 
 import logging
 import torch
+from .weight_masker import WeightMasker
 
 __all__ = ['LevelPrunerMasker', 'SlimPrunerMasker']
 
 logger = logging.getLogger('torch pruner')
 
-class WeightMasker(object):
-    def __init__(self, model, pruner):
-        self.model = model
-        self.pruner = pruner
-
-    def calc_mask(self, weight, bias=None, sparsity=1., wrapper=None):
-        """
-        Calculate the mask of given layer.
-        Scale factors with the smallest absolute value in the BN layer are masked.
-        Parameters
-        ----------
-        weight : weight tensor
-            module weights
-        bias: bias tensor
-            module bias
-        Returns
-        -------
-        dict
-            dictionary for storing masks
-        """
-
-        raise NotImplementedError('{} calc_mask is not implemented'.format(self.__class__.__name__))
 
 class LevelPrunerMasker(WeightMasker):
     """
