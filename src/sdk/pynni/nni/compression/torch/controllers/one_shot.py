@@ -10,7 +10,7 @@ from .constants import masker_dict
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
 
-__all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
+__all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', 'TaylorFOWeightFilterPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -73,12 +73,17 @@ class OneshotPruner(Pruner):
         bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             bias = wrapper.module.bias.data
-
         if not wrapper.if_calculated:
-            wrapper.if_calculated = True
-            return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity)
+            masks = self._do_calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper)
+            if masks is not None:
+                wrapper.if_calculated = True
+            return masks
         else:
             return None
+
+    def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None):
+        return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper)
+
 
 class LevelPruner(OneshotPruner):
     def __init__(self, model, config_list, optimizer=None):
@@ -97,7 +102,7 @@ class SlimPruner(OneshotPruner):
 
         schema.validate(config_list)
 
-class _WeightRankPruner(OneshotPruner):
+class _StructuredFilterPruner(OneshotPruner):
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer)
 
@@ -110,14 +115,48 @@ class _WeightRankPruner(OneshotPruner):
 
         schema.validate(config_list)
 
-class L1FilterPruner(_WeightRankPruner):
+class L1FilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer)
 
-class L2FilterPruner(_WeightRankPruner):
+class L2FilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer)
 
-class FPGMPruner(_WeightRankPruner):
+class FPGMPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='fpgm', optimizer=optimizer)
+
+class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
+    def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1):
+        super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer)
+        self.statistics_batch_num = statistics_batch_num
+        self.set_wrappers_attribute("contribution", None)
+        self.iterations = 0
+        self.patch_optimizer(self.calc_contributions)
+
+    def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None):
+        if self.iterations < self.statistics_batch_num:
+            return None
+        assert wrapper is not None
+        if wrapper.contribution is None:
+            return None
+
+        return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper)
+
+    def calc_contributions(self):
+        """
+        Calculate the estimated importance of filters as a sum of individual contribution
+        based on the first order taylor expansion.
+        """
+        if self.iterations >= self.statistics_batch_num:
+            return
+        for wrapper in self.get_modules_wrapper():
+            filters = wrapper.module.weight.size(0)
+            contribution = (wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
+            if wrapper.contribution is None:
+                wrapper.contribution = contribution
+            else:
+                wrapper.contribution += contribution
+
+        self.iterations += 1

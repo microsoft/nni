@@ -5,7 +5,7 @@ import logging
 import torch
 from .pruners import WeightMasker
 
-__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker']
+__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', 'TaylorFOWeightFilterPrunerMasker']
 
 logger = logging.getLogger('torch weight rank filter pruners')
 
@@ -14,7 +14,7 @@ class WeightRankMasker(WeightMasker):
     A structured pruning base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
-    def calc_mask(self, weight, bias=None, sparsity=1.):
+    def calc_mask(self, weight, bias=None, sparsity=1., wrapper=None):
         """
         Calculate the mask of given layer.
         Filters with the smallest importance criterion of the kernel weights are masked.
@@ -39,8 +39,31 @@ class WeightRankMasker(WeightMasker):
         num_prune = int(filters * sparsity)
         if filters < 2 or num_prune < 1:
             return mask
-        mask = self.get_mask(mask, weight, num_prune)
-        return mask
+
+        return self.get_mask(mask, weight, num_prune, wrapper)
+
+    def get_mask(self, base_mask, weight, num_prune, wrapper):
+        """
+        Calculate the mask of given layer.
+        Filters with the smallest importance approximations are masked.
+
+        Parameters
+        ----------
+        base_mask: dict
+            The basic mask with the same shape of weight, all item in the basic mask is 1.
+        weight: tensor
+            the module weight to be pruned
+        num_prune: int
+            Num of filters to prune
+        wrapper:
+            the wrapper object of the layer to be pruned
+
+        Returns
+        -------
+        dict
+            dictionary for storing masks
+        """
+        raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
 class L1FilterPrunerMasker(WeightRankMasker):
     """
@@ -51,7 +74,7 @@ class L1FilterPrunerMasker(WeightRankMasker):
     https://arxiv.org/abs/1608.08710
     """
 
-    def get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune, wrapper):
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
@@ -66,7 +89,7 @@ class L2FilterPrunerMasker(WeightRankMasker):
     A structured pruning algorithm that prunes the filters with the
     smallest L2 norm of the weights.
     """
-    def get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune, wrapper):
         filters = weight.shape[0]
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
@@ -83,7 +106,7 @@ class FPGMPrunerMasker(WeightRankMasker):
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
-    def get_mask(self, base_mask, weight, num_prune):
+    def get_mask(self, base_mask, weight, num_prune, wrapper):
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
             base_mask['weight_mask'][idx] = 0.
@@ -133,3 +156,20 @@ class FPGMPrunerMasker(WeightRankMasker):
         x = (x * x).sum(-1)
         x = torch.sqrt(x)
         return x.sum()
+
+class TaylorFOWeightFilterPrunerMasker(WeightRankMasker):
+    """
+    A structured pruning algorithm that prunes the filters with the smallest
+    importance approximations based on the first order taylor expansion on the weight.
+    Molchanov, Pavlo and Mallya, Arun and Tyree, Stephen and Frosio, Iuri and Kautz, Jan,
+    "Importance Estimation for Neural Network Pruning", CVPR 2019.
+    http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
+    """
+
+    def get_mask(self, base_mask, weight, num_prune, wrapper):
+        prune_indices = torch.argsort(wrapper.contribution)[:num_prune]
+        for idx in prune_indices:
+            base_mask['weight_mask'][idx] = 0.
+            if base_mask['bias_mask'] is not None:
+                base_mask['bias_mask'][idx] = 0.
+        return base_mask

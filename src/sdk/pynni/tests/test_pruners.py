@@ -8,7 +8,8 @@ import torch.nn.functional as F
 import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
+    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
+    TaylorFOWeightFilterPruner
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
@@ -83,6 +84,16 @@ prune_config = {
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
     },
+    'taylorfo': {
+        'pruner_class': TaylorFOWeightFilterPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'validators': [
+            lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
+        ]
+    },
     'mean_activation': {
         'pruner_class': ActivationMeanRankFilterPruner,
         'config_list': [{
@@ -116,9 +127,8 @@ class Model(nn.Module):
     def forward(self, x):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
-def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'mean_activation', 'apoz'], bias=True):
+def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
     for pruner_name in pruner_names:
-        print('testing {}...'.format(pruner_name))
         model = Model(bias=bias)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config[pruner_name]['config_list']
@@ -141,6 +151,11 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'mean
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+        if pruner_name == 'taylorfo':
+            # taylorfo algorithm calculate contributions at first iteration(step), and do pruning
+            # when iteration >= statistics_batch_num (default 1)
+            optimizer.step()
 
         pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=(2,1,28,28))
 
