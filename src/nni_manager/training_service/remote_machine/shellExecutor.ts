@@ -230,8 +230,8 @@ class ShellExecutor {
         return result !== undefined ? result : false;
     }
 
-    public async killChildProcesses(pidFileName: string): Promise<boolean> {
-        const commandText = this.osCommands && this.osCommands.killChildProcesses(pidFileName);
+    public async killChildProcesses(pidFileName: string, killSelf: boolean = false): Promise<boolean> {
+        const commandText = this.osCommands && this.osCommands.killChildProcesses(pidFileName, killSelf);
         const commandResult = await this.execute(commandText);
         return commandResult.exitCode == 0;
     }
