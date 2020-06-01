@@ -15,15 +15,15 @@ class MaskConflict:
 
         Parameters
         ----------
-            model:
-                model to fix the mask conflict
-            dummy_input:
-                input example to trace the model
-            mask_file:
-                the path of the original mask file
-            graph:
-                the traced graph of the target model, is this parameter is not None,
-                we donnot use the model and dummpy_input to get the trace graph.
+        model : torch.nn.Module
+            model to fix the mask conflict
+        dummy_input : torch.Tensor
+            input example to trace the model
+        mask_file : str
+            the path of the original mask file
+        graph : torch._C.Graph
+            the traced graph of the target model, is this parameter is not None,
+            we donnot use the model and dummpy_input to get the trace graph.
         """
         # check if the parameters are valid
         parameter_valid = False
@@ -41,9 +41,9 @@ class MaskConflict:
 
     def fix_mask_conflict(self):
         """
-            Fix the mask conflict before the mask inference for the layers that
-            has shape dependencies. This function should be called before the
-            mask inference of the 'speedup' module.
+        Fix the mask conflict before the mask inference for the layers that
+        has shape dependencies. This function should be called before the
+        mask inference of the 'speedup' module.
         """
         channel_depen = ChannelDependency(self.model, self.dummy_input, self.graph)
         depen_sets = channel_depen.dependency_sets

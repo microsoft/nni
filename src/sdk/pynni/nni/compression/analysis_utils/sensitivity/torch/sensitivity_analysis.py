@@ -32,25 +32,34 @@ class SensitivityAnalysis:
         Perform sensitivity analysis for this model.
         Parameters
         ----------
-            model:
-                the model to perform sensitivity analysis
-            val_func:
-                validation function for the model. Due to
-                different models may need different dataset/criterion
-                , therefore the user need to cover this part by themselves.
-                val_func take the model as the first input parameter, and
-                return the accuracy as output.
-            sparsities:
-                The sparsity list provided by users.
-            prune_type:
-                The pruner type used to prune the conv layers, default is 'l1',
-                and 'l2', 'fine-grained' is also supported.
-            early_stop:
-                If this flag is set, the sensitivity analysis
-                for a conv layer will early stop when the accuracy
-                drop already reach the value of early_stop (0.05 for example).
-                The default value is 1.0, which means the analysis won't stop
-                until all given sparsities are tested.
+        model : torch.nn.Module
+            the model to perform sensitivity analysis
+        val_func : function
+            validation function for the model. Due to
+            different models may need different dataset/criterion
+            , therefore the user need to cover this part by themselves.
+            In the val_func, the model should be tested on the validation dateset,
+            and the validation accuracy should be returned as the output of val_func.
+            There are no restrictions on the input parameters of the val_function.
+            User can use the val_args, val_kwargs parameters in analysis
+            to pass all the parameters that val_func needed.
+
+        sparsities : list
+            The sparsity list provided by users. This parameter is set when the user
+            only wants to test some specific sparsities. In the sparsity list, each element
+            is a sparsity value which means how much weight the pruner should prune. Take
+            [0.25, 0.5, 0.75] for an example, the SensitivityAnalysis will prune 25% 50% 75%
+            weights gradually for each layer.
+
+        prune_type : str
+            The pruner type used to prune the conv layers, default is 'l1',
+            and 'l2', 'fine-grained' is also supported.
+        early_stop : float
+            If this flag is set, the sensitivity analysis
+            for a conv layer will early stop when the accuracy
+            drop already reach the value of early_stop (0.05 for example).
+            The default value is 1.0, which means the analysis won't stop
+            until all given sparsities are tested.
 
         """
         self.model = model
@@ -94,29 +103,29 @@ class SensitivityAnalysis:
         """
         This function analyze the sensitivity to pruning for
         each conv layer in the target model.
-        If %start and %end are not set, we analyze all the conv
+        If start and end are not set, we analyze all the conv
         layers by default. Users can specify several layers to
         analyze or parallelize the analysis process easily through
-        the %start and %end parameter.
+        the start and end parameter.
 
         Parameters
         ----------
-            start:
-                Layer index of the sensitivity analysis start
-            end:
-                Layer index of the sensitivity analysis end
-            val_args:
-                args for the val_function
-            val_kwargs:
-                kwargs for the val_funtion
-                The val_funtion will be called as:
-                    val_function(*val_args, **val_kwargs)
+        val_args : list
+            args for the val_function
+        val_kwargs : dict
+            kwargs for the val_funtion
+            The val_funtion will be called as:
+                val_function(*val_args, **val_kwargs).
+        start : int
+            Layer index of the sensitivity analysis start.
+        end : int
+            Layer index of the sensitivity analysis end.
 
         Returns
         -------
-            sensitivities:
-                dict object that stores the trajectory of the
-                accuracy when the prune ratio changes
+        sensitivities : dict
+            dict object that stores the trajectory of the
+            accuracy when the prune ratio changes
         """
         if not end:
             end = self.layers_count
@@ -169,12 +178,12 @@ class SensitivityAnalysis:
 
         Parameters
         ----------
-            outdir:
-                output directory of the image
-            merge:
-                if merge all the sensitivity curves into a
-                single image. If not, we will draw a picture
-                for each target layer of the model.
+        outdir : str
+            output directory of the image
+        merge : bool
+            if merge all the sensitivity curves into a
+            single image. If not, we will draw a picture
+            for each target layer of the model.
         """
         os.makedirs(outdir, exist_ok=True)
         LineStyles = [':', '-.', '--', '-']
@@ -228,8 +237,8 @@ class SensitivityAnalysis:
 
         Parameters
         ----------
-            filepath:
-                Path of the output file
+        filepath : str
+            Path of the output file
         """
         str_sparsities = [str(x) for x in self.sparsities]
         header = ['layername'] + str_sparsities

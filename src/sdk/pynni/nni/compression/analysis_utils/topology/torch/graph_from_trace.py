@@ -69,13 +69,13 @@ class VisualGraph:
         to make the graph more clear.
         Parameters
         ----------
-            model:
-                The model to build the network architecture.
-            data:
-                The sample input data for the model.
-            graph:
-                Traced graph from jit.trace, if this option is set,
-                we donnot need to trace the model again.
+        model : torch.nn.Module
+            The model to build the network architecture.
+        data : torch.Tensor
+            The sample input data for the model.
+        graph : torch._C.Graph
+            Traced graph from jit.trace, if this option is set,
+            we donnot need to trace the model again.
         """
         self.model = model
         self.data = data
@@ -145,18 +145,18 @@ class VisualGraph:
         at the same time.
         Parameters
         ----------
-            curnode:
-                Current visiting node(tensor/module).
-            graph:
-                The handle of the Dgraph.
-            lastnode:
-                The last visited node.
-            cfg:
-                Dict object to specify the rendering
-                configuration for operation node.
-                key is the name of the operation,
-                value is a also a dict. For example,
-                {'conv1': {'shape':'box', 'color':'red'}}
+        curnode : torch._C.Node
+            Current visiting node(tensor/module).
+        graph : graphviz.dot.Digraph
+            The handle of the Dgraph.
+        lastnode : torch._C.Node
+            The last visited node.
+        cfg : dict
+            Dict object to specify the rendering
+            configuration for operation node.
+            key is the name of the operation,
+            value is a also a dict. For example,
+            {'conv1': {'shape':'box', 'color':'red'}}
         """
         if curnode in self.visited:
             if lastnode is not None:
@@ -185,10 +185,10 @@ class VisualGraph:
         visualize the network architecture automaticlly.
         Parameters
         ----------
-            filename:
-                The filename of the saved image file.
-            save_format:
-                The output save_format.
+        filename : str
+            The filename of the saved image file.
+        save_format : str
+            The output save_format.
         """
         # TODO and detailed mode for the visualization function
         # in which the graph will also contain all the weights/bias

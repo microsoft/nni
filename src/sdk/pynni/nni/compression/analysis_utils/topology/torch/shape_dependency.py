@@ -22,13 +22,13 @@ class ChannelDependency:
 
         Parameters
         ----------
-            model:
-                The model to be analyzed.
-            data:
-                The example input data to trace the network architecture.
-            graph:
-                if we alreay has the traced graph of the target model, we donnot
-                need to trace the model again.
+        model : torch.nn.Module
+            The model to be analyzed.
+        data : torch.Tensor
+            The example input data to trace the network architecture.
+        graph : torch._C.Graph
+            if we alreay has the traced graph of the target model, we donnot
+            need to trace the model again.
         """
         self.graph_builder = VisualGraph(model, data, graph)
         self.cnodes = list(self.graph_builder.graph.nodes())
@@ -45,13 +45,13 @@ class ChannelDependency:
 
         Parameters
         ---------
-            node:
-                target node.
+        node : torch._C.Node
+            target node.
 
         Returns
         -------
-            parent_convs:
-                nearest father conv layers for the target worknode.
+        parent_convs: list
+            nearest father conv layers for the target worknode.
         """
         parent_convs = []
         queue = []
@@ -73,8 +73,8 @@ class ChannelDependency:
 
     def build_channel_dependency(self):
         """
-            Build the channel dependency for the conv layers
-            in the model.
+        Build the channel dependency for the conv layers
+        in the model.
         """
         for node in self.cnodes:
             parent_convs = []
@@ -102,19 +102,19 @@ class ChannelDependency:
 
         Parameters
         ---------
-            ratios:
-                the prune ratios for the layers. %ratios is a dict,
-                in which the keys are the names of the target layer
-                and the values are the prune ratio for the corresponding
-                layers. For example:
-                ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
-                Note: the name of the layers should looks like
-                the names that model.named_modules() functions
-                returns.
+        ratios : dict
+            the prune ratios for the layers. %ratios is a dict,
+            in which the keys are the names of the target layer
+            and the values are the prune ratio for the corresponding
+            layers. For example:
+            ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
+            Note: the name of the layers should looks like
+            the names that model.named_modules() functions
+            returns.
 
         Returns
         -------
-            True/False
+        True/False
         """
 
         for node in self.cnodes:
@@ -161,9 +161,9 @@ class ChannelDependency:
 
         Returns
         -------
-            dependency_sets:
-                list of the dependency sets. For example,
-                [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
+        dependency_sets : list
+            list of the dependency sets. For example,
+            [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
 
         """
         d_sets = []
