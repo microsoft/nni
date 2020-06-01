@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **[NNI v1.6 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **[NNI v1.5 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
