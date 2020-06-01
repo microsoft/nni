@@ -18,9 +18,9 @@
 
 ```python
 from nni.compression.torch import ModelSpeedup
-# model: the model you want to speed up
-# dummy_input: dummy input of the model, given to `jit.trace`
-# masks_file: the mask file created by pruning algorithms
+# model: 要加速的模型
+# dummy_input: 模型的示例输入，传给 `jit.trace`
+# masks_file: 剪枝算法创建的掩码文件
 m_speedup = ModelSpeedup(model, dummy_input.to(device), masks_file)
 m_speedup.speedup_model()
 dummy_input = dummy_input.to(device)
