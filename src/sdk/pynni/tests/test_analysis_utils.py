@@ -10,9 +10,9 @@ import torchvision.models as models
 import numpy as np
 
 from nni.compression.torch import L1FilterPruner
-from nni.analysis_utils.topology.torch.graph_from_trace import VisualGraph
-from nni.analysis_utils.topology.torch.shape_dependency import ChannelDependency
-from nni.analysis_utils.topology.torch.mask_conflict import MaskConflict
+from nni.compression.analysis_utils.topology.torch.graph_from_trace import VisualGraph
+from nni.compression.analysis_utils.topology.torch.shape_dependency import ChannelDependency
+from nni.compression.analysis_utils.topology.torch.mask_conflict import MaskConflict
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 prefix = 'analysis_test'
