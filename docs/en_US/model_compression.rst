@@ -22,3 +22,4 @@ For details, please refer to the following tutorials:
     Model Speedup <Compressor/ModelSpeedup>
     Automatic Model Compression <Compressor/AutoCompression>
     Implementation <Compressor/Framework>
+    AnalysisUtils <Compressor/AnalysisUtils>
