@@ -93,3 +93,16 @@ td.framework{
 .ui-img img{
     height: 230px;
 }
+
+.wy-side-nav-search>div.version{
+    color: #fff !important;
+}
+
+.list{
+    width: 90%;
+    margin: 0 auto;
+}
+
+.chinese{
+    margin-bottom: 16px;
+}
