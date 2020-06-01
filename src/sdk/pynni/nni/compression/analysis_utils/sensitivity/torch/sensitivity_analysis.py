@@ -164,8 +164,8 @@ class SensitivityAnalysis:
                 if val_acc + self.early_stop < self.ori_acc:
                     break
 
-            # reset the weights pruned by the pruner, because
-            # out sparsities is sorted, so we donnot need to reset
+            # reset the weights pruned by the pruner, because the
+            # input sparsities is sorted, so we donnot need to reset
             # weight of the layer when the sparsity changes, instead,
             # we only need reset the weight when the pruning layer changes.
             self.model.load_state_dict(self.ori_state_dict)
@@ -235,16 +235,15 @@ class SensitivityAnalysis:
         Export the results of the sensitivity analysis
         to a csv file. The firstline of the csv file describe the content
         structure. The first line is constructed by 'layername' and sparsity
-        list. Each line below records the accuracy of a layer under different
-        sparsities. Note that, due to the early_stop option, some layers may
-        not have all accuracies under different sparsities, because his accuracy
-        drop has alreay exceeded the threshold set by the user. The following is an
-        example output for export.
+        list. Each line below records the model accuracy when this layer is
+        under different sparsities. Note that, due to the early_stop option,
+        some layers may not have model accuracies under all sparsities, because
+        its accuracy drop has alreay exceeded the threshold set by the user.
 
         layername, 0.25, 0.5, 0.75
         conv1, 0.6, 0.55
         conv2, 0.61, 0.57, 0.56
-        
+
         Parameters
         ----------
         filepath : str
