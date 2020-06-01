@@ -1,46 +1,56 @@
 # Install on Windows
 
-## Installation
+## Prerequires
 
-Anaconda or Miniconda is highly recommended to manage multiple Python environments.
+* Python 3.5 (or above) 64-bit. [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is highly recommended to manage multiple Python environments on Windows.
 
-### Install NNI through pip
+* If it's a newly installed Python environment, it needs to install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) to support build NNI dependencies like `scikit-learn`.
 
-  Prerequisites: `python 64-bit >= 3.5`
+    ```bat
+    pip install cython wheel
+    ```
 
-  ```bash
-  python -m pip install --upgrade nni
-  ```
+* git for verifying installation.
 
-### Install NNI through source code
+## Install NNI
 
-  If you are interested in special or the latest code versions, you can install NNI through source code.
+In most cases, you can install and upgrade NNI from pip package. It's easy and fast.
 
-  Prerequisites: `python 64-bit >=3.5`, `git`, `PowerShell`.
+If you are interested in special or the latest code versions, you can install NNI through source code.
 
-  ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -ExecutionPolicy Bypass -file install.ps1
-  ```
+If you want to contribute to NNI, refer to [setup development environment](SetupNniDeveloperEnvironment.md).
+
+* From pip package
+
+    ```bat
+    python -m pip install --upgrade nni
+    ```
+
+* From source code
+
+    ```bat
+    git clone -b v1.5 https://github.com/Microsoft/nni.git
+    cd nni
+    powershell -ExecutionPolicy Bypass -file install.ps1
+    ```
 
 ## Verify installation
 
 The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
 
-* Download the examples via clone the source code.
+* Clone examples within source code.
 
-  ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
-  ```
+    ```bat
+    git clone -b v1.5 https://github.com/Microsoft/nni.git
+    ```
 
 * Run the MNIST example.
 
-  ```bash
-  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
-  ```
+    ```bat
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+    ```
 
-  Note: for other examples you need to change trial command `python3` to `python` in each example YAML, if python3 is called through `python` on your machine.
+    Note:  If you are familiar with other frameworks, you can choose corresponding example under `examples\trials`. It needs to change trial command `python3` to `python` in each example YAML, since default installation has `python.exe`, not `python3.exe` executable.
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
@@ -112,18 +122,20 @@ If there is a stderr file, please check it. Two possible cases are:
 * forgetting to install experiment dependencies such as TensorFlow, Keras and so on.
 
 ### Fail to use BOHB on Windows
+
 Make sure a C++ 14.0 compiler is installed when trying to run `nnictl package install --name=BOHB` to install the dependencies.
 
 ### Not supported tuner on Windows
+
 SMAC is not supported currently; for the specific reason refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
-### Use a Windows server as a remote worker
-Currently, you can't.
+### Use Windows as a remote worker
 
-Note:
+Refer to [Remote Machine mode](../TrainingService/RemoteMachineMode.md).
 
-* If an error like `Segmentation fault` is encountered, please refer to the [FAQ](FAQ.md)
+### Segmentation fault (core dumped) when installing
 
+Refer to [FAQ](FAQ.md).
 
 ## Further reading
 

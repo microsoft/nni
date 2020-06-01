@@ -3,6 +3,19 @@ import axios from 'axios';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj } from './interface';
 
+async function requestAxios(url: string) {
+    const response = await axios.get(url);
+    if (response.status === 200) {
+        if (response.data.error !== undefined) {
+            throw new Error(`API ${url} ${response.data.error}`);
+        } else {
+            return response.data as any;
+        }
+    } else {
+        throw new Error(`API ${url} ${response.status} error`);
+    }
+}
+
 const convertTime = (num: number): string => {
     if (num <= 0) {
         return '0';
@@ -219,5 +232,5 @@ export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
     formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics,
-    isArrayType
+    isArrayType, requestAxios
 };

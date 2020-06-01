@@ -176,7 +176,7 @@ For example,
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, although it might contain more parameters than expected. This comes with pros and cons. The good side is, you can directly load the checkpoint dumped from supernet during the search phase and start retraining from there. However, this is also a model with redundant parameters and this may cause problems when trying to count the number of parameters in the model. For deeper reasons and possible workarounds, see [Trainers](./NasReference.md).
+After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules are pruned.
 
 Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
 

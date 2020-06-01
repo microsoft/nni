@@ -221,7 +221,7 @@
 - 文档
     
     - 更新文档结构 -Issue #1231
-    - [多阶段文档的改进](AdvancedFeature/MultiPhase.md) -Issue #1233 -PR #1242 
+    - (已删除) 多阶段文档的改进 -Issue #1233 -PR #1242 
         + 添加配置示例
     + [Web 界面描述改进](Tutorial/WebUI.md) -PR #1419
 
@@ -250,16 +250,11 @@
     * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
-* 支持多阶段 Experiment
+* (已删除) 支持多阶段 Experiment
     
     * 为多阶段 Experiment 增加新的训练平台：pai 模式从 v0.9 开始支持多阶段 Experiment。
-    *     为以下内置 Tuner 增加多阶段的功能： 
-            
-        
+    * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
-        
-        有关详细信息，参考[实现多阶段的 Tuner](AdvancedFeature/MultiPhase.md)。
-
 * Web 界面
     
     * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)

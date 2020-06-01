@@ -168,6 +168,13 @@ def detect_port(port):
     except:
         return False
 
-def snooze():
-    '''Sleep to make sure previous stopped exp has enough time to exit'''
-    time.sleep(6)
+
+def wait_for_port_available(port, timeout):
+    begin_time = time.time()
+    while True:
+        if not detect_port(port):
+            return
+        if time.time() - begin_time > timeout:
+            msg = 'port {} is not available in {} seconds.'.format(port, timeout)
+            raise RuntimeError(msg)
+        time.sleep(1)

@@ -107,12 +107,12 @@ class Mutator(BaseMutator):
         """
         if not torch.__version__.startswith("1.4"):
             logger.warning("Graph is only tested with PyTorch 1.4. Other versions might not work.")
-        from ._graph_utils import graph
+        from nni._graph_utils import build_graph
         from google.protobuf import json_format
         # protobuf should be installed as long as tensorboard is installed
         try:
             self._connect_all = True
-            graph_def, _ = graph(self.model, inputs, verbose=False)
+            graph_def, _ = build_graph(self.model, inputs, verbose=False)
             result = json_format.MessageToDict(graph_def)
         finally:
             self._connect_all = False

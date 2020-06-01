@@ -45,6 +45,7 @@ extensions = [
     'sphinx_markdown_tables',
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
+    'sphinx.ext.viewcode',
 ]
 
 # 添加示例模块

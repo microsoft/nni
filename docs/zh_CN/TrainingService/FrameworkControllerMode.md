@@ -26,7 +26,7 @@
 
 ## 安装 FrameworkController
 
-参考[指南](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run)来在 Kubernetes 集群中配置 FrameworkController。NNI 通过 statefulset 模式来 支持 FrameworkController。
+参考[指南](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run)来在 Kubernetes 集群中配置 FrameworkController。NNI 通过 statefulset 模式来 支持 FrameworkController。 如果集群需要认证，则需要为 FrameworkController 创建服务账户并授予权限，然后将 FrameworkController 服务账户的名称设置到 NNI Experiment 配置中。 [参考文档](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset)
 
 ## 设计
 
@@ -83,6 +83,7 @@ frameworkcontrollerConfig:
 ```yaml
 frameworkcontrollerConfig:
   storage: azureStorage
+  serviceAccountName: {your_frameworkcontroller_service_account_name}
   keyVault:
     vaultName: {your_vault_name}
     name: {your_secert_name}

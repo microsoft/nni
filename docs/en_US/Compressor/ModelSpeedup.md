@@ -21,7 +21,7 @@ For each module, we should prepare four functions, three for shape inference and
 ## Usage
 
 ```python
-from nni.compression.speedup.torch import ModelSpeedup
+from nni.compression.torch import ModelSpeedup
 # model: the model you want to speed up
 # dummy_input: dummy input of the model, given to `jit.trace`
 # masks_file: the mask file created by pruning algorithms
@@ -34,7 +34,7 @@ print('elapsed time: ', time.time() - start)
 ```
 For complete examples please refer to [the code](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)
 
-NOTE: The current implementation only works on torch 1.3.1 and torchvision 0.4.2
+NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
 ## Limitations
 

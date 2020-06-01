@@ -10,7 +10,7 @@ import sys
 import time
 import traceback
 
-from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port, snooze
+from utils import is_experiment_done, get_experiment_id, get_nni_log_path, read_last_line, remove_files, setup_experiment, detect_port, wait_for_port_available
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 NNI_SOURCE_DIR = '..'
@@ -71,7 +71,7 @@ def naive_test(args):
     assert assessor_result == expected, 'Bad assessor result'
 
     subprocess.run(['nnictl', 'stop'])
-    snooze()
+    wait_for_port_available(8080, 10)
 
 def stop_experiment_test(args):
     config_file = args.config
@@ -86,19 +86,20 @@ def stop_experiment_test(args):
     experiment_id = get_experiment_id(EXPERIMENT_URL)
     proc = subprocess.run(['nnictl', 'stop', experiment_id])
     assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
-    snooze()
+    wait_for_port_available(8080, 10)
     assert not detect_port(8080), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
     # test cmd `nnictl stop --port`
     proc = subprocess.run(['nnictl', 'stop', '--port', '8990'])
     assert proc.returncode == 0, '`nnictl stop %s` failed with code %d' % (experiment_id, proc.returncode)
-    snooze()
+    wait_for_port_available(8990, 10)
     assert not detect_port(8990), '`nnictl stop %s` failed to stop experiments' % experiment_id
 
     # test cmd `nnictl stop --all`
     proc = subprocess.run(['nnictl', 'stop', '--all'])
     assert proc.returncode == 0, '`nnictl stop --all` failed with code %d' % proc.returncode
-    snooze()
+    wait_for_port_available(8888, 10)
+    wait_for_port_available(8989, 10)
     assert not detect_port(8888) and not detect_port(8989), '`nnictl stop --all` failed to stop experiments'
 
 
