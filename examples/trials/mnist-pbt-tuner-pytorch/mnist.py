@@ -147,8 +147,6 @@ def get_params():
                         default='/tmp/pytorch/mnist/input_data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument("--hidden_size", type=int, default=512, metavar='N',
-                        help='hidden layer size (default: 512)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                         help='learning rate (default: 0.01)')
     parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
