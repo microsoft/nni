@@ -16,7 +16,6 @@ class StructuredWeightMasker(WeightMasker):
     A structured pruning masker base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
-    #def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
 
         """
