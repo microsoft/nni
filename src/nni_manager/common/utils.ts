@@ -184,7 +184,7 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(true, 'unittest', 8080);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest');
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');

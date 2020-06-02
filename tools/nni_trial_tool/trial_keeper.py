@@ -117,7 +117,7 @@ def main_loop(args):
                     nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
                     raise e
 
-            ## Exit as the retCode of subprocess(trial)
+            # Exit as the retCode of subprocess(trial)
             exit(retCode)
             break
 
@@ -151,13 +151,13 @@ def check_version(args):
                     nni_manager_version, trial_keeper_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10,
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, None), json.dumps(log_entry), 10,
                           False)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
                 log_entry['tag'] = 'VCSuccess'
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10,
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, None), json.dumps(log_entry), 10,
                           False)
         except AttributeError as err:
             nni_log(LogType.Error, err)
