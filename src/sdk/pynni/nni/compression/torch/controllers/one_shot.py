@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import torch
 from schema import And, Optional
 from .constants import masker_dict
 from ..utils.config_validation import CompressorSchema
