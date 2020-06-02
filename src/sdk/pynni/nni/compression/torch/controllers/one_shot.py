@@ -125,33 +125,10 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer, statistics_batch_num=statistics_batch_num)
 
-    def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
-        if self.iterations < self.statistics_batch_num:
-            return None
-        assert wrapper is not None
-        if wrapper.contribution is None:
-            return None
-
-        masks = self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper)
-        assert masks is not None
-        return masks
-
-
 class ActivationRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, \
             optimizer=optimizer, activation=activation, statistics_batch_num=statistics_batch_num)
-
-    def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
-        acts = self.collected_activation[wrapper_idx]
-        if len(acts) < self.statistics_batch_num:
-            return None
-
-        masks = self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, activations=acts)
-        assert masks is not None
-        if len(acts) >= self.statistics_batch_num and self.hook_id in self._fwd_hook_handles:
-            self.remove_activation_collector(self.hook_id)
-        return masks
 
 class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
