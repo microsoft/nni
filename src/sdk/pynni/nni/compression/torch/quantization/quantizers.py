@@ -4,8 +4,8 @@
 import logging
 import torch
 from schema import Schema, And, Or, Optional
-from .utils import CompressorSchema
-from .compressor import Quantizer, QuantGrad, QuantType
+from ..utils.config_validation import CompressorSchema
+from ..compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
