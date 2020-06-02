@@ -70,7 +70,6 @@ class OneshotPruner(Pruner):
 
         sparsity = wrapper.config['sparsity']
         if not wrapper.if_calculated:
-            #masks = self._do_calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
             masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
 
             # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
