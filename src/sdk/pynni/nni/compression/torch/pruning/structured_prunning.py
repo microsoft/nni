@@ -16,7 +16,9 @@ class StructuredWeightMasker(WeightMasker):
     A structured pruning masker base class that prunes the filters with the smallest
     importance criterion in convolution layers to achieve a preset level of network sparsity.
     """
-    def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
+    #def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+
         """
         Calculate the mask of given layer.
         Parameters
@@ -34,6 +36,10 @@ class StructuredWeightMasker(WeightMasker):
         dict
             dictionary for storing masks
         """
+        weight = wrapper.module.weight.data
+        bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
 
         mask_weight = torch.ones(weight.size()).type_as(weight).detach()
         if bias is not None:
@@ -47,7 +53,7 @@ class StructuredWeightMasker(WeightMasker):
         if filters < 2 or num_prune < 1:
             return mask
 
-        return self.get_mask(mask, weight, num_prune, **kwargs)
+        return self.get_mask(mask, weight, num_prune, wrapper=wrapper, wrapper_idx=wrapper_idx)
 
     def get_mask(self, base_mask, weight, num_prune, **kwargs):
         """
@@ -77,7 +83,8 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
     https://arxiv.org/abs/1608.08710
     """
 
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+        print('L1>>>>>>>>>>>', weight.size())
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
@@ -92,7 +99,7 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
     A structured pruning algorithm that prunes the filters with the
     smallest L2 norm of the weights.
     """
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
         filters = weight.shape[0]
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
@@ -109,7 +116,7 @@ class FPGMPrunerMasker(StructuredWeightMasker):
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
             base_mask['weight_mask'][idx] = 0.
@@ -168,8 +175,20 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     "Importance Estimation for Neural Network Pruning", CVPR 2019.
     http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
     """
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
-        wrapper = kwargs['wrapper']
+    def __init__(self, model, pruner, statistics_batch_num=1):
+        super().__init__(model, pruner)
+        self.pruner.statistics_batch_num = statistics_batch_num
+        self.pruner.set_wrappers_attribute("contribution", None)
+        self.pruner.iterations = 0
+        self.pruner.patch_optimizer(self.calc_contributions)
+
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+        if self.pruner.iterations < self.pruner.statistics_batch_num:
+            return None
+        
+        if wrapper.contribution is None:
+            return None
+
         prune_indices = torch.argsort(wrapper.contribution)[:num_prune]
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
@@ -177,7 +196,57 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
                 base_mask['bias_mask'][idx] = 0.
         return base_mask
 
-class ActivationAPoZRankFilterPrunerMasker(StructuredWeightMasker):
+    def calc_contributions(self):
+        """
+        Calculate the estimated importance of filters as a sum of individual contribution
+        based on the first order taylor expansion.
+        """
+        if self.pruner.iterations >= self.pruner.statistics_batch_num:
+            return
+        for wrapper in self.pruner.get_modules_wrapper():
+            filters = wrapper.module.weight.size(0)
+            contribution = (wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
+            if wrapper.contribution is None:
+                wrapper.contribution = contribution
+            else:
+                wrapper.contribution += contribution
+
+        self.pruner.iterations += 1
+
+
+class ActivationFilterPrunerMasker(StructuredWeightMasker):
+    def __init__(self, model, pruner, statistics_batch_num=1, activation='relu'):
+        super().__init__(model, pruner)
+        self.pruner.statistics_batch_num = statistics_batch_num
+        self.pruner.hook_id = self._add_activation_collector()
+
+        assert activation in ['relu', 'relu6']
+        if activation == 'relu':
+            self.pruner.activation = torch.nn.functional.relu
+        elif activation == 'relu6':
+            self.pruner.activation = torch.nn.functional.relu6
+        else:
+            self.pruner.activation = None
+
+    def _add_activation_collector(self):
+        def collector(collected_activation):
+            def hook(module_, input_, output):
+                print('collecting...', output.size())
+                collected_activation.append(self.pruner.activation(output.detach().cpu()))
+            return hook
+        self.pruner.collected_activation = {}
+        self.pruner._fwd_hook_id += 1
+        self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id] = []
+
+        for wrapper_idx, wrapper in enumerate(self.pruner.get_modules_wrapper()):
+            self.pruner.collected_activation[wrapper_idx] = []
+            handle = wrapper.register_forward_hook(collector(self.pruner.collected_activation[wrapper_idx]))
+            print('wrapper:', wrapper)
+            print('added handle', handle)
+            self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id].append(handle)
+        return self.pruner._fwd_hook_id
+
+class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
     A structured pruning algorithm that prunes the filters with the
     smallest APoZ(average percentage of zeros) of output activations.
@@ -185,9 +254,8 @@ class ActivationAPoZRankFilterPrunerMasker(StructuredWeightMasker):
     "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
     https://arxiv.org/abs/1607.03250
     """
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
-        assert 'activations' in kwargs
-        activations = kwargs['activations']
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+        activations = self.pruner.collected_activation[wrapper_idx]
         apoz = self._calc_apoz(activations)
         prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
         for idx in prune_indices:
@@ -215,7 +283,7 @@ class ActivationAPoZRankFilterPrunerMasker(StructuredWeightMasker):
         _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / torch.numel(_eq_zero[:, 0, :, :])
         return _apoz
 
-class ActivationMeanRankFilterPrunerMasker(StructuredWeightMasker):
+class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
     A structured pruning algorithm that prunes the filters with the
     smallest mean value of output activations.
@@ -223,9 +291,8 @@ class ActivationMeanRankFilterPrunerMasker(StructuredWeightMasker):
     "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
     https://arxiv.org/abs/1611.06440
     """
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
-        assert 'activations' in kwargs
-        activations = kwargs['activations']
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+        activations = self.pruner.collected_activation[wrapper_idx]
         mean_activation = self._cal_mean_activation(activations)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:

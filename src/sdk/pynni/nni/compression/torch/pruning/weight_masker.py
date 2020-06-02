@@ -2,11 +2,11 @@
 # Licensed under the MIT license.
 
 class WeightMasker(object):
-    def __init__(self, model, pruner):
+    def __init__(self, model, pruner, **kwargs):
         self.model = model
         self.pruner = pruner
 
-    def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         """
         Calculate the mask of given layer.
         Parameters

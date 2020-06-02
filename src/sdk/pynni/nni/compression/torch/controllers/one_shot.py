@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
 import logging
-import importlib
 import torch
 from schema import And, Optional
 from .constants import masker_dict
@@ -20,7 +18,7 @@ class OneshotPruner(Pruner):
     Prune model to an exact pruning level for one time.
     """
 
-    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None):
+    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None, **algo_kwargs):
         """
         Parameters
         ----------
@@ -36,7 +34,7 @@ class OneshotPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        self.masker = masker_dict[pruning_algorithm](model, self)
+        self.masker = masker_dict[pruning_algorithm](model, self, **algo_kwargs)
 
     def validate_config(self, model, config_list):
         """
@@ -72,20 +70,23 @@ class OneshotPruner(Pruner):
             return None
 
         sparsity = wrapper.config['sparsity']
-        weight = wrapper.module.weight.data
-        bias = None
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            bias = wrapper.module.bias.data
+        #weight = wrapper.module.weight.data
+        #bias = None
+        #if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+        #    bias = wrapper.module.bias.data
         if not wrapper.if_calculated:
-            masks = self._do_calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+            #masks = self._do_calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+            masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+
+            # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
             if masks is not None:
                 wrapper.if_calculated = True
             return masks
         else:
             return None
 
-    def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
-        return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+    #def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
+    #    return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
 
 
 class LevelPruner(OneshotPruner):
@@ -106,8 +107,8 @@ class SlimPruner(OneshotPruner):
         schema.validate(config_list)
 
 class _StructuredFilterPruner(OneshotPruner):
-    def __init__(self, model, config_list, pruning_algorithm, optimizer=None):
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer)
+    def __init__(self, model, config_list, pruning_algorithm, optimizer=None, **algo_kwargs):
+        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer, **algo_kwargs)
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
@@ -132,11 +133,7 @@ class FPGMPruner(_StructuredFilterPruner):
 
 class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1):
-        super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer)
-        self.statistics_batch_num = statistics_batch_num
-        self.set_wrappers_attribute("contribution", None)
-        self.iterations = 0
-        self.patch_optimizer(self.calc_contributions)
+        super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer, statistics_batch_num=statistics_batch_num)
 
     def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
         if self.iterations < self.statistics_batch_num:
@@ -149,51 +146,11 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
         assert masks is not None
         return masks
 
-    def calc_contributions(self):
-        """
-        Calculate the estimated importance of filters as a sum of individual contribution
-        based on the first order taylor expansion.
-        """
-        if self.iterations >= self.statistics_batch_num:
-            return
-        for wrapper in self.get_modules_wrapper():
-            filters = wrapper.module.weight.size(0)
-            contribution = (wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
-            if wrapper.contribution is None:
-                wrapper.contribution = contribution
-            else:
-                wrapper.contribution += contribution
-
-        self.iterations += 1
 
 class ActivationRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, activation='relu', statistics_batch_num=1):
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer)
-        self.statistics_batch_num = statistics_batch_num
-        self.hook_id = self._add_activation_collector()
-
-        assert activation in ['relu', 'relu6']
-        if activation == 'relu':
-            self.activation = torch.nn.functional.relu
-        elif activation == 'relu6':
-            self.activation = torch.nn.functional.relu6
-        else:
-            self.activation = None
-
-    def _add_activation_collector(self):
-        def collector(collected_activation):
-            def hook(module_, input_, output):
-                collected_activation.append(self.activation(output.detach().cpu()))
-            return hook
-        self.collected_activation = {}
-        self._fwd_hook_id += 1
-        self._fwd_hook_handles[self._fwd_hook_id] = []
-
-        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
-            self.collected_activation[wrapper_idx] = []
-            handle = wrapper.register_forward_hook(collector(self.collected_activation[wrapper_idx]))
-            self._fwd_hook_handles[self._fwd_hook_id].append(handle)
-        return self._fwd_hook_id
+        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, \
+            optimizer=optimizer, activation=activation, statistics_batch_num=activation)
 
     def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
         acts = self.collected_activation[wrapper_idx]

@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
 import logging
-import importlib
 import torch
 from schema import And, Optional
 from .constants import masker_dict
@@ -24,7 +22,7 @@ class AGP_Pruner(Pruner):
     https://arxiv.org/pdf/1710.01878.pdf
     """
 
-    def __init__(self, model, config_list, optimizer, pruning_algorithm='level'):
+    def __init__(self, model, config_list, optimizer, pruning_algorithm='l1'):
         """
         Parameters
         ----------
@@ -39,6 +37,7 @@ class AGP_Pruner(Pruner):
         super().__init__(model, config_list, optimizer)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
         self.masker = masker_dict[pruning_algorithm](model, self)
+        print(self.masker)
 
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
@@ -64,7 +63,7 @@ class AGP_Pruner(Pruner):
 
         schema.validate(config_list)
 
-    def calc_mask(self, wrapper, **kwargs):
+    def calc_mask(self, wrapper, wrapper_idx=None):
         """
         Calculate the mask of given layer.
         Scale factors with the smallest absolute value in the BN layer are masked.
@@ -81,25 +80,38 @@ class AGP_Pruner(Pruner):
 
         config = wrapper.config
         weight = wrapper.module.weight.data
+        bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
+
         start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
+        print(wrapper)
+        print('>>>>>>>>>>>>>>>>>>>>>>', weight.size(), self.now_epoch, config.get('start_epoch', 0))
 
         if wrapper.if_calculated:
+            print('return1')
             return None
         if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
+            print('return2')
             return None
 
         mask = {'weight_mask': wrapper.weight_mask}
         target_sparsity = self.compute_target_sparsity(config)
         k = int(weight.numel() * target_sparsity)
-        if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
-            return mask
+        target_sparsity = 0.5
+        #if k == 0 or target_sparsity >= 1 or target_sparsity <= 0:
+        #    print('xxxxxxxxxxx', target_sparsity)
+        #    return mask
         # if we want to generate new mask, we should update weigth first
         #w_abs = weight.abs() * mask['weight_mask']
         #threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
         #new_mask = {'weight_mask': torch.gt(w_abs, threshold).type_as(weight)}
-        new_mask = self.masker.calc_mask(weight, sparsity=target_sparsity)
-        wrapper.if_calculated = True
+        # TODO fixme,  should use pruner objects here.
+        #print('CALLING apoz')
+        new_mask = self.masker.calc_mask(weight, bias, sparsity=target_sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        if new_mask is not None:
+            wrapper.if_calculated = True
 
         return new_mask
 

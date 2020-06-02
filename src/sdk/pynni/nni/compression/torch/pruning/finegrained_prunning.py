@@ -15,7 +15,9 @@ class LevelPrunerMasker(WeightMasker):
     Prune to an exact pruning level specification
     """
 
-    def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
+    def calc_mask(self, sparsity=1., wrapper=None, wrapper_idx=None):
+        weight = wrapper.module.weight.data
+
         w_abs = weight.abs()
         k = int(weight.numel() * sparsity)
         if k == 0:
@@ -33,7 +35,7 @@ class SlimPrunerMasker(WeightMasker):
     https://arxiv.org/pdf/1708.06519.pdf
     """
 
-    def __init__(self, model, pruner):
+    def __init__(self, model, pruner, **kwargs):
         super().__init__(model, pruner)
         weight_list = []
         config_list = pruner.config_list
@@ -47,7 +49,9 @@ class SlimPrunerMasker(WeightMasker):
         k = int(all_bn_weights.shape[0] * config['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
 
-    def calc_mask(self, weight, bias=None, sparsity=1., **kwargs):
+    def calc_mask(self, sparsity=1., wrapper=None, wrapper_idx=None):
+        weight = wrapper.module.weight.data
+
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
         filters = weight.size(0)

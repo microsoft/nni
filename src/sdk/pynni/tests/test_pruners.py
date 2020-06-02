@@ -127,7 +127,8 @@ class Model(nn.Module):
     def forward(self, x):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
-def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
+def pruners_test(pruner_names=['level', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
+#def pruners_test(pruner_names=['l1'], bias=True):
     for pruner_name in pruner_names:
         model = Model(bias=bias)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -147,6 +148,7 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         x = torch.randn(2, 1, 28, 28)
         y = torch.tensor([0, 1]).long()
         out = model(x)
+        print(dir(model.conv1))
         loss = F.cross_entropy(out, y)
         optimizer.zero_grad()
         loss.backward()
