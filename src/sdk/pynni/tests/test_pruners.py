@@ -40,7 +40,7 @@ prune_config = {
             'start_epoch': 0,
             'end_epoch': 10,
             'frequency': 1,
-            'op_types': ['default']
+            'op_types': ['Conv2d']
         }],
         'validators': []
     },
@@ -127,7 +127,7 @@ class Model(nn.Module):
     def forward(self, x):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
-def pruners_test(pruner_names=['level', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
+def pruners_test(pruner_names=['agp', 'level', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
     for pruner_name in pruner_names:
         model = Model(bias=bias)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
@@ -166,12 +166,44 @@ def pruners_test(pruner_names=['level', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 
     os.remove('./mask_tmp.pth')
     os.remove('./onnx_tmp.pth')
 
+def test_apg(pruning_algorithm):
+        model = Model()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        config_list = prune_config['agp']['config_list']
+
+        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
+        pruner.compress()
+
+        x = torch.randn(2, 1, 28, 28)
+        y = torch.tensor([0, 1]).long()
+
+        for epoch in range(config_list[0]['start_epoch'], config_list[0]['end_epoch']+1):
+            pruner.update_epoch(epoch)
+            out = model(x)
+            loss = F.cross_entropy(out, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            target_sparsity = pruner.compute_target_sparsity(config_list[0])
+            actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
+            # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
+            assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
+
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
 
     def test_pruners_no_bias(self):
         pruners_test(bias=False)
+
+    def test_agp_pruner(self):
+        for pruning_algorithm in ['l1', 'l2', 'taylorfo', 'apoz']:
+            test_apg(pruning_algorithm)
+
+        for pruning_algorithm in ['level']:
+            prune_config['agp']['config_list'][0]['op_types'] = ['default']
+            test_apg(pruning_algorithm)
 
 if __name__ == '__main__':
     main()

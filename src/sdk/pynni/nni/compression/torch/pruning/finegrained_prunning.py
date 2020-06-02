@@ -21,7 +21,7 @@ class LevelPrunerMasker(WeightMasker):
         w_abs = weight.abs()
         k = int(weight.numel() * sparsity)
         if k == 0:
-            return torch.ones(weight.shape).type_as(weight)
+            return {'weight_mask': torch.ones(weight.shape).type_as(weight)}
         threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
         mask_weight = torch.gt(w_abs, threshold).type_as(weight)
         mask = {'weight_mask': mask_weight}

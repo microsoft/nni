@@ -36,6 +36,8 @@ class StructuredWeightMasker(WeightMasker):
         dict
             dictionary for storing masks
         """
+        msg = 'module type {} is not supported!'.format(wrapper.type)
+        assert wrapper.type == 'Conv2d', msg
         weight = wrapper.module.weight.data
         bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
