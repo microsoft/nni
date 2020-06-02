@@ -11,14 +11,12 @@ class WeightMasker(object):
         Calculate the mask of given layer.
         Parameters
         ----------
-        weight : weight tensor
-            module weights
-        bias: bias tensor
-            module bias
         sparsity: float
             pruning ratio,  preserved weight ratio is `1 - sparsity`
-        kwargs: dict
-            additional parameters passed from pruner
+        wrapper: PrunerModuleWrapper
+            module wrapper
+        wrapper_idx: int | None
+            index of the wrapper in the pruner
         Returns
         -------
         dict
