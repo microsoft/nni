@@ -70,10 +70,6 @@ class OneshotPruner(Pruner):
             return None
 
         sparsity = wrapper.config['sparsity']
-        #weight = wrapper.module.weight.data
-        #bias = None
-        #if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-        #    bias = wrapper.module.bias.data
         if not wrapper.if_calculated:
             #masks = self._do_calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
             masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
@@ -84,10 +80,6 @@ class OneshotPruner(Pruner):
             return masks
         else:
             return None
-
-    #def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
-    #    return self.masker.calc_mask(weight, bias=bias, sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
-
 
 class LevelPruner(OneshotPruner):
     def __init__(self, model, config_list, optimizer=None):
@@ -150,7 +142,7 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
 class ActivationRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, \
-            optimizer=optimizer, activation=activation, statistics_batch_num=activation)
+            optimizer=optimizer, activation=activation, statistics_batch_num=statistics_batch_num)
 
     def _do_calc_mask(self, weight, bias=None, sparsity=1., wrapper=None, wrapper_idx=None):
         acts = self.collected_activation[wrapper_idx]

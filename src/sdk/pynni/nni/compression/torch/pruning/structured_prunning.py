@@ -84,7 +84,6 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
     """
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
-        print('L1>>>>>>>>>>>', weight.size())
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
@@ -185,7 +184,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
         if self.pruner.iterations < self.pruner.statistics_batch_num:
             return None
-        
+
         if wrapper.contribution is None:
             return None
 
@@ -217,8 +216,8 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
 class ActivationFilterPrunerMasker(StructuredWeightMasker):
     def __init__(self, model, pruner, statistics_batch_num=1, activation='relu'):
         super().__init__(model, pruner)
-        self.pruner.statistics_batch_num = statistics_batch_num
-        self.pruner.hook_id = self._add_activation_collector()
+        self.statistics_batch_num = statistics_batch_num
+        self.pruner.hook_id = self._add_activation_collector(self.pruner)
 
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
@@ -228,23 +227,21 @@ class ActivationFilterPrunerMasker(StructuredWeightMasker):
         else:
             self.pruner.activation = None
 
-    def _add_activation_collector(self):
+    def _add_activation_collector(self, pruner):
         def collector(collected_activation):
             def hook(module_, input_, output):
-                print('collecting...', output.size())
-                collected_activation.append(self.pruner.activation(output.detach().cpu()))
+                collected_activation.append(pruner.activation(output.detach().cpu()))
             return hook
-        self.pruner.collected_activation = {}
-        self.pruner._fwd_hook_id += 1
-        self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id] = []
+        pruner.collected_activation = {}
+        pruner._fwd_hook_id += 1
+        pruner._fwd_hook_handles[pruner._fwd_hook_id] = []
 
-        for wrapper_idx, wrapper in enumerate(self.pruner.get_modules_wrapper()):
-            self.pruner.collected_activation[wrapper_idx] = []
-            handle = wrapper.register_forward_hook(collector(self.pruner.collected_activation[wrapper_idx]))
-            print('wrapper:', wrapper)
-            print('added handle', handle)
-            self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id].append(handle)
-        return self.pruner._fwd_hook_id
+        for wrapper_idx, wrapper in enumerate(pruner.get_modules_wrapper()):
+            pruner.collected_activation[wrapper_idx] = []
+            handle = wrapper.register_forward_hook(collector(pruner.collected_activation[wrapper_idx]))
+
+            pruner._fwd_hook_handles[pruner._fwd_hook_id].append(handle)
+        return pruner._fwd_hook_id
 
 class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
@@ -256,6 +253,8 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
         activations = self.pruner.collected_activation[wrapper_idx]
+        if len(activations) < self.statistics_batch_num:
+            return None
         apoz = self._calc_apoz(activations)
         prune_indices = torch.argsort(apoz, descending=True)[:num_prune]
         for idx in prune_indices:
@@ -293,6 +292,8 @@ class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
         activations = self.pruner.collected_activation[wrapper_idx]
+        if len(activations) < self.statistics_batch_num:
+            return None
         mean_activation = self._cal_mean_activation(activations)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:
