@@ -15,8 +15,10 @@ class LevelPrunerMasker(WeightMasker):
     Prune to an exact pruning level specification
     """
 
-    def calc_mask(self, sparsity=1., wrapper=None, wrapper_idx=None):
-        weight = wrapper.module.weight.data
+    def calc_mask(self, sparsity, wrapper, wrapper_idx):
+        weight = wrapper.module.weight.data.clone()
+        if wrapper.weight_mask is not None:
+            weight = weight * wrapper.weight_mask
 
         w_abs = weight.abs()
         k = int(weight.numel() * sparsity)
@@ -38,19 +40,17 @@ class SlimPrunerMasker(WeightMasker):
     def __init__(self, model, pruner, **kwargs):
         super().__init__(model, pruner)
         weight_list = []
-        config_list = pruner.config_list
-        if len(config_list) > 1:
-            logger.warning('Slim pruner only supports 1 configuration')
-        config = config_list[0]
-        for (layer, config) in pruner.get_modules_to_compress():
-            assert layer.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+        for (layer, _) in pruner.get_modules_to_compress():
             weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
-        k = int(all_bn_weights.shape[0] * config['sparsity'])
+        k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
 
-    def calc_mask(self, sparsity=1., wrapper=None, wrapper_idx=None):
-        weight = wrapper.module.weight.data
+    def calc_mask(self, sparsity, wrapper, wrapper_idx):
+        assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+        weight = wrapper.module.weight.data.clone()
+        if wrapper.weight_mask is not None:
+            weight = weight * wrapper.weight_mask
 
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
         mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}

@@ -14,9 +14,9 @@ class WeightMasker(object):
         sparsity: float
             pruning ratio,  preserved weight ratio is `1 - sparsity`
         wrapper: PrunerModuleWrapper
-            module wrapper
-        wrapper_idx: int | None
-            index of the wrapper in the pruner
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict

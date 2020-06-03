@@ -9,27 +9,23 @@ __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
     'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
     'ActivationMeanRankFilterPrunerMasker']
 
-logger = logging.getLogger('torch weight rank filter pruners')
+logger = logging.getLogger('torch filter pruners')
 
 class StructuredWeightMasker(WeightMasker):
     """
-    A structured pruning masker base class that prunes the filters with the smallest
-    importance criterion in convolution layers to achieve a preset level of network sparsity.
+    A structured pruning masker base class that prunes convolutional layer filters.
     """
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-
         """
         Calculate the mask of given layer.
         Parameters
         ----------
-        weight : weight tensor
-            module weights
-        bias: bias tensor
-            module bias
         sparsity: float
             pruning ratio,  preserved weight ratio is `1 - sparsity`
-        kwargs: dict
-            additional parameters passed from pruner
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
@@ -42,9 +38,15 @@ class StructuredWeightMasker(WeightMasker):
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             bias = wrapper.module.bias.data
 
-        mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        if wrapper.weight_mask is None:
+            mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        else:
+            mask_weight = wrapper.weight_mask.clone()
         if bias is not None:
-            mask_bias = torch.ones(bias.size()).type_as(bias).detach()
+            if wrapper.bias_mask is None:
+                mask_bias = torch.ones(bias.size()).type_as(bias).detach()
+            else:
+                mask_bias = wrapper.bias_mask.clone()
         else:
             mask_bias = None
         mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
@@ -54,9 +56,9 @@ class StructuredWeightMasker(WeightMasker):
         if filters < 2 or num_prune < 1:
             return mask
 
-        return self.get_mask(mask, weight, num_prune, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx)
 
-    def get_mask(self, base_mask, weight, num_prune, **kwargs):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
         """
         Calculate the mask of given layer.
         Parameters
@@ -67,7 +69,10 @@ class StructuredWeightMasker(WeightMasker):
             the module weight to be pruned
         num_prune: int
             Num of filters to prune
-
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
@@ -84,7 +89,7 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
     https://arxiv.org/abs/1608.08710
     """
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
@@ -99,7 +104,7 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
     A structured pruning algorithm that prunes the filters with the
     smallest L2 norm of the weights.
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
         filters = weight.shape[0]
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
@@ -116,7 +121,7 @@ class FPGMPrunerMasker(StructuredWeightMasker):
     "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
     https://arxiv.org/pdf/1811.00250.pdf
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
         min_gm_idx = self._get_min_gm_kernel_idx(weight, num_prune)
         for idx in min_gm_idx:
             base_mask['weight_mask'][idx] = 0.
@@ -138,13 +143,6 @@ class FPGMPrunerMasker(StructuredWeightMasker):
         """
         Calculate the total distance between a specified filter (by out_idex and in_idx) and
         all other filters.
-        Optimized verision of following naive implementation:
-        def _get_distance_sum(self, weight, in_idx, out_idx):
-            w = weight.view(-1, weight.size(-2), weight.size(-1))
-            dist_sum = 0.
-            for k in w:
-                dist_sum += torch.dist(k, weight[in_idx, out_idx], p=2)
-            return dist_sum
         Parameters
         ----------
         weight: Tensor
@@ -182,7 +180,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         self.pruner.iterations = 0
         self.pruner.patch_optimizer(self.calc_contributions)
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
         if self.pruner.iterations < self.pruner.statistics_batch_num:
             return None
 
@@ -252,7 +250,8 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     "Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures", ICLR 2016.
     https://arxiv.org/abs/1607.03250
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
+        assert wrapper_idx is not None
         activations = self.pruner.collected_activation[wrapper_idx]
         if len(activations) < self.statistics_batch_num:
             return None
@@ -294,7 +293,8 @@ class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     "Pruning Convolutional Neural Networks for Resource Efficient Inference", ICLR 2017.
     https://arxiv.org/abs/1611.06440
     """
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx=None):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
+        assert wrapper_idx is not None
         activations = self.pruner.collected_activation[wrapper_idx]
         if len(activations) < self.statistics_batch_num:
             return None

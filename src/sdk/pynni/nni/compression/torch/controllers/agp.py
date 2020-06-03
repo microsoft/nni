@@ -32,6 +32,8 @@ class AGP_Pruner(Pruner):
             List on pruning configs
         optimizer: torch.optim.Optimizer
             Optimizer used to train model
+        pruning_algorithm: str
+            algorithms being used to prune model
         """
 
         super().__init__(model, config_list, optimizer)

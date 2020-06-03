@@ -29,6 +29,8 @@ class OneshotPruner(Pruner):
             algorithms being used to prune model
         optimizer: torch.optim.Optimizer
             Optimizer used to train model
+        algo_kwargs: dict
+            Additional parameters passed to pruning algorithm masker class
         """
 
         super().__init__(model, config_list, optimizer)
@@ -59,7 +61,8 @@ class OneshotPruner(Pruner):
         ----------
         wrapper : Module
             the module to instrument the compression operation
-
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
@@ -95,6 +98,9 @@ class SlimPruner(OneshotPruner):
         }], model, logger)
 
         schema.validate(config_list)
+
+        if len(config_list) > 1:
+            logger.warning('Slim pruner only supports 1 configuration')
 
 class _StructuredFilterPruner(OneshotPruner):
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, **algo_kwargs):
