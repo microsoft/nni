@@ -31,17 +31,17 @@ export abstract class StorageService {
     protected remoteRoot: string = "";
     protected logger: Logger;
 
-    protected abstract config(key: string, value: string): void;
-    protected abstract async remove(remotePath: string, isDirectory: boolean, isRecursive: boolean): Promise<void>;
-    protected abstract async rename(remotePath: string, newName: string): Promise<void>;
-    protected abstract async mkdir(remotePath: string): Promise<void>;
-    protected abstract async copy(localPath: string, remotePath: string, isDirectory: boolean, isToRemote: boolean): Promise<string>;
-    protected abstract async exists(remotePath: string): Promise<boolean>;
-    protected abstract async read(remotePath: string, offset: number, length: number): Promise<string>;
-    protected abstract isRelativePath(path: string): boolean;
-    protected abstract joinPath(...paths: string[]): string;
-    protected abstract dirname(...paths: string[]): string;
-    protected abstract basename(...paths: string[]): string;
+    protected abstract internalConfig(key: string, value: string): void;
+    protected abstract async internalRemove(remotePath: string, isDirectory: boolean, isRecursive: boolean): Promise<void>;
+    protected abstract async internalRename(remotePath: string, newName: string): Promise<void>;
+    protected abstract async internalMkdir(remotePath: string): Promise<void>;
+    protected abstract async internalCopy(localPath: string, remotePath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
+    protected abstract async internalExists(remotePath: string): Promise<boolean>;
+    protected abstract async internalRead(remotePath: string, offset: number, length: number): Promise<string>;
+    protected abstract internalIsRelativePath(path: string): boolean;
+    protected abstract internalJoin(...paths: string[]): string;
+    protected abstract internalDirname(...paths: string[]): string;
+    protected abstract internalBasename(...paths: string[]): string;
 
     constructor() {
         this.logger = getLogger();
@@ -56,13 +56,13 @@ export abstract class StorageService {
     public async renameRemote(remotePath: string, newName: string): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`rename remotePath: ${remotePath} to: ${newName}`);
-        await this.rename(remotePath, newName);
+        await this.internalRename(remotePath, newName);
     }
 
     public async createDirectory(remotePath: string): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`create remotePath: ${remotePath}`);
-        await this.mkdir(remotePath);
+        await this.internalMkdir(remotePath);
     }
 
     public async copyDirectory(localPath: string, remotePath: string, asGzip: boolean = false): Promise<string> {
@@ -70,7 +70,7 @@ export abstract class StorageService {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy localPath: ${localPath} to remotePath: ${remotePath}, asGzip ${asGzip}`);
         if (!await this.existsRemote(remotePath)) {
-            await this.mkdir(remotePath);
+            await this.internalMkdir(remotePath);
         }
 
         if (asGzip) {
@@ -79,15 +79,15 @@ export abstract class StorageService {
             const tarFileName = `${localPathBaseName}.tar.gz`;
             const localTarPath: string = path.join(os.tmpdir(), tempTarFileName);
             await tarAdd(localTarPath, localPath);
-            await this.copy(localTarPath, remotePath, false, true);
-            const remoteFileName = this.joinPath(remotePath, tempTarFileName);
-            await this.rename(remoteFileName, tarFileName);
+            await this.internalCopy(localTarPath, remotePath, false, false, true);
+            const remoteFileName = this.internalJoin(remotePath, tempTarFileName);
+            await this.internalRename(remoteFileName, tarFileName);
             await fs.promises.unlink(localTarPath);
 
-            remotePath = this.joinPath(remotePath, tarFileName);
+            remotePath = this.internalJoin(remotePath, tarFileName);
         } else {
-            await this.copy(localPath, remotePath, true, true);
-            remotePath = this.joinPath(remotePath, path.basename(localPath));
+            await this.internalCopy(localPath, remotePath, true, false, true);
+            remotePath = this.internalJoin(remotePath, path.basename(localPath));
         }
 
         return remotePath;
@@ -97,44 +97,44 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy remotePath: ${remotePath} to localPath: ${localPath}`);
-        return await this.copy(localPath, remotePath, true, false);
+        return await this.internalCopy(localPath, remotePath, true, true, false);
     }
 
     public async removeDirectory(remotePath: string, isRecursive: boolean): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`remove remotePath: ${remotePath}`);
-        await this.remove(remotePath, true, isRecursive);
+        await this.internalRemove(remotePath, true, isRecursive);
     }
 
     public async readRemoteFile(remotePath: string, offset: number = -1, length: number = -1): Promise<string> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`read remote file: ${remotePath}, offset: ${offset}, length: ${length}`);
-        return this.read(remotePath, offset, length);
+        return this.internalRead(remotePath, offset, length);
     }
 
     public async existsRemote(remotePath: string): Promise<boolean> {
         remotePath = this.expandPath(true, remotePath);
-        const exists = await this.exists(remotePath);
+        const exists = await this.internalExists(remotePath);
         this.logger.debug(`check exists remotePath: ${remotePath} is ${exists}`);
         return exists
     }
 
     public async save(content: string, remotePath: string): Promise<void> {
         this.logger.debug(`save content to remotePath: ${remotePath}, length: ${content.length}`);
-        const fileName = this.basename(remotePath);
+        const fileName = this.internalBasename(remotePath);
         const tempFileName = `temp_${uniqueString(4)}_${fileName}`;
 
         remotePath = this.expandPath(true, remotePath);
         const localTempFileName = path.join(os.tmpdir(), tempFileName);
 
-        const remoteDir = this.dirname(remotePath);
-        const remoteTempFile = this.joinPath(remoteDir, tempFileName);
+        const remoteDir = this.internalDirname(remotePath);
+        const remoteTempFile = this.internalJoin(remoteDir, tempFileName);
 
-        if (await this.exists(remotePath) === true) {
-            await this.remove(remotePath, false, false);
+        if (await this.internalExists(remotePath) === true) {
+            await this.internalRemove(remotePath, false, false);
         }
         await fs.promises.writeFile(localTempFileName, content);
-        await this.copy(localTempFileName, remoteDir, false, true);
+        await this.internalCopy(localTempFileName, remoteDir, false, false, true);
         await this.renameRemote(remoteTempFile, fileName);
         await fs.promises.unlink(localTempFileName);
     }
@@ -143,26 +143,26 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy file localPath: ${localPath} to remotePath: ${remotePath}`);
-        await this.copy(localPath, remotePath, false, true);
+        await this.internalCopy(localPath, remotePath, false, false, true);
     }
 
     public async copyFileBack(remotePath: string, localPath: string): Promise<void> {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy file remotePath: ${remotePath} to localPath: ${localPath}`);
-        await this.copy(localPath, remotePath, false, false);
+        await this.internalCopy(localPath, remotePath, false, true, false);
     }
 
     public async removeFile(remotePath: string): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`remove file remotePath: ${remotePath}`);
-        await this.remove(remotePath, false, false);
+        await this.internalRemove(remotePath, false, false);
     }
 
     public joinRemotePath(...paths: string[]): string {
-        let fullPath = this.joinPath(...paths);
-        if (this.isRelativePath(fullPath) === true && this.remoteRoot !== "") {
-            fullPath = this.joinPath(this.remoteRoot, fullPath);
+        let fullPath = this.internalJoin(...paths);
+        if (this.internalIsRelativePath(fullPath) === true && this.remoteRoot !== "") {
+            fullPath = this.internalJoin(this.remoteRoot, fullPath);
         }
         return fullPath;
     }

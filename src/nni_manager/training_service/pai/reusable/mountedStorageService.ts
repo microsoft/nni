@@ -24,17 +24,17 @@ import { StorageService } from "./storageService";
 
 export class MountedStorageService extends StorageService {
 
-    protected config(_key: string, _value: string): void {
+    protected internalConfig(_key: string, _value: string): void {
         // nothing to config
     }
 
-    protected async remove(path: string, isDirectory: boolean, isRecursive: boolean): Promise<void> {
+    protected async internalRemove(path: string, isDirectory: boolean, isRecursive: boolean): Promise<void> {
         if (isDirectory) {
             if (isRecursive) {
                 const children = await fs.promises.readdir(path);
                 for (const file of children) {
                     const stat = await fs.promises.lstat(file);
-                    this.remove(file, stat.isDirectory(), isRecursive);
+                    this.internalRemove(file, stat.isDirectory(), isRecursive);
                 }
             } else {
                 await fs.promises.rmdir(path);
@@ -44,52 +44,51 @@ export class MountedStorageService extends StorageService {
         }
     }
 
-    protected async rename(remotePath: string, newName: string): Promise<void> {
+    protected async internalRename(remotePath: string, newName: string): Promise<void> {
         const dirName = path.dirname(remotePath);
-        newName = this.joinPath(dirName, newName);
+        newName = this.internalJoin(dirName, newName);
 
         await fs.promises.rename(remotePath, newName);
     }
 
-    protected async mkdir(remotePath: string): Promise<void> {
+    protected async internalMkdir(remotePath: string): Promise<void> {
         if (!fs.existsSync(remotePath)) {
             await fs.promises.mkdir(remotePath, { recursive: true });
         }
     }
 
-    protected async copy(localPath: string, remotePath: string, isDirectory: boolean, isToRemote: boolean): Promise<string> {
-        if (localPath === remotePath) {
-            return remotePath;
+    protected async internalCopy(sourcePath: string, targetPath: string, isDirectory: boolean, isFromRemote: boolean = false, isToRemote: boolean = true): Promise<string> {
+        if (sourcePath === targetPath) {
+            return targetPath;
         }
-        const sourcePath = isToRemote ? localPath : remotePath;
-        let targetPath = isToRemote ? remotePath : localPath;
 
-        this.logger.debug(`copying ${sourcePath} to ${targetPath}, dir ${isDirectory}, isRemote: ${isToRemote}`);
+        this.logger.debug(`copying ${sourcePath} to ${targetPath}, dir ${isDirectory}, isFromRemote ${isFromRemote}, isToRemote: ${isToRemote}`);
         if (isDirectory) {
+            const basename = isFromRemote ? this.internalBasename(sourcePath) : path.basename(sourcePath);
             if (isToRemote) {
-                targetPath = this.joinPath(targetPath, this.basename(localPath));
+                targetPath = this.internalJoin(targetPath, basename);
+                await this.internalMkdir(targetPath);
             } else {
-                targetPath = path.join(targetPath, this.basename(remotePath))
+                targetPath = path.join(targetPath, basename);
+                await fs.promises.mkdir(targetPath);
             }
-            await this.mkdir(targetPath);
             const children = await fs.promises.readdir(sourcePath);
             for (const child of children) {
-                const childSourcePath = this.joinPath(sourcePath, child);
+                const childSourcePath = this.internalJoin(sourcePath, child);
                 const stat = await fs.promises.lstat(childSourcePath);
-                // true: the source and target is aligned already, so always set isToRemote to true.
-                this.copy(childSourcePath, targetPath, stat.isDirectory(), true);
+                await this.internalCopy(childSourcePath, targetPath, stat.isDirectory(), isFromRemote, isToRemote);
             }
             return targetPath;
         } else {
             // This behavior may not be consistent for each platform, but it needs to correct to same 
-            await this.mkdir(targetPath);
+            await this.internalMkdir(targetPath);
             const targetFileName = path.join(targetPath, path.basename(sourcePath));
             await fs.promises.copyFile(sourcePath, targetFileName);
             return targetFileName;
         }
     }
 
-    protected async exists(remotePath: string): Promise<boolean> {
+    protected async internalExists(remotePath: string): Promise<boolean> {
         const deferred = new Deferred<boolean>();
         fs.exists(remotePath, (exists) => {
             deferred.resolve(exists);
@@ -97,7 +96,7 @@ export class MountedStorageService extends StorageService {
         return deferred.promise;
     }
 
-    protected async read(remotePath: string, offset?: number, length?: number): Promise<string> {
+    protected async internalRead(remotePath: string, offset?: number, length?: number): Promise<string> {
         const deferred = new Deferred<string>();
         // set a max length to 1MB for performance concern.
         const maxLength = 1024 * 1024;
@@ -129,19 +128,19 @@ export class MountedStorageService extends StorageService {
 
     }
 
-    protected isRelativePath(remotePath: string): boolean {
+    protected internalIsRelativePath(remotePath: string): boolean {
         return !path.isAbsolute(remotePath);
     }
 
-    protected joinPath(...paths: string[]): string {
+    protected internalJoin(...paths: string[]): string {
         return path.join(...paths);
     }
 
-    protected dirname(remotePath: string): string {
+    protected internalDirname(remotePath: string): string {
         return path.dirname(remotePath);
     }
 
-    protected basename(remotePath: string): string {
+    protected internalBasename(remotePath: string): string {
         return path.basename(remotePath);
     }
 }

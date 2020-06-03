@@ -9,19 +9,18 @@ import os
 import re
 import shlex
 import sys
+import tarfile
 import threading
 import time
-import traceback
-import tarfile
-import psutil
 from datetime import datetime
 from subprocess import Popen
 
 import pkg_resources
+import psutil
 
 idle_timeout_seconds = 10 * 60
 
-logger = logging.getLogger('trial_runner')
+logger = logging.getLogger('runner')
 regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,1}).*')
 trial_output_path_name = ".nni"
 trial_runner_syslogger = None
@@ -120,7 +119,7 @@ class Trial:
 def main_loop(args):
     '''main loop logic for trial runner'''
     idle_last_time = datetime.now()
-    trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_runner',
+    trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
                                           StdOutputType.Stdout, args.log_collection, args.runner_id)
     sys.stdout = sys.stderr = trial_runner_syslogger
     trial = None
@@ -177,7 +176,7 @@ def check_version(args):
     else:
         try:
             trial_runner_version = regular.search(trial_runner_version).group('version')
-            nni_log(LogType.Info, 'trial_runner_version is {0}'.format(trial_runner_version))
+            nni_log(LogType.Info, 'runner_version is {0}'.format(trial_runner_version))
             nni_manager_version = regular.search(args.nni_manager_version).group('version')
             nni_log(LogType.Info, 'nni_manager_version is {0}'.format(nni_manager_version))
             log_entry = {}

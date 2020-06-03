@@ -205,7 +205,7 @@ process.on(getStopSignal(), async () => {
         hasError = true;
         log.error(`${err.stack}`);
     } finally {
-        // await log.close();
+        await log.close();
         process.exit(hasError ? 1 : 0);
     }
 });

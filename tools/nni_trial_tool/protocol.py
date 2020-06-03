@@ -3,7 +3,6 @@
 
 import json
 import os
-import threading
 import time
 from datetime import datetime
 from enum import Enum
@@ -48,7 +47,8 @@ def send(command, data):
             time.sleep(0.01)
             continue
         with open(file_name, "wb") as out_file:
-            data = json.dumps(data.encode('utf8'))
+            data = json.dumps(data)
+            data = data.encode('utf8')
             msg = b'%b%014d%b' % (command.value, len(data), data)
             nni_log(LogType.Info, 'Sending command, data: [%s]' % msg)
             out_file.write(msg)

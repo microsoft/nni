@@ -284,7 +284,7 @@ class EnvironmentManager implements TrainingService {
                         break;
                 }
                 if (oldIsAlive !== environment.isAlive) {
-                    this.log.debug(`set environment isAlive from ${oldIsAlive} to ${environment.status} due to status is ${environment.status}.`);
+                    this.log.debug(`set environment isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
                 }
             });
             await delay(5000);
