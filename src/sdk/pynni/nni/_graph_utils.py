@@ -423,12 +423,9 @@ class TorchModuleGraph(TorchGraph):
             if module_name in self.leaf_modules:
                 module_to_nodes[module_name].append(node)
             else:
-                print(node)
                 func_to_nodes[node.scopeName()].append(node)
         # build node group for module
         for module_name, node_cpps in module_to_nodes.items():
-            print(module_name, len(node_cpps))
-            print(node_cpps)
             use_count = 0
             for node in node_cpps:
                 if not node.kind().startswith('prim::'):
@@ -443,8 +440,6 @@ class TorchModuleGraph(TorchGraph):
                         module_to_type[module_name], node_name=unique_name)
                     nodes_py.nodes_op.append(node_group)
                     use_count += 1
-                    print(node_group.name, use_count,
-                          len(node_group.node_cpps))
 
         # each scope_name may have multiple funcs, we split them and create node for each of them
         # build node group for torch.nn.functional
