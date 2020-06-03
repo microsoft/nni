@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
-import { filterDuration } from '../../static/function';
+import { filterDuration, convertDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -49,7 +49,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',
@@ -93,7 +99,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',
@@ -162,30 +174,30 @@ class Duration extends React.Component<DurationProps, DurationState> {
         }
     }
 
-    shouldComponentUpdate(nextProps: DurationProps): boolean {
+    // shouldComponentUpdate(nextProps: DurationProps): boolean {
 
-        const { whichGraph, source } = nextProps;
-        if (whichGraph === '3') {
-            const beforeSource = this.props.source;
-            if (whichGraph !== this.props.whichGraph) {
-                return true;
-            }
+    //     const { whichGraph, source } = nextProps;
+    //     if (whichGraph === '3') {
+    //         const beforeSource = this.props.source;
+    //         if (whichGraph !== this.props.whichGraph) {
+    //             return true;
+    //         }
 
-            if (source.length !== beforeSource.length) {
-                return true;
-            }
+    //         if (source.length !== beforeSource.length) {
+    //             return true;
+    //         }
 
-            if (beforeSource[beforeSource.length - 1] !== undefined) {
-                if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                    return true;
-                }
-                if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    //         if (beforeSource[beforeSource.length - 1] !== undefined) {
+    //             if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
+    //                 return true;
+    //             }
+    //             if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //     return false;
+    // }
 
     render(): React.ReactNode {
         const { durationSource } = this.state;
