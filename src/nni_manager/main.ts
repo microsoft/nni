@@ -21,7 +21,7 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { ForwardTrainingService } from './training_service/pai/reusable/forwardTrainingService';
+import { ForwardTrainingService } from './training_service/reusable/forwardTrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService

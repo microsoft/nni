@@ -19,13 +19,13 @@
 
 'use strict';
 
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../../common/trainingService';
-import { delay } from '../../../common/utils';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { PAIClusterConfig } from '../paiConfig';
-import { PAIK8STrainingService } from '../paiK8S/paiK8STrainingService';
+import * as component from '../../common/component';
+import { getLogger, Logger } from '../../common/log';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
+import { delay } from '../../common/utils';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { PAIClusterConfig } from '../pai/paiConfig';
+import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { EnvironmentManager } from './environmentManager';
 import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';

@@ -21,7 +21,7 @@
 
 import { EventEmitter } from 'events';
 import { Request, Response, Router } from 'express';
-import { ClusterJobRestServer } from '../../common/clusterJobRestServer';
+import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 
 export interface ParameterFileMeta {
     readonly experimentId: string;

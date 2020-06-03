@@ -19,9 +19,9 @@
 
 'use strict';
 
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../../common/trainingService";
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
 import { StorageService } from "./storageService";
-import * as component from '../../../common/component';
+import * as component from '../../common/component';
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 

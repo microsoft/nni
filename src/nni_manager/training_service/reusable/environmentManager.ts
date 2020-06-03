@@ -21,17 +21,17 @@
 
 import { EventEmitter } from 'events';
 import * as path from 'path';
-import * as component from '../../../common/component';
-import { getExperimentId, getPlatform } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric } from '../../../common/trainingService';
-import { delay, generateParamFileName, getVersion, uniqueString } from '../../../common/utils';
-import { KILL_TRIAL_JOB, NEW_TRIAL_JOB } from '../../../core/commands';
-import { encodeCommand } from '../../../core/ipcInterface';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
-import { TrialConfig } from '../../common/trialConfig';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { validateCodeDir } from '../../common/util';
+import * as component from '../../common/component';
+import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../common/log';
+import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric } from '../../common/trainingService';
+import { delay, generateParamFileName, getVersion, uniqueString } from '../../common/utils';
+import { KILL_TRIAL_JOB, NEW_TRIAL_JOB } from '../../core/commands';
+import { encodeCommand } from '../../core/ipcInterface';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { TrialConfig } from '../common/trialConfig';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { validateCodeDir } from '../common/util';
 import { EnvironmentInformation, EnvironmentService, RunnerSettings, TrialDetail } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';

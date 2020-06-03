@@ -19,12 +19,12 @@
 
 'use strict';
 
-import { uniqueString } from '../../../common/utils';
+import { uniqueString } from '../../common/utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { Logger, getLogger } from '../../../common/log';
-import { tarAdd } from '../../common/util';
+import { Logger, getLogger } from '../../common/log';
+import { tarAdd } from '../common/util';
 
 export abstract class StorageService {
     protected localRoot: string = "";
