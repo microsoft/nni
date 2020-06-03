@@ -55,7 +55,6 @@ class StructuredWeightMasker(WeightMasker):
         num_prune = int(filters * sparsity)
         if filters < 2 or num_prune < 1:
             return mask
-
         return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx)
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):
