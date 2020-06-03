@@ -20,7 +20,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from "ts-deferred";
-import { StorageService } from "./storage";
+import { StorageService } from "./storageService";
 
 export class MountedStorageService extends StorageService {
 

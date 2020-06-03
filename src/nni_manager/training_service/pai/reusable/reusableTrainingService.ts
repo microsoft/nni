@@ -30,7 +30,7 @@ import { EnvironmentManager } from './environmentManager';
 import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
-import { StorageService } from './storage';
+import { StorageService } from './storageService';
 import { MountedStorageService } from './mountedStorageService';
 
 

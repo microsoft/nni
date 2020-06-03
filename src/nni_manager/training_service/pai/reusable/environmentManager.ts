@@ -34,7 +34,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { EnvironmentInformation, EnvironmentService, RunnerSettings, TrialDetail } from './environment';
 import { JobRestServer } from './jobRestServer';
-import { StorageService } from './storage';
+import { StorageService } from './storageService';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -218,7 +218,7 @@ class EnvironmentManager implements TrainingService {
         const environments = [...this.environments.values()];
         for (let index = 0; index < environments.length; index++) {
             const environment = environments[index];
-            if (environment.isEnd === false) {
+            if (environment.isAlive === true) {
                 this.log.info(`stopping environment ${environment.id}...`);
                 await environmentService.stopEnvironment(environment);
                 this.log.info(`stopped environment ${environment.id}.`);
@@ -265,23 +265,26 @@ class EnvironmentManager implements TrainingService {
         while (!this.stopping) {
             const environments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
-                if (environment.isEnd === false) {
+                if (environment.isAlive === true) {
                     environments.push(environment);
                 }
             });
             environmentService.updateEnvironmentsStatus(environments);
 
             environments.forEach((environment) => {
+                const oldIsAlive = environment.isAlive;
                 switch (environment.status) {
                     case 'WAITING':
                     case 'RUNNING':
                     case 'UNKNOWN':
-                        environment.isEnd = false;
+                        environment.isAlive = true;
                         break;
                     default:
-                        this.log.debug(`set environment ${environment.jobId} ${environment.status} to ended`);
-                        environment.isEnd = true;
+                        environment.isAlive = false;
                         break;
+                }
+                if (oldIsAlive !== environment.isAlive) {
+                    this.log.debug(`set environment isAlive from ${oldIsAlive} to ${environment.status} due to status is ${environment.status}.`);
                 }
             });
             await delay(5000);
@@ -350,7 +353,7 @@ class EnvironmentManager implements TrainingService {
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
-                if (!environment.isEnd) {
+                if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isIdle) {
                         idleEnvironments.push(environment);
@@ -401,11 +404,11 @@ class EnvironmentManager implements TrainingService {
 
         if (environment.status === "FAILED") {
             environment.isIdle = false;
-            environment.isEnd = true;
+            environment.isAlive = false;
             throw new Error(`error on request environment ${environment.jobId}, please check log for more details.`);
         } else {
             environment.isIdle = true;
-            environment.isEnd = false;
+            environment.isAlive = true;
         }
         this.log.info(`requested environment ${environment.id} and job id is ${environment.jobId}.`);
     }

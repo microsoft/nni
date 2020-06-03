@@ -20,7 +20,7 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../../common/trainingService";
-import { StorageService } from "./storage";
+import { StorageService } from "./storageService";
 import * as component from '../../../common/component';
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -81,7 +81,7 @@ export class EnvironmentInformation {
     // training platform job friendly name, in case it's different with job ID.
     public jobName: string;
     public isIdle: boolean = false;
-    public isEnd: boolean = false;
+    public isAlive: boolean = true;
     public trackingUrl: string = "";
     public status: EnvironmentStatus = "UNKNOWN";
     public workingFolder: string = "";

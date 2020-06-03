@@ -29,7 +29,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../paiConfig';
 import { NNIPAIK8STrialConfig } from '../paiK8S/paiK8SConfig';
 import { EnvironmentInformation, EnvironmentService } from './environment';
-import { StorageService } from './storage';
+import { StorageService } from './storageService';
 
 const yaml = require('js-yaml');
 
@@ -90,6 +90,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                     if (jobInfos.has(environment.jobId)) {
                         const jobResponse = jobInfos.get(environment.jobId);
                         if (jobResponse && jobResponse.state) {
+                            const oldEnvironmentStatus = environment.status;
                             switch (jobResponse.state) {
                                 case 'WAITING':
                                 case 'RUNNING':
@@ -104,6 +105,9 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                                 default:
                                     this.log.error(`OpenPAI: job ${environment.jobId} returns unknown state ${jobResponse.state}.`);
                                     environment.status = 'UNKNOWN';
+                            }
+                            if (oldEnvironmentStatus !== environment.status) {
+                                this.log.debug(`OpenPAI: job ${environment.jobId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
                             }
                         } else {
                             this.log.error(`OpenPAI: job ${environment.jobId} has no state returned. body:${JSON.stringify(jobResponse)}`);
@@ -200,7 +204,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                         deferred.reject((error !== undefined && error !== null) ? error :
                             `Stop trial failed, http code: ${response.statusCode}`);
                     } else {
-                        this.log.info(`OpenPAI job ${environment.jobId} stopped, body: ${response.body}.`);
+                        this.log.info(`OpenPAI job ${environment.jobId} stopped.`);
                     }
                     deferred.resolve();
                 } catch (error) {
@@ -249,7 +253,6 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
             case TrialConfigMetadataKey.MULTI_PHASE:
                 break;
             default:
-                //Reject for unknown keys
                 this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
         }
     }
