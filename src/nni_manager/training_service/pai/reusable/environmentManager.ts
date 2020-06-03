@@ -125,11 +125,10 @@ class EnvironmentManager implements TrainingService {
                 {
                     const environment = trial.environment;
                     if (environment) {
+                        await this.sendCommand(KILL_TRIAL_JOB, trialJobId, environment);
                         trial.isEarlyStopped = isEarlyStopped;
                         trial.status = trial.isEarlyStopped === true ?
                             'EARLY_STOPPED' : 'USER_CANCELED';
-
-                        await this.sendCommand(KILL_TRIAL_JOB, trialJobId, environment);
                         this.releaseEnvironment(trial);
                     }
                 }
@@ -362,11 +361,10 @@ class EnvironmentManager implements TrainingService {
             });
 
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
-                for (const trial of waitingTrials) {
-                    const idleEnvironment = idleEnvironments.pop();
-                    if (idleEnvironment) {
-                        await this.assignEnvironment(trial, idleEnvironment);
-                    }
+                const trial = waitingTrials.shift();
+                const idleEnvironment = idleEnvironments.shift();
+                if (trial !== undefined && idleEnvironment != undefined) {
+                    await this.assignEnvironment(trial, idleEnvironment);
                 }
             }
 
@@ -415,7 +413,7 @@ class EnvironmentManager implements TrainingService {
 
     private async assignEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
         if (trial.environment) {
-            throw new Error(`trial ${trial.id} has assigned environment ${environment.id} already!`);
+            throw new Error(`trial ${trial.id} has assigned environment ${trial.environment.id} already, not assign to ${environment.id}!`);
         }
         if (environment.isIdle == false) {
             throw new Error(`environment ${environment.id} is not idle, and cannot be assigned again!`);

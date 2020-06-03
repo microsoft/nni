@@ -141,14 +141,15 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
         }
 
         // Step 1. Prepare PAI job configuration
-        environment.envWorkingFolder = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/envs/${environment.id}`;
-        environment.command = `cd ${environment.envWorkingFolder} && ${environment.command}`
+        environment.runnerWorkingFolder = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/envs/${environment.id}`;
+        environment.command = `cd ${environment.runnerWorkingFolder} && ${environment.command}`
         environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.jobId}`
 
-        // Generate Job Configuration in yaml format
+        // Step 2. Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(environment);
         this.log.debug(`generated paiJobConfig: ${paiJobConfig}`);
-        // Step 2. Submit PAI job via Rest call
+
+        // Step 3. Submit PAI job via Rest call
         const submitJobRequest: request.Options = {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
@@ -281,14 +282,20 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
             nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             if (nniJobConfig.taskRoles) {
-                environment.serverCount = nniJobConfig.taskRoles.length;
 
                 // Each taskRole will generate new command in NNI's command format
                 // Each command will be formatted to NNI style
                 for (const taskRoleIndex in nniJobConfig.taskRoles) {
-                    const commands = nniJobConfig.taskRoles[taskRoleIndex].commands
-                    const nniTrialCommand = `${environment.command} ${commands.join(" && ").replace(/(["'$`\\])/g, '\\$1')}`;
-                    nniJobConfig.taskRoles[taskRoleIndex].commands = [nniTrialCommand]
+                    const taskRole = nniJobConfig.taskRoles[taskRoleIndex];
+                    let instanceCount = 1;
+                    if (taskRole.instances) {
+                        instanceCount = taskRole.instances;
+                    }
+
+                    environment.serverCount += instanceCount;
+
+                    const nniTrialCommand = `${environment.command} ${taskRole.commands.join(" && ").replace(/(["'$`\\])/g, '\\$1')}`;
+                    taskRole.commands = [nniTrialCommand];
                 }
             }
 

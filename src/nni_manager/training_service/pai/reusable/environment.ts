@@ -80,15 +80,19 @@ export class EnvironmentInformation {
     public jobId: string;
     // training platform job friendly name, in case it's different with job ID.
     public jobName: string;
+
+    // key states
+    // true: environment is ready to run trial.
     public isIdle: boolean = false;
+    // true: environment is running, waiting, or unknown.
     public isAlive: boolean = true;
-    public trackingUrl: string = "";
     public status: EnvironmentStatus = "UNKNOWN";
+
+    public trackingUrl: string = "";
     public workingFolder: string = "";
-    public envWorkingFolder: string = "";
+    public runnerWorkingFolder: string = "";
     public command: string = "";
     public serverCount: number = 1;
-    public currentTrialId: string = "";
 
     constructor(id: string, jobName: string, jobId?: string) {
         this.id = id;

@@ -35,7 +35,7 @@ export abstract class StorageService {
     protected abstract async internalRemove(remotePath: string, isDirectory: boolean, isRecursive: boolean): Promise<void>;
     protected abstract async internalRename(remotePath: string, newName: string): Promise<void>;
     protected abstract async internalMkdir(remotePath: string): Promise<void>;
-    protected abstract async internalCopy(localPath: string, remotePath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
+    protected abstract async internalCopy(sourcePath: string, targetPath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
     protected abstract async internalExists(remotePath: string): Promise<boolean>;
     protected abstract async internalRead(remotePath: string, offset: number, length: number): Promise<string>;
     protected abstract internalIsRelativePath(path: string): boolean;
@@ -120,11 +120,11 @@ export abstract class StorageService {
     }
 
     public async save(content: string, remotePath: string): Promise<void> {
-        this.logger.debug(`save content to remotePath: ${remotePath}, length: ${content.length}`);
+        remotePath = this.expandPath(true, remotePath);
+        this.logger.debug(`saving content to remotePath: ${remotePath}, length: ${content.length}`);
         const fileName = this.internalBasename(remotePath);
         const tempFileName = `temp_${uniqueString(4)}_${fileName}`;
 
-        remotePath = this.expandPath(true, remotePath);
         const localTempFileName = path.join(os.tmpdir(), tempFileName);
 
         const remoteDir = this.internalDirname(remotePath);

@@ -21,7 +21,7 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { ReusableTrainingService } from './training_service/pai/reusable/reusableTrainingService';
+import { ForwardTrainingService } from './training_service/pai/reusable/forwardTrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService
@@ -47,7 +47,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
-            .to(ReusableTrainingService)
+            .to(ForwardTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'paiYarn') {
         Container.bind(TrainingService)
