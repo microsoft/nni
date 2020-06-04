@@ -125,7 +125,7 @@ class CompressorTestCase(TestCase):
         If sparsity is 0.6, the expected masks should mask out w[2] - w[7], this can be verified through:
         `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([125., 125., 0., 0., 0., 0., 0., 0., 125., 125.]))`
         """
-        w = np.array([np.ones((5, 5, 5)) * (i+1) for i in range(10)])
+        w = np.array([np.ones((5, 5, 5)) * (i+1) for i in range(10)]).astype(np.float32)
 
         model = TorchModel()
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
@@ -143,6 +143,7 @@ class CompressorTestCase(TestCase):
 
     @tf2
     def test_tf_fpgm_pruner(self):
+        w = np.array([np.ones((5, 5, 5)) * (i+1) for i in range(10)]).astype(np.float32)
         model = get_tf_model()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}]
 
@@ -169,8 +170,8 @@ class CompressorTestCase(TestCase):
         If sparsity is 0.6 for conv2, the expected masks should mask out filter 0,1,2, this can be verified through:
         `all(torch.sum(mask2, (1, 2, 3)).numpy() == np.array([0., 0., 0., 0., 0., 0., 125., 125., 125., 125.]))`
         """
-        w1 = np.array([np.ones((1, 5, 5))*i for i in range(5)])
-        w2 = np.array([np.ones((5, 5, 5))*i for i in range(10)])
+        w1 = np.array([np.ones((1, 5, 5))*i for i in range(5)]).astype(np.float32)
+        w2 = np.array([np.ones((5, 5, 5))*i for i in range(10)]).astype(np.float32)
 
         model = TorchModel()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
