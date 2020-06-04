@@ -301,7 +301,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                     const taskRole = nniJobConfig.taskRoles[taskRoleName];
                     // replace ' to '\''
                     const joinedCommand = taskRole.commands.join(" && ").replace("'", "'\\''");
-                    let nniTrialCommand = `${environment.command} --node_count ${environment.nodeCount} --trial_command '${joinedCommand.trim()}'`;
+                    const nniTrialCommand = `${environment.command} --node_count ${environment.nodeCount} --trial_command '${joinedCommand.trim()}'`;
                     this.log.debug(`replace command ${taskRole.commands} to ${[nniTrialCommand]}`);
                     taskRole.commands = [nniTrialCommand];
                 }
