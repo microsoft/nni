@@ -38,7 +38,9 @@ class ADMMPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
                 - op_names : The operation type to prune.
         trainer : function
-            function used for the first optimization subproblem
+            Function used for the first step of ADMM pruning.
+            This function should take a pytorch model, optimizer, criterion, epoch, callback as parameters and train the model,
+            no return is required.
         optimize_iterations : int
             ADMM optimize iterations
         training_epochs : int

@@ -27,12 +27,12 @@ class SimulatedAnnealingPruner(Pruner):
     """
     This is a Pytorch implementation of Simulated Annealing compression algorithm.
 
-    1. Randomly initialize a pruning rate distribution (sparsities).
-    2. generate perturbation
-    3. Perform fast evaluation on the perturbation
-    4. accept the perturbation according to the performance and probability, if not accepted, return to step 2
-    5. cool down, current_temperature <- current_temperature * cool_down_rate
-    6. repeat step 2~5 while current_temperature > stop_temperature
+    - Randomly initialize a pruning rate distribution (sparsities).
+    - While current_temperature < stop_temperature:
+        1. generate a perturbation to current distribution
+        2. Perform fast evaluation on the perturbated distribution
+        3. accept the perturbation according to the performance and probability, if not accepted, return to step 1
+        4. cool down, current_temperature <- current_temperature * cool_down_rate
     """
 
     def __init__(self, model, config_list, evaluator, optimize_mode='maximize', pruning_mode='channel',

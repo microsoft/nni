@@ -49,9 +49,11 @@ class AutoCompressPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
                 - op_types : The operation type to prune.
         trainer : function
-            function used for the first step of ADMM training
+            Function used for the first step of ADMM pruning. This function should take 
+            a pytorch model, optimizer, criterion, epoch, callback as parameters and train the model, no return is required.
         evaluator : function
-            function to evaluate the pruned model
+            Function to evaluate the masked model.
+            This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.)
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         optimize_iterations : int
