@@ -212,7 +212,8 @@ class NodePyGroup(NodePy):
         for node_cpp in node_cpps:
             nodepy = NodePyOP(node_cpp)
             # TODO may be a bug here, need confirmation with chengmin~
-            nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
+            # nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
+            nodepy.name = node_cpp.scopeName() + '_' + node_cpp.kind()
             self.nodes.append(nodepy)
 
     def sub_node_names(self):
@@ -299,6 +300,76 @@ class TorchModuleGraph(TorchGraph):
                     inputs.append(input_name)
         for output in node.outputs():
             outputs.append(output.debugName())
+        nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
+                             node_group, inputs=inputs, outputs=outputs)
+        return nodepy
+
+    def _expand_module_node(self, node, nodes, input_to_node, output_to_node,
+                            module_type, node_name=None, op_type=None, unique_name=None):
+        """
+        merge the adjacent nodes of the module. The difference between the
+        _expand_module_node and _expand_non_prim_node is that, the _expand_non_prim_node
+        only merge the prim:: nodes into the aten:: node, in contrast,the _expand_module_node
+        will merge all adjacent nodes into a same nodepy group.
+
+        Parameters
+        ----------
+        node : trace graph node
+            The non-prim node to expand
+        nodes : list of trace graph node
+            All the trace graph nodes within the same scope as the non-prim node
+        input_to_node : dict
+            key: input name, value: a node that uses this input
+        output_to_node : dict
+            key: output name, value: a node that generates this output
+        module_type : str
+            can be 'module' or 'func'
+        node_name : str
+            specify the node_name for NodePyGroup
+        op_type : str
+            specify the op_type for the NodePyGroup
+        unique_name: str
+            unique_name for the NodePyGroup
+
+        Returns
+        -------
+        node
+            the expanded non-prim node
+
+        """
+        _logger.debug("expand module node, node name: %s", node_name)
+        self.global_count += 1
+        if not op_type:
+            op_type = node.kind()
+        node_group = [node]
+        inputs = list()
+        outputs = list()
+        node_queue = queue.Queue()
+        node_queue.put(node)
+        visited = {node}
+        while not node_queue.empty():
+            curr_node = node_queue.get()
+            for _input in curr_node.inputs():
+                input_name = _input.debugName()
+                if input_name in output_to_node and output_to_node[input_name] in nodes:
+                    predecessor_node = output_to_node[input_name]
+                    if predecessor_node not in visited:
+                        node_group.append(predecessor_node)
+                        node_queue.put(predecessor_node)
+                        visited.add(predecessor_node)
+                else:
+                    inputs.append(input_name)
+            for _output in curr_node.outputs():
+                output_name = _output.debugName()
+                if output_name in input_to_node and input_to_node[output_name] in nodes:
+                    successor_node = input_to_node[output_name]
+                    if successor_node not in visited:
+                        node_group.append(successor_node)
+                        node_queue.put(successor_node)
+                        visited.add(successor_node)
+                else:
+                    outputs.append(output_name)
+
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
                              node_group, inputs=inputs, outputs=outputs)
         return nodepy
@@ -450,21 +521,23 @@ class TorchModuleGraph(TorchGraph):
         # build node group for module
         for module_name, node_cpps in module_to_nodes.items():
             use_count = 0
+            merged = set()
             for node in node_cpps:
-                if not node.kind().startswith('prim::'):
+                if node not in merged:
                     # modules that have same scope name may have different locations in the
                     # graph. Futhermore, there are also lots of prim:: nodes that in node_cpps,
                     # so we also need to call the expand_non_prim_node.
                     unique_name = module_name
                     if use_count > 0:
                         unique_name = module_name + '.%d' % use_count
-                    node_group = self._expand_non_prim_node(
+                    node_group = self._expand_module_node(
                         node, node_cpps, input_to_node, output_to_node,
                         'module', node_name=module_name,
                         op_type=module_to_type[module_name],
                         unique_name=unique_name)
                     nodes_py.nodes_op.append(node_group)
                     use_count += 1
+                    merged.update(node_group.node_cpps)
 
         # each scope_name may have multiple funcs, we split them and create node for each of them
         # build node group for torch.nn.functional
