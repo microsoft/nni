@@ -8,10 +8,6 @@ import re
 from collections import defaultdict
 import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
-from tensorboard.compat.proto.config_pb2 import RunMetadata
-from tensorboard.compat.proto.graph_pb2 import GraphDef
-from tensorboard.compat.proto.step_stats_pb2 import StepStats, DeviceStepStats
-from tensorboard.compat.proto.versions_pb2 import VersionDef
 CLASSTYPE_KIND = 'ClassType'
 GETATTR_KIND = 'prim::GetAttr'
 
@@ -78,6 +74,11 @@ class TorchProtoGraph(TorchGraph):
 
     def __init__(self, model, dummy_input, verbose=False):
         super().__init__(model, dummy_input)
+
+        from tensorboard.compat.proto.config_pb2 import RunMetadata
+        from tensorboard.compat.proto.graph_pb2 import GraphDef
+        from tensorboard.compat.proto.step_stats_pb2 import StepStats, DeviceStepStats
+        from tensorboard.compat.proto.versions_pb2 import VersionDef
 
         list_of_nodes = self.parse(self.trace.graph, self.trace, dummy_input)
         if verbose:
