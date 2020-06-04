@@ -96,7 +96,7 @@ class EnvironmentManager implements TrainingService {
         const storageService = component.get<StorageService>(StorageService);
         const trialId: string = uniqueString(5);
 
-        const trialWorkingFolder: string = storageService.joinRemotePath('trials', trialId);
+        const trialWorkingFolder: string = storageService.joinPath('trials', trialId);
         const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), trialWorkingFolder, form);
 
         this.trials.set(trialId, trialJobDetail);
@@ -109,7 +109,7 @@ class EnvironmentManager implements TrainingService {
         const trialDetail = await this.getTrialJob(trialJobId);
 
         const storageService = component.get<StorageService>(StorageService);
-        const fileName = storageService.joinRemotePath(trialDetail.workingDirectory, generateParamFileName(form.hyperParameters))
+        const fileName = storageService.joinPath(trialDetail.workingDirectory, generateParamFileName(form.hyperParameters))
         // Write file content ( parameter.cfg ) to working folders
         await storageService.save(form.hyperParameters.value, fileName);
 
@@ -151,13 +151,14 @@ class EnvironmentManager implements TrainingService {
         const storageService = component.get<StorageService>(StorageService);
         // Copy the compressed file to remoteDirectory and delete it
         const codeDir = path.resolve(this.trialConfig.codeDir);
-        const codeFileName = await storageService.copyDirectory(codeDir, "envs", true);
-        storageService.renameRemote(codeFileName, "nni-code.tar.gz");
+        const envDir = storageService.joinPath("envs");
+        const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
+        storageService.rename(codeFileName, "nni-code.tar.gz");
 
-        const installFileName = storageService.joinRemotePath("envs", 'install_nni.sh');
+        const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
         await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
 
-        const runnerSettings = storageService.joinRemotePath("envs", "settings.json");
+        const runnerSettings = storageService.joinPath(envDir, "settings.json");
         await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
 
         this.log.info(`Environment Manager run loop started.`);
@@ -190,9 +191,6 @@ class EnvironmentManager implements TrainingService {
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.runnerSettings.logCollection = value;
-                break;
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                // not useful, dismiss it.
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 // TODO to support more storage types by better parameters.
@@ -239,12 +237,12 @@ class EnvironmentManager implements TrainingService {
         let findingName: boolean = true;
         const command = encodeCommand(commantType, JSON.stringify(data));
         const storageService = component.get<StorageService>(StorageService);
-        const commandPath = storageService.joinRemotePath(environment.workingFolder, `commands`);
+        const commandPath = storageService.joinPath(environment.workingFolder, `commands`);
 
         while (findingName) {
             fileName = `manager_command_${new Date().getTime()}.txt`;
-            filePath = storageService.joinRemotePath(commandPath, fileName);
-            if (!await storageService.existsRemote(filePath)) {
+            filePath = storageService.joinPath(commandPath, fileName);
+            if (!await storageService.exists(filePath)) {
                 findingName = false;
                 break;
             }
@@ -268,7 +266,7 @@ class EnvironmentManager implements TrainingService {
                     environments.push(environment);
                 }
             });
-            environmentService.updateEnvironmentsStatus(environments);
+            await environmentService.updateEnvironmentsStatus(environments);
 
             environments.forEach((environment) => {
                 const oldIsAlive = environment.isAlive;
@@ -301,41 +299,66 @@ class EnvironmentManager implements TrainingService {
                 switch (currentStatus) {
                     case "RUNNING":
                         {
-                            // check status consistence with environment.
                             const environment = trial.environment;
+
                             if (environment === undefined) {
                                 this.log.error(`found running trial ${trial.id} has no environment, set trial to UNKNOWN.`);
                                 trial.status = "UNKNOWN";
-                            } else if (environment.status !== "RUNNING") {
-                                this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environment.status}', set trial to environment status.`);
-                                this.releaseEnvironment(trial);
-                                trial.status = environment.status;
+                                liveTrialsCount++;
+                                continue;
                             }
 
-                            // check if it's done.
-                            const fileName = trial.getExitCodeFileName();
+                            const codeFilePath = storageService.joinPath(trial.workingDirectory, trial.TRIAL_METADATA_DIR);
+                            const remoteFiles = await storageService.listDirectory(codeFilePath);
 
-                            if (await storageService.existsRemote(fileName) === true) {
-                                const fileContent = await storageService.readRemoteFile(fileName);
-                                const match: RegExpMatchArray | null = fileContent.trim()
-                                    .match(/^-?(\d+)\s+(\d+)$/);
-                                if (match !== null) {
-                                    const { 1: code, 2: timestamp } = match;
+                            let isCompleted = false;
+                            let latestTimestamp = 0;
+                            let aggregatedCode = 0;
+                            let completedCount = 0;
+                            for (const fileName of remoteFiles) {
+                                if (fileName.startsWith("code")) {
+                                    const fullName = storageService.joinPath(codeFilePath, fileName)
+                                    const fileContent = await storageService.readFileContent(fullName);
 
-                                    if (trial.status == currentStatus) {
-                                        // Update trial job's status based on result code
-                                        if (parseInt(code, 10) === 0) {
-                                            trial.status = 'SUCCEEDED';
-                                        } else {
-                                            trial.status = 'FAILED';
+                                    const match: RegExpMatchArray | null = fileContent.trim().match(/^-?(\d+)\s+(\d+)$/);
+                                    if (match !== null) {
+                                        const { 1: code, 2: timestamp } = match;
+                                        const intCode = parseInt(code, 10)
+                                        latestTimestamp = Math.max(latestTimestamp, parseInt(timestamp, 10));
+                                        if (intCode !== 0) {
+                                            // only save latest non-zero exit code
+                                            aggregatedCode = intCode;
                                         }
+                                        completedCount++;
                                     }
-                                    trial.endTime = parseInt(timestamp, 10);
-                                    this.releaseEnvironment(trial);
-                                } else {
-                                    liveTrialsCount++;
                                 }
-                            } else {
+                            }
+
+                            // for multiple running nodes, all completed mean complete.
+                            // any failed node means failed.
+                            // use <= for some wired cases.
+                            if (environment.nodeCount <= completedCount) {
+
+                                if (trial.status == currentStatus) {
+                                    // Update trial job's status based on result code
+                                    if (aggregatedCode === 0) {
+                                        trial.status = 'SUCCEEDED';
+                                    } else {
+                                        trial.status = 'FAILED';
+                                    }
+                                }
+                                trial.endTime = latestTimestamp;
+                                this.releaseEnvironment(trial);
+                                isCompleted = true;
+                            }
+
+                            if (isCompleted === false) {
+                                // check status consistence with environment.
+                                if (environment.status !== "RUNNING") {
+                                    this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environment.status}', set trial to environment status.`);
+                                    this.releaseEnvironment(trial);
+                                    trial.status = environment.status;
+                                }
                                 liveTrialsCount++;
                             }
                         }
@@ -386,7 +409,7 @@ class EnvironmentManager implements TrainingService {
         const name = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = new EnvironmentInformation(envId, name);
 
-        environment.workingFolder = storageService.joinRemotePath("envs", envId);
+        environment.workingFolder = storageService.joinPath("envs", envId);
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
         await storageService.createDirectory(environment.workingFolder);
@@ -394,7 +417,7 @@ class EnvironmentManager implements TrainingService {
         const isDebuging = true;
         if (isDebuging) {
             // environment.status = "RUNNING";
-            await storageService.copyDirectory("D:\\code\\nni\\tools\\nni_trial_tool", environment.workingFolder);
+            await storageService.copyDirectory("../nni/tools/nni_trial_tool", environment.workingFolder);
         }
 
         this.environments.set(environment.id, environment);

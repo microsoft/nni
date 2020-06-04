@@ -13,6 +13,8 @@ command_path = "./commands"
 runner_command_prefix = "runner_command_"
 manager_command_prefix = "manager_command_"
 
+parsed_commands = set()
+
 
 class CommandType(Enum):
     Initialize = b'IN'
@@ -55,7 +57,7 @@ def send(command, data):
         break
 
 
-def receive():
+def receive(is_keep_parsed=True):
     """Receive a command from Training Service.
     Returns a tuple of command (CommandType) and payload (str)
     """
@@ -66,27 +68,28 @@ def receive():
         pending_commands = []
         if os.path.exists(command_path):
             command_files = os.listdir(command_path)
-            for item in command_files:
-                if (item.startswith(manager_command_prefix)):
-                    pending_commands.append(item)
+            for file_name in command_files:
+                if (file_name.startswith(manager_command_prefix)) and file_name not in parsed_commands:
+                    pending_commands.append(file_name)
             pending_commands.sort()
 
-            if len(pending_commands) > 0:
-                for command_file in pending_commands:
-                    command_file = os.path.join(command_path, command_file)
-                    with open(command_file, "rb") as _in_file:
-                        header = _in_file.read(16)
-                        nni_log(LogType.Info, 'Received command, header: [%s]' % header)
-                        if header is None or len(header) < 16:
-                            # invalid header
-                            nni_log(LogType.Error, 'incorrect command is found!')
-                            return None, None
-                        length = int(header[2:])
-                        data = _in_file.read(length)
-                        command = CommandType(header[:2])
-                        data = json.loads(data.decode('utf8'))
-                        nni_log(LogType.Info, 'Received command, data: [%s]' % data)
-                    os.remove(command_file)
+            for file_name in pending_commands:
+                full_file_name = os.path.join(command_path, file_name)
+                with open(full_file_name, "rb") as _in_file:
+                    header = _in_file.read(16)
+                    nni_log(LogType.Info, 'Received command, header: [%s]' % header)
+                    if header is None or len(header) < 16:
+                        # invalid header
+                        nni_log(LogType.Error, 'incorrect command is found!')
+                        return None, None
+                    length = int(header[2:])
+                    data = _in_file.read(length)
+                    command = CommandType(header[:2])
+                    data = json.loads(data.decode('utf8'))
+                    nni_log(LogType.Info, 'Received command, data: [%s]' % data)
+                if not is_keep_parsed:
+                    os.remove(full_file_name)
+                parsed_commands.add(file_name)
     except Exception as identifier:
         nni_log(LogType.Error, 'meet unhandled exception: %s' % identifier)
     return command, data

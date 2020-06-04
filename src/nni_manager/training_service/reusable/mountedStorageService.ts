@@ -128,6 +128,16 @@ export class MountedStorageService extends StorageService {
 
     }
 
+    protected async internalList(remotePath: string): Promise<string[]> {
+        let results: string[] = [];
+
+        if (this.internalExists(remotePath)) {
+            results = await fs.promises.readdir(remotePath);
+        }
+
+        return results;
+    }
+
     protected internalIsRelativePath(remotePath: string): boolean {
         return !path.isAbsolute(remotePath);
     }

@@ -45,7 +45,7 @@ export class TrialDetail implements TrialJobDetail {
     public isEarlyStopped?: boolean;
     public environment?: EnvironmentInformation;
 
-    private readonly TRIAL_METADATA_DIR = ".nni";
+    public readonly TRIAL_METADATA_DIR = ".nni";
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
         workingDirectory: string, form: TrialJobApplicationForm) {
@@ -55,11 +55,6 @@ export class TrialDetail implements TrialJobDetail {
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.tags = [];
-    }
-
-    public getExitCodeFileName(): string {
-        const storageService = component.get<StorageService>(StorageService);
-        return storageService.joinRemotePath(this.workingDirectory, this.TRIAL_METADATA_DIR, "code");
     }
 }
 
@@ -92,7 +87,7 @@ export class EnvironmentInformation {
     public workingFolder: string = "";
     public runnerWorkingFolder: string = "";
     public command: string = "";
-    public serverCount: number = 1;
+    public nodeCount: number = 1;
 
     constructor(id: string, jobName: string, jobId?: string) {
         this.id = id;

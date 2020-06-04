@@ -78,7 +78,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
 
         request(getJobInfoRequest, async (error: any, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
-                this.log.error(`PAI Training service: get environment info from PAI Cluster failed!\nerror: ${error}`);
+                this.log.error(`OpenPAI: get environment list from PAI Cluster failed!\nerror: ${error}`);
                 deferred.reject(error);
             } else {
                 const jobInfos = new Map<string, any>();
@@ -201,7 +201,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
             request(stopJobRequest, (error, response, _body) => {
                 try {
                     if ((error !== undefined && error !== null) || (response && response.statusCode >= 400)) {
-                        this.log.error(`OpenPAI Training service: stop job ${environment.jobId} failed with ${response.statusCode}\n${error}`);
+                        this.log.error(`OpenPAI: stop job ${environment.jobId} failed with ${response.statusCode}\n${error}`);
                         deferred.reject((error !== undefined && error !== null) ? error :
                             `Stop trial failed, http code: ${response.statusCode}`);
                     } else {
@@ -243,7 +243,7 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                 // Validate to make sure codeDir doesn't have too many files
 
                 const storageService = component.get<StorageService>(StorageService);
-                const remoteRoot = storageService.joinRemotePath(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId);
+                const remoteRoot = storageService.joinPath(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId);
                 storageService.initialize(this.paiTrialConfig.nniManagerNFSMountPath, remoteRoot);
 
                 if (this.paiTrialConfig.paiConfigPath) {
@@ -283,18 +283,26 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
             nniJobConfig.name = jobName;
             if (nniJobConfig.taskRoles) {
 
-                // Each taskRole will generate new command in NNI's command format
-                // Each command will be formatted to NNI style
-                for (const taskRoleIndex in nniJobConfig.taskRoles) {
-                    const taskRole = nniJobConfig.taskRoles[taskRoleIndex];
+                environment.nodeCount = 0;
+                // count instance
+                for (const taskRoleName in nniJobConfig.taskRoles) {
+                    const taskRole = nniJobConfig.taskRoles[taskRoleName];
                     let instanceCount = 1;
                     if (taskRole.instances) {
                         instanceCount = taskRole.instances;
                     }
+                    environment.nodeCount += instanceCount;
+                }
 
-                    environment.serverCount += instanceCount;
 
-                    const nniTrialCommand = `${environment.command} ${taskRole.commands.join(" && ").replace(/(["'$`\\])/g, '\\$1')}`;
+                // Each taskRole will generate new command in NNI's command format
+                // Each command will be formatted to NNI style
+                for (const taskRoleName in nniJobConfig.taskRoles) {
+                    const taskRole = nniJobConfig.taskRoles[taskRoleName];
+                    // replace ' to '\''
+                    const joinedCommand = taskRole.commands.join(" && ").replace("'", "'\\''");
+                    let nniTrialCommand = `${environment.command} --node_count ${environment.nodeCount} --trial_command '${joinedCommand.trim()}'`;
+                    this.log.debug(`replace command ${taskRole.commands} to ${[nniTrialCommand]}`);
                     taskRole.commands = [nniTrialCommand];
                 }
             }

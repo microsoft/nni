@@ -38,6 +38,7 @@ export abstract class StorageService {
     protected abstract async internalCopy(sourcePath: string, targetPath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
     protected abstract async internalExists(remotePath: string): Promise<boolean>;
     protected abstract async internalRead(remotePath: string, offset: number, length: number): Promise<string>;
+    protected abstract async internalList(remotePath: string): Promise<string[]>;
     protected abstract internalIsRelativePath(path: string): boolean;
     protected abstract internalJoin(...paths: string[]): string;
     protected abstract internalDirname(...paths: string[]): string;
@@ -53,7 +54,7 @@ export abstract class StorageService {
         this.remoteRoot = remoteRoot;
     }
 
-    public async renameRemote(remotePath: string, newName: string): Promise<void> {
+    public async rename(remotePath: string, newName: string): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`rename remotePath: ${remotePath} to: ${newName}`);
         await this.internalRename(remotePath, newName);
@@ -69,7 +70,7 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy localPath: ${localPath} to remotePath: ${remotePath}, asGzip ${asGzip}`);
-        if (!await this.existsRemote(remotePath)) {
+        if (!await this.exists(remotePath)) {
             await this.internalMkdir(remotePath);
         }
 
@@ -106,16 +107,22 @@ export abstract class StorageService {
         await this.internalRemove(remotePath, true, isRecursive);
     }
 
-    public async readRemoteFile(remotePath: string, offset: number = -1, length: number = -1): Promise<string> {
+    public async readFileContent(remotePath: string, offset: number = -1, length: number = -1): Promise<string> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`read remote file: ${remotePath}, offset: ${offset}, length: ${length}`);
         return this.internalRead(remotePath, offset, length);
     }
 
-    public async existsRemote(remotePath: string): Promise<boolean> {
+    public async listDirectory(remotePath: string): Promise<string[]> {
+        remotePath = this.expandPath(true, remotePath);
+        this.logger.debug(`list remotePath: ${remotePath}`);
+        return await this.internalList(remotePath);
+    }
+
+    public async exists(remotePath: string): Promise<boolean> {
         remotePath = this.expandPath(true, remotePath);
         const exists = await this.internalExists(remotePath);
-        this.logger.debug(`check exists remotePath: ${remotePath} is ${exists}`);
+        this.logger.debug(`exists remotePath: ${remotePath} is ${exists}`);
         return exists
     }
 
@@ -135,14 +142,14 @@ export abstract class StorageService {
         }
         await fs.promises.writeFile(localTempFileName, content);
         await this.internalCopy(localTempFileName, remoteDir, false, false, true);
-        await this.renameRemote(remoteTempFile, fileName);
+        await this.rename(remoteTempFile, fileName);
         await fs.promises.unlink(localTempFileName);
     }
 
     public async copyFile(localPath: string, remotePath: string): Promise<void> {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
-        this.logger.debug(`copy file localPath: ${localPath} to remotePath: ${remotePath}`);
+        this.logger.debug(`copying file localPath: ${localPath} to remotePath: ${remotePath}`);
         await this.internalCopy(localPath, remotePath, false, false, true);
     }
 
@@ -159,7 +166,7 @@ export abstract class StorageService {
         await this.internalRemove(remotePath, false, false);
     }
 
-    public joinRemotePath(...paths: string[]): string {
+    public joinPath(...paths: string[]): string {
         let fullPath = this.internalJoin(...paths);
         if (this.internalIsRelativePath(fullPath) === true && this.remoteRoot !== "") {
             fullPath = this.internalJoin(this.remoteRoot, fullPath);
@@ -171,7 +178,7 @@ export abstract class StorageService {
         let normalizedPath: string;
 
         if (isRemote) {
-            normalizedPath = this.joinRemotePath(...paths);
+            normalizedPath = this.joinPath(...paths);
         } else {
             normalizedPath = path.join(...paths);
             if (!path.isAbsolute(normalizedPath) && this.localRoot !== "") {
