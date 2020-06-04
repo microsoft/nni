@@ -1,6 +1,6 @@
 
 defaultTestCaseConfig:
-  launchCommand: nnictl create --config $configFile
+  launchCommand: nnictl create --config $configFile --debug
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
@@ -22,7 +22,7 @@ testCases:
   validator:
 
   # launch command, default launch command is 'nnictl create --config $configFile'
-  launchCommand: nnictl create --config $configFile
+  launchCommand: nnictl create --config $configFile --debug
 
   # stop command, default stop command is 'nnictl stop', empty means no stop command
   stopCommand: nnictl stop
@@ -38,15 +38,24 @@ testCases:
 
 - name: mnist-tfv1
   configFile: test/config/examples/mnist-tfv1.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 - name: mnist-keras
   configFile: test/config/examples/mnist-keras.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 1
 
 - name: mnist-pytorch
   configFile: test/config/examples/mnist-pytorch.yml
 
 - name: mnist-annotation
   configFile: test/config/examples/mnist-annotation.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch.yml

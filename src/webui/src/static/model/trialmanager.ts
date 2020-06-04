@@ -2,6 +2,7 @@ import axios from 'axios';
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
 import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
+import { requestAxios } from '../function';
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
@@ -39,9 +40,20 @@ class TrialManager {
     private maxSequenceId: number = 0;
     private doingBatchUpdate: boolean = false;
     private batchUpdatedAfterReading: boolean = false;
+    private isJobListError: boolean = false; // trial-jobs api error filed
+    private jobErrorMessage: string = ''; // trial-jobs error message
+    private isMetricdataError: boolean = false; // metric-data api error filed
+    private MetricdataErrorMessage: string = ''; // metric-data error message
+    private isLatestMetricdataError: boolean = false; // metric-data-latest api error filed
+    private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
+    private isMetricdataRangeError: boolean = false; // metric-data-range api error filed
+    private metricdataRangeErrorMessage: string = ''; // metric-data-latest error message
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
+            if (this.isMetricdataError) {
+                return;
+            }
             await this.update();
         }
     }
@@ -156,24 +168,70 @@ class TrialManager {
         return trials;
     }
 
+    // if this.jobListError = true, show trial error message [/trial-jobs]
+    public jobListError(): boolean {
+        return this.isJobListError;
+    }
+
+    // trial error message's content [/trial-jobs]
+    public getJobErrorMessage(): string {
+        return this.jobErrorMessage;
+    }
+
+    // [/metric-data]
+    public MetricDataError(): boolean {
+        return this.isMetricdataError;
+    }
+
+    // [/metric-data]
+    public getMetricDataErrorMessage(): string {
+        return this.MetricdataErrorMessage;
+    }
+
+    // [/metric-data-latest]
+    public latestMetricDataError(): boolean {
+        return this.isLatestMetricdataError;
+    }
+
+    // [/metric-data-latest]
+    public getLatestMetricDataErrorMessage(): string {
+        return this.latestMetricdataErrorMessage;
+    }
+
+    public metricDataRangeError(): boolean {
+        return this.isMetricdataRangeError;
+    }
+
+    public metricDataRangeErrorMessage(): string {
+        return this.metricdataRangeErrorMessage;
+    }
+
     private async updateInfo(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/trial-jobs`);
+
         let updated = false;
-        if (response.status === 200) {
-            const newTrials = TrialManager.expandJobsToTrials(response.data);
-            for (const trialInfo of newTrials as TrialJobInfo[]) {
-                if (this.trials.has(trialInfo.id)) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
-                } else {
-                    this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
-                    updated = true;
+        requestAxios(`${MANAGER_IP}/trial-jobs`)
+            .then(data => {
+                const newTrials = TrialManager.expandJobsToTrials(data as any);
+                for (const trialInfo of newTrials as TrialJobInfo[]) {
+                    if (this.trials.has(trialInfo.id)) {
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
+                    } else {
+                        this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
+                        updated = true;
+                    }
+                    this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
                 }
-                this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);
-            }
-            this.infoInitialized = true;
-        }
-        return updated;
+                this.infoInitialized = true;
+            })
+            .catch(error => {
+                this.isJobListError = true;
+                this.jobErrorMessage = error.message;
+                this.infoInitialized = true;
+                updated = true;
+            });
+
+            return updated;
     }
 
     private async updateMetrics(lastTime?: boolean): Promise<boolean> {
@@ -188,13 +246,25 @@ class TrialManager {
     }
 
     private async updateAllMetrics(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/metric-data`);
-        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], false);
+        return requestAxios(`${MANAGER_IP}/metric-data`)
+            .then(data => this.doUpdateMetrics(data as any, false))
+            .catch(error => {
+                this.isMetricdataError = true;
+                this.MetricdataErrorMessage = `${error.message}`;
+                this.doUpdateMetrics([], false);
+                return true;
+            });
     }
 
     private async updateLatestMetrics(): Promise<boolean> {
-        const response = await axios.get(`${MANAGER_IP}/metric-data-latest`);
-        return (response.status === 200) && this.doUpdateMetrics(response.data as MetricDataRecord[], true);
+        return requestAxios(`${MANAGER_IP}/metric-data-latest`)
+            .then(data => this.doUpdateMetrics(data as any, true))
+            .catch(error => {
+                this.isLatestMetricdataError = true;
+                this.latestMetricdataErrorMessage = `${error.message}`;
+                this.doUpdateMetrics([], true);
+                return true;
+            });
     }
 
     private async updateManyMetrics(): Promise<void> {
@@ -202,12 +272,16 @@ class TrialManager {
             return;
         }
         this.doingBatchUpdate = true;
-        for (let i = 0; i < this.maxSequenceId; i += METRIC_GROUP_UPDATE_SIZE) {
-            const response = await axios.get(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`);
-            if (response.status === 200) {
-                const updated = this.doUpdateMetrics(response.data as MetricDataRecord[], false);
-                this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
-            }
+        for (let i = 0; i < this.maxSequenceId && this.isMetricdataRangeError === false; i += METRIC_GROUP_UPDATE_SIZE) {
+            requestAxios(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`)
+                .then(data => {
+                    const updated = this.doUpdateMetrics(data as any, false);
+                    this.batchUpdatedAfterReading = this.batchUpdatedAfterReading || updated;
+                })
+                .catch(error => {
+                    this.isMetricdataRangeError = true;
+                    this.metricdataRangeErrorMessage = `${error.message}`;
+                });
         }
         this.doingBatchUpdate = false;
     }

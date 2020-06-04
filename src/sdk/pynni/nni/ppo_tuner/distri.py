@@ -61,7 +61,7 @@ class PdType:
 
 class CategoricalPd(Pd):
     """
-    Categorical prossibility distribution
+    Categorical probability distribution
     """
     def __init__(self, logits, mask_npinf, nsteps, size, is_act_model):
         self.logits = logits

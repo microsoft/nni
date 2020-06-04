@@ -15,6 +15,7 @@ else{
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
 $NNI_VERSION_VALUE = git describe --tags --abbrev=0
+$NNI_VERSION_VALUE = $NNI_VERSION_VALUE.substring(1)
 
 # To include time stamp in version value, run:
 # make version_ts=true build
@@ -60,6 +61,8 @@ Copy-Item $CWD\..\..\src\nni_manager\package.json $CWD\nni
 (Get-Content $CWD\nni\package.json).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $CWD\nni\package.json
 cd $CWD\nni
 yarn --prod
+cd $CWD\..\..\src\sdk\pynni\nni
+(Get-Content __init__.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content __init__.py
 cd $CWD
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 python setup.py bdist_wheel -p $WHEEL_SPEC

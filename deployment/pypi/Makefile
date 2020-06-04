@@ -13,6 +13,7 @@ endif
 
 TIME_STAMP = $(shell date -u "+%y%m%d%H%M")
 NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
+NNI_VERSION_VALUE := $(NNI_VERSION_VALUE:v%=%)
 
 # To include time stamp in version value, run:
 # make version_ts=true build
@@ -25,6 +26,7 @@ NNI_YARN_FOLDER ?= $(CWD)nni-yarn
 NNI_YARN := PATH=$(CWD)node-$(OS_SPEC)-x64/bin:$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 .PHONY: build
 build:
+	# Building version $(NNI_VERSION_VALUE)
 	python3 -m pip install --user --upgrade setuptools wheel
 	wget -q https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
 	rm -rf $(CWD)node-$(OS_SPEC)-x64
@@ -47,6 +49,7 @@ build:
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
 	cd $(CWD)nni && $(NNI_YARN) --prod
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)../../src/sdk/pynni/nni/__init__.py
 	cd $(CWD) && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
 	cd $(CWD)
 

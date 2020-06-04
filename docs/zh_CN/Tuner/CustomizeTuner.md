@@ -51,7 +51,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。 如果在 Experiment 配置文件里 `multiPhase` 为 `true`， 会有一个附加的 `trial_job_id` 在 `**kwargs` 参数中返回给 `receive_trial_result` 和 `generate_parameters`。
+`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。
 
 `generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 SDK 会将 json 对象解包给 Trial 进程。因此，Trial 进程会收到来自 Tuner 的完全相同的 `your_parameters`。
 

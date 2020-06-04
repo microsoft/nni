@@ -21,7 +21,7 @@ class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-
+    
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -49,8 +49,8 @@ class App extends React.Component<{}, AppState> {
     }
 
     getFinalDataFormat = (): void => {
-        for(let i = 0; this.state.isillegalFinal === false; i++){
-            if(TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined){
+        for (let i = 0; this.state.isillegalFinal === false; i++) {
+            if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
                 if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
@@ -71,14 +71,14 @@ class App extends React.Component<{}, AppState> {
     }
 
     changeInterval = (interval: number): void => {
-        
+
         window.clearTimeout(this.timerId);
         if (interval === 0) {
-            return;   
+            return;
         }
         // setState will trigger page refresh at once.
         // setState is asyc, interval not update to (this.state.interval) at once.
-        this.setState({interval}, () => {
+        this.setState({ interval }, () => {
             this.firstLoad = true;
             this.refresh();
         });
@@ -96,7 +96,7 @@ class App extends React.Component<{}, AppState> {
 
     // overview best trial module
     changeEntries = (entries: string): void => {
-        this.setState({bestTrialEntries: entries});
+        this.setState({ bestTrialEntries: entries });
     }
 
     render(): React.ReactNode {
@@ -106,15 +106,25 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
+        
+        const errorList = [
+            { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
+            { errorWhere: EXPERIMENT.experimentError(), errorMessage: EXPERIMENT.getExperimentMessage() },
+            { errorWhere: EXPERIMENT.statusError(), errorMessage: EXPERIMENT.getStatusMessage() },
+            { errorWhere: TRIALS.MetricDataError(), errorMessage: TRIALS.getMetricDataErrorMessage() },
+            { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
+            { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
+        ];
+
         const reactPropsChildren = React.Children.map(this.props.children, child =>
             React.cloneElement(
                 child as React.ReactElement<any>, {
-                    interval,
-                    columnList, changeColumn: this.changeColumn,
-                    experimentUpdateBroadcast,
-                    trialsUpdateBroadcast,
-                    metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
-                    bestTrialEntries, changeEntries: this.changeEntries
+                interval,
+                columnList, changeColumn: this.changeColumn,
+                experimentUpdateBroadcast,
+                trialsUpdateBroadcast,
+                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
+                bestTrialEntries, changeEntries: this.changeEntries
             })
         );
 
@@ -127,6 +137,16 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className="contentBox">
                     <Stack className="content">
+                        {/* if api has error field, show error message */}
+                        {
+                            errorList.map((item, key) => {
+                                return (
+                                    item.errorWhere && <div key={key} className="warning">
+                                        <MessageInfo info={item.errorMessage} typeInfo="error" />
+                                    </div>
+                                );
+                            })
+                        }
                         {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}
@@ -149,18 +169,20 @@ class App extends React.Component<{}, AppState> {
             if (trialsUpdated) {
                 this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
             }
+
         } else {
             this.firstLoad = false;
         }
 
-        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+        // experiment status and /trial-jobs api's status could decide website update
+        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
             this.setState({ interval: 0 });
             this.lastRefresh();
             return;
         }
 
-        this.timerId =  window.setTimeout(this.refresh, this.state.interval * 1000);
+        this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
 
     }
 

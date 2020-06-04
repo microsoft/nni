@@ -143,7 +143,9 @@ def set_remote_config(experiment_config, port, config_file_name):
         for i in range(len(request_data['machine_list'])):
             if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
                 request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
+    # It needs to connect all remote machines, the time out of connection is 30 seconds.
+    # So timeout of this place should be longer.
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 60, True)
     err_message = ''
     if not response or not check_response(response):
         if response is not None:
