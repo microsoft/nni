@@ -39,7 +39,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         super(props);
         this.state = {
             tablePageSize: 20,
-            whichGraph: '1',
+            // whichGraph: '1',
+            whichGraph: 'Default metric',
             searchType: 'Id',
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
             searchFilter: trial => true
@@ -81,8 +82,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         }
     }
 
-    handleWhichTabs = (activeKey: string): void => {
-        this.setState({ whichGraph: activeKey });
+    handleWhichTabs = (item: any): void => {
+        this.setState({whichGraph: item.props.headerText});
     }
 
     updateSearchFilterType = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
@@ -109,19 +110,19 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Pivot defaultSelectedKey={"0"} className="detial-title">
+                    <Pivot defaultSelectedKey={"0"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichGraph}>
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
-                        <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="1">
+                        <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="Default metric">
                             <Stack className="graph">
                                 <DefaultPoint
                                     trialIds={trialIds}
-                                    visible={whichGraph === '1'}
+                                    visible={whichGraph === 'Default metric'}
                                     trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                                 />
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
-                        <PivotItem headerText="Hyper-parameter" itemIcon="Equalizer" key="2">
+                        <PivotItem headerText="Hyper-parameter" itemIcon="Equalizer" key="Hyper-parameter">
                             <Stack className="graph">
                                 <Para
                                     dataSource={source}
@@ -131,11 +132,11 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
-                        <PivotItem headerText="Duration" itemIcon="BarChartHorizontal" key="3">
+                        <PivotItem headerText="Duration" itemIcon="BarChartHorizontal" key="Duration">
                             <Duration source={source} whichGraph={whichGraph} />
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
-                        <PivotItem headerText="Intermediate result" itemIcon="StackedLineChart" key="4">
+                        <PivotItem headerText="Intermediate result" itemIcon="StackedLineChart" key="Intermediate result">
                             {/* *why this graph has small footprint? */}
                             <Intermediate source={source} whichGraph={whichGraph} />
                         </PivotItem>
