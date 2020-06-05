@@ -55,16 +55,16 @@ assessor:
 
 适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
 
-**Note**, according to the original paper, only incremental functions are supported. Therefore this assessor can only be used to maximize optimization metrics. For example, it can be used for accuracy, but not for loss.
+**注意**，根据原始论文，仅支持递增函数。 因此，此 Assessor 仅可用于最大化优化指标的场景。 例如，它可用于准确性，但不能用于损失值。
 
-**classArgs requirements:**
+**classArgs 要求：**
 
 * **epoch_num** (*int, **必需***) - epoch 的总数。 需要此数据来决定需要预测点的总数。
-* **start_step** (*int, optional, default = 6*) - A trial is determined to be stopped or not only after receiving start_step number of reported intermediate results.
-* **threshold** (*float, optional, default = 0.95*) - The threshold that we use to decide to early stop the worst performance curve. For example: if threshold = 0.95, and the best performance in the history is 0.9, then we will stop the trial who's predicted value is lower than 0.95 * 0.9 = 0.855.
-* **gap** (*int, optional, default = 1*) - The gap interval between Assessor judgements. For example: if gap = 2, start_step = 6, then we will assess the result when we get 6, 8, 10, 12...intermediate results.
+* **start_step** (*int, 可选, 默认值为 6*) - 只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
+* **threshold** (*float, 可选, 默认值为 0.95*) - 用来确定提前终止较差结果的阈值。 例如，如果 threshold = 0.95，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
+* **gap** (*int, 可选, 默认值为 1*) - Assessor 两次评估之间的间隔次数。 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
 
-**Usage example:**
+**使用示例：**
 
 ```yaml
 # config.yml
