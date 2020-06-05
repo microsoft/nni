@@ -4,30 +4,29 @@
 import numpy as np
 import unittest
 
-from .curvefitting_assessor import CurvefittingAssessor
-from .model_factory import CurveModel
+from nni.curvefitting_assessor import CurvefittingAssessor
+from nni.curvefitting_assessor.model_factory import CurveModel
 from nni.assessor import AssessResult
 
 class TestCurveFittingAssessor(unittest.TestCase):
     def test_init(self):
         new_assessor = CurvefittingAssessor(20)
-        self.assertEquals(new_assessor.start_step, 6)
-        self.assertEquals(new_assessor.target_pos, 20)
-        self.assertEquals(new_assessor.completed_best_performance, 0.0001)
+        self.assertEqual(new_assessor.start_step, 6)
+        self.assertEqual(new_assessor.target_pos, 20)
 
     def test_insufficient_point(self):
         new_assessor = CurvefittingAssessor(20)
         ret = new_assessor.assess_trial(1, [1])
-        self.assertEquals(ret, AssessResult.Good)
+        self.assertEqual(ret, AssessResult.Good)
 
     def test_not_converged(self):
         new_assessor = CurvefittingAssessor(20)
         with self.assertRaises(TypeError):
             ret = new_assessor.assess_trial([1, 199, 0, 199, 1, 209, 2])
         ret = new_assessor.assess_trial(1, [1, 199, 0, 199, 1, 209, 2])
-        self.assertEquals(ret, AssessResult.Good)
+        self.assertEqual(ret, AssessResult.Good)
         models = CurveModel(21)
-        self.assertEquals(models.predict([1, 199, 0, 199, 1, 209, 2]), -1)
+        self.assertEqual(models.predict([1, 199, 0, 199, 1, 209, 2]), None)
 
     def test_curve_model(self):
         test_model = CurveModel(21)
@@ -37,10 +36,10 @@ class TestCurveFittingAssessor(unittest.TestCase):
         test_model.target_pos = 20
         test_model.trial_history = ([1, 1, 1, 1, 1, 1, 1, 1, 1])
         test_model.weight_samples = np.ones((test_model.effective_model_num), dtype=np.float) / test_model.effective_model_num
-        self.assertAlmostEquals(test_model.predict_y('vap', 9), 0.5591906328335763)
-        self.assertAlmostEquals(test_model.predict_y('logx_linear', 15), 1.0704360293379522)
-        self.assertAlmostEquals(test_model.f_comb(9, test_model.weight_samples), 1.1543379521172443)
-        self.assertAlmostEquals(test_model.f_comb(15, test_model.weight_samples), 1.6949395581692737)
+        self.assertAlmostEqual(test_model.predict_y('vap', 9), 0.5591906328335763)
+        self.assertAlmostEqual(test_model.predict_y('logx_linear', 15), 1.0704360293379522)
+        self.assertAlmostEqual(test_model.f_comb(9, test_model.weight_samples), 1.1543379521172443)
+        self.assertAlmostEqual(test_model.f_comb(15, test_model.weight_samples), 1.6949395581692737)
 
 if __name__ == '__main__':
     unittest.main()
