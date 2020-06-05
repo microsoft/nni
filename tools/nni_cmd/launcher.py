@@ -18,7 +18,7 @@ from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
                           detect_port, get_user
 
-from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_META
+from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, INSTALLABLE_PACKAGE_META
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
 
@@ -406,7 +406,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except CalledProcessError:
             print_error('some errors happen when import package %s.' %(package_name))
             print_log_content(config_file_name)
-            if package_name in PACKAGE_META:
+            if package_name in INSTALLABLE_PACKAGE_META:
                 print_error('If %s is not installed, it should be installed through '\
                             '\'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)

@@ -6,9 +6,9 @@ from colorama import Fore
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local', 'nnictl')
 
-ERROR_INFO = 'ERROR:'
-NORMAL_INFO = 'INFO:'
-WARNING_INFO = 'WARNING:'
+ERROR_INFO = 'ERROR: '
+NORMAL_INFO = 'INFO: '
+WARNING_INFO = 'WARNING: '
 
 DEFAULT_REST_PORT = 8080
 REST_TIME_OUT = 20
@@ -59,7 +59,7 @@ TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
 
 TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
-PACKAGE_META = {
+INSTALLABLE_PACKAGE_META = {
     'SMAC': {
         'type': 'tuner',
         'class_name': 'nni.smac_tuner.smac_tuner.SMACTuner',

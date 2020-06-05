@@ -20,6 +20,20 @@ def get_all_builtin_names(algo_type):
     builtin_names = [x['name'] for x in merged_dict[algo_type]]
     return builtin_names
 
+def get_not_installable_builtin_names(algo_type=None):
+    if algo_type is None:
+        meta = BuiltinAlgorithms
+    else:
+        assert algo_type in ALGO_TYPES
+        meta = {
+            algo_type: BuiltinAlgorithms[algo_type]
+        }
+    names = []
+    for t in ALGO_TYPES:
+        if t in meta:
+            names.extend([x['name'] for x in meta[t]])
+    return names
+
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
     merged_dict = _get_merged_builtin_dict()
 
