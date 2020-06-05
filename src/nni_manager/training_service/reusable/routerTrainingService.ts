@@ -39,7 +39,7 @@ import { MountedStorageService } from './mountedStorageService';
  * The final goal is to support reusable training job in higher level than training service.
  */
 @component.Singleton
-class ForwardTrainingService implements TrainingService {
+class RouterTrainingService implements TrainingService {
     protected readonly log!: Logger;
     private internalTrainingService: TrainingService | undefined;
     private metaDataCache: Map<string, string> = new Map<string, string>();
@@ -170,4 +170,4 @@ class ForwardTrainingService implements TrainingService {
     }
 }
 
-export { ForwardTrainingService };
+export { RouterTrainingService };
