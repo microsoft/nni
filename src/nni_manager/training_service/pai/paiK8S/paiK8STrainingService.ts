@@ -201,6 +201,8 @@ class PAIK8STrainingService extends PAITrainingService {
             }
 
         } else {
+            const containerPathParts = this.paiTrialConfig.containerNFSMountPath.split("/");
+            const containerPathName = containerPathParts[containerPathParts.length - 1];
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,
@@ -235,7 +237,10 @@ class PAIK8STrainingService extends PAITrainingService {
                 extras: {
                     'com.microsoft.pai.runtimeplugin': [
                         {
-                            plugin: this.paiTrialConfig.paiStoragePlugin
+                            plugin: this.paiTrialConfig.paiStoragePlugin,
+                            parameters: [
+                                containerPathName
+                            ]
                         }
                     ],
                     submitFrom: 'submit-job-v2'

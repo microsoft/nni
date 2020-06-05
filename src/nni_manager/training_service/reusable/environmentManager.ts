@@ -308,56 +308,70 @@ class EnvironmentManager implements TrainingService {
                                 continue;
                             }
 
-                            const codeFilePath = storageService.joinPath(trial.workingDirectory, trial.TRIAL_METADATA_DIR);
-                            const remoteFiles = await storageService.listDirectory(codeFilePath);
-
                             let isCompleted = false;
-                            let latestTimestamp = 0;
-                            let aggregatedCode = 0;
-                            let completedCount = 0;
-                            for (const fileName of remoteFiles) {
-                                if (fileName.startsWith("code")) {
-                                    const fullName = storageService.joinPath(codeFilePath, fileName)
-                                    const fileContent = await storageService.readFileContent(fullName);
+                            let remoteFiles: string[] = [];
 
-                                    const match: RegExpMatchArray | null = fileContent.trim().match(/^-?(\d+)\s+(\d+)$/);
-                                    if (match !== null) {
-                                        const { 1: code, 2: timestamp } = match;
-                                        const intCode = parseInt(code, 10)
-                                        latestTimestamp = Math.max(latestTimestamp, parseInt(timestamp, 10));
-                                        if (intCode !== 0) {
-                                            // only save latest non-zero exit code
-                                            aggregatedCode = intCode;
-                                        }
-                                        completedCount++;
-                                    }
-                                }
+                            const codeFilePath = storageService.joinPath(trial.workingDirectory, trial.TRIAL_METADATA_DIR);
+                            // the folder may not exist at initial stage. Just ignore, if it doesn't exists;
+                            if (await storageService.exists(codeFilePath)) {
+                                remoteFiles = await storageService.listDirectory(codeFilePath);
                             }
 
-                            // for multiple running nodes, all completed mean complete.
-                            // any failed node means failed.
-                            // use <= for some wired cases.
-                            if (environment.nodeCount <= completedCount) {
+                            if (remoteFiles.length > 0) {
+                                let latestTimestamp = 0;
+                                let aggregatedCode = 0;
+                                let completedCount = 0;
+                                for (const fileName of remoteFiles) {
+                                    if (fileName.startsWith("code")) {
+                                        const fullName = storageService.joinPath(codeFilePath, fileName)
+                                        const fileContent = await storageService.readFileContent(fullName);
 
-                                if (trial.status == currentStatus) {
-                                    // Update trial job's status based on result code
-                                    if (aggregatedCode === 0) {
-                                        trial.status = 'SUCCEEDED';
-                                    } else {
-                                        trial.status = 'FAILED';
+                                        const match: RegExpMatchArray | null = fileContent.trim().match(/^-?(\d+)\s+(\d+)$/);
+                                        if (match !== null) {
+                                            const { 1: code, 2: timestamp } = match;
+                                            const intCode = parseInt(code, 10)
+                                            latestTimestamp = Math.max(latestTimestamp, parseInt(timestamp, 10));
+                                            if (intCode !== 0) {
+                                                // only save latest non-zero exit code
+                                                aggregatedCode = intCode;
+                                            }
+                                            completedCount++;
+                                        }
                                     }
                                 }
-                                trial.endTime = latestTimestamp;
-                                this.releaseEnvironment(trial);
-                                isCompleted = true;
+
+                                // for multiple running nodes, if one node is done, thought it's done.
+                                // any failed node means failed.
+                                // use <= for some wired cases.
+                                if (completedCount > 0) {
+                                    this.log.debug(`found ${completedCount} completed trial process(es), nodeCount: ${environment.nodeCount}`);
+
+                                    // if some trial processes doesn't exit, kill it for next one.
+                                    // for example, in horovod, it's just sleep command, has no impact on trial result.
+                                    if (environment.nodeCount >= completedCount){
+                                        this.sendCommand(KILL_TRIAL_JOB, trial.id, environment);
+                                    }
+                                    if (trial.status == currentStatus) {
+                                        // Update trial job's status based on result code
+                                        if (aggregatedCode === 0) {
+                                            trial.status = 'SUCCEEDED';
+                                        } else {
+                                            trial.status = 'FAILED';
+                                        }
+                                    }
+                                    trial.endTime = latestTimestamp;
+                                    this.releaseEnvironment(trial);
+                                    isCompleted = true;
+                                }
                             }
 
                             if (isCompleted === false) {
                                 // check status consistence with environment.
-                                if (environment.status !== "RUNNING") {
-                                    this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environment.status}', set trial to environment status.`);
+                                const environmentStatus = environment.status;
+                                if (environmentStatus !== "RUNNING") {
+                                    this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environmentStatus}', set trial to environment status.`);
                                     this.releaseEnvironment(trial);
-                                    trial.status = environment.status;
+                                    trial.status = environmentStatus;
                                 }
                                 liveTrialsCount++;
                             }

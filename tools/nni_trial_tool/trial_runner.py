@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import random
 import re
 import sys
 import threading
@@ -20,11 +21,24 @@ trial_runner_syslogger = None
 def main_loop(args):
     '''main loop logic for trial runner'''
     idle_last_time = datetime.now()
+    is_multi_node = args.node_count > 1
+
+    if (is_multi_node):
+        # for multiple nodes, create a file to get a unique id.
+        while True:
+            node_id = random.randint(0, 10000)
+            unique_check_file_name = "node_%s" % (node_id)
+            if not os.path.exists(unique_check_file_name):
+                break
+        with open(unique_check_file_name, "w") as unique_check_file:
+            unique_check_file.write("%s" % (int(datetime.now().timestamp() * 1000)))
+        args.node_id = node_id
+        args.runner_id = "%s_%s" % (args.runner_id, node_id)
+
     trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
                                           StdOutputType.Stdout, args.log_collection, args.runner_id)
     sys.stdout = sys.stderr = trial_runner_syslogger
     trial = None
-    is_multi_node = args.node_count > 1
 
     try:
         # command loop
@@ -146,7 +160,10 @@ if __name__ == '__main__':
 
     args.exp_id = settings["experimentId"]
     args.platform = settings["platform"]
+    # runner_id is unique node in experiment, and will be updated if it's multi-nodes
     args.runner_id = "runner_"+os.path.basename(os.path.realpath(os.path.curdir))
+    # node id is unique in the runner
+    args.node_id = None
 
     if args.trial_command is None:
         args.trial_command = settings["command"]
