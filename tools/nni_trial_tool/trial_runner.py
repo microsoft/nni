@@ -23,21 +23,6 @@ def main_loop(args):
     idle_last_time = datetime.now()
     is_multi_node = args.node_count > 1
 
-    if (is_multi_node):
-        # for multiple nodes, create a file to get a unique id.
-        while True:
-            node_id = random.randint(0, 10000)
-            unique_check_file_name = "node_%s" % (node_id)
-            if not os.path.exists(unique_check_file_name):
-                break
-        with open(unique_check_file_name, "w") as unique_check_file:
-            unique_check_file.write("%s" % (int(datetime.now().timestamp() * 1000)))
-        args.node_id = node_id
-        args.runner_id = "%s_%s" % (args.runner_id, node_id)
-
-    trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
-                                          StdOutputType.Stdout, args.log_collection, args.runner_id)
-    sys.stdout = sys.stderr = trial_runner_syslogger
     trial = None
 
     try:
@@ -75,9 +60,6 @@ def main_loop(args):
         if trial is not None:
             trial.kill()
 
-    trial_runner_syslogger.close()
-    trial_runner_syslogger = None
-
 
 def trial_runner_help_info(*args):
     print('please run --help to see guidance')
@@ -96,26 +78,26 @@ def check_version(args):
     else:
         try:
             trial_runner_version = regular.search(trial_runner_version).group('version')
-            nni_log(LogType.Info, 'runner_version is {0}'.format(trial_runner_version))
+            nni_log(LogType.Info, '{0}: runner_version is {1}'.format(args.runner_name, trial_runner_version))
             nni_manager_version = regular.search(args.nni_manager_version).group('version')
-            nni_log(LogType.Info, 'nni_manager_version is {0}'.format(nni_manager_version))
+            nni_log(LogType.Info, '{0}: nni_manager_version is {1}'.format(args.runner_name, nni_manager_version))
             log_entry = {}
             if trial_runner_version != nni_manager_version:
-                nni_log(LogType.Error, 'Version does not match!')
-                error_message = 'NNIManager version is {0}, Trial runner version is {1}, NNI version does not match!'.format(
-                    nni_manager_version, trial_runner_version)
+                nni_log(LogType.Error, '{0}: Version does not match!'.format(args.runner_name))
+                error_message = '{0}: NNIManager version is {1}, Trial runner version is {2}, NNI version does not match!'.format(
+                    args.runner_name, nni_manager_version, trial_runner_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
                 rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_id), json.dumps(log_entry), 10,
                           False)
                 os._exit(1)
             else:
-                nni_log(LogType.Info, 'Version match!')
+                nni_log(LogType.Info, '{0}: Version match!'.format(args.runner_name))
                 log_entry['tag'] = 'VCSuccess'
                 rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_id), json.dumps(log_entry), 10,
                           False)
         except AttributeError as err:
-            nni_log(LogType.Error, err)
+            nni_log(LogType.Error, '{0}: {1}'.format(args.runner_name, err))
 
 
 def fetch_parameter_file(args):
@@ -160,10 +142,8 @@ if __name__ == '__main__':
 
     args.exp_id = settings["experimentId"]
     args.platform = settings["platform"]
-    # runner_id is unique node in experiment, and will be updated if it's multi-nodes
+    # runner_id is unique runner in experiment, and will be updated if it's multi-nodes
     args.runner_id = "runner_"+os.path.basename(os.path.realpath(os.path.curdir))
-    # node id is unique in the runner
-    args.node_id = None
 
     if args.trial_command is None:
         args.trial_command = settings["command"]
@@ -192,16 +172,38 @@ if __name__ == '__main__':
     from .protocol import CommandType, receive
     from .trial import Trial
 
-    nni_log(LogType.Info, "merged args is {}".format(args))
+    is_multi_node = args.node_count > 1
+
+    if (is_multi_node):
+        # for multiple nodes, create a file to get a unique id.
+        while True:
+            node_id = random.randint(0, 10000)
+            unique_check_file_name = "node_%s" % (node_id)
+            if not os.path.exists(unique_check_file_name):
+                break
+        with open(unique_check_file_name, "w") as unique_check_file:
+            unique_check_file.write("%s" % (int(datetime.now().timestamp() * 1000)))
+        args.node_id = node_id
+        args.runner_name = "%s_%s" % (args.runner_id, node_id)
+    else:
+        # node id is unique in the runner
+        args.node_id = None
+        # runner_name is unique node in experiment, and will be updated if it's multi-nodes
+        args.runner_name = args.runner_id
+
+    trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
+                                          StdOutputType.Stdout, args.log_collection, args.runner_id)
+    sys.stdout = sys.stderr = trial_runner_syslogger
+    nni_log(LogType.Info, "{}: merged args is {}".format(args.runner_name, args))
 
     if args.trial_command is None:
-        nni_log(LogType.Error, "no command is found.")
+        nni_log(LogType.Error, "{}: no command is found.".format(args.runner_name))
         os._exit(1)
     check_version(args)
     try:
         main_loop(args)
     except SystemExit as se:
-        nni_log(LogType.Info, 'NNI trial runner exit with code {}'.format(se.code))
+        nni_log(LogType.Info, '{}: NNI trial runner exit with code {}'.format(args.runner_name, se.code))
         os._exit(se.code)
     finally:
         if trial_runner_syslogger is not None:

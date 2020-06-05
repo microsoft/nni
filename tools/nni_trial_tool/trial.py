@@ -3,7 +3,6 @@
 
 import ctypes
 import os
-import random
 import shlex
 import tarfile
 import time
@@ -41,13 +40,14 @@ class Trial:
     def run(self):
         # redirect trial's stdout and stderr to syslog
         self.trial_syslogger_stdout = RemoteLogger(self.args.nnimanager_ip, self.args.nnimanager_port, 'trial', StdOutputType.Stdout,
-                                                   self.args.log_collection, self.name)
+                                                   self.args.log_collection, self.id)
 
         nni_log(LogType.Info, "%s: start to run trial" % self.name)
 
         trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
         self.trial_output_dir = os.path.join(trial_working_dir, trial_output_path_name)
         trial_code_dir = os.path.join(trial_working_dir, "code")
+        trial_nnioutput_dir = os.path.join(trial_working_dir, "nnioutput")
 
         os.environ['NNI_TRIAL_SEQ_ID'] = str(self.data["sequenceId"])
         os.environ['NNI_OUTPUT_DIR'] = os.path.join(trial_working_dir, "nnioutput")
@@ -59,6 +59,7 @@ class Trial:
             os.makedirs(trial_working_dir, exist_ok=True)
 
             os.makedirs(self.trial_output_dir, exist_ok=True)
+            os.makedirs(trial_nnioutput_dir, exist_ok=True)
             # prepare code
             os.makedirs(trial_code_dir, exist_ok=True)
             with tarfile.open(os.path.join("..", "nni-code.tar.gz"), "r:gz") as tar:
@@ -84,7 +85,7 @@ class Trial:
         # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
         self.log_pipe_stdout = self.trial_syslogger_stdout.get_pipelog_reader()
         self.process = Popen(self.args.trial_command, shell=True, stdout=self.log_pipe_stdout,
-                             stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=os.environ)
+                             stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=dict(os.environ))
         nni_log(LogType.Info, '{0}: spawns a subprocess (pid {1}) to run command: {2}'.
                 format(self.name, self.process.pid, shlex.split(self.args.trial_command)))
 

@@ -312,10 +312,7 @@ class EnvironmentManager implements TrainingService {
                             let remoteFiles: string[] = [];
 
                             const codeFilePath = storageService.joinPath(trial.workingDirectory, trial.TRIAL_METADATA_DIR);
-                            // the folder may not exist at initial stage. Just ignore, if it doesn't exists;
-                            if (await storageService.exists(codeFilePath)) {
-                                remoteFiles = await storageService.listDirectory(codeFilePath);
-                            }
+                            remoteFiles = await storageService.listDirectory(codeFilePath);
 
                             if (remoteFiles.length > 0) {
                                 let latestTimestamp = 0;
@@ -348,7 +345,7 @@ class EnvironmentManager implements TrainingService {
 
                                     // if some trial processes doesn't exit, kill it for next one.
                                     // for example, in horovod, it's just sleep command, has no impact on trial result.
-                                    if (environment.nodeCount >= completedCount){
+                                    if (environment.nodeCount >= completedCount) {
                                         this.sendCommand(KILL_TRIAL_JOB, trial.id, environment);
                                     }
                                     if (trial.status == currentStatus) {
