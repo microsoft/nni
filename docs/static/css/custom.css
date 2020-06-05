@@ -106,3 +106,11 @@ td.framework{
 .chinese{
     margin-bottom: 16px;
 }
+
+.QR{
+    width: 180px;
+}
+
+.or{
+    vertical-align: middle;
+}
