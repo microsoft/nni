@@ -39,7 +39,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         super(props);
         this.state = {
             tablePageSize: 20,
-            // whichGraph: '1',
             whichGraph: 'Default metric',
             searchType: 'Id',
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
