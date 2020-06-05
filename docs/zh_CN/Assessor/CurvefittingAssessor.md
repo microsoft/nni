@@ -1,6 +1,6 @@
 # NNI 中的 Curve Fitting Assessor
 
-## Introduction
+## 介绍
 
 Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
 
@@ -30,9 +30,9 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
-![examples](../../img/curvefitting_example.PNG)
+![示例](../../img/curvefitting_example.PNG)
 
-## Usage
+## 用法
 
 要使用 Curve Fitting Assessor，需要在 Experiment 的 YAML 配置文件进行如下改动。
 
@@ -40,7 +40,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 assessor:
   builtinAssessorName: Curvefitting
   classArgs:
-    # (required)The total number of epoch.
+    # (必须) epoch 的总数。
     # 需要此数据来决定需要预测的点。
     epoch_num: 20
     # (optional) In order to save our computing resource, we start to predict when we have more than only after receiving start_step number of reported intermediate results.
