@@ -6,14 +6,11 @@ from colorama import Fore
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local', 'nnictl')
 
-ERROR_INFO = 'ERROR: %s'
-
-NORMAL_INFO = 'INFO: %s'
-
-WARNING_INFO = 'WARNING: %s'
+ERROR_INFO = 'ERROR:'
+NORMAL_INFO = 'INFO:'
+WARNING_INFO = 'WARNING:'
 
 DEFAULT_REST_PORT = 8080
-
 REST_TIME_OUT = 20
 
 EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fore.RESET + \
@@ -98,14 +95,6 @@ TUNERS_NO_NEED_TO_IMPORT_DATA = {
     'Hyperband'
 }
 
-COLOR_RED_FORMAT = Fore.RED + '%s'
-
-COLOR_GREEN_FORMAT = Fore.GREEN + '%s'
-
-COLOR_YELLOW_FORMAT = Fore.YELLOW + '%s'
-
 SCHEMA_TYPE_ERROR = '%s should be %s type!'
-
 SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
-
 SCHEMA_PATH_ERROR = '%s path not exist!'

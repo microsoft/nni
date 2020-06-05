@@ -506,7 +506,11 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    validate_all_content(experiment_config, config_path)
+    try:
+        validate_all_content(experiment_config, config_path)
+    except Exception as e:
+        print_error(e)
+        exit(1)
 
     nni_config.set_config('experimentConfig', experiment_config)
     nni_config.set_config('restServerPort', args.port)

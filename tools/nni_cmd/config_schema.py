@@ -2,9 +2,11 @@
 # Licensed under the MIT license.
 
 import os
+import json
 from schema import Schema, And, Optional, Regex, Or, SchemaError
 from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
+from .common_utils import get_yml_content, print_warning
 
 
 def setType(key, valueType):
@@ -26,37 +28,10 @@ def setPathCheck(key):
     '''check if path exist'''
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
 
-common_schema = {
-    'authorName': setType('authorName', str),
-    'experimentName': setType('experimentName', str),
-    Optional('description'): setType('description', str),
-    'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
-    Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
-    Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'),
-    Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
-    Optional('multiPhase'): setType('multiPhase', bool),
-    Optional('multiThread'): setType('multiThread', bool),
-    Optional('nniManagerIp'): setType('nniManagerIp', str),
-    Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
-    Optional('debug'): setType('debug', bool),
-    Optional('versionCheck'): setType('versionCheck', bool),
-    Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
-    Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
-    'useAnnotation': setType('useAnnotation', bool),
-    Optional('tuner'): dict,
-    Optional('advisor'): dict,
-    Optional('assessor'): dict,
-    Optional('localConfig'): {
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-        Optional('useActiveGpu'): setType('useActiveGpu', bool)
-    }
-}
-
 class AlgoSchema:
-    def __init__(self):
+    def __init__(self, algo_type):
+        assert algo_type in ['tuner', 'assessor', 'advisor']
+        self.algo_type = algo_type
         self.algo_schema = {
             Optional('codeDir'): setPathCheck('codeDir'),
             Optional('classFileName'): setType('classFileName', str),
@@ -113,12 +88,39 @@ class AlgoSchema:
         class_args = data.get('classArgs')
         self.validate_class_args(class_args, algo_type, builtin_name)
 
-    def validate(self, data, algo_type):
-        assert algo_type in ['tuner', 'assessor', 'advisor']
-        self.algo_schema.update(self.builtin_name_schema[algo_type])
+    def validate(self, data):
+        self.algo_schema.update(self.builtin_name_schema[self.algo_type])
         Schema(self.algo_schema).validate(data)
-        self.validate_extras(data, algo_type)
+        self.validate_extras(data, self.algo_type)
 
+common_schema = {
+    'authorName': setType('authorName', str),
+    'experimentName': setType('experimentName', str),
+    Optional('description'): setType('description', str),
+    'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
+    Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
+    Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
+    'trainingServicePlatform': setChoice(
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'),
+    Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
+    Optional('multiPhase'): setType('multiPhase', bool),
+    Optional('multiThread'): setType('multiThread', bool),
+    Optional('nniManagerIp'): setType('nniManagerIp', str),
+    Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
+    Optional('debug'): setType('debug', bool),
+    Optional('versionCheck'): setType('versionCheck', bool),
+    Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+    Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
+    'useAnnotation': setType('useAnnotation', bool),
+    Optional('tuner'): AlgoSchema('tuner'),
+    Optional('advisor'): AlgoSchema('advisor'),
+    Optional('assessor'): AlgoSchema('assessor'),
+    Optional('localConfig'): {
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool)
+    }
+}
 
 common_trial_schema = {
     'trial':{
@@ -326,7 +328,7 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-    Optional('machineList'):[Or(
+    'machineList':[Or(
         {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -348,16 +350,124 @@ machine_list_schema = {
         })]
 }
 
-LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
+training_service_schema_dict = {
+    'local': Schema({**common_schema, **common_trial_schema}),
+    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema}),
+    'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
+    'paiYarn': Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema}),
+    'kubeflow': Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema}),
+    'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
+    'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
+}
 
-REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schema})
+class NNIConfigSchema:
+    def validate(self, data):
+        train_service = data['trainingServicePlatform']
+        Schema(common_schema['trainingServicePlatform']).validate(train_service)
 
-PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+        train_service_schema = training_service_schema_dict[train_service]
 
-PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
+        train_service_schema.validate(data)
+        self.validate_extras(data)
 
-DLTS_CONFIG_SCHEMA = Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema})
+    def validate_extras(self, experiment_config):
+        self.validate_tuner_adivosr_assessor(experiment_config)
+        self.validate_pai_trial_conifg(experiment_config)
+        self.validate_kubeflow_operators(experiment_config)
 
-KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
+    def validate_tuner_adivosr_assessor(self, experiment_config):
+        if experiment_config.get('advisor'):
+            if experiment_config.get('assessor') or experiment_config.get('tuner'):
+                raise SchemaError('advisor could not be set with assessor or tuner simultaneously!')
+            self.validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
+        else:
+            if not experiment_config.get('tuner'):
+                raise SchemaError('Please provide tuner spec!')
+            self.validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
 
-FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+    def validate_search_space_content(self, experiment_config):
+        '''Validate searchspace content,
+        if the searchspace file is not json format or its values does not contain _type and _value which must be specified,
+        it will not be a valid searchspace file'''
+        try:
+            search_space_content = json.load(open(experiment_config.get('searchSpacePath'), 'r'))
+            for value in search_space_content.values():
+                if not value.get('_type') or not value.get('_value'):
+                    raise SchemaError('please use _type and _value to specify searchspace!')
+        except:
+            raise SchemaError('searchspace file is not a valid json format!')
+
+    def validate_kubeflow_operators(self, experiment_config):
+        '''Validate whether the kubeflow operators are valid'''
+        if experiment_config.get('kubeflowConfig'):
+            if experiment_config.get('kubeflowConfig').get('operator') == 'tf-operator':
+                if experiment_config.get('trial').get('master') is not None:
+                    raise SchemaError('kubeflow with tf-operator can not set master')
+                if experiment_config.get('trial').get('worker') is None:
+                    raise SchemaError('kubeflow with tf-operator must set worker')
+            elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
+                if experiment_config.get('trial').get('ps') is not None:
+                    raise SchemaError('kubeflow with pytorch-operator can not set ps')
+                if experiment_config.get('trial').get('master') is None:
+                    raise SchemaError('kubeflow with pytorch-operator must set master')
+
+            if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
+                if experiment_config.get('kubeflowConfig').get('nfs') is None:
+                    raise SchemaError('please set nfs configuration!')
+            elif experiment_config.get('kubeflowConfig').get('storage') == 'azureStorage':
+                if experiment_config.get('kubeflowConfig').get('azureStorage') is None:
+                    raise SchemaError('please set azureStorage configuration!')
+            elif experiment_config.get('kubeflowConfig').get('storage') is None:
+                if experiment_config.get('kubeflowConfig').get('azureStorage'):
+                    raise SchemaError('please set storage type!')
+
+    def validate_annotation_content(self, experiment_config, spec_key, builtin_name):
+        '''
+        Valid whether useAnnotation and searchSpacePath is coexist
+        spec_key: 'advisor' or 'tuner'
+        builtin_name: 'builtinAdvisorName' or 'builtinTunerName'
+        '''
+        if experiment_config.get('useAnnotation'):
+            if experiment_config.get('searchSpacePath'):
+                raise SchemaError('If you set useAnnotation=true, please leave searchSpacePath empty')
+        else:
+            # validate searchSpaceFile
+            if experiment_config[spec_key].get(builtin_name) == 'NetworkMorphism':
+                return
+            if experiment_config[spec_key].get(builtin_name):
+                if experiment_config.get('searchSpacePath') is None:
+                    raise SchemaError('Please set searchSpacePath!')
+                self.validate_search_space_content(experiment_config)
+
+    def validate_pai_config_path(self, experiment_config):
+        '''validate paiConfigPath field'''
+        if experiment_config.get('trainingServicePlatform') == 'pai':
+            if experiment_config.get('trial', {}).get('paiConfigPath'):
+                # validate commands
+                pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
+                taskRoles_dict = pai_config.get('taskRoles')
+                if not taskRoles_dict:
+                    raise SchemaError('Please set taskRoles in paiConfigPath config file!')
+            else:
+                pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
+                for trial_field in pai_trial_fields_required_list:
+                    if experiment_config['trial'].get(trial_field) is None:
+                        raise SchemaError('Please set {0} in trial configuration,\
+                                    or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
+
+    def validate_pai_trial_conifg(self, experiment_config):
+        '''validate the trial config in pai platform'''
+        if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
+            if experiment_config.get('trial').get('shmMB') and \
+            experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
+                raise SchemaError('shmMB should be no more than memoryMB!')
+                exit(1)
+            #backward compatibility
+            warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
+            please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
+            for the practices of how to get data and output model in trial code'
+            if experiment_config.get('trial').get('dataDir'):
+                print_warning(warning_information.format('dataDir'))
+            if experiment_config.get('trial').get('outputDir'):
+                print_warning(warning_information.format('outputDir'))
+            self.validate_pai_config_path(experiment_config)
