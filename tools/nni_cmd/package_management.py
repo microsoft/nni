@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import json
 import pkginfo
 import nni
 from nni.package_utils import read_installed_package_meta, get_installed_package_meta, write_package_meta, get_builtin_algo_meta
@@ -54,16 +55,31 @@ def package_show(args):
     builtin_name = args.name[0]
     meta = get_builtin_algo_meta(builtin_name=builtin_name)
     if meta:
-        print(meta)
+        print(json.dumps(meta, indent=4))
     else:
         print_error('package {} not found'.format(builtin_name))
+
+def print_package_list(meta):
+    print('+-----------------+------------+----------------------+------------------------------------------+')
+    print('|      Name       |    Type    |      Class Name      |               Module Name                |')
+    print('+-----------------+------------+----------------------+------------------------------------------+')
+    MAX_MODULE_NAME = 38
+    for t in ['tuners', 'assessors', 'advisors']:
+        for p in meta[t]:
+            module_name = '.'.join(p['class_name'].split('.')[:-1])
+            if len(module_name) > MAX_MODULE_NAME:
+                module_name = module_name[:MAX_MODULE_NAME-3] + '...'
+            class_name = p['class_name'].split('.')[-1]
+            print('| {:15s} | {:10s} | {:20s} | {:40s} |'.format(p['name'], t, class_name, module_name[:38]))
+    print('+-----------------+------------+----------------------+------------------------------------------+')
 
 def package_list(args):
     '''list all packages'''
     if args.all:
-        print(get_builtin_algo_meta())
+        meta = get_builtin_algo_meta()
     else:
-        print(read_installed_package_meta())
+        meta = read_installed_package_meta()
+    print_package_list(meta)
 
 def save_package_meta_data(meta_data):
     assert meta_data['type'] in PACKAGE_TYPES

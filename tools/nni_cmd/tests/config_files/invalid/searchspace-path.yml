@@ -3,6 +3,8 @@ experimentName: default_test
 maxExecDuration: 15m
 maxTrialNum: 2
 trialConcurrency: 2
+
+# error: searchSpacePath can not be found
 searchSpacePath: ./wrong_search_space.json
 
 tuner:

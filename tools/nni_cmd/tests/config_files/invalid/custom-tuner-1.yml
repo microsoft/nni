@@ -5,6 +5,7 @@ maxTrialNum: 2
 trialConcurrency: 2
 searchSpacePath: ./search_space.json
 
+# error: no className
 tuner:
   codeDir: ./
   classFileName: mytuner.py

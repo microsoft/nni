@@ -364,9 +364,7 @@ class NNIConfigSchema:
     def validate(self, data):
         train_service = data['trainingServicePlatform']
         Schema(common_schema['trainingServicePlatform']).validate(train_service)
-
         train_service_schema = training_service_schema_dict[train_service]
-
         train_service_schema.validate(data)
         self.validate_extras(data)
 
@@ -394,8 +392,8 @@ class NNIConfigSchema:
             for value in search_space_content.values():
                 if not value.get('_type') or not value.get('_value'):
                     raise SchemaError('please use _type and _value to specify searchspace!')
-        except:
-            raise SchemaError('searchspace file is not a valid json format!')
+        except Exception as e:
+            raise SchemaError('searchspace file is not a valid json format! ' + str(e))
 
     def validate_kubeflow_operators(self, experiment_config):
         '''Validate whether the kubeflow operators are valid'''

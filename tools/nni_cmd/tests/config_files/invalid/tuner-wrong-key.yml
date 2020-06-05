@@ -6,6 +6,7 @@ trialConcurrency: 2
 searchSpacePath: ./search_space.json
 
 tuner:
+  # error: wrong key
   wrongTunerKey: abc
 
 assessor:

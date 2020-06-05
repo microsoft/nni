@@ -2,10 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import json
 from schema import SchemaError
 from .config_schema import NNIConfigSchema
-from .common_utils import print_error, print_warning, print_normal, get_yml_content
+from .common_utils import print_normal
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -23,12 +22,10 @@ def parse_time(time):
     '''Change the time to seconds'''
     unit = time[-1]
     if unit not in ['s', 'm', 'h', 'd']:
-        print_error('the unit of time could only from {s, m, h, d}')
-        exit(1)
+        raise SchemaError('the unit of time could only from {s, m, h, d}')
     time = time[:-1]
     if not time.isdigit():
-        print_error('time format error!')
-        exit(1)
+        raise SchemaError('time format error!')
     parse_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
     return int(time) * parse_dict[unit]
 

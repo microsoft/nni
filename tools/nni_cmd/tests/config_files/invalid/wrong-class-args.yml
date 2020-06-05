@@ -10,7 +10,8 @@ tuner:
 assessor:
   builtinAssessorName: Medianstop
   classArgs:
-    optimize_mode: maximize
+    # wrong class args, should be detected by assessor validator
+    optimize_mode: aaaaaa
 trial:
   codeDir: ./
   command: python3 main.py
@@ -19,5 +20,4 @@ useAnnotation: false
 multiPhase: false
 multiThread: false
 
-# error: wrong training service name
-trainingServicePlatform: local222
+trainingServicePlatform: local
