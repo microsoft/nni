@@ -43,26 +43,26 @@ assessor:
     # (必须) epoch 的总数。
     # 需要此数据来决定需要预测的点。
     epoch_num: 20
-    # (optional) In order to save our computing resource, we start to predict when we have more than only after receiving start_step number of reported intermediate results.
-    # The default value of start_step is 6.
+    # (可选) 为了节约计算资源，仅在收到 start_step 个中间结果后，才开始进行预测。
+    # start_step 的默认值是 6。
     start_step: 6
-    # (optional) The threshold that we decide to early stop the worse performance curve.
-    # For example: if threshold = 0.95, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-    # The default value of threshold is 0.95.
+    # (可选) 决定是否提前终止的阈值。
+    # 例如，如果 threshold = 0.95，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
+    # 阈值的默认值是 0.95。
     threshold: 0.95
-    # (optional) The gap interval between Assesor judgements.
+    # (可选) gap 是两次评估之间的间隔次数。
     # 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
-    # The default value of gap is 1.
+    # gap 的默认值是 1。
     gap: 1
 ```
 
-## Limitation
+## 局限性
 
-According to the original paper, only incremental functions are supported. Therefore this assessor can only be used to maximize optimization metrics. For example, it can be used for accuracy, but not for loss.
+根据原始论文，仅支持递增函数。 因此，此 Assessor 仅可用于最大化优化指标的场景。 例如，它可用于准确度，但不能用于损失值。
 
-## File Structure
+## 文件结构
 
-The assessor has a lot of different files, functions, and classes. Here we briefly describe a few of them.
+Assessor 有大量的文件、函数和类。 在这里，会简要描述其中一部分。
 
 * `curvefunctions.py` 包含了所有函数表达式和默认参数。
 * `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。
