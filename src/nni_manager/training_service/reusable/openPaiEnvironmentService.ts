@@ -345,9 +345,11 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                     'com.microsoft.pai.runtimeplugin': [
                         {
                             plugin: this.paiTrialConfig.paiStoragePlugin,
-                            parameters: [
-                                containerPathName
-                            ]
+                            parameters: {
+                                storageConfigNames: [
+                                    containerPathName
+                                ]
+                            }
                         }
                     ],
                     submitFrom: 'submit-job-v2'
