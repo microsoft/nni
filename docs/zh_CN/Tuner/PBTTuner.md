@@ -46,7 +46,3 @@ tuner:
     all_checkpoint_dir: /the/path/to/store/checkpoints
     population_size: 10
 ```
-
-### 局限性
-
-尚未支持导入数据。
