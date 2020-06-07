@@ -54,7 +54,7 @@ const yaml = require('js-yaml');
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
     private copyExpCodeDirPromise?: Promise<void>;
-    private paiJobConfig: undefined;
+    private paiJobConfig: any;
     private nniVersion: string | undefined;
     constructor() {
         super();
@@ -158,7 +158,7 @@ class PAIK8STrainingService extends PAITrainingService {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const containerNFSExpCodeDir = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/'nni-code`;
+        const containerNFSExpCodeDir = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/nni-code`;
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobDetail.id}`;
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const nniPaiTrialCommand: string = String.Format(
@@ -190,7 +190,7 @@ class PAIK8STrainingService extends PAITrainingService {
 
         let nniJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
-            nniJobConfig = this.paiJobConfig;
+            nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             // Each taskRole will generate new command in NNI's command format
             // Each command will be formatted to NNI style
@@ -290,8 +290,6 @@ class PAIK8STrainingService extends PAITrainingService {
             await this.writeParameterFile(trialJobDetail.logPath, trialJobDetail.form.hyperParameters);
         }
 
-        //Copy codeDir files to local working folder
-        await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
         //Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
         this.log.debug(paiJobConfig);

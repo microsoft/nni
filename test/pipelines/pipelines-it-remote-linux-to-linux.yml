@@ -1,5 +1,5 @@
 jobs:
-- job: 'integration_test_remote'
+- job: 'integration_test_remote_linux_to_linux'
   timeoutInMinutes: 120
 
   steps:

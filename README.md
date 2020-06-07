@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiment new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **[NNI v1.5 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **[NNI v1.6 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 
@@ -239,7 +239,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
+  git clone -b v1.6 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -319,8 +319,7 @@ After getting familiar with contribution agreements, you are ready to create you
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
 * ### **External Repositories** ###
-   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI
+   * Run [ENAS](examples/nas/enas/README.md) with NNI
    * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
    * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
@@ -342,7 +341,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 Join IM discussion groups:
 |Gitter||WeChat|
 |----|----|----|
-|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/JSong-Jia/NNI-user-group/blob/master/user%20group%20code_0512.jpg)|
+|<img src="https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png" width="180"/>| OR |<img src="https://user-images.githubusercontent.com/39592018/83108240-113d9600-a0f2-11ea-91f8-8754af11a0ee.png" width="180"/>|
 
 
 ## Related Projects
