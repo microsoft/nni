@@ -65,7 +65,6 @@ class RemoteMachineTrainingService implements TrainingService {
         this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
-        this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
         this.timer = timer;
