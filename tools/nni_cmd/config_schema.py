@@ -292,7 +292,7 @@ pai_trial_schema = {
         Optional('memoryMB'): setType('memoryMB', int),
         Optional('image'): setType('image', str),
         Optional('virtualCluster'): setType('virtualCluster', str),
-        Optional('paiStoragePlugin'): setType('paiStoragePlugin', str),
+        Optional('paiStorageConfigName'): setType('paiStorageConfigName', str),
         Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
     }
 }

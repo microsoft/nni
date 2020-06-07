@@ -32,7 +32,7 @@ trial:
   image: msranni/nni:latest
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
-  paiStoragePlugin: team_wise
+  paiStoraeConfigName: confignfs-data
 paiConfig:
   #The username to login pai
   userName: username

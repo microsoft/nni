@@ -273,7 +273,7 @@ def validate_pai_config_path(experiment_config):
                 print_error('Please set taskRoles in paiConfigPath config file!')
                 exit(1)
         else:
-            pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
+            pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStorageConfigName', 'command']
             for trial_field in pai_trial_fields_required_list:
                 if experiment_config['trial'].get(trial_field) is None:
                     print_error('Please set {0} in trial configuration,\

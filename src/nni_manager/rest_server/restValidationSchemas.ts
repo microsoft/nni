@@ -39,7 +39,7 @@ export namespace ValidationSchemas {
                 nniManagerNFSMountPath: joi.string().min(1),
                 containerNFSMountPath: joi.string().min(1),
                 paiConfigPath: joi.string(),
-                paiStoragePlugin: joi.string().min(1),
+                paiStorageConfigName: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
                 portList: joi.array().items(joi.object({
                     label: joi.string().required(),
