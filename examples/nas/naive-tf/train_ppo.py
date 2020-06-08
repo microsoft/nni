@@ -4,6 +4,7 @@ from tensorflow.keras.layers import (AveragePooling2D, BatchNormalization, Conv2
 from tensorflow.keras.losses import Reduction, SparseCategoricalCrossentropy
 from tensorflow.keras.optimizers import SGD
 
+import nni
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice
 from nni.nas.tensorflow.classic_nas import get_and_apply_next_architecture
 
@@ -12,11 +13,10 @@ tf.get_logger().setLevel('ERROR')
 class Net(Model):
     def __init__(self):
         super().__init__()
-        '''self.conv1 = LayerChoice([
+        self.conv1 = LayerChoice([
             Conv2D(6, 3, padding='same', activation='relu'),
             Conv2D(6, 5, padding='same', activation='relu'),
-        ])'''
-        self.conv1 = Conv2D(6, 3, padding='same', activation='relu')
+        ])
         self.pool = MaxPool2D(2)
         self.conv2 = LayerChoice([
             Conv2D(16, 3, padding='same', activation='relu'),
@@ -76,7 +76,7 @@ def train(net, train_dataset, optimizer):
     train_loss_results = []
     train_accuracy_results = []
 
-    num_epochs = 20
+    num_epochs = 2
 
     for epoch in range(num_epochs):
         epoch_loss_avg = tf.keras.metrics.Mean()
@@ -96,6 +96,19 @@ def train(net, train_dataset, optimizer):
                                                                 epoch_loss_avg.result(),
                                                                 epoch_accuracy.result()))
 
+def test(model, test_dataset):
+    test_accuracy = tf.keras.metrics.Accuracy()
+
+    for (x, y) in test_dataset:
+        # training=False is needed only if there are layers with different
+        # behavior during training versus inference (e.g. Dropout).
+        logits = model(x, training=False)
+        prediction = tf.argmax(logits, axis=1, output_type=tf.int32)
+        test_accuracy(prediction, y)
+
+    print("Test set accuracy: {:.3%}".format(test_accuracy.result()))
+    return test_accuracy.result()
+
 if __name__ == '__main__':
     cifar10 = tf.keras.datasets.cifar10
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -113,4 +126,6 @@ if __name__ == '__main__':
 
     train(net, dataset_train, optimizer)
 
-    nni.report_final_result(acc)
+    acc = test(net, dataset_test)
+
+    nni.report_final_result(acc.numpy())
