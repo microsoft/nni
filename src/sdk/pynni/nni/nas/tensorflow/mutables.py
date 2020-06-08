@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+from collections import OrderedDict
 
 from tensorflow.keras import Model
 
@@ -77,6 +78,18 @@ class MutableScope(Mutable):
 class LayerChoice(Mutable):
     def __init__(self, op_candidates, reduction='sum', return_mask=False, key=None):
         super().__init__(key=key)
+        self.names = []
+        if isinstance(op_candidates, OrderedDict):
+            for name, module in op_candidates.items():
+                assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
+                    "Please don't use a reserved name '{}' for your module.".format(name)
+                self.names.append(name)
+        elif isinstance(op_candidates, list):
+            for i, module in enumerate(op_candidates):
+                self.names.append(str(i))
+        else:
+            raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
+
         self.length = len(op_candidates)
         self.choices = op_candidates
         self.reduction = reduction
