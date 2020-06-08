@@ -17,10 +17,6 @@ Please fill this for deployment related issues:
 - Operating type: Initial deployment / upgrading / operating etc.
 - Brief what deployment process you are following -->
 
-**How to reproduce it**: 
-
-<!--Fill the following information if your issue need diagnostic support from the team, as minimally and precisely as possible!-->
-
 **nni Environment**:
 - nni version:
 - nni mode(local|pai|remote):
@@ -29,11 +25,13 @@ Please fill this for deployment related issues:
 - is conda or virtualenv used?: 
 - is running in docker?:
 
+**Log message**:
+ - nnimanager.log: 
+ - dispatcher.log:
+ - nnictl stdout and stderr:
+ 
+reference for these file: [log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director), [stdout/stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout)
+
 **need to update document(yes/no)**:
 
 **Anything else we need to know**:
-
-**Log message**:
- - [nnimanager.log and dispatcher.log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-directory) : 
-
- - [nnictl stdout and stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) : 
