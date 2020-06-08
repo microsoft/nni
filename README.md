@@ -342,7 +342,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 Join IM discussion groups:
 |Gitter||WeChat|
 |----|----|----|
-|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/JSong-Jia/NNI-user-group/blob/master/user%20group%20code_0512.png)|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/blob/master/wechat.png)|
 
 
 ## Related Projects
