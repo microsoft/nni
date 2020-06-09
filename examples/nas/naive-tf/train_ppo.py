@@ -52,12 +52,6 @@ class Net(Model):
         x = self.fc3(x)
         return x
 
-def accuracy(output, target):
-    bs = target.shape[0]
-    predicted = tf.cast(tf.argmax(output, 1), target.dtype)
-    target = tf.reshape(target, [-1])
-    return sum(tf.cast(predicted == target, tf.float32)) / bs
-
 loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
 def loss(model, x, y, training):
