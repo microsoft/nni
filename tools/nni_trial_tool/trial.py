@@ -99,7 +99,7 @@ class Trial:
             # In Windows, the retCode -1 is 4294967295. It's larger than c_long, and raise OverflowError.
             # So covert it to int32.
             retCode = ctypes.c_long(retCode).value
-            nni_log(LogType.Info, '{0}: subprocess terminated. Exit code is {1}. Quit'.format(self.name, retCode))
+            nni_log(LogType.Info, '{0}: subprocess terminated. Exit code is {1}.'.format(self.name, retCode))
 
             # Exit as the retCode of subprocess(trial)
             exit_code_file_name = os.path.join(self.trial_output_dir, "code")

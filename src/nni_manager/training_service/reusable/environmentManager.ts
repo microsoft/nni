@@ -299,11 +299,12 @@ class EnvironmentManager implements TrainingService {
                             if (trial.nodeExitResults.length > 0) {
                                 const completedCount = trial.nodeExitResults.length;
                                 let finalStatus: TrialJobStatus = "SUCCEEDED";
-                                this.log.debug(`found ${completedCount} completed trial process(es), nodeCount: ${environment.nodeCount}`);
+                                this.log.debug(`found ${completedCount} completed trial node(s), nodeCount: ${environment.nodeCount}`);
 
                                 // if some trial processes doesn't exit, kill it for next one.
                                 // for example, in horovod, it's just sleep command, has no impact on trial result.
-                                if (environment.nodeCount >= completedCount) {
+                                if (environment.nodeCount > completedCount) {
+                                    this.log.info(`stop partial completed trial ${trial.id}`);
                                     const trialService = component.get<TrialService>(TrialService);
                                     await trialService.stopTrial(trial);
                                 }
