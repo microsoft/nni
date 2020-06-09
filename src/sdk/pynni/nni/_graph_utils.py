@@ -231,8 +231,8 @@ class TorchModuleGraph(TorchGraph):
     Generates model graph, each node is created from single or multiple jit trace nodes.
     """
 
-    def __init__(self, model, dummy_input):
-        super().__init__(model, dummy_input)
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        super().__init__(model, dummy_input, traced_model)
         self.global_count = 0
         self.name_to_node, self.input_to_node, self.output_to_node = self._build_graph()
 

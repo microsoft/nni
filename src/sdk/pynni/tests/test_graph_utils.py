@@ -15,7 +15,7 @@ from google.protobuf import text_format
 import unittest
 from unittest import TestCase, main
 
-from nni._graph_utils import build_module_graph, build_graph
+from nni._graph_utils import build_module_graph, build_graph, TorchModuleGraph
 
 class BackboneModel1(nn.Module):
     def __init__(self):
@@ -153,6 +153,46 @@ class GraphUtilsTestCase(TestCase):
             torch.randn(4, 5),
             os.path.join(os.path.dirname(__file__), "expect", "test_graph_module3.expect")
         )
+    
+    @unittest.skipIf(torch.__version__ < "1.4.0", "not supported")
+    def test_module_reuse(self):
+        class MyModule(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.liner1 = nn.Linear(10, 10)
+                self.relu = nn.ReLU(inplace=True)
+                self.liner2 = nn.Linear(10, 20)
+                self.liner3 = nn.Linear(20, 10)
+
+            def forward(self, x):
+                x = self.liner1(x)
+                x = self.relu(x)
+                x = self.liner2(x)
+                x = self.relu(x)
+                x = self.liner3(x)
+                x = self.relu(x)
+                return x
+
+        data = torch.rand(10, 10)
+        net = MyModule()
+        traced = torch.jit.trace(net, data)
+        modulegraph = TorchModuleGraph(traced_model=traced)
+        # Traverse the TorchModuleGraph, due the resue of the relu module,
+        # there will be three cpp_nodes corrspoding to the same module.
+        # During traversing the graph, there should be only one
+        # successor of each cpp-node (including the cpp_nodes that corresponds
+        # to the same relu module).
+        for name, nodeio in modulegraph.nodes_py.nodes_io.items():
+            if nodeio.input_or_output == 'input':
+                # Find the first node of the whole graph
+                start_nodes = modulegraph.input_to_node[name]
+                # We have only one single path top-down
+                assert len(start_nodes) == 1
+                node = start_nodes[0].unique_name
+                while modulegraph.find_successors(node):
+                    nodes = modulegraph.find_successors(node)
+                    assert len(nodes) == 1
+                    node = nodes[0]
 
 if __name__ == '__main__':
     main()
