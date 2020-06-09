@@ -19,7 +19,6 @@
 
 'use strict';
 
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 
@@ -28,32 +27,6 @@ export abstract class EnvironmentService {
     public abstract updateEnvironmentsStatus(environment: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
-}
-
-export class TrialDetail implements TrialJobDetail {
-    public id: string;
-    public status: TrialJobStatus;
-    public submitTime: number;
-    public startTime?: number;
-    public endTime?: number;
-    public tags?: string[];
-    public url?: string;
-    public workingDirectory: string;
-    public form: TrialJobApplicationForm;
-    public isEarlyStopped?: boolean;
-    public environment?: EnvironmentInformation;
-
-    public readonly TRIAL_METADATA_DIR = ".nni";
-
-    constructor(id: string, status: TrialJobStatus, submitTime: number,
-        workingDirectory: string, form: TrialJobApplicationForm) {
-        this.id = id;
-        this.status = status;
-        this.submitTime = submitTime;
-        this.workingDirectory = workingDirectory;
-        this.form = form;
-        this.tags = [];
-    }
 }
 
 export class RunnerSettings {

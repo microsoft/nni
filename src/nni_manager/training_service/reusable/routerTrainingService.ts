@@ -32,6 +32,8 @@ import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { StorageService } from './storageService';
 import { MountedStorageService } from './mountedStorageService';
+import { TrialService } from './trial';
+import { StorageTrialService } from './storageTrialService';
 
 
 /**
@@ -119,6 +121,10 @@ class RouterTrainingService implements TrainingService {
                     // TODO to support other storages later.
                     Container.bind(StorageService)
                         .to(MountedStorageService)
+                        .scope(Scope.Singleton);
+                    // TODO to support other trialService  later.
+                    Container.bind(TrialService)
+                        .to(StorageTrialService)
                         .scope(Scope.Singleton);
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);

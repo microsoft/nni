@@ -24,17 +24,16 @@ import * as path from 'path';
 import * as component from '../../common/component';
 import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric } from '../../common/trainingService';
+import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, generateParamFileName, getVersion, uniqueString } from '../../common/utils';
-import { KILL_TRIAL_JOB, NEW_TRIAL_JOB } from '../../core/commands';
-import { encodeCommand } from '../../core/ipcInterface';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
-import { EnvironmentInformation, EnvironmentService, RunnerSettings, TrialDetail } from './environment';
+import { EnvironmentInformation, EnvironmentService, RunnerSettings } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
+import { TrialDetail, TrialService } from './trial';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -125,7 +124,8 @@ class EnvironmentManager implements TrainingService {
                 {
                     const environment = trial.environment;
                     if (environment) {
-                        await this.sendCommand(KILL_TRIAL_JOB, trialJobId, environment);
+                        const trialService = component.get<TrialService>(TrialService);
+                        await trialService.stopTrial(trial);
                         trial.isEarlyStopped = isEarlyStopped;
                         trial.status = trial.isEarlyStopped === true ?
                             'EARLY_STOPPED' : 'USER_CANCELED';
@@ -230,33 +230,6 @@ class EnvironmentManager implements TrainingService {
         }
     }
 
-    private async sendCommand(commantType: string, data: any, environment: EnvironmentInformation): Promise<void> {
-        let retryCount = 10;
-        let fileName: string;
-        let filePath: string = "";
-        let findingName: boolean = true;
-        const command = encodeCommand(commantType, JSON.stringify(data));
-        const storageService = component.get<StorageService>(StorageService);
-        const commandPath = storageService.joinPath(environment.workingFolder, `commands`);
-
-        while (findingName) {
-            fileName = `manager_command_${new Date().getTime()}.txt`;
-            filePath = storageService.joinPath(commandPath, fileName);
-            if (!await storageService.exists(filePath)) {
-                findingName = false;
-                break;
-            }
-            if (retryCount == 0) {
-                throw new Error(`EnvironmentManager retry too many times to send command!`);
-            }
-            retryCount--;
-            await delay(1);
-        }
-
-        // prevent to have imcomplete command, so save as temp name and then rename.
-        await storageService.save(command.toString("utf8"), filePath);
-    }
-
     private async environmentMaintenanceLoop(): Promise<void> {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         while (!this.stopping) {
@@ -289,12 +262,26 @@ class EnvironmentManager implements TrainingService {
     }
 
     private async trialManagementLoop(): Promise<void> {
-        const storageService = component.get<StorageService>(StorageService);
         while (!this.stopping) {
+            await delay(2000);
+
+            const toRefreshedTrials: TrialDetail[] = [];
+            for (const trial of this.trials.values()) {
+                if (trial.status === "RUNNING" || trial.status === "WAITING" || trial.status === "UNKNOWN") {
+                    toRefreshedTrials.push(trial);
+                }
+            }
+
+            if (toRefreshedTrials.length == 0) {
+                continue;
+            }
+
+            const trialService = component.get<TrialService>(TrialService);
+            trialService.updateTrialsStatus(toRefreshedTrials);
+
             const waitingTrials: TrialDetail[] = [];
             let liveTrialsCount = 0;
-            const trials = this.trials.values();
-            for (const trial of trials) {
+            for (const trial of toRefreshedTrials) {
                 const currentStatus = trial.status;
                 switch (currentStatus) {
                     case "RUNNING":
@@ -308,61 +295,26 @@ class EnvironmentManager implements TrainingService {
                                 continue;
                             }
 
-                            let isCompleted = false;
-                            let remoteFiles: string[] = [];
+                            // any node exit, then make sure the whole trial stopped.
+                            if (trial.nodeExitResults.length > 0) {
+                                const completedCount = trial.nodeExitResults.length;
+                                let finalStatus: TrialJobStatus = "SUCCEEDED";
+                                this.log.debug(`found ${completedCount} completed trial process(es), nodeCount: ${environment.nodeCount}`);
 
-                            const codeFilePath = storageService.joinPath(trial.workingDirectory, trial.TRIAL_METADATA_DIR);
-                            remoteFiles = await storageService.listDirectory(codeFilePath);
-
-                            if (remoteFiles.length > 0) {
-                                let latestTimestamp = 0;
-                                let aggregatedCode = 0;
-                                let completedCount = 0;
-                                for (const fileName of remoteFiles) {
-                                    if (fileName.startsWith("code")) {
-                                        const fullName = storageService.joinPath(codeFilePath, fileName)
-                                        const fileContent = await storageService.readFileContent(fullName);
-
-                                        const match: RegExpMatchArray | null = fileContent.trim().match(/^-?(\d+)\s+(\d+)$/);
-                                        if (match !== null) {
-                                            const { 1: code, 2: timestamp } = match;
-                                            const intCode = parseInt(code, 10)
-                                            latestTimestamp = Math.max(latestTimestamp, parseInt(timestamp, 10));
-                                            if (intCode !== 0) {
-                                                // only save latest non-zero exit code
-                                                aggregatedCode = intCode;
-                                            }
-                                            completedCount++;
-                                        }
+                                // if some trial processes doesn't exit, kill it for next one.
+                                // for example, in horovod, it's just sleep command, has no impact on trial result.
+                                if (environment.nodeCount >= completedCount) {
+                                    const trialService = component.get<TrialService>(TrialService);
+                                    await trialService.stopTrial(trial);
+                                }
+                                for (const nodeStatus of trial.nodeExitResults) {
+                                    if (nodeStatus == "FAILED") {
+                                        finalStatus = "FAILED";
                                     }
                                 }
-
-                                // for multiple running nodes, if one node is done, thought it's done.
-                                // any failed node means failed.
-                                // use <= for some wired cases.
-                                if (completedCount > 0) {
-                                    this.log.debug(`found ${completedCount} completed trial process(es), nodeCount: ${environment.nodeCount}`);
-
-                                    // if some trial processes doesn't exit, kill it for next one.
-                                    // for example, in horovod, it's just sleep command, has no impact on trial result.
-                                    if (environment.nodeCount >= completedCount) {
-                                        this.sendCommand(KILL_TRIAL_JOB, trial.id, environment);
-                                    }
-                                    if (trial.status == currentStatus) {
-                                        // Update trial job's status based on result code
-                                        if (aggregatedCode === 0) {
-                                            trial.status = 'SUCCEEDED';
-                                        } else {
-                                            trial.status = 'FAILED';
-                                        }
-                                    }
-                                    trial.endTime = latestTimestamp;
-                                    this.releaseEnvironment(trial);
-                                    isCompleted = true;
-                                }
-                            }
-
-                            if (isCompleted === false) {
+                                trial.status = finalStatus;
+                                this.releaseEnvironment(trial);
+                            } else {
                                 // check status consistence with environment.
                                 const environmentStatus = environment.status;
                                 if (environmentStatus !== "RUNNING") {
@@ -409,7 +361,6 @@ class EnvironmentManager implements TrainingService {
                     await this.requestEnvironment();
                 }
             }
-            await delay(2000);
         }
     }
 
@@ -456,14 +407,15 @@ class EnvironmentManager implements TrainingService {
 
         environment.isIdle = false;
         trial.environment = environment;
-        const settings = {
+        trial.settings = {
             trialId: trial.id,
             sequenceId: trial.form.sequenceId,
             parameter: trial.form.hyperParameters,
         }
         trial.startTime = Date.now();
         trial.status = "RUNNING";
-        await this.sendCommand(NEW_TRIAL_JOB, settings, environment);
+        const trialService = component.get<TrialService>(TrialService);
+        await trialService.startTrial(trial);
     }
 
     private releaseEnvironment(trial: TrialDetail): void {
