@@ -5,7 +5,7 @@ about: Report an issue or question while using nni instance (deployment).
 
 ---
 
-**NNI Environment**:
+**Environment**:
 - NNI version:
 - NNI mode (local|remote|pai):
 - Client OS:
@@ -22,10 +22,8 @@ about: Report an issue or question while using nni instance (deployment).
  
 <!-- Where can you find the log files: [log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director), [stdout/stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) -->
 
-**Short summary about the issue/question**:
+**What issue meet, what's expected?**:
 
-**Brief what process you are following**: 
+**How to reproduce it?**: 
 
-**need to update document(yes/no)**:
-
-**Anything else we need to know**:
+**Additional information**:
