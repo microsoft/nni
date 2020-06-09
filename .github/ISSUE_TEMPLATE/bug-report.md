@@ -20,7 +20,7 @@ about: Report an issue or question while using nni instance (deployment).
  - dispatcher.log:
  - nnictl stdout and stderr:
  
-Where can you find the log files: [log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director), [stdout/stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout)
+<!-- Where can you find the log files: [log](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director), [stdout/stderr](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout) -->
 
 **Short summary about the issue/question**:
 
