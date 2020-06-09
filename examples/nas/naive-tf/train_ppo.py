@@ -24,7 +24,7 @@ class Net(Model):
         ])
         self.conv3 = Conv2D(16, 1)
 
-        self.skipconnect = InputChoice(n_candidates=1)
+        self.skipconnect = InputChoice(n_candidates=2, n_chosen=1)
         self.bn = BatchNormalization()
 
         self.gap = AveragePooling2D(2)
@@ -40,7 +40,7 @@ class Net(Model):
         x0 = self.conv2(x)
         x1 = self.conv3(x0)
 
-        x0 = self.skipconnect([x0])
+        x0 = self.skipconnect([x0, None])
         if x0 is not None:
             x1 += x0
         x = self.pool(self.bn(x1))
