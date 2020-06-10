@@ -44,6 +44,9 @@ class TorchGraph:
             The model user wants to speed up
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
+        traced_model : torch._C.torch.jit.TopLevelTracedModule
+            An alredy traced model, if traced_model is not None, then TorchGraph will build the graph
+            based on this traced model and won't trace the model again.
         """
         assert torch.__version__ >= '1.3.1'
         # check if the input is legal
@@ -211,8 +214,6 @@ class NodePyGroup(NodePy):
     def add_nodes(self, node_cpps):
         for node_cpp in node_cpps:
             nodepy = NodePyOP(node_cpp)
-            # TODO may be a bug here, need confirmation with chengmin~
-            # nodepy.name = str(node_cpp).split(':')[0].strip().replace('%', '')
             nodepy.name = node_cpp.scopeName() + '_' + node_cpp.kind()
             self.nodes.append(nodepy)
 
@@ -221,8 +222,8 @@ class NodePyGroup(NodePy):
 
     def __repr__(self):
         return 'name: {}, type: {}, op_type: {}, sub_nodes: {}, inputs: {}, outputs: {}, aux: {}'.format(
-            self.name, self.type, self.op_type, self.sub_node_names(
-            ), self.inputs, self.outputs, self.auxiliary
+            self.name, self.type, self.op_type, self.sub_node_names(),
+            self.inputs, self.outputs, self.auxiliary
         )
 
 
