@@ -515,7 +515,7 @@ class TorchModuleGraph(TorchGraph):
                 if node not in merged:
                     # modules that have same scope name may have different locations in the
                     # graph. Futhermore, there are also lots of prim:: nodes that in node_cpps,
-                    # so we also need to call the expand_non_prim_node.
+                    # so we also need to call the expand_module_node.
                     unique_name = module_name
                     if use_count > 0:
                         unique_name = module_name + '.%d' % use_count
@@ -590,8 +590,6 @@ class TorchModuleGraph(TorchGraph):
         """
         successors = []
         for output in self.name_to_node[unique_name].outputs:
-            # assert output in self.input_to_node, "No node with input {}(from {})".format(
-            #     output, module_name)
             if output not in self.input_to_node:
                 # may reach the output of the whole graph
                 continue
