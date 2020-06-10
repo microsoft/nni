@@ -6,9 +6,6 @@ import copy
 import csv
 import logging
 from collections import OrderedDict
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.lines import Line2D
 
 import numpy as np
 import torch.nn as nn
@@ -17,8 +14,6 @@ from nni.compression.torch import LevelPruner
 from nni.compression.torch import L1FilterPruner
 from nni.compression.torch import L2FilterPruner
 
-# use Agg backend
-matplotlib.use('Agg')
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
@@ -172,63 +167,6 @@ class SensitivityAnalysis:
 
         return self.sensitivities
 
-    def visualization(self, outdir, merge=False):
-        """
-        Visualize the sensitivity curves of the model
-
-        Parameters
-        ----------
-        outdir : str
-            output directory of the image
-        merge : bool
-            if merge all the sensitivity curves into a
-            single image. If not, we will draw a picture
-            for each target layer of the model.
-        """
-        os.makedirs(outdir, exist_ok=True)
-        LineStyles = [':', '-.', '--', '-']
-        Markers = list(Line2D.markers.keys())
-        if not merge:
-            # Draw the sensitivity curves for each layer first
-            for name in self.sensitivities:
-                X = list(self.sensitivities[name].keys())
-                X = sorted(X)
-                Y = [self.sensitivities[name][x] for x in X]
-                if 0.00 not in X:
-                    # add the original accuracy into the figure
-                    X = [0.00] + X
-                    Y = [self.ori_acc] + Y
-                plt.figure(figsize=(8, 4))
-                plt.plot(X, Y, marker='*')
-                plt.xlabel('Prune Ratio')
-                plt.ylabel('Validation Accuracy')
-                plt.title(name)
-                plt.tight_layout()
-                filepath = os.path.join(outdir, '%s.jpg' % name)
-                plt.savefig(filepath)
-                plt.close()
-        else:
-            plt.figure()
-            styleid = 0
-            for name in self.sensitivities:
-                X = list(self.sensitivities[name].keys())
-                X = sorted(X)
-                Y = [self.sensitivities[name][x] for x in X]
-                if 0.00 not in X:
-                    # add the original accuracy into the figure
-                    X = [0.00] + X
-                    Y = [self.ori_acc] + Y
-                linestyle = LineStyles[styleid % len(LineStyles)]
-                marker = Markers[styleid % len(Markers)]
-                plt.plot(X, Y, label=name, linestyle=linestyle, marker=marker)
-                plt.xlabel('Prune Ratio')
-                plt.ylabel('Validation Accuracy')
-                plt.legend(loc='center left', bbox_to_anchor=(1.02, 0.5))
-                plt.tight_layout()
-                filepath = os.path.join(outdir, 'all.jpg')
-                plt.savefig(filepath, dpi=1000, bbox_inches='tight')
-                styleid += 1
-            plt.close()
 
     def export(self, filepath):
         """

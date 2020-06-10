@@ -40,9 +40,7 @@ setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'scikit-learn>=0.20,<0.22',
-        'graphviz',
-        'matplotlib'
+        'scikit-learn>=0.20,<0.22'
     ],
 
     entry_points = {

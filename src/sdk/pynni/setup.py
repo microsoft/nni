@@ -18,9 +18,7 @@ setuptools.setup(
         'json_tricks',
         'numpy',
         'scipy',
-        'coverage',
-        'graphviz',
-        'matplotlib'
+        'coverage'
     ],
     package_data = {'nni': ['**/requirements.txt']},
 

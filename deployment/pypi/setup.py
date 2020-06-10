@@ -62,9 +62,7 @@ setuptools.setup(
         'scipy',
         'coverage',
         'colorama',
-        'scikit-learn>=0.20,<0.22',
-        'graphviz',
-        'matplotlib'
+        'scikit-learn>=0.20,<0.22'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',
