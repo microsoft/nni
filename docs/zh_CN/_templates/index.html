@@ -235,36 +235,33 @@
     <p>注意：</p>
     <ul>
       <li>如果遇到任何权限问题，可添加 --user 在用户目录中安装 NNI。</li>
-      <li>目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 Anaconda or Miniconda is highly
-        recommended to install <a href="">NNI on Windows</a>.</li>
-      <li>If there is any error like Segmentation fault, please refer to <a
-          href="{{ pathto('Tutorial/Installation') }}">FAQ</a>. For FAQ on Windows, please refer
-        to NNI on Windows.</li>
+      <li>目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 <a href="">Windows 上安装 NNI</a>。</li>
+      <li>如果遇到如 Segmentation fault 这样的任何错误请参考 <a
+          href="{{ pathto('Tutorial/Installation') }}">常见问题</a>。 Windows 上的 FAQ 参考在 Windows 上使用 NNI。</li>
     </ul>
   </div>
   <div>
-    <h2 class="second-title">Verify installation</h2>
+    <h2 class="second-title">验证安装</h2>
     <p>
-      The following example is built on TensorFlow 1.x. Make sure <b>TensorFlow 1.x is used</b> when running
-      it.
+      以下示例基于 TensorFlow 1.x 构建。 确保运行环境中使用的是 <b>TensorFlow 1.x</b>。
     </p>
     <ul>
       <li>
-        <p>Download the examples via clone the source code.</p>
+        <p>通过克隆源代码下载示例。</p>
         <div class="command">git clone -b v1.5 https://github.com/Microsoft/nni.git</div>
       </li>
       <li>
-        <p>Run the MNIST example.</p>
-        <div class="command-intro">Linux or macOS</div>
+        <p>运行 MNIST 示例。</p>
+        <div class="command-intro">Linux 或 macOS</div>
         <div class="command">nnictl create --config nni/examples/trials/mnist-tfv1/config.yml</div>
         <div class="command-intro">Windows</div>
         <div class="command">nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml</div>
       </li>
       <li>
         <p>
-          Wait for the message INFO: Successfully started experiment! in the command line.
-          This message indicates that your experiment has been successfully started.
-          You can explore the experiment using the Web UI url.
+          在命令行中等待输出 INFO: Successfully started experiment!  
+          此消息表明 Experiment 已成功启动。
+          通过命令行输出的 Web UI url 来访问 Experiment 的界面。
         </p>
         <!-- Indentation affects style！ -->
         <pre class="code">
@@ -306,66 +303,54 @@ You can use these commands to get more information about the experiment
 
 <!-- Documentation -->
 <div>
-  <h1 class="title">Documentation</h1>
+  <h1 class="title">文档</h1>
   <ul>
-    <li>To learn about what's NNI, read the <a href="{{ pathto('Overview') }}">NNI Overview</a>.</li>
-    <li>To get yourself familiar with how to use NNI, read the <a href="{{ pathto('index') }}">documentation</a>.</li>
-    <li>To get started and install NNI on your system, please refer to <a href="{{ pathto('installation') }}">Install NNI</a>.</li>
+    <li>要了解 NNI，请阅读 <a href="{{ pathto('Overview') }}">NNI 概述</a>。</li>
+    <li>要熟悉如何使用 NNI，请阅读<a href="{{ pathto('index') }}">文档</a>。</li>
+    <li>要安装 NNI，请参阅<a href="{{ pathto('installation') }}">安装 NNI</a>。</li>
   </ul>
 </div>
 
 <!-- Contributing -->
 <div>
-  <h1 class="title">Contributing</h1>
+  <h1 class="title">贡献</h1>
   <p>
-    This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor
-    License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your
-    contribution.
-    For details, visit <a href="https://cla.microsoft.com">https://cla.microsoft.com</a>.
+    本项目欢迎任何贡献和建议。 大多数贡献都需要你同意参与者许可协议（CLA），来声明你有权，并实际上授予我们有权使用你的贡献。
+    有关详细信息，请访问 <a href="https://cla.microsoft.com">https://cla.microsoft.com</a>。
   </p>
   <p>
-    当你提交拉取请求时，CLA 机器人会自动检查你是否需要提供 CLA，并修饰这个拉取请求（例如，标签、注释）。 只需要按照机器人提供的说明进行操作即可。 You
-    will only need to do this once across all repos using our CLA.
+    当你提交拉取请求时，CLA 机器人会自动检查你是否需要提供 CLA，并修饰这个拉取请求（例如，标签、注释）。 只需要按照机器人提供的说明进行操作即可。 CLA 只需要同意一次，就能应用到所有的代码仓库上。
   </p>
   <p>
-    This project has adopted the <a href="https://opensource.microsoft.com/codeofconduct/">Microsoft Open Source Code of
-      Conduct</a>. For more information see the Code of
-    <a href="https://opensource.microsoft.com/codeofconduct/faq/">Conduct FAQ</a> or contact <a
-      href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> with any additional questions or comments.
+    该项目采用了 <a href="https://opensource.microsoft.com/codeofconduct/">Microsoft 开源行为准则 </a>。 有关详细信息,请参阅<a href="https://opensource.microsoft.com/codeofconduct/faq/">行为守则常见问题解答</a>或联系 <a
+      href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> 咨询问题或评论。
   </p>
   <p>
-    After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI
-    developer tutorials to get start:
+    熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =) 了：
   </p>
   <ul>
-    <li>We recommend new contributors to start with simple issues: '<a
-        href="https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">good first
-        issue</a>' or '<a
-        href="https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22">help-wanted</a>'.
+    <li>推荐新贡献者先从简单的问题开始：<a
+        href="https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">'good first issue'</a> 或 <a
+        href="https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22">'help-wanted'</a>。
     </li>
-    <li><a href="{{ pathto('Tutorial/SetupNniDeveloperEnvironment') }}">NNI developer environment installation
-        tutorial</a></li>
-    <li><a href="{{ pathto('Tutorial/HowToDebug') }}">How to debug</a></li>
+    <li><a href="{{ pathto('Tutorial/SetupNniDeveloperEnvironment') }}">NNI 开发环境安装教程</a></li>
+    <li><a href="{{ pathto('Tutorial/HowToDebug') }}">如何调试</a></li>
     <li>
-      If you have any questions on usage, review <a href="{{ pathto('Tutorial/FAQ') }}">FAQ</a> first, if there are no
-      relevant issues and answers to your
-      question, try contact NNI dev team and users in
-      <a
-        href="https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">Gitter</a>
-      or
-      <a href="https://github.com/microsoft/nni/issues/new/choose">File an issue</a> on GitHub.
+      如果有使用上的问题，可先查看<a href="{{ pathto('Tutorial/FAQ') }}">常见问题解答</a>。如果没能解决问题，可通过 <a
+        href="https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">Gitter</a> 
+ 联系 NNI 开发团队或在 GitHub 上<a href="https://github.com/microsoft/nni/issues/new/choose">报告问题</a>。
     </li>
-    <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">Customize your own Tuner</a></li>
-    <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">Implement customized TrainingService</a>
+    <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">自定义 Tuner</a></li>
+    <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">实现定制的训练平台</a>
     </li>
-    <li><a href="{{ pathto('NAS/Advanced') }}">Implement a new NAS trainer on NNI</a></li>
-    <li><a href="{{ pathto('Tuner/CustomizeAdvisor') }}">Customize your own Advisor</a></li>
+    <li><a href="{{ pathto('NAS/Advanced') }}">在 NNI 上实现新的 NAS Trainer</a></li>
+    <li><a href="{{ pathto('Tuner/CustomizeAdvisor') }}">自定义 Advisor</a></li>
   </ul>
 </div>
 
 <!-- External Repositories and References -->
 <div>
-  <h1 class="title">External Repositories and References</h1>
+  <h1 class="title">其它代码库和参考</h1>
   <p>With authors' permission, we listed a set of NNI usage examples and relevant articles.</p>
   <ul>
     <h2>External Repositories</h2>
