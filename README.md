@@ -341,7 +341,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 Join IM discussion groups:
 |Gitter||WeChat|
 |----|----|----|
-|<img src="https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png" width="180"/>| OR |<img src="https://user-images.githubusercontent.com/39592018/83856705-8e00ed80-a74c-11ea-95dc-2525b61a09e0.png" width="180"/>|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
 
 
 ## Related Projects
