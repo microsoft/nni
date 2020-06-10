@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import csv
-import torch
 import logging
 
 from nni._graph_utils import TorchModuleGraph
