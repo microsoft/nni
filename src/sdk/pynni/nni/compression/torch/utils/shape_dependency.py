@@ -5,8 +5,8 @@ import csv
 import torch
 import logging
 
-import nni._graph_utils as _graph_utils
-from _graph_utils import TorchModuleGraph
+from nni._graph_utils import TorchModuleGraph
+
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -35,9 +35,8 @@ class ChannelDependency:
             # user should provide model & dummy_input to trace the model or a already traced model
             assert model is not None and dummy_input is not None
         self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.dependency = dict()
         self.build_channel_dependency()
-        self.dependency = {}
-
 
     def get_parent_convs(self, node):
         """
@@ -58,7 +57,7 @@ class ChannelDependency:
         queue.append(node)
         while queue:
             curnode = queue.pop(0)
-            if node.op_type == 'Conv2d':
+            if curnode.op_type == 'Conv2d':
                 # find the first met conv
                 parent_convs.append(curnode.name)
                 continue
@@ -89,7 +88,7 @@ class ChannelDependency:
                 # NodepyGroup.
                 cat_dim = None
                 for cnode in node.node_cpps:
-                    if cnode.kind == CAT_TYPE:
+                    if cnode.kind() == CAT_TYPE:
                         cat_dim = list(cnode.inputs())[1].toIValue()
                         break
                 if cat_dim != 1:
@@ -151,7 +150,7 @@ class ChannelDependency:
             csv_w = csv.writer(csvf, delimiter=',')
             csv_w.writerow(header)
             for node in self.graph.nodes_py.nodes_op:
-                if node.op_type() != 'Conv2d' or node in visited:
+                if node.op_type != 'Conv2d' or node in visited:
                     continue
                 setid += 1
                 row = ['Set %d' % setid]
@@ -159,7 +158,7 @@ class ChannelDependency:
                     visited.add(node)
                     row.append(node.name)
                 else:
-                    for other in self.dependency[node]:
+                    for other in self.dependency[node.name]:
                         visited.add(self.graph.name_to_node[other])
                         row.append(other)
                 csv_w.writerow(row)
