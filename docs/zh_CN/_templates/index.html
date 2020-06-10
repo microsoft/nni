@@ -163,52 +163,51 @@
             <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
           </ul>
         </ul>
-        <a href="{{ pathto('FeatureEngineering/Overview') }}">Feature Engineering (Beta)</a>
+        <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程（测试版）</a>
         <ul class="circle">
           <li><a href="{{ pathto('FeatureEngineering/GradientFeatureSelector') }}">GradientFeatureSelector</a></li>
           <li><a href="{{ pathto('FeatureEngineering/GBDTSelector') }}">GBDTSelector</a></li>
         </ul>
-        <a href="{{ pathto('Assessor/BuiltinAssessor') }}">Early Stop Algorithms</a>
+        <a href="{{ pathto('Assessor/BuiltinAssessor') }}">提前终止算法</a>
         <ul class="circle">
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Median Stop</a></li>
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Curve Fitting</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Median Stop（中位数终止）</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Curve Fitting（曲线拟合）</a></li>
         </ul>
       </td>
       <td>
         <ul class="firstUl">
-          <li><a href="{{ pathto('TrainingService/LocalMode') }}">Local Machine</a></li>
-          <li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}">Remote Servers</a></li>
-          <li><b>Kubernetes based services</b></li>
+          <li><a href="{{ pathto('TrainingService/LocalMode') }}">本机</a></li>
+          <li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}">远程计算机</a></li>
+          <li><b>基于 Kubernetes 的平台</b></li>
           <ul class="circle">
             <li><a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a></li>
             <li><a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a></li>
-            <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">FrameworkController on K8S
-                (AKSetc.)</a>
+            <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController (如 AKS 等)</a>
             </li>
-            <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (aka. DLTS)</a></li>
+            <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (又称 DLTS)</a></li>
           </ul>
         </ul>
       </td>
     </tr>
     <tr valign="top">
-      <td class="verticalMiddle"><b>References</b></td>
+      <td class="verticalMiddle"><b>参考</b></td>
       <td>
         <ul class="firstUl">
           <li><a href="https://nni.readthedocs.io/zh/latest/autotune_ref.html#trial">Python API</a></li>
           <li><a href="{{ pathto('Tutorial/AnnotationSpec') }}">NNI Annotation</a></li>
-          <li><a href="https://nni.readthedocs.io/zh/latest/installation.html">Supported OS</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/latest/installation.html">支持的操作系统</a></li>
         </ul>
       </td>
       <td>
         <ul class="firstUl">
-          <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">CustomizeTuner</a></li>
-          <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">CustomizeAssessor</a></li>
+          <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">自定义 Tuner</a></li>
+          <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">自定义 Assessor</a></li>
         </ul>
       </td>
       <td>
         <ul class="firstUl">
-          <li><a href="{{ pathto('TrainingService/SupportTrainingService') }}">Support TrainingService</a></li>
-          <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">Implement TrainingService</a></li>
+          <li><a href="{{ pathto('TrainingService/SupportTrainingService') }}">支持训练平台</a></li>
+          <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">实现训练平台</a></li>
         </ul>
       </td>
     </tr>
@@ -217,29 +216,26 @@
 
 <!-- Installation -->
 <div>
-  <h1 class="title">Installation</h1>
+  <h1 class="title">安装</h1>
   <div>
-    <h2 class="second-title">Install</h2>
+    <h2 class="second-title">安装</h2>
     <p>
-      NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1,
-      and Windows 10 >= 1809. Simply run the following `pip install`
-      in an environment that has `python 64-bit >= 3.5`.
+      NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64 位 >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
     </p>
-    <div class="command-intro">Linux or macOS</div>
+    <div class="command-intro">Linux 或 macOS</div>
     <div class="command">python3 -m pip install --upgrade nni</div>
     <div class="command-intro">Windows</div>
     <div class="command">python -m pip install --upgrade nni</div>
-    <p class="topMargin">If you want to try latest code, please <a href="{{ pathto('Installation') }}">install
-        NNI</a> from source code.
+    <p class="topMargin">如果想要尝试最新代码，可通过源代码<a href="{{ pathto('Installation') }}">安装
+        NNI</a>。
     </p>
-    <p>For detail system requirements of NNI, please refer to <a href="{{ pathto('Tutorial/InstallationLinux') }}">here</a>
-      for Linux & macOS, and <a href="{{ pathto('Tutorial/InstallationWin') }}">here</a> for Windows.</p>
+    <p>Linux 和 macOS 下 NNI 系统需求<a href="{{ pathto('Tutorial/InstallationLinux') }}">参考这里</a>，Windows <a href="{{ pathto('Tutorial/InstallationWin') }}">参考这里</a>。</p>
   </div>
   <div>
-    <p>Note:</p>
+    <p>注意：</p>
     <ul>
-      <li>If there is any privilege issue, add --user to install NNI in the user directory.</li>
-      <li>Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly
+      <li>如果遇到任何权限问题，可添加 --user 在用户目录中安装 NNI。</li>
+      <li>目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 Anaconda or Miniconda is highly
         recommended to install <a href="">NNI on Windows</a>.</li>
       <li>If there is any error like Segmentation fault, please refer to <a
           href="{{ pathto('Tutorial/Installation') }}">FAQ</a>. For FAQ on Windows, please refer
