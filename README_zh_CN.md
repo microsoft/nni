@@ -338,9 +338,9 @@ You can use these commands to get more information about the experiment
 
 加入聊天组： 
 
-| Gitter                                                                                                                         |   | 微信                                                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------ | - | ------------------------------------------------------------------------------------------------------------------------------ |
-| <img src="https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png" width="180" /> | 或 | <img src="https://user-images.githubusercontent.com/39592018/83856705-8e00ed80-a74c-11ea-95dc-2525b61a09e0.png" width="180" /> |
+| Gitter                                                                                                         |   | 微信                                                                      |
+| -------------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------- |
+| ![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png) |
 
 ## 相关项目
 
