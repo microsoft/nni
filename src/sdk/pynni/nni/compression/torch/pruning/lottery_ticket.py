@@ -7,6 +7,7 @@ import torch
 from schema import And, Optional
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
+from .finegrained_prunning import LevelPrunerMasker
 
 logger = logging.getLogger('torch pruner')
 
@@ -53,6 +54,7 @@ class LotteryTicketPruner(Pruner):
         super().__init__(model, config_list, optimizer)
         self.curr_prune_iteration = None
         self.prune_iterations = config_list[0]['prune_iterations']
+        self.masker = LevelPrunerMasker(model, self)
 
     def validate_config(self, model, config_list):
         """
@@ -80,16 +82,14 @@ class LotteryTicketPruner(Pruner):
         curr_keep_ratio = keep_ratio_once ** self.curr_prune_iteration
         return max(1 - curr_keep_ratio, 0)
 
-    def _calc_mask(self, weight, sparsity, curr_w_mask):
+    def _calc_mask(self, wrapper, sparsity):
+        weight = wrapper.weight.data
         if self.curr_prune_iteration == 0:
-            mask = torch.ones(weight.shape).type_as(weight)
+            mask = {'weight_mask': torch.ones(weight.shape).type_as(weight)}
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            w_abs = weight.abs() * curr_w_mask
-            k = int(w_abs.numel() * curr_sparsity)
-            threshold = torch.topk(w_abs.view(-1), k, largest=False).values.max()
-            mask = torch.gt(w_abs, threshold).type_as(weight)
-        return {'weight_mask': mask}
+            mask = self.masker.calc_mask(wrapper, curr_sparsity)
+        return mask
 
     def calc_mask(self, wrapper, **kwargs):
         """
@@ -143,7 +143,7 @@ class LotteryTicketPruner(Pruner):
             assert module_wrapper is not None
 
             sparsity = config.get('sparsity')
-            mask = self._calc_mask(layer.module.weight.data, sparsity, module_wrapper.weight_mask)
+            mask = self._calc_mask(module_wrapper, sparsity)
             # TODO: directly use weight_mask is not good
             module_wrapper.weight_mask = mask['weight_mask']
             # there is no mask for bias

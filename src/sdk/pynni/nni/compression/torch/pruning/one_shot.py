@@ -66,7 +66,9 @@ class OneshotPruner(Pruner):
         Returns
         -------
         dict
-            dictionary for storing masks
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
         """
         if wrapper.if_calculated:
             return None

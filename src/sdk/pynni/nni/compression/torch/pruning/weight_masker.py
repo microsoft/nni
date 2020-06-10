@@ -20,7 +20,9 @@ class WeightMasker(object):
         Returns
         -------
         dict
-            dictionary for storing masks
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
         """
 
         raise NotImplementedError('{} calc_mask is not implemented'.format(self.__class__.__name__))

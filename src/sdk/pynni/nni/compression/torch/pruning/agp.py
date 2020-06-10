@@ -72,11 +72,14 @@ class AGP_Pruner(Pruner):
         ----------
         wrapper : Module
             the layer to instrument the compression operation
-
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
-            dictionary for storing masks
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
         """
 
         config = wrapper.config

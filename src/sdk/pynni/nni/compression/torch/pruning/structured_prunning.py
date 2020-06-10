@@ -29,7 +29,9 @@ class StructuredWeightMasker(WeightMasker):
         Returns
         -------
         dict
-            dictionary for storing masks
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
         """
         msg = 'module type {} is not supported!'.format(wrapper.type)
         assert wrapper.type == 'Conv2d', msg
@@ -55,6 +57,7 @@ class StructuredWeightMasker(WeightMasker):
         num_prune = int(filters * sparsity)
         if filters < 2 or num_prune < 1:
             return mask
+        # weight*mask_weight: apply base mask for iterative pruning
         return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx)
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx):

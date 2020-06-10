@@ -15,9 +15,10 @@ class LevelPrunerMasker(WeightMasker):
     Prune to an exact pruning level specification
     """
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx):
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         weight = wrapper.module.weight.data.clone()
         if wrapper.weight_mask is not None:
+            # apply base mask for iterative pruning
             weight = weight * wrapper.weight_mask
 
         w_abs = weight.abs()
@@ -46,10 +47,11 @@ class SlimPrunerMasker(WeightMasker):
         k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
         self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx):
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
         weight = wrapper.module.weight.data.clone()
         if wrapper.weight_mask is not None:
+            # apply base mask for iterative pruning
             weight = weight * wrapper.weight_mask
 
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
