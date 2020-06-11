@@ -14,6 +14,24 @@ import { validateFileName } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
+ * List all files in directory except those ignored by .nniignore.
+ * Synchronous for now, will be refactored later.
+ * @param source
+ * @param destination
+ */
+export function listDirWithIgnoredFiles(source: string): string[] {
+    let ignoreFile = undefined;
+    if (fs.existsSync(path.join(source, ".nniignore"))) {
+        ignoreFile = path.join(source, ".nniignore");
+    }
+    // There can be performance issues when the directory contains millions of files.
+    const fileList = fs.readdirSync(source);
+    if (ignoreFile === undefined)
+        return fileList;
+    return ignore().add(fs.readFileSync(ignoreFile).toString()).filter(fileList);
+}
+
+/**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
  *
  * @param codeDir codeDir in nni config file
@@ -80,24 +98,6 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
     }
 
     return Promise.resolve();
-}
-
-/**
- * List all files in directory except those ignored by .nniignore.
- * Synchronous for now, will be refactored later.
- * @param source
- * @param destination
- */
-export function listDirWithIgnoredFiles(source: string): string[] {
-    let ignoreFile = undefined;
-    if (fs.existsSync(path.join(source, ".nniignore"))) {
-        ignoreFile = path.join(source, ".nniignore");
-    }
-    // There can be performance issues when the directory contains millions of files.
-    const fileList = fs.readdirSync(source);
-    if (ignoreFile === undefined)
-        return fileList;
-    return ignore().add(fs.readFileSync(ignoreFile).toString()).filter(fileList);
 }
 
 /**
