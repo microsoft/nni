@@ -166,7 +166,7 @@ def pruners_test(pruner_names=['agp', 'level', 'slim', 'fpgm', 'l1', 'l2', 'tayl
     os.remove('./mask_tmp.pth')
     os.remove('./onnx_tmp.pth')
 
-def test_apg(pruning_algorithm):
+def test_agp(pruning_algorithm):
         model = Model()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config['agp']['config_list']
@@ -199,11 +199,11 @@ class PrunerTestCase(TestCase):
 
     def test_agp_pruner(self):
         for pruning_algorithm in ['l1', 'l2', 'taylorfo', 'apoz']:
-            test_apg(pruning_algorithm)
+            test_agp(pruning_algorithm)
 
         for pruning_algorithm in ['level']:
             prune_config['agp']['config_list'][0]['op_types'] = ['default']
-            test_apg(pruning_algorithm)
+            test_agp(pruning_algorithm)
 
 if __name__ == '__main__':
     main()
