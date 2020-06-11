@@ -386,17 +386,12 @@ You can view example for more information
 
 
 ## NetAdapt Pruner
-
 NetAdapt allows a user to automatically simplify a pretrained network to meet the resource budget. 
 For example, given the ovrall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
-As the number of iterations increases, the constraints gradually become tighter. 
-In each iteration, NetAdapt satifies the constraint by pruning a single layer.
-The algorithm terminates when the constraint is equal to or smaller than the budget for every resource type.
-
-![](../../img/algo_NetAdapt.png)
 
 For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
 
+![](../../img/algo_NetAdapt.png)
 
 #### Usage
 
@@ -408,19 +403,20 @@ config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
 }]
-pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator, pruning_mode='channel')
+pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner,evaluator=evaluator,pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
 #### User configuration for NetAdapt Pruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
-- **fine_tuner:** Function used to short-term fine tune the model in each iteration. This function should take a pytorch model as the only parameter and train it, no return is required.
-- **evaluator:** Function to evaluate the masked model. This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.)
+- **fine_tuner:** Function to short-term fine tune the masked model.
+- **evaluator:** Function to evaluate the masked model.
 - **pruning_mode:** 'channel' or 'fine_grained'.
+- **pruning_step:** sparsity to prune in each iteration
 - **experiment_data_dir:** PATH to save experiment data.
 
 
@@ -429,9 +425,9 @@ You can view [example](../../../examples/model_compress/auto_pruners_torch.py) f
 We implement a guided heuristic search method, Simulated Annealing (SA) algorithm, with enhancement on guided search based on prior experience. 
 The enhanced SA technique is based on the observation that a DNN layer with more number of weights often has a higher degree of model compression with less impact on overall accuracy.
 
-- Randomly initialize a pruning rate (sparsities) distribution.
+- Randomly initialize a pruning rate distribution (sparsities).
 - While current_temperature < stop_temperature:
-    1. generate a perturbation to the current distribution
+    1. generate a perturbation to current distribution
     2. Perform fast evaluation on the perturbated distribution
     3. accept the perturbation according to the performance and probability, if not accepted, return to step 1
     4. cool down, current_temperature <- current_temperature * cool_down_rate
@@ -448,7 +444,8 @@ config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
 }]
-pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, pruning_mode='channel', cool_down_rate=0.9)
+pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
 pruner.compress()
 ```
 
@@ -458,7 +455,7 @@ You can view [example](../../../examples/model_compress/auto_pruners_torch.py) f
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** "Conv2d" or "default".
-- **evaluator:** Function to evaluate the masked model. This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.).
+- **evaluator:** Function to evaluate the masked model. The function should take only one parameter : a pytorch model.
 - **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
 - **pruning_mode:** 'channel' or 'fine_grained'.
 - **start_temperature:** Simualated Annealing related parameter.
@@ -501,15 +498,15 @@ You can view [example](../../../examples/model_compress/admm_pruner_torch.py) fo
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Currently only Conv2d is supported in ADMMPruner.
-- **trainer:** Function used for the first step of ADMM pruning. This function should take a pytorch model, optimizer, criterion, epoch, callback as parameters and train the model, no return is required.
+- **trainer:** Function used for the first step of ADMM training.
 - **optimize_iteration:** ADMM optimize iterations.
 - **epochs:** training epochs of the first optimization subproblem.
             
 
 ## AutoCompress Pruner
-For each round, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
-        1. Generate sparsities distribution using SimualtedAnnealingPruner;
-        2. Perform ADMM-based structured pruning to generate pruning result, for the next round
+For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
+        1. Generate sparsities distribution using SimualtedAnnealingPruner
+        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t
 
 Perform prurification step (the speedup process in nni)
 
@@ -520,35 +517,35 @@ For more details, please refer to [AutoCompress: An Automatic DNN Structured Pru
 PyTorch code
 
 ```python
-from nni.compression.torch import AutoCompressPruner
+from nni.compression.torch import ADMMPruner
 config_list = [{
         'sparsity': 0.5,
         'op_types': ['Conv2d']
     }]
 pruner = AutoCompressPruner(
-            model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
-            optimize_iterations=3, optimize_mode='maximize', pruning_mode='channel',
-            cool_down_rate=0.9, admm_optimize_iterations=30, admm_training_epochs=5)
+            model, config_list, trainer=trainer, evaluator=evaluator,
+            dummy_input=dummy_input, iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
+            cool_down_rate=args.cool_down_rate, optimize_iterations=30, epochs=5, experiment_data_dir=args.experiment_data_dir)
 pruner.compress()
 ```
 
-You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](../../../examples/model_compress/auto_pruners_torch.py) for more information
 
 #### User configuration for AutoCompress Pruner
 
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** "Conv2d" or "default".
-- **trainer:** Function used for the first step of ADMM pruning. This function should take a pytorch model, optimizer, criterion, epoch, callback as parameters and train the model, no return is required.
-- **evaluator:** Function to evaluate the masked model. This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.)
-- **dummy_input:** The dummy input used for model speed up, users should put it on right device before pass in.
-- **optimize_iterations:** The number of overall iterations.
+- **trainer:** Function used for the first step of ADMM training.
+- **evaluator:** Function to evaluate the masked model.
+- **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
+- **iterations:** The number of overall iterations.
 - **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
 - **pruning_mode:** 'channel' or 'fine_grained'.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
 - **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **admm_optimize_iterations:** ADMM optimize iterations.
-- **admm_training_epochs:** training epochs of the first optimization subproblem of ADMMPruner.
-- **row:** penalty parameters for ADMM training.
+- **optimize_iteration:** ADMM optimize iterations.
+- **epochs:** training epochs of the first optimization subproblem.
 - **experiment_data_dir:** PATH to save experiment data.
+

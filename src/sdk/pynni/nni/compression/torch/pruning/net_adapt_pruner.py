@@ -50,15 +50,16 @@ class NetAdaptPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
                 - op_types : The operation type to prune.
         evaluator : function
-            Function to evaluate the masked model.
-            This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.)
+            function to evaluate the masked model
         fine_tuner : function
-            Function used to short-term fine tune the model in each iteration.
-            This function should take a pytorch model as the only parameter and train it, no return is required.
+            function to short-term fine tune the masked model
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
         pruning_mode : str
             'channel' or 'fine_grained', by default 'channel'
+        TODO: refine
+        pruning_step : float
+            sparsity to prune in each iteration
         experiment_data_dir : str
             PATH to save experiment data
         """
@@ -165,6 +166,17 @@ class NetAdaptPruner(Pruner):
         }], model, _logger)
 
         schema.validate(config_list)
+
+    def _set_modules_wrapper(self, modules_wrapper):
+        """
+        To obtain all the wrapped modules.
+
+        Parameters
+        -------
+        list
+            a list of the wrapped modules
+        """
+        self.modules_wrapper = copy.deepcopy(modules_wrapper)
 
     def calc_mask(self, wrapper, **kwargs):
         return None
@@ -288,8 +300,10 @@ class NetAdaptPruner(Pruner):
             for wrapper in self.get_modules_wrapper():
                 _logger.debug("op name : %s", wrapper.name)
                 _logger.debug("op weights : %d", wrapper.weight_mask.numel())
-                _logger.debug("op left weights : %d", wrapper.weight_mask.sum().item())
-                _logger.debug("related weights : %d", self._calc_related_weights(wrapper.name))
+                _logger.debug("op left weights : %d",
+                              wrapper.weight_mask.sum().item())
+                _logger.debug("related weights : %d",
+                              self._calc_related_weights(wrapper.name))
 
                 current_op_sparsity = 1 - wrapper.weight_mask.sum().item() / \
                     wrapper.weight_mask.numel()
@@ -318,8 +332,9 @@ class NetAdaptPruner(Pruner):
                         self._model_to_prune), config_list)
                 model_masked = pruner.compress()
 
-                _logger.debug(
-                    "Layer : %s, evaluation result before fine tuning : %s", wrapper.name, self._evaluator(model_masked))
+                performance = self._evaluator(model_masked)
+                _logger.info(
+                    "Layer : %s, evaluation result before fine tuning : %s", wrapper.name, performance)
                 # Short-term fine tune the pruned model
                 self._fine_tuner(model_masked)
 
@@ -348,8 +363,9 @@ class NetAdaptPruner(Pruner):
                     pruner.export_model(self._tmp_model_path)
 
             if not best_layer:
-                _logger.info("No more layers to prune.")
-                break
+                self._pruning_step *= 0.5
+                _logger.info("No more layers to prune, decrease pruning step to %s", self._pruning_step)
+                continue
 
             # Pick the best layer to prune, update iterative information
             # update config_list
