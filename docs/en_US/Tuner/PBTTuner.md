@@ -46,7 +46,3 @@ tuner:
     all_checkpoint_dir: /the/path/to/store/checkpoints
     population_size: 10
 ```
-
-### Limitation
-
-Importing data has not been supported yet.
