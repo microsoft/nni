@@ -1,28 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import json
 import os
-import re
-
-import pathspec
-from schema import Schema, SchemaError
-
-from .common_utils import (get_yml_content, print_error, print_normal,
-                           print_warning)
-from .config_schema import (DLTS_CONFIG_SCHEMA,
-                            FRAMEWORKCONTROLLER_CONFIG_SCHEMA,
-                            KUBEFLOW_CONFIG_SCHEMA, LOCAL_CONFIG_SCHEMA,
-                            PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA,
-                            REMOTE_CONFIG_SCHEMA, advisor_schema_dict,
-                            assessor_schema_dict, tuner_schema_dict)
-
+import json
+from schema import SchemaError
+from schema import Schema
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
+                           DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
+                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
+from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
     if experiment_config.get(key):
         experiment_config[key] = os.path.expanduser(experiment_config[key])
-
 
 def parse_relative_path(root_path, experiment_config, key):
     '''Change relative path to absolute path'''
@@ -30,7 +21,6 @@ def parse_relative_path(root_path, experiment_config, key):
         absolute_path = os.path.join(root_path, experiment_config.get(key))
         print_normal('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
         experiment_config[key] = absolute_path
-
 
 def parse_time(time):
     '''Change the time to seconds'''
@@ -42,9 +32,8 @@ def parse_time(time):
     if not time.isdigit():
         print_error('time format error!')
         exit(1)
-    parse_dict = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}
+    parse_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
     return int(time) * parse_dict[unit]
-
 
 def parse_path(experiment_config, config_path):
     '''Parse path in config file'''
@@ -78,7 +67,7 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         expand_path(experiment_config['trial'], 'paiConfigPath')
 
-    # if users use relative path, convert it to absolute path
+    #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
     if experiment_config.get('searchSpacePath'):
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
@@ -111,7 +100,6 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
-
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content,
        if the searchspace file is not json format or its values does not contain _type and _value which must be specified,
@@ -125,7 +113,6 @@ def validate_search_space_content(experiment_config):
     except:
         print_error('searchspace file is not a valid json format!')
         exit(1)
-
 
 def validate_kubeflow_operators(experiment_config):
     '''Validate whether the kubeflow operators are valid'''
@@ -158,12 +145,12 @@ def validate_kubeflow_operators(experiment_config):
                 print_error('please set storage type!')
                 exit(1)
 
-
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in \
-            ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts']:
+        experiment_config.get('trainingServicePlatform') not in [
+                'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'
+        ]:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
@@ -174,7 +161,7 @@ def validate_common_content(experiment_config):
         'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
         'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA,
         'dlts': DLTS_CONFIG_SCHEMA,
-    }
+        }
     separate_schema_dict = {
         'tuner': tuner_schema_dict,
         'advisor': advisor_schema_dict,
@@ -206,7 +193,7 @@ def validate_common_content(experiment_config):
         print_error(error.code)
         exit(1)
 
-    # set default value
+    #set default value
     if experiment_config.get('maxExecDuration') is None:
         experiment_config['maxExecDuration'] = '999d'
     if experiment_config.get('maxTrialNum') is None:
@@ -216,30 +203,27 @@ def validate_common_content(experiment_config):
             if experiment_config['machineList'][index].get('port') is None:
                 experiment_config['machineList'][index]['port'] = 22
 
-
 def validate_customized_file(experiment_config, spec_key):
     '''
     check whether the file of customized tuner/assessor/advisor exists
     spec_key: 'tuner', 'assessor', 'advisor'
     '''
     if experiment_config[spec_key].get('codeDir') and \
-            experiment_config[spec_key].get('classFileName') and \
-            experiment_config[spec_key].get('className'):
+        experiment_config[spec_key].get('classFileName') and \
+        experiment_config[spec_key].get('className'):
         if not os.path.exists(os.path.join(
                 experiment_config[spec_key]['codeDir'],
                 experiment_config[spec_key]['classFileName'])):
-            print_error('%s file directory is not valid!' % (spec_key))
+            print_error('%s file directory is not valid!'%(spec_key))
             exit(1)
     else:
-        print_error('%s file directory is not valid!' % (spec_key))
+        print_error('%s file directory is not valid!'%(spec_key))
         exit(1)
-
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
     if not experiment_config['tuner'].get('builtinTunerName'):
         validate_customized_file(experiment_config, 'tuner')
-
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
@@ -247,12 +231,10 @@ def parse_assessor_content(experiment_config):
         if not experiment_config['assessor'].get('builtinAssessorName'):
             validate_customized_file(experiment_config, 'assessor')
 
-
 def parse_advisor_content(experiment_config):
     '''Validate whether advisor in experiment_config is valid'''
     if not experiment_config['advisor'].get('builtinAdvisorName'):
         validate_customized_file(experiment_config, 'advisor')
-
 
 def validate_annotation_content(experiment_config, spec_key, builtin_name):
     '''
@@ -274,13 +256,11 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
                 exit(1)
             validate_search_space_content(experiment_config)
 
-
 def validate_machine_list(experiment_config):
     '''Validate machine list'''
     if experiment_config.get('trainingServicePlatform') == 'remote' and experiment_config.get('machineList') is None:
         print_error('Please set machineList!')
         exit(1)
-
 
 def validate_pai_config_path(experiment_config):
     '''validate paiConfigPath field'''
@@ -300,15 +280,14 @@ def validate_pai_config_path(experiment_config):
                                 or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
                     exit(1)
 
-
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
     if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
         if experiment_config.get('trial').get('shmMB') and \
-                experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
+        experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')
             exit(1)
-        # backward compatibility
+        #backward compatibility
         warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
         please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
         for the practices of how to get data and output model in trial code'
@@ -317,7 +296,6 @@ def validate_pai_trial_conifg(experiment_config):
         if experiment_config.get('trial').get('outputDir'):
             print_warning(warning_information.format('outputDir'))
         validate_pai_config_path(experiment_config)
-
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
@@ -337,40 +315,3 @@ def validate_all_content(experiment_config, config_path):
         parse_tuner_content(experiment_config)
         parse_assessor_content(experiment_config)
         validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
-
-
-def validate_code_dir(code_dir):
-    '''
-    Validate whether a directory contains excessive files.
-    In future, will create a snapshot directly here.
-    '''
-    if os.path.exists(os.path.join(code_dir, '.nniignore')):
-        ignore_file = os.path.join(code_dir, '.nniignore')
-    elif os.path.exists(os.path.join(code_dir, '.gitignore')):
-        ignore_file = os.path.join(code_dir, '.gitignore')
-    else:
-        ignore_file = None
-        ignore_spec = None
-    if ignore_file is not None:
-        with open(ignore_file, 'r') as f:
-            ignore_spec = pathspec.PathSpec.from_lines(pathspec.patterns.GitWildMatchPattern, f.read().splitlines())
-    total_file_count = 0
-    total_file_size = 0
-    pattern = r'^[a-z0-9A-Z\._\-/]+$'
-    for root, _, files in os.walk(code_dir):
-        if ignore_spec is not None and ignore_spec.match_file(os.path.relpath(root, code_dir)):
-            continue
-        for filepath in files:
-            full_path = os.path.join(root, filepath)
-            if ignore_spec is not None and ignore_spec.match_file(full_path):
-                continue
-            if re.match(pattern, full_path) is None:
-                print_error('File {} failed to match the pattern "{}" and is not supported.'.format(full_path, pattern))
-                exit(1)
-            total_file_count += 1
-            total_file_size += os.path.getsize(full_path)
-    if total_file_count >= 2000 or total_file_size >= 300 * 1024 * 1024:
-        print_error('Total file count exceeds 2000 or total file size exceeds 300MB (current file count: {}, file size: {}).'
-                    'Please use .gitignore or .nniignore to exclude large files. To use large files in your experiment, '
-                    'please download or mount them.'.format(total_file_count, total_file_size))
-        exit(1)
