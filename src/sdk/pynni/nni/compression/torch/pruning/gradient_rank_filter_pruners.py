@@ -3,7 +3,7 @@
 
 import logging
 import torch
-from .compressor import Pruner
+from ..compressor import Pruner
 
 __all__ = ['TaylorFOWeightFilterPruner']
 

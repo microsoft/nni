@@ -13,12 +13,12 @@ from torchvision import datasets, transforms
 logger = logging.getLogger('mnist_pbt_tuner_pytorch_AutoML')
 
 class Net(nn.Module):
-    def __init__(self, hidden_size):
+    def __init__(self):
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 20, 5, 1)
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4*4*50, hidden_size)
-        self.fc2 = nn.Linear(hidden_size, 10)
+        self.fc1 = nn.Linear(4*4*50, 512)
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -104,9 +104,7 @@ def main(args):
         ])),
         batch_size=1000, shuffle=True, **kwargs)
 
-    hidden_size = args['hidden_size']
-
-    model = Net(hidden_size=hidden_size).to(device)
+    model = Net().to(device)
 
     save_checkpoint_dir = args['save_checkpoint_dir']
     save_checkpoint_path = os.path.join(save_checkpoint_dir, 'model.pth')
@@ -146,11 +144,9 @@ def get_params():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument("--data_dir", type=str,
-                        default='./tmp/pytorch/mnist/input_data', help="data directory")
+                        default='/tmp/pytorch/mnist/input_data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
-    parser.add_argument("--hidden_size", type=int, default=512, metavar='N',
-                        help='hidden layer size (default: 512)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                         help='learning rate (default: 0.01)')
     parser.add_argument('--momentum', type=float, default=0.5, metavar='M',

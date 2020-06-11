@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
-import { filterDuration } from '../../static/function';
+import { filterDuration, convertDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -49,7 +49,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',
@@ -93,7 +99,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',

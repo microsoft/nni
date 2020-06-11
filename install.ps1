@@ -51,7 +51,7 @@ else {
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install "
 
 if (!(Test-Path $NNI_DEPENDENCY_FOLDER)) {
-    New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
+    $null = New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
 $NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER + "\nni-node.zip"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER + "\nni-node"
@@ -112,17 +112,16 @@ if ($install_yarn) {
 
 if ($Development) {
     $PYTHON_BUILD = "build"
-    if (Test-Path $PYTHON_BUILD) { 
-        # To compat with file and links.
-        cmd /c rmdir /s /q $PYTHON_BUILD
-    }
-    New-Item $PYTHON_BUILD -ItemType Directory
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni" -Target "src\sdk\pynni\nni"
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nnicli" -Target "src\sdk\pycli\nnicli"
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_annotation" -Target "tools\nni_annotation"
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_cmd" -Target "tools\nni_cmd"
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_trial_tool" -Target "tools\nni_trial_tool"
-    New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_gpu_tool" -Target "tools\nni_gpu_tool"
+    # To compat with file and links.
+    cmd /c if exist "$PYTHON_BUILD" rmdir /s /q $PYTHON_BUILD
+
+    $null = New-Item $PYTHON_BUILD -ItemType Directory
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni" -Target "src\sdk\pynni\nni"
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nnicli" -Target "src\sdk\pycli\nnicli"
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_annotation" -Target "tools\nni_annotation"
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_cmd" -Target "tools\nni_cmd"
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_trial_tool" -Target "tools\nni_trial_tool"
+    $null = New-Item -ItemType Junction -Path "$($PYTHON_BUILD)\nni_gpu_tool" -Target "tools\nni_gpu_tool"
 
     Copy-Item setup.py $PYTHON_BUILD
     Copy-Item README.md $PYTHON_BUILD
@@ -148,42 +147,46 @@ cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 Copy-Item config -Destination .\dist\ -Recurse -Force
 # Building WebUI
+# office-ui-fabric-react need longer time. the 180000 is in ms, mean 180 seconds, longer than default 30 seconds.
 cd ..\webui
-cmd /c $NNI_YARN
+cmd /c $NNI_YARN --network-timeout 180000
 cmd /c $NNI_YARN build
 # Building NasUI
 cd ..\nasui
-cmd /c $NNI_YARN
+cmd /c $NNI_YARN --network-timeout 180000
 cmd /c $NNI_YARN build
 
 cd ..\..
 
 ## install-node-modules
-if (Test-Path $NNI_PKG_FOLDER) {
-    # it needs to remove the whole folder for following copy.
-    cmd /c rmdir /s /q $NNI_PKG_FOLDER
-}
+
+# it needs to remove the whole folder for following copy.
+cmd /c if exist "$NNI_PKG_FOLDER" rmdir /s /q $NNI_PKG_FOLDER
 
 $NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER + "\static"
 $NASUI_PKG_FOLDER = $NNI_PKG_FOLDER + "\nasui"
 
+cmd /c if exist "src\nni_manager\dist\node_modules" rmdir /s /q src\nni_manager\dist\node_modules
+cmd /c if exist "src\nni_manager\dist\static" rmdir /s /q src\nni_manager\dist\static
+cmd /c if exist "src\nni_manager\dist\nasui" rmdir /s /q src\nni_manager\dist\nasui
+
 if ($Development) {
-    New-Item -ItemType Junction -Path $($NNI_PKG_FOLDER) -Target "src\nni_manager\dist"
-    New-Item -ItemType Junction -Path "$($NNI_PKG_FOLDER)\node_modules" -Target "src\nni_manager\node_modules"
-    New-Item -ItemType Junction -Path $($NNI_PKG_FOLDER_STATIC) -Target "src\webui\build"
-    New-Item -ItemType Junction -Path $($NASUI_PKG_FOLDER) -Target "src\nasui\build"
+    $null = New-Item -ItemType Junction -Path $NNI_PKG_FOLDER -Target "src\nni_manager\dist"
+
+    $null = New-Item -ItemType Junction -Path "$($NNI_PKG_FOLDER)\node_modules" -Target "src\nni_manager\node_modules"
+    $null = New-Item -ItemType Junction -Path $NNI_PKG_FOLDER_STATIC -Target "src\webui\build"
+    $null = New-Item -ItemType Junction -Path $NASUI_PKG_FOLDER -Target "src\nasui\build"
 }
 else {
     Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
     Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse
     Copy-Item "src\nasui\build" $NASUI_PKG_FOLDER -Recurse
-}
 
-Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
-$PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
-(Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
-Copy-Item "src\nasui\server.js" $NASUI_PKG_FOLDER -Recurse
+    Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
+    $PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
+    (Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
 
-if (!$Development) {
     cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
 }
+
+Copy-Item "src\nasui\server.js" $NASUI_PKG_FOLDER

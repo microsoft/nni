@@ -25,7 +25,8 @@ const CONTROLTYPE = [
 ];
 const MONACO = {
     readOnly: true,
-    automaticLayout: true
+    automaticLayout: true,
+    scrollBeyondLastLine: false,
 };
 const DRAWEROPTION = {
     minimap: { enabled: false },
