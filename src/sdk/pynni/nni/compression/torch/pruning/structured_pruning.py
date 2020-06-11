@@ -7,7 +7,7 @@ from .weight_masker import WeightMasker
 
 __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
     'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
-    'ActivationMeanRankFilterPrunerMasker']
+    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -329,3 +329,38 @@ class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
         activations = torch.cat(activations, 0)
         mean_activation = torch.mean(activations, dim=(0, 2, 3))
         return mean_activation
+
+class SlimPrunerMasker(WeightMasker):
+    """
+    A structured pruning algorithm that prunes channels by pruning the weights of BN layers.
+    Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang
+    "Learning Efficient Convolutional Networks through Network Slimming", 2017 ICCV
+    https://arxiv.org/pdf/1708.06519.pdf
+    """
+
+    def __init__(self, model, pruner, **kwargs):
+        super().__init__(model, pruner)
+        weight_list = []
+        for (layer, _) in pruner.get_modules_to_compress():
+            weight_list.append(layer.module.weight.data.abs().clone())
+        all_bn_weights = torch.cat(weight_list)
+        k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
+        self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
+
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+        weight = wrapper.module.weight.data.clone()
+        if wrapper.weight_mask is not None:
+            # apply base mask for iterative pruning
+            weight = weight * wrapper.weight_mask
+
+        base_mask = torch.ones(weight.size()).type_as(weight).detach()
+        mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
+        filters = weight.size(0)
+        num_prune = int(filters * sparsity)
+        if filters >= 2 and num_prune >= 1:
+            w_abs = weight.abs()
+            mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
+            mask_bias = mask_weight.clone()
+            mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
+        return mask

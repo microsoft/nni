@@ -7,7 +7,7 @@ import torch
 from schema import And, Optional
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
-from .finegrained_prunning import LevelPrunerMasker
+from .finegrained_pruning import LevelPrunerMasker
 
 logger = logging.getLogger('torch pruner')
 
