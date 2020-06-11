@@ -10,17 +10,60 @@ import ignore from 'ignore';
 import * as path from 'path';
 import * as tar from 'tar';
 import { String } from 'typescript-string-operations';
+import { validateFileName } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
  *
- * @param _codeDir codeDir in nni config file
+ * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
-export async function validateCodeDir(_codeDir: string): Promise<number> {
-    // This part is moved to nnictl.
-    return 0;
+ export async function validateCodeDir(codeDir: string): Promise<number> {
+    let fileCount: number | undefined;
+    let fileTotalSize: number | undefined;
+    let fileNameValid: boolean = true;
+    let fileList: string[] | undefined;
+    try {
+        fileList = listDirWithIgnoredFiles(codeDir);
+    } catch (error) {
+        throw new Error(`List directory error: ${error}`);
+    }
+
+    try {
+        fileCount = fileList.length;
+        fileTotalSize = fileList.map(f => fs.statSync(path.join(codeDir, f))['size']).reduce((sum, current) => sum + current, 0);
+    } catch (error) {
+        throw new Error(`Exception when counting files in directory: ${error}`);
+    }
+
+    try {
+        fileList.forEach(f => {
+            f.split(path.delimiter).forEach(fpart => {
+                if (!validateFileName(fpart))
+                    fileNameValid = false;
+            });
+        });
+    } catch (error) {
+        throw new Error(`Validate file name error: ${error}`);
+    }
+
+    if (fileCount !== undefined && fileCount > 2000) {
+        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
+                                    + ` please check if it's a valid code dir`;
+        throw new Error(errMessage);
+    }
+    if (fileTotalSize !== undefined && fileTotalSize > 300 * 1024 * 1024) {
+        const errMessage = `File total size too large in code dir (${fileTotalSize} bytes exceeds 300MB).`;
+        throw new Error(errMessage);
+    }
+
+    if (!fileNameValid) {
+        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
+        throw new Error(errMessage);
+    }
+
+    return fileCount;
 }
 
 /**
@@ -40,17 +83,15 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
 }
 
 /**
- * List all files in directory except those ignored by .nniignore or .gitignore.
+ * List all files in directory except those ignored by .nniignore.
  * Synchronous for now, will be refactored later.
  * @param source
  * @param destination
  */
-export function listDirWithIgnoreFiles(source: string): string[] {
+export function listDirWithIgnoredFiles(source: string): string[] {
     let ignoreFile = undefined;
     if (fs.existsSync(path.join(source, ".nniignore"))) {
         ignoreFile = path.join(source, ".nniignore");
-    } else if (fs.existsSync(path.join(source, ".gitignore"))) {
-        ignoreFile = path.join(source, ".gitignore");
     }
     // There can be performance issues when the directory contains millions of files.
     const fileList = fs.readdirSync(source);
@@ -65,7 +106,7 @@ export function listDirWithIgnoreFiles(source: string): string[] {
  * @param destination
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
-    listDirWithIgnoreFiles(source).forEach((relPath: string) => {
+    listDirWithIgnoredFiles(source).forEach((relPath: string) => {
         // Possible to parallelize copy?
         const destPath = path.join(destination, relPath)
         if (!fs.existsSync(path.dirname(destPath)))
@@ -171,7 +212,7 @@ export async function tarAdd(tarPath: string, sourcePath: string): Promise<void>
             sync: true,
             cwd: sourcePath,
         },
-        listDirWithIgnoreFiles(sourcePath)
+        listDirWithIgnoredFiles(sourcePath)
     );
     return Promise.resolve();
 }
