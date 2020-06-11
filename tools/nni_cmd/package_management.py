@@ -35,12 +35,13 @@ def package_install(args):
             package_meta['class_name'] = INSTALLABLE_PACKAGE_META[args.name]['class_name']
             package_meta['class_args_validator'] = INSTALLABLE_PACKAGE_META[args.name]['class_args_validator']
             save_package_meta_data(package_meta)
+            print_green('{} installed!'.format(args.name))
         else:
             package_meta = get_nni_meta(args.source)
             if package_meta:
                 if call_pip_install(args.source) == 0:
                     save_package_meta_data(package_meta)
-        print_green('{} installed!'.format(args.name))
+            print_green('{} installed!'.format(package_meta['name']))
     except Exception as e:
         print_error(e)
 
