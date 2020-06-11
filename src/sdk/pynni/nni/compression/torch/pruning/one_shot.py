@@ -3,7 +3,7 @@
 
 import logging
 from schema import And, Optional
-from .constants import masker_dict
+from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
 
@@ -35,7 +35,7 @@ class OneshotPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        self.masker = masker_dict[pruning_algorithm](model, self, **algo_kwargs)
+        self.masker = MASKER_DICT[pruning_algorithm](model, self, **algo_kwargs)
 
     def validate_config(self, model, config_list):
         """
@@ -133,17 +133,12 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer, statistics_batch_num=statistics_batch_num)
 
-class ActivationRankFilterPruner(_StructuredFilterPruner):
-    def __init__(self, model, config_list, pruning_algorithm, optimizer=None, activation='relu', statistics_batch_num=1):
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, \
-            optimizer=optimizer, activation=activation, statistics_batch_num=statistics_batch_num)
-
-class ActivationAPoZRankFilterPruner(ActivationRankFilterPruner):
+class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)
 
-class ActivationMeanRankFilterPruner(ActivationRankFilterPruner):
+class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)

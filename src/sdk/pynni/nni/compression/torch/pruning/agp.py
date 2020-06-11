@@ -4,7 +4,7 @@
 import logging
 import torch
 from schema import And, Optional
-from .constants import masker_dict
+from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
 
@@ -38,7 +38,7 @@ class AGP_Pruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
-        self.masker = masker_dict[pruning_algorithm](model, self)
+        self.masker = MASKER_DICT[pruning_algorithm](model, self)
 
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
@@ -76,8 +76,8 @@ class AGP_Pruner(Pruner):
             index of this wrapper in pruner's all wrappers
         Returns
         -------
-        dict
-            dictionary for storing masks, keys of the dict:
+        dict | None
+            Dictionary for storing masks, keys of the dict:
             'weight_mask':  weight mask tensor
             'bias_mask': bias mask tensor (optional)
         """
