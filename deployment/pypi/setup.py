@@ -62,7 +62,6 @@ setuptools.setup(
         'scipy',
         'coverage',
         'colorama',
-        'pathspec',
         'scikit-learn>=0.20,<0.22'
     ],
     classifiers = [
