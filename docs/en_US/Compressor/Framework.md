@@ -94,7 +94,7 @@ In above example, we use `set_wrappers_attribute` to set a buffer `if_calculated
 Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. Therefore user can add a customized collector to module.
 
 ```python
-class MyPrunerMasker(WeightMasker):
+class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
         self.pruner.set_wrappers_attribute("collected_activation", [])
