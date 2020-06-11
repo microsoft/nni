@@ -4,7 +4,7 @@
 
 [Autokeras](https://arxiv.org/abs/1806.10282) 是使用 Network Morphism 算法的流行的自动机器学习工具。 Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 然后使用朴素贝叶斯回归，从网络的历史训练结果来预测它的指标值。 接下来，会选择预测结果最好的子网络加入训练队列中。 在[此代码](https://github.com/jhfjhfj1/autokeras)的启发下，我们在 NNI 中实现了 Network Morphism 算法。
 
-要了解 Network Morphism Trial 的用法，参考 [Readme_zh_CN.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README_zh_CN.md)，了解更多细节。
+要了解 Network Morphism Trial 的用法，参考 [Readme_zh_CN.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README_zh_CN.md)。
 
 ## 2. 用法
 
@@ -52,7 +52,7 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-如果需要保存并**读取最佳模型**，推荐采用以下方法。
+如果需要保存并读取**最佳模型**，推荐采用以下方法。
 
 ```python
 # 1. 使用 NNI API
@@ -100,11 +100,11 @@ loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ## 3. 文件结构
 
-Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件：
 
 - `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
-- `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
+- `bayesian.py` 是用来基于已经搜索到的模型来预测未知模型指标的贝叶斯算法。
 
 - `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
   - Graph 从模型中抽取神经网络。
@@ -117,13 +117,13 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 - `layers.py` 包括模型中用到的所有层。
 
 - `layer_transformer.py` 包含了一些层转换，包括变宽，变深，或在层中增加跳跃连接。
-- `nn.py` 包含生成初始化网的类。
+- `nn.py` 包括生成初始网络的类。
 - `metric.py` 包括了一些指标类，如 Accuracy 和 MSE。
-- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的样例。
+- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的示例。
 
-## 4. 网络表示的 JSON 样例
+## 4. 网络表示的 JSON 示例
 
-这是定义的中间表示 JSON 样例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
+这是定义的中间表示 JSON 示例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 Trial 代码中的 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```json
 {
@@ -216,19 +216,19 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
  }
 ```
 
-每个模型的定义都是一个 JSON 对象 （也可以认为模型是一个 [有向无环图](https://en.wikipedia.org/wiki/Directed_acyclic_graph))：
+可将模型视为[有向无环图](https://en.wikipedia.org/wiki/Directed_acyclic_graph)。 每个模型的定义都是一个 JSON 对象：
 
 - `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
 - `operation_history` 是保存了所有网络形态操作的列表。
-- `layer_id_to_input_node_ids` 是字典实例，将层的标识映射到输入节点标识。
-- `layer_id_to_output_node_ids` 是字典实例，将层的标识映射到输出节点标识。
-- `adj_list` 是二维列表。 是图的邻接列表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
+- `layer_id_to_input_node_ids` 是字典，将层的标识映射到输入节点标识。
+- `layer_id_to_output_node_ids` 是字典，将层的标识映射到输出节点标识。
+- `adj_list` 是二维列表，是图的邻接表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
 - `reverse_adj_list` 是与 adj_list 格式一样的反向邻接列表。
 - `node_list` 是一个整数列表。 列表的索引是标识。
 - `layer_list` 是层的列表。 列表的索引是标识。
   
-  - 对于 `StubConv (StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
+  - 对于 `StubConv(StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
   
   - 对于 `StubDense`，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
   
@@ -242,4 +242,4 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 
 ## 5. TODO
 
-下一步，会将 API 从固定的网络生成方法改为更多的网络操作生成方法。 此外，还会使用 ONNX 格式来替代 JSON 作为中间表示结果。
+下一步，会将 API 从固定网络生成器，改为有更多可用操作的网络生成器。 会使用 ONNX 格式来替代 JSON 作为中间表示结果。

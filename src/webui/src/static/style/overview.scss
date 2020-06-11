@@ -1,16 +1,9 @@
 
 /* new style */
 .overMessage{
-    height: 430px;
+    height: 446px;
 }
-.overGraph{
-    height: 362px;
 
-    .accuracy{
-        width: 100%;
-        height: 324px;
-    }
-}
 .blockPadding{
     padding: 10px 20px;
 }
@@ -23,7 +16,7 @@
 }
 
 .padItem{
-    padding-left: 20px;
+    padding: 10px 20px 0 20px;
 }
 
 .searchSpace{
@@ -31,6 +24,7 @@
     font-size: 14px;
     padding: 15px 0;
     color: #212121;
+    width: 95%;
 }
 
 .nowrap{
@@ -51,4 +45,22 @@
 
 .link{
     margin-bottom: 10px;
+}
+
+.info{
+    position: relative;
+    top: 15px;
+    left: 10px;
+    span{
+        color: #333;
+        font-size: 14px;
+    }
+}
+
+/* overview-succeed-graph */
+.showMess{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }

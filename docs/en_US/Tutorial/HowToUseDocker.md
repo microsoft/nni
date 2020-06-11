@@ -3,89 +3,89 @@
 
 ## Overview
 
-[Docker](https://www.docker.com/) is a tool to make it easier for users to deploy and run applications based on their own operating system by starting containers. Docker is not a virtual machine, it does not create a virtual operating system, bug it allows different applications to use the same OS kernel, and isolate different applications by container.
+[Docker](https://www.docker.com/) is a tool to make it easier for users to deploy and run applications based on their own operating system by starting containers. Docker is not a virtual machine, it does not create a virtual operating system, but it allows different applications to use the same OS kernel and isolate different applications by container.
 
-Users could start NNI experiments using docker, and NNI provides an offical docker image [msranni/nni](https://hub.docker.com/r/msranni/nni) in docker hub.
+Users can start NNI experiments using Docker. NNI also provides an official Docker image [msranni/nni](https://hub.docker.com/r/msranni/nni) on Docker Hub.
 
-## Using docker in local machine
+## Using Docker in local machine
 
-### Step 1: Installation of docker
-Before you start using docker to start NNI experiments, you should install a docker software in your local machine. [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+### Step 1: Installation of Docker
+Before you start using Docker for NNI experiments, you should install Docker on your local machine. [See here](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
-### Step2: Start docker container
-If you have installed the docker package in your local machine, you could start a docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in container and continue to listen to a port, you need to specify the port mapping between your host machine and docker container to give access to web UI outside the container. By visting the host ip address and port, you could redirect to the web UI process started in docker container, and visit web UI content.
+### Step 2: Start a Docker container
+If you have installed the Docker package in your local machine, you can start a Docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in a container and continue to listen to a port, you need to specify the port mapping between your host machine and Docker container to give access to web UI outside the container. By visiting the host IP address and port, you can redirect to the web UI process started in Docker container and visit web UI content.
 
-For example, you could start a new docker container from following command:
+For example, you could start a new Docker container from the following command:
 ```
 docker run -i -t -p [hostPort]:[containerPort] [image]
 ```
-`-i:` Start a docker in an interactive mode.
+`-i:` Start a Docker in an interactive mode.
 
-`-t:` Docker assign the container a input terminal.
+`-t:` Docker assign the container an input terminal.
 
 `-p:` Port mapping, map host port to a container port.
 
-For more information about docker command, please [refer](https://docs.docker.com/v17.09/edge/engine/reference/run/)
+For more information about Docker commands, please [refer to this](https://docs.docker.com/v17.09/edge/engine/reference/run/).
 
 Note:
 ```
-   NNI only support Ubuntu and MacOS system in local mode for the moment, please use correct docker image type.If you want to use gpu in docker container, please use nvidia-docker.
+   NNI only supports Ubuntu and MacOS systems in local mode for the moment, please use correct Docker image type. If you want to use gpu in a Docker container, please use nvidia-docker.
 ```
-### Step3: Run NNI in docker container
+### Step 3: Run NNI in a Docker container
 
-If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment.
+If you start a Docker image using NNI's official image `msranni/nni`, you can directly start NNI experiments by using the `nnictl` command. Our official image has NNI's running environment and basic python and deep learning frameworks preinstalled.
 
-If you start your own docker image, you may need to install NNI package first, please [refer](Installation.md).
+If you start your own Docker image, you may need to install the NNI package first; please refer to [NNI installation](InstallationLinux.md).
 
-If you want to run NNI's offical examples, you may need to clone NNI repo in github using
+If you want to run NNI's official examples, you may need to clone the NNI repo in GitHub using
 ```
 git clone https://github.com/Microsoft/nni.git
 ```
-then you could enter `nni/examples/trials` to start an experiment.
+then you can enter `nni/examples/trials` to start an experiment.
 
-After you prepare NNI's environment, you could start a new experiment using `nnictl` command, [refer](QuickStart.md)
+After you prepare NNI's environment, you can start a new experiment using the `nnictl` command. [See here](QuickStart.md).
 
-## Using docker in remote platform
+## Using Docker on a remote platform
 
-NNI support starting experiments in [remoteTrainingService](../TrainingService/RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used as the remote machine in NNI's remot mode.
+NNI supports starting experiments in [remoteTrainingService](../TrainingService/RemoteMachineMode.md), and running trial jobs on remote machines. As Docker can start an independent Ubuntu system as an SSH server, a Docker container can be used as the remote machine in NNI's remote mode.
 
-### Step 1: Setting docker environment
+### Step 1: Setting a Docker environment
 
-You should install a docker software in your remote machine first, please [refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+You should install the Docker software on your remote machine first, please [refer to this](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
-To make sure your docker container could be connected by NNI experiments, you should build your own docker image to set SSH server or use images with SSH configuration. If you want to use docker container as SSH server, you should configure SSH password login or private key login, please [refer](https://docs.docker.com/engine/examples/running_ssh_service/).
+To make sure your Docker container can be connected by NNI experiments, you should build your own Docker image to set an SSH server or use images with an SSH configuration. If you want to use a Docker container as an SSH server, you should configure the SSH password login or private key login; please [refer to this](https://docs.docker.com/engine/examples/running_ssh_service/).
 
 Note:
 ```
-NNI's offical image msranni/nni does not support SSH server for the time being, you should build your own docker image with SSH configuration or use other images as remote server.
+NNI's official image msranni/nni does not support SSH servers for the time being; you should build your own Docker image with an SSH configuration or use other images as a remote server.
 ```
 
-### Step2: Start docker container in remote machine
+### Step 2: Start a Docker container on a remote machine
 
-SSH server need a port, you need to expose docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map container's port **`A`** to your remote host machine's another port **`B`**, NNI will connect port **`B`** as SSH port, and your host machine will map the connection from port **`B`** to port **`A`**, then NNI could connect to your docker container.
+An SSH server needs a port; you need to expose Docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map the container's port **`A`** to your remote host machine's other port **`B`**, NNI will connect port **`B`** as an SSH port, and your host machine will map the connection from port **`B`** to port **`A`** then NNI could connect to your Docker container.
 
-For example, you could start your docker container using following commands:
+For example, you could start your Docker container using the following commands:
 ```
 docker run -dit -p [hostPort]:[containerPort] [image]
 ```
-The `containerPort` is the SSH port used in your docker container, and the `hostPort` is your host machine's port exposed to NNI. You could set your NNI's config file to connect to `hostPort`, and the connection will be transmitted to your docker container.
-For more information about docker command, please [refer](https://docs.docker.com/v17.09/edge/engine/reference/run/).
+The `containerPort` is the SSH port used in your Docker container and the `hostPort` is your host machine's port exposed to NNI. You can set your NNI's config file to connect to `hostPort` and the connection will be transmitted to your Docker container.
+For more information about Docker commands, please [refer to this](https://docs.docker.com/v17.09/edge/engine/reference/run/).
 
 Note:
 ```
-If you use your own docker image as remote server, please make sure that this image has basic python environment and NNI SDK runtime environment. If you want to use gpu in docker container, please use nvidia-docker.
+If you use your own Docker image as a remote server, please make sure that this image has a basic python environment and an NNI SDK runtime environment. If you want to use a GPU in a Docker container, please use nvidia-docker.
 ```
 
-### Step3: Run NNI experiments
+### Step 3: Run NNI experiments
 
-You could set your config file as remote platform, and setting the `machineList` configuration to connect your docker SSH server, [refer](../TrainingService/RemoteMachineMode.md). Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
+You can set your config file as a remote platform and set the `machineList` configuration to connect to your Docker SSH server; [refer to this](../TrainingService/RemoteMachineMode.md). Note that you should set the correct `port`, `username`, and `passWd` or `sshKeyPath` of your host machine.
 
-`port:` The host machine's port, mapping to docker's SSH port.
+`port:` The host machine's port, mapping to Docker's SSH port.
 
-`username:` The username of docker container.
+`username:` The username of the Docker container.
 
-`passWd:` The password of docker container.
+`passWd:` The password of the Docker container.
 
-`sshKeyPath:` The path of private key of docker container.
+`sshKeyPath:` The path of the private key of the Docker container.
 
-After the configuration of config file, you could start an experiment, [refer](QuickStart.md)
+After the configuration of the config file, you could start an experiment, [refer to this](QuickStart.md).

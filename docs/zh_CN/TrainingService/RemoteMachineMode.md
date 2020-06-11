@@ -1,8 +1,22 @@
-# 在多机上运行 Experiment
+# 在远程计算机上运行 Experiment
 
-NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remote` 模式。 NNI 需要这些计算机的访问权限，并假定已配置好了深度学习训练环境。
+NNI 可以通过 SSH 在多个远程计算机上运行同一个 Experiment，称为 `remote` 模式。 这就像一个轻量级的训练平台。 在此模式下，可以从计算机启动 NNI，并将 Trial 并行调度到远程计算机。
 
-例如：有三台服务器，登录账户为 `bob`（注意：账户不必在各台计算机上一致）：
+## 远程计算机的要求
+
+* 仅支持 Linux 作为远程计算机，其[配置需求](../Tutorial/InstallationLinux.md)与 NNI 本机模式相同。
+
+* 根据[安装文章](../Tutorial/InstallationLinux.md)，在每台计算机上安装 NNI。
+
+* 确保远程计算机满足 Trial 代码的环境要求。 如果默认环境不符合要求，可以将设置脚本添加到 NNI 配置的 `command` 字段。
+
+* 确保远程计算机能被运行 `nnictl` 命令的计算机通过 SSH 访问。 同时支持 SSH 的密码和密钥验证方法。 有关高级用法，参考[配置](../Tutorial/ExperimentConfig.md)的 machineList 部分。
+
+* 确保每台计算机上的 NNI 版本一致。
+
+## 运行 Experiment
+
+例如，有三台机器，可使用用户名和密码登录。
 
 | IP       | 用户名 | 密码     |
 | -------- | --- | ------ |
@@ -10,15 +24,9 @@ NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remo
 | 10.1.1.2 | bob | bob123 |
 | 10.1.1.3 | bob | bob123 |
 
-## 设置 NNI 环境
+在这三台计算机或另一台能访问这些计算机的环境中安装并运行 NNI。
 
-按照[指南](../Tutorial/QuickStart.md)在每台计算机上安装 NNI。
-
-## 运行 Experiment
-
-在另一台计算机，或在其中任何一台上安装 NNI，并运行 nnictl 工具。
-
-以 `examples/trials/mnist-annotation` 为例。 `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` 来查看详细配置：
+以 `examples/trials/mnist-annotation` 为例。 示例文件 `examples/trials/mnist-annotation/config_remote.yml` 的内容如下：
 
 ```yaml
 authorName: default
@@ -26,16 +34,18 @@ experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-#可选项: local, remote, pai
+#choice: local, remote, pai
 trainingServicePlatform: remote
-#可选项: true, false
+# 搜索空间文件
+searchSpacePath: search_space.json
+# 可选项: true, false
 useAnnotation: true
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC 需要通过 nnictl 安装)
+  # 可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #可选项: maximize, minimize
+    # 可选项:: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
@@ -56,28 +66,8 @@ machineList:
     passwd: bob123
 ```
 
-可以使用不同系统来在远程计算机上运行 Experiment。
-
-#### Linux 和 macOS
-
-填好 `machineList` 部分，然后运行：
+`codeDir` 中的文件会自动上传到远程计算机中。 可在 Windows、Linux 或 macOS 上运行以下命令，在远程 Linux 计算机上启动 Trial：
 
 ```bash
-nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 ```
-
-来启动 Experiment。
-
-#### Windows
-
-填好 `machineList` 部分，然后运行：
-
-```bash
-nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
-```
-
-来启动 Experiment。
-
-## 版本校验
-
-从 0.6 开始，NNI 支持版本校验，详情参考[这里](PaiMode.md)。

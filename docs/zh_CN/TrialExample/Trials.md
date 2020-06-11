@@ -2,7 +2,7 @@
 
 **Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 样例。
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 示例。
 
 <a name="nni-api"></a>
 
@@ -10,7 +10,7 @@
 
 ### 第一步：准备搜索空间参数文件。
 
-样例如下：
+示例如下：
 
 ```json
 {
@@ -45,7 +45,7 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`是损失值或精度。
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给 [Assessor](../Assessor/BuiltinAssessor.md)。 通常，`指标`包含了定期评估的损失值或精度。
 
 * 返回配置的最终性能
 
@@ -53,11 +53,11 @@ nni.report_intermediate_result(metrics)
 nni.report_final_result(metrics)
 ```
 
-`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
+`指标`可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](../Tuner/BuiltinTuner.md)。
 
 ### 第三步：启用 NNI API
 
-要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径，即第一步中定义的文件：
 
 ```yaml
 useAnnotation: false
@@ -72,10 +72,10 @@ searchSpacePath: /path/to/your/search_space.json
 
 ## NNI Annotation
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NN Annotation 很简单，类似于注释。 不必对现有代码进行结构更改。 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量
-* 指定变量的搜索空间范围
+* 指定要在其中调整的变量的范围
 * 标记哪个变量需要作为中间结果范围给 `Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。
 
@@ -89,7 +89,7 @@ searchSpacePath: /path/to/your/search_space.json
 2. 每执行 100 步返回 test\_acc
 3. 最后返回 test\_acc 作为最终结果。
 
-新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
+值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -120,7 +120,7 @@ with tf.Session() as sess:
 
 **注意**：
 
-* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
+* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须与 `@nni.variable` 的关键字 `name` 相同。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 
 Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpec.md)。
@@ -132,13 +132,31 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
     useAnnotation: true
     
 
+## 用于调试的独立模式
+
+NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 这样能更容易的找出 Trial 代码中的 Bug。 NNI Annotation 天然支持独立模式，因为添加的 NNI 相关的行都是注释的形式。 NNI Trial API 在独立模式下的行为有所变化，某些 API 返回虚拟值，而某些 API 不报告值。 有关这些 API 的完整列表，请参阅下表。
+
+```python
+＃注意：请为 Trial 代码中的超参分配默认值
+nni.get_next_parameter＃返回 {}
+nni.report_final_result＃已在 stdout 上打印日志，但不报告
+nni.report_intermediate_result＃已在 stdout 上打印日志，但不报告
+nni.get_experiment_id＃返回 "STANDALONE"
+nni.get_trial_id＃返回 "STANDALONE"
+nni.get_sequence_id＃返回 0
+```
+
+可使用 [mnist 示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1) 来尝试独立模式。 只需在代码目录下运行 `python3 mnist.py`。 Trial 代码会使用默认超参成功运行。
+
+更多调试的信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
+
 ## Trial 存放在什么地方？
 
 ### 本机模式
 
 每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
-如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件样例：
+如果使用了 Annotation 方法，转换后的 Trial 代码会存放在另一个临时目录中。 可以在 `run.sh` 文件中的 `NNI_OUTPUT_DIR` 变量找到此目录。 文件中的第二行（即：`cd`）会切换到代码所在的实际路径。 参考 `run.sh` 文件示例：
 
 ```bash
 #!/bin/bash
@@ -162,9 +180,9 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 <a name="more-examples"></a>
 
-## 更多 Trial 的样例
+## 更多 Trial 的示例
 
-* [MNIST 样例](MnistExamples.md)
+* [MNIST 示例](MnistExamples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](Cifar10Examples.md)
 * [如何在 NNI 调优 SciKit-learn 的参数](SklearnExamples.md)
 * [在阅读理解上使用自动模型架构搜索。](SquadEvolutionExamples.md)

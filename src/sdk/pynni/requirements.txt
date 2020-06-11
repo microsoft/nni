@@ -7,4 +7,4 @@ scipy
 hyperopt==0.1.2
 
 # metis tuner
-sklearn
+scikit-learn==0.20

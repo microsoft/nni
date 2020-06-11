@@ -1,17 +1,85 @@
-# Experiment config reference
+# Experiment Config Reference
 
 A config file is needed when creating an experiment. The path of the config file is provided to `nnictl`.
 The config file is in YAML format.
 This document describes the rules to write the config file, and provides some examples and templates.
 
-- [Experiment config reference](#experiment-config-reference)
-  - [Template](#template)
-  - [Configuration spec](#configuration-spec)
-  - [Examples](#examples)
+- [Experiment Config Reference](#experiment-config-reference)
+  * [Template](#template)
+  * [Configuration Spec](#configuration-spec)
+    + [authorName](#authorname)
+    + [experimentName](#experimentname)
+    + [trialConcurrency](#trialconcurrency)
+    + [maxExecDuration](#maxexecduration)
+    + [versionCheck](#versioncheck)
+    + [debug](#debug)
+    + [maxTrialNum](#maxtrialnum)
+    + [trainingServicePlatform](#trainingserviceplatform)
+    + [searchSpacePath](#searchspacepath)
+    + [useAnnotation](#useannotation)
+    + [multiThread](#multithread)
+    + [nniManagerIp](#nnimanagerip)
+    + [logDir](#logdir)
+    + [logLevel](#loglevel)
+    + [logCollection](#logcollection)
+    + [tuner](#tuner)
+      - [builtinTunerName](#builtintunername)
+      - [codeDir](#codedir)
+      - [classFileName](#classfilename)
+      - [className](#classname)
+      - [classArgs](#classargs)
+      - [gpuIndices](#gpuindices)
+      - [includeIntermediateResults](#includeintermediateresults)
+    + [assessor](#assessor)
+      - [builtinAssessorName](#builtinassessorname)
+      - [codeDir](#codedir-1)
+      - [classFileName](#classfilename-1)
+      - [className](#classname-1)
+      - [classArgs](#classargs-1)
+    + [advisor](#advisor)
+      - [builtinAdvisorName](#builtinadvisorname)
+      - [codeDir](#codedir-2)
+      - [classFileName](#classfilename-2)
+      - [className](#classname-2)
+      - [classArgs](#classargs-2)
+      - [gpuIndices](#gpuindices-1)
+    + [trial](#trial)
+    + [localConfig](#localconfig)
+      - [gpuIndices](#gpuindices-2)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu)
+      - [useActiveGpu](#useactivegpu)
+    + [machineList](#machinelist)
+      - [ip](#ip)
+      - [port](#port)
+      - [username](#username)
+      - [passwd](#passwd)
+      - [sshKeyPath](#sshkeypath)
+      - [passphrase](#passphrase)
+      - [gpuIndices](#gpuindices-3)
+      - [maxTrialNumPerGpu](#maxtrialnumpergpu-1)
+      - [useActiveGpu](#useactivegpu-1)
+    + [kubeflowConfig](#kubeflowconfig)
+      - [operator](#operator)
+      - [storage](#storage)
+      - [nfs](#nfs)
+      - [keyVault](#keyvault)
+      - [azureStorage](#azurestorage)
+      - [uploadRetryCount](#uploadretrycount)
+    + [paiConfig](#paiconfig)
+      - [userName](#username)
+      - [password](#password)
+      - [token](#token)
+      - [host](#host)
+  * [Examples](#examples)
+    + [Local mode](#local-mode)
+    + [Remote mode](#remote-mode)
+    + [PAI mode](#pai-mode)
+    + [Kubeflow mode](#kubeflow-mode)
+    + [Kubeflow with azure storage](#kubeflow-with-azure-storage)
 
 ## Template
 
-* __light weight(without Annotation and Assessor)__
+* __Light weight (without Annotation and Assessor)__
 
 ```yaml
 authorName:
@@ -24,8 +92,6 @@ trainingServicePlatform:
 searchSpacePath:
 #choice: true, false, default: false
 useAnnotation:
-#choice: true, false, default: false
-multiPhase:
 #choice: true, false, default: false
 multiThread:
 tuner:
@@ -60,8 +126,6 @@ trainingServicePlatform:
 searchSpacePath:
 #choice: true, false, default: false
 useAnnotation:
-#choice: true, false, default: false
-multiPhase:
 #choice: true, false, default: false
 multiThread:
 tuner:
@@ -102,8 +166,6 @@ trainingServicePlatform:
 #choice: true, false, default: false
 useAnnotation:
 #choice: true, false, default: false
-multiPhase:
-#choice: true, false, default: false
 multiThread:
 tuner:
   #choice: TPE, Random, Anneal, Evolution
@@ -130,442 +192,475 @@ machineList:
     passwd:
 ```
 
-## Configuration spec
+## Configuration Spec
 
-* __authorName__
-  * Description
+### authorName
 
-    __authorName__ is the name of the author who create the experiment.
+Required. String.
 
-    TBD: add default value
+The name of the author who create the experiment.
 
-* __experimentName__
-  * Description
+*TBD: add default value.*
 
-    __experimentName__ is the name of the experiment created.
+### experimentName
 
-    TBD: add default value
+Required. String.
 
-* __trialConcurrency__
-  * Description
+The name of the experiment created.
 
-    __trialConcurrency__ specifies the max num of trial jobs run simultaneously.
+*TBD: add default value.*
 
-    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+### trialConcurrency
 
-* __maxExecDuration__
-  * Description
+Required. Integer between 1 and 99999.
 
-    __maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.
+Specifies the max num of trial jobs run simultaneously.
 
-    Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+If trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach __trialConcurrency__ number, some trial jobs will be put into a queue to wait for gpu allocation.
 
-* __versionCheck__
-  * Description
+### maxExecDuration
+
+Optional. String. Default: 999d.
+
+__maxExecDuration__ specifies the max duration time of an experiment. The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.
+
+Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+
+### versionCheck
+
+Optional. Bool. Default: false.
   
-    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
+NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
-* __debug__
-  * Description
+### debug
 
-    Debug mode will set versionCheck be False and set logLevel be 'debug'
+Optional. Bool. Default: false.
 
-* __maxTrialNum__
-  * Description
+Debug mode will set versionCheck to false and set logLevel to be 'debug'.
 
-   __maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+### maxTrialNum
 
-* __trainingServicePlatform__
-  * Description
+Optional. Integer between 1 and 99999. Default: 99999.
 
-    __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.
+Specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
-    * __local__ run an experiment on local ubuntu machine.
+### trainingServicePlatform
 
-    * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
+Required. String.
 
-    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](../TrainingService/PaiMode.md)
+Specifies the platform to run the experiment, including __local__, __remote__, __pai__, __kubeflow__, __frameworkcontroller__.
 
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). Detail please reference [KubeflowDoc](../TrainingService/KubeflowMode.md)
+* __local__ run an experiment on local ubuntu machine.
 
-* __searchSpacePath__
-  * Description
+* __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
 
-    __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+* __pai__  submit trial jobs to [OpenPAI](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please refer to [Guide to PAI Mode](../TrainingService/PaiMode.md)
 
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+* __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
 
-* __useAnnotation__
-  * Description
+* TODO: explain frameworkcontroller.
 
-    __useAnnotation__ use annotation to analysis trial code and generate search space.
+### searchSpacePath
 
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+Optional. Path to existing file.
 
-* __multiPhase__
-  * Description
+Specifies the path of search space file, which should be a valid path in the local linux machine.
 
-    __multiPhase__ enable [multi-phase experiment](../AdvancedFeature/MultiPhase.md).
+The only exception that __searchSpacePath__ can be not fulfilled is when `useAnnotation=True`.
 
-* __multiThread__
-  * Description
+### useAnnotation
 
-    __multiThread__ enable multi-thread mode for dispatcher, if multiThread is set to `true`, dispatcher will start a thread to process each command from NNI Manager.
+Optional. Bool. Default: false.
 
-* __nniManagerIp__
-  * Description
+Use annotation to analysis trial code and generate search space.
 
-    __nniManagerIp__ set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+Note: if __useAnnotation__ is true, the searchSpacePath field should be removed.
 
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+### multiThread
 
-* __logDir__
-  * Description
+Optional. Bool. Default: false.
 
-    __logDir__ configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+Enable multi-thread mode for dispatcher. If multiThread is enabled, dispatcher will start a thread to process each command from NNI Manager.
 
-* __logLevel__
-  * Description
+### nniManagerIp
 
-    __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+Optional. String. Default: eth0 device IP.
 
-* __logCollection__
-  * Description
+Set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
-    __logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If not, __nniManagerIp__ is recommended to set explicitly.
 
-* __tuner__
-  * Description
+### logDir
 
-    __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
-  * __builtinTunerName__ and __classArgs__
-    * __builtinTunerName__
+Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
 
-      __builtinTunerName__ specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
+Configures the directory to store logs and data of the experiment.
 
-    * __classArgs__
+### logLevel
 
-      __classArgs__ specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
-    * __codeDir__
+Optional. String. Default: `info`.
 
-      __codeDir__ specifies the directory of tuner code.
-    * __classFileName__
+Sets log level for the experiment. Available log levels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
 
-      __classFileName__ specifies the name of tuner file.
-    * __className__
+### logCollection
 
-      __className__ specifies the name of tuner class.
-    * __classArgs__
+Optional. `http` or `none`. Default: `none`.
 
-      __classArgs__ specifies the arguments of tuner algorithm.
+Set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
 
-  * __gpuIndices__
+### tuner
 
-      __gpuIndices__ specifies the gpus that can be used by the tuner process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+Required.
 
-  * __includeIntermediateResults__
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, in which case __codeDirectory__, __classFileName__, __className__ and __classArgs__ are needed. *Users must choose exactly one way.*
 
-      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
+#### builtinTunerName
 
-  Note: users could only use one way to specify tuner, either specifying `builtinTunerName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+Required if using built-in tuners. String.
 
-* __assessor__
+Specifies the name of system tuner, NNI sdk provides different tuners introduced [here](../Tuner/BuiltinTuner.md).
 
-  * Description
+#### codeDir
 
-    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
-  * __builtinAssessorName__ and __classArgs__
-    * __builtinAssessorName__
+Required if using customized tuners. Path relative to the location of config file.
 
-      __builtinAssessorName__ specifies the name of built-in assessor, NNI sdk provides different assessors introducted [here](../Assessor/BuiltinAssessor.md).
-    * __classArgs__
+Specifies the directory of tuner code.
 
-      __classArgs__ specifies the arguments of assessor algorithm
+#### classFileName
 
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
+Required if using customized tuners. File path relative to __codeDir__.
 
-    * __codeDir__
+Specifies the name of tuner file.
 
-      __codeDir__ specifies the directory of assessor code.
+#### className
 
-    * __classFileName__
+Required if using customized tuners. String.
 
-      __classFileName__ specifies the name of assessor file.
+Specifies the name of tuner class.
 
-    * __className__
+#### classArgs
 
-      __className__ specifies the name of assessor class.
+Optional. Key-value pairs. Default: empty.
 
-    * __classArgs__
+Specifies the arguments of tuner algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in tuner.
 
-      __classArgs__ specifies the arguments of assessor algorithm.
+#### gpuIndices
 
-  Note: users could only use one way to specify assessor, either specifying `builtinAssessorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`. If users do not want to use assessor, assessor fileld should leave to empty.
+Optional. String. Default: empty.
 
-* __advisor__
-  * Description
+Specifies the GPUs that can be used by the tuner process. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
-    __advisor__ specifies the advisor algorithm in the experiment, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
-  * __builtinAdvisorName__ and __classArgs__
-    * __builtinAdvisorName__
+#### includeIntermediateResults
 
-      __builtinAdvisorName__ specifies the name of a built-in advisor, NNI sdk provides [different advisors](../Tuner/BuiltinTuner.md).
+Optional. Bool. Default: false.
 
-    * __classArgs__
+If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result.
 
-      __classArgs__ specifies the arguments of the advisor algorithm. Please refer to [this file](../Tuner/BuiltinTuner.md) for the configurable arguments of each built-in advisor.
-  * __codeDir__, __classFileName__, __className__ and __classArgs__
-    * __codeDir__
+### assessor
 
-      __codeDir__ specifies the directory of advisor code.
-    * __classFileName__
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and users need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__. *Users must choose exactly one way.*
 
-      __classFileName__ specifies the name of advisor file.
-    * __className__
+By default, there is no assessor enabled.
 
-      __className__ specifies the name of advisor class.
-    * __classArgs__
+#### builtinAssessorName
 
-      __classArgs__ specifies the arguments of advisor algorithm.
+Required if using built-in assessors. String.
 
-  * __gpuIndices__
+Specifies the name of built-in assessor, NNI sdk provides different assessors introduced [here](../Assessor/BuiltinAssessor.md).
 
-      __gpuIndices__ specifies the gpus that can be used by the advisor process. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`. If the field is not set, `CUDA_VISIBLE_DEVICES` will be '' in script, that is, no GPU is visible to tuner.
+#### codeDir
 
-  Note: users could only use one way to specify advisor, either specifying `builtinAdvisorName` and `classArgs`, or specifying `codeDir`, `classFileName`, `className` and `classArgs`.
+Required if using customized assessors. Path relative to the location of config file.
 
-* __trial(local, remote)__
+Specifies the directory of assessor code.
 
-  * __command__
+#### classFileName
 
-    __command__  specifies the command to run trial process.
+Required if using customized assessors. File path relative to __codeDir__.
 
-  * __codeDir__
+Specifies the name of assessor file.
 
-    __codeDir__ specifies the directory of your own trial file.
+#### className
 
-  * __gpuNum__
+Required if using customized assessors. String.
 
-    __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
+Specifies the name of assessor class.
 
-* __trial(pai)__
+#### classArgs
 
-  * __command__
+Optional. Key-value pairs. Default: empty.
 
-    __command__  specifies the command to run trial process.
+Specifies the arguments of assessor algorithm.
 
-  * __codeDir__
+### advisor
 
-    __codeDir__ specifies the directory of the own trial file.
+Optional.
 
-  * __gpuNum__
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set __builtinAdvisorName__ and __classArgs__. Another way is to use users' own advisor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
 
-    __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
+When advisor is enabled, settings of tuners and advisors will be bypassed.
 
-  * __cpuNum__
+#### builtinAdvisorName
 
-    __cpuNum__ is the cpu number of cpu to be used in pai container.
+Specifies the name of a built-in advisor. NNI sdk provides [BOHB](../Tuner/BohbAdvisor.md) and [Hyperband](../Tuner/HyperbandAdvisor.md).
 
-  * __memoryMB__
+#### codeDir
 
-    __memoryMB__ set the momory size to be used in pai's container.
+Required if using customized advisors. Path relative to the location of config file.
 
-  * __image__
+Specifies the directory of advisor code.
 
-    __image__ set the image to be used in pai.
+#### classFileName
 
-  * __dataDir__
+Required if using customized advisors. File path relative to __codeDir__.
 
-    __dataDir__ is the data directory in hdfs to be used.
+Specifies the name of advisor file.
 
-  * __outputDir__
+#### className
 
-    __outputDir__ is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+Required if using customized advisors. String.
 
-* __trial(kubeflow)__
+Specifies the name of advisor class.
 
-  * __codeDir__
+#### classArgs
 
-    __codeDir__ is the local directory where the code files in.
+Optional. Key-value pairs. Default: empty.
 
-  * __ps(optional)__
+Specifies the arguments of advisor.
 
-    __ps__ is the configuration for kubeflow's tensorflow-operator.
+#### gpuIndices
 
-    * __replicas__
+Optional. String. Default: empty.
 
-      __replicas__ is the replica number of __ps__ role.
+Specifies the GPUs that can be used. Single or multiple GPU indices can be specified. Multiple GPU indices are separated by comma `,`. For example, `1`, or `0,1,3`. If the field is not set, no GPU will be visible to tuner (by setting `CUDA_VISIBLE_DEVICES` to be an empty string).
 
-    * __command__
+### trial
 
-      __command__ is the run script in __ps__'s container.
+Required. Key-value pairs.
 
-    * __gpuNum__
+In local and remote mode, the following keys are required.
 
-      __gpuNum__ set the gpu number to be used in __ps__ container.
+* __command__: Required string. Specifies the command to run trial process.
 
-    * __cpuNum__
+* __codeDir__: Required string. Specifies the directory of your own trial file. This directory will be automatically uploaded in remote mode.
 
-      __cpuNum__ set the cpu number to be used in __ps__ container.
+* __gpuNum__: Optional integer. Specifies the num of gpu to run the trial process. Default value is 0.
 
-    * __memoryMB__
+In PAI mode, the following keys are required.
 
-      __memoryMB__ set the memory size of the container.
+* __command__: Required string. Specifies the command to run trial process.
 
-    * __image__
+* __codeDir__: Required string. Specifies the directory of the own trial file. Files in the directory will be uploaded in PAI mode.
 
-      __image__ set the image to be used in __ps__.
+* __gpuNum__: Required integer. Specifies the num of gpu to run the trial process. Default value is 0.
 
-  * __worker__
+* __cpuNum__: Required integer. Specifies the cpu number of cpu to be used in pai container.
 
-    __worker__ is the configuration for kubeflow's tensorflow-operator.
+* __memoryMB__: Required integer. Set the memory size to be used in pai container, in megabytes.
 
-    * __replicas__
+* __image__: Required string. Set the image to be used in pai.
 
-      __replicas__ is the replica number of __worker__ role.
+* __authFile__: Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. [Reference](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job).
 
-    * __command__
+* __shmMB__: Optional integer. Shared memory size of container.
 
-      __command__ is the run script in __worker__'s container.
+* __portList__: List of key-values pairs with `label`, `beginAt`, `portNumber`. See [job tutorial of PAI](https://github.com/microsoft/pai/blob/master/docs/job_tutorial.md) for details.
 
-    * __gpuNum__
+In Kubeflow mode, the following keys are required.
 
-      __gpuNum__ set the gpu number to be used in __worker__ container.
+* __codeDir__: The local directory where the code files are in.
 
-    * __cpuNum__
+* __ps__: An optional configuration for kubeflow's tensorflow-operator, which includes
 
-      __cpuNum__ set the cpu number to be used in __worker__ container.
+    * __replicas__: The replica number of __ps__ role.
 
-    * __memoryMB__
+    * __command__: The run script in __ps__'s container.
 
-      __memoryMB__ set the memory size of the container.
+    * __gpuNum__: The gpu number to be used in __ps__ container.
 
-    * __image__
+    * __cpuNum__: The cpu number to be used in __ps__ container.
 
-      __image__ set the image to be used in __worker__.
+    * __memoryMB__: The memory size of the container.
 
-* __localConfig__
+    * __image__: The image to be used in __ps__.
 
-  __localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
-  * __gpuIndices__
+* __worker__: An optional configuration for kubeflow's tensorflow-operator.
 
-    __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+    * __replicas__: The replica number of __worker__ role.
 
-  * __maxTrialNumPerGpu__
+    * __command__: The run script in __worker__'s container.
+
+    * __gpuNum__: The gpu number to be used in __worker__ container.
+
+    * __cpuNum__: The cpu number to be used in __worker__ container.
+
+    * __memoryMB__: The memory size of the container.
+
+    * __image__: The image to be used in __worker__.
+
+### localConfig
+
+Optional in local mode. Key-value pairs.
+
+Only applicable if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
+
+#### gpuIndices
+
+Optional. String. Default: none.
+
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
+
+#### maxTrialNumPerGpu
+
+Optional. Integer. Default: 1.
   
-    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+Used to specify the max concurrency trial number on a GPU device.
     
-  * __useActiveGpu__
-  
-    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
-  
+#### useActiveGpu
 
-* __machineList__
+Optional. Bool. Default: false.
 
-  __machineList__ should be set if __trainingServicePlatform__ is set to remote, or it should be empty.
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
-  * __ip__
+### machineList
 
-    __ip__ is the ip address of remote machine.
+Required in remote mode. A list of key-value pairs with the following keys.
 
-  * __port__
+#### ip
 
-    __port__ is the ssh port to be used to connect machine.
+Required. IP address that is accessible from the current machine.
 
-     Note: if users set port empty, the default value will be 22.
-  * __username__
+The IP address of remote machine.
 
-    __username__ is the account of remote machine.
-  * __passwd__
+#### port
 
-    __passwd__ specifies the password of the account.
+Optional. Integer. Valid port. Default: 22.
 
-  * __sshKeyPath__
+The ssh port to be used to connect machine.
 
-    If users use ssh key to login remote machine, could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
+#### username
 
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+Required if authentication with username/password. String.
 
-  * __passphrase__
+The account of remote machine.
 
-    __passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
+#### passwd
 
-  * __gpuIndices__
+Required if authentication with username/password. String.
 
-    __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+Specifies the password of the account.
 
-  * __maxTrialNumPerGpu__
-  
-    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+#### sshKeyPath
 
-  * __useActiveGpu__
-  
-    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+Required if authentication with ssh key. Path to private key file.
 
-* __kubeflowConfig__:
+If users use ssh key to login remote machine, __sshKeyPath__ should be a valid path to a ssh key file.
 
-  * __operator__
+*Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd first.*
 
-    __operator__ specify the kubeflow's operator to be used, NNI support __tf-operator__ in current version.
+#### passphrase
 
-  * __storage__
+Optional. String.
 
-    __storage__ specify the storage type of kubeflow, including {__nfs__, __azureStorage__}. This field is optional, and the default value is __nfs__. If the config use azureStorage, this field must be completed.
+Used to protect ssh key, which could be empty if users don't have passphrase.
 
-  * __nfs__
+#### gpuIndices
 
-    __server__ is the host of nfs server
+Optional. String. Default: none.
 
-    __path__ is the mounted path of nfs
+Used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified. Multiple GPU indices should be separated with comma (`,`), such as `1` or  `0,1,3`. By default, all GPUs available will be used.
 
-  * __keyVault__
+#### maxTrialNumPerGpu
 
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+Optional. Integer. Default: 99999.
 
-    * __vaultName__
+Used to specify the max concurrency trial number on a GPU device.
 
-      __vaultName__ is the value of `--vault-name` used in az command.
+#### useActiveGpu
 
-    * __name__
+Optional. Bool. Default: false.
 
-      __name__ is the value of `--name` used in az command.
+Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
-  * __azureStorage__
+### kubeflowConfig
 
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+#### operator
 
-    * __accountName__
+Required. String. Has to be `tf-operator` or `pytorch-operator`.
 
-      __accountName__ is the name of azure storage account.
+Specifies the kubeflow's operator to be used, NNI support `tf-operator` in current version.
 
-    * __azureShare__
+#### storage
 
-      __azureShare__ is the share of the azure file storage.
+Optional. String. Default. `nfs`.
 
-  * __uploadRetryCount__
+Specifies the storage type of kubeflow, including `nfs` and `azureStorage`.
 
-    If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+#### nfs
 
-* __paiConfig__
+Required if using nfs. Key-value pairs.
 
-  * __userName__
+* __server__ is the host of nfs server.
 
-    __userName__ is the user name of your pai account.
+* __path__ is the mounted path of nfs.
 
-  * __password__
+#### keyVault
 
-    __password__ is the password of the pai account.
+Required if using azure storage. Key-value pairs.
 
-  * __host__
+Set __keyVault__ to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
 
-    __host__ is the host of pai.
+* __vaultName__ is the value of `--vault-name` used in az command.
+
+* __name__ is the value of `--name` used in az command.
+
+#### azureStorage
+
+Required if using azure storage. Key-value pairs.
+
+Set azure storage account to store code files.
+
+* __accountName__ is the name of azure storage account.
+
+* __azureShare__ is the share of the azure file storage.
+
+#### uploadRetryCount
+
+Required if using azure storage. Integer between 1 and 99999.
+
+If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
+
+### paiConfig
+
+#### userName
+
+Required. String.
+
+The user name of your pai account.
+
+#### password
+
+Required if using password authentication. String.
+
+The password of the pai account.
+
+#### token
+
+Required if using token authentication. String.
+
+Personal access token that can be retrieved from PAI portal.
+
+#### host
+
+Required. String.
+
+The hostname of IP address of PAI.
 
 ## Examples
 
-* __local mode__
+### Local mode
 
-  If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 
   ```yaml
   authorName: test
@@ -589,7 +684,7 @@ machineList:
     gpuNum: 0
   ```
 
-  You can add assessor configuration.
+You can add assessor configuration.
 
   ```yaml
   authorName: test
@@ -620,7 +715,7 @@ machineList:
     gpuNum: 0
   ```
 
-  Or you could specify your own tuner and assessor file as following,
+Or you could specify your own tuner and assessor file as following,
 
   ```yaml
   authorName: test
@@ -653,9 +748,9 @@ machineList:
     gpuNum: 0
   ```
 
-* __remote mode__
+### Remote mode
 
-  If run trial jobs in remote machine, users could specify the remote machine information as following format:
+If run trial jobs in remote machine, users could specify the remote machine information as following format:
 
   ```yaml
   authorName: test
@@ -695,7 +790,7 @@ machineList:
       passphrase: qwert
   ```
 
-* __pai mode__
+### PAI mode
 
   ```yaml
   authorName: test
@@ -723,10 +818,6 @@ machineList:
     memoryMB: 10000
     #The docker image to run NNI job on pai
     image: msranni/nni:latest
-    #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
-    dataDir: hdfs://10.11.12.13:9000/test
-    #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
-    outputDir: hdfs://10.11.12.13:9000/test
   paiConfig:
     #The username to login pai
     userName: test
@@ -736,7 +827,7 @@ machineList:
     host: 10.10.10.10
   ```
 
-* __kubeflow mode__
+### Kubeflow mode
 
   kubeflow with nfs storage.
 
@@ -773,7 +864,7 @@ machineList:
       path: /var/nfs/general
   ```
 
-  kubeflow with azure storage
+### Kubeflow with azure storage
 
   ```yaml
   authorName: default

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import tensorflow as tf
 from .compressor import Quantizer

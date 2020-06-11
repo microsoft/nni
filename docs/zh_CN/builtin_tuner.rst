@@ -1,5 +1,10 @@
 内置 Tuner
-==================
+==============
+
+NNI 能用简单快速的方法来配置超参调优算法，称之为 **Tuner**。
+
+Tuner 从 Trial 接收指标结果，来评估一组超参或网络结构的性能。 然后 Tuner 会将下一组超参或网络结构的配置发送给新的 Trial。
+
 
 ..  toctree::
     :maxdepth: 1
@@ -17,3 +22,5 @@
     Network Morphism<Tuner/NetworkmorphismTuner>
     Hyperband<Tuner/HyperbandAdvisor>
     BOHB<Tuner/BohbAdvisor>
+    PPO Tuner <Tuner/PPOTuner>
+    PBT Tuner <Tuner/PBTTuner>

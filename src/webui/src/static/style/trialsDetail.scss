@@ -1,42 +1,44 @@
-
 #tabsty{
-    .ant-tabs-nav-container{
-        height: 38px;
-    }
-    .ant-tabs-tab{
-        border: none;
-        margin-right: 0;
-        line-height: 38px;
-        padding: 0;
-    }
-    .ant-tabs-nav-scroll{
-        background-color: #b3b3b3;
-    }
-    .ant-tabs-tab-active{
-        .panelTitle{
-            background-color: #999;
-            /*
-            span{
-                color: #fff;
-                font-weight: normal;
+    background-color: #fff;
+    .ms-Pivot{
+        .ms-Button{
+            padding: 0;
+            /* reset fabric style */
+            margin-right: 0;
+            border-right: 2px solid #fff;
+            transition: 0.3s;
+        }
+
+        .ms-Pivot-link::before{
+            height: 0;
+        }
+        
+        .is-selected{
+            background: #999;
+            &:hover{
+                background: #999;
             }
-            */
         }
     }
-    .panelTitle{
-        margin-right: 14px;
-        border-right: 2px solid #e8e8e8;
+    
+    .ms-Pivot-icon{
+        margin-left: 12px;
     }
+    
+    .ms-Pivot-text{
+        /* Default metric | Hyper-parameter | Duration | Intermediate result*/
+        margin: 0 12px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
 }
 
 .trial{
     /* graph, title total height */
     width: 100%;
-    height: 478px;
-    /* cancle default panel title style*/
-    .ant-tabs-bar{
-        margin: 0;
-    }
+    height: 500px;
+
     .graph{
         height: 432px;
         margin: 0 auto;
@@ -69,30 +71,54 @@
     }
 }
 
-.allList{
-    margin-top: 15px;
-}
-
 .default-metric{
     width: 90%;
     text-align: right;
     margin-top: 15px;
-    .position{
+
+    &-graph{
+        position: relative;
+    }
+
+    &-noData{
+        position: absolute;
+        left: 48%;
+        top: 30%;
         color: #333;
-        .bold{
-                font-weight: 600;
-                margin-right: 10px;
-            }
     }
 }
 
-/* for # intermediate in intermediate graph*/
+.detial-title{
+    .ms-Button{
+        i{
+            font-size: 22px;
+        }
+    }
+}
+/* for yAxis # intermediate position in intermediate graph*/
 .intermediate-graph{
     position: relative;
-    .yAxis{
+    .xAxis{
         color: #333;
         position: absolute;
-        left: 45%;
-        top: 86%;
+        left: 50%;
+        top: 88%;
+        transform: translate(-50%);
+    }
+}
+
+#tableList{
+    width: 96%;
+    margin: 0 auto;
+}
+
+.detail-table{
+    .ms-Button{
+        padding: 0;
+        height: 26px;
+        margin-top: -2px;
+        span{
+            padding: 0;
+        }
     }
 }

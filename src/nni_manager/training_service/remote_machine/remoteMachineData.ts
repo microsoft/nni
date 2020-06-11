@@ -1,41 +1,23 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
-import * as fs from 'fs';
-import { Client, ConnectConfig } from 'ssh2';
-import { Deferred } from 'ts-deferred';
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
+import { ShellExecutor } from './shellExecutor';
 
 /**
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip : string = '';
-    public readonly port : number = 22;
-    public readonly username : string = '';
+    public readonly ip: string = '';
+    public readonly port: number = 22;
+    public readonly username: string = '';
     public readonly passwd: string = '';
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
-    public gpuSummary : GPUSummary | undefined;
+    public gpuSummary: GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
     //TODO: initialize varialbe in constructor
@@ -59,11 +41,11 @@ export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
  * The execution result for command executed on remote machine
  */
 export class RemoteCommandResult {
-    public readonly stdout : string;
-    public readonly stderr : string;
-    public readonly exitCode : number;
+    public readonly stdout: string;
+    public readonly stderr: string;
+    public readonly exitCode: number;
 
-    constructor(stdout : string, stderr : string, exitCode : number) {
+    constructor(stdout: string, stderr: string, exitCode: number) {
         this.stdout = stdout;
         this.stderr = stderr;
         this.exitCode = exitCode;
@@ -88,7 +70,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public gpuIndices: GPUInfo[];
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: TrialJobApplicationForm) {
+        workingDirectory: string, form: TrialJobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -100,150 +82,92 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 }
 
 /**
- * The remote machine ssh client used for trial and gpu detector
+ * The remote machine executor manager
  */
-export class SSHClient {
-    private readonly sshClient: Client;
-    private usedConnectionNumber: number; //count the connection number of every client
-    constructor(sshClient: Client, usedConnectionNumber: number) {
-        this.sshClient = sshClient;
-        this.usedConnectionNumber = usedConnectionNumber;
-    }
-
-    public get getSSHClientInstance(): Client {
-        return this.sshClient;
-    }
-
-    public get getUsedConnectionNumber(): number {
-        return this.usedConnectionNumber;
-    }
-
-    public addUsedConnectionNumber(): void {
-        this.usedConnectionNumber += 1;
-    }
-
-    public minusUsedConnectionNumber(): void {
-        this.usedConnectionNumber -= 1;
-    }
-}
-
-/**
- * The remote machine ssh client manager
- */
-export class SSHClientManager {
-    private readonly sshClientArray: SSHClient[];
-    private readonly maxTrialNumberPerConnection: number;
+export class ExecutorManager {
+    private readonly executorMap: Map<string, ShellExecutor> = new Map<string, ShellExecutor>();
     private readonly rmMeta: RemoteMachineMeta;
-    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+
+    private executors: ShellExecutor[] = [];
+
+    constructor(rmMeta: RemoteMachineMeta) {
         this.rmMeta = rmMeta;
-        this.sshClientArray = sshClientArray;
-        this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
     }
 
-    /**
-     * find a available ssh client in ssh array, if no ssh client available, return undefined
-     */
-    public async getAvailableSSHClient(): Promise<Client> {
-        const deferred: Deferred<Client> = new Deferred<Client>();
-        for (const index of this.sshClientArray.keys()) {
-            const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
-            if (connectionNumber < this.maxTrialNumberPerConnection) {
-                this.sshClientArray[index].addUsedConnectionNumber();
-                deferred.resolve(this.sshClientArray[index].getSSHClientInstance);
+    public async getExecutor(id: string): Promise<ShellExecutor> {
+        let isFound = false;
+        let executor: ShellExecutor | undefined;
 
-                return deferred.promise;
+        // already assigned
+        if (this.executorMap.has(id)) {
+            executor = this.executorMap.get(id);
+            if (executor === undefined) {
+                throw new Error("executor shouldn't be undefined before return!");
             }
+            return executor;
         }
 
-        //init a new ssh client if could not get an available one
-        return this.initNewSSHClient();
-    }
-
-    /**
-     * add a new ssh client to sshClientArray
-     * @param sshClient SSH Client
-     */
-    public addNewSSHClient(client: Client): void {
-        this.sshClientArray.push(new SSHClient(client, 1));
-    }
-
-    /**
-     * first ssh client instance is used for gpu collector and host job
-     */
-    public getFirstSSHClient(): Client {
-        return this.sshClientArray[0].getSSHClientInstance;
-    }
-
-    /**
-     * close all of ssh client
-     */
-    public closeAllSSHClient(): void {
-        for (const sshClient of this.sshClientArray) {
-            sshClient.getSSHClientInstance.end();
-        }
-    }
-
-    /**
-     * retrieve resource, minus a number for given ssh client
-     * @param client SSH Client
-     */
-    public releaseConnection(client: Client | undefined): void {
-        if (client === undefined) {
-            throw new Error(`could not release a undefined ssh client`);
-        }
-        for (const index of this.sshClientArray.keys()) {
-            if (this.sshClientArray[index].getSSHClientInstance === client) {
-                this.sshClientArray[index].minusUsedConnectionNumber();
+        for (const candidateExecutor of this.executors) {
+            if (candidateExecutor.addUsage()) {
+                isFound = true;
+                executor = candidateExecutor;
                 break;
             }
         }
+        // init a new executor if no free one.
+        if (!isFound) {
+            executor = await this.createShellExecutor();
+        }
+
+        if (executor === undefined) {
+            throw new Error("executor shouldn't be undefined before set!");
+        }
+        this.executorMap.set(id, executor);
+
+        return executor;
     }
 
     /**
-     * Create a new ssh connection client and initialize it
+     * close all of executor
      */
-    // tslint:disable:non-literal-fs-path
-    private initNewSSHClient(): Promise<Client> {
-        const deferred: Deferred<Client> = new Deferred<Client>();
-        const conn: Client = new Client();
-        const connectConfig: ConnectConfig = {
-            host: this.rmMeta.ip,
-            port: this.rmMeta.port,
-            username: this.rmMeta.username,
-            tryKeyboard: true };
-        if (this.rmMeta.passwd !== undefined) {
-            connectConfig.password = this.rmMeta.passwd;
-        } else if (this.rmMeta.sshKeyPath !== undefined) {
-            if (!fs.existsSync(this.rmMeta.sshKeyPath)) {
-                //SSh key path is not a valid file, reject
-                deferred.reject(new Error(`${this.rmMeta.sshKeyPath} does not exist.`));
-            }
-            const privateKey: string = fs.readFileSync(this.rmMeta.sshKeyPath, 'utf8');
-
-            connectConfig.privateKey = privateKey;
-            connectConfig.passphrase = this.rmMeta.passphrase;
-        } else {
-            deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+    public releaseAllExecutor(): void {
+        this.executorMap.clear();
+        for (const executor of this.executors) {
+            executor.close();
         }
-        conn.on('ready', () => {
-            this.addNewSSHClient(conn);
-            deferred.resolve(conn);
-        })
-          .on('error', (err: Error) => {
-            // SSH connection error, reject with error message
-            deferred.reject(new Error(err.message));
-        }).on("keyboard-interactive", (name, instructions, lang, prompts, finish) => {
-            finish([this.rmMeta.passwd]);
-        })
-          .connect(connectConfig);
+        this.executors = [];
+    }
 
-        return deferred.promise;
+    /**
+     * retrieve resource, minus a number for given executor
+     * @param executor executor
+     */
+    public releaseExecutor(id: string): void {
+        const executor = this.executorMap.get(id);
+        if (executor === undefined) {
+            throw new Error(`executor for ${id} is not found`);
+        }
+        executor.releaseUsage();
+        this.executorMap.delete(id);
+    }
+
+    /**
+     * Create a new connection executor and initialize it
+     */
+    private async createShellExecutor(): Promise<ShellExecutor> {
+        const executor = new ShellExecutor();
+        await executor.initialize(this.rmMeta);
+        if (!executor.addUsage()) {
+            throw new Error("failed to add usage on new created Executor! It's a wired bug!");
+        }
+        this.executors.push(executor);
+        return executor;
     }
 }
 
-export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
+export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType };
 
-export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
+export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cudaVisibleDevice: string };
 
 export enum ScheduleResultType {
     // Schedule succeeded
@@ -255,21 +179,3 @@ export enum ScheduleResultType {
     // Cannot match requirement even if all GPU are a
     REQUIRE_EXCEED_TOTAL
 }
-
-export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
-`#!/bin/bash
-export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} \
-NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}
-cd $NNI_SYS_DIR
-sh install_nni.sh
-echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' \
---nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-echo $? \`date +%s%3N\` >{12}`;
-
-export const HOST_JOB_SHELL_FORMAT: string =
-`#!/bin/bash
-cd {0}
-echo $$ >{1}
-eval {2} >stdout 2>stderr
-echo $? \`date +%s%3N\` >{3}`;

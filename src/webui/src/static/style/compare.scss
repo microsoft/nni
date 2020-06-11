@@ -1,35 +1,43 @@
-.compare{
-    width: 92%;
-    table-layout: fixed;
-    margin: 0 auto;
-    color: #333;
-    tr{
-        line-height: 30px;
+.compare-modal{
+    /* decide modal size */
+    .ms-Dialog-main{
+        max-width: 70%;
     }
-    tr:nth-of-type(even){
-        background-color: gainsboro;
-    }
-    .column{
-        max-width: 124px;
-        padding-left: 18px;
-        font-weight: 600;
-    }
-    .value{
-        max-width: 152px;
-        padding-right: 18px;
-        text-align: left;
-    }
-    .idList{
-        font-weight: 600;
-    }
-}
 
-.compare-intermediate{
-    position: relative;
-    .compare-yAxis{
+    /* compare-md: table style */
+    &-table{
+        width: 92%;
+        table-layout: fixed;
+        margin: 0 auto;
         color: #333;
-        position: absolute;
-        top: 87%;
-        left: 45%;
+        tr{
+            line-height: 30px;
+        }
+        tr:nth-of-type(even){
+            background-color: gainsboro;
+        }
+        .column{
+            max-width: 124px;
+            padding-left: 18px;
+            font-weight: 600;
+        }
+        .value{
+            max-width: 152px;
+            padding-right: 18px;
+            text-align: left;
+        }
+        .idList{
+            font-weight: 600;
+        }
+    }
+    /* compare-md: intermediate graph style */
+    &-intermediate{
+        position: relative;
+        .compare-yAxis{
+            color: #333;
+            position: absolute;
+            top: 87%;
+            left: 45%;
+        }
     }
 }

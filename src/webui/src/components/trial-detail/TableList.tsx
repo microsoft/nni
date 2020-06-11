@@ -1,23 +1,28 @@
 import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
-import { Row, Table, Button, Popconfirm, Modal, Checkbox, Select, Icon } from 'antd';
-import { ColumnProps } from 'antd/lib/table';
-const Option = Select.Option;
-const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, trialJobStatus, COLUMN_INDEX, COLUMNPro } from '../../static/const';
-import { convertDuration, formatTimestamp, intermediateGraphOption, killJob } from '../../static/function';
-import { TRIALS } from '../../static/datamodel';
-import { TableRecord } from '../../static/interface';
-import OpenRow from '../public-child/OpenRow';
-import Compare from '../Modal/Compare';
+import {
+    Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
+    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton
+} from 'office-ui-fabric-react';
+import { LineChart, blocked, copy } from '../Buttons/Icon';
+import { MANAGER_IP, COLUMNPro } from '../../static/const';
+import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { TableRecord, TrialJobInfo } from '../../static/interface';
+import Details from '../overview/Details';
+import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
+import Compare from '../Modals/Compare';
+import KillJob from '../Modals/Killjob';
+import Customize from '../Modals/CustomizedTrial';
+import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/search.scss';
-require('../../static/style/tableStatus.css');
-require('../../static/style/logPath.scss');
-require('../../static/style/search.scss');
-require('../../static/style/table.scss');
-require('../../static/style/button.scss');
-require('../../static/style/openRow.scss');
+import '../../static/style/tableStatus.css';
+import '../../static/style/logPath.scss';
+import '../../static/style/search.scss';
+import '../../static/style/table.scss';
+import '../../static/style/button.scss';
+import '../../static/style/openRow.scss';
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -29,9 +34,14 @@ echarts.registerTheme('my_theme', {
 interface TableListProps {
     pageSize: number;
     tableSource: Array<TableRecord>;
-    columnList: Array<string>; // user select columnKeys
-    changeColumn: (val: Array<string>) => void;
+    columnList: string[]; // user select columnKeys
+    changeColumn: (val: string[]) => void;
     trialsUpdateBroadcast: number;
+}
+
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
 }
 
 interface TableListState {
@@ -39,24 +49,29 @@ interface TableListState {
     modalVisible: boolean;
     isObjFinal: boolean;
     isShowColumn: boolean;
-    selectRows: Array<TableRecord>;
+    selectRows: Array<any>;
     isShowCompareModal: boolean;
     selectedRowKeys: string[] | number[];
     intermediateData: Array<object>; // a trial's intermediate results (include dict)
     intermediateId: string;
-    intermediateOtherKeys: Array<string>;
-}
-
-interface ColumnIndex {
-    name: string;
-    index: number;
+    intermediateOtherKeys: string[];
+    isShowCustomizedModal: boolean;
+    copyTrialId: string; // user copy trial to submit a new customized trial
+    isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
+    intermediateKey: string; // intermeidate modal: which key is choosed.
+    isExpand: boolean;
+    modalIntermediateWidth: number;
+    modalIntermediateHeight: number;
+    tableColumns: IColumn[];
+    allColumnList: string[];
+    tableSourceForSort: Array<TableRecord>;
+    sortMessage: SortInfo;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
 
     public intervalTrialLog = 10;
-    public _trialId: string;
-    public tables: Table<TableRecord> | null;
+    public trialId!: string;
 
     constructor(props: TableListProps) {
         super(props);
@@ -71,36 +86,210 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowKeys: [], // close selected trial message after modal closed
             intermediateData: [],
             intermediateId: '',
-            intermediateOtherKeys: []
+            intermediateOtherKeys: [],
+            isShowCustomizedModal: false,
+            isCalloutVisible: false,
+            copyTrialId: '',
+            intermediateKey: 'default',
+            isExpand: false,
+            modalIntermediateWidth: window.innerWidth,
+            modalIntermediateHeight: window.innerHeight,
+            tableColumns: this.initTableColumnList(this.props.columnList),
+            allColumnList: this.getAllColumnKeys(),
+            tableSourceForSort: this.props.tableSource,
+            sortMessage: { field: '', isDescend: false }
         };
     }
 
-    showIntermediateModal = async (id: string) => {
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${id}`);
+    // sort for table column
+    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+        const { tableColumns } = this.state;
+        const { tableSource } = this.props;
+        const newColumns: IColumn[] = tableColumns.slice();
+        const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
+        newColumns.forEach((newCol: IColumn) => {
+            if (newCol === currColumn) {
+                currColumn.isSortedDescending = !currColumn.isSortedDescending;
+                currColumn.isSorted = true;
+            } else {
+                newCol.isSorted = false;
+                newCol.isSortedDescending = true;
+            }
+        });
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newItems = this.copyAndSort(tableSource, currColumn.fieldName!, currColumn.isSortedDescending);
+        this.setState({
+            tableColumns: newColumns,
+            tableSourceForSort: newItems,
+            sortMessage: { field: getColumn.key, isDescend: currColumn.isSortedDescending }
+        });
+
+    };
+
+    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
+        const key = columnKey as keyof T;
+        return items.slice(0).sort(function (a: T, b: T): any {
+            if (a[key] === undefined) {
+                return 1;
+            }
+            if (b[key] === undefined) {
+                return -1;
+            }
+            return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+        });
+    }
+
+    AccuracyColumnConfig: any = {
+        name: 'Default metric',
+        className: 'leftTitle',
+        key: 'latestAccuracy',
+        fieldName: 'latestAccuracy',
+        minWidth: 200,
+        maxWidth: 300,
+        isResizable: true,
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+        onRender: (item): React.ReactNode => <div>{item.formattedLatestAccuracy}</div>
+    };
+
+    SequenceIdColumnConfig: any = {
+        name: 'Trial No.',
+        key: 'sequenceId',
+        fieldName: 'sequenceId',
+        minWidth: 80,
+        maxWidth: 240,
+        className: 'tableHead',
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+    };
+
+    IdColumnConfig: any = {
+        name: 'ID',
+        key: 'id',
+        fieldName: 'id',
+        minWidth: 150,
+        maxWidth: 200,
+        isResizable: true,
+        data: 'string',
+        onColumnClick: this.onColumnClick,
+        className: 'tableHead leftTitle'
+    };
+
+
+    StartTimeColumnConfig: any = {
+        name: 'Start Time',
+        key: 'startTime',
+        fieldName: 'startTime',
+        minWidth: 150,
+        maxWidth: 400,
+        isResizable: true,
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+        onRender: (record): React.ReactNode => (
+            <span>{formatTimestamp(record.startTime)}</span>
+        )
+    };
+
+    EndTimeColumnConfig: any = {
+        name: 'End Time',
+        key: 'endTime',
+        fieldName: 'endTime',
+        minWidth: 200,
+        maxWidth: 400,
+        isResizable: true,
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+        onRender: (record): React.ReactNode => (
+            <span>{formatTimestamp(record.endTime, '--')}</span>
+        )
+    };
+
+    DurationColumnConfig: any = {
+        name: 'Duration',
+        key: 'duration',
+        fieldName: 'duration',
+        minWidth: 150,
+        maxWidth: 300,
+        isResizable: true,
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+        onRender: (record): React.ReactNode => (
+            <span className="durationsty">{convertDuration(record.duration)}</span>
+        )
+    };
+
+    StatusColumnConfig: any = {
+        name: 'Status',
+        key: 'status',
+        fieldName: 'status',
+        className: 'tableStatus',
+        minWidth: 150,
+        maxWidth: 250,
+        isResizable: true,
+        data: 'string',
+        onColumnClick: this.onColumnClick,
+        onRender: (record): React.ReactNode => (
+            <span className={`${record.status} commonStyle`}>{record.status}</span>
+        ),
+    };
+
+    IntermediateCountColumnConfig: any = {
+        name: 'Intermediate result',
+        dataIndex: 'intermediateCount',
+        fieldName: 'intermediateCount',
+        minWidth: 150,
+        maxWidth: 200,
+        isResizable: true,
+        data: 'number',
+        onColumnClick: this.onColumnClick,
+        onRender: (record): React.ReactNode => (
+            <span>{`#${record.intermediateCount}`}</span>
+        )
+    };
+
+    showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
+        event.preventDefault();
+        event.stopPropagation();
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.jobId}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
             // final result in a succeed trial, it may be a dict.
             // get intermediate result dict keys array
-            let otherkeys: Array<string> = ['default'];
-            if (res.data.length !== 0) {
-                otherkeys = Object.keys(JSON.parse(res.data[0].data));
+            const { intermediateKey } = this.state;
+            const otherkeys: string[] = [];
+            // One trial job may contains multiple parameter id
+            // only show current trial's metric data
+            const metricDatas = res.data.filter(item => {
+                return item.parameterId == record.parameterId;
+            });
+            if (metricDatas.length !== 0) {
+                // just add type=number keys
+                const intermediateMetrics = parseMetrics(res.data[0].data);
+                for (const key in intermediateMetrics) {
+                    if (typeof intermediateMetrics[key] === 'number') {
+                        otherkeys.push(key);
+                    }
+                }
             }
             // intermediateArr just store default val
-            Object.keys(res.data).map(item => {
-                const temp = JSON.parse(res.data[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp.default);
-                } else {
-                    intermediateArr.push(temp);
+            metricDatas.map(item => {
+
+                if (item.type === 'PERIODICAL') {
+                    const temp = parseMetrics(item.data);
+                    if (typeof temp === 'object') {
+                        intermediateArr.push(temp[intermediateKey]);
+                    } else {
+                        intermediateArr.push(temp);
+                    }
                 }
             });
-            const intermediate = intermediateGraphOption(intermediateArr, id);
+            const intermediate = intermediateGraphOption(intermediateArr, record.id);
             this.setState({
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                intermediateId: id
+                intermediateId: record.id
             });
         }
         this.setState({ modalVisible: true });
@@ -108,120 +297,64 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // intermediate button click -> intermediate graph for each trial
     // support intermediate is dict
-    selectOtherKeys = (value: string) => {
-
-        const isShowDefault: boolean = value === 'default' ? true : false;
-        const { intermediateData, intermediateId } = this.state;
-        const intermediateArr: number[] = [];
-        // just watch default key-val
-        if (isShowDefault === true) {
-            Object.keys(intermediateData).map(item => {
-                const temp = JSON.parse(intermediateData[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp[value]);
-                } else {
-                    intermediateArr.push(temp);
-                }
-            });
-        } else {
-            Object.keys(intermediateData).map(item => {
-                const temp = JSON.parse(intermediateData[item].data);
-                if (typeof temp === 'object') {
-                    intermediateArr.push(temp[value]);
-                }
+    selectOtherKeys = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        if (item !== undefined) {
+            const value = item.text;
+            const isShowDefault: boolean = value === 'default' ? true : false;
+            const { intermediateData, intermediateId } = this.state;
+            const intermediateArr: number[] = [];
+            // just watch default key-val
+            if (isShowDefault === true) {
+                Object.keys(intermediateData).map(item => {
+                    if (intermediateData[item].type === 'PERIODICAL') {
+                        const temp = parseMetrics(intermediateData[item].data);
+                        if (typeof temp === 'object') {
+                            intermediateArr.push(temp[value]);
+                        } else {
+                            intermediateArr.push(temp);
+                        }
+                    }
+                });
+            } else {
+                Object.keys(intermediateData).map(item => {
+                    const temp = parseMetrics(intermediateData[item].data);
+                    if (typeof temp === 'object') {
+                        intermediateArr.push(temp[value]);
+                    }
+                });
+            }
+            const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
+            // re-render
+            this.setState({
+                intermediateKey: value,
+                intermediateOption: intermediate
             });
         }
-        const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
-        // re-render
-        this.setState({
-            intermediateOption: intermediate
-        });
     }
 
-    hideIntermediateModal = () => {
+    hideIntermediateModal = (): void => {
         this.setState({
             modalVisible: false
         });
     }
 
-    hideShowColumnModal = () => {
-        this.setState({
-            isShowColumn: false
-        });
+    hideShowColumnModal = (): void => {
+
+        this.setState(() => ({ isShowColumn: false }));
     }
 
     // click add column btn, just show the modal of addcolumn
-    addColumn = () => {
+    addColumn = (): void => {
         // show user select check button
-        this.setState({
-            isShowColumn: true
-        });
+        this.setState(() => ({ isShowColumn: true }));
     }
 
-    // checkbox for coloumn
-    selectedColumn = (checkedValues: Array<string>) => {
-        // 9: because have nine common column, 
-        // [Intermediate count, Start Time, End Time] is hidden by default
-        let count = 9;
-        const want: Array<object> = [];
-        const finalKeys: Array<string> = [];
-        const wantResult: Array<string> = [];
-        Object.keys(checkedValues).map(m => {
-            switch (checkedValues[m]) {
-                case 'Trial No.':
-                case 'ID':
-                case 'Start Time':
-                case 'End Time':
-                case 'Duration':
-                case 'Status':
-                case 'Operation':
-                case 'Default':
-                case 'Intermediate result':
-                    break;
-                default:
-                    finalKeys.push(checkedValues[m]);
-            }
-        });
-
-        Object.keys(finalKeys).map(n => {
-            want.push({
-                name: finalKeys[n],
-                index: count++
-            });
-        });
-
-        Object.keys(checkedValues).map(item => {
-            const temp = checkedValues[item];
-            Object.keys(COLUMN_INDEX).map(key => {
-                const index = COLUMN_INDEX[key];
-                if (index.name === temp) {
-                    want.push(index);
-                }
-            });
-        });
-
-        want.sort((a: ColumnIndex, b: ColumnIndex) => {
-            return a.index - b.index;
-        });
-
-        Object.keys(want).map(i => {
-            wantResult.push(want[i].name);
-        });
-
-        this.props.changeColumn(wantResult);
-    }
-
-    openRow = (record: TableRecord) => {
-        return (
-            <OpenRow trialId={record.id} />
-        );
-    }
-
-    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>) => {
+    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>): void => {
         this.setState({ selectRows: selectedRows, selectedRowKeys: selected });
     }
+
     // open Compare-modal
-    compareBtn = () => {
+    compareBtn = (): void => {
 
         const { selectRows } = this.state;
         if (selectRows.length === 0) {
@@ -230,327 +363,325 @@ class TableList extends React.Component<TableListProps, TableListState> {
             this.setState({ isShowCompareModal: true });
         }
     }
+
     // close Compare-modal
-    hideCompareModal = () => {
+    hideCompareModal = (): void => {
         // close modal. clear select rows data, clear selected track
         this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
     }
 
-    render() {
-        const { pageSize, columnList } = this.props;
-        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
-        const { intermediateOption, modalVisible, isShowColumn,
-            selectRows, isShowCompareModal, selectedRowKeys, intermediateOtherKeys } = this.state;
-        const rowSelection = {
-            selectedRowKeys: selectedRowKeys,
-            onChange: (selected: string[] | number[], selectedRows: Array<TableRecord>) => {
-                this.fillSelectedRowsTostate(selected, selectedRows);
-            }
-        };
-        let showTitle = COLUMNPro;
-        const showColumn: Array<object> = [];
+    // open customized trial modal
+    private setCustomizedTrial = (trialId: string, event: React.SyntheticEvent<EventTarget>): void => {
+        event.preventDefault();
+        event.stopPropagation();
+        this.setState({
+            isShowCustomizedModal: true,
+            copyTrialId: trialId
+        });
+    }
 
+    private closeCustomizedTrial = (): void => {
+        this.setState({
+            isShowCustomizedModal: false,
+            copyTrialId: ''
+        });
+    }
+
+    private onWindowResize = (): void => {
+        this.setState(() => ({
+            modalIntermediateHeight: window.innerHeight,
+            modalIntermediateWidth: window.innerWidth
+        }));
+    }
+
+    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
+        if (props) {
+            return <Details detailsProps={props} />;
+        }
+        return null;
+    };
+
+    private getSelectedRows = new Selection({
+        onSelectionChanged: (): void => {
+            this.setState(() => ({ selectRows: this.getSelectedRows.getSelection() }));
+        }
+    });
+
+    // trial parameters & dict final keys & Trial No. Id ...
+    private getAllColumnKeys = (): string[] => {
+        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         // parameter as table column
-        const parameterStr: Array<string> = [];
+        const parameterStr: string[] = [];
         if (tableSource.length > 0) {
             const trialMess = TRIALS.getTrial(tableSource[0].id);
             const trial = trialMess.description.parameters;
-            const parameterColumn: Array<string> = Object.keys(trial);
+            const parameterColumn: string[] = Object.keys(trial);
             parameterColumn.forEach(value => {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        showTitle = COLUMNPro.concat(parameterStr);
+        let allColumnList = COLUMNPro.concat(parameterStr);
 
         // only succeed trials have final keys
         if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accuracy;
+            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
             if (temp !== undefined && typeof temp === 'object') {
                 // concat default column and finalkeys
                 const item = Object.keys(temp);
                 // item: ['default', 'other-keys', 'maybe loss']
                 if (item.length > 1) {
-                    const want: Array<string> = [];
+                    const want: string[] = [];
                     item.forEach(value => {
                         if (value !== 'default') {
                             want.push(value);
                         }
                     });
-                    showTitle = COLUMNPro.concat(want);
+                    allColumnList = allColumnList.concat(want);
                 }
             }
         }
+
+        return allColumnList;
+    }
+
+    // get IColumn[]
+    // when user click [Add Column] need to use the function
+    private initTableColumnList = (columnList: string[]): IColumn[] => {
+        // const { columnList } = this.props;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
+        const showColumn: IColumn[] = [];
         for (const item of columnList) {
             const paraColumn = item.match(/ \(search space\)$/);
-            let cc;
+            let result;
             if (paraColumn !== null) {
-                cc = paraColumn.input;
+                result = paraColumn.input;
             }
             switch (item) {
                 case 'Trial No.':
-                    showColumn.push(SequenceIdColumnConfig);
+                    showColumn.push(this.SequenceIdColumnConfig);
                     break;
                 case 'ID':
-                    showColumn.push(IdColumnConfig);
+                    showColumn.push(this.IdColumnConfig);
                     break;
                 case 'Start Time':
-                    showColumn.push(StartTimeColumnConfig);
+                    showColumn.push(this.StartTimeColumnConfig);
                     break;
                 case 'End Time':
-                    showColumn.push(EndTimeColumnConfig);
+                    showColumn.push(this.EndTimeColumnConfig);
                     break;
                 case 'Duration':
-                    showColumn.push(DurationColumnConfig);
+                    showColumn.push(this.DurationColumnConfig);
                     break;
                 case 'Status':
-                    showColumn.push(StatusColumnConfig);
+                    showColumn.push(this.StatusColumnConfig);
                     break;
                 case 'Intermediate result':
-                    showColumn.push(IntermediateCountColumnConfig);
+                    showColumn.push(this.IntermediateCountColumnConfig);
                     break;
                 case 'Default':
-                    showColumn.push(AccuracyColumnConfig);
+                    showColumn.push(this.AccuracyColumnConfig);
                     break;
                 case 'Operation':
                     showColumn.push({
-                        title: 'Operation',
-                        dataIndex: 'operation',
+                        name: 'Operation',
                         key: 'operation',
-                        width: 120,
-                        render: (text: string, record: TableRecord) => {
-                            let trialStatus = record.status;
-                            const flag: boolean = (trialStatus === 'RUNNING') ? false : true;
+                        fieldName: 'operation',
+                        minWidth: 160,
+                        maxWidth: 200,
+                        isResizable: true,
+                        className: 'detail-table',
+                        onRender: (record: any) => {
+                            const trialStatus = record.status;
+                            const flag: boolean = (trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN') ? false : true;
                             return (
-                                <Row id="detail-button">
+                                <Stack className="detail-button" horizontal>
                                     {/* see intermediate result graph */}
-                                    <Button
-                                        type="primary"
-                                        className="common-style"
-                                        onClick={this.showIntermediateModal.bind(this, record.id)}
+                                    <PrimaryButton
+                                        className="detail-button-operation"
                                         title="Intermediate"
+                                        onClick={this.showIntermediateModal.bind(this, record)}
                                     >
-                                        <Icon type="line-chart" />
-                                    </Button>
+                                        {LineChart}
+                                    </PrimaryButton>
                                     {/* kill job */}
                                     {
                                         flag
                                             ?
-                                            <Button
-                                                type="default"
-                                                disabled={true}
-                                                className="margin-mediate special"
-                                                title="kill"
-                                            >
-                                                <Icon type="stop" />
-                                            </Button>
+                                            <PrimaryButton className="detail-button-operation" disabled={true} title="kill">
+                                                {blocked}
+                                            </PrimaryButton>
                                             :
-                                            <Popconfirm
-                                                title="Are you sure to cancel this trial?"
-                                                okText="Yes"
-                                                cancelText="No"
-                                                onConfirm={killJob.
-                                                    bind(this, record.key, record.id, record.status)}
-                                            >
-                                                <Button
-                                                    type="default"
-                                                    disabled={false}
-                                                    className="margin-mediate special"
-                                                    title="kill"
-                                                >
-                                                    <Icon type="stop" />
-                                                </Button>
-                                            </Popconfirm>
+                                            <KillJob trial={record} />
                                     }
-                                </Row>
+                                    {/* Add a new trial-customized trial */}
+                                    <PrimaryButton
+                                        className="detail-button-operation"
+                                        title="Customized trial"
+                                        onClick={this.setCustomizedTrial.bind(this, record.id)}
+                                        disabled={disabledAddCustomizedTrial}
+                                    >
+                                        {copy}
+                                    </PrimaryButton>
+                                </Stack>
                             );
                         },
                     });
                     break;
-                case (cc):
+                case (result):
                     // remove SEARCH_SPACE title
-                    const realItem = item.replace(' (search space)', '');
+                    // const realItem = item.replace(' (search space)', '');
                     showColumn.push({
-                        title: realItem,
-                        dataIndex: item,
+                        name: item.replace(' (search space)', ''),
                         key: item,
-                        width: '6%',
-                        render: (text: string, record: TableRecord) => {
+                        fieldName: item,
+                        minWidth: 150,
+                        onRender: (record: TableRecord) => {
                             const eachTrial = TRIALS.getTrial(record.id);
                             return (
-                                <span>{eachTrial.description.parameters[realItem]}</span>
+                                <span>{eachTrial.description.parameters[item.replace(' (search space)', '')]}</span>
                             );
                         },
                     });
                     break;
                 default:
-                    // FIXME
-                    alert('Unexpected column type');
+                    showColumn.push({
+                        name: item,
+                        key: item,
+                        fieldName: item,
+                        minWidth: 100,
+                        onRender: (record: TableRecord) => {
+                            const accDictionary = record.accDictionary;
+                            let other = '';
+                            if (accDictionary !== undefined) {
+                                other = accDictionary[item].toString();
+                            }
+                            return (
+                                <div>{other}</div>
+                            );
+                        }
+                    });
             }
         }
+        return showColumn;
+    }
 
+    componentDidMount(): void {
+        window.addEventListener('resize', this.onWindowResize);
+    }
+
+    UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
+        const { columnList, tableSource } = nextProps;
+        this.setState({
+            tableSourceForSort: tableSource,
+            tableColumns: this.initTableColumnList(columnList),
+            allColumnList: this.getAllColumnKeys()
+        });
+
+    }
+    render(): React.ReactNode {
+        const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
+            tableColumns, allColumnList, isShowColumn, modalVisible,
+            selectRows, isShowCompareModal, intermediateOtherKeys,
+            isShowCustomizedModal, copyTrialId, intermediateOption, sortMessage
+        } = this.state;
+        const { columnList } = this.props;
+        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
+        if (sortMessage.field !== '') {
+            tableSource.sort(function (a, b): any {
+                if (a[sortMessage.field] === undefined) {
+                    return 1;
+                }
+                if (b[sortMessage.field] === undefined) {
+                    return -1;
+                }
+                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
+            });
+        }
         return (
-            <Row className="tableList">
+            <Stack>
                 <div id="tableList">
-                    <Table
-                        ref={(table: Table<TableRecord> | null) => this.tables = table}
-                        columns={showColumn}
-                        rowSelection={rowSelection}
-                        expandedRowRender={this.openRow}
-                        dataSource={tableSource}
-                        className="commonTableStyle"
-                        scroll={{x: 'max-content'}}
-                        pagination={pageSize > 0 ? { pageSize } : false}
+                    <DetailsList
+                        columns={tableColumns}
+                        items={tableSource}
+                        setKey="set"
+                        compact={true}
+                        onRenderRow={this.onRenderRow}
+                        layoutMode={DetailsListLayoutMode.justified}
+                        selectionMode={SelectionMode.multiple}
+                        selection={this.getSelectedRows}
                     />
-                    {/* Intermediate Result Modal */}
-                    <Modal
-                        title="Intermediate result"
-                        visible={modalVisible}
-                        onCancel={this.hideIntermediateModal}
-                        footer={null}
-                        destroyOnClose={true}
-                        width="80%"
-                    >
-                        {
-                            intermediateOtherKeys.length > 1
-                                ?
-                                <Row className="selectKeys">
-                                    <Select
-                                        className="select"
-                                        defaultValue="default"
-                                        onSelect={this.selectOtherKeys}
-                                    >
-                                        {
-                                            Object.keys(intermediateOtherKeys).map(item => {
-                                                const keys = intermediateOtherKeys[item];
-                                                return <Option value={keys} key={item}>{keys}</Option>;
-                                            })
-                                        }
-                                    </Select>
 
-                                </Row>
-                                :
-                                <div />
-                        }
+                </div>
+                {/* Intermediate Result Modal */}
+                <Modal
+                    isOpen={modalVisible}
+                    onDismiss={this.hideIntermediateModal}
+                    containerClassName={contentStyles.container}
+                >
+                    <div className={contentStyles.header}>
+                        <span>Intermediate result</span>
+                        <IconButton
+                            styles={iconButtonStyles}
+                            iconProps={{ iconName: 'Cancel' }}
+                            ariaLabel="Close popup modal"
+                            onClick={this.hideIntermediateModal as any}
+                        />
+                    </div>
+                    {
+                        intermediateOtherKeys.length > 1
+                            ?
+                            <Stack horizontalAlign="end" className="selectKeys">
+                                <Dropdown
+                                    className="select"
+                                    selectedKey={intermediateKey}
+                                    options={
+                                        intermediateOtherKeys.map((key, item) => {
+                                            return {
+                                                key: key, text: intermediateOtherKeys[item]
+                                            };
+                                        })
+                                    }
+                                    onChange={this.selectOtherKeys}
+                                />
+                            </Stack>
+                            :
+                            null
+                    }
+                    <div className="intermediate-graph">
                         <ReactEcharts
                             option={intermediateOption}
                             style={{
-                                width: '100%',
-                                height: 0.7 * window.innerHeight
+                                width: 0.5 * modalIntermediateWidth,
+                                height: 0.7 * modalIntermediateHeight,
+                                padding: 20
                             }}
                             theme="my_theme"
                         />
-                    </Modal>
-                </div>
-                {/* Add Column Modal */}
-                <Modal
-                    title="Table Title"
-                    visible={isShowColumn}
-                    onCancel={this.hideShowColumnModal}
-                    footer={null}
-                    destroyOnClose={true}
-                    width="40%"
-                >
-                    <CheckboxGroup
-                        options={showTitle}
-                        defaultValue={columnList}
-                        // defaultValue={columnSelected}
-                        onChange={this.selectedColumn}
-                        className="titleColumn"
-                    />
+                        <div className="xAxis">#Intermediate result</div>
+                    </div>
                 </Modal>
-                <Compare compareRows={selectRows} visible={isShowCompareModal} cancelFunc={this.hideCompareModal} />
-            </Row>
+                {/* Add Column Modal */}
+                {
+                    isShowColumn &&
+                    <ChangeColumnComponent
+                        hideShowColumnDialog={this.hideShowColumnModal}
+                        isHideDialog={!isShowColumn}
+                        showColumn={allColumnList}
+                        selectedColumn={columnList}
+                        changeColumn={this.props.changeColumn}
+                    />
+                }
+                {/* compare trials based message */}
+                {isShowCompareModal && <Compare compareStacks={selectRows} cancelFunc={this.hideCompareModal} />}
+                {/* clone trial parameters and could submit a customized trial */}
+                <Customize
+                    visible={isShowCustomizedModal}
+                    copyTrialId={copyTrialId}
+                    closeCustomizeModal={this.closeCustomizedTrial}
+                />
+            </Stack>
         );
     }
 }
-
-const SequenceIdColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Trial No.',
-    dataIndex: 'sequenceId',
-    width: 120,
-    className: 'tableHead',
-    sorter: (a, b) => a.sequenceId - b.sequenceId
-};
-
-const IdColumnConfig: ColumnProps<TableRecord> = {
-    title: 'ID',
-    dataIndex: 'id',
-    width: 60,
-    className: 'tableHead leftTitle',
-    sorter: (a, b) => a.id.localeCompare(b.id),
-    render: (text, record) => (
-        <div>{record.id}</div>
-    )
-};
-
-const StartTimeColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Start Time',
-    dataIndex: 'startTime',
-    width: 160,
-    render: (text, record) => (
-        <span>{formatTimestamp(record.startTime)}</span>
-    )
-};
-
-const EndTimeColumnConfig: ColumnProps<TableRecord> = {
-    title: 'End Time',
-    dataIndex: 'endTime',
-    width: 160,
-    render: (text, record) => (
-        <span>{formatTimestamp(record.endTime, '--')}</span>
-    )
-};
-
-const DurationColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Duration',
-    dataIndex: 'duration',
-    width: 100,
-    sorter: (a, b) => a.duration - b.duration,
-    render: (text, record) => (
-        <div className="durationsty"><div>{convertDuration(record.duration)}</div></div>
-    )
-};
-
-const StatusColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Status',
-    dataIndex: 'status',
-    width: 150,
-    className: 'tableStatus',
-    render: (text, record) => (
-        <span className={`${record.status} commonStyle`}>{record.status}</span>
-    ),
-    sorter: (a, b) => a.status.localeCompare(b.status),
-    filters: trialJobStatus.map(status => ({ text: status, value: status })),
-    onFilter: (value, record) => (record.status === value)
-};
-
-const IntermediateCountColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Intermediate result',
-    dataIndex: 'intermediateCount',
-    width: 86,
-    render: (text, record) => (
-        <span>{`#${record.intermediateCount}`}</span>
-    )
-};
-
-const AccuracyColumnConfig: ColumnProps<TableRecord> = {
-    title: 'Default metric',
-    className: 'leftTitle',
-    dataIndex: 'accuracy',
-    width: 120,
-    sorter: (a, b, sortOrder) => {
-        if (a.accuracy === undefined) {
-            return sortOrder === 'ascend' ? -1 : 1;
-        } else if (b.accuracy === undefined) {
-            return sortOrder === 'ascend' ? 1 : -1;
-        } else {
-            return a.accuracy - b.accuracy;
-        }
-    },
-    render: (text, record) => (
-        // TODO: is this needed?
-        <div>{record.latestAccuracy}</div>
-    )
-};
 
 export default TableList;

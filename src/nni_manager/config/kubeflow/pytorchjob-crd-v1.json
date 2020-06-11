@@ -1,0 +1,17 @@
+{
+    "kind": "CustomResourceDefinition",
+    "spec": {
+        "scope": "Namespaced",
+        "version": "v1",
+        "group": "kubeflow.org",
+        "names": {
+            "kind": "PyTorchJob",
+            "plural": "pytorchjobs",
+            "singular": "pytorchjob"
+        }
+    },
+    "apiVersion": "kubeflow.org/v1",
+    "metadata": {
+        "name": "pytorchjobs.kubeflow.org"
+    }
+}

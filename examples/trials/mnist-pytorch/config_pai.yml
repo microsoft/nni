@@ -23,10 +23,13 @@ trial:
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+  paiStoragePlugin: team_wise
 paiConfig:
   #The username to login pai
   userName: username
-  #The password to login pai
-  passWord: password
+  #The token to login pai
+  token: token
   #The host of restful server of pai
   host: 10.10.10.10

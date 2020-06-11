@@ -1,34 +1,16 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
 import * as cpp from 'child-process-promise';
-import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { String } from 'typescript-string-operations';
 import { getLogger, Logger } from '../../common/log';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
-import { execKill, execMkdir, execRemove, execTail, getgpuMetricsCollectorScriptContent, getScriptName, runScript } from '../common/util';
+import { execKill, execMkdir, execRemove, execTail, runGpuMetricsCollector } from '../common/util';
 
 /**
  * GPUScheduler for local training service
@@ -43,7 +25,7 @@ class GPUScheduler {
     constructor() {
         this.stopping = false;
         this.log = getLogger();
-        this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/nni/script`;
+        this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/${os.userInfo().username}/nni/script`;
     }
 
     public async run(): Promise<void> {
@@ -101,15 +83,9 @@ class GPUScheduler {
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
         await execMkdir(this.gpuMetricCollectorScriptFolder, true);
-        //generate gpu_metrics_collector script
-        const gpuMetricsCollectorScriptPath: string =
-            path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
-        const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
-        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        runScript(gpuMetricsCollectorScriptPath);
+        runGpuMetricsCollector(this.gpuMetricCollectorScriptFolder);
     }
 
-    // tslint:disable:non-literal-fs-path
     private async updateGPUSummary(): Promise<void> {
         const gpuMetricPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
         if (fs.existsSync(gpuMetricPath)) {

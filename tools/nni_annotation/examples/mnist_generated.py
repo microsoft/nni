@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """A deep MNIST classifier using convolutional layers."""
 import logging
 import math

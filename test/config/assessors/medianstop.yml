@@ -1,0 +1,25 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 8
+trialConcurrency: 8
+searchSpacePath: ../naive_trial/search_space.json
+
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+
+trial:
+  codeDir: ../naive_trial
+  command: python3 trial.py
+  gpuNum: 0
+
+useAnnotation: false
+
+trainingServicePlatform: local

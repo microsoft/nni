@@ -1,4 +1,4 @@
-# CIFAR-10 样例
+# CIFAR-10 示例
 
 ## 概述
 
@@ -16,9 +16,9 @@
 
 #### 准备
 
-此样例需要安装 PyTorch。 PyTorch 安装包需要选择所基于的 Python 和 CUDA 版本。
+此示例需要安装 PyTorch。 PyTorch 安装包需要选择所基于的 Python 和 CUDA 版本。
 
-这是环境 python==3.5 且 cuda == 8.0 的样例，然后用下列命令来安装 [ PyTorch](https://pytorch.org/)：
+这是环境 python==3.5 且 cuda == 8.0 的示例，然后用下列命令来安装 [ PyTorch](https://pytorch.org/)：
 
 ```bash
 python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
@@ -55,15 +55,15 @@ python3 -m pip install torchvision
 
 **配置**
 
-这是在本机运行 Experiment 的样例（多GPU）：
+这是在本机运行 Experiment 的示例（多GPU）：
 
 代码：[examples/trials/cifar10_pytorch/config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml)
 
-这是在 OpenPAI 上运行 Experiment 的样例：
+这是在 OpenPAI 上运行 Experiment 的示例：
 
 代码：[examples/trials/cifar10_pytorch/config_pai.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml)
 
-*完整样例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
+*完整示例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
 
 #### 运行 Experiment
 

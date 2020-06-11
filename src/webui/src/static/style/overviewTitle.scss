@@ -1,19 +1,18 @@
-$titleBgcolor: #b3b3b3;
-.overview .overviewBoder{
-    height: 100%;
-    border-right: 2px solid white;
-}
+$iconPaddingVal: 14px;
 
 .panelTitle{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     width: 100%;
     height: 38px;
-    background: $titleBgcolor;
-
+    padding: 4px $iconPaddingVal;
+    box-sizing: border-box;
+    
     img{
         height: 22px;
-        margin-top: -8px;
-        padding-left: 14px;
+        /* (38 - 22 ) / 2 */
+        margin-top: 8px;
+        /* icon right */
+        padding: 0 $iconPaddingVal 0 0;
     }
 
     span{
@@ -21,15 +20,11 @@ $titleBgcolor: #b3b3b3;
         font-weight: 600;
         color: #333;
         line-height: 38px;
-        margin-left: 14px;
     }
 
     i{
         font-size: 24px;
-        margin-left: 14px;
         color: #545454;
-        position: relative;
-        top: 2px;
     }
 }
 
@@ -39,18 +34,17 @@ $titleBgcolor: #b3b3b3;
 }
 
 .top10bg{
-    background-color: $titleBgcolor;
 
     .top10Title{
         width: 160px;
     }
 
     .title{
-        width: 135px;
         border-left: 2px solid #fff;
     }
 
     .minTitle{
+        margin-right: $iconPaddingVal;
         border-right: 2px solid #fff;
     }
 

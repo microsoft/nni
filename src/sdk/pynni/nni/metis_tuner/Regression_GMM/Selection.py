@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
 import random
@@ -33,13 +16,16 @@ CONSTRAINT_UPPERBOUND = None
 CONSTRAINT_PARAMS_IDX = []
 
 
-def _ratio_scores(parameters_value, clusteringmodel_gmm_good, clusteringmodel_gmm_bad):
+def _ratio_scores(parameters_value, clusteringmodel_gmm_good,
+                  clusteringmodel_gmm_bad):
     '''
     The ratio is smaller the better
     '''
-    ratio = clusteringmodel_gmm_good.score([parameters_value]) / clusteringmodel_gmm_bad.score([parameters_value])
+    ratio = clusteringmodel_gmm_good.score(
+        [parameters_value]) / clusteringmodel_gmm_bad.score([parameters_value])
     sigma = 0
     return ratio, sigma
+
 
 def selection_r(x_bounds,
                 x_types,
@@ -60,6 +46,7 @@ def selection_r(x_bounds,
 
     return outputs
 
+
 def selection(x_bounds,
               x_types,
               clusteringmodel_gmm_good,
@@ -69,12 +56,13 @@ def selection(x_bounds,
     '''
     Select the lowest mu value
     '''
-    results = lib_acquisition_function.next_hyperparameter_lowest_mu(\
-                    _ratio_scores, [clusteringmodel_gmm_good, clusteringmodel_gmm_bad],\
-                    x_bounds, x_types, minimize_starting_points, \
-                    minimize_constraints_fun=minimize_constraints_fun)
+    results = lib_acquisition_function.next_hyperparameter_lowest_mu(
+        _ratio_scores, [clusteringmodel_gmm_good, clusteringmodel_gmm_bad],
+        x_bounds, x_types, minimize_starting_points,
+        minimize_constraints_fun=minimize_constraints_fun)
 
     return results
+
 
 def _rand_with_constraints(x_bounds, x_types):
     '''
@@ -95,6 +83,7 @@ def _rand_with_constraints(x_bounds, x_types):
             if outputs[i] is None:
                 outputs[i] = random.randint(x_bounds[i][0], x_bounds[i][1])
     return outputs
+
 
 def _minimize_constraints_fun_summation(x):
     '''

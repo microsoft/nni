@@ -1,31 +1,17 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import csv
 import os
+import sys
 import json
 import time
 import re
 import shutil
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
@@ -33,7 +19,7 @@ from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
+from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, get_nni_installation_path
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -99,9 +85,13 @@ def check_experiment_id(args, update=True):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'],\
-                experiment_dict[key]['endTime']))
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                                      experiment_dict[key].get('experimentName', 'N/A'),
+                                                                      experiment_dict[key]['status'],
+                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('platform'),
+                                                                      experiment_dict[key]['startTime'],
+                                                                      experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -155,9 +145,13 @@ def parse_ids(args):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
-                experiment_dict[key]['endTime']))
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                                      experiment_dict[key].get('experimentName', 'N/A'),
+                                                                      experiment_dict[key]['status'],
+                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('platform'),
+                                                                      experiment_dict[key]['startTime'],
+                                                                      experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -233,7 +227,7 @@ def stop_experiment(args):
         experiment_config = Experiments()
         experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
-            print_normal('Stoping experiment %s' % experiment_id)
+            print_normal('Stopping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
@@ -395,6 +389,20 @@ def webui_url(args):
     nni_config = Config(get_config_filename(args))
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
+def webui_nas(args):
+    '''launch nas ui'''
+    print_normal('Starting NAS UI...')
+    try:
+        entry_dir = get_nni_installation_path()
+        entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
+        node_command = 'node'
+        if sys.platform == 'win32':
+            node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
+        cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
+        subprocess.run(cmds)
+    except KeyboardInterrupt:
+        pass
+
 def local_clean(directory):
     '''clean up local data'''
     print_normal('removing folder {0}'.format(directory))
@@ -410,11 +418,13 @@ def remote_clean(machine_list, experiment_id=None):
         userName = machine.get('username')
         host = machine.get('ip')
         port = machine.get('port')
+        sshKeyPath = machine.get('sshKeyPath')
+        passphrase = machine.get('passphrase')
         if experiment_id:
             remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', experiment_id])
         else:
             remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments'])
-        sftp = create_ssh_sftp_client(host, port, userName, passwd)
+        sftp = create_ssh_sftp_client(host, port, userName, passwd, sshKeyPath, passphrase)
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remove_remote_directory(sftp, remote_dir)
 
@@ -573,8 +583,13 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
-        experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
-        experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+        experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
+                                                              experiment_dict[key].get('experimentName', 'N/A'),
+                                                              experiment_dict[key]['status'],
+                                                              experiment_dict[key]['port'],
+                                                              experiment_dict[key].get('platform'),
+                                                              experiment_dict[key]['startTime'],
+                                                              experiment_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
 
 def get_time_interval(time1, time2):
@@ -626,22 +641,43 @@ def show_experiment_info():
                           content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
+def set_monitor(auto_exit, time_interval, port=None, pid=None):
+    '''set the experiment monitor engine'''
+    while True:
+        try:
+            if sys.platform == 'win32':
+                os.system('cls')
+            else:
+                os.system('clear')
+            update_experiment()
+            show_experiment_info()
+            if auto_exit:
+                status = get_experiment_status(port)
+                if status in ['DONE', 'ERROR', 'STOPPED']:
+                    print_normal('Experiment status is {0}.'.format(status))
+                    print_normal('Stopping experiment...')
+                    kill_command(pid)
+                    print_normal('Stop experiment success.')
+                    exit(0)
+            time.sleep(time_interval)
+        except KeyboardInterrupt:
+            if auto_exit:
+                print_normal('Stopping experiment...')
+                kill_command(pid)
+                print_normal('Stop experiment success.')
+            else:
+                print_normal('Exiting...')
+            exit(0)
+        except Exception as exception:
+            print_error(exception)
+            exit(1)
+
 def monitor_experiment(args):
     '''monitor the experiment'''
     if args.time <= 0:
         print_error('please input a positive integer as time interval, the unit is second.')
         exit(1)
-    while True:
-        try:
-            os.system('clear')
-            update_experiment()
-            show_experiment_info()
-            time.sleep(args.time)
-        except KeyboardInterrupt:
-            exit(0)
-        except Exception as exception:
-            print_error(exception)
-            exit(1)
+    set_monitor(False, args.time)
 
 def export_trials_data(args):
     '''export experiment metadata to csv
@@ -663,12 +699,16 @@ def export_trials_data(args):
                 content = json.loads(response.text)
                 trial_records = []
                 for record in content:
-                    if not isinstance(record['value'], (float, int)):
-                        formated_record = {**record['parameter'], **record['value'], **{'id': record['id']}}
+                    record_value = json.loads(record['value'])
+                    if not isinstance(record_value, (float, int)):
+                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']}}
                     else:
-                        formated_record = {**record['parameter'], **{'reward': record['value'], 'id': record['id']}}
+                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
                     trial_records.append(formated_record)
-                with open(args.path, 'w') as file:
+                if not trial_records:
+                    print_error('No trial results collected! Please check your trial log...')
+                    exit(0)
+                with open(args.path, 'w', newline='') as file:
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
                     writer.writeheader()
                     writer.writerows(trial_records)
@@ -679,3 +719,19 @@ def export_trials_data(args):
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def search_space_auto_gen(args):
+    '''dry run trial code to generate search space file'''
+    trial_dir = os.path.expanduser(args.trial_dir)
+    file_path = os.path.expanduser(args.file)
+    if not os.path.isabs(file_path):
+        file_path = os.path.join(os.getcwd(), file_path)
+    assert os.path.exists(trial_dir)
+    if os.path.exists(file_path):
+        print_warning('%s already exists, will be overwritten.' % file_path)
+    print_normal('Dry run to generate search space...')
+    Popen(args.trial_command, cwd=trial_dir, env=dict(os.environ, NNI_GEN_SEARCH_SPACE=file_path), shell=True).wait()
+    if not os.path.exists(file_path):
+        print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
+    else:
+        print_normal('Generate search space done: \'{}\'.'.format(file_path))

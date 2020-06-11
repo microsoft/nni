@@ -63,7 +63,9 @@ def load_mnist_data(args):
     '''
     Load MNIST dataset
     '''
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+    mnist_path = os.path.join(os.environ.get('NNI_OUTPUT_DIR'), 'mnist.npz')
+    (x_train, y_train), (x_test, y_test) = mnist.load_data(path=mnist_path)
+    os.remove(mnist_path)
 
     x_train = (np.expand_dims(x_train, -1).astype(np.float) / 255.)[:args.num_train]
     x_test = (np.expand_dims(x_test, -1).astype(np.float) / 255.)[:args.num_test]
@@ -84,7 +86,11 @@ class SendMetrics(keras.callbacks.Callback):
         Run on end of each epoch
         '''
         LOG.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        # TensorFlow 2.0 API reference claims the key is `val_acc`, but in fact it's `val_accuracy`
+        if 'val_acc' in logs:
+            nni.report_intermediate_result(logs['val_acc'])
+        else:
+            nni.report_intermediate_result(logs['val_accuracy'])
 
 def train(args, params):
     '''

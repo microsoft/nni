@@ -43,6 +43,11 @@
 
 * NNI 遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/) 的 Python 代码命名约定。在提交拉取请求时，请尽量遵循此规范。 可通过`flake8`或`pylint`的提示工具来帮助遵循规范。
 * NNI 还遵循 [NumPy Docstring 风格](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) 的 Python Docstring 命名方案。 Python API 使用了[sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) 来[生成文档](Contributing.md#documentation)。
+* 有关 docstrings，参考 [numpydoc docstring 指南](https://numpydoc.readthedocs.io/en/latest/format.html) 和 [pandas docstring 指南](https://python-sprints.github.io/pandas/guide/pandas_docstring.html) 
+    * 函数的 docstring, **description**, **Parameters**, 以及**Returns**/**Yields** 是必需的。
+    * 类的 docstring, **description**, **Attributes** 是必需的。
+    * 描述 `dict` 的 docstring 在超参格式描述中多处用到，参考 [RiboKit : 文档标准
+    * 写作标准的内部准则](https://ribokit.github.io/docs/text/)
 
 ## 文档
 
@@ -53,4 +58,4 @@
 * 需要链接时，尽量使用**相对路径**。 但如果文档是 Markdown 格式的，并且：
     
     * 图片需要通过嵌入的 HTML 语法来格式化，则需要使用绝对链接，如 `https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png`。可以通过将图片拖拽到 [Github Issue](https://github.com/Microsoft/nni/issues/new) 框中来生成这样的链接。
-    * 如果不能被 sphinx 重新格式化，如源代码等，则需要使用绝对链接。 如果源码连接到本代码库，使用 `https://github.com/Microsoft/nni/tree/master/` 作为根目录 (例如：[mnist.py](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py))。
+    * 如果不能被 sphinx 重新格式化，如源代码等，则需要使用绝对链接。 如果源码连接到本代码库，使用 `https://github.com/Microsoft/nni/tree/master/` 作为根目录 (例如：[mnist.py](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist-tfv1/mnist.py))。

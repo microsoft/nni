@@ -1,27 +1,12 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
+import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
@@ -36,10 +21,12 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService';
+import { PAIK8STrainingService } from './training_service/pai/paiK8S/paiK8STrainingService';
+import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
+import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number,
@@ -49,7 +36,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
 }
 
-async function initContainer(platformMode: string): Promise<void> {
+async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
@@ -60,7 +47,11 @@ async function initContainer(platformMode: string): Promise<void> {
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
-            .to(PAITrainingService)
+            .to(PAIK8STrainingService)
+            .scope(Scope.Singleton);
+    } else if (platformMode === 'paiYarn') {
+            Container.bind(TrainingService)
+            .to(PAIYarnTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService)
@@ -70,8 +61,12 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService)
             .to(FrameworkControllerTrainingService)
             .scope(Scope.Singleton);
+    } else if (platformMode === 'dlts') {
+        Container.bind(TrainingService)
+            .to(DLTSTrainingService)
+            .scope(Scope.Singleton);
     } else {
-        throw new Error(`Error: unsupported mode: ${mode}`);
+        throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
     Container.bind(Manager)
         .to(NNIManager)
@@ -82,6 +77,15 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
+    const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
+    if (foreground) {
+        logFileName = undefined;
+    } else if (logFileName === undefined) {
+        logFileName = DEFAULT_LOGFILE;
+    }
+    Container.bind(Logger).provider({
+        get: (): Logger => new Logger(logFileName)
+    });
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -89,7 +93,7 @@ async function initContainer(platformMode: string): Promise<void> {
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -98,10 +102,18 @@ if (!strPort || strPort.length === 0) {
     process.exit(1);
 }
 
+const foregroundArg: string = parseArg(['--foreground', '-f']);
+if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+    console.log(`FATAL: foreground property should only be true or false`);
+    usage();
+    process.exit(1);
+}
+const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
+
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
@@ -145,13 +157,14 @@ initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {
-    const log: Logger = getLogger();
     try {
-        await initContainer(mode);
+        await initContainer(foreground, mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start();
+        const log: Logger = getLogger();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
+        const log: Logger = getLogger();
         log.error(`${err.stack}`);
         throw err;
     }
@@ -168,6 +181,15 @@ function getStopSignal(): any {
         return 'SIGTERM';
     }
 }
+
+function getCtrlCSignal(): any {
+    return 'SIGINT';
+}
+
+process.on(getCtrlCSignal(), async () => {
+    const log: Logger = getLogger();
+    log.info(`Get SIGINT signal!`);
+});
 
 process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();

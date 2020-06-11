@@ -14,11 +14,11 @@ class FixedProductTuner(GridSearchTuner):
         super().__init__()
         self.product = product
 
-    def expand_parameters(self, para):
+    def _expand_parameters(self, para):
         """
         Filter out all qualified parameters
         """
-        para = super().expand_parameters(para)
+        para = super()._expand_parameters(para)
         if all([key in para[0] for key in ["alpha", "beta", "gamma"]]):  # if this is an interested set
             ret_para = []
             for p in para:

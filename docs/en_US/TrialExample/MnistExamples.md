@@ -2,7 +2,8 @@
 
 CNN MNIST classifier for deep learning is similar to `hello world` for programming languages. Thus, we use MNIST as example to introduce different features of NNI. The examples are listed below:
 
- - [MNIST with NNI API](#mnist)
+ - [MNIST with NNI API (TensorFlow v1.x)](#mnist-tfv1)
+ - [MNIST with NNI API (TensorFlow v2.x)](#mnist-tfv2)
  - [MNIST with NNI annotation](#mnist-annotation)
  - [MNIST in keras](#mnist-keras)
  - [MNIST -- tuning with batch tuner](#mnist-batch)
@@ -11,12 +12,19 @@ CNN MNIST classifier for deep learning is similar to `hello world` for programmi
  - [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)
  - [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
 
-<a name="mnist"></a>
-**MNIST with NNI API**
+<a name="mnist-tfv1"></a>
+**MNIST with NNI API (TensorFlow v1.x)**
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple YAML file which enables assessor.
 
-`code directory: examples/trials/mnist/`
+`code directory: examples/trials/mnist-tfv1/`
+
+<a name="mnist-tfv2"></a>
+**MNIST with NNI API (TensorFlow v2.x)**
+
+Same network to the example above, but written in TensorFlow v2.x Keras API.
+
+`code directory: examples/trials/mnist-tfv2/`
 
 <a name="mnist-annotation"></a>
 **MNIST with NNI annotation**

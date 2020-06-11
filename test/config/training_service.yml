@@ -1,0 +1,102 @@
+all:
+  logCollection: http
+
+kubeflow:
+  maxExecDuration: 15m
+  nniManagerIp:
+  # use a small trial number to make IT faster
+  maxTrialNum: 2
+  trialConcurrency: 2
+
+  kubeflowConfig:
+    operator: tf-operator
+    apiVersion: v1alpha2
+    storage: azureStorage
+    keyVault:
+      vaultName:
+      name:
+    azureStorage:
+      accountName:
+      azureShare:
+  trial:
+    worker:
+      replicas: 1
+      command:
+      gpuNum: 1
+      cpuNum: 1
+      memoryMB: 8192
+      image:
+  trainingServicePlatform: kubeflow
+
+frameworkcontroller:
+  maxExecDuration: 15m
+  nniManagerIp:
+  # use a small trial number to make IT faster
+  maxTrialNum: 2
+  trialConcurrency: 2
+  frameworkcontrollerConfig:
+    serviceAccountName: frameworkbarrier
+    storage: azureStorage
+    keyVault:
+      vaultName:
+      name:
+    azureStorage:
+      accountName:
+      azureShare:
+  trial:
+    taskRoles:
+      - name: worker
+        taskNum: 1
+        command:
+        gpuNum: 1
+        cpuNum: 1
+        memoryMB: 8192
+        image:
+        frameworkAttemptCompletionPolicy:
+          minFailedTaskCount: 1
+          minSucceededTaskCount: 1
+  trainingServicePlatform: frameworkcontroller
+
+local:
+  trainingServicePlatform: local
+paiYarn:
+  nniManagerIp:
+  maxExecDuration: 15m
+  paiYarnConfig:
+    host:
+    passWord:
+    userName:
+  trainingServicePlatform: paiYarn
+  trial:
+    gpuNum: 1
+    cpuNum: 1
+    dataDir:
+    image:
+    memoryMB: 8192
+    outputDir:
+    virtualCluster:
+pai:
+  nniManagerIp:
+  maxExecDuration: 15m
+  # PAI has job submission limitation, set maxTrialNum=1 to control trial job numbers for PAI 
+  maxTrialNum: 1
+  trialConcurrency: 1
+  paiConfig:
+    host:
+    userName:
+  trainingServicePlatform: pai
+  trial:
+    gpuNum: 1 
+    cpuNum: 1
+    image:
+    memoryMB: 8192
+    nniManagerNFSMountPath: 
+    containerNFSMountPath: 
+    paiStoragePlugin: 
+remote:
+  machineList:
+  - ip:
+    passwd:
+    port:
+    username:
+  trainingServicePlatform: remote

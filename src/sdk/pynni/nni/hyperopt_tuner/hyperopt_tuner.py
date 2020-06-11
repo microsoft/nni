@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 hyperopt_tuner.py
 """
@@ -27,7 +11,6 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.nas_utils import rewrite_nas_space
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
@@ -135,6 +118,8 @@ def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
                           vals[NodeType.VALUE],
                           out_y,
                           name=name + '[%d]' % _index)
+            if _type == 'randint':
+                out_y[name] -= in_x[NodeType.VALUE][0]
         else:
             for key in in_x.keys():
                 json2vals(in_x[key], vals[key], out_y,
@@ -242,7 +227,6 @@ class HyperoptTuner(Tuner):
             return hp.anneal.suggest
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
-    @rewrite_nas_space
     def update_search_space(self, search_space):
         """
         Update search space definition in tuner by search_space in parameters.
@@ -422,7 +406,8 @@ class HyperoptTuner(Tuner):
                     misc_by_id[tid]['vals'][key] = [val]
 
     def get_suggestion(self, random_search=False):
-        """get suggestion from hyperopt
+        """
+        get suggestion from hyperopt
 
         Parameters
         ----------
@@ -473,7 +458,8 @@ class HyperoptTuner(Tuner):
         return total_params
 
     def import_data(self, data):
-        """Import additional data for tuning
+        """
+        Import additional data for tuning
 
         Parameters
         ----------

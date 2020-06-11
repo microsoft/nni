@@ -2,94 +2,94 @@
 
 ## 概述
 
-[Docker](https://www.docker.com/) 是一种工具, 可通过启动容器, 使用户能够更轻松地根据自己的操作系统部署和运行应用程序。 Docker 不是虚拟机, 它不创建虚拟操作系统, 但是它允许不同的应用程序使用相同的操作系统内核, 并通过容器隔离不同的应用程序。
+[Docker](https://www.docker.com/) 是一种工具, 可通过启动容器, 使用户能够更轻松地根据自己的操作系统部署和运行应用程序。 Docker 不是虚拟机，它不创建虚拟操作系统，但它允许不同的应用程序使用相同的操作系统内核，并通过容器隔离不同的应用程序。
 
-用户可以使用docker进行 NNI 实验, NNI 在docker hub上提供了一个官方的镜像 [msranni/nni](https://hub.docker.com/r/msranni/nni)。
+用户可使用 Docker 来启动 NNI Experiment。 NNI 在 Docker Hub 上也提供了官方的 Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni)。
 
 ## 在本机使用docker
 
-### 第一步：docker的安装
+### 第一步：Docker 的安装
 
-在你开始使用docker进行NNI实验之前，你首先需要在本地机器上安装docker运行程序。 [参考](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+在开始使用 Docker 运行 NNI Experiment 前，首先需要在本机安装 Docker 运行程序。 [参考这里](https://docs.docker.com/install/linux/docker-ce/ubuntu/)。
 
-### 第二步：启动docker容器
+### 第二步：启动 Docker 容器
 
-如果你已经在本地机器上安装了docker程序，你可以启动docker容器来运行NNI实验了。 因为NNI会在docker容器里面启动web UI进程，并且监听一个端口，因此你需要指定一个在主机和docker容器里面的端口映射，这个映射可以让你在容器外面访问docker容器里面的进程。 通过访问主机的ip和端口，你就可以访问容器里面的Web网页进程了。
+如果已经在本地机器上安装了 Docker 程序，可以启动 Docker 容器来运行 NNI 示例。 因为 NNI 会在 Docker 容器里启动 Web 界面进程，并监听端口，因此需要指定一个在主机和 Docker 容器映射的端口，可在容器外访问 Docker 容器里的进程。 通过访问主机的 IP 和端口，就可以访问容器里的 Web 网页进程了。
 
-例如，你可以通过如下命令来启动docker容器：
+例如，通过如下命令来启动 Docker 容器：
 
     docker run -i -t -p [hostPort]:[containerPort] [image]
     
 
--i: 使用交互模式启动docker
+-i: 使用交互模式启动 Docker。
 
--t: Docker分配一个输入终端。
+-t: 为 Docker 分配一个输入终端。
 
 -p: 端口映射，映射主机端口和容器端口。
 
-可以参考[这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)，获取更多的命令参考。
+更多命令信息，可[参考这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)。
 
 注意：
 
-       NNI只支持Ubuntu和macOS操作系统，请指定正确的docker镜像。如果你希望在docker里面使用gpu，请使用nvidia-docker。
+       NNI 目前仅支持本机模式下的 Ubuntu 和 macOS 系统，请使用正确的 Docker 映像类型。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
     
 
-### 步骤3：在docker容器里面运行NNI
+### 第三步：在 Docker 容器里运行 NNI
 
-如果你直接使用NNI的官方镜像`msranni/nni`来启动实验，你可以直接使用`nnictl`命令。 NNI的官方镜像有最基础的python环境和深度学习框架。
+如果直接使用 NNI 的官方镜像 `msranni/nni` 来启动 Experiment，可以直接使用 `nnictl` 命令。 NNI 官方镜像有最基础的 Python 环境和深度学习框架。
 
-如果你使用你自己的docker镜像，你首先需要安装NNI环境。[参考](Installation.md)
+如果使用自己的 Docker 镜像，需要首先[安装 NNI](InstallationLinux.md)。
 
-如果你想要使用NNI的官方例子，你可以通过以下git命令来克隆NNI：
+如果要使用 NNI 的官方示例，可以通过以下 git 命令来克隆 NNI：
 
     git clone https://github.com/Microsoft/nni.git
     
 
-然后可以进入`nni/examples/trials`文件夹来启动实验。
+然后可以进入 `nni/examples/trials` 文件夹来启动 Experiment。
 
-等你准备完NNI环境，你可以通过`nnictl`命令来启动实验，[参考](QuickStart.md).
+准备好 NNI 的环境后，可使用 `nnictl` 命令开始新的 Experiment。 [参考这里](QuickStart.md)。
 
-## 在远程平台上运行docker
+## 在远程平台上运行 Docker
 
-NNI支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动实验，在远程机器里运行任务。 因为docker可以运行独立的Ubuntu系统和SSH服务，因此docker容器可以作为远程平台来运行NNI.
+NNI 支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动 Experiment，并在远程机器里运行 Trial。 因为 Docker 可以运行独立的 Ubuntu 系统和 SSH 服务，因此 Docker 容器可以作为远程平台来运行 NNI。
 
-### 步骤1：设置docker环境
+### 第一步：设置 Docker 环境
 
-你首先应该在远程机器上安装docker工具，[参考](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
+首先在远程机器上安装 Docker 工具，[参考这里](https://docs.docker.com/install/linux/docker-ce/ubuntu/)。
 
-为了保证docker容器可以被NNI实验连接上，你应该在你自己的docker容器里面安装SSH服务，并做SSH相关配置。 如果你想在docker容器里面使用SSH服务，你应该配置SSH密码登录或者私钥登录，[参考](https://docs.docker.com/engine/examples/running_ssh_service/)。
+为保证 Docker 容器可以被 NNI Experiment 连接上，要在自己的 Docker 容器里安装 SSH 服务，或使用已经配置好 SSH 的映像。 如果要在 Docker 容器里使用 SSH 服务，需要配置 SSH 密码登录或者私钥登录，[参考这里](https://docs.docker.com/engine/examples/running_ssh_service/)。
 
 注意：
 
-    NNI的官方镜像msranni/nni暂时不支持SSH服务，你应该构建自己的带有SSH服务的镜像，或者使用其他的带有SSH服务的镜像。
+    NNI 的官方镜像 msranni/nni 暂不支持 SSH 服务，应构建自己的带有 SSH 服务的映像，或者使用其他的带有 SSH 服务的镜像。
     
 
-### 第二步：在远程机器上启动docker容器
+### 第二步：在远程机器上启动 Dokcer 容器
 
-SSH容器需要一个端口，你需要把docker的SSH服务端口暴露给NNI作为连接端口。 例如，如果你设置容器的端口**`A`**作为SSH端口，你应该把端口**`A`**映射到主机的端口**`B`**，NNI会连接端口**`B`**作为SSH服务端口，你的主机会把连接到端口**`B`**的连接映射到端口**`A`**，NNI就可以连接到你的容器中了。
+SSH 服务需要端口，要把 Docker 的 SSH 服务端口暴露给 NNI 作为连接端口。 例如，如果设置容器的端口 **`A`** 作为 SSH 端口，应把端口 **`A`** 映射到主机的端口 **`B`**，NNI 会连接端口**`B`** 作为 SSH 服务端口，主机会把连接到端口 **`B`** 的连接映射到端口 **`A`**，NNI 就可以连接到容器中了。
 
-例如，你可以通过如下命令来启动docker容器：
+例如，通过如下命令来启动 Docker 容器：
 
     docker run -dit -p [hostPort]:[containerPort] [image]
     
 
-`containerPort`是在docker容器中指定的端口，`hostPort`是主机的端口。 你可以设置你的NNI配置，连接到`hostPort`，这个连接会被转移到你的docker容器中。 更多的命定信息，可以[参考](https://docs.docker.com/v17.09/edge/engine/reference/run/).
+`containerPort`是在 Docker 容器中指定的端口，`hostPort` 是主机的端口。 可设置 NNI 配置，连接到 `hostPort`，这个连接会被转发到 Docker 容器。 更多命令信息，可[参考这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)。
 
 注意：
 
-    如果你使用你自己构建的docker容器，请保证这个容器中有基础的python运行时环境和NNI SDK环境。 如果你想要在docker容器里面使用gpu，请使用nvidia-docker。
+    如果使用自己构建的 Docker 映像，确保有基础的 Python 运行时和 NNI SDK 环境。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
     
 
-### 步骤三：运行NNI实验
+### 第三步：运行 NNI Experiment
 
-你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](../TrainingService/RemoteMachineMode.md)。 注意你应该设置正确的`port`，`username`, `passwd`或者`sshKeyPath`。
+可以在配置文件中，设置训练平台为远程平台，然后设置 `machineList` 配置。[参考这里](../TrainingService/RemoteMachineMode.md)。 注意应该设置正确的 `port`，`username`，以及 `passwd` 或 `sshKeyPath`。
 
-`port`: 主机的端口，映射到docker的SSH端口中。
+`port`: 主机的端口，映射到 Docker 的 SSH 端口。
 
-`username`: docker容器的用户名。
+`username`：Docker 容器的用户名。
 
-`passWd: ` docker容器的密码。
+`passWd: ` Docker 容器的密码。
 
-`sshKeyPath:` docker容器私钥的存储路径。
+`sshKeyPath:` Docker 容器私钥的存储路径。
 
-设置完配置文件，你就可以启动实验了，[参考](QuickStart.md)。
+设置完配置文件，就可以启动 Experiment 了，[参考这里](QuickStart.md)。

@@ -1,0 +1,5 @@
+*.bz2
+*.svm
+*.log
+*memory
+*time

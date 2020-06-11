@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -26,8 +10,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
-import { file } from '../../node_modules/@types/tmp';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
+import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -35,8 +18,7 @@ import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } fr
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
-// tslint:disable: no-redundant-jsdoc
-export async function validateCodeDir(codeDir: string) : Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number | undefined;
     let fileNameValid: boolean = true;
     try {
@@ -70,11 +52,11 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
  */
 export async function execMkdir(directory: string, share: boolean = false): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe New-Item -Path ${directory} -ItemType "directory" -Force`);
+        await cpp.exec(`powershell.exe New-Item -Path "${directory}" -ItemType "directory" -Force`);
     } else if (share) {
-        await cpp.exec(`(umask 0; mkdir -p ${directory})`);
+        await cpp.exec(`(umask 0; mkdir -p '${directory}')`);
     } else {
-        await cpp.exec(`mkdir -p ${directory}`);
+        await cpp.exec(`mkdir -p '${directory}'`);
     }
 
     return Promise.resolve();
@@ -87,9 +69,9 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Copy-Item ${source} -Destination ${destination} -Recurse`);
+        await cpp.exec(`powershell.exe Copy-Item "${source}\\*" -Destination "${destination}" -Recurse`);
     } else {
-        await cpp.exec(`cp -r ${source} ${destination}`);
+        await cpp.exec(`cp -r '${source}/.' '${destination}'`);
     }
 
     return Promise.resolve();
@@ -101,9 +83,9 @@ export async function execCopydir(source: string, destination: string): Promise<
  */
 export async function execNewFile(filename: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe New-Item -Path ${filename} -ItemType "file" -Force`);
+        await cpp.exec(`powershell.exe New-Item -Path "${filename}" -ItemType "file" -Force`);
     } else {
-        await cpp.exec(`touch ${filename}`);
+        await cpp.exec(`touch '${filename}'`);
     }
 
     return Promise.resolve();
@@ -115,9 +97,9 @@ export async function execNewFile(filename: string): Promise<void> {
  */
 export function runScript(filePath: string): cp.ChildProcess {
     if (process.platform === 'win32') {
-        return cp.exec(`powershell.exe -ExecutionPolicy Bypass -file ${filePath}`);
+        return cp.exec(`powershell.exe -ExecutionPolicy Bypass -file "${filePath}"`);
     } else {
-        return cp.exec(`bash ${filePath}`);
+        return cp.exec(`bash '${filePath}'`);
     }
 }
 
@@ -128,9 +110,9 @@ export function runScript(filePath: string): cp.ChildProcess {
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
     if (process.platform === 'win32') {
-        cmdresult = await cpp.exec(`powershell.exe Get-Content ${filePath} -Tail 1`);
+        cmdresult = await cpp.exec(`powershell.exe Get-Content "${filePath}" -Tail 1`);
     } else {
-        cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
+        cmdresult = await cpp.exec(`tail -n 1 '${filePath}'`);
     }
 
     return Promise.resolve(cmdresult);
@@ -142,9 +124,9 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  */
 export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
+        await cpp.exec(`powershell.exe Remove-Item "${directory}" -Recurse -Force`);
     } else {
-        await cpp.exec(`rm -rf ${directory}`);
+        await cpp.exec(`rm -rf '${directory}'`);
     }
 
     return Promise.resolve();
@@ -173,7 +155,7 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
     } else {
-        return `export ${variable.key}=${variable.value}`;
+        return `export ${variable.key}='${variable.value}'`;
     }
 }
 
@@ -192,10 +174,11 @@ export async function tarAdd(tarPath: string, sourcePath: string): Promise<void>
         script.push(
             `import os`,
             `import tarfile`,
-            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tarFilePath, sourceFilePath),
+            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nroot="{1}"\r\nfor file_path,dir,files in os.walk(root):`, tarFilePath, sourceFilePath),
             `    for file in files:`,
-            `        fullpath = os.path.join(root,file)`,
-            `        tar.add(fullpath, arcname=file)`,
+            `        full_path = os.path.join(file_path, file)`,
+            `        file = os.path.relpath(full_path, root)`,
+            `        tar.add(full_path, arcname=file)`,
             `tar.close()`);
         await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         const tarScript: string = path.join(os.tmpdir(), 'tar.py');
@@ -219,22 +202,16 @@ export function getScriptName(fileNamePrefix: string): string {
     }
 }
 
-/**
- * generate script file
- * @param gpuMetricCollectorScriptFolder
- */
-export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
+export function getGpuMetricsCollectorBashScriptContent(scriptFolder: string): string {
+    return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni_gpu_tool.gpu_metrics_collector`;
+}
+
+export function runGpuMetricsCollector(scriptFolder: string): void {
     if (process.platform === 'win32') {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_WINDOWS,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        const scriptPath = path.join(scriptFolder, 'gpu_metrics_collector.ps1');
+        const content = String.Format(GPU_INFO_COLLECTOR_FORMAT_WINDOWS, scriptFolder, path.join(scriptFolder, 'pid'));
+        fs.writeFile(scriptPath, content, { encoding: 'utf8' }, () => { runScript(scriptPath); });
     } else {
-        return String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX,
-            gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid')
-        );
+        cp.exec(getGpuMetricsCollectorBashScriptContent(scriptFolder), { shell: '/bin/bash' });
     }
 }

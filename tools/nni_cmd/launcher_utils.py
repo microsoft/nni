@@ -1,30 +1,14 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
 import json
 from schema import SchemaError
 from schema import Schema
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA,\
-                           FRAMEWORKCONTROLLER_CONFIG_SCHEMA, tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
-from .common_utils import print_error, print_warning, print_normal
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, PAI_YARN_CONFIG_SCHEMA, \
+                           DLTS_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
+                           tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
+from .common_utils import print_error, print_warning, print_normal, get_yml_content
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -80,6 +64,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             expand_path(experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        expand_path(experiment_config['trial'], 'paiConfigPath')
 
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
@@ -111,6 +97,8 @@ def parse_path(experiment_config, config_path):
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
+    if experiment_config['trial'].get('paiConfigPath'):
+        parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content,
@@ -160,15 +148,19 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller']:
+        experiment_config.get('trainingServicePlatform') not in [
+                'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'
+        ]:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
         'local': LOCAL_CONFIG_SCHEMA,
         'remote': REMOTE_CONFIG_SCHEMA,
         'pai': PAI_CONFIG_SCHEMA,
+        'paiYarn': PAI_YARN_CONFIG_SCHEMA,
         'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
-        'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+        'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA,
+        'dlts': DLTS_CONFIG_SCHEMA,
         }
     separate_schema_dict = {
         'tuner': tuner_schema_dict,
@@ -230,24 +222,18 @@ def validate_customized_file(experiment_config, spec_key):
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
-    if experiment_config['tuner'].get('builtinTunerName'):
-        experiment_config['tuner']['className'] = experiment_config['tuner']['builtinTunerName']
-    else:
+    if not experiment_config['tuner'].get('builtinTunerName'):
         validate_customized_file(experiment_config, 'tuner')
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
     if experiment_config.get('assessor'):
-        if experiment_config['assessor'].get('builtinAssessorName'):
-            experiment_config['assessor']['className'] = experiment_config['assessor']['builtinAssessorName']
-        else:
+        if not experiment_config['assessor'].get('builtinAssessorName'):
             validate_customized_file(experiment_config, 'assessor')
 
 def parse_advisor_content(experiment_config):
     '''Validate whether advisor in experiment_config is valid'''
-    if experiment_config['advisor'].get('builtinAdvisorName'):
-        experiment_config['advisor']['className'] = experiment_config['advisor']['builtinAdvisorName']
-    else:
+    if not experiment_config['advisor'].get('builtinAdvisorName'):
         validate_customized_file(experiment_config, 'advisor')
 
 def validate_annotation_content(experiment_config, spec_key, builtin_name):
@@ -276,9 +262,27 @@ def validate_machine_list(experiment_config):
         print_error('Please set machineList!')
         exit(1)
 
+def validate_pai_config_path(experiment_config):
+    '''validate paiConfigPath field'''
+    if experiment_config.get('trainingServicePlatform') == 'pai':
+        if experiment_config.get('trial', {}).get('paiConfigPath'):
+            # validate commands
+            pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
+            taskRoles_dict = pai_config.get('taskRoles')
+            if not taskRoles_dict:
+                print_error('Please set taskRoles in paiConfigPath config file!')
+                exit(1)
+        else:
+            pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
+            for trial_field in pai_trial_fields_required_list:
+                if experiment_config['trial'].get(trial_field) is None:
+                    print_error('Please set {0} in trial configuration,\
+                                or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
+                    exit(1)
+
 def validate_pai_trial_conifg(experiment_config):
     '''validate the trial config in pai platform'''
-    if experiment_config.get('trainingServicePlatform') == 'pai':
+    if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
         if experiment_config.get('trial').get('shmMB') and \
         experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
             print_error('shmMB should be no more than memoryMB!')
@@ -291,6 +295,7 @@ def validate_pai_trial_conifg(experiment_config):
             print_warning(warning_information.format('dataDir'))
         if experiment_config.get('trial').get('outputDir'):
             print_warning(warning_information.format('outputDir'))
+        validate_pai_config_path(experiment_config)
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''

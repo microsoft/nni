@@ -22,6 +22,7 @@ nnictl support commands:
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
+* [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
 ### Manage an experiment
@@ -48,25 +49,26 @@ nnictl support commands:
   |--config, -c|  True| |YAML configure file of the experiment|
   |--port, -p|False| |the port of restful server|
   |--debug, -d|False||set debug mode|
+  |--foreground, -f|False||set foreground mode, print log content to terminal|
 
 * Examples
 
   > create a new experiment with the default port: 8080
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
   ```
 
   > create a new experiment with specified port 8088
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
   ```
 
   > create a new experiment with specified port 8088 and debug mode
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
   ```
 
 Note:
@@ -96,6 +98,7 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  True| |The id of the experiment you want to resume|
   |--port, -p|  False| |Rest port of the experiment you want to resume|
   |--debug, -d|False||set debug mode|
+  |--foreground, -f|False||set foreground mode, print log content to terminal|
 
 * Example
 
@@ -209,10 +212,10 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Example
 
-    `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+    `update experiment's new search space with file dir 'examples/trials/mnist-tfv1/search_space.json'`
 
     ```bash
-    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
     ```
 
 * __nnictl update concurrency__
@@ -731,6 +734,37 @@ Debug mode will disable version check function in Trialkeeper.
 
     ```bash
     nnictl package show
+    ```
+
+<a name="ss_gen"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Generate search space`
+
+* __nnictl ss_gen__
+  * Description
+
+    Generate search space from user trial code which uses NNI NAS APIs.
+
+  * Usage
+
+    ```bash
+    nnictl ss_gen [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--trial_command|  True| |The command of the trial code|
+  |--trial_dir|  False| ./ |The directory of the trial code|
+  |--file|  False| nni_auto_gen_search_space.json |The file for storing generated search space|
+
+  * Example
+
+    > Generate a search space
+
+    ```bash
+    nnictl ss_gen --trial_command="python3 mnist.py" --trial_dir=./ --file=ss.json
     ```
 
 <a name="version"></a>

@@ -24,131 +24,30 @@
         }
     }
 }
-/* add the brother selector to increase the priority */
-#succeTable .commonTableStyle, #tableList .commonTableStyle {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    tr{
-        text-align: center;
-        color:#212121;
-        font-size: 14px;
-    }
-    th{
-        padding: 2px;
-        background-color:white !important;
-        font-size: 14px;
-        color: #808080;
-        text-align: center;
-    }
-
-
-    .ant-table-expanded-row{
-        /* background-color: #f2f2f2 */
-        background-color: transparent;
-    }
-
-    tr:hover{
-        /* cancel antd table default hover style */
-        td{
-            background-color: transparent;
-        }
-        .ant-table-row-expand-icon{
-            background-color: transparent;
-        }
-    }
-
-    td{
-        padding: 0px;
-        line-height: 24px;
-    }
-
-    /* + button */
-    .ant-table-row-expand-icon{
-        background: none;
-    }
-
-    .ant-table-row-expand-icon-cell{
-        background: #ccc;
-        .ant-table-row-expand-icon{
-            border: none;
-            width: 100%;
-            height: 100%;
-        }
-    }
-    .ant-table-row-expand-icon-cell:hover{
-        background: #ccc;
-    }
-}
-
-/* let openrow content left*/
-.hyperpar{
-    text-align: left;
-    line-height: 18px;
-    font-size: 14px;
-    overflow: hidden;
-    margin-bottom: 10px;
-}
-
-/* the position of the pagination */
-.ant-table-pagination.ant-pagination{
-    margin: 16px 0;
-    float: right;
-    margin-right: 30px;
-}
-
-.ant-modal-title{
-    font-size: 20px;
-}
-
-/*disable select all checkbox in detail page*/
-.ant-table-selection{
-    display: none;
-}
-
-/* fix the border-bottom bug in firefox and edge */
-.ant-table-thead > tr > th .ant-table-column-sorters::before{
-    padding-bottom: 25px;
-    border-bottom: 1px solid #e8e8e8;
-}
 
 .margin-mediate{
     margin: 0 10px;
 }
 
-#detail-button{
-    margin: 2px 0;
-    .common-style, .common-style:visited, .common-style:focus{
-        height: 26px;
+.detail-button{
+    &-operation{
+        min-width: 44px;
         border: none;
-        border-radius: 0;
-        background-color: #0078d4;
+        margin-right: 10px;
     }
-    .common-style:hover{
-        background-color: #106ebe;
-    }
-    .common-style:active{
-        background-color: #005a9e;
-        outline: 0;
-    }
-    .common-style:disabled{
-        background-color: #f4f4f4;
-    }
-    .special, .special:visited, .special:focus, .special button{
-        height: 26px;
-        border: none;
-        border-radius: 0;
-        outline: 0;
-        background-color: #f4f4f4;
-        color: #333;
-    }
-    .special:hover{
-        background-color: #eaeaea;
-    }
-    .special:active{
-        background-color: #c8c8c8;
-        outline: 0;
-    }
-    .special:disabled, .special button:disabled{
-        background-color: #f4f4f4;
-        color: #d9d9d9;
+    i{
+        color: #fff;
     }
 } 
+
+/* office-fabric-ui */
+.ms-DetailsRow{
+    height: 30px;
+}
+.detail-table{
+    padding: 5px 0 0 0;
+}
+.columns-height{
+    max-height: 335px;
+    overflow-y: scroll;
+}

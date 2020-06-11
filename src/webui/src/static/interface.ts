@@ -1,6 +1,4 @@
-// tslint:disable:no-any
-
-// draw accuracy graph data interface
+// draw accuracy graph data export interface
 interface TableObj {
     key: number;
     sequenceId: number;
@@ -20,11 +18,15 @@ interface TableRecord {
     startTime: number;
     endTime?: number;
     id: string;
+    jobId: string;
+    parameterId: string;
     duration: number;
     status: string;
     intermediateCount: number;
     accuracy?: number;
-    latestAccuracy: string;  // formatted string
+    latestAccuracy: number | undefined;
+    formattedLatestAccuracy: string; // format (LATEST/FINAL),
+    accDictionary: FinalType | undefined;
 }
 
 interface SearchSpace {
@@ -43,7 +45,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate: Array<number>;
+    intermediate: number[];
     multiProgress?: number;
 }
 
@@ -81,6 +83,7 @@ interface Dimobj {
     axisLabel?: object;
     axisLine?: object;
     nameTextStyle?: object;
+    scale?: boolean;
 }
 
 interface ParaObj {
@@ -98,6 +101,7 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
+    trialId: string;
     parameterId: string;
     type: string;
     sequence: number;
@@ -106,6 +110,8 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
+    jobId: string;
+    parameterId: string;
     sequenceId: number;
     status: string;
     startTime?: number;
@@ -125,7 +131,6 @@ interface ExperimentParams {
     maxTrialNum: number;
     searchSpace: string;
     trainingServicePlatform: string;
-    multiPhase?: boolean;
     multiThread?: boolean;
     versionCheck?: boolean;
     logCollection?: string;
@@ -179,9 +184,13 @@ interface NNIManagerStatus {
     errors: string[];
 }
 
+interface EventMap {
+    [key: string]: () => void;
+}
+
 export {
-    TableObj, TableRecord, Parameters, ExperimentProfile, AccurPoint,
-    DetailAccurPoint, TooltipForAccuracy, ParaObj, Dimobj, FinalType,
-    TooltipForIntermediate, SearchSpace, Intermedia, MetricDataRecord, TrialJobInfo,
-    NNIManagerStatus,
+    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
+    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
+    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
+    ExperimentProfile, NNIManagerStatus, EventMap
 };

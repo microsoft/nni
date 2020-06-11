@@ -4,7 +4,31 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 设置环境
 
-参考[指南](../Tutorial/QuickStart.md)安装 NNI。
+步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
+
+步骤 2. 获取 OpenPAI 的令牌。  
+点击 OpenPAI 界面右上方的 `My profile` 按钮。 ![](../../img/pai_token_button.jpg) 找到 token management，复制当前账号的令牌。 ![](../../img/pai_token_profile.jpg)
+
+步骤 3. 将 NFS 存储挂载到本机。  
+点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
+在作业提交页面找到数据管理区域。 ![](../../img/pai_data_management_page.jpg)  
+`DEFAULT_STORAGE` 字段是在作业运行起来后，OpenPAI 容器中挂载的路径。 `Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
+例如，使用下列命令：
+
+    sudo mount nfs://gcr-openpai-infra02:/pai/data /local/mnt
+    
+
+然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
+然后在 NNI 的配置文件中如下配置：
+
+    nniManagerNFSMountPath: /local/mnt
+    containerNFSMountPath: /data
+    
+
+步骤 4. 获取 OpenPAI 存储插件名称。 联系 OpenPAI 管理员，获得 NFS 存储插件的名称。 默认存储的名称是 `teamwise_storage`，NNI 配置文件中的配置如下：
+
+    paiStoragePlugin: teamwise_storage
+    
 
 ## 运行 Experiment
 
@@ -21,6 +45,8 @@ maxExecDuration: 3h
 maxTrialNum: 100
 # 可选项: local, remote, pai
 trainingServicePlatform: pai
+# 搜索空间文件
+searchSpacePath: search_space.json
 # 可选项: true, false
 useAnnotation: true
 tuner:
@@ -34,10 +60,14 @@ trial:
   cpuNum: 1
   memoryMB: 8196
   image: msranni/nni:latest
-# 配置访问的 OpenPAI 集群
+  virtualCluster: default
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+  paiStoragePlugin: team_wise
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
-  passWord: your_pai_password
+  token: your_pai_token
   host: 10.1.1.1
 ```
 
@@ -46,47 +76,32 @@ paiConfig:
 与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 需要额外的配置：
 
 * cpuNum 
-    * 必填。 Trial 程序的 CPU 需求，必须为正数。
+    * 可选。 Trial 程序的 CPU 需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * memoryMB 
-    * 必填。 Trial 程序的内存需求，必须为正数。
+    * 可选。 Trial 程序的内存需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * image 
-    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
-    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。
+    * 可选。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
+    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * virtualCluster 
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
-* shmMB 
-    * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
-* authFile 
-    * 可选。在使用 pai 模式时，为私有 Docker 仓库设置认证文件，[见参考文档](https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.md#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job)。提供 authFile 的本地路径即可， NNI 会上传此文件。
+* nniManagerNFSMountPath 
+    * 必填。 在 nniManager 计算机上设置挂载的路径。
+* containerNFSMountPath 
+    * 必填。 在 OpenPAI 的容器中设置挂载路径。
+* paiStoragePlugin 
+    * 可选。 设置 PAI 中使用的存储插件的名称。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
+* command  
+    * 可选。 设置 OpenPAI 容器中使用的命令。
 
-* portList
+* paiConfigPath
     
-    * 可选。 设置 OpenPAI 的 portList。指定了容器中使用的端口列表，[参考文档](https://github.com/microsoft/pai/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.md#specification)。  
-        示例如下：
-        portList:
-          - label: test
-            beginAt: 8080
-            portNumber: 2
+    * 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。 如果在 NNI 配置文件中设置了 `paiConfigPath`，则不需在 `trial` 配置中设置 `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum`。 这些字段将使用 `paiConfigPath` 指定的配置文件中的值。 
+        注意：
+          1. OpenPAI 配置文件中的作业名称会由 NNI 指定，格式为：nni_exp_${this.experimentId}_trial_${trialJobId}。
         
-    
-    假设需要在 MNIST 示例中使用端口来运行 TensorBoard。 第一步是编写 `mnist.py` 的包装脚本 `launch_pai.sh`。
-    
-    ```bash
-    export TENSORBOARD_PORT=PAI_PORT_LIST_${PAI_CURRENT_TASK_ROLE_NAME}_0_tensorboard
-    tensorboard --logdir . --port ${!TENSORBOARD_PORT} &
-    python3 mnist.py
-    ```
-    
-    portList 的配置部分如下：
-    
-    ```yaml
-    trial:
-    command: bash launch_pai.sh
-    portList:
-      - label: tensorboard
-        beginAt: 0
-        portNumber: 1
-    ```
+          2.  如果在 OpenPAI 配置文件中有多个 taskRoles，NNI 会将这些 taksRoles 作为一个 Trial 任务，用户需要确保只有一个 taskRole 会将指标上传到 NNI 中，否则可能会产生错误。 
+        
+        
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
@@ -107,9 +122,7 @@ paiConfig:
 
 ## 数据管理
 
-如果训练数据集不大，可放在 codeDir中，NNI会将其上传到 HDFS，或者构建 Docker 映像来包含数据。 如果数据集非常大，则不可放在 codeDir 中，可参考此[指南](https://github.com/microsoft/pai/blob/master/docs/user/storage.md)来将数据目录挂载到容器中。
-
-如果要将 Trial 的其它输出保存到 HDFS 上，如模型文件等，需要在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来保存输出文件。NNI 的 SDK 会将文件从 Trial 容器的 `NNI_OUTPUT_DIR` 复制到 HDFS 上，目标路径为：`hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`。
+使用 NNI 启动 Experiment 前，应在 nniManager 计算机中设置相应的挂载数据的路径。 OpenPAI 有自己的存储（NFS、AzureBlob ...），在 PAI 中使用的存储将在启动作业时挂载到容器中。 应通过 `paiStoragePlugin` 字段选择 OpenPAI 中的存储类型。 然后，应将存储挂载到 nniManager 计算机上，并在配置文件中设置 `nniManagerNFSMountPath`，NNI会生成 bash 文件并将 `codeDir` 中的数据拷贝到 `nniManagerNFSMountPath` 文件夹中，然后启动 Trial 任务。 `nniManagerNFSMountPath` 中的数据会同步到 OpenPAI 存储中，并挂载到 OpenPAI 的容器中。 容器中的数据路径在 `containerNFSMountPath` 设置，NNI 将进入该文件夹，运行脚本启动 Trial 任务。
 
 ## 版本校验
 

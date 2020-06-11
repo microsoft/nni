@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -29,7 +13,7 @@ import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesCluste
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2' | 'v1';
 
 /**
  * Kubeflow Cluster Configuration
@@ -42,7 +26,6 @@ export class KubeflowClusterConfig extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable:completed-docs
 export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
     constructor(
@@ -59,7 +42,6 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
         return 'nfs';
     }
 
-    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigNFS {
         const kubeflowClusterConfigObjectNFS: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>jsonObject;
         assert (kubeflowClusterConfigObjectNFS !== undefined);
@@ -91,7 +73,6 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
         return 'azureStorage';
     }
 
-    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigAzure {
         const kubeflowClusterConfigObjectAzure: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>jsonObject;
 
@@ -107,7 +88,6 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
 
 export class KubeflowClusterConfigFactory {
 
-    // tslint:disable-next-line:function-name
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
          const storageConfig: StorageConfig = <StorageConfig>jsonObject;
          if (storageConfig === undefined) {
@@ -134,7 +114,7 @@ export class KubeflowTrialConfig extends KubernetesTrialConfig {
 
 export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate {
     public readonly replicas: number;
-    constructor(replicas: number, command : string, gpuNum : number,
+    constructor(replicas: number, command: string, gpuNum: number,
                 cpuNum: number, memoryMB: number, image: string, privateRegistryAuthPath?: string) {
         super(command, gpuNum, cpuNum, memoryMB, image, privateRegistryAuthPath);
         this.replicas = replicas;
@@ -172,8 +152,6 @@ export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
 }
 
 export class KubeflowTrialConfigFactory {
-
-    // tslint:disable-next-line:function-name
     public static generateKubeflowTrialConfig(jsonObject: object, operator: KubeflowOperator): KubeflowTrialConfig {
         if (operator === 'tf-operator') {
             const kubeflowTrialConfigObject: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>jsonObject;

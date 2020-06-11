@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -24,7 +8,7 @@ const joi = require('joi');
 export namespace ValidationSchemas {
     export const SETCLUSTERMETADATA = {
         body: {
-            machine_list: joi.array().items(joi.object({
+            machine_list: joi.array().items(joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 username: joi.string().required(),
                 ip: joi.string().ip().required(),
                 port: joi.number().min(1).max(65535).required(),
@@ -35,12 +19,12 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             })),
-            local_config: joi.object({
+            local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             }),
-            trial_config: joi.object({
+            trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
                 dataDir: joi.string(),
@@ -52,6 +36,10 @@ export namespace ValidationSchemas {
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
                 authFile: joi.string(),
+                nniManagerNFSMountPath: joi.string().min(1),
+                containerNFSMountPath: joi.string().min(1),
+                paiConfigPath: joi.string(),
+                paiStoragePlugin: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
                 portList: joi.array().items(joi.object({
                     label: joi.string().required(),
@@ -105,13 +93,19 @@ export namespace ValidationSchemas {
                     })
                 })
             }),
-            pai_config: joi.object({
+            pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required()
             }),
-            kubeflow_config: joi.object({
+            pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                userName: joi.string().min(1).required(),
+                passWord: joi.string().min(1),
+                token: joi.string().min(1),
+                host: joi.string().min(1).required(),
+            }),
+            kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),
                 apiVersion: joi.string().min(1),
@@ -129,7 +123,7 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
-            frameworkcontroller_config: joi.object({
+            frameworkcontroller_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 storage: joi.string().min(1),
                 serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
@@ -146,7 +140,16 @@ export namespace ValidationSchemas {
                 }),
                 uploadRetryCount: joi.number().min(1)
             }),
-            nni_manager_ip: joi.object({
+            dlts_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                dashboard: joi.string().min(1),
+              
+                cluster: joi.string().min(1),
+                team: joi.string().min(1),
+              
+                email: joi.string().min(1),
+                password: joi.string().min(1)
+            }),
+            nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             })
         }
@@ -175,7 +178,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string()
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner', 'PBTTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -200,6 +203,7 @@ export namespace ValidationSchemas {
     };
     export const UPDATEEXPERIMENT = {
         query: {
+            /* eslint-disable-next-line @typescript-eslint/camelcase */
             update_type: joi.string().required().valid('TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION', 'SEARCH_SPACE', 'MAX_TRIAL_NUM')
         },
         body: {

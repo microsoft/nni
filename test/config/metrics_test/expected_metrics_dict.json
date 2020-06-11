@@ -1,0 +1,11 @@
+{
+    "intermediate_result": [
+        {"default": 0.1, "loss": 0.11, "other": 0.111},
+        {"default": 0.2, "loss": 0.22, "other": 0.222},
+        {"default": 0.3, "loss": 0.33, "other": 0.333},
+        {"default": 0.4, "loss": 0.44, "other": 0.444},
+        {"default": 0.5, "loss": 0.55, "other": 0.555}
+
+    ],
+    "final_result": {"default": 0.6, "loss": 0.66, "other": 0.666}
+}

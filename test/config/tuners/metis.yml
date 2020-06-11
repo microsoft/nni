@@ -1,0 +1,25 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 2
+trialConcurrency: 1
+searchSpacePath: search_space.json
+
+tuner:
+  builtinTunerName: MetisTuner
+  classArgs:
+    optimize_mode: maximize
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ../../../examples/trials/mnist-tfv1
+  command: python3 mnist.py --batch_num 100
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

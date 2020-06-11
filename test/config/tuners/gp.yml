@@ -1,0 +1,33 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 2
+trialConcurrency: 1
+searchSpacePath: search_space.json
+
+tuner:
+  builtinTunerName: GPTuner
+  classArgs:
+    optimize_mode: maximize
+    utility: 'ei'
+    kappa: 5.0
+    xi: 0.0
+    nu: 2.5
+    alpha: 1e-6
+    cold_start_num: 10
+    selection_num_warm_up: 100000
+    selection_num_starting_points: 250
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ../../../examples/trials/mnist-tfv1
+  command: python3 mnist.py --batch_num 100
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

@@ -2,72 +2,35 @@
 .allList{
     width: 96%;
     margin: 0 auto;
-    .right{
-        text-align: right;
-        .common{
-            border-radius: 0;
-        }
-        .common:hover{
-            color: #0071BC;
-            border-radius: 0;
-        }
-        .filter{
-            width: 100px;
-            margin-left: 8px;
-            .ant-select-selection-selected-value{
-                font-size: 14px;
-            }
-        }
-        .search-input{
-            height: 32px;
-            outline: none;
-            border: 1px solid #d9d9d9;
-            border-left: none;
-            padding-left: 8px;
-            color: #333;
-        }
-        .search-input::placeholder{
-            color: DarkGray;
-        }
+    margin-top: 15px;
+
+    &-compare{
+        margin-top: 15px;
     }
-    .entry{
-        width: 120px;
-        margin: 0 6px;
+
+    &-entry{
+        line-height: 32px;
     }
-    .btns{
-        height: 32px;
-        text-align: right;
-        .ant-input-search{
-            height: 32px;
-        }
+
+    /* compare button style */
+    &-button-gap{
+        margin-right: 10px;
+    }
+
+    &-search-input{
+        padding-left: 10px;
     }
 }
 
-.titleColumn{
-    .ant-checkbox-group-item{
-        display: block;
-    }
-}
-
-.applyfooter{
-    /* apply button style */
-    .apply{
-        text-align: right;
-    }
-}
-
-/* compare button style */
-Button.mediateBtn{
-    margin: 0 2px 0 8px;
-}
 
 /* each row's Intermediate btn -> Modal*/
 .selectKeys{
     /* intermediate result is dict, select box for keys */
     .select{
+        margin-right: 12%;
+    }
+    .ms-Dropdown{
         width: 120px;
-        float: right;
-        margin-right: 10%;
     }
 }
 

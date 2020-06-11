@@ -56,6 +56,6 @@ main()
 
 也可以重载 Assessor 的 `run` 函数来控制过程逻辑。
 
-更多样例，可参考：
+更多示例，可参考：
 
 > - [Base-Assessor](https://msrasrg.visualstudio.com/NeuralNetworkIntelligenceOpenSource/_git/Default?_a=contents&path=%2Fsrc%2Fsdk%2Fpynni%2Fnni%2Fassessor.py&version=GBadd_readme)

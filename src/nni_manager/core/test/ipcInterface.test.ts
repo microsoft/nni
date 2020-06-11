@@ -1,23 +1,8 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
+
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
@@ -29,7 +14,6 @@ import { NNIError } from '../../common/errors';
 let sentCommands: { [key: string]: string }[] = [];
 const receivedCommands: { [key: string]: string }[] = [];
 
-let commandTooLong: Error | undefined;
 let rejectCommandType: Error | undefined;
 
 function runProcess(): Promise<Error | null> {
@@ -69,14 +53,7 @@ function runProcess(): Promise<Error | null> {
     // Command #2: ok
     dispatcher.sendCommand('ME', '123');
 
-    // Command #3: too long
-    try {
-        dispatcher.sendCommand('ME', 'x'.repeat(1_000_000));
-    } catch (error) {
-        commandTooLong = error;
-    }
-
-    // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command
+    // Command #3: FE is not tuner/assessor command, test the exception type of send non-valid command
     try {
         dispatcher.sendCommand('FE', '1');
     } catch (error) {
@@ -103,21 +80,11 @@ describe('core/protocol', (): void => {
     });
 
     it('sendCommand() should work without content', (): void => {
-        assert.equal(sentCommands[0], '(\'IN\', \'\')');
+        assert.equal(sentCommands[0], "('IN', '')");
     });
 
     it('sendCommand() should work with content', (): void => {
-        assert.equal(sentCommands[1], '(\'ME\', \'123\')');
-    });
-
-    it('sendCommand() should throw on too long command', (): void => {
-        if (commandTooLong === undefined) {
-            assert.fail('Should throw error')
-        } else {
-            const err: Error | undefined = (<NNIError>commandTooLong).cause;
-            assert(err && err.name === 'RangeError');
-            assert(err && err.message === 'Command too long');
-        }
+        assert.equal(sentCommands[1], "('ME', '123')");
     });
 
     it('sendCommand() should throw on wrong command type', (): void => {

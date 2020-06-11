@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Row, Col, Progress } from 'antd';
+import { Stack, StackItem, ProgressIndicator } from 'office-ui-fabric-react';
 
 interface ProItemProps {
     who: string;
@@ -16,31 +16,25 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
 
     }
 
-    render() {
+    render(): React.ReactNode {
         const { who, percent, description, maxString, bgclass } = this.props;
-
         return (
             <div>
-                <Row className={`probar ${bgclass}`}>
-                        <Col span={8}>
-                            <div className="name">{who}</div>
-                        </Col>
-                        <Col span={16} className="bar">
-                            <div className="showProgress">
-                                <Progress
-                                    percent={percent}
-                                    strokeWidth={30}
-                                    // strokeLinecap={'square'}
-                                    format={() => description}
-                                />
-                            </div>
-                            <Row className="description">
-                                <Col span={9}>0</Col>
-                                <Col className="right" span={15}>{maxString}</Col>
-                            </Row>
-                        </Col>
-                    </Row>
-                    <br/>
+                <Stack horizontal className={`probar ${bgclass}`}>
+                    <div className="name">{who}</div>
+                    <div className="showProgress" style={{ width: '78%' }}>
+                        <ProgressIndicator
+                            barHeight={30}
+                            percentComplete={percent}
+                        />
+                        <Stack horizontal className="boundary">
+                            <StackItem grow={30}>0</StackItem>
+                            <StackItem className="right" grow={70}>{maxString}</StackItem>
+                        </Stack>
+                    </div>
+                    <div className="description" style={{ width: '22%' }}>{description}</div>
+                </Stack>
+                <br />
             </div>
         );
     }

@@ -152,7 +152,11 @@ class SendMetrics(keras.callbacks.Callback):
         if logs is None:
             logs = dict()
         logger.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        # TensorFlow 2.0 API reference claims the key is `val_acc`, but in fact it's `val_accuracy`
+        if 'val_acc' in logs:
+            nni.report_intermediate_result(logs['val_acc'])
+        else:
+            nni.report_intermediate_result(logs['val_accuracy'])
 
 
 # Training

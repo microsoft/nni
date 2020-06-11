@@ -1,0 +1,212 @@
+{
+  "LayerChoice1": [
+    false, false, false, false, false, true, false, false
+  ],
+  "InputChoice2": [
+    true
+  ],
+  "LayerChoice3": [
+    false, false, false, false, false, false, false, true
+  ],
+  "InputChoice4": [
+    false
+  ],
+  "InputChoice5": [
+    true, false
+  ],
+  "LayerChoice6": [
+    false, false, false, true, false, false, false, false
+  ],
+  "InputChoice7": [
+    false, false
+  ],
+  "InputChoice8": [
+    false, false, true
+  ],
+  "LayerChoice9": [
+    false, false, false, false, false, false, true, false
+  ],
+  "InputChoice10": [
+    false, true, true
+  ],
+  "InputChoice11": [
+    false, false, true, false
+  ],
+  "LayerChoice12": [
+    false, true, false, false, false, false, false, false
+  ],
+  "InputChoice13": [
+    false, true, false, false
+  ],
+  "InputChoice14": [
+    false, false, false, false, true
+  ],
+  "LayerChoice15": [
+    false, true, false, false, false, false, false, false
+  ],
+  "InputChoice16": [
+    false, false, true, false, true
+  ],
+  "InputChoice17": [
+    false, false, false, false, true
+  ],
+  "LayerChoice18": [
+    true, false, false, false, false, false, false, false
+  ],
+  "InputChoice19": [
+    false, false, true, true, true, true
+  ],
+  "InputChoice20": [
+    true, false, false, false, false
+  ],
+  "LayerChoice21": [
+    false, false, false, false, false, false, true, false
+  ],
+  "InputChoice22": [
+    false, true, true, false, false, false, false
+  ],
+  "InputChoice23": [
+    false, true, false, false, false
+  ],
+  "LayerChoice24": [
+    false, false, false, false, false, true, false, false
+  ],
+  "InputChoice25": [
+    false, true, false, true, true, false, true, true
+  ],
+  "InputChoice26": [
+    false, false, true, false, false
+  ],
+  "LayerChoice27": [
+    false, false, false, false, false, true, false, false
+  ],
+  "InputChoice28": [
+    false, false, false, false, false, true, false, true, true
+  ],
+  "InputChoice29": [
+    true, false, false, false, false
+  ],
+  "LayerChoice30": [
+    false, false, false, false, false, false, false, true
+  ],
+  "InputChoice31": [
+    true, true, false, false, true, false, false, true, true, false
+  ],
+  "InputChoice32": [
+    true, false, false, false, false
+  ],
+  "LayerChoice33": [
+    false, false, false, false, true, false, false, false
+  ],
+  "InputChoice34": [
+    true, false, false, true, true, true, true, false, false, false, false
+  ],
+  "InputChoice35": [
+    false, false, false, true, false
+  ],
+  "LayerChoice36": [
+    false, true, false, false, false, false, false, false
+  ],
+  "InputChoice37": [
+    true, true, false, true, false, true, false, false, true, false, false, false
+  ],
+  "InputChoice38": [
+    false, false, false, true, false
+  ],
+  "LayerChoice39": [
+    false, false, true, false, false, false, false, false
+  ],
+  "InputChoice40": [
+    true, true, false, false, false, false, true, false, false, true, true, false, true
+  ],
+  "InputChoice41": [
+    false, false, false, true, false
+  ],
+  "LayerChoice42": [
+    true, false, false, false, false, false, false, false
+  ],
+  "InputChoice43": [
+    false, false, true, false, false, false, true, true, true, false, true, true, false, false
+  ],
+  "InputChoice44": [
+    false, false, false, false, true
+  ],
+  "LayerChoice45": [
+    false, false, false, true, false, false, false, false
+  ],
+  "InputChoice46": [
+    true, false, false, false, false, false, true, false, false, false, true, true, false, false, true
+  ],
+  "InputChoice47": [
+    false, false, false, true, false
+  ],
+  "LayerChoice48": [
+    false, false, true, false, false, false, false, false
+  ],
+  "InputChoice49": [
+    false, false, false, false, false, false, false, false, false, true, true, false, true, false, true, false
+  ],
+  "InputChoice50": [
+    false, false, false, false, true
+  ],
+  "LayerChoice51": [
+    false, false, false, false, true, false, false, false
+  ],
+  "InputChoice52": [
+    false, true, true, true, true, false, false, true, false, true, false, false, false, false, true, false, false
+  ],
+  "InputChoice53": [
+    false, false, true, false, false
+  ],
+  "LayerChoice54": [
+    false, false, false, true, false, false, false, false
+  ],
+  "InputChoice55": [
+    false, false, false, false, false, true, false, false, false, false, false, false, false, true, true, true, false, true
+  ],
+  "InputChoice56": [
+    false, false, true, false, false
+  ],
+  "LayerChoice57": [
+    false, false, false, true, false, false, false, false
+  ],
+  "InputChoice58": [
+    false, false, false, true, false, false, false, false, false, false, true, false, false, false, true, false, false, false, false
+  ],
+  "InputChoice59": [
+    false, true, false, false, false
+  ],
+  "LayerChoice60": [
+    false, false, false, false, false, true, false, false
+  ],
+  "InputChoice61": [
+    true, true, false, false, false, false, false, false, false, false, true, true, false, false, true, true, true, true, false, false
+  ],
+  "InputChoice62": [
+    true, false, false, false, false
+  ],
+  "LayerChoice63": [
+    false, false, false, false, false, false, false, true
+  ],
+  "InputChoice64": [
+    false, true, true, true, false, false, false, true, false, true, true, true, true, false, true, false, false, false, false, false, false
+  ],
+  "InputChoice65": [
+    false, false, false, false, true
+  ],
+  "LayerChoice66": [
+    false, false, false, false, false, false, false, true
+  ],
+  "InputChoice67": [
+    false, false, true, true, true, true, false, true, false, true, true, false, false, false, false, true, false, false, false, false, false, true
+  ],
+  "InputChoice68": [
+    false, false, false, true, false
+  ],
+  "LayerChoice69": [
+    false, false, false, true, false, false, false, false
+  ],
+  "InputChoice70": [
+    true, false, false, true, false, false, false, true, false, false, false, false, true, false, false, false, true, false, false, false, false, false, false
+  ]
+}

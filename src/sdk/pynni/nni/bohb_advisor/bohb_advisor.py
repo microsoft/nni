@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 '''
 bohb_advisor.py
 '''
@@ -573,7 +557,8 @@ class BOHB(MsgDispatcherBase):
             Data type not supported
         """
         logger.debug('handle report metric data = %s', data)
-
+        if 'value' in data:
+            data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
@@ -643,6 +628,8 @@ class BOHB(MsgDispatcherBase):
         AssertionError
             data doesn't have required key 'parameter' and 'value'
         """
+        for entry in data:
+            entry['value'] = json_tricks.loads(entry['value'])
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
@@ -654,6 +641,7 @@ class BOHB(MsgDispatcherBase):
             if not _value:
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
+            _value = extract_scalar_reward(_value)
             budget_exist_flag = False
             barely_params = dict()
             for keys in _params:

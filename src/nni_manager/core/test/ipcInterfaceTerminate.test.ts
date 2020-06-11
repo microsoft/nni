@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -37,18 +21,26 @@ function startProcess(): void {
     const dispatcherCmd: string = getMsgDispatcherCommand(
         // Mock tuner config
         {
-            className: 'DummyTuner',
-            codeDir: './',
-            classFileName: 'dummy_tuner.py'
-        },
-        // Mock assessor config
-        {
-            className: 'DummyAssessor',
-            codeDir: './',
-            classFileName: 'dummy_assessor.py'
-        },
-        // advisor
-        undefined
+            experimentName: 'exp1',
+            maxExecDuration: 3600,
+            searchSpace: '',
+            trainingServicePlatform: 'local',
+            authorName: '',
+            trialConcurrency: 1,
+            maxTrialNum: 5,
+            tuner: {
+                className: 'DummyTuner',
+                codeDir: './',
+                classFileName: 'dummy_tuner.py',
+                checkpointDir: './'
+            },
+            assessor: {
+                className: 'DummyAssessor',
+                codeDir: './',
+                classFileName: 'dummy_assessor.py',
+                checkpointDir: './'
+            }
+        }
     );
     const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);
     proc.on('error', (error: Error): void => {
@@ -63,7 +55,7 @@ function startProcess(): void {
     // create IPC interface
     dispatcher = createDispatcherInterface(proc);
     (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
-        console.log(commandType, content);  // tslint:disable-line:no-console
+        console.log(commandType, content);
     });
 }
 

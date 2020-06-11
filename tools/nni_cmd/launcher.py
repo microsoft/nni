@@ -1,33 +1,14 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import json
 import os
 import sys
 import string
 import random
-import site
 import time
 import tempfile
-from subprocess import Popen, check_call, CalledProcessError
+from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni_annotation import expand_annotations, generate_search_space
 from nni.constants import ModuleName, AdvisorModuleName
 from .launcher_utils import validate_all_content
@@ -35,7 +16,7 @@ from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
-                          detect_port, get_user, get_python_dir
+                          detect_port, get_user, get_nni_installation_path
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
@@ -55,48 +36,7 @@ def print_log_content(config_file_name):
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
 
-def get_nni_installation_path():
-    ''' Find nni lib from the following locations in order
-    Return nni root directory if it exists
-    '''
-    def try_installation_path_sequentially(*sitepackages):
-        '''Try different installation path sequentially util nni is found.
-        Return None if nothing is found
-        '''
-        def _generate_installation_path(sitepackages_path):
-            python_dir = get_python_dir(sitepackages_path)
-            entry_file = os.path.join(python_dir, 'nni', 'main.js')
-            if os.path.isfile(entry_file):
-                return python_dir
-            return None
-
-        for sitepackage in sitepackages:
-            python_dir = _generate_installation_path(sitepackage)
-            if python_dir:
-                return python_dir
-        return None
-
-    if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
-        # Note that conda venv will not have VIRTUAL_ENV
-        python_dir = os.getenv('VIRTUAL_ENV')
-    else:
-        python_sitepackage = site.getsitepackages()[0]
-        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
-        # that nni exists there
-        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
-        else:
-            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
-
-    if python_dir:
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        if os.path.isfile(entry_file):
-            return os.path.join(python_dir, 'nni')
-    print_error('Fail to find nni under python library')
-    exit(1)
-
-def start_rest_server(port, platform, mode, config_file_name, experiment_id=None, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, config_file_name, foreground=False, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
@@ -117,7 +57,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     node_command = 'node'
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
-    cmds = [node_command, entry_file, '--port', str(port), '--mode', platform]
+    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
         cmds += ['--readonly', 'true']
@@ -129,6 +69,8 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         cmds += ['--log_level', log_level]
     if mode in ['resume', 'view']:
         cmds += ['--experiment_id', experiment_id]
+    if foreground:
+        cmds += ['--foreground', 'true']
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
         time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
@@ -138,9 +80,15 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         stderr_file.write(log_header)
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
-            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
+            if foreground:
+                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NEW_PROCESS_GROUP)
+            else:
+                process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
         else:
-            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
+            if foreground:
+                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE)
+            else:
+                process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -191,7 +139,9 @@ def set_remote_config(experiment_config, port, config_file_name):
         for i in range(len(request_data['machine_list'])):
             if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
                 request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
+    # It needs to connect all remote machines, the time out of connection is 30 seconds.
+    # So timeout of this place should be longer.
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 60, True)
     err_message = ''
     if not response or not check_response(response):
         if response is not None:
@@ -242,6 +192,25 @@ def set_pai_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_pai_yarn_config(experiment_config, port, config_file_name):
+    '''set paiYarn configuration'''
+    pai_yarn_config_data = dict()
+    pai_yarn_config_data['pai_yarn_config'] = experiment_config['paiYarnConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(pai_yarn_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
 def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration'''
     kubeflow_config_data = dict()
@@ -266,6 +235,25 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
+def set_dlts_config(experiment_config, port, config_file_name):
+    '''set dlts configuration'''
+    dlts_config_data = dict()
+    dlts_config_data['dlts_config'] = experiment_config['dltsConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(dlts_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -338,6 +326,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'paiYarn':
+        request_data['clusterMetaData'].append(
+            {'key': 'pai_yarn_config', 'value': experiment_config['paiYarnConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
         request_data['clusterMetaData'].append(
             {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
@@ -369,10 +362,14 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)
     elif platform == 'pai':
         config_result, err_msg = set_pai_config(experiment_config, port, config_file_name)
+    elif platform == 'paiYarn':
+        config_result, err_msg = set_pai_yarn_config(experiment_config, port, config_file_name)
     elif platform == 'kubeflow':
         config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
     elif platform == 'frameworkcontroller':
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name)
+    elif platform == 'dlts':
+        config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
@@ -412,12 +409,14 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
+    foreground = False
     if mode != 'view':
+        foreground = args.foreground
         if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
             log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
-                                                 mode, config_file_name, experiment_id, log_dir, log_level)
+                                                 mode, config_file_name, foreground, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -478,12 +477,21 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
 
-    #save experiment information
+    # save experiment information
     nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,\
-                                            experiment_config['trainingServicePlatform'])
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
+    if mode != 'view' and args.foreground:
+        try:
+            while True:
+                log_content = rest_process.stdout.readline().strip().decode('utf-8')
+                print(log_content)
+        except KeyboardInterrupt:
+            kill_command(rest_process.pid)
+            print_normal('Stopping experiment...')
 
 def create_experiment(args):
     '''start a new experiment'''
@@ -497,8 +505,16 @@ def create_experiment(args):
     validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
-    launch_experiment(args, experiment_config, 'new', config_file_name)
     nni_config.set_config('restServerPort', args.port)
+    try:
+        launch_experiment(args, experiment_config, 'new', config_file_name)
+    except Exception as exception:
+        nni_config = Config(config_file_name)
+        restServerPid = nni_config.get_config('restServerPid')
+        if restServerPid:
+            kill_command(restServerPid)
+        print_error(exception)
+        exit(1)
 
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
@@ -508,7 +524,7 @@ def manage_stopped_experiment(args, mode):
     experiment_id = None
     #find the latest stopped experiment
     if not args.id:
-        print_error('Please set experiment id! \nYou could use \'nnictl {0} {id}\' to {0} a stopped experiment!\n' \
+        print_error('Please set experiment id! \nYou could use \'nnictl {0} id\' to {0} a stopped experiment!\n' \
         'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
         exit(1)
     else:
@@ -526,8 +542,16 @@ def manage_stopped_experiment(args, mode):
     new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
     new_nni_config = Config(new_config_file_name)
     new_nni_config.set_config('experimentConfig', experiment_config)
-    launch_experiment(args, experiment_config, mode, new_config_file_name, experiment_id)
     new_nni_config.set_config('restServerPort', args.port)
+    try:
+        launch_experiment(args, experiment_config, mode, new_config_file_name, experiment_id)
+    except Exception as exception:
+        nni_config = Config(new_config_file_name)
+        restServerPid = nni_config.get_config('restServerPid')
+        if restServerPid:
+            kill_command(restServerPid)
+        print_error(exception)
+        exit(1)
 
 def view_experiment(args):
     '''view a stopped experiment'''

@@ -24,60 +24,52 @@ import numpy as np
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
-from sklearn.svm import SVR
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.linear_model import Ridge
+from sklearn.linear_model import Lars
+from sklearn.linear_model import ARDRegression
 
 LOG = logging.getLogger('sklearn_regression')
 
 def load_data():
     '''Load dataset, use boston dataset'''
     boston = load_boston()
-    X_train, X_test, y_train, y_test = train_test_split(boston.data, boston.target, random_state=99, test_size=0.25)
+    X_train, X_test, y_train, y_test = train_test_split(
+        boston.data, boston.target, random_state=99, test_size=0.25)
     #normalize data
     ss_X = StandardScaler()
     ss_y = StandardScaler()
 
     X_train = ss_X.fit_transform(X_train)
     X_test = ss_X.transform(X_test)
-    y_train = ss_y.fit_transform(y_train[:, None])[:,0]
-    y_test = ss_y.transform(y_test[:, None])[:,0]
+    y_train = ss_y.fit_transform(y_train[:, None])[:, 0]
+    y_test = ss_y.transform(y_test[:, None])[:, 0]
 
     return X_train, X_test, y_train, y_test
 
 def get_default_parameters():
     '''get default parameters'''
-    params = {
-        'model_name': 'LinearRegression'
-    }
+    params = {'model_name': 'LinearRegression'}
     return params
 
 def get_model(PARAMS):
     '''Get model according to parameters'''
     model_dict = {
         'LinearRegression': LinearRegression(),
-        'SVR': SVR(),
-        'KNeighborsRegressor': KNeighborsRegressor(),
-        'DecisionTreeRegressor': DecisionTreeRegressor()
+        'Ridge': Ridge(),
+        'Lars': Lars(),
+        'ARDRegression': ARDRegression()
+
     }
     if not model_dict.get(PARAMS['model_name']):
         LOG.exception('Not supported model!')
         exit(1)
 
     model = model_dict[PARAMS['model_name']]
+    model.normalize = bool(PARAMS['normalize'])
 
-    try:
-        if PARAMS['model_name'] == 'SVR':
-            model.kernel = PARAMS['svr_kernel']
-        elif PARAMS['model_name'] == 'KNeighborsRegressor':
-            model.weights = PARAMS['knr_weights']
-    except Exception as exception:
-        LOG.exception(exception)
-        raise
     return model
 
-
-def run(X_train, X_test, y_train, y_test, PARAMS):
+def run(X_train, X_test, y_train, y_test, model):
     '''Train model and predict result'''
     model.fit(X_train, y_train)
     predict_y = model.predict(X_test)

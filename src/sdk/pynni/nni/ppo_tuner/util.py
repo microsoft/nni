@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 util functions
 """
@@ -94,12 +78,14 @@ def lstm_model(nlstm=128, layer_norm=False):
 
     An example of usage of lstm-based policy can be found here: common/tests/test_doc_examples.py/test_lstm_example
 
-    Parameters:
+    Parameters
     ----------
-    nlstm: int          LSTM hidden state size
-    layer_norm: bool    if True, layer-normalized version of LSTM is used
+    nlstm : int
+        LSTM hidden state size
+    layer_norm : bool
+        if True, layer-normalized version of LSTM is used
 
-    Returns:
+    Returns
     -------
     function that builds LSTM with a given input tensor / placeholder
     """
@@ -171,11 +157,15 @@ def adjust_shape(placeholder, data):
     adjust shape of the data to the shape of the placeholder if possible.
     If shape is incompatible, AssertionError is thrown
 
-    Parameters:
-    placeholder:     tensorflow input placeholder
-    data:            input data to be (potentially) reshaped to be fed into placeholder
+    Parameters
+    ----------
+    placeholder
+        tensorflow input placeholder
+    data
+        input data to be (potentially) reshaped to be fed into placeholder
 
-    Returns:
+    Returns
+    -------
     reshaped data
     """
     if not isinstance(data, np.ndarray) and not isinstance(data, list):
@@ -230,13 +220,16 @@ def observation_placeholder(ob_space, batch_size=None, name='Ob'):
     """
     Create placeholder to feed observations into of the size appropriate to the observation space
 
-    Parameters:
+    Parameters
     ----------
-    ob_space: gym.Space     observation space
-    batch_size: int         size of the batch to be fed into input. Can be left None in most cases.
-    name: str               name of the placeholder
+    ob_space : gym.Space
+        observation space
+    batch_size : int
+        size of the batch to be fed into input. Can be left None in most cases.
+    name : str
+        name of the placeholder
 
-    Returns:
+    Returns
     -------
     tensorflow placeholder tensor
     """

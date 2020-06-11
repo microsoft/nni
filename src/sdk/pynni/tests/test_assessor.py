@@ -1,23 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import nni.protocol
 from nni.protocol import CommandType, send, receive
@@ -65,9 +47,9 @@ def _restore_io():
 class AssessorTestCase(TestCase):
     def test_assessor(self):
         _reverse_io()
-        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":0,"value":2}')
-        send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"PERIODICAL","sequence":0,"value":2}')
-        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":3}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":0,"value":"2"}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"PERIODICAL","sequence":0,"value":"2"}')
+        send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":"3"}')
         send(CommandType.TrialEnd, '{"trial_job_id":"A","event":"SYS_CANCELED"}')
         send(CommandType.TrialEnd, '{"trial_job_id":"B","event":"SUCCEEDED"}')
         send(CommandType.NewTrialJob, 'null')

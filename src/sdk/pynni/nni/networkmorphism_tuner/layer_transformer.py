@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import numpy as np
 
@@ -52,7 +35,8 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
     if weighted:
         new_conv_layer.set_weights(
-            (add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+            (add_noise(weight, np.array([0, 1])),
+             add_noise(bias, np.array([0, 1])))
         )
         new_weights = [
             add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),
@@ -74,7 +58,8 @@ def dense_to_deeper_block(dense_layer, weighted=True):
     new_dense_layer = StubDense(units, units)
     if weighted:
         new_dense_layer.set_weights(
-            (add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+            (add_noise(weight, np.array([0, 1])),
+             add_noise(bias, np.array([0, 1])))
         )
     return [StubReLU(), new_dense_layer]
 
@@ -97,8 +82,11 @@ def wider_pre_dense(layer, n_add, weighted=True):
         teacher_index = rand[i]
         new_weight = teacher_w[teacher_index, :]
         new_weight = new_weight[np.newaxis, :]
-        student_w = np.concatenate((student_w, add_noise(new_weight, student_w)), axis=0)
-        student_b = np.append(student_b, add_noise(teacher_b[teacher_index], student_b))
+        student_w = np.concatenate(
+            (student_w, add_noise(new_weight, student_w)), axis=0)
+        student_b = np.append(
+            student_b, add_noise(
+                teacher_b[teacher_index], student_b))
 
     new_pre_layer = StubDense(layer.input_units, n_units2 + n_add)
     new_pre_layer.set_weights((student_w, student_b))
@@ -209,7 +197,7 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
             student_w[:, : start_dim * n_units_each_channel],
             add_noise(new_weight, student_w),
             student_w[
-                :, start_dim * n_units_each_channel : total_dim * n_units_each_channel
+                :, start_dim * n_units_each_channel: total_dim * n_units_each_channel
             ],
         ),
         axis=1,
@@ -225,7 +213,8 @@ def add_noise(weights, other_weights):
     '''
     w_range = np.ptp(other_weights.flatten())
     noise_range = NOISE_RATIO * w_range
-    noise = np.random.uniform(-noise_range / 2.0, noise_range / 2.0, weights.shape)
+    noise = np.random.uniform(-noise_range / 2.0,
+                              noise_range / 2.0, weights.shape)
     return np.add(noise, weights)
 
 
@@ -236,7 +225,8 @@ def init_dense_weight(layer):
     weight = np.eye(units)
     bias = np.zeros(units)
     layer.set_weights(
-        (add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+        (add_noise(weight, np.array([0, 1])),
+         add_noise(bias, np.array([0, 1])))
     )
 
 
@@ -256,7 +246,8 @@ def init_conv_weight(layer):
     bias = np.zeros(n_filters)
 
     layer.set_weights(
-        (add_noise(weight, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+        (add_noise(weight, np.array([0, 1])),
+         add_noise(bias, np.array([0, 1])))
     )
 
 

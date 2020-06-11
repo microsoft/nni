@@ -78,7 +78,7 @@ kubeflowConfig:
 
 ## 运行 Experiment
 
-以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist-tfv1` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: default

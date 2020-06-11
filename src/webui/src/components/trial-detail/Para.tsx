@@ -1,22 +1,22 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { filterByStatus } from '../../static/function';
-import { Row, Col, Select, Button, message } from 'antd';
-import { ParaObj, Dimobj, TableObj } from '../../static/interface';
-const Option = Select.Option;
-require('echarts/lib/chart/parallel');
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/title');
-require('echarts/lib/component/visualMap');
-require('../../static/style/para.scss');
-require('../../static/style/button.scss');
+import { EXPERIMENT } from '../../static/datamodel';
+import { Stack, PrimaryButton, Dropdown, IDropdownOption, } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
+import { ParaObj, Dimobj, TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import 'echarts/lib/chart/parallel';
+import 'echarts/lib/component/tooltip';
+import 'echarts/lib/component/title';
+import 'echarts/lib/component/visualMap';
+import '../../static/style/para.scss';
+import '../../static/style/button.scss';
 
 interface ParaState {
     // paraSource: Array<TableObj>;
     option: object;
     paraBack: ParaObj;
-    dimName: Array<string>;
-    swapAxisArr: Array<string>;
+    dimName: string[];
+    swapAxisArr: string[];
     percent: number;
     paraNodata: string;
     max: number; // graph color bar limit
@@ -25,6 +25,9 @@ interface ParaState {
     succeedRenderCount: number; // all succeed trials number
     clickCounts: number;
     isLoadConfirm: boolean;
+    // office-fabric-ui
+    selectedItem?: { key: string | number | undefined }; // percent Selector
+    swapyAxis?: string[]; // yAxis Selector
 }
 
 interface ParaProps {
@@ -32,11 +35,6 @@ interface ParaProps {
     expSearchSpace: string;
     whichGraph: string;
 }
-
-message.config({
-    top: 250,
-    duration: 2,
-});
 
 class Para extends React.Component<ParaProps, ParaState> {
 
@@ -69,20 +67,21 @@ class Para extends React.Component<ParaProps, ParaState> {
             sutrialCount: 10000000,
             succeedRenderCount: 10000000,
             clickCounts: 1,
-            isLoadConfirm: false
+            isLoadConfirm: false,
+            swapyAxis: []
         };
     }
 
     getParallelAxis =
         (
-            dimName: Array<string>, parallelAxis: Array<Dimobj>,
-            accPara: Array<number>, eachTrialParams: Array<string>,
+            dimName: string[], parallelAxis: Array<Dimobj>,
+            accPara: number[], eachTrialParams: string[],
             lengthofTrials: number
-        ) => {
+        ): void => {
             // get data for every lines. if dim is choice type, number -> toString()
             const paraYdata: number[][] = [];
             Object.keys(eachTrialParams).map(item => {
-                let temp: Array<number> = [];
+                const temp: number[] = [];
                 for (let i = 0; i < dimName.length; i++) {
                     if ('type' in parallelAxis[i]) {
                         temp.push(eachTrialParams[item][dimName[i]].toString());
@@ -100,7 +99,13 @@ class Para extends React.Component<ParaProps, ParaState> {
             // according acc to sort ydata // sort to find top percent dataset
             if (paraYdata.length !== 0) {
                 const len = paraYdata[0].length - 1;
-                paraYdata.sort((a, b) => b[len] - a[len]);
+                // show top trials
+                if (EXPERIMENT.optimizeMode === 'minimize') {
+                    paraYdata.sort((a, b) => a[len] - b[len]);
+                }
+                if (EXPERIMENT.optimizeMode === 'maximize') {
+                    paraYdata.sort((a, b) => b[len] - a[len]);
+                }
             }
             const paraData = {
                 parallelAxis: parallelAxis,
@@ -122,13 +127,13 @@ class Para extends React.Component<ParaProps, ParaState> {
             this.setState({ paraBack: paraData });
         }
 
-    hyperParaPic = (source: Array<TableObj>, searchSpace: string) => {
+    hyperParaPic = (source: Array<TableObj>, searchSpace: string): void => {
         // filter succeed trials [{}, {}, {}]
         const dataSource = source.filter(filterByStatus);
         const lenOfDataSource: number = dataSource.length;
-        const accPara: Array<number> = [];
+        const accPara: number[] = [];
         // specific value array
-        const eachTrialParams: Array<string> = [];
+        const eachTrialParams: string[] = [];
         // experiment interface search space obj
         const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
         // nest search space
@@ -147,6 +152,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         let i = 0;
         if (isNested === false) {
             for (i; i < dimName.length; i++) {
+                const data: string[] = [];
                 const searchKey = searchRange[dimName[i]];
                 switch (searchKey._type) {
                     case 'uniform':
@@ -167,7 +173,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                         });
                         break;
                     case 'choice':
-                        const data: Array<string> = [];
                         for (let j = 0; j < searchKey._value.length; j++) {
                             data.push(searchKey._value[j].toString());
                         }
@@ -220,10 +225,10 @@ class Para extends React.Component<ParaProps, ParaState> {
         } else {
             for (i; i < dimName.length; i++) {
                 const searchKey = searchRange[dimName[i]];
+                const data: string[] = [];
+                let j = 0;
                 switch (searchKey._type) {
                     case 'choice':
-                        const data: Array<string> = [];
-                        let j = 0;
                         for (j; j < searchKey._value.length; j++) {
                             const item = searchKey._value[j];
                             Object.keys(item).map(key => {
@@ -275,6 +280,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         parallelAxis.push({
             dim: i,
             name: 'default metric',
+            scale: true,
             nameTextStyle: {
                 fontWeight: 700
             }
@@ -291,7 +297,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             show: true
                         },
                         axisLabel: {
-                            formatter: function (value?: string) {
+                            formatter: function (value?: string): string | null {
                                 if (value !== undefined) {
                                     const length = value.length;
                                     if (length > 16) {
@@ -339,7 +345,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             if (isNested !== false) {
                 eachTrialParams.forEach(element => {
                     Object.keys(element).forEach(key => {
-                        let item = element[key];
+                        const item = element[key];
                         if (typeof item === 'object') {
                             Object.keys(item).forEach(index => {
                                 if (index !== '_name') {
@@ -362,16 +368,19 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     // get percent value number
-    percentNum = (value: string) => {
-
-        let vals = parseFloat(value);
-        this.setState({ percent: vals }, () => {
-            this.reInit();
-        });
+    // percentNum = (value: string) => {
+    percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        // percentNum = (event: React.FormEvent<HTMLDivElement>, item?: ISelectableOption) => {
+        if (item !== undefined) {
+            const vals = parseFloat(item !== undefined ? item.text : '');
+            this.setState({ percent: vals / 100, selectedItem: item }, () => {
+                this.reInit();
+            });
+        }
     }
 
     // deal with response data into pic data
-    getOption = (dataObj: ParaObj, lengthofTrials: number) => {
+    getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
         // dataObj [[y1], [y2]... [default metric]]
         const { max, min } = this.state;
         const parallelAxis = dataObj.parallelAxis;
@@ -406,7 +415,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                         show: true
                     },
                     axisLabel: {
-                        formatter: function (value: string) {
+                        formatter: function (value: string): string {
                             const length = value.length;
                             if (length > 16) {
                                 const temp = value.split('');
@@ -441,16 +450,32 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     // get swap parallel axis
-    getSwapArr = (value: Array<string>) => {
-        this.setState({ swapAxisArr: value });
+    getSwapArr = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        const newSelectedItems = [...this.state.swapyAxis];
+        if (item !== undefined) {
+            if (item.selected) {
+                // add the option if it's checked
+                newSelectedItems.push(item.key as string);
+            } else {
+                // remove the option if it's unchecked
+                const currIndex = newSelectedItems.indexOf(item.key as string);
+                if (currIndex > -1) {
+                    newSelectedItems.splice(currIndex, 1);
+                }
+            }
+            this.setState({
+                swapAxisArr: newSelectedItems,
+                swapyAxis: newSelectedItems
+            });
+        }
     }
 
-    reInit = () => {
+    reInit = (): void => {
         const { dataSource, expSearchSpace } = this.props;
         this.hyperParaPic(dataSource, expSearchSpace);
     }
 
-    swapReInit = () => {
+    swapReInit = (): void => {
         const { clickCounts, succeedRenderCount } = this.state;
         const val = clickCounts + 1;
         this.setState({ isLoadConfirm: true, clickCounts: val, });
@@ -508,12 +533,12 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
-    sortDimY = (a: Dimobj, b: Dimobj) => {
+    sortDimY = (a: Dimobj, b: Dimobj): number => {
         return a.dim - b.dim;
     }
 
     // deal with after swap data into pic
-    swapGraph = (paraBack: ParaObj, swapAxisArr: string[]) => {
+    swapGraph = (paraBack: ParaObj, swapAxisArr: string[]): void => {
         const paralDim = paraBack.parallelAxis;
         const paraData = paraBack.data;
         let temp: number;
@@ -562,91 +587,58 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.reInit();
     }
 
-    componentWillReceiveProps(nextProps: ParaProps) {
+    componentWillReceiveProps(nextProps: ParaProps): void {
         const { dataSource, expSearchSpace, whichGraph } = nextProps;
         if (whichGraph === '2') {
             this.hyperParaPic(dataSource, expSearchSpace);
         }
     }
 
-    shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState) {
-
-        const { whichGraph } = nextProps;
-        const beforeGraph = this.props.whichGraph;
-        if (whichGraph === '2') {
-            if (whichGraph !== beforeGraph) {
-                return true;
-            }
-
-            const { sutrialCount, clickCounts, succeedRenderCount } = nextState;
-            const beforeCount = this.state.sutrialCount;
-            const beforeClickCount = this.state.clickCounts;
-            const beforeRealRenderCount = this.state.succeedRenderCount;
-            if (sutrialCount !== beforeCount) {
-                return true;
-            }
-            if (succeedRenderCount !== beforeRealRenderCount) {
-                return true;
-            }
-
-            if (clickCounts !== beforeClickCount) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    render() {
-        const { option, paraNodata, dimName, isLoadConfirm } = this.state;
+    render(): React.ReactNode {
+        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
         return (
-            <Row className="parameter">
-                <Row>
-                    <Col span={6} />
-                    <Col span={18}>
-                        <Row className="meline">
-                            <span>Top</span>
-                            <Select
-                                style={{ width: '20%', marginRight: 10 }}
-                                placeholder="100%"
-                                optionFilterProp="children"
-                                onSelect={this.percentNum}
-                            >
-                                <Option value="0.2">20%</Option>
-                                <Option value="0.5">50%</Option>
-                                <Option value="0.8">80%</Option>
-                                <Option value="1">100%</Option>
-                            </Select>
-                            <Select
-                                style={{ width: '60%' }}
-                                mode="multiple"
-                                placeholder="Please select two items to swap"
-                                onChange={this.getSwapArr}
-                                maxTagCount={2}
-                            >
-                                {
-                                    dimName.map((key, item) => {
-                                        return (
-                                            <Option key={key} value={dimName[item]}>{dimName[item]}</Option>
-                                        );
-                                    })
-                                }
-                            </Select>
-                            <Button
-                                type="primary"
-                                className="changeBtu tableButton"
-                                onClick={this.swapReInit}
-                                disabled={isLoadConfirm}
-                            >
-                                Confirm
-                            </Button>
-                        </Row>
-                    </Col>
-                </Row>
-                <Row className="searcHyper">
+            <div className="parameter">
+                <Stack horizontal className="para-filter" horizontalAlign="end">
+                    <span className="para-filter-text">Top</span>
+                    <Dropdown
+                        selectedKey={selectedItem ? selectedItem.key : undefined}
+                        onChange={this.percentNum}
+                        placeholder="100%"
+                        defaultSelectedKeys={[0.2]}
+                        options={[
+                            { key: '0.2', text: '20%' },
+                            { key: '0.5', text: '50%' },
+                            { key: '0.8', text: '80%' },
+                            { key: '1', text: '100%' },
+                        ]}
+                        styles={{ dropdown: { width: 300 } }}
+                        className="para-filter-percent"
+                    />
+                    <Dropdown
+                        placeholder="Select options"
+                        selectedKeys={swapyAxis}
+                        onChange={this.getSwapArr}
+                        multiSelect
+                        options={
+                            dimName.map((key, item) => {
+                                return {
+                                    key: key, text: dimName[item]
+                                };
+                            })
+                        }
+                        styles={{ dropdown: { width: 300 } }}
+                    />
+                    <PrimaryButton
+                        text="Confirm"
+                        onClick={this.swapReInit}
+                        disabled={isLoadConfirm}
+                    />
+                </Stack>
+                <div className="searcHyper">
                     <ReactEcharts
                         option={option}
                         style={this.chartMulineStyle}
@@ -654,8 +646,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                         notMerge={true} // update now
                     />
                     <div className="noneData">{paraNodata}</div>
-                </Row>
-            </Row>
+                </div>
+            </div>
         );
     }
 }

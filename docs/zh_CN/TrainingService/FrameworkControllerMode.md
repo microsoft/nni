@@ -26,13 +26,13 @@
 
 ## 安装 FrameworkController
 
-参考[指南](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run)来在 Kubernetes 集群中配置 FrameworkController。NNI 通过 statefulset 模式来 支持 FrameworkController。
+参考[指南](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run)来在 Kubernetes 集群中配置 FrameworkController。NNI 通过 statefulset 模式来 支持 FrameworkController。 如果集群需要认证，则需要为 FrameworkController 创建服务账户并授予权限，然后将 FrameworkController 服务账户的名称设置到 NNI Experiment 配置中。 [参考文档](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset)
 
 ## 设计
 
 参考[Kubeflow 训练平台](KubeflowMode.md)的设计，FrameworkController 训练平台与其类似。
 
-## 样例
+## 示例
 
 FrameworkController 配置文件的格式如下：
 
@@ -44,7 +44,7 @@ maxExecDuration: 10h
 maxTrialNum: 100
 #可选项: local, remote, pai, kubeflow, frameworkcontroller
 trainingServicePlatform: frameworkcontroller
-searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
+searchSpacePath: ~/nni/examples/trials/mnist-tfv1/search_space.json
 #可选项: true, false
 useAnnotation: false
 tuner:
@@ -59,7 +59,7 @@ assessor:
     optimize_mode: maximize
   gpuNum: 0
 trial:
-  codeDir: ~/nni/examples/trials/mnist
+  codeDir: ~/nni/examples/trials/mnist-tfv1
   taskRoles:
     - name: worker
       taskNum: 1
@@ -83,6 +83,7 @@ frameworkcontrollerConfig:
 ```yaml
 frameworkcontrollerConfig:
   storage: azureStorage
+  serviceAccountName: {your_frameworkcontroller_service_account_name}
   keyVault:
     vaultName: {your_vault_name}
     name: {your_secert_name}
@@ -93,7 +94,7 @@ frameworkcontrollerConfig:
 
 注意：如果用 FrameworkController 模式运行，需要在 YAML 文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
 
-FrameworkController 模式的 Trial 配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。
+FrameworkController 模式的 Trial 配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 示例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。
 
 frameworkcontroller 模式中的 Trial 配置使用以下主键：
 

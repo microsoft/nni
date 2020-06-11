@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -58,9 +42,9 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 5,
         maxTrialNum: 3,
         trainingServicePlatform: 'local',
-        searchSpace: '{"x":1}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -68,7 +52,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -81,9 +65,9 @@ describe('Unit test for nnimanager', function () {
         maxExecDuration: 6,
         maxTrialNum: 2,
         trainingServicePlatform: 'local',
-        searchSpace: '{"y":2}',
+        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            className: 'TPE',
+            builtinTunerName: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
@@ -91,7 +75,7 @@ describe('Unit test for nnimanager', function () {
             gpuNum: 0
         },
         assessor: {
-            className: 'Medianstop',
+            builtinAssessorName: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -121,7 +105,7 @@ describe('Unit test for nnimanager', function () {
 
 
     it('test addCustomizedTrialJob', () => {
-        return nniManager.addCustomizedTrialJob('hyperParams').then(() => {
+        return nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
 
         }).catch((error) => {
             assert.fail(error);
@@ -214,7 +198,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile SEARCH_SPACE',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.searchSpace).to.be.equal('{"y":2}');
+                expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
             });
         }).catch((error) => {
             assert.fail(error);
@@ -273,7 +257,7 @@ describe('Unit test for nnimanager', function () {
 
     it('test addCustomizedTrialJob reach maxTrialNum', () => {
         // test currSubmittedTrialNum reach maxTrialNum
-        return nniManager.addCustomizedTrialJob('hyperParam').then(() => {
+        return nniManager.addCustomizedTrialJob('"hyperParam"').then(() => {
             nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
                 if (trialJobStatistics[0].trialJobStatus === 'WAITING')
                     expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);

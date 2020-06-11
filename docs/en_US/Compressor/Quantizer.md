@@ -1,18 +1,13 @@
 Quantizer on NNI Compressor
 ===
-
 ## Naive Quantizer
 
 We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
 
 ### Usage
-tensorflow
-```python
-nni.compressors.tensorflow.NaiveQuantizer(model_graph).compress()
-```
 pytorch
-```python
-nni.compressors.torch.NaiveQuantizer(model).compress()
+```python 
+model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -28,17 +23,23 @@ In [Quantization and Training of Neural Networks for Efficient Integer-Arithmeti
 ### Usage
 You can quantize your model to 8 bits with the code below before your training code.
 
-Tensorflow code
-```python
-from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(tf.get_default_graph(), config_list)
-quantizer.compress()
-```
 PyTorch code
 ```python
-from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
+from nni.compression.torch import QAT_Quantizer
+model = Mnist()
+
+config_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+    'op_types':['Conv2d', 'Linear']
+}, {
+    'quant_types': ['output'],
+    'quant_bits': 8,
+    'quant_start_step': 7000,
+    'op_types':['ReLU6']
+}]
 quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
@@ -46,9 +47,17 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-* **q_bits:** This is to specify the q_bits operations to be quantized to
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
 
+configuration needed by this algorithm :
 
+* **quant_start_step:** int
+
+disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
+state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
+
+### note
+batch normalization folding is currently not supported.
 ***
 
 ## DoReFa Quantizer
@@ -57,17 +66,14 @@ In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bit
 ### Usage
 To implement DoReFa Quantizer, you can add code below before your training code
 
-Tensorflow code
-```python
-from nni.compressors.tensorflow import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(tf.get_default_graph(), config_list)
-quantizer.compress()
-```
 PyTorch code
 ```python
-from nni.compressors.torch import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
+from nni.compression.torch import DoReFaQuantizer
+config_list = [{ 
+    'quant_types': ['weight'],
+    'quant_bits': 8, 
+    'op_types': 'default' 
+}]
 quantizer = DoReFaQuantizer(model, config_list)
 quantizer.compress()
 ```
@@ -75,4 +81,53 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-* **q_bits:** This is to specify the q_bits operations to be quantized to
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+
+configuration needed by this algorithm :
+
+
+## BNN Quantizer
+In [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), 
+
+>We introduce a method to train Binarized Neural Networks (BNNs) - neural networks with binary weights and activations at run-time. At training-time the binary weights and activations are used for computing the parameters gradients. During the forward pass, BNNs drastically reduce memory size and accesses, and replace most arithmetic operations with bit-wise operations, which is expected to substantially improve power-efficiency.
+
+
+### Usage
+
+PyTorch code
+```python
+from nni.compression.torch import BNNQuantizer
+model = VGG_Cifar10(num_classes=10)
+
+configure_list = [{
+    'quant_bits': 1,
+    'quant_types': ['weight'],
+    'op_types': ['Conv2d', 'Linear'],
+    'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
+}, {
+    'quant_bits': 1,
+    'quant_types': ['output'],
+    'op_types': ['Hardtanh'],
+    'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
+}]
+
+quantizer = BNNQuantizer(model, configure_list)
+model = quantizer.compress()
+```
+
+You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
+
+#### User configuration for BNN Quantizer
+common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+
+configuration needed by this algorithm :
+
+### Experiment
+We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
+
+| Model         | Accuracy  | 
+| ------------- | --------- | 
+| VGGNet        | 86.93%    |
+
+
+The experiments code can be found at [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 

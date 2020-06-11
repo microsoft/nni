@@ -1,23 +1,23 @@
 import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
+import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
+import { Trial } from '../../static/model/trial';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { Trial } from '../../static/model/trial';
-import { Row, Tabs, Button, message, Modal } from 'antd';
-import { MANAGER_IP } from '../../static/const';
+import MessageInfo from '../Modals/MessageInfo';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
-import JSONTree from 'react-json-tree';
-const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
     trialId: string;
 }
 
 interface OpenRowState {
-    isShowFormatModal: boolean;
-    formatStr: string;
+    typeInfo: string;
+    info: string;
+    isHidenInfo: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
@@ -25,120 +25,92 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     constructor(props: OpenRowProps) {
         super(props);
         this.state = {
-            isShowFormatModal: false,
-            formatStr: ''
+            typeInfo: '',
+            info: '',
+            isHidenInfo: true
         };
     }
 
-    showFormatModal = (trial: Trial) => {
+    hideMessageInfo = (): void => {
+        this.setState(() => ({ isHidenInfo: true }));
+    }
+
+    /**
+     * info: message content
+     * typeInfo: message type: success | error...
+     * continuousTime: show time, 2000ms 
+     */
+    getCopyStatus = (info: string, typeInfo: string): void => {
+        this.setState(() => ({ info, typeInfo, isHidenInfo: false }));
+        setTimeout(this.hideMessageInfo, 2000);
+    }
+
+    copyParams = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(trial.info.hyperParameters, null, 4);
-        // open modal with format string
-        this.setState({ isShowFormatModal: true, formatStr: params });
-    }
-
-    hideFormatModal = () => {
-        // close modal, destroy state format string data
-        this.setState({ isShowFormatModal: false, formatStr: '' });
-    }
-
-    copyParams = () => {
-        // json format
-        const { formatStr } = this.state;
-        if (copy(formatStr)) {
-            message.destroy();
-            message.success('Success copy parameters to clipboard in form of python dict !', 3);
+        const params = JSON.stringify(trial.description.parameters, null, 4);
+        if (copy.default(params)) {
+            this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
         } else {
-            message.destroy();
-            message.error('Failed !', 2);
+            this.getCopyStatus('Failed !', 'error');
         }
-        this.hideFormatModal();
     }
 
-    render() {
-        const { isShowFormatModal, formatStr } = this.state;
+    render(): React.ReactNode {
+        const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
-        const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
-        const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
-            <Row className="openRowContent hyperpar">
-                <Tabs tabPosition="left" className="card">
-                    <TabPane tab="Parameters" key="1">
-                        {
-                            EXPERIMENT.multiPhase
-                                ?
-                                <Row className="link">
-                                    Trails for multiphase experiment will return a set of parameters,
-                                    we are listing the latest parameter in webportal.
-                                    <br />
-                                    For the entire parameter set, please refer to the following "
-                                    <a href={trialLink} target="_blank">{trialLink}</a>".
-                                    <br />
-                                    Current Phase: {multiProgress}.
-                                </Row>
-                                :
-                                <div />
-                        }
-                        {
-                            trial.info.hyperParameters !== undefined
-                                ?
-                                <Row id="description">
-                                    <Row className="bgHyper">
-                                        <JSONTree
-                                            hideRoot={true}
-                                            shouldExpandNode={() => true}  // default expandNode
-                                            getItemString={() => (<span />)}  // remove the {} items
-                                            data={trial.description.parameters}
-                                        />
-                                    </Row>
-                                    <Row className="copy">
-                                        <Button
-                                            onClick={this.showFormatModal.bind(this, trial)}
-                                        >
-                                            Copy as json
-                                        </Button>
-                                    </Row>
-                                </Row>
-                                :
-                                <Row className="logpath">
-                                    <span className="logName">Error: </span>
-                                    <span className="error">'This trial's parameters are not available.'</span>
-                                </Row>
-                        }
-                    </TabPane>
-                    <TabPane tab="Log" key="2">
-                        {
-                            // FIXME: this should not be handled in web UI side
-                            EXPERIMENT.trainingServicePlatform !== 'local'
-                                ?
-                                <PaiTrialLog
-                                    logStr={logPathRow}
-                                    id={trialId}
-                                    logCollection={EXPERIMENT.logCollectionEnabled}
-                                />
-                                :
-                                <TrialLog logStr={logPathRow} id={trialId} />
-                        }
-                    </TabPane>
-                </Tabs>
-                <Modal
-                    title="Format"
-                    okText="Copy"
-                    centered={true}
-                    visible={isShowFormatModal}
-                    onCancel={this.hideFormatModal}
-                    maskClosable={false} // click mongolian layer don't close modal
-                    onOk={this.copyParams}
-                    destroyOnClose={true}
-                    width="60%"
-                    className="format"
-                >
-                    {/* write string in pre to show format string */}
-                    <pre className="formatStr">{formatStr}</pre>
-                </Modal>
-            </Row >
+            <Stack className="openRow">
+                <Stack className="openRowContent">
+                    <Pivot>
+                        <PivotItem headerText="Parameters" key="1" itemIcon="TestParameter">
+                            {
+                                trial.info.hyperParameters !== undefined
+                                    ?
+                                    <Stack id="description">
+                                        <Stack className="bgHyper">
+                                            <JSONTree
+                                                hideRoot={true}
+                                                shouldExpandNode={(): boolean => true}  // default expandNode
+                                                getItemString={(): null => null}  // remove the {} items
+                                                data={trial.description.parameters}
+                                            />
+                                        </Stack>
+                                        <Stack horizontal className="copy">
+                                            <PrimaryButton
+                                                onClick={this.copyParams.bind(this, trial)}
+                                                text="Copy as json"
+                                                styles={{ root: { width: 128, marginRight: 10 } }}
+                                            />
+                                            {/* copy success | failed message info */}
+                                            {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
+                                        </Stack>
+                                    </Stack>
+                                    :
+                                    <Stack className="logpath">
+                                        <span className="logName">Error: </span>
+                                        <span className="error">{`This trial's parameters are not available.'`}</span>
+                                    </Stack>
+                            }
+                        </PivotItem>
+                        <PivotItem headerText="Log" key="2" itemIcon="M365InvoicingLogo">
+                            {
+                                // FIXME: this should not be handled in web UI side
+                                EXPERIMENT.trainingServicePlatform !== 'local'
+                                    ?
+                                    <PaiTrialLog
+                                        logStr={logPathRow}
+                                        id={trialId}
+                                        logCollection={EXPERIMENT.logCollectionEnabled}
+                                    />
+                                    :
+                                    <TrialLog logStr={logPathRow} id={trialId} />
+                            }
+                        </PivotItem>
+                    </Pivot>
+                </Stack >
+            </Stack>
         );
     }
 }

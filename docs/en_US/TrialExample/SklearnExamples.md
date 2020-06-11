@@ -20,7 +20,7 @@ nnictl create --config ./config.yml
 
 This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes.
 
-In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "keral", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
+In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "kernel", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
 
 ### 2.2 regression
 
@@ -64,7 +64,7 @@ It is easy to use NNI in your scikit-learn code, there are only a few steps.
   ```json
   {
     "C": {"_type":"uniform","_value":[0.1, 1]},
-    "keral": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
+    "kernel": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
     "degree": {"_type":"choice","_value":[1, 2, 3, 4]},
     "gamma": {"_type":"uniform","_value":[0.01, 0.1]},
     "coef0 ": {"_type":"uniform","_value":[0.01, 0.1]}
@@ -76,7 +76,7 @@ It is easy to use NNI in your scikit-learn code, there are only a few steps.
   ```python
   params = {
         'C': 1.0,
-        'keral': 'linear',
+        'kernel': 'linear',
         'degree': 3,
         'gamma': 0.01,
         'coef0': 0.01

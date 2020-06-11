@@ -1,0 +1,20 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 3m
+maxTrialNum: 1
+trialConcurrency: 1
+searchSpacePath: ./search_space.json
+
+tuner:
+  builtinTunerName: Random
+
+trial:
+  codeDir: .
+  command: python3 trial.py --dict_metrics
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

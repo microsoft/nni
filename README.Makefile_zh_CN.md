@@ -69,7 +69,7 @@ Python 包使用 setuptools 安装，所以安装路径依赖于 Python 配置�
 | ------------------ | ------------------------------------------ |
 | `easy-install`     | 安装依赖项，生成，安装 NNI，并编辑 `~/.bashrc`            |
 | `dev-easy-install` | 安装依赖项，生成，将 NNI 作为符号链接来安装，并编辑 `~/.bashrc`   |
-| `install`          | 安装 Python 包，Node.js 模块，NNI 脚本和样例           |
+| `install`          | 安装 Python 包，Node.js 模块，NNI 脚本和示例           |
 | `dev-install`      | 将 Python 和 Node.js 模块作为符号链接安装，然后安装 scripts |
 | `pip-install`      | 安装依赖项，生成，安装 NNI，但不安装 Python 包              |
 

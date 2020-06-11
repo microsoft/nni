@@ -1,9 +1,13 @@
 import * as React from 'react';
-import { Row, Button, Switch } from 'antd';
-import { TooltipForIntermediate, TableObj, Intermedia } from '../../static/interface';
+import { Stack, PrimaryButton, Toggle, IStackTokens } from 'office-ui-fabric-react';
+import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/title');
+import 'echarts/lib/component/tooltip';
+import 'echarts/lib/component/title';
+
+const stackTokens: IStackTokens = {
+    childrenGap: 20
+};
 
 interface IntermediateState {
     detailSource: Array<TableObj>;
@@ -11,9 +15,11 @@ interface IntermediateState {
     filterSource: Array<TableObj>;
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
-    isFilter: boolean;
+    isFilter?: boolean | undefined;
     length: number;
     clickCounts: number; // user filter intermediate click confirm btn's counts
+    startMediaY: number;
+    endMediaY: number;
 }
 
 interface IntermediateProps {
@@ -24,9 +30,9 @@ interface IntermediateProps {
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
 
     static intervalMediate = 1;
-    public pointInput: HTMLInputElement | null;
-    public minValInput: HTMLInputElement | null;
-    public maxValInput: HTMLInputElement | null;
+    public pointInput!: HTMLInputElement | null;
+    public minValInput!: HTMLInputElement | null;
+    public maxValInput!: HTMLInputElement | null;
 
     constructor(props: IntermediateProps) {
         super(props);
@@ -38,16 +44,19 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             isLoadconfirmBtn: false,
             isFilter: false,
             length: 100000,
-            clickCounts: 0
+            clickCounts: 0,
+            startMediaY: 0,
+            endMediaY: 100
         };
     }
 
-    drawIntermediate = (source: Array<TableObj>) => {
+    drawIntermediate = (source: Array<TableObj>): void => {
         if (source.length > 0) {
             this.setState({
                 length: source.length,
                 detailSource: source
             });
+            const { startMediaY, endMediaY } = this.state;
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -60,10 +69,10 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
             });
             // find max intermediate number
             trialIntermediate.sort((a, b) => { return (b.data.length - a.data.length); });
-            const legend: Array<string> = [];
+            const legend: string[] = [];
             // max length
             const length = trialIntermediate[0].data.length;
-            const xAxis: Array<number> = [];
+            const xAxis: number[] = [];
             Object.keys(trialIntermediate).map(item => {
                 const temp = trialIntermediate[item];
                 legend.push(temp.name);
@@ -75,14 +84,14 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 tooltip: {
                     trigger: 'item',
                     enterable: true,
-                    position: function (point: Array<number>, data: TooltipForIntermediate) {
+                    position: function (point: number[], data: TooltipForIntermediate): number[] {
                         if (data.dataIndex < length / 2) {
                             return [point[0], 80];
                         } else {
                             return [point[0] - 300, 80];
                         }
                     },
-                    formatter: function (data: TooltipForIntermediate) {
+                    formatter: function (data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
                         let obj = {};
                         const temp = trialIntermediate.find(key => key.name === trialId);
@@ -111,8 +120,19 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Metric'
+                    name: 'Metric',
+                    scale: true,
                 },
+                dataZoom: [
+                    {
+                        id: 'dataZoomY',
+                        type: 'inside',
+                        yAxisIndex: [0],
+                        filterMode: 'empty',
+                        start: startMediaY,
+                        end: endMediaY
+                    }
+                ],
                 series: trialIntermediate
             };
             this.setState({
@@ -139,7 +159,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     }
 
     // confirm btn function [filter data]
-    filterLines = () => {
+    filterLines = (): void => {
         const filterSource: Array<TableObj> = [];
         this.setState({ isLoadconfirmBtn: true }, () => {
             const { source } = this.props;
@@ -180,19 +200,19 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         });
     }
 
-    switchTurn = (checked: boolean) => {
+    switchTurn = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         this.setState({ isFilter: checked });
         if (checked === false) {
             this.drawIntermediate(this.props.source);
         }
     }
 
-    componentDidMount() {
+    componentDidMount(): void {
         const { source } = this.props;
         this.drawIntermediate(source);
     }
 
-    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState) {
+    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState): void {
         const { isFilter, filterSource } = nextState;
         const { whichGraph, source } = nextProps;
 
@@ -211,106 +231,70 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         }
     }
 
-    shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
-        const { whichGraph, source } = nextProps;
-        const beforeGraph = this.props.whichGraph;
-        if (whichGraph === '4') {
-            const { isFilter, length, clickCounts } = nextState;
-            const beforeLength = this.state.length;
-            const beforeSource = this.props.source;
-            const beforeClickCounts = this.state.clickCounts;
-
-            if (isFilter !== this.state.isFilter) {
-                return true;
-            }
-
-            if (clickCounts !== beforeClickCounts) {
-                return true;
-            }
-
-            if (isFilter === false) {
-                if (whichGraph !== beforeGraph) {
-                    return true;
-                }
-                if (length !== beforeLength) {
-                    return true;
-                }
-                if (beforeSource.length !== source.length) {
-                    return true;
-                }
-                if (beforeSource[beforeSource.length - 1] !== undefined) {
-                    if (source[source.length - 1].description.intermediate.length !==
-                        beforeSource[beforeSource.length - 1].description.intermediate.length) {
-                        return true;
-                    }
-                    if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                        return true;
-                    }
-                    if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    render() {
+    render(): React.ReactNode {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
+        const IntermediateEvents = { 'dataZoom': this.intermediateDataZoom };
+
         return (
             <div>
                 {/* style in para.scss */}
-                <Row className="meline intermediate">
+                <Stack horizontal horizontalAlign="end" tokens={stackTokens} className="meline intermediate">
                     {
                         isFilter
                             ?
-                            <span style={{marginRight: 15}}>
+                            <div>
                                 <span className="filter-x"># Intermediate result</span>
                                 <input
                                     // placeholder="point"
-                                    ref={input => this.pointInput = input}
+                                    ref={(input): any => this.pointInput = input}
                                     className="strange"
                                 />
                                 <span>Metric range</span>
                                 <input
                                     // placeholder="range"
-                                    ref={input => this.minValInput = input}
+                                    ref={(input): any => this.minValInput = input}
                                 />
                                 <span className="hyphen">-</span>
                                 <input
                                     // placeholder="range"
-                                    ref={input => this.maxValInput = input}
+                                    ref={(input): any => this.maxValInput = input}
                                 />
-                                <Button
-                                    type="primary"
-                                    className="changeBtu tableButton"
+                                <PrimaryButton
+                                    text="Confirm"
                                     onClick={this.filterLines}
                                     disabled={isLoadconfirmBtn}
-                                >
-                                    Confirm
-                                </Button>
-                            </span>
+                                />
+                            </div>
                             :
                             null
                     }
                     {/* filter message */}
-                    <span>Filter</span>
-                    <Switch
-                        defaultChecked={false}
-                        onChange={this.switchTurn}
-                    />
-                </Row>
-                <Row className="intermediate-graph">
+                    <Stack horizontal className="filter-toggle">
+                        <span>Filter</span>
+                        <Toggle onChange={this.switchTurn} />
+                    </Stack>
+
+                </Stack>
+                <div className="intermediate-graph">
                     <ReactEcharts
                         option={interSource}
-                        style={{ width: '100%', height: 418, margin: '0 auto' }}
+                        style={{ width: '100%', height: 400, margin: '0 auto' }}
                         notMerge={true} // update now
+                        onEvents={IntermediateEvents}
                     />
-                    <div className="yAxis"># Intermediate result</div>
-                </Row>
+                    <div className="xAxis"># Intermediate result</div>
+                </div>
             </div>
         );
+    }
+
+    private intermediateDataZoom = (e: EventMap): void => {
+        if (e.batch !== undefined) {
+            this.setState(() => ({
+                startMediaY: (e.batch[0].start !== null ? e.batch[0].start : 0),
+                endMediaY: (e.batch[0].end !== null ? e.batch[0].end : 100)
+            }));
+        }
     }
 }
 

@@ -1,0 +1,1 @@
+from .compressor import ModelSpeedup

@@ -2,14 +2,15 @@
 
 ## Installation
 
-We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
-#### Linux and MacOS
+We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+
+**Linux and macOS**
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-#### Windows
+**Windows**
 
 ```bash
     python -m pip install --upgrade nni
@@ -17,15 +18,15 @@ We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, Mac
 
 Note:
 
-* For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
-* For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
+* For Linux and macOS, `--user` can be added if you want to install NNI in your home directory; this does not require any special privileges.
+* If there is an error like `Segmentation fault`, please refer to the [FAQ](FAQ.md).
+* For the `system requirements` of NNI, please refer to [Install NNI on Linux&Mac](InstallationLinux.md) or [Windows](InstallationWin.md).
 
 ## "Hello World" example on MNIST
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, tuning hyperparameters. Now, we show how to use NNI to help you find the optimal hyperparameters.
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
 
-Here is an example script to train a CNN on MNIST dataset **without NNI**:
+Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
 ```python
 def run_trial(params):
@@ -47,13 +48,13 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
+Note: If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
 
-The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
+The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
-NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
+NNI is born to help the user do tuning jobs; the NNI working process is presented below:
 
-```
+```text
 input: search space, trial code, config file
 output: one optimal hyperparameter configuration
 
@@ -66,11 +67,11 @@ output: one optimal hyperparameter configuration
 7: return hyperparameter value with best final result
 ```
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes base on your code:
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
 
-**Three things required to do when using NNI**
+**Three steps to start an experiment**
 
-**Step 1**: Give a `Search Space` file in JSON, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
+**Step 1**: Give a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -84,9 +85,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
+*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
-**Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
+**Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 ```diff
 + import nni
@@ -100,7 +101,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       with tf.Session() as sess:
           mnist_network.train(sess, mnist)
           test_acc = mnist_network.evaluate(mnist)
-+         nni.report_final_result(acc)
++         nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
 -     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -109,9 +110,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
+*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
-**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max duration arguments.
+**Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
 ```yaml
 authorName: default
@@ -132,30 +133,33 @@ trial:
   gpuNum: 0
 ```
 
-Note, **for Windows, you need to change trial command `python3` to `python`**
+Note, **for Windows, you need to change the trial command from `python3` to `python`**.
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
+*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
+All the cod above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-#### Linux and MacOS   
-Run the **config.yml** file from your command line to start MNIST experiment.
+**Linux and macOS**
 
-```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
-```
-#### Windows   
-Run the **config_windows.yml** file from your command line to start MNIST experiment.
-
-**Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+Run the **config.yml** file from your command line to start an MNIST experiment.
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist\config_windows.yml
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
+**Windows**
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
+Run the **config_windows.yml** file from your command line to start an MNIST experiment.
+
+Note: if you're using NNI on Windows, you need to change `python3` to `python` in the config.yml file or use the config_windows.yml file to start the experiment.
+
+```bash
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+```
+
+Note: `nnictl` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
+
+Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
 
 ```text
 INFO: Starting restful server...
@@ -183,53 +187,53 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-If you prepare `trial`, `search space` and `config` according to the above steps and successfully create a NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameters sets for each trial according to the requirements you set. You can clearly sees its progress by NNI WebUI.
+If you prepared `trial`, `search space`, and `config` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the requirements you set. You can clearly see its progress through the NNI WebUI.
 
 ## WebUI
 
-After you start your experiment in NNI successfully, you can find a message in the command-line interface to tell you `Web UI url` like this:
+After you start your experiment in NNI successfully, you can find a message in the command-line interface that tells you the `Web UI url` like this:
 
 ```text
 The Web UI urls are: [Your IP]:8080
 ```
 
-Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. If you can not open the WebUI link in your terminal, you can refer to [FAQ](FAQ.md).
+Open the `Web UI url` (Here it's: `[Your IP]:8080`) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the [FAQ](FAQ.md).
 
-#### View summary page
+### View summary page
 
-Click the tab "Overview".
+Click the "Overview" tab.
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
+Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
 
 ![](../../img/QuickStart1.png)
 
-Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
+The top 10 trials will be listed on the Overview page. You can browse all the trials on the "Trials Detail" page.
 
 ![](../../img/QuickStart2.png)
 
-#### View trials detail page
+### View trials detail page
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+Click the "Default Metric" tab to see the point graph of all trials. Hover to see specific default metrics and search space messages.
 
 ![](../../img/QuickStart3.png)
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+Click the "Hyper Parameter" tab to see the parallel graph.
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
+* You can select the percentage to see the top trials.
+* Choose two axis to swap their positions.
 
 ![](../../img/QuickStart4.png)
 
-Click the tab "Trial Duration" to see the bar graph.
+Click the "Trial Duration" tab to see the bar graph.
 
 ![](../../img/QuickStart5.png)
 
-Below is the status of the all trials. Specifically:
+Below is the status of all trials. Specifically:
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
+* Trial detail: trial's id, duration, start time, end time, status, accuracy, and search space file.
 * If you run on the OpenPAI platform, you can also see the hdfsLogPath.
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial.
+* Kill: you can kill a job that has the `Running` status.
+* Support: Used to search for a specific trial.
 
 ![](../../img/QuickStart6.png)
 

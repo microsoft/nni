@@ -1,40 +1,28 @@
-# ============================================================================================================================== #
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ============================================================================================================================== #
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import argparse
-import os
-from subprocess import Popen
-import time
-import logging
-import shlex
-import re
-import sys
+import ctypes
 import json
+import logging
+import os
+import re
+import shlex
+import sys
 import threading
-from pyhdfs import HdfsClient
-import pkg_resources
-from .rest_utils import rest_post, rest_get
-from .url_utils import gen_send_version_url, gen_parameter_meta_url
+import time
+from subprocess import Popen
 
-from .constants import LOG_DIR, NNI_PLATFORM, MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
-from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal, copyHdfsFileToLocal
-from .log_utils import LogType, nni_log, RemoteLogger, StdOutputType
+import pkg_resources
+from pyhdfs import HdfsClient
+
+from .constants import (LOG_DIR, MULTI_PHASE, NNI_EXP_ID, NNI_PLATFORM,
+                        NNI_SYS_DIR, NNI_TRIAL_JOB_ID)
+from .hdfsClientUtility import (copyDirectoryToHdfs, copyHdfsDirectoryToLocal,
+                                copyHdfsFileToLocal)
+from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
+from .rest_utils import rest_get, rest_post
+from .url_utils import gen_parameter_meta_url, gen_send_version_url
 
 logger = logging.getLogger('trial_keeper')
 regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,1}).*')
@@ -96,6 +84,10 @@ def main_loop(args):
     if hdfs_client is not None:
         copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
 
+    if args.job_id_file:
+        with open(args.job_id_file, 'w') as job_file:
+            job_file.write("%d" % os.getpid())
+
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
     process = Popen(args.trial_command, shell=True, stdout=log_pipe_stdout, stderr=log_pipe_stdout)
@@ -107,6 +99,9 @@ def main_loop(args):
         retCode = process.poll()
         # child worker process exits and all stdout data is read
         if retCode is not None and log_pipe_stdout.set_process_exit() and log_pipe_stdout.is_read_completed == True:
+            # In Windows, the retCode -1 is 4294967295. It's larger than c_long, and raise OverflowError.
+            # So covert it to int32.
+            retCode = ctypes.c_long(retCode).value
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
             if hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
@@ -234,12 +229,13 @@ if __name__ == '__main__':
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     PARSER.add_argument('--nni_manager_version', type=str, help='the nni version transmitted from nniManager')
     PARSER.add_argument('--log_collection', type=str, help='set the way to collect log in trialkeeper')
+    PARSER.add_argument('--job_id_file', type=str, help='set job id file for operating and monitoring job.')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
     check_version(args)
     try:
-        if NNI_PLATFORM == 'pai' and is_multi_phase():
+        if NNI_PLATFORM == 'paiYarn' and is_multi_phase():
             fetch_parameter_file(args)
         main_loop(args)
     except SystemExit as se:

@@ -1,0 +1,27 @@
+authorName: NNI Example
+experimentName: MNIST TF v2.x with assessor
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 50
+#choice: local, remote
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+assessor:
+  #choice: Medianstop, Curvefitting
+  builtinAssessorName: Curvefitting
+  classArgs:
+    epoch_num: 20
+    threshold: 0.9
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0

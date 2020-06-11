@@ -1,3 +1,7 @@
-from .compressor import LayerInfo, Compressor, Pruner, Quantizer
-from .builtin_pruners import *
-from .builtin_quantizers import *
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+from .pruning import *
+from .quantization import *
+from .compressor import Compressor, Pruner, Quantizer
+from .speedup import ModelSpeedup

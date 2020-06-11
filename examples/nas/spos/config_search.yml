@@ -1,0 +1,16 @@
+authorName: unknown
+experimentName: SPOS Search
+trialConcurrency: 4
+maxExecDuration: 7d
+maxTrialNum: 99999
+trainingServicePlatform: local
+searchSpacePath: nni_auto_gen_search_space.json
+useAnnotation: false
+tuner:
+  codeDir: .
+  classFileName: tuner.py
+  className: EvolutionWithFlops
+trial:
+  command: python tester.py --spos-prep
+  codeDir: .
+  gpuNum: 1

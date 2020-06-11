@@ -1,0 +1,42 @@
+{
+    "env": {
+        "browser": true,
+        "node": true,
+        "es6": true
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "rules": {
+        "@typescript-eslint/no-explicit-any": 0,
+        "@typescript-eslint/no-namespace": 0,
+        "@typescript-eslint/consistent-type-assertions": 0,
+        "@typescript-eslint/no-inferrable-types": 0,
+        "no-inner-declarations": 0,
+        "@typescript-eslint/explicit-function-return-type": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ],
+        "@typescript-eslint/no-var-requires": 0
+    },
+    "ignorePatterns": [
+        "node_modules/",
+        "test/",
+        "dist/",
+        "types/",
+        "**/*.js"
+    ]
+}

@@ -1,23 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import argparse
 import os
@@ -28,7 +10,8 @@ from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
-                          monitor_experiment, export_trials_data, trial_codegen, webui_url, get_config, log_stdout, log_stderr
+                          monitor_experiment, export_trials_data, trial_codegen, webui_url, \
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
 from .package_management import package_install, package_show
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -56,11 +39,19 @@ def parse_args():
     # create subparsers for args with sub values
     subparsers = parser.add_subparsers()
 
+    # parse the command of auto generating search space
+    parser_start = subparsers.add_parser('ss_gen', help='automatically generate search space file from trial code')
+    parser_start.add_argument('--trial_command', '-t', required=True, dest='trial_command', help='the command for running trial code')
+    parser_start.add_argument('--trial_dir', '-d', default='./', dest='trial_dir', help='the directory for running the command')
+    parser_start.add_argument('--file', '-f', default='nni_auto_gen_search_space.json', dest='file', help='the path of search space file')
+    parser_start.set_defaults(func=search_space_auto_gen)
+
     # parse start command
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
@@ -68,13 +59,14 @@ def parse_args():
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
-    parser_resume = subparsers.add_parser('view', help='view a stopped experiment')
-    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to view')
-    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_resume.set_defaults(func=view_experiment)
+    parser_view = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_view.set_defaults(func=view_experiment)
 
     # parse update command
     parser_updater = subparsers.add_parser('update', help='update the experiment')
@@ -166,6 +158,10 @@ def parse_args():
     parser_webui_url = parser_webui_subparsers.add_parser('url', help='show the url of web ui')
     parser_webui_url.add_argument('id', nargs='?', help='the id of experiment')
     parser_webui_url.set_defaults(func=webui_url)
+    parser_webui_nas = parser_webui_subparsers.add_parser('nas', help='show nas ui')
+    parser_webui_nas.add_argument('--port', default=6060, type=int, help='port of nas ui')
+    parser_webui_nas.add_argument('--logdir', default='.', type=str, help='the logdir where nas ui will read data')
+    parser_webui_nas.set_defaults(func=webui_nas)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')

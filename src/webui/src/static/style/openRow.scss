@@ -2,58 +2,39 @@
 $color: #0071bc;
 /* bg light grey */
 $bgColor: #f2f2f2;
-.openRowContent{
-    .ant-tabs-vertical.ant-tabs-left .ant-tabs-bar .ant-tabs-tab{
-        text-align: left !important;
-    }
-}
-.openRowContent{
-    .ant-tabs-nav .ant-tabs-tab:hover{
-        color: $color;
-    }
-}
-.openRowContent{
-    margin-top: 15px;
+.openRow{
+    width: 100%;
     background-color: $bgColor;
-    .card{
-        .ant-tabs-vertical .ant-tabs-bar .ant-tabs-tab{
-            margin: 0;
-            padding: 8px 12px;
-        }
-        .ant-tabs-nav .ant-tabs-tab-active{
-            color: $color;
-            font-weight: 600;
-            background: #dedede;
-            border-left: 3px solid ;
-        }
-        .ant-tabs-tabpane{
-            background: #f2f2f2;
-            padding: 12px 12px 12px 0;
-        }
+    margin-bottom: 10px;
+
+    &Content{
+        width: 91%;
+        margin: 0 auto;
+        min-height: 150px;
+        padding-bottom: 10px;
     }
 }
+
 .trialLog{
     white-space: normal;
     color: #212121;
 }
 #trialLogContent{
-    .ant-input-disabled{
-        color: #212121;
-        background-color: #fff;
-        cursor: pointer;
-        border: none;
-    }
+
     .logcontent{
         height: 100%;
     }
 }
 
 #description{
-    .bgHyper{
-        background-color: #fff;
-        margin-bottom: 12px;
+    padding: 0 10px;
+    .bgHyper ul{
+        background-color: #fff !important;
+        padding: 3px 0 5px 0 !important;
+        font-size: 14px;
     }
     .copy{
+        margin-top: 3px;
         Button{
             background-color: #ccc;
             color: #191919;

@@ -1,8 +1,8 @@
 # 在 NNI 中用网络形态算法来进行自动模型结构搜索
 
-Network Morphism （网络形态）是内置的 Tuner，它使用了网络形态技术来搜索和评估新的网络结构。 该样例展示了如何使用它来为深度学习找到好的模型架构。
+Network Morphism （网络形态）是内置的 Tuner，它使用了网络形态技术来搜索和评估新的网络结构。 该示例展示了如何使用它来为深度学习找到好的模型架构。
 
-## 如何运行此样例？
+## 如何运行此示例？
 
 ### 1. 训练框架支持
 
@@ -58,7 +58,7 @@ trial:
 
 ### 4. 在代码中调用 "json\_to\_graph()" 函数
 
-修改代码来调用 "json\_to\_graph()" 函数来从收到的 JSON 字符串生成一个 Pytorch 或 Keras 模型。 简单样例：
+修改代码来调用 "json\_to\_graph()" 函数来从收到的 JSON 字符串生成一个 Pytorch 或 Keras 模型。 简单示例：
 
 ```python
 import nni
@@ -91,18 +91,18 @@ nni.report_final_result(best_acc)
 nnictl create --config config.yml
 ```
 
-## Trial 样例
+## Trial 示例
 
 下面的代码可在 `examples/trials/network_morphism/` 中找到。 可参考此代码来更新自己的任务。 希望它对你有用。
 
 ### FashionMNIST
 
-`Fashion-MNIST` 是来自 [Zalando](https://jobs.zalando.com/tech/) 文章的图片 — 有 60,000 个样例的训练集和 10,000 个样例的测试集。 每个样例是 28x28 的灰度图，分为 10 个类别。 由于 MNIST 数据集过于简单，该数据集现在开始被广泛使用，用来替换 MNIST 作为基准数据集。
+`Fashion-MNIST` 是来自 [Zalando](https://jobs.zalando.com/tech/) 文章的图片 — 有 60,000 个示例的训练集和 10,000 个示例的测试集。 每个示例是 28x28 的灰度图，分为 10 个类别。 由于 MNIST 数据集过于简单，该数据集现在开始被广泛使用，用来替换 MNIST 作为基准数据集。
 
-这里有两个样例，[FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) 和 [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py)。 注意，在 `config.yml` 中，需要为此数据集修改 `input_width` 为 28，以及 `input_channel` 为 1。
+这里有两个示例，[FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) 和 [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py)。 注意，在 `config.yml` 中，需要为此数据集修改 `input_width` 为 28，以及 `input_channel` 为 1。
 
 ### Cifar10
 
 `CIFAR-10` 数据集 [Canadian Institute For Advanced Research](https://www.cifar.ca/) 是广泛用于机器学习和视觉算法训练的数据集。 它是机器学习领域最广泛使用的数据集之一。 CIFAR-10 数据集包含了 60,000 张 32x32 的彩色图片，分为 10 类。
 
-这里有两个样例，[cifar10-keras.py](./cifar10/cifar10_keras.py) 和 [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py)。 在 `config.yml` 中，该数据集 `input_width` 的值是 32，并且 `input_channel` 是 3。
+这里有两个示例，[cifar10-keras.py](./cifar10/cifar10_keras.py) 和 [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py)。 在 `config.yml` 中，该数据集 `input_width` 的值是 32，并且 `input_channel` 是 3。

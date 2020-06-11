@@ -99,7 +99,7 @@ def prepare(args):
 
 
 # Training
-def train(epoch):
+def train(epoch, batches=-1):
     global trainloader
     global testloader
     global net
@@ -128,6 +128,9 @@ def train(epoch):
 
         progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
+        if batches > 0 and (batch_idx+1) >= batches:
+            return
 
 def test(epoch):
     global best_acc
@@ -176,6 +179,10 @@ def test(epoch):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=200)
+
+    # Maximum mini-batches per epoch, for code testing purpose
+    parser.add_argument("--batches", type=int, default=-1)
+
     args, _ = parser.parse_known_args()
 
     try:
@@ -187,7 +194,7 @@ if __name__ == '__main__':
         acc = 0.0
         best_acc = 0.0
         for epoch in range(start_epoch, start_epoch+args.epochs):
-            train(epoch)
+            train(epoch, args.batches)
             acc, best_acc = test(epoch)
             nni.report_intermediate_result(acc)
 

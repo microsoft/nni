@@ -10,7 +10,7 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
         super(props);
     }
 
-    render() {
+    render(): React.ReactNode {
         return (
             <div>{TRIALS.getTrial(this.props.trialId).formatLatestAccuracy()}</div>
         );

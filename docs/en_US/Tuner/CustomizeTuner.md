@@ -51,7 +51,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send. If `multiPhase` is set to `true` in the experiment configuration file, an additional `trial_job_id` parameter is passed to `receive_trial_result` and `generate_parameters` through the `**kwargs` parameter.
+`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
 
 The `your_parameters` return from `generate_parameters` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same `your_parameters` from Tuner.
 
@@ -77,7 +77,7 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
+**Note that** The working directory of your tuner is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`, therefore, if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
 
 ```python
 _pwd = os.path.dirname(__file__)

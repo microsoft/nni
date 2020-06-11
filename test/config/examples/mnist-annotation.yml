@@ -1,0 +1,21 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 4
+trialConcurrency: 2
+
+tuner:
+  builtinTunerName: Random
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ../../../examples/trials/mnist-annotation
+  command: python3 mnist.py --batch_num 10
+
+useAnnotation: true
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

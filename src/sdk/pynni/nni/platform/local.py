@@ -1,32 +1,15 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
 import sys
 import json
 import time
 import subprocess
-import json_tricks
 
 from ..common import init_logger
 from ..env_vars import trial_env_vars
+from ..utils import to_json
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):
@@ -47,7 +30,7 @@ _multiphase = trial_env_vars.MULTI_PHASE
 _param_index = 0
 
 def request_next_parameter():
-    metric = json_tricks.dumps({
+    metric = to_json({
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
@@ -80,9 +63,8 @@ def get_next_parameter():
 
 def send_metric(string):
     if _nni_platform != 'local':
-        data = (string).encode('utf8')
-        assert len(data) < 1000000, 'Metric too long'
-        print('NNISDK_ME%s' % (data), flush=True)
+        assert len(string) < 1000000, 'Metric too long'
+        print("NNISDK_MEb'%s'" % (string), flush=True)
     else:
         data = (string + '\n').encode('utf8')
         assert len(data) < 1000000, 'Metric too long'
@@ -101,4 +83,4 @@ def get_trial_id():
     return trial_env_vars.NNI_TRIAL_JOB_ID
 
 def get_sequence_id():
-    return trial_env_vars.NNI_TRIAL_SEQ_ID
+    return int(trial_env_vars.NNI_TRIAL_SEQ_ID)

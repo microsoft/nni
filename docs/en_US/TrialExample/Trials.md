@@ -1,8 +1,8 @@
 # Write a Trial Run on NNI
 
-A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) on a model.
+A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) to a model.
 
-To define an NNI trial, you need to firstly define the set of parameters (i.e., search space) and then update the model. NNI provide two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
+To define an NNI trial, you need to first define the set of parameters (i.e., search space) and then update the model. NNI provides two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
 
 <a name="nni-api"></a>
 ## NNI API
@@ -20,9 +20,9 @@ An example is shown below:
 }
 ```
 
-Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+Refer to [SearchSpaceSpec.md](../Tutorial/SearchSpaceSpec.md) to learn more about search spaces. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
 
-### Step 2 - Update model codes
+### Step 2 - Update model code
 
 - Import NNI
 
@@ -44,18 +44,18 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 nni.report_intermediate_result(metrics)
 ```
 
-`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](../Assessor/BuiltinAssessor.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
+`metrics` can be any python object. If users use the NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, or 2) a dict object that has a key named `default` whose value is a number. These `metrics` are reported to [assessor](../Assessor/BuiltinAssessor.md). Often, `metrics` includes the periodically evaluated loss or accuracy.
 
 - Report performance of the configuration
 
 ```python
 nni.report_final_result(metrics)
 ```
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](../Tuner/BuiltinTuner.md).
+`metrics` can also be any python object. If users use the NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. These `metrics` are reported to [tuner](../Tuner/BuiltinTuner.md).
 
 ### Step 3 - Enable NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of the SearchSpace file was defined in step 1:
 
 ```yaml
 useAnnotation: false
@@ -69,23 +69,23 @@ You can refer to [here](../Tutorial/ExperimentConfig.md) for more information ab
 <a name="nni-annotation"></a>
 ## NNI Python Annotation
 
-An alternative to writing a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+An alternative to writing a trial is to use NNI's syntax for python. NNI annotations are simple, similar to comments. You don't have to make structural changes to your existing code. With a few lines of NNI annotation, you will be able to:
 
 * annotate the variables you want to tune
-* specify in which range you want to tune the variables
-* annotate which variable you want to report as intermediate result to `assessor`
+* specify the range  in which you want to tune the variables
+* annotate which variable you want to report as an intermediate result to `assessor`
 * annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`.
 
 Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
 
 ### Step 1 - Update codes with annotations
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:
+The following is a TensorFlow code snippet for NNI Annotation where the highlighted four lines are annotations that:
   1. tune batch\_size and dropout\_rate
   2. report test\_acc every 100 steps
-  3. at last report test\_acc as final result.
+  3. lastly report test\_acc as the final result.
 
-What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+It's worth noting that, as these newly added codes are merely annotations, you can still run your code as usual in environments without NNI installed.
 
 ```diff
 with tf.Session() as sess:
@@ -114,7 +114,7 @@ with tf.Session() as sess:
 ```
 
 **NOTE**:
-- `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
+- `@nni.variable` will affect its following line which should be an assignment statement whose left-hand side must be the same as the keyword `name` in the `@nni.variable` statement.
 - `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
 
 For more information about annotation syntax and its usage, please refer to [Annotation](../Tutorial/AnnotationSpec.md).
@@ -127,13 +127,30 @@ In the YAML configure file, you need to set *useAnnotation* to true to enable NN
 useAnnotation: true
 ```
 
+## Standalone mode for debugging
+
+NNI supports a standalone mode for trial code to run without starting an NNI experiment. This is for finding out bugs in trial code more conveniently. NNI annotation natively supports standalone mode, as the added NNI related lines are comments. For NNI trial APIs, the APIs have changed behaviors in standalone mode, some APIs return dummy values, and some APIs do not really report values. Please refer to the following table for the full list of these APIs.
+```python
+# NOTE: please assign default values to the hyperparameters in your trial code
+nni.get_next_parameter # return {}
+nni.report_final_result # have log printed on stdout, but does not report
+nni.report_intermediate_result # have log printed on stdout, but does not report
+nni.get_experiment_id # return "STANDALONE"
+nni.get_trial_id # return "STANDALONE"
+nni.get_sequence_id # return 0
+```
+
+You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code should successfully run with the default hyperparameter values.
+
+For more information on debugging, please refer to [How to Debug](../Tutorial/HowToDebug.md)
+
 ## Where are my trials?
 
 ### Local Mode
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
+In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you can find each trial's code, data, and other logs. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
-If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
+If NNI Annotation is used, the trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
 
 ```bash
 #!/bin/bash
@@ -151,9 +168,9 @@ echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$t
 
 ### Other Modes
 
-When running trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+When running trials on other platforms like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while the trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to the local machine in the trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
-For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md)
+For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md).
 
 <a name="more-examples"></a>
 ## More Trial Examples

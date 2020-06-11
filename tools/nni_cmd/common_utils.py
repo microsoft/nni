@@ -1,24 +1,8 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
+import site
 import sys
 import json
 import socket
@@ -91,3 +75,52 @@ def get_python_dir(sitepackages_path):
         return str(Path(sitepackages_path))
     else:
         return str(Path(sitepackages_path).parents[2])
+
+def check_tensorboard_version():
+    try:
+        import tensorboard
+        return tensorboard.__version__
+    except:
+        print_error('import tensorboard error!')
+        exit(1)
+
+def get_nni_installation_path():
+    ''' Find nni lib from the following locations in order
+    Return nni root directory if it exists
+    '''
+    def try_installation_path_sequentially(*sitepackages):
+        '''Try different installation path sequentially util nni is found.
+        Return None if nothing is found
+        '''
+        def _generate_installation_path(sitepackages_path):
+            python_dir = get_python_dir(sitepackages_path)
+            entry_file = os.path.join(python_dir, 'nni', 'main.js')
+            if os.path.isfile(entry_file):
+                return python_dir
+            return None
+
+        for sitepackage in sitepackages:
+            python_dir = _generate_installation_path(sitepackage)
+            if python_dir:
+                return python_dir
+        return None
+
+    if os.getenv('VIRTUAL_ENV'):
+        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv will not have VIRTUAL_ENV
+        python_dir = os.getenv('VIRTUAL_ENV')
+    else:
+        python_sitepackage = site.getsitepackages()[0]
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
+        # that nni exists there
+        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
+        else:
+            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
+
+    if python_dir:
+        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            return os.path.join(python_dir, 'nni')
+    print_error('Fail to find nni under python library')
+    exit(1)

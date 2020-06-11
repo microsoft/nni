@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import math
 import random
@@ -38,7 +21,7 @@ from nni.networkmorphism_tuner.layers import is_layer
 def layer_distance(a, b):
     """The distance between two layers."""
     # pylint: disable=unidiomatic-typecheck
-    if type(a) != type(b):
+    if not isinstance(a, type(b)):
         return 1.0
     if is_layer(a, "Conv"):
         att_diff = [
@@ -96,7 +79,8 @@ def skip_connection_distance(a, b):
         return 1.0
     len_a = abs(a[1] - a[0])
     len_b = abs(b[1] - b[0])
-    return (abs(a[0] - b[0]) + abs(len_a - len_b)) / (max(a[0], b[0]) + max(len_a, len_b))
+    return (abs(a[0] - b[0]) + abs(len_a - len_b)) / \
+        (max(a[0], b[0]) + max(len_a, len_b))
 
 
 def skip_connections_distance(list_a, list_b):
@@ -161,7 +145,8 @@ class IncrementalGaussianProcess:
     def incremental_fit(self, train_x, train_y):
         """ Incrementally fit the regressor. """
         if not self._first_fitted:
-            raise ValueError("The first_fit function needs to be called first.")
+            raise ValueError(
+                "The first_fit function needs to be called first.")
 
         train_x, train_y = np.array(train_x), np.array(train_y)
 
@@ -174,7 +159,7 @@ class IncrementalGaussianProcess:
         temp_distance_matrix = np.concatenate((up_k, down_k), axis=0)
         k_matrix = bourgain_embedding_matrix(temp_distance_matrix)
         diagonal = np.diag_indices_from(k_matrix)
-        diagonal = (diagonal[0][-len(train_x) :], diagonal[1][-len(train_x) :])
+        diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
         k_matrix[diagonal] += self.alpha
 
         try:
@@ -186,7 +171,8 @@ class IncrementalGaussianProcess:
         self._y = np.concatenate((self._y, train_y), axis=0)
         self._distance_matrix = temp_distance_matrix
 
-        self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
+        self._alpha_vector = cho_solve(
+            (self._l_matrix, True), self._y)  # Line 3
 
         return self
 
@@ -209,7 +195,8 @@ class IncrementalGaussianProcess:
 
         self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
 
-        self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
+        self._alpha_vector = cho_solve(
+            (self._l_matrix, True), self._y)  # Line 3
 
         self._first_fitted = True
         return self
@@ -227,7 +214,9 @@ class IncrementalGaussianProcess:
 
         # compute inverse K_inv of K based on its Cholesky
         # decomposition L and its inverse L_inv
-        l_inv = solve_triangular(self._l_matrix.T, np.eye(self._l_matrix.shape[0]))
+        l_inv = solve_triangular(
+            self._l_matrix.T, np.eye(
+                self._l_matrix.shape[0]))
         k_inv = l_inv.dot(l_inv.T)
         # Compute variance of predictive distribution
         y_var = np.ones(len(train_x), dtype=np.float)
@@ -378,7 +367,11 @@ class BayesianOptimizer:
                         continue
 
                     temp_acq_value = self.acq(temp_graph)
-                    pq.put(elem_class(temp_acq_value, elem.father_id, temp_graph))
+                    pq.put(
+                        elem_class(
+                            temp_acq_value,
+                            elem.father_id,
+                            temp_graph))
                     descriptors.append(temp_graph.extract_descriptor())
                     if self._accept_new_acq_value(opt_acq, temp_acq_value):
                         opt_acq = temp_acq_value

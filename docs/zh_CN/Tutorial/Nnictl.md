@@ -22,6 +22,7 @@ nnictl 支持的命令：
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
+* [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
 ### 管理 Experiment
@@ -43,30 +44,31 @@ nnictl 支持的命令：
 
 * 选项
   
-  | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
-  | ------------ | ----- | --- | ---------------------- |
-  | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
-  | --port, -p   | False |     | RESTful 服务的端口          |
-  | --debug, -d  | False |     | 设置为调试模式                |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                     |
+  | ---------------- | ----- | --- | ---------------------- |
+  | --config, -c     | True  |     | Experiment 的 YAML 配置文件 |
+  | --port, -p       | False |     | RESTful 服务的端口          |
+  | --debug, -d      | False |     | 设置为调试模式                |
+  | --foreground, -f | False |     | 设为前台运行模式，将日志输出到终端      |
 
-* 样例
+* 示例
   
   > 在默认端口 8080 上创建一个新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
   ```
   
   > 在指定的端口 8088 上创建新的 Experiment，并启用调试模式
   
   ```bash
-  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
   ```
 
 注意：
@@ -91,13 +93,14 @@ nnictl 支持的命令：
 
 * 选项
   
-  | 参数及缩写       | 是否必需  | 默认值 | 说明                               |
-  | ----------- | ----- | --- | -------------------------------- |
-  | id          | True  |     | 要恢复的 Experiment 标识               |
-  | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
-  | --debug, -d | False |     | 设置为调试模式                          |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                               |
+  | ---------------- | ----- | --- | -------------------------------- |
+  | id               | True  |     | 要恢复的 Experiment 标识               |
+  | --port, -p       | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
+  | --debug, -d      | False |     | 设置为调试模式                          |
+  | --foreground, -f | False |     | 设为前台运行模式，将日志输出到终端                |
 
-* 样例
+* 示例
   
   > 在指定的端口 8088 上恢复 Experiment
   
@@ -215,10 +218,10 @@ nnictl 支持的命令：
   
   * 示例
     
-    `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
+    `使用 'examples/trials/mnist-tfv1/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
-    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
     ```
 
 * **nnictl update concurrency**
@@ -240,7 +243,7 @@ nnictl 支持的命令：
   | id          | False |     | 需要设置的 Experiment 的 ID |
   | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
-  * 样例
+  * 示例
     
     > 更新 Experiment 的并发数量
     
@@ -498,7 +501,7 @@ nnictl 支持的命令：
   
   * 详细说明
     
-    NNI 支持导入用户的数据，确保数据格式正确。 样例如下：
+    NNI 支持导入用户的数据，确保数据格式正确。 示例如下：
     
     ```json
     [
@@ -740,6 +743,38 @@ nnictl 支持的命令：
     
     ```bash
     nnictl package show
+    ```
+
+<a name="ss_gen"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `生成搜索空间`
+
+* **nnictl ss_gen**
+  
+  * 说明
+    
+    从使用 NNI NAS API 的用户代码生成搜索空间。
+  
+  * 用法
+    
+    ```bash
+    nnictl ss_gen [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写           | 是否必需  | 默认值                                | 说明          |
+  | --------------- | ----- | ---------------------------------- | ----------- |
+  | --trial_command | True  |                                    | Trial 代码的命令 |
+  | --trial_dir     | False | ./                                 | Trial 代码目录  |
+  | --file          | False | nni_auto_gen_search_space.json | 用来存储生成的搜索空间 |
+  
+  * 示例
+    
+    > 生成搜索空间
+    
+    ```bash
+    nnictl ss_gen --trial_command="python3 mnist.py" --trial_dir=./ --file=ss.json
     ```
 
 <a name="version"></a>

@@ -1,0 +1,18 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 100h
+maxTrialNum: 1000
+#choice: local, remote, pai
+trainingServicePlatform: local
+#please use `nnictl ss_gen` to generate search space file first
+searchSpacePath: <the_generated_search_space_path>
+useAnnotation: False
+tuner:
+  builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0

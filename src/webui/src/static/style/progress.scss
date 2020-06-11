@@ -1,99 +1,116 @@
+.progress {
+  margin: 15px 17px;
+  .status {
+    color: #0573bc;
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 5px;
+    .status-text{
+      display: inline-block;
+      line-height: 30px;
+    }
+  }
 
-.progress{
-    margin: 15px 17px;
-    .status{
-        color: #0573bc;
-        font-size: 20px;
-        font-weight: 600;
-        margin-top: 5px;
+  .probar {
+    width: 100%;
+    height: 34px;
+    margin-top: 15px;
+
+    .showProgress{
+        width: 300px;
+        height: 30px;
+    }
+    
+    .name {
+      width: 178px;
+      box-sizing: border-box;
+      line-height: 30px;
+      text-align: center;
+      color: #fff;
+      background-color: #999;
+      border: 2px solid #e6e6e6;
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
     }
 
-    .probar{
-        width: 95%;
-        height: 34px;
-        margin-top: 15px;
-
-        .ant-progress-inner{
-            border: 2px solid #e6e6e6;
-            border-radius: 0 12px 12px 0 !important;
-        }
-        .name{
-            height: 34px;
-            line-height: 30px;
-            text-align: center;
-            color: #fff;
-            background-color: #999;
-            border: 2px solid #e6e6e6;
-            border-top-left-radius: 12px;
-            border-bottom-left-radius: 12px;
-        }
-
-        .showProgress{
-            height: 30px;
-        }
-        .description{
-            width: 100%;
-            line-height: 24px;
-            font-size: 12px;
-            color: #212121;
-            .right{
-                text-align: right;
-            }
-        }
+    .boundary {
+      width: 100%;
+      line-height: 24px;
+      font-size: 12px;
+      color: #212121;
+      .right {
+        text-align: right;
+      }
     }
+
+    .description{
+      line-height: 34px;
+      margin-left: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &-info{
+    margin-left: 4px;
+    position: relative;
+    top: 2px;
+  }
 }
 
 /* basic experiment message style */
-.basic{
-
-    line-height: 24px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    p{
-        font-size: 14px;
-        color: #212121;
-    }
-    div{
-        font-size: 16px;
-        color: #0573bc;
-    }
+.basic {
+  line-height: 24px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  p {
+    font-size: 14px;
+    color: #212121;
+  }
+  div {
+    font-size: 16px;
+    color: #0573bc;
+  }
 }
 
-.colorOfbasic{
-    div{
-        color: #0573bc;
-    }
-    .time{
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
+.colorOfbasic {
+  div {
+    color: #0573bc;
+  }
+  .time {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
 }
 
-.mess{
-    margin: 10px 0;
-}
-/*
-.ant-tooltip-inner{
-    min-width: 300px;
-}
-*/
-.inputBox{
-    height: 26px;
-    margin-top: 5px;
-    .concurrencyInput{
-        width: 25%;
-        height: 26px;
-        padding-left: 8px;
-        outline: none;
-        border: 1px solid #ccc;
-    }
-    .editStyle{
-        height: 26px;
-        padding: 0 9px;
-    }
+.mess {
+  margin: 10px 0;
 }
 
-.lineBasic{
-    padding-bottom: 14px;
-    border-bottom: 1px solid #ccc;
+.inputBox {
+  height: 32px;
+  margin-top: 5px;
+  .concurrencyInput {
+    width: 40px;
+    padding-left: 8px;
+    outline: none;
+    border: 1px solid #ccc;
+  }
+}
+
+.lineBasic {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* office-fabric-ui progressIndicator*/
+.ms-ProgressIndicator-itemProgress {
+    padding: 0;
+    border: 2px solid #e6e6e6;
+    border-radius: 0 12px 12px 0 !important;
+}
+
+.cursor, .cursor:hover{
+  cursor: pointer;
 }

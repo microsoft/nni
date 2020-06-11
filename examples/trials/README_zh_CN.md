@@ -6,7 +6,7 @@
 
 **1) 写好原始的训练代码**。
 
-Trial 的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-keras. py` 作为样例：
+Trial 的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-keras. py` 作为示例：
 
 ```python
 import argparse
@@ -163,7 +163,7 @@ def train(args, params):
 ...
 ```
 
-这是完整的样例：
+这是完整示例：
 
 ```python
 import argparse

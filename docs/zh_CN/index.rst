@@ -1,10 +1,7 @@
-#########################################
-Neural Network Intelligence（NNI）文档
-#########################################
+###########################
+Neural Network Intelligence
+###########################
 
-********
-内容
-********
 
 ..  toctree::
     :caption: 目录
@@ -12,11 +9,14 @@ Neural Network Intelligence（NNI）文档
     :titlesonly:
 
     概述<Overview>
+    安装 <installation>
     入门<Tutorial/QuickStart>
-    教程<tutorials>
-    示例<examples>
+    自动（超参数）调优 <hyperparameter_tune>
+    神经网络架构搜索<nas>
+    模型压缩<model_compression>
+    特征工程<feature_engineering>
     参考<reference>
-    FAQ<Tutorial/FAQ>
-    贡献<contribution>
-    更改日志<Release>
-    社区分享<CommunitySharings/community_sharings>
+    社区分享 <CommunitySharings/community_sharings>
+    常见问题 <Tutorial/FAQ>
+    如何贡献 <contribution>
+    更改日志 <Release>

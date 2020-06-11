@@ -1,30 +1,38 @@
+# Azure hosted agents specification:
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops
+
 jobs:
-- job: 'basic_test_pr_ubuntu'
+- job: 'ubuntu_1804_python36'
   pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+    vmImage: 'Ubuntu 18.04'
 
   steps:
   - script: |
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
       python3 -m pip install coverage --user
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
-      python3 -m pip install tensorflow==1.13.1 --user
+      set -e
+      cd src/nni_manager
+      yarn eslint
+      # uncomment following 2 lines to enable webui eslint
+      cd ../webui
+      yarn eslint
+    displayName: 'Run eslint'
+  - script: |
+      python3 -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
+      python3 -m pip install tensorflow==1.15.2 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install gym onnx --user
+      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 --user
       sudo apt-get install swig -y
-      PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
-      PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
       set -e
@@ -37,79 +45,86 @@ jobs:
     displayName: 'Run pylint'
   - script: |
       python3 -m pip install flake8 --user
-      IGNORE=./tools/nni_annotation/testcase/*:F821,./examples/trials/mnist-nas/*/mnist*.py:F821,./examples/trials/nas_cifar10/src/cifar10/general_child.py:F821
-      python3 -m flake8 . --count --per-file-ignores=$IGNORE --select=E9,F63,F72,F82 --show-source --statistics
+      EXCLUDES=./src/nni_manager/,./src/webui,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
+      python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      sudo apt install -y swig
-      PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
-      source unittest.sh
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-    displayName: 'Naive test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
   - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
-    displayName: 'Trial job metrics test'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
-    displayName: 'nnicli test'
+      cd docs/en_US/
+      sphinx-build -M html . _build -W
+    displayName: 'Sphinx Documentation Build check'
 
-- job: 'basic_test_pr_macOS'
+- job: 'ubuntu_1604_python35_legacy_torch'
   pool:
-    vmImage: 'macOS 10.13'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+    vmImage: 'Ubuntu 16.04'
+
+  steps:
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install coverage --user
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+    displayName: 'Install python tools'
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+  - script: |
+      python3 -m pip install torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
+      python3 -m pip install tensorflow==1.15.2 --user
+      python3 -m pip install keras==2.1.6 --user
+      python3 -m pip install gym onnx --user
+      sudo apt-get install swig -y
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
+    displayName: 'Install dependencies'
+  - script: |
+      cd test
+      source scripts/unittest.sh
+    displayName: 'Unit test'
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
+
+
+- job: 'macos_1015_python37'
+  pool:
+    vmImage: 'macOS-10.15'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
-      python3 -m pip install torch==0.4.1 --user
-      python3 -m pip install torchvision==0.2.1 --user
-      python3 -m pip install tensorflow==1.13.1 --user
-    displayName: 'Install dependencies'
-  - script: |
       source install.sh
+      echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
     displayName: 'Install nni toolkit via source code'
   - script: |
-      cd test
-      ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" < /dev/null 2> /dev/null
+      # pytorch Mac binary does not support CUDA, default is cpu version
+      python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
+      python3 -m pip install tensorflow==1.15.2 --user
       brew install swig@3
+      rm /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      PATH=$HOME/Library/Python/3.7/bin:$PATH nnictl package install --name=SMAC
-      PATH=$HOME/Library/Python/3.7/bin:$PATH source unittest.sh
+      nnictl package install --name=SMAC
+    displayName: 'Install dependencies'
+  - script: |
+      cd test
+      source scripts/unittest.sh
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 cli_test.py
-    displayName: 'nnicli test'
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'
 
-- job: 'basic_test_pr_Windows'
+- job: 'win2016_python37'
   pool:
     vmImage: 'vs2017-win2016'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
 
   steps:
   - script: |
@@ -118,27 +133,14 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
-      python -m pip install torchvision --user
-      python -m pip install tensorflow==1.13.1 --user
+      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
+      python -m pip install tensorflow==1.15.2 --user
     displayName: 'Install dependencies'
   - script: |
       cd test
-      powershell.exe -file unittest.ps1
+      powershell.exe -file scripts/unittest.ps1
     displayName: 'unit test'
   - script: |
       cd test
-      python naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python metrics_test.py
-    displayName: 'Trial job metrics test'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 cli_test.py
-    displayName: 'nnicli test'
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple test'

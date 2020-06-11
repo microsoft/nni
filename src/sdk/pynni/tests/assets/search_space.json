@@ -1,8 +1,7 @@
 {
   "choice_str": {
     "_type": "choice",
-    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"],
-    "fail": ["metis", "gp"]
+    "_value": ["cat", "dog", "elephant", "cow", "sheep", "panda"]
   },
   "choice_int": {
     "_type": "choice",
@@ -10,8 +9,7 @@
   },
   "choice_mixed": {
     "_type": "choice",
-    "_value": [0.3, "cat", 1, null],
-    "fail": ["metis", "gp"]
+    "_value": [0.3, "cat", 1, null]
   },
   "choice_float": {
     "_type": "choice",

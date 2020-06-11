@@ -1,23 +1,5 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-# associated documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish, distribute,
-# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or
-# substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
-# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
-# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-# ==================================================================================================
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import json
 from io import BytesIO
@@ -77,11 +59,9 @@ class MsgDispatcherTestCase(TestCase):
     def test_msg_dispatcher(self):
         _reverse_io()  # now we are sending to Tuner's incoming stream
         send(CommandType.RequestTrialJobs, '2')
-        send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":10}')
-        send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":11}')
+        send(CommandType.ReportMetricData, '{"parameter_id":0,"type":"PERIODICAL","value":"10"}')
+        send(CommandType.ReportMetricData, '{"parameter_id":1,"type":"FINAL","value":"11"}')
         send(CommandType.UpdateSearchSpace, '{"name":"SS0"}')
-        send(CommandType.AddCustomizedTrialJob, '{"param":-1}')
-        send(CommandType.ReportMetricData, '{"parameter_id":2,"type":"FINAL","value":22}')
         send(CommandType.RequestTrialJobs, '1')
         send(CommandType.KillTrialJob, 'null')
         _restore_io()
@@ -99,14 +79,7 @@ class MsgDispatcherTestCase(TestCase):
         self._assert_params(0, 2, [], None)
         self._assert_params(1, 4, [], None)
 
-        command, data = receive()  # this one is customized
-        data = json.loads(data)
-        self.assertIs(command, CommandType.NewTrialJob)
-        self.assertEqual(data['parameter_id'], 2)
-        self.assertEqual(data['parameter_source'], 'customized')
-        self.assertEqual(data['parameters'], {'param': -1})
-
-        self._assert_params(3, 6, [[1, 4, 11, False], [2, -1, 22, True]], {'name': 'SS0'})
+        self._assert_params(2, 6, [[1, 4, 11, False]], {'name': 'SS0'})
 
         self.assertEqual(len(_out_buf.read()), 0)  # no more commands
 

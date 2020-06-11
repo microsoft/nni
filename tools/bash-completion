@@ -1,7 +1,8 @@
 # list of commands/arguments
-__nnictl_cmds="create resume update stop trial experiment platform import export webui config log package tensorboard top"
-__nnictl_create_cmds="--config --port --debug"
-__nnictl_resume_cmds="--port --debug"
+__nnictl_cmds="create resume view update stop trial experiment platform import export webui config log package tensorboard top"
+__nnictl_create_cmds="--config --port --debug --watch"
+__nnictl_resume_cmds="--port --debug --watch"
+__nnictl_view_cmds="--port"
 __nnictl_update_cmds="searchspace concurrency duration trialnum"
 __nnictl_update_searchspace_cmds="--filename"
 __nnictl_update_concurrency_cmds="--value"
@@ -31,7 +32,7 @@ __nnictl_tensorboard_start_cmds="--trial_id --port"
 __nnictl_top_cmds="--time"
 
 # list of commands that accept an experiment ID as second argument
-__nnictl_2st_expid_cmds=" resume stop import export "
+__nnictl_2nd_expid_cmds=" resume view stop import export "
 # list of commands that accept an experiment ID as third argument
 __nnictl_3rd_expid_cmds=" update trial experiment webui config log tensorboard "
 
@@ -73,7 +74,7 @@ _nnictl()
         COMPREPLY=($(compgen -W "${!args}" -- "${COMP_WORDS[2]}"))
 
         # add experiment IDs to candidates if desired
-        if [[ " resume stop import export " =~ " ${COMP_WORDS[1]} " ]]; then
+        if [[ $__nnictl_2nd_expid_cmds =~ " ${COMP_WORDS[1]} " ]]; then
             local experiments=$(ls ~/nni/experiments 2>/dev/null)
             COMPREPLY+=($(compgen -W "$experiments" -- $cur))
         fi
@@ -138,4 +139,8 @@ _nnictl()
     fi
 }
 
-complete -o nosort -F _nnictl nnictl
+if [[ ${BASH_VERSINFO[0]} -le 4 && ${BASH_VERSINFO[1]} -le 4 ]]; then
+    complete -F _nnictl nnictl
+else
+    complete -o nosort -F _nnictl nnictl
+fi

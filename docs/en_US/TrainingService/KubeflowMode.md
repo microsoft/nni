@@ -84,7 +84,7 @@ kubeflowConfig:
 
 ## Run an experiment
 
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of Kubeflow. The NNI config YAML file's content is like:
+Use `examples/trials/mnist-tfv1` as an example. This is a tensorflow job, and use tf-operator of Kubeflow. The NNI config YAML file's content is like:
 
 ```yaml
 authorName: default

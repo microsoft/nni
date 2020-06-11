@@ -32,12 +32,24 @@ Config the network mode to bridge mode or other mode that could make virtual mac
 ### Could not open webUI link
 Unable to open the WebUI may have the following reasons:
 
-* http://127.0.0.1, http://172.17.0.1 and http://10.0.0.15 are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like http://[your_server_ip]:8080
+* `http://127.0.0.1`, `http://172.17.0.1` and `http://10.0.0.15` are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like `http://[your_server_ip]:8080`
 * If you still can't see the WebUI after you use the server IP, you can check the proxy and the firewall of your machine. Or use the browser on the machine where you start your NNI experiment.
-* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
+* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: `~/nni/experiment/[your_experiment_id]` `/log/nnimanager.log`
+
+### Restful server start failed
+
+Probably it's a problem with your network config. Here is a checklist.
+
+* You might need to link `127.0.0.1` with `localhost`. Add a line `127.0.0.1 localhost` to `/etc/hosts`.
+* It's also possible that you have set some proxy config. Check your environment for variables like `HTTP_PROXY` or `HTTPS_PROXY` and unset if they are set.
+
 
 ### NNI on Windows problems
-Please refer to [NNI on Windows](NniOnWindows.md)
+Please refer to [NNI on Windows](InstallationWin.md)
+
+
+### More FAQ issues
+[NNI Issues with FAQ labels](https://github.com/microsoft/nni/labels/FAQ)
 
 ### Help us improve
 Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.

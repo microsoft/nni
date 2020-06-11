@@ -2,11 +2,11 @@
 ==================
 
 ..  toctree::
-    :maxdepth: 3
+    :maxdepth: 2
 
-    命令行<Tutorial/Nnictl>
-    Python API<sdk_reference>
-    Annotation<Tutorial/AnnotationSpec>
-    配置<Tutorial/ExperimentConfig>
+    nnictl 命令 <Tutorial/Nnictl>
+    Experiment 配置 <Tutorial/ExperimentConfig>
     搜索空间<Tutorial/SearchSpaceSpec>
-    实现训练平台<TrainingService/HowToImplementTrainingService>
+    NNI Annotation<Tutorial/AnnotationSpec>
+    SDK API 参考 <sdk_reference>
+    支持的框架和库 <SupportedFramework_Library>

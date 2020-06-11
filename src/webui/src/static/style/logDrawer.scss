@@ -1,113 +1,29 @@
-.card-container > .ant-tabs-card > .ant-tabs-content {
-    margin-top: -16px;
-  }
-  
-  .card-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane {
-    background: #fff;
-    padding: 16px;
-  }
-  
-  .card-container > .ant-tabs-card > .ant-tabs-bar {
-    border-color: #fff;
-  }
-  
-  .card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab {
-    border-color: transparent;
-    background: transparent;
-  }
-  
-  .card-container > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active {
-    border-color: #fff;
-    background: #fff;
-  }
-
-.logContainer{
-  height: 100%;
-}
-
-/* log drawer download & close button's row */
-.buttons{
-  margin-top: 16px;
-  .close{
-    text-align: right;
-  }
-}
-/*
-.logDrawer{
-    width: 100%;
-    .ant-drawer-body{
-      box-sizing: border-box;
-      -webkit-box-sizing: border-box;
-    }
-}
-*/
-.ant-drawer-body{
-    background: #333;
-}
-.card-container > .ant-tabs-card > .ant-tabs-bar{
-    border: none;
-}
-.card-container > .ant-tabs-card > .ant-tabs-content > .ant-tabs-tabpane{
-    background-color: #333;
-}
-.close{
-    Button, Button:active, Button:hover{
-        background-color: #212121;
-        color: #fff;
-        border: none;
-    }
-}
-.download{
-    Button, Button:active, Button:hover{
-        background-color: #2772be;
-        color: #fff;
-        border: none;
-    }
-}
-.log-tab-body > .ant-tabs-card > .ant-tabs-bar .ant-tabs-tab-active{
-    background-color: #1e1e1e;
+.download {
+  button,
+  button:active,
+  button:hover {
     color: #fff;
     border: none;
+  }
 }
-.log-tab-body .ant-tabs-nav .ant-tabs-tab:hover, .log-tab-body .ant-tabs-nav .ant-tabs-tab{
-    color: #fff;
-    border: none;
-}
-.ant-tabs.ant-tabs-card>.ant-tabs-bar .ant-tabs-tab{
-  border: none;
-}
-.log-tab-body{
-  .refresh{
+
+.log-tab-body {
+  .refresh {
     margin-left: 10px;
     display: none;
   }
-  .ant-tabs-tab-active{
-    .refresh{
-      transition: 0.3s;
-      display: inline-block;
-    }
-    .refresh:hover{
-      transform: scale(1.2);
-    }
-  }
 }
-.just-for-log{
-  .monaco-editor{
-    .line-numbers{
-      color: #fff;
-    }
-    .current-line ~ .line-numbers{
-      color: #FFFAF0;
-    }
-  }
-  .view-lines{
-    background-color: #1e1e1e;
-    .mtk1{
-      color: #fff;
-    }
-    
-  }
-  .margin-view-overlays{
-    background-color: #1e1e1e;
+
+/* office-fabric-ui */
+.ms-Panel-main {
+  width: 55%;
+  background: #fff;
+}
+
+/* log drawer download & close button's row */
+.buttons {
+  margin-top: 16px;
+  .close {
+    text-align: right;
   }
 }

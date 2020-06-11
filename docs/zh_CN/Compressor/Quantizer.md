@@ -1,18 +1,13 @@
 NNI Compressor 中的 Quantizer
 ===
-
 ## Naive Quantizer
 
 Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试量化算法。
 
 ### 用法
-Tensorflow
-```python
-nni.compressors.tensorflow.NaiveQuantizer()(model_graph)
-```
-PyTorch
-```python
-nni.compressors.torch.NaiveQuantizer()(model)
+pytorch
+```python 
+model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -25,27 +20,40 @@ nni.compressors.torch.NaiveQuantizer()(model)
 ### 用法
 可在训练代码前将模型量化为 8 位。
 
-TensorFlow 代码
-```python
-from nni.compressors.tensorflow import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(tf.get_default_graph())
-```
 PyTorch 代码
 ```python
-from nni.compressors.torch import QAT_Quantizer
-config_list = [{ 'q_bits': 8, 'op_types': ['default'] }]
-quantizer = QAT_Quantizer(config_list)
-quantizer(model)
+from nni.compression.torch import QAT_Quantizer
+model = Mnist()
+
+config_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    }, # 这里可以仅使用 `int`，因为所有 `quan_types` 使用了一样的位长，参考下方 `ReLu6` 配置。
+    'op_types':['Conv2d', 'Linear']
+}, {
+    'quant_types': ['output'],
+    'quant_bits': 8,
+    'quant_start_step': 7000,
+    'op_types':['ReLU6']
+}]
+quantizer = QAT_Quantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解
 
 #### QAT Quantizer 的用户配置
-* **q_bits:** 指定需要被量化的位数。
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
 
+此算法所需的配置：
 
+* **quant_start_step:** int
+
+在运行到某步骤前，对模型禁用量化。这让网络在进入更稳定的 状态后再激活量化，这样不会配除掉一些分数显著的值，默认为 0
+
+### 注意
+当前不支持批处理规范化折叠。
 ***
 
 ## DoReFa Quantizer
@@ -54,22 +62,67 @@ quantizer(model)
 ### 用法
 要实现 DoReFa Quantizer，在训练代码前加入以下代码。
 
-TensorFlow 代码
-```python
-from nni.compressors.tensorflow import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(tf.get_default_graph())
-```
 PyTorch 代码
 ```python
-from nni.compressors.torch import DoReFaQuantizer
-config_list = [{ 'q_bits': 8, 'op_types': 'default' }]
-quantizer = DoReFaQuantizer(config_list)
-quantizer(model)
+from nni.compression.torch import DoReFaQuantizer
+config_list = [{ 
+    'quant_types': ['weight'],
+    'quant_bits': 8, 
+    'op_types': 'default' 
+}]
+quantizer = DoReFaQuantizer(model, config_list)
+quantizer.compress()
 ```
 
 查看示例进一步了解
 
-#### QAT Quantizer 的用户配置
-* **q_bits:** 指定需要被量化的位数。
+#### DoReFa Quantizer 的用户配置
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
+
+此算法所需的配置：
+
+
+## BNN Quantizer
+在 [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830) 中，
+> 引入了一种训练二进制神经网络（BNN）的方法 - 神经网络在运行时使用二进制权重。 在训练时，二进制权重和激活用于计算参数梯度。 在 forward 过程中，BNN 会大大减少内存大小和访问，并将大多数算术运算替换为按位计算，可显著提高能源效率。
+
+
+### 用法
+
+PyTorch 代码
+```python
+from nni.compression.torch import BNNQuantizer
+model = VGG_Cifar10(num_classes=10)
+
+configure_list = [{
+    'quant_bits': 1,
+    'quant_types': ['weight'],
+    'op_types': ['Conv2d', 'Linear'],
+    'op_names': ['features.0', 'features.3', 'features.7', 'features.10', 'features.14', 'features.17', 'classifier.0', 'classifier.3']
+}, {
+    'quant_bits': 1,
+    'quant_types': ['output'],
+    'op_types': ['Hardtanh'],
+    'op_names': ['features.6', 'features.9', 'features.13', 'features.16', 'features.20', 'classifier.2', 'classifier.5']
+}]
+
+quantizer = BNNQuantizer(model, configure_list)
+model = quantizer.compress()
+```
+
+可以查看示例 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 了解更多信息。
+
+#### BNN Quantizer 的用户配置
+压缩算法所需的常见配置可在[通用配置](./Overview.md#压缩算法中的用户配置)中找到。
+
+此算法所需的配置：
+
+### 实验
+我们实现了 [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830) 中的一个实验，对 CIFAR-10 上的 **VGGNet** 进行了量化操作。 我们的实验结果如下：
+
+| 模型     | 精度     |
+| ------ | ------ |
+| VGGNet | 86.93% |
+
+
+实验代码可在 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 

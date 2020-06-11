@@ -1,0 +1,52 @@
+{
+  "name": "nasnni-vis-ts",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@material-ui/core": "^4.9.3",
+    "@material-ui/icons": "^4.9.1",
+    "cytoscape": "^3.14.0",
+    "cytoscape-dagre": "^2.2.2",
+    "cytoscape-panzoom": "^2.5.3",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-scripts": "3.4.0",
+    "typeface-roboto": "^0.0.75",
+    "typescript": "~3.7.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "eject": "react-scripts eject",
+    "backend": "node server.js"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/cytoscape": "^3.14.0",
+    "@types/jest": "^24.0.0",
+    "@types/lodash": "^4.14.149",
+    "@types/node": "^12.0.0",
+    "@types/react": "^16.9.0",
+    "@types/react-dom": "^16.9.0"
+  },
+  "proxy": "http://localhost:8080"
+}

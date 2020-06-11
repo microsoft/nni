@@ -1,22 +1,5 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
 import sys
@@ -53,7 +36,7 @@ class StdOutputType(Enum):
 def nni_log(log_type, log_message):
     '''Log message into stdout'''
     dt = datetime.now()
-    print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))
+    print('[{0}] {1} {2}'.format(dt, log_type.value, log_message), flush=True)
 
 class NNIRestLogHanlder(StreamHandler):
     def __init__(self, host, port, tag, std_output_type=StdOutputType.Stdout):
@@ -101,6 +84,13 @@ class RemoteLogger(object):
         Get pipe for remote logger
         '''
         return PipeLogReader(self.logger, self.log_collection, logging.INFO)
+
+    def flush(self):
+        '''
+        Add flush in handler
+        '''
+        for handler in self.logger.handlers:
+            handler.flush()
 
     def write(self, buf):
         '''

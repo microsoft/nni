@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 import * as cpp from 'child-process-promise';
@@ -47,7 +31,6 @@ import { GPUScheduler } from './gpuScheduler';
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
-// tslint:disable:newline-per-chained-call informative-docs
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
@@ -62,7 +45,6 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
 
     return [true, commandType, content, remain];
 }
-// tslint:enable:newline-per-chained-call informative-docs
 
 /**
  * LocalTrialJobDetail
@@ -123,7 +105,7 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
-    private readonly experimentId! : string;
+    private readonly experimentId!: string;
     private gpuScheduler!: GPUScheduler;
     private readonly occupiedGpuIndexNumMap: Map<number, number>;
     private designatedGpuIndices!: Set<number>;
@@ -268,7 +250,6 @@ class LocalTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
-            // tslint:disable-next-line:non-literal-fs-path
             if (!fs.existsSync(this.rootDir)) {
                 await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
             }
@@ -315,7 +296,7 @@ class LocalTrainingService implements TrainingService {
 
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 let getResult: Promise<string>;
                 if (this.localTrialConfig === undefined) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
@@ -324,6 +305,7 @@ class LocalTrainingService implements TrainingService {
                 }
 
                 return getResult;
+            }
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }
@@ -352,9 +334,11 @@ class LocalTrainingService implements TrainingService {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
                 //Refer https://github.com/Juul/tail-stream/issues/20
-                stream.end(0);
-                stream.emit('end');
-                this.jobStreamMap.delete(trialJob.id);
+                setTimeout(() => {
+                    stream.end(0);
+                    stream.emit('end');
+                    this.jobStreamMap.delete(trialJob.id);
+                }, 5000);
             }
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
@@ -377,21 +361,25 @@ class LocalTrainingService implements TrainingService {
         trialJobDetail: TrialJobDetail,
         resource: { gpuIndices: number[] },
         gpuNum: number | undefined): { key: string; value: string }[] {
-        const envVariables: { key: string; value: string }[] = [
-            { key: 'NNI_PLATFORM', value: 'local' },
-            { key: 'NNI_EXP_ID', value: this.experimentId },
-            { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
-            { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
-            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
-            { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
-        ];
-        if (gpuNum !== undefined) {
-            envVariables.push({
-                key: 'CUDA_VISIBLE_DEVICES',
-                value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
-            });
-        }
+            if (this.localTrialConfig === undefined) {
+                throw new Error('localTrialConfig is not initialized!');
+            }
+            const envVariables: { key: string; value: string }[] = [
+                { key: 'NNI_PLATFORM', value: 'local' },
+                { key: 'NNI_EXP_ID', value: this.experimentId },
+                { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
+                { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
+                { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+                { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
+                { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() },
+                { key: 'NNI_CODE_DIR', value: this.localTrialConfig.codeDir}
+            ];
+            if (gpuNum !== undefined) {
+                envVariables.push({
+                    key: 'CUDA_VISIBLE_DEVICES',
+                    value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
+                });
+            }
 
         return envVariables;
     }
@@ -489,19 +477,21 @@ class LocalTrainingService implements TrainingService {
     private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
+            script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
-                `cmd.exe /c ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+                `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
-                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
+                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
-            script.push(`eval ${localTrialConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            script.push(`cd $NNI_CODE_DIR`);
+            script.push(`eval ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
-                script.push(`echo $? \`date +%s999\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                script.push(`echo $? \`date +%s999\` >'${path.join(workingDirectory, '.nni', 'state')}'`);
             } else {
-                script.push(`echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                script.push(`echo $? \`date +%s%3N\` >'${path.join(workingDirectory, '.nni', 'state')}'`);
             }
         }
 
@@ -522,7 +512,6 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         }
-        runScriptContent.push(`cd ${this.localTrialConfig.codeDir}`);
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }
@@ -539,8 +528,8 @@ class LocalTrainingService implements TrainingService {
         await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
         const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
-        trialJobDetail.startTime = Date.now();
-        trialJobDetail.pid = trialJobProcess.pid;
+        trialJobDetail.startTime = Date.now(); // eslint-disable-line require-atomic-updates
+        trialJobDetail.pid = trialJobProcess.pid; // eslint-disable-line require-atomic-updates
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);

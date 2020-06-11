@@ -1,0 +1,27 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 8
+trialConcurrency: 8
+searchSpacePath: ../naive_trial/search_space.json
+
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+assessor:
+    builtinAssessorName: Curvefitting
+    classArgs:
+      epoch_num: 20
+      start_step: 6
+      threshold: 0.95
+trial:
+  codeDir: ../naive_trial
+  command: python3 trial.py
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

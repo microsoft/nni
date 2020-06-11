@@ -10,7 +10,7 @@ NNI 在内置的 Tuner 中提供了最新的调优算法。 NNI 同时也支持�
 2. 实现 receive_trial_result 和 generate_parameter 函数
 3. 在 Experiment 的 YAML 文件中配置好自定义的 Tuner
 
-样例如下：
+示例如下：
 
 **1. 继承 Tuner 基类**
 
@@ -51,7 +51,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。 如果在 Experiment 配置文件里 `multiPhase` 为 `true`， 会有一个附加的 `trial_job_id` 在 `**kwargs` 参数中返回给 `receive_trial_result` 和 `generate_parameters`。
+`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。
 
 `generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 SDK 会将 json 对象解包给 Trial 进程。因此，Trial 进程会收到来自 Tuner 的完全相同的 `your_parameters`。
 
@@ -76,7 +76,7 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**注意** 如果需要存取自定义的 Tuner 目录里的文件 (如, `data.txt`)，不能使用 `open('data.txt', 'r')`。 要使用：
+**注意：**Tuner 的工作目录是 `<home>/nni/experiments/<experiment_id>/log`，可使用环境变量 `NNI_LOG_DIRECTORY`，因此 ，如果要访问自己 Tuner 目录中的文件（如： `data.txt`）不能直接使用 `open('data.txt', 'r')`。 要使用：
 
 ```python
 _pwd = os.path.dirname(__file__)
@@ -101,7 +101,7 @@ tuner:
 
 ```
 
-更多样例，可参考：
+更多示例，可参考：
 
 > - [evolution-tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner)
 > - [hyperopt-tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner)

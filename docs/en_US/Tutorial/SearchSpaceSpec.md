@@ -73,12 +73,6 @@ All types of sampling strategies and their parameter are listed here:
   * Which means the variable value is a value like `round(exp(normal(mu, sigma)) / q) * q`
   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 
-* `{"_type": "mutable_layer", "_value": {mutable_layer_infomation}}`
-  * Type for [Neural Architecture Search Space][1]. Value is also a dictionary, which contains key-value pairs representing respectively name and search space of each mutable_layer.
-  * For now, users can only use this type of search space with annotation, which means that there is no need to define a json file for search space since it will be automatically generated according to the annotation in trial code.
-  * The following HPO tuners can be adapted to tune this search space: TPE, Random, Anneal, Evolution, Grid Search,
-  Hyperband and BOHB.
-  * For detailed usage, please refer to [General NAS Interfaces][1].
 
 ## Search Space Types Supported by Each Tuner
 
@@ -105,5 +99,3 @@ Known Limitations:
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
 
     * We do not support nested search space "Hyper Parameter" in visualization now, the enhancement is being considered in [#1110](https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
-
-[1]: ../AdvancedFeature/GeneralNasInterfaces.md

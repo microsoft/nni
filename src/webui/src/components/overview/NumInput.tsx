@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, Row } from 'antd';
+import { Stack, PrimaryButton } from 'office-ui-fabric-react';
 
 interface ConcurrencyInputProps {
     value: number;
@@ -18,65 +18,56 @@ class ConcurrencyInput extends React.Component<ConcurrencyInputProps, Concurrenc
         this.state = { editting: false };
     }
 
-    save = () => {
+    save = (): void => {
         if (this.input.current !== null) {
             this.props.updateValue(this.input.current.value);
             this.setState({ editting: false });
         }
     }
 
-    cancel = () => {
+    cancel = (): void => {
         this.setState({ editting: false });
     }
 
-    edit = () => {
+    edit = (): void => {
         this.setState({ editting: true });
     }
 
-    render() {
+    render(): React.ReactNode {
         if (this.state.editting) {
             return (
-                <Row className="inputBox">
+                <Stack horizontal className="inputBox">
                     <input
                         type="number"
                         className="concurrencyInput"
                         defaultValue={this.props.value.toString()}
                         ref={this.input}
                     />
-                    <Button
-                        type="primary"
-                        className="tableButton editStyle"
+                    <PrimaryButton
+                        text="Save"
                         onClick={this.save}
-                    >
-                        Save
-                    </Button>
-                    <Button
-                        type="primary"
-                        onClick={this.cancel}
+                    />
+                    <PrimaryButton
+                        text="Cancel"
                         style={{ display: 'inline-block', marginLeft: 1 }}
-                        className="tableButton editStyle"
-                    >
-                        Cancel
-                    </Button>
-                </Row>
+                        onClick={this.cancel}
+                    />
+                </Stack>
             );
         } else {
             return (
-                <Row className="inputBox">
+                <Stack horizontal className="inputBox">
                     <input
                         type="number"
                         className="concurrencyInput"
                         disabled={true}
                         value={this.props.value}
                     />
-                    <Button
-                        type="primary"
-                        className="tableButton editStyle"
+                    <PrimaryButton
+                        text="Edit"
                         onClick={this.edit}
-                    >
-                        Edit
-                    </Button>
-                </Row>
+                    />
+                </Stack>
             );
         }
     }

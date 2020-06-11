@@ -1,22 +1,6 @@
-# Copyright (c) Microsoft Corporation
-# All rights reserved.
-#
-# MIT License
-#
-# Permission is hereby granted, free of charge,
-# to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction,
-# including without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and
-# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-# The above copyright notice and this permission notice shall be included
-# in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 functions for sampling from hidden state
 """
@@ -77,7 +61,7 @@ class PdType:
 
 class CategoricalPd(Pd):
     """
-    categorical prossibility distribution
+    Categorical probability distribution
     """
     def __init__(self, logits, mask_npinf, nsteps, size, is_act_model):
         self.logits = logits
@@ -154,7 +138,7 @@ class CategoricalPd(Pd):
 
 class CategoricalPdType(PdType):
     """
-    to create CategoricalPd
+    To create CategoricalPd
     """
     def __init__(self, ncat, nsteps, np_mask, is_act_model):
         self.ncat = ncat
@@ -180,7 +164,7 @@ class CategoricalPdType(PdType):
 
 def _matching_fc(tensor, name, size, nsteps, init_scale, init_bias, np_mask, is_act_model):
     """
-    add fc op, and add mask op when not in action mode
+    Add fc op, and add mask op when not in action mode
     """
     if tensor.shape[-1] == size:
         assert False

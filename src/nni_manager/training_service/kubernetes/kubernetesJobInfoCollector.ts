@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -30,7 +14,7 @@ import { KubernetesTrialJobDetail } from './kubernetesData';
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
 export class KubernetesJobInfoCollector {
-    protected readonly trialJobsMap : Map<string, KubernetesTrialJobDetail>;
+    protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
     protected readonly log: Logger = getLogger();
     protected readonly statusesNeedToCheck: TrialJobStatus[];
 
@@ -39,9 +23,9 @@ export class KubernetesJobInfoCollector {
         this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
 
-    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined) : Promise<void> {
+    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined): Promise<void> {
         assert(kubernetesCRDClient !== undefined);
-        const updateKubernetesTrialJobs : Promise<void>[] = [];
+        const updateKubernetesTrialJobs: Promise<void>[] = [];
         for (const [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
             if (kubernetesTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
@@ -56,8 +40,8 @@ export class KubernetesJobInfoCollector {
         await Promise.all(updateKubernetesTrialJobs);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+    protected async retrieveSingleTrialJobInfo(_kubernetesCRDClient: KubernetesCRDClient | undefined,
+                                               _kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
             throw new MethodNotImplementedError();
     }
 }
