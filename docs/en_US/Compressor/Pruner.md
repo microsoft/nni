@@ -94,7 +94,7 @@ AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however
 * `apoz`: ActivationAPoZRankFilterPruner
 * `mean_activation`: ActivationMeanRankFilterPruner
 
-you should add code below to update epoch number when you finish one epoch in your training code.
+You should add code below to update epoch number when you finish one epoch in your training code.
 
 Tensorflow code 
 ```python
@@ -219,7 +219,7 @@ pruner.compress()
 ```
 Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-you should add code below to update epoch number at beginning of each epoch.
+You should add code below to update epoch number at beginning of each epoch.
 
 Tensorflow code
 ```python
