@@ -1,0 +1,25 @@
+authorName: default
+experimentName: Conv_N512C3HW227F64K11ST4PD0_OPEVO
+trialConcurrency: 8
+maxExecDuration: 24h
+maxTrialNum: 512
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  codeDir: /root/algorithms/
+  classFileName: opevo.py
+  className: OpEvo
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example 
+  classArgs:
+    optimize_mode: maximize
+    parents_size: 8
+    offspring_size: 8
+    mutate_rate: 0.5
+trial:
+  command: OP=convfwd_direct N=512 C=3 H=227 W=227 F=64 K=11 ST=4 PD=0 ./run.sh
+  codeDir: /root
+  # gpuNum: 0
