@@ -12,9 +12,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 步骤 3. 将 NFS 存储挂载到本机。  
 点击 OpenPAI 网站的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)  
-在作业提交页面找到数据管理区域。 ![](../../img/pai_data_management_page.jpg)  
-`DEFAULT_STORAGE` 字段是在作业运行起来后，OpenPAI 容器中挂载的路径。 `Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
-例如，使用下列命令：
+在作业提交页面找到数据管理区域。 
 
     sudo mount -t nfs4 gcr-openpai-infra02:/pai/data /local/mnt
     
@@ -22,13 +20,12 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
 然后在 NNI 的配置文件中如下配置：
 
-    nniManagerNFSMountPath: /local/mnt
-    containerNFSMountPath: /data
+    
     
 
-步骤 4. 获取 OpenPAI 存储插件名称。 联系 OpenPAI 管理员，获得 NFS 存储插件的名称。 默认存储的名称是 `teamwise_storage`，NNI 配置文件中的配置如下：
+步骤 4. 
 
-    paiStoragePlugin: teamwise_storage
+    
     
 
 ## 运行 Experiment
@@ -36,40 +33,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
-authorName: your_name
-experimentName: auto_mnist
-# 并发运行的 Trial 数量
-trialConcurrency: 2
-# Experiment 的最长持续运行时间
-maxExecDuration: 3h
-# 空表示一直运行
-maxTrialNum: 100
-# 可选项: local, remote, pai
-trainingServicePlatform: pai
-# 搜索空间文件
-searchSpacePath: search_space.json
-# 可选项: true, false
-useAnnotation: true
-tuner:
-  builtinTunerName: TPE
-  classArgs:
-    optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist-annotation
-  gpuNum: 0
-  cpuNum: 1
-  memoryMB: 8196
-  image: msranni/nni:latest
-  virtualCluster: default
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
-  paiStoragePlugin: teamwise_storage
-# 配置要访问的 OpenPAI 集群
-paiConfig:
-  userName: your_pai_nni_user
-  token: your_pai_token
-  host: 10.1.1.1
+
 ```
 
 注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。 配置文件中的 host 字段是 OpenPAI 作业提交页面的地址，例如：`10.10.5.1`，NNI 中默认协议是 `http`，如果 OpenPAI 集群启用了 https，则需要使用 `https://10.10.5.1` 的格式。
@@ -89,14 +53,13 @@ paiConfig:
     * 必填。 在 nniManager 计算机上设置挂载的路径。
 * containerNFSMountPath 
     * 必填。 在 OpenPAI 的容器中设置挂载路径。
-* paiStoragePlugin 
-    * 可选。 设置 PAI 中使用的存储插件的名称。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
+* * 可选。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 * command  
     * 可选。 设置 OpenPAI 容器中使用的命令。
 
 * paiConfigPath
     
-    * 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。 如果在 NNI 配置文件中设置了 `paiConfigPath`，则不需在 `trial` 配置中设置 `command`, `paiStoragePlugin`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum`。 这些字段将使用 `paiConfigPath` 指定的配置文件中的值。 
+    * 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。 这些字段将使用 `paiConfigPath` 指定的配置文件中的值。 
         注意：
           1. OpenPAI 配置文件中的作业名称会由 NNI 指定，格式为：nni_exp_${this.experimentId}_trial_${trialJobId}。
         
@@ -123,7 +86,7 @@ paiConfig:
 
 ## 数据管理
 
-使用 NNI 启动 Experiment 前，应在 nniManager 计算机中设置相应的挂载数据的路径。 OpenPAI 有自己的存储（NFS、AzureBlob ...），在 PAI 中使用的存储将在启动作业时挂载到容器中。 应通过 `paiStoragePlugin` 字段选择 OpenPAI 中的存储类型。 然后，应将存储挂载到 nniManager 计算机上，并在配置文件中设置 `nniManagerNFSMountPath`，NNI会生成 bash 文件并将 `codeDir` 中的数据拷贝到 `nniManagerNFSMountPath` 文件夹中，然后启动 Trial 任务。 `nniManagerNFSMountPath` 中的数据会同步到 OpenPAI 存储中，并挂载到 OpenPAI 的容器中。 容器中的数据路径在 `containerNFSMountPath` 设置，NNI 将进入该文件夹，运行脚本启动 Trial 任务。
+OpenPAI 有自己的存储（NFS、AzureBlob ...），在 PAI 中使用的存储将在启动作业时挂载到容器中。 然后，应将存储挂载到 nniManager 计算机上，并在配置文件中设置 `nniManagerNFSMountPath`，NNI会生成 bash 文件并将 `codeDir` 中的数据拷贝到 `nniManagerNFSMountPath` 文件夹中，然后启动 Trial 任务。 `nniManagerNFSMountPath` 中的数据会同步到 OpenPAI 存储中，并挂载到 OpenPAI 的容器中。 容器中的数据路径在 `containerNFSMountPath` 设置，NNI 将进入该文件夹，运行脚本启动 Trial 任务。
 
 ## 版本校验
 
