@@ -202,7 +202,7 @@ class ClassicMutator(Mutator):
             elif isinstance(mutable, InputChoice):
                 key = mutable.key
                 search_space[key] = {"_type": INPUT_CHOICE,
-                                     "_value": {"candidates": ["input_"+str(i) for i in range(mutable.n_candidates)],
+                                     "_value": {"candidates": mutable.choose_from, #["input_"+str(i) for i in range(mutable.n_candidates)],
                                                 "n_chosen": mutable.n_chosen}}
             elif isinstance(mutable, MutableScope):
                 logger.info("Mutable scope '%s' is skipped during generating search space.", mutable.key)

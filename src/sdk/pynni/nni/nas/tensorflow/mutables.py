@@ -80,7 +80,7 @@ class LayerChoice(Mutable):
         super().__init__(key=key)
         self.names = []
         if isinstance(op_candidates, OrderedDict):
-            for name, module in op_candidates.items():
+            for name, _ in op_candidates.items():
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.names.append(name)

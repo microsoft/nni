@@ -13,6 +13,6 @@ tuner:
   classArgs:
     optimize_mode: maximize
 trial:
-  command: python3 train_ppo.py
+  command: python3 train.py
   codeDir: .
   gpuNum: 0
