@@ -8,7 +8,7 @@ First, we provide a sensitivity analysis tool (**SensitivityAnalysis**) for user
 
 Following codes show the basic usage of the SensitivityAnalysis.
 ```python
-from nni.compression.analysis_utils.sensitivity.torch.sensitivity_analysis import SensitivityAnalysis
+from nni.compression.torch.utils.sensitivity_analysis import SensitivityAnalysis
 
 def val(model):
     model.eval()
@@ -27,12 +27,10 @@ s_analyzer = SensitivityAnalysis(model=net, val_func=val)
 sensitivity = s_analyzer.analysis(val_args=[net])
 os.makedir(outdir)
 s_analyzer.export(os.path.join(outdir, filename))
-s_analyzer.visualization(outdir, merge=True)
-s_analyzer.visualization(outdir, merge=False)
 ```
 
 Two key parameters of SensitivityAnalysis are model, and val_func. 'model' is the neural network that to be analyzed and the 'val_func' is the validation function that returns the model accuracy on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy on the dataset and pass it to SensitivityAnalysis.
-SensitivityAnalysis can export the sensitivity results as a csv file and visualization the sensitivity results of each layer in the model, usage is shown in the example above.
+SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
 
 Futhermore, users can specify the sparsities values used to prune for each layer by optinal parameter 'sparsities'.
 ```python
@@ -65,7 +63,7 @@ Complicated models may has residual connection/concat operations in their models
 
 #### Usage
 ```python
-from nni.compression.analysis_utils.topology.torch.shape_dependency import ChannelDependency
+from nni.compression.torch.utils.shape_dependency import ChannelDependency
 data = torch.ones(1, 3, 224, 224).cuda()
 channel_depen = ChannelDependency(net, data)
 channel_depen.export('dependency.csv')
@@ -93,7 +91,7 @@ Set 12,layer4.1.conv1
 When the masks of different layers in a model has conflict, we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
-from analysis_utils.topology.torch.mask_conflict import MaskConflict
+from nni.compression.torch.utils.mask_conflict import MaskConflict
 mc = MaskConflict('./resnet18_mask', net, data)
 mc.fix_mask_conflict()
 mc.export('./resnet18_fixed_mask')
