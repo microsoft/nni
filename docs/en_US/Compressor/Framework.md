@@ -117,10 +117,10 @@ class MyMasker(WeightMasker):
         self.pruner.set_wrappers_attribute("collected_activation", [])
         self.activation = torch.nn.functional.relu
 
-        def collector(module_, input_, output):
+        def collector(wrapper, input_, output):
             # The collected activation can be accessed via each wrapper's collected_activation
             # attribute
-            module_.collected_activation.append(self.activation(output.detach().cpu()))
+            wrapper.collected_activation.append(self.activation(output.detach().cpu()))
 
         self.pruner.hook_id = self.pruner.add_activation_collector(collector)
 ```
