@@ -25,3 +25,9 @@ cd ${CWD}/../src/nni_manager
 echo ""
 echo "===========================Testing: nni_manager==========================="
 npm run test
+
+# -------------For NASUI unittest-------------
+cd ${CWD}/../src/nasui
+echo ""
+echo "===========================Testing: nasui==========================="
+CI=true npm test
