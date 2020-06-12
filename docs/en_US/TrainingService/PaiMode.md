@@ -31,7 +31,7 @@ Step 4. Get PAI's storage config name and nniManagerMountPath
 The `Team share storage` field is storage configuration used to specify storage value in PAI. You can get `paiStorageConfigName` and `containerNFSMountPath` field in `Team share storage`, for example:
 
 ```
-paiStoraeConfigName: confignfs-data
+paiStorageConfigName: confignfs-data
 containerNFSMountPath: /mnt/confignfs-data
 ```
 
@@ -67,7 +67,7 @@ trial:
   virtualCluster: default
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
-  paiStoraeConfigName: confignfs-data
+  paiStorageConfigName: confignfs-data
 # Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
@@ -91,13 +91,13 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Required key. Set the mount path in your nniManager machine.
 * containerNFSMountPath
     * Required key. Set the mount path in your container used in PAI.
-* paiStoraeConfigName:
+* paiStorageConfigName:
     * Optional key. Set the storage name used in PAI. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
 * command  
     * Optional key. Set the commands used in PAI container.
 * paiConfigPath
     * Optional key. Set the file path of pai job configuration, the file is in yaml format.
-    If users set `paiConfigPath` in NNI's configuration file, no need to specify the fields `command`, `paiStoraeConfigName`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` configuration. These fields will use the values from the config file specified by  `paiConfigPath`. 
+    If users set `paiConfigPath` in NNI's configuration file, no need to specify the fields `command`, `paiStorageConfigName`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum` in `trial` configuration. These fields will use the values from the config file specified by  `paiConfigPath`. 
     ```
     Note:
       1. The job name in PAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}.
@@ -128,7 +128,7 @@ And you will be redirected to HDFS web portal to browse the output files of that
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
 ## data management
-Before using NNI to start your experiment, users should set the corresponding mount data path in your nniManager machine. PAI has their own storage(NFS, AzureBlob ...), and the storage will used in PAI will be mounted to the container when it start a job. Users should set the PAI storage type by `paiStoraeConfigName` field to choose a storage in PAI. Then users should mount the storage to their nniManager machine, and set the `nniManagerNFSMountPath` field in configuration file, NNI will generate bash files and copy data in `codeDir` to the `nniManagerNFSMountPath` folder, then NNI will start a trial job. The data in `nniManagerNFSMountPath` will be sync to PAI storage, and will be mounted to PAI's container. The data path in container is set in `containerNFSMountPath`, NNI will enter this folder first, and then run scripts to start a trial job. 
+Before using NNI to start your experiment, users should set the corresponding mount data path in your nniManager machine. PAI has their own storage(NFS, AzureBlob ...), and the storage will used in PAI will be mounted to the container when it start a job. Users should set the PAI storage type by `paiStorageConfigName` field to choose a storage in PAI. Then users should mount the storage to their nniManager machine, and set the `nniManagerNFSMountPath` field in configuration file, NNI will generate bash files and copy data in `codeDir` to the `nniManagerNFSMountPath` folder, then NNI will start a trial job. The data in `nniManagerNFSMountPath` will be sync to PAI storage, and will be mounted to PAI's container. The data path in container is set in `containerNFSMountPath`, NNI will enter this folder first, and then run scripts to start a trial job. 
 
 ## version check
 NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.

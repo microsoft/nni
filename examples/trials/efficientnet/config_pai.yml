@@ -23,7 +23,7 @@ trial:
   image: msranni/nni:latest
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
-  paiStoraeConfigName: confignfs-data
+  paiStorageConfigName: confignfs-data
 nniManagerIp: <nni_manager_ip>
 paiConfig:
   userName: <username>

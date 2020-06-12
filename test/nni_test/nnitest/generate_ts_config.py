@@ -41,8 +41,6 @@ def update_training_service_config(args):
             config[args.ts]['trial']['nniManagerNFSMountPath'] = args.nni_manager_nfs_mount_path
         if args.container_nfs_mount_path is not None:
             config[args.ts]['trial']['containerNFSMountPath'] = args.container_nfs_mount_path
-        if args.pai_storage_plugin is not None:
-            config[args.ts]['trial']['paiStoraeConfigName'] = args.pai_storage_config_name
         if args.pai_storage_config_name is not None:
             config[args.ts]['trial']['paiStorageConfigName'] = args.pai_storage_config_name
         if args.vc is not None:
