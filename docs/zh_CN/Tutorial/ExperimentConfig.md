@@ -530,9 +530,9 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### ip
 
-必填。 可从当前计算机访问的 IP 地址。
+必填。 IP address or host name that is accessible from the current machine.
 
-远程计算机的 IP 地址。
+The IP address or host name of remote machine.
 
 #### port
 
