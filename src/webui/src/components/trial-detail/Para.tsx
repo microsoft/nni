@@ -591,10 +591,12 @@ class Para extends React.Component<ParaProps, ParaState> {
         this.reInit();
     }
 
-    componentWillReceiveProps(nextProps: ParaProps): void {
-        const { dataSource, expSearchSpace, whichGraph } = nextProps;
-        if (whichGraph === '2') {
-            this.hyperParaPic(dataSource, expSearchSpace);
+    componentDidUpdate(prevProps: ParaProps): void {
+        if(this.props.dataSource !== prevProps.dataSource) {
+            const { dataSource, expSearchSpace, whichGraph } = this.props;
+            if (whichGraph === 'Hyper-parameter') {
+                this.hyperParaPic(dataSource, expSearchSpace);
+            }
         }
     }
 
