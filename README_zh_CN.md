@@ -223,7 +223,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 注意：
 
 * 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
-* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 Anaconda or Miniconda is highly recommended to install [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md).
 * 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/InstallationWin.md#faq)。
 
 ### **验证安装**
