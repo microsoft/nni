@@ -108,8 +108,6 @@ class SensitivityAnalysis:
             args for the val_function
         val_kwargs : dict
             kwargs for the val_funtion
-            The val_funtion will be called as:
-                val_function(*val_args, **val_kwargs).
         start : int
             Layer index of the sensitivity analysis start.
         end : int

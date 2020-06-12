@@ -7,7 +7,7 @@
 ## Sensitivity Utilities
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.utils.sensitivity_analysis
+..  autoclass:: nni.compression.torch.utils.sensitivity_analysis.SensitivityAnalysis
     :members:
 
 ```
@@ -15,9 +15,9 @@
 ## Topology Utilities
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.utils.shape_dependency
+..  autoclass:: nni.compression.torch.utils.shape_dependency.ChannelDependency
     :members:
 
-..  autoclass:: nni.compression.torch.utils.mask_conflict.py
+..  autoclass:: nni.compression.torch.utils.mask_conflict.MaskConflict
     :members:
 ```
