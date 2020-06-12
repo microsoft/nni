@@ -10,7 +10,7 @@ export namespace ValidationSchemas {
         body: {
             machine_list: joi.array().items(joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 username: joi.string().required(),
-                ip: joi.string().ip().required(),
+                ip: joi.string().hostname().required(),
                 port: joi.number().min(1).max(65535).required(),
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
