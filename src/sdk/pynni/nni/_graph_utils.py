@@ -10,6 +10,7 @@ import torch
 from torch.utils.tensorboard._pytorch_graph import NodePy, NodePyIO, NodePyOP, GraphPy
 CLASSTYPE_KIND = 'ClassType'
 GETATTR_KIND = 'prim::GetAttr'
+CAT_KIND = 'aten::cat'
 
 _logger = logging.getLogger(__name__)
 
@@ -236,6 +237,7 @@ class TorchModuleGraph(TorchGraph):
         super().__init__(model, dummy_input, traced_model)
         self.global_count = 0
         self.name_to_node, self.input_to_node, self.output_to_node = self._build_graph()
+        self._extract_auxiliary_info()
 
     def _expand_non_prim_node(self, node, nodes, input_to_node, output_to_node,
                               module_type):
@@ -363,6 +365,50 @@ class TorchModuleGraph(TorchGraph):
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
                              node_group, inputs=inputs, outputs=outputs)
         return nodepy
+
+    def _extract_cat_info(self, node_group, cpp_node):
+        """
+        Extract the detail information of the cat operation,
+        such the order of the input tensor, the shape of each
+        input tensor, the output shape, and the cat dimension.
+
+        Parameters
+        ----------
+        node_group : NodePyGroup
+        cpp_node: torch._C.Node
+            It should be ```aten::cat``` node
+
+        Returns
+        -------
+        dict
+            Include auxiliary information for the cat operation.
+        """
+        # only suport the cat operation
+        assert cpp_node.kind() == CAT_KIND
+        cat_info = {}
+        # get the shape of the output tensor
+        t_output = cpp_node.output()
+        out_shape = t_output.type().sizes()
+        cat_info['out_shape'] = out_shape
+        # get the cat dimension
+        inputs = cpp_node.inputs()
+        cat_dim = list(inputs)[1].toIValue()
+        cat_info['cat_dim'] = cat_dim
+        # get the order of the input tensors
+        # To get the order of the input tensors, we need
+        # to be aware of the topology of the model, which
+        # means we should extract the auxiliary information
+        # after the build_index function.
+        input_order = []
+        list_construct_cpp = list(cpp_node.inputs())[0].node()
+        input_tensors = list(list_construct_cpp.inputs())
+        for _tensor in input_tensors:
+            debug_name = _tensor.debugName()
+            input_order.append(self.output_to_node[debug_name].unique_name)
+        cat_info['input_order'] = input_order
+        input_shapes = [t.type().sizes() for t in input_tensors]
+        cat_info['input_shapes'] = input_shapes
+        return cat_info
 
     def _extract_shape_info(self, node):
         """
@@ -541,8 +587,8 @@ class TorchModuleGraph(TorchGraph):
                     node, nodes, input_to_node, output_to_node, 'func')
                 nodes_py.nodes_op.append(node_group)
                 # get shape infor for view (aten::view) func
-                if node_group.op_type in ['aten::view', 'aten::flatten']:
-                    node_group.auxiliary = self._extract_shape_info(node)
+                # if node_group.op_type in ['aten::view', 'aten::flatten']:
+                #     node_group.auxiliary = self._extract_shape_info(node)
 
         for node in graph.outputs():  # Create sink nodes for output ops
             node_py = NodePyIO(node, 'output')
@@ -551,6 +597,26 @@ class TorchModuleGraph(TorchGraph):
         self.nodes_py = nodes_py
         # build index
         return self._build_index(self.nodes_py.nodes_op)
+
+    def _extract_auxiliary_info(self):
+        """
+        Extract the auxiliary information for the nodegroups
+        if necessary. For example, view/flatten operations may
+        need the shape of the input tensor and output tensor.
+        """
+        # extract the input & output shape for the view and flatten
+        for node_group in self.nodes_py.nodes_op:
+            if node_group.op_type in ['aten::view', 'aten::flatten']:
+                # get shape infor for view (aten::view) func
+                cpp_node = list(filter(lambda x: x.kind() ==node_group.op_type,
+                                       node_group.node_cpps))[0]
+                node_group.auxiliary = self._extract_shape_info(cpp_node)
+            elif node_group.op_type == CAT_KIND:
+                # get the detail information for cat func
+                cpp_node = list(filter(lambda x: x.kind() ==node_group.op_type,
+                                       node_group.node_cpps))[0]
+                node_group.auxiliary = self._extract_cat_info(
+                    node_group, cpp_node)
 
     def find_predecessors(self, unique_name):
         """

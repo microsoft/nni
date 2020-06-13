@@ -57,7 +57,7 @@ class ModelSpeedup:
         self.dummy_input = dummy_input
         self.torch_graph = build_module_graph(model, dummy_input)
 
-    def infer_module_mask(self, module_name, mask=None, in_shape=None, out_shape=None):
+    def infer_module_mask(self, module_name, last_module, mask=None, in_shape=None, out_shape=None):
         """
         Infer input shape / output shape based on the module's weight mask / input shape / output shape.
 
@@ -107,6 +107,13 @@ class ModelSpeedup:
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
                                                           self.torch_graph.name_to_node[module_name].auxiliary)
+            elif m_type in ['aten::cat']:
+                # To calculate the mask for concat operation, the output shape
+                # , cat dimension, and the order of the input parameters.
+                output_cmask = infer_from_inshape[m_type](module_masks,
+                                                          in_shape,
+                                                          self.torch_graph.name_to_node[module_name].auxiliary,
+                                                          last_module)
             else:
                 output_cmask = infer_from_inshape[m_type](module_masks, in_shape)
         if out_shape is not None:
@@ -135,7 +142,7 @@ class ModelSpeedup:
         for module_name, mask in self.masks.items():
             print('%%%%%%%%%%')
             print('start_from', module_name)
-            self.infer_module_mask(module_name, mask=mask)
+            self.infer_module_mask(module_name, None, mask=mask)
 
     def replace_compressed_modules(self):
         """

@@ -180,7 +180,8 @@ infer_from_inshape = {
     'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask),
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask),
     'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
-    'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask)
+    'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
+    'aten::cat': lambda module_mask, mask: cat_inshape(module_mask, mask)
 }
 
 """
@@ -189,6 +190,13 @@ Infer input and weight shape of a module/function from its output shape
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
+
+def cat_inshape(module_masks, mask):
+    """
+    Inference the output mask of the cat operation from the
+    input mask.
+    """
+    pass
 
 def add_inshape(module_masks, mask):
     """
