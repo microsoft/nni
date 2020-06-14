@@ -128,12 +128,12 @@ class ModelSpeedup:
             predecessors = self.torch_graph.find_predecessors(module_name)
             print('fathers:', predecessors)
             for _module_name in predecessors:
-                self.infer_module_mask(_module_name, out_shape=input_cmask)
+                self.infer_module_mask(_module_name, module_name, out_shape=input_cmask)
         if output_cmask:
             successors = self.torch_graph.find_successors(module_name)
             print('sons:', successors)
             for _module_name in successors:
-                self.infer_module_mask(_module_name, in_shape=output_cmask)
+                self.infer_module_mask(_module_name, module_name, in_shape=output_cmask)
 
     def infer_modules_masks(self):
         """

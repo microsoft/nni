@@ -405,9 +405,9 @@ class TorchModuleGraph(TorchGraph):
         for _tensor in input_tensors:
             debug_name = _tensor.debugName()
             input_order.append(self.output_to_node[debug_name].unique_name)
-        cat_info['input_order'] = input_order
+        cat_info['in_order'] = input_order
         input_shapes = [t.type().sizes() for t in input_tensors]
-        cat_info['input_shapes'] = input_shapes
+        cat_info['in_shape'] = input_shapes
         return cat_info
 
     def _extract_shape_info(self, node):
