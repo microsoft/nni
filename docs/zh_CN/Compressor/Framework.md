@@ -2,12 +2,12 @@
 
 ## 概述
 
-Following example shows how to use a pruner:
+下列示例展示了如何使用 Pruner：
 
 ```python
 from nni.compression.torch import LevelPruner
 
-# load a pretrained model or train a model before using a pruner
+# 读取预训练的模型，或在使用 Pruner 前进行训练。
 
 configure_list = [{
     'sparsity': 0.7,
@@ -18,11 +18,11 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_d
 pruner = LevelPruner(model, configure_list, optimizer)
 model = pruner.compress()
 
-# model is ready for pruning, now start finetune the model,
-# the model will be pruned during training automatically
+# 剪枝已准备好，开始调优模型，
+# 模型会在训练过程中自动剪枝
 ```
 
-A pruner receives `model`, `config_list` and `optimizer` as arguments. It prunes the model per the `config_list` during training loop by adding a hook on `optimizer.step()`.
+Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 It prunes the model per the `config_list` during training loop by adding a hook on `optimizer.step()`.
 
 From implementation perspective, a pruner consists of a `weight masker` instance and multiple `module wrapper` instances.
 
@@ -35,21 +35,21 @@ A `weight masker` is the implementation of pruning algorithms, it can prune a sp
 A `module wrapper` is a module containing:
 
 1. 原始的 module
-2. some buffers used by `calc_mask`
-3. a new forward method that applies masks before running the original forward method.
+2. `calc_mask` 使用的一些缓存
+3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
 
-the reasons to use `module wrapper`:
+使用 `module 包装`的原因：
 
-1. some buffers are needed by `calc_mask` to calculate masks and these buffers should be registered in `module wrapper` so that the original modules are not contaminated.
-2. a new `forward` method is needed to apply masks to weight before calling the real `forward` method.
+1. 计算掩码所需要的 `calc_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
+2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
 
 ### Pruner
 
-A `pruner` is responsible for:
+`Pruner` 用于：
 
-1. Manage / verify config_list.
-2. Use `module wrapper` to wrap the model layers and add hook on `optimizer.step`
-3. Use `weight masker` to calculate masks of layers while pruning.
+1. 管理、验证 config_list.
+2. 使用 `module 包装`来包装模型层，并在 `optimizer.step` 上添加回调
+3. 使用`权重掩码`在剪枝时计算层的掩码。
 4. Export pruned model weights and masks.
 
 ## Implement a new pruning algorithm
@@ -62,12 +62,11 @@ An implementation of `weight masker` may look like this:
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # You can do some initialization here, such as collecting some statistics data
-        # if it is necessary for your algorithms to calculate the masks.
+        # 此处可初始化，如为算法收集计算权重所需要的统计信息。
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-        # calculate the masks based on the wrapper.weight, and sparsity, 
-        # and anything else
+        # 根据 wrapper.weight, 和 sparsity, 
+        # 及其它信息来计算掩码
         # mask = ...
         return {'weight_mask': mask}
 ```
@@ -81,16 +80,16 @@ class MyPruner(Pruner):
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        # construct a weight masker instance
+        # 创建权重掩码实例
         self.masker = MyMasker(model, self)
 
     def calc_mask(self, wrapper, wrapper_idx=None):
         sparsity = wrapper.config['sparsity']
         if wrapper.if_calculated:
-            # Already pruned, do not prune again as a one-shot pruner
+            # 如果是一次性剪枝算法，不需要再次剪枝
             return None
         else:
-            # call your masker to actually calcuate the mask for this layer
+            # 调用掩码函数来实际计算当前层的掩码
             masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
             wrapper.if_calculated = True
             return masks
@@ -111,32 +110,30 @@ Sometimes users want to collect some data during the modules' forward method, fo
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # Set attribute `collected_activation` for all wrappers to store
-        # activations for each layer
+        # 为所有包装类设置 `collected_activation` 属性
+        # 保存所有层的激活值
         self.pruner.set_wrappers_attribute("collected_activation", [])
         self.activation = torch.nn.functional.relu
 
         def collector(wrapper, input_, output):
-            # The collected activation can be accessed via each wrapper's collected_activation
-            # attribute
+            # 通过每个包装的 collected_activation 属性，来评估收到的激活值
             wrapper.collected_activation.append(self.activation(output.detach().cpu()))
 
         self.pruner.hook_id = self.pruner.add_activation_collector(collector)
 ```
 
-The collector function will be called each time the forward method runs.
+收集函数会在每次 forward 方法运行时调用。
 
-Users can also remove this collector like this:
+还可这样来移除收集方法：
 
 ```python
-# Save the collector identifier
+# 保存 Collector 的标识
 collector_id = self.pruner.add_activation_collector(collector)
 
-# When the collector is not used any more, it can be remove using
-# the saved collector identifier
+# 当 Collector 不再需要后，可以通过保存的 Collector 标识来删除
 self.pruner.remove_activation_collector(collector_id)
 ```
 
-### Multi-GPU support
+### 多 GPU 支持
 
-On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective. Since `calc_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
+在多 GPU 训练中，缓存和参数会在每次 `forward` 方法被调用时，复制到多个 GPU 上。 如果缓存和参数要在 `forward` 更新，就需要通过`原地`更新来提高效率。 因为 `calc_mask` 会在 `optimizer.step` 方法中的调用，会在 `forward` 方法后才被调用，且只会发生在单 GPU 上，因此它天然的就支持多 GPU 的情况。
