@@ -42,6 +42,12 @@ Users can also speed up the progress of sensitivity analysis by the early_stop/m
 ```python
 s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5, 0.75], early_stop=0.1)
 ```
+If users only want to analyze several specified convolutional layers, users can specify the target conv layers by the 'sepcified_layers' parameter in analysis function. For example
+```python
+sensitivity = s_analyzer.analysis(val_args=[net], specified_layers=['Conv1'])
+```
+In this example, only the Conv1 layer is analyzed.
+
 
 ### Output example
 The following lines are the example csv file exported from SensitivityAnalysis. The first line is constructed by 'layername' and sparsity list. Here the sparsity value means how much weight SensitivityAnalysis prune for each layer. Each line below records the model accuracy when this layer is under different sparsities. Note that, due to the early_stop option, some layers may
