@@ -14,7 +14,10 @@ replace_module = {
     'AvgPool2d': lambda module, mask: no_replace(module, mask),
     'AdaptiveAvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
-    'Linear': lambda module, mask: replace_linear(module, mask)
+    'Linear': lambda module, mask: replace_linear(module, mask),
+    'Dropout': lambda module, mask: no_replace(module, mask),
+    'Dropout2d': lambda module, mask: no_replace(module, mask),
+    'Dropout3d': lambda module, mask: no_replace(module, mask)
 }
 
 def no_replace(module, mask):
