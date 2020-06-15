@@ -374,12 +374,12 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer)
 pruner.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
 #### GradientWeightSumFilterPruner 的用户配置
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **sparsity:** 卷积过滤器要修剪的百分比。
+- **op_types:** 当前 TaylorFOWeightFilterPruner 中仅支持 Conv2d。
 
 
 
