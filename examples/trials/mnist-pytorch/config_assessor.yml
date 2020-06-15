@@ -19,8 +19,6 @@ assessor:
   #choice: Medianstop, Curvefitting
   builtinAssessorName: Curvefitting
   classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
     epoch_num: 20
     threshold: 0.9
 trial:

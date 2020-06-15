@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { MANAGER_IP } from '../const';
 import { ExperimentProfile, NNIManagerStatus } from '../interface';
 import { requestAxios } from '../function';
