@@ -81,7 +81,7 @@ pruner = AGP_Pruner(model, config_list, pruning_algorithm='level')
 pruner.compress()
 ```
 
-AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however you can set `pruning_algorithm` parameter to other values to use other pruning algorithms:
+AGP Pruner 默认使用 `LevelPruner` 算法来修建权重，还可以设置 `pruning_algorithm` 参数来使用其它剪枝算法：
 * `level`: LevelPruner
 * `slim`: SlimPruner
 * `l1`: L1FilterPruner
@@ -91,42 +91,42 @@ AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however
 * `apoz`: ActivationAPoZRankFilterPruner
 * `mean_activation`: ActivationMeanRankFilterPruner
 
-You should add code below to update epoch number when you finish one epoch in your training code.
+在训练代码中每完成一个 Epoch，需要更新一下 Epoch 的值。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
 #### AGP Pruner 的用户配置
-* **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
-* **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
-* **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
+* **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
+* **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
+* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值，默认为 0。
+* **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
+* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝，默认 frequency=1。
 
 ***
 
 ## Lottery Ticket 假设
-[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
 
-In this paper, the authors use the following process to prune a model, called *iterative prunning*:
+本文中，作者使用叫做*迭代*修剪的方法：
 > 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
 > 2. 将网络训练 j 次，得出参数 theta_j。
 > 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
 > 4. 将其余参数重置为 theta_0 的值，创建获胜彩票 f(x;m*theta_0)。
 > 5. 重复步骤 2、3 和 4。
 
-If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+如果配置的最终稀疏度为 P (e.g., 0.8) 并且有 n 次修建迭代，每次迭代修剪前一轮中剩余权重的 1-(1-P)^(1/n)。
 
 ### 用法
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import LotteryTicketPruner
 config_list = [{
@@ -142,21 +142,21 @@ for _ in pruner.get_prune_iterations():
         ...
 ```
 
-The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round. Simple reproducing results can be found [here](./LotteryTicketHypothesis.md).
+上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 `model` 和 `optimizer` (**注意，如果使用 `lr_scheduler`，也需要添加**) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 `get_prune_iterations` 来获取修建迭代，并在每次迭代开始时调用 `prune_iteration_start`。 为了模型能较好收敛，`epoch_num` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。 [这是](./LotteryTicketHypothesis.md)简单的重现结果。
 
 
-*Tensorflow version will be supported later.*
+*稍后支持 TensorFlow 版本。*
 
 #### LotteryTicketPruner 的用户配置
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+* **prune_iterations:** 迭代修剪的次数。
+* **sparsity:** 压缩完成后的最终稀疏度。
 
 ***
 
 ## Slim Pruner
 
-This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+这是一次性的 Pruner，在 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
 
 ![](../../img/slim_pruner.png)
 
@@ -164,7 +164,7 @@ This is an one-shot pruner, In ['Learning Efficient Convolutional Networks throu
 
 ### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import SlimPruner
@@ -175,25 +175,25 @@ pruner.compress()
 
 #### Slim Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
 
 
 ## WeightRankFilterPruner
-WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
+WeightRankFilterPruner 是一系列的 Pruner，在卷积层权重上，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### FPGM Pruner
 
-This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 
-FPGMPruner prune filters with the smallest geometric median
+具有最小几何中位数的 FPGMPruner 修剪过滤器
 
  ![](../../img/fpgm_fig1.png)
 > 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
 #### 用法
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import FPGMPruner
 config_list = [{
@@ -203,7 +203,7 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
 config_list = [{
@@ -213,28 +213,28 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-You should add code below to update epoch number at beginning of each epoch.
+需要在每个 epoch 开始的地方，添加下列代码来更新 epoch 的数值。
 
-Tensorflow code
+TensorFlow 代码
 ```python
 pruner.update_epoch(epoch, sess)
 ```
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
 #### FPGM Pruner 的用户配置
-* **sparsity:** How much percentage of convolutional filters are to be pruned.
+* **sparsity:** 卷积过滤器要修剪的百分比。
 
 ***
 
 ### L1Filter Pruner
 
-This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf. The reproduced experiment results can be found [here](l1filterpruner.md)
+这是一种一次性的 Pruner，由 ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) 提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 和 Hans Peter Graf。 [重现的实验结果](l1filterpruner.md)
 
 ![](../../img/l1filter_pruner.png)
 
@@ -249,7 +249,7 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 
 #### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import L1FilterPruner
@@ -261,17 +261,17 @@ pruner.compress()
 #### L1Filter Pruner 的用户配置
 
 - **sparsity:**，指定压缩的稀疏度。
-- **op_types:** Only Conv1d and Conv2d is supported in L1Filter Pruner
+- **op_types:** 在 L1Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
 ***
 
 ### L2Filter Pruner
 
-This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
+这是一种结构化剪枝算法，用于修剪权重的最小 L2 规范筛选器。 它被实现为一次性修剪器。
 
 #### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import L2FilterPruner
@@ -282,23 +282,23 @@ pruner.compress()
 
 #### L2Filter Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 L2Filter Pruner 中仅支持 Conv1d 和 Conv2d。
 
 ## ActivationRankFilterPruner
-ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
+ActivationRankFilterPruner 是一系列的 Pruner，从卷积层激活的输出，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### ActivationAPoZRankFilterPruner
 
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `APoZ` which is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250). Iterative pruning based on `APoZ` will be supported in future release.
+我们将其实现为一次性剪枝器，它基于 `APoZ` 修剪卷积层，参考论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250)。 基于迭代剪枝的 `APoZ` 将在以后的版本中支持。
 
-The APoZ is defined as:
+APoZ 定义为：
 
 ![](../../img/apoz.png)
 
 #### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import ActivationAPoZRankFilterPruner
@@ -310,24 +310,24 @@ pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num
 pruner.compress()
 ```
 
-Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：ActivationAPoZRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-You can view example for more information
+查看示例进一步了解
 
 #### ActivationAPoZRankFilterPruner 的用户配置
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
-- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
+- **op_types:** 在 ActivationAPoZRankFilterPruner 中仅支持 Conv2d。
 
 ***
 
 ### ActivationMeanRankFilterPruner
 
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `mean activation` which is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+其实现为一次性修剪器，基于 `平均激活` 准则来修剪卷积层，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中有说明。 本文中提到的其他修剪标准将在以后的版本中支持。
 
 #### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import ActivationMeanRankFilterPruner
@@ -339,30 +339,30 @@ pruner = ActivationMeanRankFilterPruner(model, config_list)
 pruner.compress()
 ```
 
-Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-You can view example for more information
+查看示例进一步了解
 
 #### ActivationMeanRankFilterPruner 的用户配置
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
+- **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
 
 
 ## GradientRankFilterPruner
 
-GradientRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the gradients of convolution layers to achieve a preset level of network sparsity.
+GradientRankFilterPruner 是一系列的 Pruner，在卷积层梯度上，用最小的重要性标准修剪过滤器，来达到预设的网络稀疏度。
 
 ### TaylorFOWeightFilterPruner
 
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the first order taylor expansion on weights. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+其实现为一次性 Pruner，会根据权重的一阶泰勒展开式来对卷积层进行剪枝。 过滤器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
 >
 
 ![](../../img/importance_estimation_sum.png)
 
 #### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import TaylorFOWeightFilterPruner
