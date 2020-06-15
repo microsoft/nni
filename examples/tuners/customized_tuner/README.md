@@ -1,16 +1,33 @@
 # How to install this customized tuner as a builtin tuner
 
-## Prepare package installation source
-Run following command to prepare the installation source:
-```bash
-python setup.py develop
-```
+## Prepare installation source and install package
+There are 2 options to install this customized tuner:
 
-## Install this tuner as a builtin tuner
-Run following command to install it as a builtin tuner:
-```
-nnictl package install ./
-```
+### Option 1: install from directory
+
+Step 1: From `customized_tuner` directory, run: 
+
+`python setup.py develop`
+
+This command will build the `customized_tuner` directory as a pip installation source.
+
+Step 2: Run command:
+
+`nnictl package install ./`
+
+### Option 2: install from whl file
+
+Step 1: From `customized_tuner` directory, run:
+
+`python setup.py bdist_wheel`
+
+This command build a whl file which is a pip installation source.
+
+Step 2: Run command:
+
+`nnictl package install dist/*.whl`
+
+## Check the installed package
 
 Then run command `nnictl package list`, you should be able to see that demotuner is installed:
 ```

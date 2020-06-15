@@ -51,8 +51,105 @@ The validator will be invoked before experiment is started to check whether the 
 ### 3. Prepare package installation source
 In order to be installed as builtin tuners, assessors and advisors, the customized algorithms need to be packaged as installable source which can be recognized by `pip` command, under the hood nni calls `pip` command to install the package.
 Besides being a common pip source, the package needs to provide meta information in the `classifiers` field.
+Format of classifiers field is a following:
+```
+NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full class name of class args validator>
+```
+* `type`: type of algorithms, could be one of `tuner`, `assessor`, `advisor`
+* `builtin name`: builtin name used in experiment configuration file
+* `full class name of tuner`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
+* `full class name of class args validator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
+Following is an example of classfiers in package's `setup.py`:
 
+```python
+    classifiers = [
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: ',
+        'NNI Package :: tuner :: demotuner :: demo_tuner.DemoTuner :: demo_tuner.MyClassArgsValidator'
+    ],
+```
+
+Once you have the meta info in `setup.py`, you can build your pip installation source via:
+* Run command `python setup.py develop` from the package directory, this command will build the directory as a pip installation source.
+* Run command `python setup.py bdist_wheel` from the package directory, this command build a whl file which is a pip installation source.
+
+NNI will look for the classifier starts with `NNI Package` to retrieve the package meta information while the package being installed with `nnictl package install <source>` command.
+
+Reference [customized tuner example](https://github.com/microsoft/nni/blob/master/examples/tuners/customized_tuner/README.md) for a full example.
 
 ### 4. Install customized algorithms package into NNI
 
-### Manage packages using `nnictl package`
+If you installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
+
+`nnictl package install ./`
+
+If you installation source is prepared as a whl file with `python setup.py bdist_wheel`, you can install the package by following command:
+
+`nnictl package install dist/*.whl`
+
+## 5. Use the installed builtin algorithms in experiment
+Once your customized algorithms is installed, you can use it in experiment configuration file the same way as other builtin tuners/assessors/advisors, for example:
+
+```yaml
+tuner:
+  builtinTunerName: demotuner
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+```
+
+
+## Manage packages using `nnictl package`
+
+### List installed packages
+
+Run following command to list the installed packages:
+
+```
+nnictl package list
++-----------------+------------+-----------+--------=-------------+------------------------------------------+
+|      Name       |    Type    | Installed |      Class Name      |               Module Name                |
++-----------------+------------+-----------+----------------------+------------------------------------------+
+| demotuner       | tuners     | Yes       | DemoTuner            | demo_tuner                               |
+| SMAC            | tuners     | No        | SMACTuner            | nni.smac_tuner.smac_tuner                |
+| PPOTuner        | tuners     | No        | PPOTuner             | nni.ppo_tuner.ppo_tuner                  |
+| BOHB            | advisors   | Yes       | BOHB                 | nni.bohb_advisor.bohb_advisor            |
++-----------------+------------+-----------+----------------------+------------------------------------------+
+```
+
+Run following command to list all packages, including the builtin packages can not be uninstalled.
+
+```
+nnictl package list --all
++-----------------+------------+-----------+--------=-------------+------------------------------------------+
+|      Name       |    Type    | Installed |      Class Name      |               Module Name                |
++-----------------+------------+-----------+----------------------+------------------------------------------+
+| TPE             | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Random          | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Anneal          | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Evolution       | tuners     | Yes       | EvolutionTuner       | nni.evolution_tuner.evolution_tuner      |
+| BatchTuner      | tuners     | Yes       | BatchTuner           | nni.batch_tuner.batch_tuner              |
+| GridSearch      | tuners     | Yes       | GridSearchTuner      | nni.gridsearch_tuner.gridsearch_tuner    |
+| NetworkMorphism | tuners     | Yes       | NetworkMorphismTuner | nni.networkmorphism_tuner.networkmo...   |
+| MetisTuner      | tuners     | Yes       | MetisTuner           | nni.metis_tuner.metis_tuner              |
+| GPTuner         | tuners     | Yes       | GPTuner              | nni.gp_tuner.gp_tuner                    |
+| PBTTuner        | tuners     | Yes       | PBTTuner             | nni.pbt_tuner.pbt_tuner                  |
+| SMAC            | tuners     | No        | SMACTuner            | nni.smac_tuner.smac_tuner                |
+| PPOTuner        | tuners     | No        | PPOTuner             | nni.ppo_tuner.ppo_tuner                  |
+| Medianstop      | assessors  | Yes       | MedianstopAssessor   | nni.medianstop_assessor.medianstop_...   |
+| Curvefitting    | assessors  | Yes       | CurvefittingAssessor | nni.curvefitting_assessor.curvefitt...   |
+| Hyperband       | advisors   | Yes       | Hyperband            | nni.hyperband_advisor.hyperband_adv...   |
+| BOHB            | advisors   | Yes       | BOHB                 | nni.bohb_advisor.bohb_advisor            |
++-----------------+------------+-----------+----------------------+------------------------------------------+
+```
+
+### Uninstall package
+
+Run following command to uninstall an installed package:
+
+`nnictl package uninstall <builtin name>`
+
+For example:
+
+`nnictl package uninstall demotuner`

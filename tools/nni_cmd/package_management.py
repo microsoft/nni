@@ -22,28 +22,33 @@ def install_by_name(package_name):
     requirements_path = os.path.join(nni.__path__[0], INSTALLABLE_PACKAGE_META[package_name]['code_sub_dir'], 'requirements.txt')
     assert os.path.exists(requirements_path)
 
-    install_requirements_command(requirements_path)
+    return install_requirements_command(requirements_path)
 
 def package_install(args):
     '''install packages'''
+    installed = False
     try:
         if args.name:
-            install_by_name(args.name)
-            package_meta = {}
-            package_meta['type'] = INSTALLABLE_PACKAGE_META[args.name]['type']
-            package_meta['name'] = args.name
-            package_meta['class_name'] = INSTALLABLE_PACKAGE_META[args.name]['class_name']
-            package_meta['class_args_validator'] = INSTALLABLE_PACKAGE_META[args.name]['class_args_validator']
-            save_package_meta_data(package_meta)
-            print_green('{} installed!'.format(args.name))
+            if install_by_name(args.name) == 0:
+                package_meta = {}
+                package_meta['type'] = INSTALLABLE_PACKAGE_META[args.name]['type']
+                package_meta['name'] = args.name
+                package_meta['class_name'] = INSTALLABLE_PACKAGE_META[args.name]['class_name']
+                package_meta['class_args_validator'] = INSTALLABLE_PACKAGE_META[args.name]['class_args_validator']
+                save_package_meta_data(package_meta)
+                print_green('{} installed!'.format(args.name))
+                installed = True
         else:
             package_meta = get_nni_meta(args.source)
             if package_meta:
                 if call_pip_install(args.source) == 0:
                     save_package_meta_data(package_meta)
-            print_green('{} installed!'.format(package_meta['name']))
+                    print_green('{} installed!'.format(package_meta['name']))
+                    installed = True
     except Exception as e:
         print_error(e)
+    if not installed:
+        print_error('installation failed!')
 
 def package_uninstall(args):
     '''uninstall packages'''
