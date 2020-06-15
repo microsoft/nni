@@ -34,6 +34,7 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
+    failOnStderr: true
     displayName: 'Install dependencies'
   - script: |
       set -e
@@ -84,6 +85,7 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
+    failOnStderr: true
     displayName: 'Install dependencies'
   - script: |
       cd test
@@ -115,6 +117,7 @@ jobs:
       rm /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
       nnictl package install --name=SMAC
+    failOnStderr: true
     displayName: 'Install dependencies'
   - script: |
       cd test
@@ -139,6 +142,7 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install tensorflow==1.15.2 --user
+    failOnStderr: true
     displayName: 'Install dependencies'
   - script: |
       cd test
