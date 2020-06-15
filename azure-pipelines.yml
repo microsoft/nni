@@ -26,7 +26,7 @@ jobs:
     displayName: 'Run eslint'
   - script: |
       set -e
-      python3 -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
+      python3 -m pip install torch==2.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python3 -m pip install tensorflow==1.15.2 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install gym onnx --user
