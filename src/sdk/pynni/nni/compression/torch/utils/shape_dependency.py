@@ -37,7 +37,7 @@ class ChannelDependency:
         self.dependency = dict()
         self.build_channel_dependency()
 
-    def get_parent_convs(self, node):
+    def _get_parent_layers(self, node):
         """
         Find the nearest father conv layers for the target node.
 
@@ -48,23 +48,23 @@ class ChannelDependency:
 
         Returns
         -------
-        parent_convs: list
-            nearest father conv layers for the target worknode.
+        parent_layers: list
+            nearest father conv/linear layers for the target worknode.
         """
-        parent_convs = []
+        parent_layers = []
         queue = []
         queue.append(node)
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d':
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear':
                 # find the first met conv
-                parent_convs.append(curnode.name)
+                parent_layers.append(curnode.name)
                 continue
             parents = self.graph.find_predecessors(curnode.unique_name)
             parents = [self.graph.name_to_node[name] for name in parents]
             for parent in parents:
                 queue.append(parent)
-        return parent_convs
+        return parent_layers
 
     def build_channel_dependency(self):
         """
@@ -72,11 +72,11 @@ class ChannelDependency:
         in the model.
         """
         for node in self.graph.nodes_py.nodes_op:
-            parent_convs = []
+            parent_layers = []
             # find the node that contains aten::add
             # or aten::cat operations
             if node.op_type in ADD_TYPES:
-                parent_convs = self.get_parent_convs(node)
+                parent_layers = self._get_parent_layers(node)
             elif node.op_type == CAT_TYPE:
                 # To determine if this cat operation will introduce channel
                 # dependency, we need the specific input parameters of the cat
@@ -91,10 +91,10 @@ class ChannelDependency:
                         cat_dim = list(cnode.inputs())[1].toIValue()
                         break
                 if cat_dim != 1:
-                    parent_convs = self.get_parent_convs(node)
-            dependency_set = set(parent_convs)
+                    parent_layers = self._get_parent_layers(node)
+            dependency_set = set(parent_layers)
             # merge the dependencies
-            for parent in parent_convs:
+            for parent in parent_layers:
                 if parent in self.dependency:
                     dependency_set.update(self.dependency[parent])
             # save the dependencies
@@ -102,45 +102,22 @@ class ChannelDependency:
                 self.dependency[_node] = dependency_set
 
 
-    def filter_prune_check(self, ratios):
-        """
-        According to the channel dependencies between the conv
-        layers, check if the filter pruning ratio for the conv
-        layers is legal.
-
-        Parameters
-        ---------
-        ratios : dict
-            the prune ratios for the layers. %ratios is a dict,
-            in which the keys are the names of the target layer
-            and the values are the prune ratio for the corresponding
-            layers. For example:
-            ratios = {'body.conv1': 0.5, 'body.conv2':0.5}
-            Note: the name of the layers should looks like
-            the names that model.named_modules() functions
-            returns.
-
-        Returns
-        -------
-        True/False
-        """
-        for node in self.graph.nodes_py.nodes_op:
-            if node.op_type == 'Conv2d' and node.name in ratios:
-                if node.name not in self.dependency:
-                    # this layer has no dependency on other layers
-                    # it's legal to set any prune ratio between 0 and 1
-                    continue
-                for other in self.dependency[node.name]:
-                    if other not in ratios:
-                        return False
-                    elif ratios[other] != ratios[node.name]:
-                        return False
-        return True
-
-
     def export(self, filepath):
         """
         export the channel dependencies as a csv file.
+        The layers at the same line have output channel
+        dependencies with each other. For example,
+        layer1.1.conv2, conv1, and layer1.0.conv2 have
+        output channel dependencies with each other, which
+        means the output channel(filters) numbers of these
+        three layers should be same with each other, otherwise
+        the model may has shape conflict. 
+
+        Output example:
+        Dependency Set,Convolutional Layers
+        Set 1,layer1.1.conv2,layer1.0.conv2,conv1
+        Set 2,layer1.0.conv1
+        Set 3,layer1.1.conv1
         """
         header = ['Dependency Set', 'Convolutional Layers']
         setid = 0

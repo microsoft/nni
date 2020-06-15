@@ -29,7 +29,7 @@ os.makedir(outdir)
 s_analyzer.export(os.path.join(outdir, filename))
 ```
 
-Two key parameters of SensitivityAnalysis are model, and val_func. 'model' is the neural network that to be analyzed and the 'val_func' is the validation function that returns the model accuracy on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy on the dataset and pass it to SensitivityAnalysis.
+Two key parameters of SensitivityAnalysis are model, and val_func. 'model' is the neural network that to be analyzed and the 'val_func' is the validation function that returns the model accuracy/loss/ or other metrics on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy/loss on the dataset and pass it to SensitivityAnalysis.
 SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
 
 Futhermore, users can specify the sparsities values used to prune for each layer by optinal parameter 'sparsities'.
@@ -38,7 +38,7 @@ s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5,
 ``` 
 the SensitivityAnalysis will prune 25% 50% 75% weights gradually for each layer, and record the model's accuracy at the same time (SensitivityAnalysis only prune a layer once a time, the other layers are set to their original weights). If the sparsities is not set, SensitivityAnalysis will use the numpy.arange(0.1, 1.0, 0.1) as the default sparsity values.
 
-Users can also speed up the progress of sensitivity analysis by the early_stop option. By default, the SensitivityAnalysis will test the accuracy under all sparsities for each layer. In contrast, when the early_stop is set, the sensitivity analysis for a layer will stop, when the accuracy drop already reaches the threshold set by early_stop.
+Users can also speed up the progress of sensitivity analysis by the early_stop/min_threshold/max_threshold option. By default, the SensitivityAnalysis will test the accuracy under all sparsities for each layer. In contrast, when the early_stop is set, the sensitivity analysis for a layer will stop, when the accuracy/loss has already droped/raised the value of early_stop. If the min_threshold/max_threshold is set, when the validation metric returned by the val_func is lower/larger than the threshold, the sensitivity analysis will stop.
 ```python
 s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5, 0.75], early_stop=0.1)
 ```
@@ -59,7 +59,7 @@ features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 We also provide several tools for the topology analysis during the model compression.
 
 ### ChannelDependency
-Complicated models may has residual connection/concat operations in their models. When the user prune these models, they need to be careful about the channel-count dependencies between the convolution layers in the model. If the layers has channel dependency are assigned with different sparsities (here we only discuss the structured pruning by L1FilterPruner/L2FilterPruner), then even the pruned model with mask works fine. but the pruned model cannot be speedup to the final model that run on the devices, because there will be a shape conflict when the model try to add/concat the outputs of these layers. This model is to find the layers that has channel count dependencies to help user better prune their model.
+Complicated models may has residual connection/concat operations in their models. When the user prune these models, they need to be careful about the channel-count dependencies between the convolution layers in the model. If the layers has channel dependency are assigned with different sparsities (here we only discuss the structured pruning by L1FilterPruner/L2FilterPruner), then even the pruned model with mask works fine. but the pruned model cannot be speedup to the final model that run on the devices, because there will be a shape conflict when the model try to add/concat the outputs of these layers. This tool is to find the layers that has channel count dependencies to help user better prune their model.
 
 #### Usage
 ```python

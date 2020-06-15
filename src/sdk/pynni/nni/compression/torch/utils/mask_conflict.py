@@ -60,14 +60,8 @@ class MaskConflict:
                 w_mask = self.masks[name]['weight']
                 shape = w_mask.size()
                 count = np.prod(shape[1:])
-                all_ones = []
-                all_zeros = []
-                for i in range(w_mask.size(0)):
-                    _count = torch.sum(w_mask[i])
-                    if _count == count:
-                        all_ones.append(i)
-                    elif _count == 0:
-                        all_zeros.append(i)
+                all_ones = (w_mask.flatten(1).sum(-1)==count).nonzero().squeeze(1).tolist()
+                all_zeros = (w_mask.flatten(1).sum(-1)==0).nonzero().squeeze(1).tolist()
                 if len(all_ones) + len(all_zeros) < w_mask.size(0):
                     # In fine-grained pruning, there is no need to check
                     # the shape conflict

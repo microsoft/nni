@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 
 class SensitivityAnalysis:
-    def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop=1.0):
+    def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop=None, min_threshold=None, max_threshold=None):
         """
         Perform sensitivity analysis for this model.
         Parameters
@@ -37,23 +37,28 @@ class SensitivityAnalysis:
             There are no restrictions on the input parameters of the val_function.
             User can use the val_args, val_kwargs parameters in analysis
             to pass all the parameters that val_func needed.
-
         sparsities : list
             The sparsity list provided by users. This parameter is set when the user
             only wants to test some specific sparsities. In the sparsity list, each element
             is a sparsity value which means how much weight the pruner should prune. Take
             [0.25, 0.5, 0.75] for an example, the SensitivityAnalysis will prune 25% 50% 75%
             weights gradually for each layer.
-
         prune_type : str
             The pruner type used to prune the conv layers, default is 'l1',
             and 'l2', 'fine-grained' is also supported.
         early_stop : float
             If this flag is set, the sensitivity analysis
-            for a conv layer will early stop when the accuracy
-            drop already reach the value of early_stop (0.05 for example).
-            The default value is 1.0, which means the analysis won't stop
+            for a conv layer will early stop when the validation metric(
+            for example, accurracy/loss) has alreay droped/raised the value
+            of early_stop (0.05 for example).
+            The default value is None, which means the analysis won't stop
             until all given sparsities are tested.
+        min_threshold : float
+            If the validation metric returned by the val_func is lower
+            than min_threshold, the sensitivity analysis will stop.
+        max_threshold : float
+            if the validation metric returned by the val_func is larger
+            than max_threshold, the sensitivity analysis will stop.
 
         """
         self.model = model
@@ -73,7 +78,9 @@ class SensitivityAnalysis:
         elif prune_type == 'fine-grained':
             self.Pruner = LevelPruner
         self.early_stop = early_stop
-        self.ori_acc = None  # original accuracy for the model
+        self.min_threshold = min_threshold
+        self.max_threshold = max_threshold
+        self.ori_metric = None  # original validation metric for the model
         # already_pruned is for the iterative sensitivity analysis
         # For example, sensitivity_pruner iteratively prune the target
         # model according to the sensitivity. After each round of
@@ -93,7 +100,34 @@ class SensitivityAnalysis:
                     self.target_layer[name] = submodel
                     self.already_pruned[name] = 0
 
-    def analysis(self, val_args=None, val_kwargs=None, start=0, end=None):
+    def _need_to_stop(self, ori_metric, cur_metric):
+        """
+        Judge if meet the stop conditon(early_stop, min_threshold,
+        max_threshold).
+        Parameters
+        ----------
+        ori_metric : float
+            original validation metric
+        cur_metric : float
+            current validation metric
+
+        Returns
+        -------
+        stop : bool
+            if stop the sensitivity analysis
+        """
+        if self.early_stop is not None:
+            if abs(ori_metric - cur_metric) >= self.early_stop:
+                return True
+        if self.min_threshold is not None:
+            if cur_metric < self.min_threshold:
+                return True
+        if self.max_threshold is not None:
+            if cur_metric > self.max_threshold:
+                return True
+        return False
+
+    def analysis(self, val_args=None, val_kwargs=None, specified_layers=None):
         """
         This function analyze the sensitivity to pruning for
         each conv layer in the target model.
@@ -108,31 +142,30 @@ class SensitivityAnalysis:
             args for the val_function
         val_kwargs : dict
             kwargs for the val_funtion
-        start : int
-            Layer index of the sensitivity analysis start.
-        end : int
-            Layer index of the sensitivity analysis end.
-
+        specified_layers : list
+            list of layer names to analyze sensitivity.
+            If this variable is set, then only analyze
+            the conv layers in specified in the list.
+            User can also use this option to parallelize
+            the sensitivity analysis easily.
         Returns
         -------
         sensitivities : dict
             dict object that stores the trajectory of the
             accuracy when the prune ratio changes
         """
-        if not end:
-            end = self.layers_count
-        assert start >= 0 and end <= self.layers_count
-        assert start <= end
         if val_args is None:
             val_args = []
         if val_kwargs is None:
             val_kwargs = {}
-        # Get the validation accuracy before pruning
-        if self.ori_acc is None:
-            self.ori_acc = self.val_func(*val_args, **val_kwargs)
+        # Get the original validation metric(accuracy) before pruning
+        if self.ori_metric is None:
+            self.ori_metric = self.val_func(*val_args, **val_kwargs)
         namelist = list(self.target_layer.keys())
-        for layerid in range(start, end):
-            name = namelist[layerid]
+        if specified_layers is not None:
+            # only analyze several specified conv layers
+            namelist = list(filter(lambda x: x in specified_layers, namelist))
+        for name in namelist:
             self.sensitivities[name] = {}
             for sparsity in self.sparsities:
                 # Calculate the actual prune ratio based on the already pruned ratio
@@ -145,15 +178,15 @@ class SensitivityAnalysis:
                     name], 'op_types': ['Conv2d']}]
                 pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
-                val_acc = self.val_func(*val_args, **val_kwargs)
+                val_metric = self.val_func(*val_args, **val_kwargs)
                 logger.info('Layer: %s Sparsity: %.2f Accuracy: %.4f',
-                            name, sparsity, val_acc)
+                            name, sparsity, val_metric)
 
-                self.sensitivities[name][sparsity] = val_acc
+                self.sensitivities[name][sparsity] = val_metric
                 pruner._unwrap_model()
                 del pruner
-                # if the accuracy drop already reach the 'early_stop'
-                if val_acc + self.early_stop < self.ori_acc:
+                # check if the current metric meet the stop condition
+                if self._need_to_stop(self.ori_metric, val_metric):
                     break
 
             # reset the weights pruned by the pruner, because the
@@ -163,7 +196,6 @@ class SensitivityAnalysis:
             self.model.load_state_dict(self.ori_state_dict)
 
         return self.sensitivities
-
 
     def export(self, filepath):
         """
