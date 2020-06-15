@@ -22,7 +22,7 @@ model = pruner.compress()
 # 模型会在训练过程中自动剪枝
 ```
 
-Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 It prunes the model per the `config_list` during training loop by adding a hook on `optimizer.step()`.
+Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 通过往 `optimizer.step()` 上增加回调，在训练过程中根据 `config_list` 来对模型剪枝。
 
 From implementation perspective, a pruner consists of a `weight masker` instance and multiple `module wrapper` instances.
 
