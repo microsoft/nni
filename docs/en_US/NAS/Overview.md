@@ -1,5 +1,9 @@
 # Neural Architecture Search (NAS) on NNI
 
+```eval_rst
+.. contents::
+```
+
 ## Overview
 
 Automatic neural architecture search is taking an increasingly important role in finding better models. Recent research has proved the feasibility of automatic NAS and has lead to models that beat many manually designed and tuned models. Some representative works are [NASNet][2], [ENAS][1], [DARTS][3], [Network Morphism][4], and [Evolution][5]. Further, new innovations keep emerging.

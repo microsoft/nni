@@ -1,24 +1,10 @@
-# Quick Start
+# One-shot NAS algorithms
 
-```eval_rst
-.. contents::
-
-.. Note:: The APIs are in an experimental stage. The current programing interface is subject to change.
-```
-
-![](../../img/nas_abstract_illustration.png)
-
-Modern Neural Architecture Search (NAS) methods usually incorporate [three dimensions][1]: search space, search strategy, and performance estimation strategy. Search space often contains a limited number of neural network architectures to explore, while the search strategy samples architectures from search space, gets estimations of their performance, and evolves itself. Ideally, the search strategy should find the best architecture in the search space and report it to users. After users obtain the "best architecture", many methods use a "retrain step", which trains the network with the same pipeline as any traditional model.
-
-
-
-## Use a Search Algorithm
-
-Aside from using a search space, there are at least two other ways users can do search. One runs NAS distributedly, which can be as naive as enumerating all the architectures and training each one from scratch, or can involve leveraging more advanced technique, such as [SMASH][8], [ENAS][2], [DARTS][1], [FBNet][3], [ProxylessNAS][4], [SPOS][5], [Single-Path NAS][6],  [Understanding One-shot][7] and [GDAS][9]. Since training many different architectures is known to be expensive, another family of methods, called one-shot NAS, builds a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
+Besides [classic NAS algorithms](./ClassicNas.md), users also apply more advanced one-shot NAS algorithms to find better models from a search space. There are lots of related works about one-shot NAS algorithms, such as [SMASH][8], [ENAS][2], [DARTS][1], [FBNet][3], [ProxylessNAS][4], [SPOS][5], [Single-Path NAS][6],  [Understanding One-shot][7] and [GDAS][9]. One-shot NAS algorithms usually build a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
 
 Currently, several one-shot NAS methods are supported on NNI. For example, `DartsTrainer`, which uses SGD to train architecture weights and model weights iteratively, and `ENASTrainer`, which [uses a controller to train the model][2]. New and more efficient NAS trainers keep emerging in research community and some will be implemented in future releases of NNI.
 
-### One-Shot NAS
+## Search with One-shot NAS Algorithms
 
 Each one-shot NAS algorithm implements a trainer, for which users can find usage details in the description of each algorithm. Here is a simple example, demonstrating how users can use `EnasTrainer`.
 
@@ -56,35 +42,13 @@ trainer.train()  # training
 trainer.export(file="model_dir/final_architecture.json")  # export the final architecture to file
 ```
 
-Users can directly run their training file through `python3 train.py` without `nnictl`. After training, users can export the best one of the found models through `trainer.export()`.
+`model` is the one with [user defined search space](./WriteSearchSpace.md). Then users should prepare training data and model evaluation metrics. To search from the defined search space, a one-shot algorithm is instantiated, called trainer (e.g., EnasTrainer). The trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usages needs and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible.
 
-Normally, the trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usages needs and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible. But there is no guarantee. For example, some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers).
+**Note that** when using one-shot NAS algorithms, there is no need to start an NNI experiment. Users can directly run this Python script (i.e., `train.py`) through `python3 train.py` without `nnictl`. After training, users can export the best one of the found models through `trainer.export()`.
+
+On the other hand, there might be various needs for the search. Some of the needs are embedded in the trainer. For example, some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps); most trainers do not have support for distributed training: they won't wrap your model with `DataParallel` or `DistributedDataParallel` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers).
 
 Furthermore, one-shot NAS can be visualized with our NAS UI. [See more details.](./Visualization.md)
-
-### Distributed NAS
-
-Neural architecture search was originally executed by running each child model independently as a trial job. We also support this searching approach, and it naturally fits within the NNI hyper-parameter tuning framework, where Tuner generates child models for the next trial and trials run in the training service.
-
-To use this mode, there is no need to change the search space expressed with the NNI NAS API (i.e., `LayerChoice`, `InputChoice`, `MutableScope`). After the model is initialized, apply the function `get_and_apply_next_architecture` on the model. One-shot NAS trainers are not used in this mode. Here is a simple example:
-
-```python
-model = Net()
-
-# get the chosen architecture from tuner and apply it on model
-get_and_apply_next_architecture(model)
-train(model)  # your code for training the model
-acc = test(model)  # test the trained model
-nni.report_final_result(acc)  # report the performance of the chosen architecture
-```
-
-The search space should be generated and sent to Tuner. As with the NNI NAS API, the search space is embedded in the user code. Users can use "[nnictl ss_gen](../Tutorial/Nnictl.md)" to generate the search space file. Then put the path of the generated search space in the field `searchSpacePath` of `config.yml`. The other fields in `config.yml` can be filled by referring [this tutorial](../Tutorial/QuickStart.md).
-
-You can use the [NNI tuners](../Tuner/BuiltinTuner.md) to do the search. Currently, only PPO Tuner supports NAS search spaces.
-
-We support a standalone mode for easy debugging, where you can directly run the trial command without launching an NNI experiment. This is for checking whether your trial code can correctly run. The first candidate(s) are chosen for `LayerChoice` and `InputChoice` in this standalone mode.
-
-A complete example can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas/config_nas.yml).
 
 ### Retrain with Exported Architecture
 
