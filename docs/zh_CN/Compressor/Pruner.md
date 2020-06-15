@@ -77,11 +77,21 @@ config_list = [{
     'frequency': 1,
     'op_types': ['default']
 }]
-pruner = AGP_Pruner(model, config_list)
+pruner = AGP_Pruner(model, config_list, pruning_algorithm='level')
 pruner.compress()
 ```
 
-在训练代码中每完成一个 Epoch，更新一下 Epoch 数值。
+AGP Pruner 默认使用 `LevelPruner` 算法来修建权重，还可以设置 `pruning_algorithm` 参数来使用其它剪枝算法：
+* `level`: LevelPruner
+* `slim`: SlimPruner
+* `l1`: L1FilterPruner
+* `l2`: L2FilterPruner
+* `fpgm`: FPGMPruner
+* `taylorfo`: TaylorFOWeightFilterPruner
+* `apoz`: ActivationAPoZRankFilterPruner
+* `mean_activation`: ActivationMeanRankFilterPruner
+
+在训练代码中每完成一个 Epoch，需要更新一下 Epoch 的值。
 
 TensorFlow 代码
 ```python
@@ -205,7 +215,7 @@ pruner.compress()
 ```
 注意：FPGM Pruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-需要在每个 epoch 开始的地方添加下列代码来更新 epoch 的编号。
+需要在每个 epoch 开始的地方，添加下列代码来更新 epoch 的数值。
 
 TensorFlow 代码
 ```python
