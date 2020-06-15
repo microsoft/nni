@@ -111,7 +111,7 @@ class ChannelDependency:
         output channel dependencies with each other, which
         means the output channel(filters) numbers of these
         three layers should be same with each other, otherwise
-        the model may has shape conflict. 
+        the model may has shape conflict.
 
         Output example:
         Dependency Set,Convolutional Layers
