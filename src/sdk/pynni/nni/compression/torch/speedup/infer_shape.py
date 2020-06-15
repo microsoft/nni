@@ -52,14 +52,18 @@ class CoarseMask:
         -------
         tensor
             The merged index (1-dimension) tensor
+            Note that: the output tensor will be moved
+            to the same device as index_a.
         """
+        device = index_a.device
         s = set()
         for num in index_a:
             s.add(num)
         for num in index_b:
             s.add(num)
-        return torch.tensor(sorted(s))  # pylint: disable=not-callable
-
+        # move the output tensor to the same device with index_a
+        return torch.tensor(sorted(s)).to(device)  # pylint: disable=not-callable
+        
     def merge(self, cmask):
         """
         Merge another CoarseMask
@@ -107,6 +111,37 @@ class CoarseMask:
             if not self.eq_on_dim(other, i):
                 return False
         return True
+
+    def __lt__(self, other):
+        """
+        Judge if the mask is a subset of another CoarseMask.
+        """
+        assert isinstance(other, CoarseMask)
+        for dim, indexs in enumerate(self.mask_index):
+            # if self has more dimensions
+            if dim >= len(other.mask_index):
+                return False
+            if self.mask_index[dim] is None:
+                # if no mask on this dimension, then we have less
+                # masks then the other CoraseMask.
+                continue
+            elif other.mask_index[dim] is None:
+                return False
+            else:
+                s1 = set(self.mask_index[dim].tolist())
+                s2 = set(other.mask_index[dim].tolist())
+                if not s1 < s2:
+                    return False
+        return True
+            
+    def __le__(self, other):
+        """
+        Return if self's mask is less or equal to other's mask.
+        """
+        assert isinstance(other, CoarseMask)
+        if self.__lt__(other) or self.__eq__(other):
+            return True
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -192,7 +227,8 @@ infer_from_inshape = {
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask),
     'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
     'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
-    'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited)
+    'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
+    'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -201,6 +237,20 @@ Infer input and weight shape of a module/function from its output shape
 infer_from_outshape = {
     'Conv2d': lambda module_masks, mask: conv2d_outshape(module_masks, mask)
 }
+
+def dropout_inshape(module_masks, mask):
+    if module_masks.input_mask is None:
+        module_masks.set_input_mask(mask)
+        module_masks.set_output_mask(mask)
+        return module_masks.output_mask
+    # if alreay visited
+    assert module_masks.input_mask <= mask
+    if module_masks.input_mask == mask:
+        return None
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
+    return module_masks.output_mask
+
 
 
 def cat_inshape(module_masks, mask, cat_info, last_visited):
@@ -241,6 +291,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
             if dim == cat_dim:
                 if mask.mask_index[dim] is None:
                     continue
+                device = mask.mask_index[dim].device
                 # calculate the offset of the mask
                 pos = in_order.index(last_visited)
                 offsets = [in_shape[i][cat_dim]
@@ -248,7 +299,8 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                 offset = 0
                 for i in range(pos):
                     offset += offsets[i]
-                output_mask.mask_index[dim] = mask.mask_index[dim] + offset
+                _tmp_mask = (mask.mask_index[dim] + offset).to(device)
+                output_mask.mask_index[dim] = _tmp_mask 
             else:
                 # directly copy the mask
                 if mask.mask_index[dim] is not None:
@@ -265,15 +317,19 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
         if dim == cat_dim:
             if mask.mask_index[dim] is None:
                 continue
+            pos = in_order.index(last_visited)
             offsets = [in_shape[i][cat_dim] for i, _ in enumerate(in_shape)]
             offset = 0
             for i in range(pos):
                 offset += offsets[i]
+            device = mask.mask_index[dim].device
             new_mask = mask.mask_index[dim] + offset
+            print(new_mask.device)
             module_masks.output_mask.mask_index[dim] = CoarseMask.merge_index(
-                module_masks.output_mask.mask_index[dim], new_mask)
+                module_masks.output_mask.mask_index[dim], new_mask).to(device)
         else:
             assert module_masks.output_mask.eq_on_dim(mask, dim)
+    print("CATOUTPUT", module_masks.output_mask)
     return module_masks.output_mask
 
 
@@ -423,7 +479,9 @@ def maxpool2d_inshape(module_masks, mask):
     assert mask.mask_index[0] is None
     assert mask.mask_index[2] is None
     assert mask.mask_index[3] is None
-    assert module_masks.input_mask is None
+    if module_masks.input_mask is not None:
+        assert module_masks.input_mask <= mask
+    # assert module_masks.input_mask is None
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return mask
@@ -587,8 +645,15 @@ def conv2d_inshape(module_masks, mask):
         The mask of its output tensor
     """
     assert isinstance(mask, CoarseMask)
-    assert module_masks.input_mask is None
-    module_masks.set_input_mask(mask)
+    if module_masks.input_mask is None:
+        module_masks.set_input_mask(mask)
+    else:
+        # the same conv layer may be accessed more
+        # than once, such as a concat operation.
+        print(module_masks.input_mask)
+        print(mask)
+        assert module_masks.input_mask <= mask
+        module_masks.input_mask.merge(mask)
     return None
 
 
