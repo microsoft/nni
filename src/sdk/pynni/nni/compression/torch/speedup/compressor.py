@@ -178,7 +178,7 @@ class ModelSpeedup:
         """
         print('test 1')
         # TODO change to the absolute import after the analysis_util pr is merged
-        from ....analysis_utils.topology.torch.shape_dependency import ChannelDependency
+        from nni.compression.torch.utils.shape_dependency import ChannelDependency
         channel_depen = ChannelDependency(self.bound_model, self.dummy_input)
         depen_sets = channel_depen.dependency_sets
         print(depen_sets)
