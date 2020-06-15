@@ -34,7 +34,7 @@ A `weight masker` is the implementation of pruning algorithms, it can prune a sp
 
 A `module wrapper` is a module containing:
 
-1. the origin module
+1. 原始的 module
 2. some buffers used by `calc_mask`
 3. a new forward method that applies masks before running the original forward method.
 
