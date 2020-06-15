@@ -26,13 +26,13 @@ Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 It prunes the 
 
 From implementation perspective, a pruner consists of a `weight masker` instance and multiple `module wrapper` instances.
 
-### Weight masker
+### 权重掩码
 
 A `weight masker` is the implementation of pruning algorithms, it can prune a specified layer wrapped by `module wrapper` with specified sparsity.
 
-### Module wrapper
+### module 的包装
 
-A `module wrapper` is a module containing:
+`module 的包装` 包含：
 
 1. 原始的 module
 2. `calc_mask` 使用的一些缓存
@@ -50,9 +50,9 @@ A `module wrapper` is a module containing:
 1. 管理、验证 config_list.
 2. 使用 `module 包装`来包装模型层，并在 `optimizer.step` 上添加回调
 3. 使用`权重掩码`在剪枝时计算层的掩码。
-4. Export pruned model weights and masks.
+4. 导出剪枝后模型的权重和掩码。
 
-## Implement a new pruning algorithm
+## 实现新的剪枝算法
 
 Implementing a new pruning algorithm requires implementing a `weight masker` class which shoud be a subclass of `WeightMasker`, and a `pruner` class, which should a subclass `Pruner`.
 
@@ -73,7 +73,7 @@ class MyMasker(WeightMasker):
 
 You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py) implementations to implement your own weight masker.
 
-A basic pruner looks likes this:
+基本的 Pruner 如下所示：
 
 ```python
 class MyPruner(Pruner):
@@ -98,13 +98,13 @@ class MyPruner(Pruner):
 
 Reference nni provided [pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) implementations to implement your own pruner class.
 
-### Set wrapper attribute
+### 设置包装的属性
 
-Sometimes `calc_mask` must save some state data, therefore users can use `set_wrappers_attribute` API to register attribute just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`. In above example, we use `set_wrappers_attribute` to set a buffer `if_calculated` which is used as flag indicating if the mask of a layer is already calculated.
+有时，`calc_mask` 需要保存一些状态数据，可以像 PyTorch 的 module 一样，使用 `set_wrappers_attribute` API 来注册属性。 这些缓存会注册到 `module 包装`中。 用户可以通过 `module 包装`来直接访问这些缓存。 In above example, we use `set_wrappers_attribute` to set a buffer `if_calculated` which is used as flag indicating if the mask of a layer is already calculated.
 
-### Collect data during forward
+### 在 forward 时收集数据
 
-Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. This can be done by adding a customized collector to module.
+有时，需要在 forward 方法中收集数据，例如，需要激活的平均值。 This can be done by adding a customized collector to module.
 
 ```python
 class MyMasker(WeightMasker):
