@@ -161,7 +161,7 @@ trial:
 
 All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-**Linux and macOS**
+#### Linux and macOS
 
 Run the **config.yml** file from your command line to start an MNIST experiment.
 
@@ -169,7 +169,7 @@ Run the **config.yml** file from your command line to start an MNIST experiment.
 nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-**Windows**
+#### Windows
 
 Run the **config_windows.yml** file from your command line to start an MNIST experiment.
 
