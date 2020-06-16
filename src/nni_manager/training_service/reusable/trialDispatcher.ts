@@ -20,12 +20,13 @@
 'use strict';
 
 import { EventEmitter } from 'events';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../common/component';
 import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getVersion, uniqueString } from '../../common/utils';
+import { delay, getLogLevel, getVersion, uniqueString } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -43,6 +44,7 @@ import { TrialDetail, TrialService } from './trial';
 class TrialDispatcher implements TrainingService {
 
     private readonly log: Logger;
+    private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
 
     private jobRestServer: JobRestServer;
@@ -66,6 +68,14 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings = new RunnerSettings();
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
+
+        const logLevel = getLogLevel();
+
+        this.log.debug(`current folder ${__dirname}`);
+        if (logLevel == "debug" && fs.existsSync("../../../src/nni_manager")) {
+            this.log.debug("log level is debug, and exist code folder, so set to developing mode.");
+            this.isDeveloping = true;
+        }
     }
 
     public async listTrialJobs(): Promise<TrialDetail[]> {
@@ -92,10 +102,14 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`trialConfig not initialized!`);
         }
 
-        const storageService = component.get<StorageService>(StorageService);
         const trialId: string = uniqueString(5);
 
-        const trialWorkingFolder: string = storageService.joinPath('trials', trialId);
+        const environmentService = component.get<EnvironmentService>(EnvironmentService);
+        let trialWorkingFolder: string = "";
+        if (environmentService.hasStorageService) {
+            const storageService = component.get<StorageService>(StorageService);
+            trialWorkingFolder = storageService.joinPath('trials', trialId);
+        }
         const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), trialWorkingFolder, form);
 
         this.trials.set(trialId, trialJobDetail);
@@ -160,6 +174,10 @@ class TrialDispatcher implements TrainingService {
 
             const runnerSettings = storageService.joinPath(envDir, "settings.json");
             await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+
+            if (this.isDeveloping) {
+                await storageService.copyDirectory("../nni/tools/nni_trial_tool", envDir, true);
+            }
         }
 
         this.log.info(`Environment Manager run loop started.`);
@@ -374,15 +392,14 @@ class TrialDispatcher implements TrainingService {
 
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
+        if (this.isDeveloping) {
+            environment.command = "mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool &&" + environment.command;
+        }
+
         if (environmentService.hasStorageService) {
             const storageService = component.get<StorageService>(StorageService);
             environment.workingFolder = storageService.joinPath("envs", envId);
             await storageService.createDirectory(environment.workingFolder);
-
-            const isDebuging = true;
-            if (isDebuging) {
-                await storageService.copyDirectory("../nni/tools/nni_trial_tool", environment.workingFolder);
-            }
         }
 
         this.environments.set(environment.id, environment);
