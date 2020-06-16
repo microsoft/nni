@@ -268,6 +268,25 @@ def set_dlts_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_aml_config(experiment_config, port, config_file_name):
+    '''set aml configuration'''
+    aml_config_data = dict()
+    aml_config_data['aml_config'] = experiment_config['amlConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -370,6 +389,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name)
     elif platform == 'dlts':
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
+    elif platform == 'aml':
+        config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)

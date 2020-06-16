@@ -33,7 +33,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'),
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -327,6 +327,24 @@ dlts_config_schema = {
 
         Optional('email'): setType('email', str),
         Optional('password'): setType('password', str),
+    }
+}
+
+aml_trial_schema = {
+    'trial':{
+        'codeDir': setPathCheck('codeDir'),
+        'script': setType('script', str),
+        'image': setType('image', str),
+        'computeTarget': setType('computeClusterName', str),
+        'nodeCount': setType('nodeCount', int)
+    }
+}
+
+aml_config_schema = {
+    'amlConfig': {
+        'subscriptionId': setType('subscriptionId', str),
+        'resourceGroup': setType('resourceGroup', str),
+        'workspaceName': setType('workspaceName', str),
     }
 }
 
