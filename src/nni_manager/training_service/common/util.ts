@@ -15,7 +15,6 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * List all files in directory except those ignored by .nniignore.
- * Synchronous for now, will be refactored later.
  * @param source
  * @param destination
  */
