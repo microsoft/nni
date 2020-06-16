@@ -8,3 +8,4 @@ Python API 参考
 
     自动调优 <autotune_ref>
     NAS <NAS/NasReference>
+    Compression Utilities <Compressor/CompressionReference>
