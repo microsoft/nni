@@ -235,34 +235,31 @@ abstract class AMLTrainingService implements TrainingService {
         if (this.amlTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-
-        //Generate Job Configuration in yaml format
-        const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
-        this.log.debug(paiJobConfig);
-        // Step 2. Submit PAI job via Rest call
-        // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
-        const submitJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
-            method: 'POST',
-            body: paiJobConfig,
-            headers: {
-                'Content-Type': 'text/yaml',
-                Authorization: `Bearer ${this.paiToken}`
-            }
-        };
-        request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
-            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
-                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
-                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${body}`;
-
-                this.log.error(errorMessage);
-                trialJobDetail.status = 'FAILED';
-            } else {
-                trialJobDetail.submitTime = Date.now();
-            }
-            deferred.resolve(true);
+        let pyshell = new PythonShell('jobSubmission.py', {
+            scriptPath: './config/aml',
+            args: [
+                '--subscription_id', this.amlClusterConfig.subscriptionId,
+                '--resource_group', this.amlClusterConfig.resourceGroup,
+                '--workspace_name', this.amlClusterConfig.workspaceName,
+                '--computer_target', this.amlTrialConfig.computerTarget,
+                '--docker_image', this.amlTrialConfig.image,
+                '--experiment_name', this.experimentId,
+                '--code_dir', this.amlTrialConfig.codeDir,
+                '--script', this.amlTrialConfig.script
+              ]
         });
-
+        pyshell.on('message', function (message) {
+            // received a message sent from the Python script (a simple "print" statement)
+            console.log(message);
+        });
+        // end the input stream and allow the process to exit
+        pyshell.end(function (err,code,signal) {
+            if (err) throw err;
+            console.log('The exit code was: ' + code);
+            console.log('The exit signal was: ' + signal);
+            console.log('finished');
+            deferred.resolve();
+        });
         return deferred.promise;
     }
 }

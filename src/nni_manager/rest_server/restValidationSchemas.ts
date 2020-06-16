@@ -40,7 +40,7 @@ export namespace ValidationSchemas {
                 containerNFSMountPath: joi.string().min(1),
                 paiConfigPath: joi.string(),
                 script: joi.string(),
-                computeTarget: joi.string(),
+                computerTarget: joi.string(),
                 nodeCount: joi.number(),
                 paiStorageConfigName: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),

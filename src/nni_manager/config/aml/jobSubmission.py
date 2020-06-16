@@ -1,4 +1,5 @@
 import os
+import time
 from argparse import ArgumentParser
 from azureml.core import Experiment, RunConfiguration, ScriptRunConfig
 from azureml.core.compute import ComputeTarget
@@ -34,3 +35,7 @@ if __name__ == "__main__":
     config = ScriptRunConfig(source_directory=args.code_dir, script=args.script, run_config=run_config)
     script_run = experiment.submit(config)
     print(script_run.get_portal_url())
+    while True:
+        time.sleep(5)
+        print(script_run.get_status())
+        print(script_run.get_metrics())

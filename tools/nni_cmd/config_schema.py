@@ -335,7 +335,7 @@ aml_trial_schema = {
         'codeDir': setPathCheck('codeDir'),
         'script': setType('script', str),
         'image': setType('image', str),
-        'computeTarget': setType('computeClusterName', str),
+        'computerTarget': setType('computerTarget', str),
         'nodeCount': setType('nodeCount', int)
     }
 }
@@ -494,3 +494,5 @@ DLTS_CONFIG_SCHEMA = Schema({**common_schema, **dlts_trial_schema, **dlts_config
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 
 FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+
+AML_CONFIG_SCHEMA = Schema({**common_schema, **aml_trial_schema, **aml_config_schema})

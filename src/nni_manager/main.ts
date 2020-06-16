@@ -23,6 +23,7 @@ import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { PAIK8STrainingService } from './training_service/pai/paiK8S/paiK8STrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
+import { AMLTrainingService } from './training_service/aml/amlTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -65,6 +66,10 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         Container.bind(TrainingService)
             .to(DLTSTrainingService)
             .scope(Scope.Singleton);
+    } else if (platformMode === 'aml') {
+        Container.bind(TrainingService)
+            .to(AMLTrainingService)
+            .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
@@ -93,7 +98,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -113,7 +118,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
