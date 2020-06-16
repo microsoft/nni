@@ -23,8 +23,8 @@ def parse_args():
     parser.add_argument('--suffix', default=None, type=str, help='suffix to help you remember what experiment you ran')
     # env
     parser.add_argument('--model', default='mobilenet', type=str, help='model to prune')
-    parser.add_argument('--dataset', default='imagenet', type=str, help='dataset to use (cifar/imagenet)')
-    parser.add_argument('--data_root', default=None, type=str, help='dataset path')
+    parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
+    parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
     parser.add_argument('--preserve_ratio', default=0.5, type=float, help='preserve ratio of the model')
     parser.add_argument('--lbound', default=0.2, type=float, help='minimum preserve ratio')
     parser.add_argument('--rbound', default=1., type=float, help='maximum preserve ratio')
@@ -85,16 +85,19 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
     elif model == 'mobilenetv2' and dataset == 'imagenet':
         from models.mobilenet_v2 import MobileNetV2
         net = MobileNetV2(n_class=1000)
+    elif model == 'mobilenet' and dataset == 'cifar10':
+        from models.mobilenet import MobileNet
+        net = MobileNet(n_class=10)
     else:
         raise NotImplementedError
-    sd = torch.load(checkpoint_path)
-    if 'state_dict' in sd:  # a checkpoint but not a state_dict
-        sd = sd['state_dict']
-    sd = {k.replace('module.', ''): v for k, v in sd.items()}
-    net.load_state_dict(sd)
-    net = net.cuda()
-    if n_gpu > 1:
-        net = torch.nn.DataParallel(net, range(n_gpu))
+    #sd = torch.load(checkpoint_path)
+    #if 'state_dict' in sd:  # a checkpoint but not a state_dict
+    #    sd = sd['state_dict']
+    #sd = {k.replace('module.', ''): v for k, v in sd.items()}
+    #net.load_state_dict(sd)
+    #net = net.cuda()
+    #if n_gpu > 1:
+    #    net = torch.nn.DataParallel(net, range(n_gpu))
 
     return net, deepcopy(net.state_dict())
 
