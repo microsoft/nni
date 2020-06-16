@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -53,6 +54,31 @@ def test(model, test_loader, criterion):
 
 
 if __name__ == '__main__':
+    """
+    THE LOTTERY TICKET HYPOTHESIS: FINDING SPARSE, TRAINABLE NEURAL NETWORKS (https://arxiv.org/pdf/1803.03635.pdf)
+
+    The Lottery Ticket Hypothesis. A randomly-initialized, dense neural network contains a subnetwork that is
+    initialized such that—when trained in isolation—it can match the test accuracy of the original network after
+    training for at most the same number of iterations.
+
+    Identifying winning tickets. We identify a winning ticket by training a network and pruning its
+    smallest-magnitude weights. The remaining, unpruned connections constitute the architecture of the
+    winning ticket. Unique to our work, each unpruned connection’s value is then reset to its initialization
+    from original network before it was trained. This forms our central experiment:
+        1. Randomly initialize a neural network f(x; θ0) (where θ0 ∼ Dθ).
+        2. Train the network for j iterations, arriving at parameters θj .
+        3. Prune p% of the parameters in θj , creating a mask m.
+        4. Reset the remaining parameters to their values in θ0, creating the winning ticket f(x; mθ0).
+    As described, this pruning approach is one-shot: the network is trained once, p% of weights are
+    pruned, and the surviving weights are reset. However, in this paper, we focus on iterative pruning,
+    which repeatedly trains, prunes, and resets the network over n rounds; each round prunes p**(1/n) % of
+    the weights that survive the previous round. Our results show that iterative pruning finds winning tickets
+    that match the accuracy of the original network at smaller sizes than does one-shot pruning.
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train_epochs", type=int, default=10, help="training epochs")
+    args = parser.parse_args()
+
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     traindataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
     testdataset = datasets.MNIST('./data', train=False, transform=transform)
@@ -76,9 +102,12 @@ if __name__ == '__main__':
         pruner.prune_iteration_start()
         loss = 0
         accuracy = 0
-        for epoch in range(10):
+        for epoch in range(args.train_epochs):
             loss = train(model, train_loader, optimizer, criterion)
             accuracy = test(model, test_loader, criterion)
             print('current epoch: {0}, loss: {1}, accuracy: {2}'.format(epoch, loss, accuracy))
         print('prune iteration: {0}, loss: {1}, accuracy: {2}'.format(i, loss, accuracy))
-    pruner.export_model('model.pth', 'mask.pth')
+
+    # reset weight to original untrained model to export wining ticket
+    pruner.load_model_state_dict(pruner._model_state)
+    pruner.export_model('model_wining_ticket.pth', 'mask_wining_ticket.pth')
