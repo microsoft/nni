@@ -108,6 +108,6 @@ if __name__ == '__main__':
             print('current epoch: {0}, loss: {1}, accuracy: {2}'.format(epoch, loss, accuracy))
         print('prune iteration: {0}, loss: {1}, accuracy: {2}'.format(i, loss, accuracy))
 
-    # reset weight to original untrained model to export wining ticket
+    # reset weight to original untrained model to export winning ticket
     pruner.load_model_state_dict(pruner._model_state)
-    pruner.export_model('model_wining_ticket.pth', 'mask_wining_ticket.pth')
+    pruner.export_model('model_winning_ticket.pth', 'mask_winning_ticket.pth')
