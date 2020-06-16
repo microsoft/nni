@@ -113,7 +113,7 @@ Set 12,layer4.1.conv1
 ```
 
 ### MaskConflict
-When the masks of different layers in a model have conflict, we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
+When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
 from nni.compression.torch.utils.mask_conflict import MaskConflict
