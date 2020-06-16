@@ -39,6 +39,9 @@ export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFil
         else if (entryStat.isFile())
             yield entry;
     }
+    if (ignoreFile !== undefined) {
+        ignoreFiles.pop();
+    }
 }
 
 /**

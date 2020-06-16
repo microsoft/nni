@@ -46,11 +46,11 @@ describe('fileUtility', () => {
         fs.writeFileSync(path.join(sourceDir, 'xyy', '.nniignore'), 'qq');  // nested nniignore
         fs.writeFileSync(path.join(sourceDir, 'xyy', 'abc'), '123');
         fs.writeFileSync(path.join(sourceDir, 'xyy', 'qq'), '1234');
-        fs.writeFileSync(path.join(sourceDir, 'xyy', 'zz'), '1234');
+        fs.writeFileSync(path.join(sourceDir, 'xyy', 'pp'), '1234');
         fs.writeFileSync(path.join(sourceDir, 'www', '.nniignore'), 'pp');  // pop nniignore
         fs.writeFileSync(path.join(sourceDir, 'www', 'abc'), '123');
         fs.writeFileSync(path.join(sourceDir, 'www', 'qq'), '1234');
-        fs.writeFileSync(path.join(sourceDir, 'www', 'zz'), '1234');
+        fs.writeFileSync(path.join(sourceDir, 'www', 'pp'), '1234');
     });
 
     afterEach(() => {
@@ -68,16 +68,16 @@ describe('fileUtility', () => {
             'xyy',
             'xx',
             path.join('xyy', '.nniignore'),
-            path.join('xyy', 'zz'),
+            path.join('xyy', 'pp'),
             path.join('www', '.nniignore'),
             path.join('www', 'qq'),
-            path.join('www', 'zz'),
         ]
         const notExistFiles = [
             'abc',
             'xyz',
             path.join('xyy', 'abc'),
             path.join('xyy', 'qq'),
+            path.join('www', 'pp'),
             path.join('www', 'abc'),
         ]
         existFiles.forEach(d => assert.ok(fs.existsSync(path.join(destDir, d))));
