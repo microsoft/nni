@@ -28,7 +28,7 @@ from .convert_ss_to_scenario import generate_scenario
 
 logger = logging.getLogger('smac_AutoML')
 
-class SMACValidator(ClassArgsValidator):
+class SMACClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         Schema({
             'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
