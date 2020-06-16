@@ -156,7 +156,7 @@ class SensitivityAnalysis:
         specified_layers : list
             list of layer names to analyze sensitivity.
             If this variable is set, then only analyze
-            the conv layers in specified in the list.
+            the conv layers that specified in the list.
             User can also use this option to parallelize
             the sensitivity analysis easily.
         Returns
