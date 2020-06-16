@@ -14,6 +14,20 @@ from .constants import BuiltinAlgorithms
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
 
 def get_all_builtin_names(algo_type):
+    """Get all valid builtin names, including:
+    1. BuiltinAlgorithms which is pre-installed.
+    2. User installed packages in <nni_installation_path>/config/installed_packages.yml
+
+    Parameters
+    ----------
+    algo_type: str
+        can be one of 'tuners', 'assessors' or 'advisors'
+
+    Returns: list of string
+    -------
+    All builtin names of specified type, for example, if algo_type is 'tuners', returns
+    all builtin tuner names.
+    """
     assert algo_type in ALGO_TYPES
     merged_dict = _get_merged_builtin_dict()
 
@@ -21,6 +35,20 @@ def get_all_builtin_names(algo_type):
     return builtin_names
 
 def get_not_installable_builtin_names(algo_type=None):
+    """Get builtin names in BuiltinAlgorithms which do not need to be installed
+    and can be used once NNI is installed.
+
+    Parameters
+    ----------
+    algo_type: str | None
+        can be one of 'tuners', 'assessors', 'advisors' or None
+
+    Returns: list of string
+    -------
+    All builtin names of specified type, for example, if algo_type is 'tuners', returns
+    all builtin tuner names.
+    If algo_type is None, returns all builtin names of all types.
+    """
     if algo_type is None:
         meta = BuiltinAlgorithms
     else:
@@ -35,6 +63,32 @@ def get_not_installable_builtin_names(algo_type=None):
     return names
 
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
+    """ Get meta information of builtin algorithms from:
+    1. Pre-installed BuiltinAlgorithms
+    2. User installed packages in <nni_installation_path>/config/installed_packages.yml
+
+    Parameters
+    ----------
+    algo_type: str | None
+        can be one of 'tuners', 'assessors', 'advisors' or None
+    builtin_name: str | None
+        builtin name.
+
+    Returns: dict | list of dict | None
+    -------
+        If builtin_name is specified, returns meta information of speicified builtin
+        alogorithms, for example:
+        {
+            'name': 'Random',
+            'class_name': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner',
+            'class_args': {
+                'algorithm_name': 'random_search'
+            },
+            'accept_class_args': False,
+            'class_args_validator': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptClassArgsValidator'
+        }
+        If builtin_name is None, returns multiple meta information in a list.
+    """
     merged_dict = _get_merged_builtin_dict()
 
     if algo_type is None and builtin_name is None:
@@ -54,6 +108,42 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
 
     return None
 
+def get_installed_package_meta(algo_type, builtin_name):
+    """ Get meta information of user installed algorithms from:
+    <nni_installation_path>/config/installed_packages.yml
+
+    Parameters
+    ----------
+    algo_type: str | None
+        can be one of 'tuners', 'assessors', 'advisors' or None
+    builtin_name: str
+        builtin name.
+
+    Returns: dict | None
+    -------
+        Returns meta information of speicified builtin alogorithms, for example:
+        {
+            'class_args_validator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator',
+            'class_name': 'nni.smac_tuner.smac_tuner.SMACTuner',
+            'name': 'SMAC'
+        }
+    """
+    assert builtin_name is not None
+    if algo_type:
+        assert algo_type in ALGO_TYPES
+    config = read_installed_package_meta()
+
+    candidates = []
+    if algo_type:
+        candidates = config[algo_type]
+    else:
+        for algo_type in ALGO_TYPES:
+            candidates.extend(config[algo_type])
+    for meta in candidates:
+        if meta['name'] == builtin_name:
+            return meta
+    return None
+
 def _parse_full_class_name(full_class_name):
     if not full_class_name:
         return None, None
@@ -62,14 +152,43 @@ def _parse_full_class_name(full_class_name):
     return module_name, class_name
 
 def get_builtin_module_class_name(algo_type, builtin_name):
+    """Get module name and class name of all builtin algorithms
+
+    Parameters
+    ----------
+    algo_type: str
+        can be one of 'tuners', 'assessors', 'advisors'
+    builtin_name: str
+        builtin name.
+
+    Returns: tuple
+    -------
+        tuple of (module name, class name)
+    """
     assert algo_type in ALGO_TYPES
+    assert builtin_name is not None
     meta = get_builtin_algo_meta(algo_type, builtin_name)
     if not meta:
         return None, None
     return _parse_full_class_name(meta['class_name'])
 
 def create_validator_instance(algo_type, builtin_name):
+    """Create instance of validator class
+
+    Parameters
+    ----------
+    algo_type: str
+        can be one of 'tuners', 'assessors', 'advisors'
+    builtin_name: str
+        builtin name.
+
+    Returns: object | None
+    -------
+        Returns validator class instance.
+        If specified validator class does not exist, returns None.
+    """
     assert algo_type in ALGO_TYPES
+    assert builtin_name is not None
     meta = get_builtin_algo_meta(algo_type, builtin_name)
     if not meta or 'class_args_validator' not in meta:
         return None
@@ -80,6 +199,21 @@ def create_validator_instance(algo_type, builtin_name):
     return class_constructor()
 
 def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
+    """Create instance of builtin algorithms
+
+    Parameters
+    ----------
+    builtin_name: str
+        builtin name.
+    input_class_args: dict
+        kwargs for builtin class constructor
+    algo_type: str
+        can be one of 'tuners', 'assessors', 'advisors'
+
+    Returns: object
+    -------
+        Returns builtin class instance.
+    """
     assert algo_type in ALGO_TYPES
     if builtin_name not in get_all_builtin_names(algo_type):
         raise RuntimeError('Builtin name is not found: {}'.format(builtin_name))
@@ -118,6 +252,21 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
     return instance
 
 def create_customized_class_instance(class_params):
+    """Create instance of customized algorithms
+
+    Parameters
+    ----------
+    class_params: dict
+        class_params should contains following keys:
+            codeDir: code directory
+            classFileName: python file name of the class
+            className: class name
+            classArgs (optional): kwargs pass to class constructor
+    Returns: object
+    -------
+        Returns customized class instance.
+    """
+
     code_dir = class_params.get('codeDir')
     class_filename = class_params.get('classFileName')
     class_name = class_params.get('className')
@@ -196,22 +345,6 @@ def get_package_config_path():
     if not os.path.exists(config_dir):
         os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, 'installed_packages.yml')
-
-def get_installed_package_meta(algo_type, builtin_name):
-    if algo_type:
-        assert algo_type in ALGO_TYPES
-    config = read_installed_package_meta()
-
-    candidates = []
-    if algo_type:
-        candidates = config[algo_type]
-    else:
-        for algo_type in ALGO_TYPES:
-            candidates.extend(config[algo_type])
-    for meta in candidates:
-        if meta['name'] == builtin_name:
-            return meta
-    return None
 
 def read_installed_package_meta():
     config_file = get_package_config_path()
