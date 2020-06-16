@@ -3,7 +3,7 @@ import axios from 'axios';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj } from './interface';
 
-async function requestAxios(url: string) {
+async function requestAxios(url: string): Promise<any> {
     const response = await axios.get(url);
     if (response.status === 200) {
         if (response.data.error !== undefined) {
