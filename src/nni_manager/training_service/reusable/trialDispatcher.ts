@@ -40,7 +40,7 @@ import { TrialDetail, TrialService } from './trial';
  * and expose trial as trial job to upper level.
 **/
 @component.Singleton
-class EnvironmentManager implements TrainingService {
+class TrialDispatcher implements TrainingService {
 
     private readonly log: Logger;
     private stopping: boolean = false;
@@ -431,4 +431,4 @@ class EnvironmentManager implements TrainingService {
     }
 }
 
-export { EnvironmentManager };
+export { TrialDispatcher };

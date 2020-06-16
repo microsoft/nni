@@ -26,7 +26,7 @@ import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
-import { EnvironmentManager } from './environmentManager';
+import { TrialDispatcher } from './trialDispatcher';
 import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
@@ -112,7 +112,7 @@ class RouterTrainingService implements TrainingService {
                 const config = <PAIClusterConfig>JSON.parse(value);
                 if (config.reuse === true) {
                     this.log.info(`reuse flag enabled, use EnvironmentManager.`);
-                    this.internalTrainingService = component.get(EnvironmentManager);
+                    this.internalTrainingService = component.get(TrialDispatcher);
 
                     // TODO to support other serivces later.
                     Container.bind(EnvironmentService)
