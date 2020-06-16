@@ -92,7 +92,37 @@ class GroupDependency:
         """
         Build the channel dependency for the conv layers
         in the model.
+
+        Returns
+        -------
+        self.dependency : dict
+            key: the name of conv layers, value: the minimum value that the number of
+            filters should be divisible to.
         """
         for node in self.graph.nodes_py.nodes_op:
             if node.op_type == 'Conv2d':
-                if  
+                group = self._get_conv_groups(node)
+                if node.name in self.dependency:
+                    # the conv layer whose group is larger than 1 will require that
+                    # it's number of output channel to be divisible by the number of group.
+                    self.dependency[node.name] = max(self.dependency[node.name], group)
+                else:
+                    self.dependency[node.name] = group
+                if group > 1:
+                    # for the conv layer whose group is larger than 1, it will require the number
+                    # of output channels of their parent conv layer to be divisible by group.
+                    parent_convs = self._get_parent_convs(node)
+                    for parent in parent_convs:
+                        if parent in self.dependency:
+                            self.dependency[parent] = max(self.dependency[parent], group)
+                        else:
+                            self.dependency[parent] = group
+        return self.dependency
+
+    def export(self, filepath):
+        """
+        export the group dependency to a csv file.
+        output example:
+        Conv layer, Shoule be divisible by
+        """
+        
