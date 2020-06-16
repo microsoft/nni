@@ -25,7 +25,7 @@ import * as component from '../../common/component';
 import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, generateParamFileName, getVersion, uniqueString } from '../../common/utils';
+import { delay, getVersion, uniqueString } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -107,10 +107,8 @@ class TrialDispatcher implements TrainingService {
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialDetail> {
         const trialDetail = await this.getTrialJob(trialJobId);
 
-        const storageService = component.get<StorageService>(StorageService);
-        const fileName = storageService.joinPath(trialDetail.workingDirectory, generateParamFileName(form.hyperParameters))
-        // Write file content ( parameter.cfg ) to working folders
-        await storageService.save(form.hyperParameters.value, fileName);
+        const trialService = component.get<TrialService>(TrialService);
+        await trialService.updateTrial(trialDetail, form);
 
         return trialDetail;
     }
@@ -147,19 +145,22 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
 
-        this.log.info(`Environment Manager copying code and settings.`);
-        const storageService = component.get<StorageService>(StorageService);
-        // Copy the compressed file to remoteDirectory and delete it
-        const codeDir = path.resolve(this.trialConfig.codeDir);
-        const envDir = storageService.joinPath("envs");
-        const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
-        storageService.rename(codeFileName, "nni-code.tar.gz");
+        const environmentService = component.get<EnvironmentService>(EnvironmentService);
+        if (environmentService.hasStorageService) {
+            this.log.info(`Environment Manager copying code and settings.`);
+            const storageService = component.get<StorageService>(StorageService);
+            // Copy the compressed file to remoteDirectory and delete it
+            const codeDir = path.resolve(this.trialConfig.codeDir);
+            const envDir = storageService.joinPath("envs");
+            const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
+            storageService.rename(codeFileName, "nni-code.tar.gz");
 
-        const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
-        await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
 
-        const runnerSettings = storageService.joinPath(envDir, "settings.json");
-        await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+            const runnerSettings = storageService.joinPath(envDir, "settings.json");
+            await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+        }
 
         this.log.info(`Environment Manager run loop started.`);
         await Promise.all([
@@ -239,7 +240,7 @@ class TrialDispatcher implements TrainingService {
                     environments.push(environment);
                 }
             });
-            await environmentService.updateEnvironmentsStatus(environments);
+            await environmentService.refreshEnvironmentsStatus(environments);
 
             environments.forEach((environment) => {
                 const oldIsAlive = environment.isAlive;
@@ -277,7 +278,7 @@ class TrialDispatcher implements TrainingService {
             }
 
             const trialService = component.get<TrialService>(TrialService);
-            trialService.updateTrialsStatus(toRefreshedTrials);
+            trialService.refreshTrialsStatus(toRefreshedTrials);
 
             const waitingTrials: TrialDetail[] = [];
             let liveTrialsCount = 0;
@@ -367,20 +368,21 @@ class TrialDispatcher implements TrainingService {
 
     private async requestEnvironment(): Promise<void> {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
-        const storageService = component.get<StorageService>(StorageService);
         const envId = uniqueString(5);
         const name = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = new EnvironmentInformation(envId, name);
 
-        environment.workingFolder = storageService.joinPath("envs", envId);
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
-        await storageService.createDirectory(environment.workingFolder);
+        if (environmentService.hasStorageService) {
+            const storageService = component.get<StorageService>(StorageService);
+            environment.workingFolder = storageService.joinPath("envs", envId);
+            await storageService.createDirectory(environment.workingFolder);
 
-        const isDebuging = true;
-        if (isDebuging) {
-            // environment.status = "RUNNING";
-            await storageService.copyDirectory("../nni/tools/nni_trial_tool", environment.workingFolder);
+            const isDebuging = true;
+            if (isDebuging) {
+                await storageService.copyDirectory("../nni/tools/nni_trial_tool", environment.workingFolder);
+            }
         }
 
         this.environments.set(environment.id, environment);

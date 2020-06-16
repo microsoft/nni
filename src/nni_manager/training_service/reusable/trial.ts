@@ -27,7 +27,8 @@ export abstract class TrialService {
     protected readonly log: Logger;
 
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract updateTrialsStatus(trials: TrialDetail[]): Promise<void>;
+    public abstract refreshTrialsStatus(trials: TrialDetail[]): Promise<void>;
+    public abstract updateTrial(trial: TrialDetail, form: TrialJobApplicationForm): Promise<void>;
     public abstract startTrial(trial: TrialDetail): Promise<void>;
     public abstract stopTrial(trial: TrialDetail): Promise<void>;
 

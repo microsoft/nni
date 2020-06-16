@@ -23,8 +23,11 @@
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 
 export abstract class EnvironmentService {
+
+    public abstract get hasStorageService(): boolean;
+
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract updateEnvironmentsStatus(environment: EnvironmentInformation[]): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environment: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
 }

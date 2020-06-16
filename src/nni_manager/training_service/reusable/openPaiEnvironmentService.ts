@@ -55,7 +55,49 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
         this.experimentId = getExperimentId();
     }
 
-    public async updateEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+
+    public get hasStorageService(): boolean {
+        return true;
+    }
+
+    public async config(key: string, value: string): Promise<void> {
+        switch (key) {
+            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
+                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
+                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
+                if (this.paiClusterConfig.passWord) {
+                    // Get PAI authentication token
+                    await this.updatePaiToken();
+                } else if (this.paiClusterConfig.token) {
+                    this.paiToken = this.paiClusterConfig.token;
+                }
+                break;
+
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
+                if (this.paiClusterConfig === undefined) {
+                    this.log.error('pai cluster config is not initialized');
+                    break;
+                }
+                this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
+                // Validate to make sure codeDir doesn't have too many files
+
+                const storageService = component.get<StorageService>(StorageService);
+                const remoteRoot = storageService.joinPath(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId);
+                storageService.initialize(this.paiTrialConfig.nniManagerNFSMountPath, remoteRoot);
+
+                if (this.paiTrialConfig.paiConfigPath) {
+                    this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
+                }
+                break;
+            }
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                break;
+            default:
+                this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
+        }
+    }
+
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         await this.refreshPlatform();
 
@@ -219,43 +261,6 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
         }
 
         return deferred.promise;
-    }
-
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if (this.paiClusterConfig.passWord) {
-                    // Get PAI authentication token
-                    await this.updatePaiToken();
-                } else if (this.paiClusterConfig.token) {
-                    this.paiToken = this.paiClusterConfig.token;
-                }
-                break;
-
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                if (this.paiClusterConfig === undefined) {
-                    this.log.error('pai cluster config is not initialized');
-                    break;
-                }
-                this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
-                // Validate to make sure codeDir doesn't have too many files
-
-                const storageService = component.get<StorageService>(StorageService);
-                const remoteRoot = storageService.joinPath(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId);
-                storageService.initialize(this.paiTrialConfig.nniManagerNFSMountPath, remoteRoot);
-
-                if (this.paiTrialConfig.paiConfigPath) {
-                    this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                }
-                break;
-            }
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                break;
-            default:
-                this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
-        }
     }
 
     private async refreshPlatform(): Promise<void> {

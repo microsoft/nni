@@ -20,12 +20,13 @@
 'use strict';
 
 import * as component from "../../common/component";
-import { delay } from "../../common/utils";
+import { delay, generateParamFileName } from "../../common/utils";
 import { KILL_TRIAL_JOB, NEW_TRIAL_JOB } from '../../core/commands';
 import { encodeCommand } from "../../core/ipcInterface";
 import { EnvironmentInformation } from "./environment";
 import { StorageService } from "./storageService";
 import { TrialDetail, TrialService } from "./trial";
+import { TrialJobApplicationForm } from "../../common/trainingService";
 
 @component.Singleton
 export class StorageTrialService extends TrialService {
@@ -33,7 +34,7 @@ export class StorageTrialService extends TrialService {
         return;
     }
 
-    public async updateTrialsStatus(trials: TrialDetail[]): Promise<void> {
+    public async refreshTrialsStatus(trials: TrialDetail[]): Promise<void> {
         const storageService = component.get<StorageService>(StorageService);
 
         for (const trial of trials) {
@@ -92,6 +93,14 @@ export class StorageTrialService extends TrialService {
             throw new Error(`trialService: environment of trial ${trial.id} shouldn't be undefined!`);
         }
         await this.sendCommand(KILL_TRIAL_JOB, trial.id, trial.environment);
+    }
+
+    public async updateTrial(trial: TrialDetail, form: TrialJobApplicationForm): Promise<void> {
+        const storageService = component.get<StorageService>(StorageService);
+        const fileName = storageService.joinPath(trial.workingDirectory, generateParamFileName(form.hyperParameters))
+
+        // Write file content ( parameter.cfg ) to working folders
+        await storageService.save(form.hyperParameters.value, fileName);
     }
 
     private async sendCommand(commantType: string, data: any, environment: EnvironmentInformation): Promise<void> {
