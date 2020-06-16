@@ -9,11 +9,15 @@ import re
 import sys
 import threading
 import time
-from datetime import datetime
+import traceback
+from datetime import datetime, timedelta
 
 import pkg_resources
 
+from .gpu import collect_gpu_usage
+
 idle_timeout_seconds = 10 * 60
+gpu_refressh_interval_seconds = 5
 regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,1}).*')
 trial_runner_syslogger = None
 
@@ -21,14 +25,22 @@ trial_runner_syslogger = None
 def main_loop(args):
     '''main loop logic for trial runner'''
     idle_last_time = datetime.now()
-    is_multi_node = args.node_count > 1
+    gpu_refresh_last_time = datetime.now() - timedelta(minutes=1)
+
+    # init command channel
+    command_channel = None
+    if args.command_channel == "api":
+        command_channel = FileChannel(args)
+    else:
+        command_channel = FileChannel(args)
+    nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
 
     trial = None
 
     try:
         # command loop
         while True:
-            command_type, command_data = receive(is_multi_node)
+            command_type, command_data = command_channel.receive()
             if command_type == CommandType.NewTrialJob:
                 if trial is not None:
                     if trial.is_running():
@@ -52,13 +64,20 @@ def main_loop(args):
                 nni_log(LogType.Info, "trial runner is idle more than {0} seconds, so exit.".format(
                     idle_timeout_seconds))
                 break
+
+            if args.enable_gpu_collect and (datetime.now() - gpu_refresh_last_time).seconds > gpu_refressh_interval_seconds:
+                # collect gpu information
+                gpu_info = collect_gpu_usage(args.node_id)
+                command_channel.send(CommandType.ReportGpuInfo, gpu_info)
+                gpu_refresh_last_time = datetime.now()
             time.sleep(0.5)
-    except Exception as ex:
-        nni_log(LogType.Error, ex)
+    except Exception:
+        traceback.print_exc()
     finally:
         nni_log(LogType.Info, "main_loop exits.")
         if trial is not None:
             trial.kill()
+        command_channel.close()
 
 
 def trial_runner_help_info(*args):
@@ -134,16 +153,22 @@ if __name__ == '__main__':
     PARSER.add_argument('--node_count', type=int, help='number of nodes, it determines how to consume command and save code file')
     args, unknown = PARSER.parse_known_args()
 
-    setting_file = "../settings.json"
+    setting_file = "settings.json"
+    if not os.path.exists(setting_file):
+        setting_file = "../{}".format(setting_file)
     if os.path.exists(setting_file):
         with open(setting_file, 'r') as fp:
             settings = json.load(fp)
-    print("setting is {}".format(settings))
+        print("setting is {}".format(settings))
+    else:
+        print("not found setting file")
 
     args.exp_id = settings["experimentId"]
     args.platform = settings["platform"]
     # runner_id is unique runner in experiment, and will be updated if it's multi-nodes
     args.runner_id = "runner_"+os.path.basename(os.path.realpath(os.path.curdir))
+    args.enable_gpu_collect = settings["enableGpuCollector"]
+    args.command_channel = settings["commandChannel"]
 
     if args.trial_command is None:
         args.trial_command = settings["command"]
@@ -169,8 +194,9 @@ if __name__ == '__main__':
     from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
     from .rest_utils import rest_get, rest_post
     from .url_utils import gen_parameter_meta_url, gen_send_version_url
-    from .protocol import CommandType, receive
     from .trial import Trial
+    from .file_channel import FileChannel
+    from .base_channel import CommandType
 
     is_multi_node = args.node_count > 1
 

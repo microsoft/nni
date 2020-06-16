@@ -42,6 +42,11 @@ export class RunnerSettings {
     public nniManagerVersion: string = "";
     public logCollection: string = "none";
     public command: string = "";
+    public enableGpuCollector: boolean = false;
+
+    // specify which communication channel is used by runner.
+    // supported channel includes: api, storage, aml
+    public commandChannel: string = "api";
 }
 
 export class EnvironmentInformation {

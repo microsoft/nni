@@ -75,6 +75,7 @@ class TrialDispatcher implements TrainingService {
         if (logLevel == "debug" && fs.existsSync("../../../src/nni_manager")) {
             this.log.debug("log level is debug, and exist code folder, so set to developing mode.");
             this.isDeveloping = true;
+            this.runnerSettings.enableGpuCollector = true;
         }
     }
 
@@ -313,6 +314,7 @@ class TrialDispatcher implements TrainingService {
                                 liveTrialsCount++;
                                 continue;
                             }
+                            const environmentStatus = environment.status;
 
                             // any node exit, then make sure the whole trial stopped.
                             if (trial.nodeExitResults.length > 0) {
@@ -334,14 +336,11 @@ class TrialDispatcher implements TrainingService {
                                 }
                                 trial.status = finalStatus;
                                 this.releaseEnvironment(trial);
+                            } else if (environmentStatus !== "RUNNING") {
+                                this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environmentStatus}', set trial to environment status.`);
+                                this.releaseEnvironment(trial);
+                                trial.status = environmentStatus;
                             } else {
-                                // check status consistence with environment.
-                                const environmentStatus = environment.status;
-                                if (environmentStatus !== "RUNNING") {
-                                    this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environmentStatus}', set trial to environment status.`);
-                                    this.releaseEnvironment(trial);
-                                    trial.status = environmentStatus;
-                                }
                                 liveTrialsCount++;
                             }
                         }
