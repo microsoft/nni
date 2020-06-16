@@ -275,7 +275,7 @@ function countFilesRecursively(directory: string): Promise<number> {
 }
 
 export function validateFileName(fileName: string): boolean {
-    const pattern: string = '^[a-z0-9A-Z._-]+$';
+    const pattern: string = '^[a-z0-9A-Z\._-]+$';
     const validateResult = fileName.match(pattern);
     if (validateResult) {
         return true;

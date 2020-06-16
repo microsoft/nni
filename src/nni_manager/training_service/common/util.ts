@@ -19,16 +19,27 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @param source
  * @param destination
  */
-export function listDirWithIgnoredFiles(source: string): string[] {
+export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFiles: string[]): Iterable<string> {
     let ignoreFile = undefined;
-    if (fs.existsSync(path.join(source, ".nniignore"))) {
-        ignoreFile = path.join(source, ".nniignore");
+    const source = path.join(root, relDir);
+    if (fs.existsSync(path.join(source, '.nniignore'))) {
+        ignoreFile = path.join(source, '.nniignore');
+        ignoreFiles.push(ignoreFile);
     }
-    // There can be performance issues when the directory contains millions of files.
-    const fileList = fs.readdirSync(source);
-    if (ignoreFile === undefined)
-        return fileList;
-    return ignore().add(fs.readFileSync(ignoreFile).toString()).filter(fileList);
+    const ig = ignore();
+    ignoreFiles.forEach((i) => ig.add(fs.readFileSync(i).toString()));
+    for (const d of fs.readdirSync(source)) {
+        const entry = path.join(relDir, d);
+        if (ig.ignores(entry))
+            continue;
+        const entryStat = fs.statSync(path.join(root, entry));
+        if (entryStat.isDirectory()) {
+            yield entry;
+            yield* listDirWithIgnoredFiles(root, entry, ignoreFiles);
+        }
+        else if (entryStat.isFile())
+            yield entry;
+    }
 }
 
 /**
@@ -38,47 +49,30 @@ export function listDirWithIgnoredFiles(source: string): string[] {
  * @returns file number under codeDir
  */
  export async function validateCodeDir(codeDir: string): Promise<number> {
-    let fileCount: number | undefined;
-    let fileTotalSize: number | undefined;
+    let fileCount: number = 0;
+    let fileTotalSize: number = 0;
     let fileNameValid: boolean = true;
-    let fileList: string[] | undefined;
-    try {
-        fileList = listDirWithIgnoredFiles(codeDir);
-    } catch (error) {
-        throw new Error(`List directory error: ${error}`);
-    }
-
-    try {
-        fileCount = fileList.length;
-        fileTotalSize = fileList.map(f => fs.statSync(path.join(codeDir, f))['size']).reduce((sum, current) => sum + current, 0);
-    } catch (error) {
-        throw new Error(`Exception when counting files in directory: ${error}`);
-    }
-
-    try {
-        fileList.forEach(f => {
-            f.split(path.delimiter).forEach(fpart => {
-                if (!validateFileName(fpart))
-                    fileNameValid = false;
-            });
+    for (const relPath of listDirWithIgnoredFiles(codeDir, '', [])) {
+        const d = path.join(codeDir, relPath);
+        fileCount += 1;
+        fileTotalSize += fs.statSync(d).size;
+        if (fileCount > 2000) {
+            const errMessage: string = `Too many files and directories (${fileCount} already scanned) in ${codeDir},`
+                                        + ` please check if it's a valid code dir`;
+            throw new Error(errMessage);
+        }
+        if (fileTotalSize > 300 * 1024 * 1024) {
+            const errMessage = `File total size too large in code dir (${fileTotalSize} bytes already scanned, exceeds 300MB).`;
+            throw new Error(errMessage);
+        }
+        fileNameValid = true;
+        d.split(path.sep).forEach(fpart => {
+            if (!validateFileName(fpart))
+                fileNameValid = false;
         });
-    } catch (error) {
-        throw new Error(`Validate file name error: ${error}`);
-    }
-
-    if (fileCount !== undefined && fileCount > 2000) {
-        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
-                                    + ` please check if it's a valid code dir`;
-        throw new Error(errMessage);
-    }
-    if (fileTotalSize !== undefined && fileTotalSize > 300 * 1024 * 1024) {
-        const errMessage = `File total size too large in code dir (${fileTotalSize} bytes exceeds 300MB).`;
-        throw new Error(errMessage);
-    }
-
-    if (!fileNameValid) {
-        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
-        throw new Error(errMessage);
+        if (!fileNameValid) {
+            throw new Error(`Validate file name error: '${d}' is an invalid file name.`);
+        }
     }
 
     return fileCount;
@@ -106,15 +100,17 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
  * @param destination
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
-    listDirWithIgnoredFiles(source).forEach((relPath: string) => {
-        // Possible to parallelize copy?
-        const destPath = path.join(destination, relPath)
-        if (!fs.existsSync(path.dirname(destPath)))
-            fs.mkdirSync(path.dirname(destPath));
-        fs.copyFileSync(path.join(source, relPath), destPath);
-    });
-
-    return Promise.resolve();
+    if (!fs.existsSync(destination))
+        fs.mkdirSync(destination);
+    for (const relPath of listDirWithIgnoredFiles(source, '', [])) {
+        const sourcePath = path.join(source, relPath);
+        const destPath = path.join(destination, relPath);
+        if (fs.statSync(sourcePath).isDirectory()) {
+            fs.mkdirSync(destPath);
+        } else {
+            fs.copyFileSync(sourcePath, destPath);
+        }
+    }
 }
 
 /**
@@ -205,6 +201,10 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
  * @param  tarPath
  */
 export async function tarAdd(tarPath: string, sourcePath: string): Promise<void> {
+    const fileList = [];
+    for (const d of listDirWithIgnoredFiles(sourcePath, '', [])) {
+        fileList.push(d);
+    }
     tar.create(
         {
             gzip: true,
@@ -212,7 +212,7 @@ export async function tarAdd(tarPath: string, sourcePath: string): Promise<void>
             sync: true,
             cwd: sourcePath,
         },
-        listDirWithIgnoredFiles(sourcePath)
+        fileList
     );
     return Promise.resolve();
 }
