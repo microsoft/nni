@@ -10,6 +10,7 @@ export class PAIClusterConfig {
     public readonly passWord?: string;
     public host: string;
     public readonly token?: string;
+    public readonly reuse?: boolean;
 
     /**
      * Constructor
@@ -17,12 +18,14 @@ export class PAIClusterConfig {
      * @param passWord password of PAI Cluster
      * @param host Host IP of PAI Cluster
      * @param token PAI token of PAI Cluster
+     * @param reuse If job is reusable for multiple trials
      */
-    constructor(userName: string, host: string, passWord?: string, token?: string) {
+    constructor(userName: string, host: string, passWord?: string, token?: string, reuse?: boolean) {
         this.userName = userName;
         this.passWord = passWord;
         this.host = host;
         this.token = token;
+        this.reuse = reuse;
     }
 }
 

@@ -107,6 +107,7 @@ export namespace ValidationSchemas {
                 passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
+                reuse: joi.boolean(),
             }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),

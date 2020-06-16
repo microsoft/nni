@@ -21,7 +21,7 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { PAIK8STrainingService } from './training_service/pai/paiK8S/paiK8STrainingService';
+import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import { AMLTrainingService } from './training_service/aml/amlTrainingService';
 import {
@@ -30,11 +30,11 @@ import {
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
-    startExpMode: string, resumeExperimentId: string, basePort: number,
+    startExpMode: string, resumeExperimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel, readonly);
+    setExperimentStartupInfo(createNew, expId, basePort, platform, logDirectory, experimentLogLevel, readonly);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -48,10 +48,10 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
-            .to(PAIK8STrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'paiYarn') {
-            Container.bind(TrainingService)
+        Container.bind(TrainingService)
             .to(PAIYarnTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
@@ -158,31 +158,31 @@ if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
 }
 const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
 
-initStartupInfo(startMode, experimentId, port, logDir, logLevel, readonly);
+initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly);
 
 mkDirP(getLogDir())
     .then(async () => {
-    try {
-        await initContainer(foreground, mode);
-        const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.start();
-        const log: Logger = getLogger();
-        log.info(`Rest server listening on: ${restServer.endPoint}`);
-    } catch (err) {
-        const log: Logger = getLogger();
-        log.error(`${err.stack}`);
-        throw err;
-    }
-})
-.catch((err: Error) => {
-    console.error(`Failed to create log dir: ${err.stack}`);
-});
+        try {
+            await initContainer(foreground, mode);
+            const restServer: NNIRestServer = component.get(NNIRestServer);
+            await restServer.start();
+            const log: Logger = getLogger();
+            log.info(`Rest server listening on: ${restServer.endPoint}`);
+        } catch (err) {
+            const log: Logger = getLogger();
+            log.error(`${err.stack}`);
+            throw err;
+        }
+    })
+    .catch((err: Error) => {
+        console.error(`Failed to create log dir: ${err.stack}`);
+    });
 
 function getStopSignal(): any {
     if (process.platform === "win32") {
         return 'SIGBREAK';
     }
-    else{
+    else {
         return 'SIGTERM';
     }
 }
