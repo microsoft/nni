@@ -251,10 +251,10 @@
     <ul>
       <li>If there is any privilege issue, add --user to install NNI in the user directory.</li>
       <li>Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly
-        recommended to install <a href="">NNI on Windows</a>.</li>
+        recommended to install <a href="{{ pathto('Tutorial/InstallationWin') }}">NNI on Windows</a>.</li>
       <li>If there is any error like Segmentation fault, please refer to <a
           href="{{ pathto('Tutorial/Installation') }}">FAQ</a>. For FAQ on Windows, please refer
-        to NNI on Windows.</li>
+        to <a href="{{ pathto('Tutorial/InstallationWin') }}">NNI on Windows</a>.</li>
     </ul>
   </div>
   <div>
@@ -266,7 +266,7 @@
     <ul>
       <li>
         <p>Download the examples via clone the source code.</p>
-        <div class="command">git clone -b v1.5 https://github.com/Microsoft/nni.git</div>
+        <div class="command">git clone -b v{{ release }} https://github.com/Microsoft/nni.git</div>
       </li>
       <li>
         <p>Run the MNIST example.</p>

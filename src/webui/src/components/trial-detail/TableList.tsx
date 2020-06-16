@@ -569,15 +569,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
-        const { columnList, tableSource } = nextProps;
-        this.setState({
-            tableSourceForSort: tableSource,
-            tableColumns: this.initTableColumnList(columnList),
-            allColumnList: this.getAllColumnKeys()
-        });
-
+    componentDidUpdate(prevProps: TableListProps): void {
+        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource) {
+            const { columnList, tableSource } = this.props;
+            this.setState({
+                tableSourceForSort: tableSource,
+                tableColumns: this.initTableColumnList(columnList),
+                allColumnList: this.getAllColumnKeys()
+            });
+        }
     }
+
     render(): React.ReactNode {
         const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,

@@ -126,9 +126,11 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
     ];
 
-    componentWillReceiveProps(nextProps: SuccessTableProps): void {
-        const { trialIds } = nextProps;
-        this.setState(() => ({ source: TRIALS.table(trialIds) }));
+    componentDidUpdate(prevProps: SuccessTableProps): void {
+        if(this.props.trialIds !== prevProps.trialIds){
+            const { trialIds } = this.props;
+            this.setState(() => ({ source: TRIALS.table(trialIds) }));
+        }
     }
 
     render(): React.ReactNode {
