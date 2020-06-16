@@ -237,6 +237,7 @@ abstract class AMLTrainingService implements TrainingService {
         }
         let pyshell = new PythonShell('jobSubmission.py', {
             scriptPath: './config/aml',
+            pythonOptions: ['-u'], // get print results in real-time
             args: [
                 '--subscription_id', this.amlClusterConfig.subscriptionId,
                 '--resource_group', this.amlClusterConfig.resourceGroup,
