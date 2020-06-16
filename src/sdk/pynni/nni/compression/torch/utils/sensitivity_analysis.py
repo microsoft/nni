@@ -33,7 +33,7 @@ class SensitivityAnalysis:
             different models may need different dataset/criterion
             , therefore the user need to cover this part by themselves.
             In the val_func, the model should be tested on the validation dateset,
-            and the validation accuracy should be returned as the output of val_func.
+            and the validation accuracy/loss should be returned as the output of val_func.
             There are no restrictions on the input parameters of the val_function.
             User can use the val_args, val_kwargs parameters in analysis
             to pass all the parameters that val_func needed.
