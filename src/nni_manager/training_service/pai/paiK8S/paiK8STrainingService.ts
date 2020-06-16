@@ -201,8 +201,6 @@ class PAIK8STrainingService extends PAITrainingService {
             }
 
         } else {
-            const containerPathParts = this.paiTrialConfig.containerNFSMountPath.split("/");
-            const containerPathName = containerPathParts[containerPathParts.length - 1];
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,

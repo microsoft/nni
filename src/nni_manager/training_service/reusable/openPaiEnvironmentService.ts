@@ -313,8 +313,6 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
             }
 
         } else {
-            const containerPathParts = this.paiTrialConfig.containerNFSMountPath.split("/");
-            const containerPathName = containerPathParts[containerPathParts.length - 1];
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,
@@ -347,14 +345,9 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                     }
                 },
                 extras: {
-                    'com.microsoft.pai.runtimeplugin': [
+                    'storages': [
                         {
-                            plugin: this.paiTrialConfig.paiStoragePlugin,
-                            parameters: {
-                                storageConfigNames: [
-                                    containerPathName
-                                ]
-                            }
+                            name: this.paiTrialConfig.paiStorageConfigName
                         }
                     ],
                     submitFrom: 'submit-job-v2'
