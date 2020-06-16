@@ -76,21 +76,6 @@ class AnalysisUtilsTest(TestCase):
             assert d_set_count == len(channel_dependency_ground_truth[name])
             fpath = os.path.join(outdir, name)
             channel_depen.export(fpath)
-    # comments the visulization test temporarily
-    # because, this test needs the graphviz package
-    # in ths os.(apt install graphviz)
-    # def test_visulization(self):
-    #     outdir = os.path.join(prefix, 'visual')
-    #     os.makedirs(outdir, exist_ok=True)
-    #     for name in model_names:
-    #         print('Visualization for %s' % name)
-    #         model = getattr(models, name)
-    #         net = model().to(device)
-    #         dummy_input = torch.ones(1, 3, 224, 224).to(device)
-    #         vg = VisualGraph(net, dummy_input)
-    #         picpath = os.path.join(outdir, name)
-    #         depen_file = os.path.join('analysis_test/dependency', name)
-    #         vg.visualization(picpath, dependency_file=depen_file)
 
     def get_pruned_index(self, mask):
         pruned_indexes = []
