@@ -21,7 +21,7 @@ logger.setLevel(logging.INFO)
 
 
 class SensitivityAnalysis:
-    def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop=None, min_threshold=None, max_threshold=None):
+    def __init__(self, model, val_func, sparsities=None, prune_type='l1', early_stop_mode=None, early_stop_value=None):
         """
         Perform sensitivity analysis for this model.
         Parameters
@@ -33,7 +33,7 @@ class SensitivityAnalysis:
             different models may need different dataset/criterion
             , therefore the user need to cover this part by themselves.
             In the val_func, the model should be tested on the validation dateset,
-            and the validation accuracy should be returned as the output of val_func.
+            and the validation accuracy/loss should be returned as the output of val_func.
             There are no restrictions on the input parameters of the val_function.
             User can use the val_args, val_kwargs parameters in analysis
             to pass all the parameters that val_func needed.
@@ -46,19 +46,24 @@ class SensitivityAnalysis:
         prune_type : str
             The pruner type used to prune the conv layers, default is 'l1',
             and 'l2', 'fine-grained' is also supported.
-        early_stop : float
+        early_stop_mode : str
             If this flag is set, the sensitivity analysis
             for a conv layer will early stop when the validation metric(
-            for example, accurracy/loss) has alreay droped/raised the value
-            of early_stop (0.05 for example).
-            The default value is None, which means the analysis won't stop
-            until all given sparsities are tested.
-        min_threshold : float
-            If the validation metric returned by the val_func is lower
-            than min_threshold, the sensitivity analysis will stop.
-        max_threshold : float
-            if the validation metric returned by the val_func is larger
-            than max_threshold, the sensitivity analysis will stop.
+            for example, accurracy/loss) has alreay meet the threshold. We
+            support four different early stop modes: minimize, maximize, dropped,
+            raised. The default value is None, which means the analysis won't stop
+            until all given sparsities are tested. This option should be used with
+            early_stop_value together.
+
+            minimize: The analysis stops when the validation metric return by the val_func
+            lower than early_stop_value.
+            maximize: The analysis stops when the validation metric return by the val_func
+            larger than early_stop_value.
+            dropped: The analysis stops when the validation metric has dropped by early_stop_value.
+            raised: The analysis stops when the validation metric has raised by early_stop_value.
+        early_stop_value : float
+            This value is used as the threshold for different earlystop modes.
+            This value is effective only when the early_stop_mode is set.
 
         """
         self.model = model
@@ -77,9 +82,8 @@ class SensitivityAnalysis:
             self.Pruner = L2FilterPruner
         elif prune_type == 'fine-grained':
             self.Pruner = LevelPruner
-        self.early_stop = early_stop
-        self.min_threshold = min_threshold
-        self.max_threshold = max_threshold
+        self.early_stop_mode = early_stop_mode
+        self.early_stop_value = early_stop_value
         self.ori_metric = None  # original validation metric for the model
         # already_pruned is for the iterative sensitivity analysis
         # For example, sensitivity_pruner iteratively prune the target
@@ -116,14 +120,21 @@ class SensitivityAnalysis:
         stop : bool
             if stop the sensitivity analysis
         """
-        if self.early_stop is not None:
-            if abs(ori_metric - cur_metric) >= self.early_stop:
+        if self.early_stop_mode is None:
+            # early stop mode is not enable
+            return False
+        assert self.early_stop_value is not None
+        if self.early_stop_mode == 'minimize':
+            if cur_metric < self.early_stop_value:
                 return True
-        if self.min_threshold is not None:
-            if cur_metric < self.min_threshold:
+        elif self.early_stop_mode == 'maximize':
+            if cur_metric > self.early_stop_value:
                 return True
-        if self.max_threshold is not None:
-            if cur_metric > self.max_threshold:
+        elif self.early_stop_mode == 'dropped':
+            if cur_metric < ori_metric - self.early_stop_value:
+                return True
+        elif self.early_stop_mode == 'raised':
+            if cur_metric > ori_metric + self.early_stop_value:
                 return True
         return False
 
@@ -152,7 +163,7 @@ class SensitivityAnalysis:
         -------
         sensitivities : dict
             dict object that stores the trajectory of the
-            accuracy when the prune ratio changes
+            accuracy/loss when the prune ratio changes
         """
         if val_args is None:
             val_args = []
@@ -179,7 +190,7 @@ class SensitivityAnalysis:
                 pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
                 val_metric = self.val_func(*val_args, **val_kwargs)
-                logger.info('Layer: %s Sparsity: %.2f Accuracy: %.4f',
+                logger.info('Layer: %s Sparsity: %.2f Validation Metric: %.4f',
                             name, sparsity, val_metric)
 
                 self.sensitivities[name][sparsity] = val_metric
@@ -202,10 +213,9 @@ class SensitivityAnalysis:
         Export the results of the sensitivity analysis
         to a csv file. The firstline of the csv file describe the content
         structure. The first line is constructed by 'layername' and sparsity
-        list. Each line below records the model accuracy when this layer is
-        under different sparsities. Note that, due to the early_stop option,
-        some layers may not have model accuracies under all sparsities, because
-        its accuracy drop has alreay exceeded the threshold set by the user.
+        list. Each line below records the validation metric returned by val_func
+        when this layer is under different sparsities. Note that, due to the early_stop
+        option, some layers may not have the metrics under all sparsities.
 
         layername, 0.25, 0.5, 0.75
         conv1, 0.6, 0.55
