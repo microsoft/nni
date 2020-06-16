@@ -19,6 +19,8 @@
 
 'use strict';
 
+import { GPUSummary } from "training_service/common/gpuData";
+
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 
@@ -62,6 +64,8 @@ export class EnvironmentInformation {
     public runnerWorkingFolder: string = "";
     public command: string = "";
     public nodeCount: number = 1;
+
+    public gpuSummary: GPUSummary | undefined;
 
     constructor(id: string, jobName: string, jobId?: string) {
         this.id = id;

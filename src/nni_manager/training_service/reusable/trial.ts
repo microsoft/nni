@@ -22,6 +22,7 @@
 import { Logger, getLogger } from "../../common/log";
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
 import { EnvironmentInformation } from "./environment";
+import { GPUInfo } from "training_service/common/gpuData";
 
 export abstract class TrialService {
     protected readonly log: Logger;
@@ -54,6 +55,8 @@ export class TrialDetail implements TrialJobDetail {
     public settings = {};
     // it's used to aggregate node status for multiple node trial
     public nodeExitResults: TrialJobStatus[];
+    // assigned GPUs for multi-trial scheduled.
+    public assignedGpus: GPUInfo[] = [];
 
     public readonly TRIAL_METADATA_DIR = ".nni";
 
