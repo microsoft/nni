@@ -46,6 +46,7 @@ extensions = [
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
 ]
 
 # Add mock modules
