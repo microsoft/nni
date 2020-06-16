@@ -1,7 +1,12 @@
 # Analysis Utils for Model Compression
+
+```eval_rst
+.. contents::
+```
+
 We provide several easy-to-use tools for users to analyze their model during model compression.
 
-## Sensitivity
+## Sensitivity Analysis
 First, we provide a sensitivity analysis tool (**SensitivityAnalysis**) for users to analyze the sensitivity of each convolutional layer in their model. Specifically, the SensitiviyAnalysis gradually prune each layer of the model, and test the accuracy of the model at the same time. Note that, SensitivityAnalysis only prunes a layer once a time, and the other layers are set to their original weights. According to the accuracies of different convolutional layers under different sparsities, we can easily find out which layers the model accuracy is more sensitive to. 
 
 ### Usage
@@ -29,7 +34,7 @@ os.makedir(outdir)
 s_analyzer.export(os.path.join(outdir, filename))
 ```
 
-Two key parameters of SensitivityAnalysis are model, and val_func. `model` is the neural network that to be analyzed and the `val_func` is the validation function that returns the model accuracy/loss/ or other metrics on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy/loss on the dataset and pass it to SensitivityAnalysis.
+Two key parameters of SensitivityAnalysis are `model`, and `val_func`. `model` is the neural network that to be analyzed and the `val_func` is the validation function that returns the model accuracy/loss/ or other metrics on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy/loss on the dataset and pass it to SensitivityAnalysis.
 SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
 
 Futhermore, users can specify the sparsities values used to prune for each layer by optional parameter `sparsities`.
@@ -51,16 +56,16 @@ raised: The analysis stops when the validation metric has raised by `early_stop_
 ```python
 s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5, 0.75], early_stop_mode='dropped', early_stop_value=0.1)
 ```
-If users only want to analyze several specified convolutional layers, users can specify the target conv layers by the 'sepcified_layers' parameter in analysis function. For example
+If users only want to analyze several specified convolutional layers, users can specify the target conv layers by the `specified_layers` in analysis function. `specified_layers` is a list that consists of the Pytorch module names of the conv layers. For example
 ```python
 sensitivity = s_analyzer.analysis(val_args=[net], specified_layers=['Conv1'])
 ```
-In this example, only the Conv1 layer is analyzed.
+In this example, only the `Conv1` layer is analyzed. In addtion, users can quickly and easily achieve the analysis parallelization by launching multiple processes and assigning different conv layers of the same model to each process.
 
 
 ### Output example
 The following lines are the example csv file exported from SensitivityAnalysis. The first line is constructed by 'layername' and sparsity list. Here the sparsity value means how much weight SensitivityAnalysis prune for each layer. Each line below records the model accuracy when this layer is under different sparsities. Note that, due to the early_stop option, some layers may
-not have model accuracies under all sparsities, because its accuracy drop has already exceeded the threshold set by the user.
+not have model accuracies/losses under all sparsities, for example, its accuracy drop has already exceeded the threshold set by the user.
 ```
 layername,0.05,0.1,0.2,0.3,0.4,0.5,0.7,0.85,0.95
 features.0,0.54566,0.46308,0.06978,0.0374,0.03024,0.01512,0.00866,0.00492,0.00184
@@ -70,7 +75,7 @@ features.8,0.55696,0.54194,0.48892,0.42986,0.33048,0.2266,0.09566,0.02348,0.0056
 features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 ```
 
-## Topology
+## Topology Analysis
 We also provide several tools for the topology analysis during the model compression.
 
 ### ChannelDependency
