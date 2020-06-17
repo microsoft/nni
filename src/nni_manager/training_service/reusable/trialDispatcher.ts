@@ -72,7 +72,8 @@ class TrialDispatcher implements TrainingService {
         const logLevel = getLogLevel();
 
         this.log.debug(`current folder ${__dirname}`);
-        if (logLevel == "debug" && fs.existsSync("../../../src/nni_manager")) {
+        // different source folder in Linux and Windows
+        if (logLevel == "debug" && (fs.existsSync("../../../src/nni_manager") || __dirname.endsWith("src\\nni_manager\\dist\\training_service\\reusable"))) {
             this.log.debug("log level is debug, and exist code folder, so set to developing mode.");
             this.isDeveloping = true;
             this.runnerSettings.enableGpuCollector = true;
@@ -177,7 +178,11 @@ class TrialDispatcher implements TrainingService {
             await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
 
             if (this.isDeveloping) {
-                await storageService.copyDirectory("../nni/tools/nni_trial_tool", envDir, true);
+                let trialToolsPath = "../../../tools/nni_trial_tool";
+                if (false === fs.existsSync(trialToolsPath)) {
+                    trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
+                }
+                await storageService.copyDirectory(trialToolsPath, envDir, true);
             }
         }
 
@@ -274,7 +279,7 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
                 if (oldIsAlive !== environment.isAlive) {
-                    this.log.debug(`set environment isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
+                    this.log.debug(`set environment ${environment.id} isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
                 }
             });
             await delay(5000);
