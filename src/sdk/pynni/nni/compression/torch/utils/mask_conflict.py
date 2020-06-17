@@ -1,17 +1,53 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency
+from .shape_dependency import ChannelDependency, GroupDependency
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
 
-class MaskConflict:
-    def __init__(self, mask_file, model=None, dummy_input=None, graph=None):
+def fix_mask_conflict(masks, model=None, dummy_input=None, graph=None):
+    """
+    MaskConflict fix the mask conflict for the channel dependencies
+    and group dependency.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        model to fix the mask conflict
+    dummy_input : torch.Tensor
+        input example to trace the model
+    masks : dict/str
+        a dict object that stores the masks or the path of the mask file
+    graph : torch._C.Graph
+        the traced graph of the target model, is this parameter is not None,
+        we donnot use the model and dummpy_input to get the trace graph.
+    """
+    if isinstance(masks, str):
+        # if the input is the path of the mask_file
+        assert os.path.exists(masks)
+        masks = torch.load(masks)
+    # if the user uses the model and dummy_input to trace the model, we
+    # should get the traced model handly, so that, we only trace the
+    # model once, GroupMaskConflict and ChannelMaskConflict will reuse
+    # this traced model.
+    if graph is None:
+        assert model is not None and dummy_input is not None
+        graph = torch.jit.trace(model, dummy_input)
+    fix_group_mask = GroupMaskConflict(masks, model, dummy_input, graph)
+    masks = fix_group_mask.fix_mask_conflict()
+    fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, graph)
+    masks = fix_channel_mask.fix_mask_conflict()
+    return masks
+
+
+class GroupMaskConflict:
+    def __init__(self, masks, model=None, dummy_input=None, graph=None):
         """
-        MaskConflict fix the mask conflict between the layers that
-        has channel dependecy with each other.
+        GroupMaskConflict fix the mask conflict between the layers that
+        has group dependecy with each other.
 
         Parameters
         ----------
@@ -19,8 +55,8 @@ class MaskConflict:
             model to fix the mask conflict
         dummy_input : torch.Tensor
             input example to trace the model
-        mask_file : str
-            the path of the original mask file
+        masks : dict
+            a dict object that stores the masks
         graph : torch._C.Graph
             the traced graph of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
@@ -36,8 +72,88 @@ class MaskConflict:
         self.model = model
         self.dummy_input = dummy_input
         self.graph = graph
-        self.mask_file = mask_file
-        self.masks = torch.load(self.mask_file)
+        self.masks = masks
+
+    def fix_mask_conflict(self):
+        """
+        Fix the mask conflict before the mask inference for the layers that
+        has group dependencies. This function should be called before the
+        mask inference of the 'speedup' module.
+        """
+        group_depen = GroupDependency(self.model, self.dummy_input, self.graph)
+        depens = group_depen.dependency
+        for layername in depens:
+            group = depens[layername]
+            if layername not in self.masks:
+                # this layer not pruned
+                continue
+            w_mask = self.masks[layername]['weight']
+            shape = w_mask.size()
+            count = np.prod(shape[1:])
+            all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
+            all_zeros = (w_mask.flatten(1).sum(-1) == 0).nonzero().squeeze(1).tolist()
+            if len(all_ones) + len(all_zeros) < w_mask.size(0):
+                # In fine-grained pruning, skip this layer
+                _logger.info('Layers %s using fine-grained pruning', layername)
+                continue
+            assert shape[0] % group == 0
+            # Find the number of masked filter for each group (mini_masked).
+            # Because we have to keep the pruned filter can still
+            # be divided into the same number of groups, so we only can
+            # prune mini_masked filters for each group.
+            step = shape[0] / group
+            group_masked = []
+            for i in range(group):
+                _start = step * i
+                _end = step * (i+1)
+                _tmp_list = list(filter(lambda x: _start <= x and x < _end, all_zeros))
+                group_masked.append(_tmp_list)
+            mini_masked = min([len(x) for x in group_masked])
+            for gm in group_masked:
+                for i in range(mini_masked, len(gm)):
+                    # To keep the output channel number still being divisible to
+                    # groups, we set the masks of following filters to be zero.
+                    pos = gm[i]
+                    self.masks[layername][pos] = torch.ones(shape[1:])
+        return self.masks
+
+    def export(self, path):
+        """
+        Export the masks after fixing the conflict to file.
+        """
+        torch.save(self.masks, path)
+
+
+class ChannelMaskConflict:
+    def __init__(self, masks, model=None, dummy_input=None, graph=None):
+        """
+        ChannelMaskConflict fix the mask conflict between the layers that
+        has channel dependecy with each other.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            model to fix the mask conflict
+        dummy_input : torch.Tensor
+            input example to trace the model
+        masks : dict
+            a dict object that stores the masks
+        graph : torch._C.Graph
+            the traced graph of the target model, is this parameter is not None,
+            we donnot use the model and dummpy_input to get the trace graph.
+        """
+        # check if the parameters are valid
+        parameter_valid = False
+        if graph is not None:
+            parameter_valid = True
+        elif (model is not None) and (dummy_input is not None):
+            parameter_valid = True
+        if not parameter_valid:
+            raise Exception('The input parameters is invalid!')
+        self.model = model
+        self.dummy_input = dummy_input
+        self.graph = graph
+        self.masks = masks
 
     def fix_mask_conflict(self):
         """
