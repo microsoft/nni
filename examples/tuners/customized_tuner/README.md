@@ -25,7 +25,7 @@ This command build a whl file which is a pip installation source.
 
 Step 2: Run command:
 
-`nnictl package install dist/*.whl`
+`nnictl package install dist/demo_tuner-0.1-py3-none-any.whl`
 
 ## Check the installed package
 

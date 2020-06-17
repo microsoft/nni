@@ -7,7 +7,7 @@ NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../
 
 NNI also provides the ability to build your own [customized tuners](../Tuner/CustomizeTuner.md), [advisors](../Tuner/CustomizeAdvisor.md) and [assessors](../Assessor/CustomizeAssessor.md).
 
-Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisorsa/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
+Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
 ```yaml
 tuner:
   builtinTunerName: mytuner
@@ -59,6 +59,7 @@ NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full c
 * `builtin name`: builtin name used in experiment configuration file
 * `full class name of tuner`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
 * `full class name of class args validator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
+
 Following is an example of classfiers in package's `setup.py`:
 
 ```python
@@ -80,13 +81,21 @@ Reference [customized tuner example](https://github.com/microsoft/nni/blob/maste
 
 ### 4. Install customized algorithms package into NNI
 
-If you installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
+If your installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
 
-`nnictl package install ./`
+`nnictl package install <installation source directory>`
 
-If you installation source is prepared as a whl file with `python setup.py bdist_wheel`, you can install the package by following command:
+For example:
 
-`nnictl package install dist/*.whl`
+`nnictl package install nni/examples/tuners/customized_tuner/`
+
+If your installation source is prepared as a whl file with `python setup.py bdist_wheel`, you can install the package by following command:
+
+`nnictl package install <whl file path>`
+
+For example:
+
+`nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl`
 
 ## 5. Use the installed builtin algorithms in experiment
 Once your customized algorithms is installed, you can use it in experiment configuration file the same way as other builtin tuners/assessors/advisors, for example:
