@@ -116,7 +116,7 @@ jobs:
       python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
       python3 -m pip install tensorflow==1.15.2 --user
       brew install swig@3
-      if [ -e /usr/local/bin/swig ]; then rm /usr/local/bin/swig; fi
+      rm -f /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
       nnictl package install --name=SMAC
     displayName: 'Install dependencies'
