@@ -7,11 +7,11 @@
 NNI 提供了几种易于使用的工具，在压缩时用于分析模型。
 
 ## 灵敏度分析
-首先提供的是灵敏度分析工具 (**SensitivityAnalysis**)，用于分析模型中每个卷积层的灵敏度。 具体来说，SensitiviyAnalysis 会为每层逐渐剪枝，同时测试模型的精度变化。 Note that, SensitivityAnalysis only prunes a layer once a time, and the other layers are set to their original weights. According to the accuracies of different convolutional layers under different sparsities, we can easily find out which layers the model accuracy is more sensitive to.
+首先提供的是灵敏度分析工具 (**SensitivityAnalysis**)，用于分析模型中每个卷积层的灵敏度。 具体来说，SensitiviyAnalysis 会为每层逐渐剪枝，同时测试模型的精度变化。 注意，敏感度分析一次只会对一层进行剪枝，其它层会使用它们原始的权重。 根据不同稀疏度下不同卷积层的精度，可以很容易的找出模型精度对哪些层的变化更敏感。
 
 ### 用法
 
-The following codes show the basic usage of the SensitivityAnalysis.
+下列代码是 SensitivityAnalysis 的基本用法。
 ```python
 from nni.compression.torch.utils.sensitivity_analysis import SensitivityAnalysis
 
