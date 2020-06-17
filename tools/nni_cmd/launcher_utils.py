@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import netifaces
 import os
 import json
 from schema import SchemaError
@@ -297,10 +298,19 @@ def validate_pai_trial_conifg(experiment_config):
             print_warning(warning_information.format('outputDir'))
         validate_pai_config_path(experiment_config)
 
+def validate_eth0_device(experiment_config):
+    '''validate whether the machine has eth0 device'''
+    if experiment_config.get('trainingServicePlatform') not in ['local'] \
+       and not experiment_config.get('nniManagerIp') \
+       and 'eth0' not in netifaces.interfaces():
+        print_error('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
+        exit(1)
+
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
     parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
+    validate_eth0_device(experiment_config)
     validate_pai_trial_conifg(experiment_config)
     experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
