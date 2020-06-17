@@ -101,14 +101,14 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
     if (!fs.existsSync(destination))
-        fs.mkdirSync(destination);
+        await fs.promises.mkdir(destination);
     for (const relPath of listDirWithIgnoredFiles(source, '', [])) {
         const sourcePath = path.join(source, relPath);
         const destPath = path.join(destination, relPath);
-        if (fs.statSync(sourcePath).isDirectory() && !fs.existsSync(destPath)) {
-            fs.mkdirSync(destPath);
+        if (fs.statSync(sourcePath).isDirectory()) {
+            await fs.promises.mkdir(destPath);
         } else {
-            fs.copyFileSync(sourcePath, destPath);
+            await fs.promises.copyFile(sourcePath, destPath);
         }
     }
 
