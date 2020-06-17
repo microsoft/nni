@@ -50,7 +50,7 @@ export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFil
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
- export async function validateCodeDir(codeDir: string): Promise<number> {
+export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number = 0;
     let fileTotalSize: number = 0;
     let fileNameValid: boolean = true;
@@ -60,7 +60,7 @@ export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFil
         fileTotalSize += fs.statSync(d).size;
         if (fileCount > 2000) {
             const errMessage: string = `Too many files and directories (${fileCount} already scanned) in ${codeDir},`
-                                        + ` please check if it's a valid code dir`;
+                + ` please check if it's a valid code dir`;
             throw new Error(errMessage);
         }
         if (fileTotalSize > 300 * 1024 * 1024) {
@@ -69,7 +69,7 @@ export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFil
         }
         fileNameValid = true;
         d.split(path.sep).forEach(fpart => {
-            if (!validateFileName(fpart))
+            if (fpart !== '' && !validateFileName(fpart))
                 fileNameValid = false;
         });
         if (!fileNameValid) {
