@@ -59,16 +59,14 @@ export async function validateCodeDir(codeDir: string): Promise<number> {
         fileCount += 1;
         fileTotalSize += fs.statSync(d).size;
         if (fileCount > 2000) {
-            const errMessage: string = `Too many files and directories (${fileCount} already scanned) in ${codeDir},`
-                + ` please check if it's a valid code dir`;
-            throw new Error(errMessage);
+            throw new Error(`Too many files and directories (${fileCount} already scanned) in ${codeDir},`
+                + ` please check if it's a valid code dir`);
         }
         if (fileTotalSize > 300 * 1024 * 1024) {
-            const errMessage = `File total size too large in code dir (${fileTotalSize} bytes already scanned, exceeds 300MB).`;
-            throw new Error(errMessage);
+            throw new Error(`File total size too large in code dir (${fileTotalSize} bytes already scanned, exceeds 300MB).`);
         }
         fileNameValid = true;
-        d.split(path.sep).forEach(fpart => {
+        relPath.split(path.sep).forEach(fpart => {
             if (fpart !== '' && !validateFileName(fpart))
                 fileNameValid = false;
         });
