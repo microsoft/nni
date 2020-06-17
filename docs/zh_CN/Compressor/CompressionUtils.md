@@ -34,7 +34,7 @@ os.makedir(outdir)
 s_analyzer.export(os.path.join(outdir, filename))
 ```
 
-Two key parameters of SensitivityAnalysis are `model`, and `val_func`. `model` is the neural network that to be analyzed and the `val_func` is the validation function that returns the model accuracy/loss/ or other metrics on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy/loss on the dataset and pass it to SensitivityAnalysis. SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
+SensitivityAnalysis 的两个重要参数是 `model`, 和 `val_func`。 `model` is the neural network that to be analyzed and the `val_func` is the validation function that returns the model accuracy/loss/ or other metrics on the validation dataset. Due to different scenarios may have different ways to calculate the loss/accuracy, so users should prepare a function that returns the model accuracy/loss on the dataset and pass it to SensitivityAnalysis. SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
 
 Futhermore, users can specify the sparsities values used to prune for each layer by optional parameter `sparsities`.
 ```python
