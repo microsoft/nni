@@ -3,33 +3,32 @@
 # {jilin, songhan}@mit.edu
 
 import time
+from copy import deepcopy
+import math
+import copy
+import numpy as np
 import torch
 import torch.nn as nn
-from lib.utils import AverageMeter, accuracy, prGreen
-from lib.data import get_split_dataset
-from env.rewards import *
-import math
 
-import numpy as np
-import copy
-
+from ..lib.utils import AverageMeter, accuracy, prGreen
+from .rewards import *
 
 class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, model, checkpoint, data, preserve_ratio, args, n_data_worker=4,
-                 batch_size=256, export_model=False, use_new_input=False):
+    def __init__(self, model, val_loader, preserve_ratio, args, export_model=False, use_new_input=False):
         # default setting
         self.prunable_layer_types = [torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear]
 
         # save options
         self.model = model
-        self.checkpoint = checkpoint
-        self.n_data_worker = n_data_worker
-        self.batch_size = batch_size
-        self.data_type = data
-        print('data:', data)
+        #self.checkpoint = checkpoint
+        self.checkpoint = deepcopy(model.state_dict())
+        #self.n_data_worker = n_data_worker
+        self.batch_size = val_loader.batch_size
+        #self.data_type = data
+        #print('data:', data)
         self.preserve_ratio = preserve_ratio
 
         # options from args
@@ -43,7 +42,7 @@ class ChannelPruningEnv:
         self.n_points_per_layer = args.n_points_per_layer
         self.channel_round = args.channel_round
         self.acc_metric = args.acc_metric
-        self.data_root = args.data_root
+        #self.data_root = args.data_root
 
         self.export_model = export_model
         self.use_new_input = use_new_input
@@ -52,7 +51,8 @@ class ChannelPruningEnv:
         assert self.preserve_ratio > self.lbound, 'Error! You can make achieve preserve_ratio smaller than lbound!'
 
         # prepare data
-        self._init_data()
+        #self._init_data()
+        self.val_loader = val_loader
 
         # build indexs
         self._build_index()
@@ -228,7 +228,7 @@ class ChannelPruningEnv:
         # reconstruct, X, Y <= [N, C]
         masked_X = X[:, mask]
         if weight.shape[2] == 1:  # 1x1 conv or fc
-            from lib.utils import least_square_sklearn
+            from ..lib.utils import least_square_sklearn
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
             rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
             rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
@@ -317,18 +317,18 @@ class ChannelPruningEnv:
         reduced = self.org_flops - self._cur_flops()
         return reduced
 
-    def _init_data(self):
+    #def _init_data(self):
         # split the train set into train + val
         # for CIFAR, split 5k for val
         # for ImageNet, split 3k for val
-        val_size = 5000 if 'cifar' in self.data_type else 3000
-        self.train_loader, self.val_loader, n_class = get_split_dataset(self.data_type, self.batch_size,
-                                                                        self.n_data_worker, val_size,
-                                                                        data_root=self.data_root,
-                                                                        use_real_val=self.use_real_val,
-                                                                        shuffle=False)  # same sampling
-        if self.use_real_val:  # use the real val set for eval, which is actually wrong
-            print('*** USE REAL VALIDATION SET!')
+        #val_size = 5000 if 'cifar' in self.data_type else 3000
+        #self.train_loader, self.val_loader, n_class = get_split_dataset(self.data_type, self.batch_size,
+        #                                                                self.n_data_worker, val_size,
+        #                                                                data_root=self.data_root,
+        #                                                                use_real_val=self.use_real_val,
+        #                                                                shuffle=False)  # same sampling
+        #if self.use_real_val:  # use the real val set for eval, which is actually wrong
+        #    print('*** USE REAL VALIDATION SET!')
 
     def _build_index(self):
         self.prunable_idx = []
@@ -393,7 +393,7 @@ class ChannelPruningEnv:
         self.wsize_list = []
         self.flops_list = []
 
-        from lib.utils import measure_layer_for_pruning
+        from ..lib.utils import measure_layer_for_pruning
 
         # extend the forward fn to record layer info
         def new_forward(m):
@@ -414,7 +414,7 @@ class ChannelPruningEnv:
         # now let the image flow
         print('=> Extracting information...')
         with torch.no_grad():
-            for i_b, (input, target) in enumerate(self.train_loader):  # use image from train set
+            for i_b, (input, target) in enumerate(self.val_loader):  # use image from train set
                 if i_b == self.n_calibration_batches:
                     break
                 self.data_saver.append((input.clone(), target.clone()))

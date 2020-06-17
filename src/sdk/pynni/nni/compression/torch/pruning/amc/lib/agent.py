@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 
-from lib.memory import SequentialMemory
-from lib.utils import to_numpy, to_tensor
+from .memory import SequentialMemory
+from .utils import to_numpy, to_tensor
 
 criterion = nn.MSELoss()
 USE_CUDA = torch.cuda.is_available()
