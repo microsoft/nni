@@ -2,7 +2,7 @@ import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { filterByStatus } from '../../static/function';
 import { EXPERIMENT } from '../../static/datamodel';
-import { Stack, PrimaryButton, Dropdown, IDropdownOption, } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
+import { Stack, PrimaryButton, Dropdown, IDropdownOption } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
 import { ParaObj, Dimobj, TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
 import 'echarts/lib/chart/parallel';
 import 'echarts/lib/component/tooltip';
@@ -237,24 +237,18 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
         } else {
             for (const parallelAxisName in searchRange) {
-                // cc: layer0 layer1
                 const data: any[] = [];
-                const parallelAxisData: any[] = [];
                 dimName.push(parallelAxisName);
 
                 for (const choiceItem in searchRange[parallelAxisName]) {
                     if (choiceItem === '_value') {
                         for (const item in searchRange[parallelAxisName][choiceItem]) {
                             data.push(searchRange[parallelAxisName][choiceItem][item]._name);
-                            if (searchRange[parallelAxisName][choiceItem][item]._name !== 'Empty') {
-                                parallelAxisData.push(searchRange[parallelAxisName][choiceItem][item]._name);
-                            }
                         }
                         yAxisOrderList.set(parallelAxisName, JSON.parse(JSON.stringify(data)));
-                        parallelAxisData.push('null');
                         parallelAxis.push({
                             dim: i,
-                            data: parallelAxisData,
+                            data: data,
                             name: parallelAxisName,
                             type: 'category',
                             boundaryGap: true,
@@ -283,7 +277,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                                     parallelAxis.push({
                                         dim: i,
                                         data: searchRange[parallelAxisName][choiceItem][item][key]._value.concat('null'),
-                                        name: key,
+                                        name: `${searchRange[parallelAxisName][choiceItem][item]._name}_${key}`,
                                         type: 'category',
                                         boundaryGap: true,
                                         axisLine: {
@@ -390,7 +384,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                                         eachTrialData.push(eachTrialParams[i][m][index].toString());
                                     }
                                     if (eachTrialParams[i][m][index] === 'Empty') {
-                                        eachTrialData.push('null');
+                                        eachTrialData.push('Empty');
                                     }
                                 }
                             } else if (yAxisOrderList.get(m)[n] === 'Empty') {
