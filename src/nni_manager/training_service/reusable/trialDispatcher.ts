@@ -178,7 +178,7 @@ class TrialDispatcher implements TrainingService {
             await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
 
             if (this.isDeveloping) {
-                let trialToolsPath = "../../../tools/nni_trial_tool";
+                let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
                 if (false === fs.existsSync(trialToolsPath)) {
                     trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
                 }

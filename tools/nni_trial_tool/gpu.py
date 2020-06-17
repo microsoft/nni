@@ -41,11 +41,15 @@ def parse_nvidia_smi_result(smi):
             runningProNumber = len(processes[0].getElementsByTagName('process_info'))
             gpuInfo['activeProcessNum'] = runningProNumber
 
-            gpuInfo['gpuType'] = gpu.getElementsByTagName('product_name').nodeValue
-            memUsage = gpu.getElementByTagName('fb_memory_usage')[0]
-            gpuInfo['gpuMemTotal'] = memUsage['total'].nodeValue.replace("MiB").strip()
-            gpuInfo['gpuMemUsed'] = memUsage['used'].nodeValue.replace("MiB").strip()
-            gpuInfo['gpuMemFree'] = memUsage['free'].nodeValue.replace("MiB").strip()
+            gpuInfo['gpuType'] = gpu.getElementsByTagName('product_name')[0]\
+                .childNodes[0].data
+            memUsage = gpu.getElementsByTagName('fb_memory_usage')[0]
+            gpuInfo['gpuMemTotal'] = memUsage.getElementsByTagName('total')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
+            gpuInfo['gpuMemUsed'] = memUsage.getElementsByTagName('used')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
+            gpuInfo['gpuMemFree'] = memUsage.getElementsByTagName('free')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
 
             output["gpuInfos"].append(gpuInfo)
     except Exception:

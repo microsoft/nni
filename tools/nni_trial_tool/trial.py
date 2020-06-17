@@ -49,9 +49,10 @@ class Trial:
         trial_code_dir = os.path.join(trial_working_dir, "code")
         trial_nnioutput_dir = os.path.join(trial_working_dir, "nnioutput")
 
-        os.environ['NNI_TRIAL_SEQ_ID'] = str(self.data["sequenceId"])
-        os.environ['NNI_OUTPUT_DIR'] = os.path.join(trial_working_dir, "nnioutput")
-        os.environ['NNI_SYS_DIR'] = trial_working_dir
+        environ = os.environ.copy()
+        environ['NNI_TRIAL_SEQ_ID'] = str(self.data["sequenceId"])
+        environ['NNI_OUTPUT_DIR'] = os.path.join(trial_working_dir, "nnioutput")
+        environ['NNI_SYS_DIR'] = trial_working_dir
 
         # prepare code and parameters
         prepared_flag_file_name = os.path.join(trial_working_dir, "trial_prepared")
@@ -82,10 +83,9 @@ class Trial:
                     break
                 time.sleep(0.1)
 
-        # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
         self.log_pipe_stdout = self.trial_syslogger_stdout.get_pipelog_reader()
         self.process = Popen(self.args.trial_command, shell=True, stdout=self.log_pipe_stdout,
-                             stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=dict(os.environ))
+                             stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=dict(environ))
         nni_log(LogType.Info, '{0}: spawns a subprocess (pid {1}) to run command: {2}'.
                 format(self.name, self.process.pid, shlex.split(self.args.trial_command)))
 
