@@ -6,6 +6,7 @@ import logging
 
 from nni._graph_utils import TorchModuleGraph
 
+__all__ = ['ChannelDependency', 'GroupDependency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -166,3 +167,146 @@ class ChannelDependency:
                     tmp_set.add(other)
             d_sets.append(tmp_set)
         return d_sets
+
+
+class GroupDependency:
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        """
+        This model analyze the group dependencis between the conv
+        layers in a model.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to be analyzed.
+        data : torch.Tensor
+            The example input data to trace the network architecture.
+        traced_model : torch._C.Graph
+            if we alreay has the traced graph of the target model, we donnot
+            need to trace the model again.
+        """
+        # check if the input is legal
+        if traced_model is None:
+            # user should provide model & dummy_input to trace the model or a already traced model
+            assert model is not None and dummy_input is not None
+        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.dependency = dict()
+        self.build_group_dependency()
+
+    def _get_parent_convs(self, node):
+        """
+        Find the nearest father conv layers for the target node.
+
+        Parameters
+        ---------
+        node : torch._C.Node
+            target node.
+
+        Returns
+        -------
+        parent_layers : list
+            nearest father conv layers for the target node. Due to the group
+            dependency only exists between the conv layers, so we only find
+            the parent conv layers.
+        """
+        parent_layers = []
+        queue = []
+        queue.append(node)
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Conv2d':
+                # find the first met conv
+                parent_layers.append(curnode.name)
+                continue
+            parents = self.graph.find_predecessors(curnode.unique_name)
+            parents = [self.graph.name_to_node[name] for name in parents]
+            for parent in parents:
+                queue.append(parent)
+        return parent_layers
+
+    def _get_conv_groups(self, node_group):
+        """
+        Get the number of groups for a convolutional layer.
+
+        Parameters
+        ----------
+        node_group : NodePyGroup
+            target node.
+
+        Returns
+        -------
+        group : int
+            the number of the groups of the target conv layer.
+        """
+        cpp_conv = list(filter(lambda x: x.kind()==CONV_TYPE, node_group.node_cpps))
+        assert len(cpp_conv) == 1
+        cpp_conv = cpp_conv[0]
+        inputs = list(cpp_conv.inputs())
+        # get the number of the group from the input parameters
+        group = inputs[8].toIValue()
+        return group
+        
+    def build_group_dependency(self):
+        """
+        Build the channel dependency for the conv layers
+        in the model. This function return the group number
+        of each conv layers. Note that, here, the group count
+        of conv layers may be larger than their originl groups.
+        This is because that the input channel will also be grouped
+        for the group conv layers. To make this clear, assume we 
+        have two group conv layers: conv1(group=2), conv2(group=4).
+        conv2 takes the output features of conv1 as input.
+        Then we have to the filters of conv1 can still be
+        divided into 4 groups after filter pruning, because
+        the input channels of conv2 shoule be divided into
+        4 groups.
+
+        Returns
+        -------
+        self.dependency : dict
+            key: the name of conv layers, value: the minimum value that the number of
+            filters should be divisible to.
+        """
+        for node in self.graph.nodes_py.nodes_op:
+            if node.op_type == 'Conv2d':
+                group = self._get_conv_groups(node)
+                if node.name in self.dependency:
+                    # the conv layer whose group is larger than 1 will require that
+                    # it's number of output channel to be divisible by the number of group.
+                    self.dependency[node.name] = max(self.dependency[node.name], group)
+                else:
+                    self.dependency[node.name] = group
+                if group > 1:
+                    # for the conv layer whose group is larger than 1, it will require the number
+                    # of output channels of their parent conv layer to be divisible by group.
+                    parent_convs = self._get_parent_convs(node)
+                    for parent in parent_convs:
+                        if parent in self.dependency:
+                            self.dependency[parent] = max(self.dependency[parent], group)
+                        else:
+                            self.dependency[parent] = group
+        return self.dependency
+
+    def export(self, filepath):
+        """
+        export the group dependency to a csv file.
+        Each line describes a convolution layer, the
+        first part of each line is the Pytorch module
+        name of the conv layer. The second part of each
+        line is the group count of the filters in this layer.
+        Note that, the group count may be larger than this
+        layers original group number. 
+
+        output example:
+        Conv layer, Groups
+        Conv1, 1
+        Conv2, 2
+        Conv3, 4
+        """
+        header = ['Conv Layer Name', 'Group']
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for name in self.dependency:
+                group = self.dependency[name]
+                csv_w.writerow([name, group])
