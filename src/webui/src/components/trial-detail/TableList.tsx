@@ -149,7 +149,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
-        onRender: (item): React.ReactNode => <div>{item.formattedLatestAccuracy}</div>
+        onRender: (item): React.ReactNode => <div className="ellipsis">{item.formattedLatestAccuracy}</div>
     };
 
     SequenceIdColumnConfig: any = {
@@ -556,7 +556,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 other = accDictionary[item].toString();
                             }
                             return (
-                                <div>{other}</div>
+                                <div className="ellipsis">{other}</div>
                             );
                         }
                     });
