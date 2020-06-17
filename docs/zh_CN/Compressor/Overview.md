@@ -15,17 +15,18 @@ NNI 提供了几种压缩算法，包括剪枝和量化算法：
 
 剪枝算法通过删除冗余权重或层通道来压缩原始网络，从而降低模型复杂性并解决过拟合问题。
 
-| 名称                                                                           | 算法简介                                                                                                                                    |
-| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| [Level Pruner](./Pruner.md#level-pruner)                                     | 根据权重的绝对值，来按比例修剪权重。                                                                                                                      |
-| [AGP Pruner](./Pruner.md#agp-pruner)                                         | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                     |
-| [Lottery Ticket Pruner](./Pruner.md#agp-pruner)                              | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635)  |
-| [FPGM Pruner](./Pruner.md#fpgm-pruner)                                       | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)    |
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner)                               | 在卷积层中具有最小 L1 权重规范的剪枝过滤器（用于 Efficient Convnets 的剪枝过滤器） [参考论文](https://arxiv.org/abs/1608.08710)                                          |
-| [L2Filter Pruner](./Pruner.md#l2filter-pruner)                               | 在卷积层中具有最小 L2 权重规范的剪枝过滤器                                                                                                                 |
-| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | 基于指标 APoZ（平均百分比零）的剪枝过滤器，该指标测量（卷积）图层激活中零的百分比。 [参考论文](https://arxiv.org/abs/1607.03250)                                                   |
-| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | 基于计算输出激活最小平均值指标的剪枝过滤器                                                                                                                   |
-| [Slim Pruner](./Pruner.md#slim-pruner)                                       | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming) [参考论文](https://arxiv.org/abs/1708.06519) |
+| 名称                                                                           | 算法简介                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Level Pruner](./Pruner.md#level-pruner)                                     | 根据权重的绝对值，来按比例修剪权重。                                                                                                                                                                                         |
+| [AGP Pruner](./Pruner.md#agp-pruner)                                         | 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）[参考论文](https://arxiv.org/abs/1710.01878)                                                                                                                                        |
+| [Lottery Ticket Pruner](./Pruner.md#agp-pruner)                              | "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 [参考论文](https://arxiv.org/abs/1803.03635)                                                                     |
+| [FPGM Pruner](./Pruner.md#fpgm-pruner)                                       | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [参考论文](https://arxiv.org/pdf/1811.00250.pdf)                                                                       |
+| [L1Filter Pruner](./Pruner.md#l1filter-pruner)                               | 在卷积层中具有最小 L1 权重规范的剪枝过滤器（用于 Efficient Convnets 的剪枝过滤器） [参考论文](https://arxiv.org/abs/1608.08710)                                                                                                             |
+| [L2Filter Pruner](./Pruner.md#l2filter-pruner)                               | 在卷积层中具有最小 L2 权重规范的剪枝过滤器                                                                                                                                                                                    |
+| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | 基于指标 APoZ（平均百分比零）的剪枝过滤器，该指标测量（卷积）图层激活中零的百分比。 [参考论文](https://arxiv.org/abs/1607.03250)                                                                                                                      |
+| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | 基于计算输出激活最小平均值指标的剪枝过滤器                                                                                                                                                                                      |
+| [Slim Pruner](./Pruner.md#slim-pruner)                                       | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming) [参考论文](https://arxiv.org/abs/1708.06519)                                                                    |
+| [TaylorFO Pruner](./Pruner.md#taylorfoweightfilterpruner)                    | Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) [Reference Paper](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) |
 
 
 **量化**
