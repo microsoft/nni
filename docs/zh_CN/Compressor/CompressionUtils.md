@@ -1,15 +1,15 @@
-# Analysis Utils for Model Compression
+# 模型压缩分析工具
 
 ```eval_rst
 .. contents::
 ```
 
-We provide several easy-to-use tools for users to analyze their model during model compression.
+NNI 提供了几种易于使用的工具，在压缩时用于分析模型。
 
-## Sensitivity Analysis
-First, we provide a sensitivity analysis tool (**SensitivityAnalysis**) for users to analyze the sensitivity of each convolutional layer in their model. Specifically, the SensitiviyAnalysis gradually prune each layer of the model, and test the accuracy of the model at the same time. Note that, SensitivityAnalysis only prunes a layer once a time, and the other layers are set to their original weights. According to the accuracies of different convolutional layers under different sparsities, we can easily find out which layers the model accuracy is more sensitive to.
+## 灵敏度分析
+首先提供的是灵敏度分析工具 (**SensitivityAnalysis**)，用于分析模型中每个卷积层的灵敏度。 具体来说，SensitiviyAnalysis 会为每层逐渐剪枝，同时测试模型的精度变化。 Note that, SensitivityAnalysis only prunes a layer once a time, and the other layers are set to their original weights. According to the accuracies of different convolutional layers under different sparsities, we can easily find out which layers the model accuracy is more sensitive to.
 
-### Usage
+### 用法
 
 The following codes show the basic usage of the SensitivityAnalysis.
 ```python
@@ -62,7 +62,7 @@ sensitivity = s_analyzer.analysis(val_args=[net], specified_layers=['Conv1'])
 In this example, only the `Conv1` layer is analyzed. In addtion, users can quickly and easily achieve the analysis parallelization by launching multiple processes and assigning different conv layers of the same model to each process.
 
 
-### Output example
+### 输出示例
 The following lines are the example csv file exported from SensitivityAnalysis. The first line is constructed by 'layername' and sparsity list. Here the sparsity value means how much weight SensitivityAnalysis prune for each layer. Each line below records the model accuracy when this layer is under different sparsities. Note that, due to the early_stop option, some layers may not have model accuracies/losses under all sparsities, for example, its accuracy drop has already exceeded the threshold set by the user.
 ```
 layername,0.05,0.1,0.2,0.3,0.4,0.5,0.7,0.85,0.95
@@ -73,7 +73,7 @@ features.8,0.55696,0.54194,0.48892,0.42986,0.33048,0.2266,0.09566,0.02348,0.0056
 features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 ```
 
-## Topology Analysis
+## 拓扑结构分析
 We also provide several tools for the topology analysis during the model compression. These tools are to help users compress their model better. Because of the complex topology of the network, when compressing the model, users often need to spend a lot of effort to check whether the compression configuration is reasonable. So we provide these tools for topology analysis to reduce the burden on users.
 
 ### ChannelDependency
@@ -84,7 +84,7 @@ Complicated models may have residual connection/concat operations in their model
 
 If the layers have channel dependency are assigned with different sparsities (here we only discuss the structured pruning by L1FilterPruner/L2FilterPruner), then there will be a shape conflict during these layers. Even the pruned model with mask works fine, the pruned model cannot be speedup to the final model directly that runs on the devices, because there will be a shape conflict when the model tries to add/concat the outputs of these layers. This tool is to find the layers that have channel count dependencies to help users better prune their model.
 
-#### Usage
+#### 用法
 ```python
 from nni.compression.torch.utils.shape_dependency import ChannelDependency
 data = torch.ones(1, 3, 224, 224).cuda()
@@ -110,7 +110,7 @@ Set 11,layer4.0.downsample.0,layer4.1.conv2,layer4.0.conv2
 Set 12,layer4.1.conv1
 ```
 
-### MaskConflict
+### 掩码冲突
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
