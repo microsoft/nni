@@ -229,7 +229,7 @@ For detail system requirements of NNI, please refer to [here](https://nni.readth
 Note:
 
 * If there is any privilege issue, add `--user` to install NNI in the user directory.
-* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md).
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md#faq).
 
 ### **Verify installation**
