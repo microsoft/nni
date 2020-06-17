@@ -5,6 +5,7 @@ import logging
 import torch
 import numpy as np
 from nni._graph_utils import build_module_graph
+from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
 
@@ -235,7 +236,7 @@ class ModelSpeedup:
         training = self.bound_model.training
         _logger.info("start to speed up the model")
         _logger.info("fix the mask conflict of the interdependent layers")
-        self.fix_mask_conflict()
+        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")

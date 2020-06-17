@@ -8,7 +8,7 @@ from .shape_dependency import ChannelDependency, GroupDependency
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
 
-def fix_mask_conflict(masks, model=None, dummy_input=None, graph=None):
+def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     """
     MaskConflict fix the mask conflict for the channel dependencies
     and group dependency.
@@ -21,8 +21,8 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, graph=None):
         input example to trace the model
     masks : dict/str
         a dict object that stores the masks or the path of the mask file
-    graph : torch._C.Graph
-        the traced graph of the target model, is this parameter is not None,
+    traced : torch._C.torch.jit.TopLevelTracedModule
+        the traced model of the target model, is this parameter is not None,
         we donnot use the model and dummpy_input to get the trace graph.
     """
     if isinstance(masks, str):
@@ -33,18 +33,18 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, graph=None):
     # should get the traced model handly, so that, we only trace the
     # model once, GroupMaskConflict and ChannelMaskConflict will reuse
     # this traced model.
-    if graph is None:
+    if traced is None:
         assert model is not None and dummy_input is not None
-        graph = torch.jit.trace(model, dummy_input)
-    fix_group_mask = GroupMaskConflict(masks, model, dummy_input, graph)
-    masks = fix_group_mask.fix_mask_conflict()
-    fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, graph)
+        traced = torch.jit.trace(model, dummy_input)
+    # fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
+    # masks = fix_group_mask.fix_mask_conflict()
+    fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, traced)
     masks = fix_channel_mask.fix_mask_conflict()
     return masks
 
 
 class GroupMaskConflict:
-    def __init__(self, masks, model=None, dummy_input=None, graph=None):
+    def __init__(self, masks, model=None, dummy_input=None, traced=None):
         """
         GroupMaskConflict fix the mask conflict between the layers that
         has group dependecy with each other.
@@ -57,13 +57,13 @@ class GroupMaskConflict:
             input example to trace the model
         masks : dict
             a dict object that stores the masks
-        graph : torch._C.Graph
-            the traced graph of the target model, is this parameter is not None,
+        traced : torch._C.torch.jit.TopLevelTracedModule
+            the traced model of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
         """
         # check if the parameters are valid
         parameter_valid = False
-        if graph is not None:
+        if traced is not None:
             parameter_valid = True
         elif (model is not None) and (dummy_input is not None):
             parameter_valid = True
@@ -71,7 +71,7 @@ class GroupMaskConflict:
             raise Exception('The input parameters is invalid!')
         self.model = model
         self.dummy_input = dummy_input
-        self.graph = graph
+        self.traced = traced
         self.masks = masks
 
     def fix_mask_conflict(self):
@@ -80,7 +80,7 @@ class GroupMaskConflict:
         has group dependencies. This function should be called before the
         mask inference of the 'speedup' module.
         """
-        group_depen = GroupDependency(self.model, self.dummy_input, self.graph)
+        group_depen = GroupDependency(self.model, self.dummy_input, self.traced)
         depens = group_depen.dependency
         for layername in depens:
             group = depens[layername]
@@ -114,7 +114,9 @@ class GroupMaskConflict:
                     # To keep the output channel number still being divisible to
                     # groups, we set the masks of following filters to be zero.
                     pos = gm[i]
-                    self.masks[layername][pos] = torch.ones(shape[1:])
+                    self.masks[layername]['weight'][pos] = torch.ones(shape[1:])
+                    if hasattr(self.masks[layername], 'bias'):
+                        self.masks[layername]['bias'][pos] = 1
         return self.masks
 
     def export(self, path):
