@@ -111,6 +111,8 @@ export async function execCopydir(source: string, destination: string): Promise<
             fs.copyFileSync(sourcePath, destPath);
         }
     }
+
+    return Promise.resolve();
 }
 
 /**
