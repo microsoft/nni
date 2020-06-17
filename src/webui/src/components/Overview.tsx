@@ -61,7 +61,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
     render(): React.ReactNode {
         const { trialConcurrency } = this.state;
         const { experimentUpdateBroadcast, metricGraphMode, bestTrialEntries } = this.props;
-        const searchSpace = this.convertSearchSpace();
+        // const searchSpace = this.convertSearchSpace();
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
@@ -105,7 +105,8 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     <Stack.Item grow styles={{root: {width: 450}}} className="overviewBoder borderRight bgNNI">
                         <Title1 text="Search space" icon="10.png" />
                         <Stack className="experiment">
-                            <SearchSpace searchSpace={searchSpace} />
+                            {/* <SearchSpace searchSpace={searchSpace} /> */}
+                            <SearchSpace searchSpace={EXPERIMENT.searchSpace} />
                         </Stack>
                     </Stack.Item>
                     {/* <Stack.Item grow styles={{root: {width: 450}}} className="bgNNI"> */}
@@ -163,22 +164,22 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         );
     }
 
-    private convertSearchSpace(): object {
-        const searchSpace = Object.assign({}, EXPERIMENT.searchSpace);
-        Object.keys(searchSpace).map(item => {
-            const key = searchSpace[item]._type;
-            const value = searchSpace[item]._value;
-            switch (key) {
-                case 'quniform':
-                case 'qnormal':
-                case 'qlognormal':
-                    searchSpace[item]._value = [value[0], value[1]];
-                    break;
-                default:
-            }
-        });
-        return searchSpace;
-    }
+    // private convertSearchSpace(): object {
+    //     const searchSpace = Object.assign({}, EXPERIMENT.searchSpace);
+    //     Object.keys(searchSpace).map(item => {
+    //         const key = searchSpace[item]._type;
+    //         const value = searchSpace[item]._value;
+    //         switch (key) {
+    //             case 'quniform':
+    //             case 'qnormal':
+    //             case 'qlognormal':
+    //                 searchSpace[item]._value = [value[0], value[1]];
+    //                 break;
+    //             default:
+    //         }
+    //     });
+    //     return searchSpace;
+    // }
 
     private findBestTrials(): Trial[] {
         const bestTrials = TRIALS.sort();
