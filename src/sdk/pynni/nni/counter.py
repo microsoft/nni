@@ -14,10 +14,14 @@ try:
     from thop import profile
 except ImportError:
     _logger.warning('Please install thop first.')
-
+    
 def count_flops_params(model: nn.Module, input_size=None, verbose=False):
     """
-    Count FLOPs and Params of the given model. This function would identify the mask on the module and take the pruend shape into consideration. Note that, we only identify the output shape of the module, so the calculated FLOPs will be larger than real number.
+    Count FLOPs and Params of the given model. 
+    This function would identify the mask on the module 
+    and take the pruend shape into consideration. 
+    Note that, we only identify the output shape of the module, 
+    so the calculated FLOPs will be larger than real number.
 
     Parameters
     ---------
