@@ -36,8 +36,8 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     if traced is None:
         assert model is not None and dummy_input is not None
         traced = torch.jit.trace(model, dummy_input)
-    # fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
-    # masks = fix_group_mask.fix_mask_conflict()
+    fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
+    masks = fix_group_mask.fix_mask_conflict()
     fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, traced)
     masks = fix_channel_mask.fix_mask_conflict()
     return masks
@@ -82,6 +82,7 @@ class GroupMaskConflict:
         """
         group_depen = GroupDependency(self.model, self.dummy_input, self.traced)
         depens = group_depen.dependency
+        _logger.info(depens)
         for layername in depens:
             group = depens[layername]
             if layername not in self.masks:

@@ -210,8 +210,10 @@ class GroupDependency:
             the parent conv layers.
         """
         parent_layers = []
-        queue = []
-        queue.append(node)
+        # the input node is a Conv node
+        predeessors = self.graph.find_predecessors(node.unique_name)
+        predeessors = [self.graph.name_to_node[x] for x in predeessors]
+        queue = predeessors
         while queue:
             curnode = queue.pop(0)
             if curnode.op_type == 'Conv2d':
