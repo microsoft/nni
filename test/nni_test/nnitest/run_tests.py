@@ -41,10 +41,11 @@ def update_training_service_config(config, training_service):
 
 def nnictl_generate_search_space(test_yml_config, test_case_config, args):
     trial_command = test_yml_config['trial']['command']
-    code_dir = test_yml_config['trial']['codeDir']
+    code_dir = args.nni_source_dir + test_case_config['ssgenCodeDir']
     ss_file_path = args.nni_source_dir + test_case_config['ssFilePath']
 
     nnictl_command = 'nnictl ss_gen --trial_command="{}" --trial_dir={} --file={}'.format(trial_command, code_dir, ss_file_path)
+    print('ss_gen command:', nnictl_command, flush=True)
     proc = subprocess.run(shlex.split(nnictl_command))
     assert proc.returncode == 0, 'nnictl ss_gen command failed with code %d' % proc.returncode
     assert os.path.exists(ss_file_path)
@@ -67,7 +68,8 @@ def prepare_config_file(test_case_config, it_config, args):
     # generate search space file for classic nas
     if test_case_config.get('doSsgen') is not None:
         ss_file_path = nnictl_generate_search_space(test_yml_config, test_case_config, args)
-        deep_update(test_yml_config, {"searchSpacePath": ss_file_path})
+        # use `basename` because searchSpacePath is relative path based on the path of config file
+        deep_update(test_yml_config, {"searchSpacePath": os.path.basename(ss_file_path)})
 
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml

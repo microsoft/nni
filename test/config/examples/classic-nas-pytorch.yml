@@ -10,7 +10,7 @@ tuner:
   classArgs:
     optimize_mode: maximize
 trial:
-  command: python3 mnist.py
+  command: python3 mnist.py --epochs 1
   codeDir: ../../../examples/nas/classic_nas
   gpuNum: 0
 
