@@ -16,14 +16,13 @@ def collect_gpu_usage(node_id):
     except Exception:
         traceback.print_exc()
         info = gen_empty_gpu_metric()
-    if node_id is not None:
-        info["node"] = node_id
+    info["node"] = node_id
     return info
 
 
 def parse_nvidia_smi_result(smi):
-    output = {}
     try:
+        output = {}
         xmldoc = minidom.parseString(smi)
         gpuList = xmldoc.getElementsByTagName('gpu')
         output["Timestamp"] = time.asctime(time.localtime())
@@ -42,19 +41,31 @@ def parse_nvidia_smi_result(smi):
             runningProNumber = len(processes[0].getElementsByTagName('process_info'))
             gpuInfo['activeProcessNum'] = runningProNumber
 
+            gpuInfo['gpuType'] = gpu.getElementsByTagName('product_name')[0]\
+                .childNodes[0].data
+            memUsage = gpu.getElementsByTagName('fb_memory_usage')[0]
+            gpuInfo['gpuMemTotal'] = memUsage.getElementsByTagName('total')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
+            gpuInfo['gpuMemUsed'] = memUsage.getElementsByTagName('used')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
+            gpuInfo['gpuMemFree'] = memUsage.getElementsByTagName('free')[0]\
+                .childNodes[0].data.replace("MiB", "").strip()
+
             output["gpuInfos"].append(gpuInfo)
     except Exception:
         # e_info = sys.exc_info()
         traceback.print_exc()
+        output = {}
     return output
 
 
 def gen_empty_gpu_metric():
-    output = {}
     try:
+        output = {}
         output["Timestamp"] = time.asctime(time.localtime())
         output["gpuCount"] = 0
         output["gpuInfos"] = []
     except Exception:
         traceback.print_exc()
+        output = {}
     return output
