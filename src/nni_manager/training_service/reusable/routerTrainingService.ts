@@ -25,11 +25,14 @@ import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetri
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
+import { AMLClusterConfig } from '../aml/amlConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
+import { AMLTrainingService } from '../aml/amlTrainingService';
 import { TrialDispatcher } from './trialDispatcher';
 import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
+import { AMLEnvironmentService } from './amlEnvironmentService';
 import { StorageService } from './storageService';
 import { MountedStorageService } from './mountedStorageService';
 import { TrialService } from './trial';
@@ -130,6 +133,32 @@ class RouterTrainingService implements TrainingService {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(PAIK8STrainingService);
                 }
+                for (const [key, value] of this.metaDataCache) {
+                    if (this.internalTrainingService === undefined) {
+                        throw new Error("TrainingService is not assigned!");
+                    }
+                    await this.internalTrainingService.setClusterMetadata(key, value);
+                }
+
+                if (this.internalTrainingService === undefined) {
+                    throw new Error("TrainingService is not assigned!");
+                }
+                await this.internalTrainingService.setClusterMetadata(key, value);
+
+                this.metaDataCache.clear();
+            } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
+                const config = <AMLClusterConfig>JSON.parse(value);
+                this.internalTrainingService = component.get(TrialDispatcher);
+
+                Container.bind(EnvironmentService)
+                    .to(AMLEnvironmentService)
+                    .scope(Scope.Singleton);
+                Container.bind(StorageService)
+                    .to(MountedStorageService)
+                    .scope(Scope.Singleton);
+                Container.bind(TrialService)
+                    .to(StorageTrialService)
+                    .scope(Scope.Singleton);
                 for (const [key, value] of this.metaDataCache) {
                     if (this.internalTrainingService === undefined) {
                         throw new Error("TrainingService is not assigned!");

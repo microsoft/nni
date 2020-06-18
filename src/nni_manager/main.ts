@@ -23,7 +23,6 @@ import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
-import { AMLTrainingService } from './training_service/aml/amlTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -68,7 +67,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'aml') {
         Container.bind(TrainingService)
-            .to(AMLTrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
