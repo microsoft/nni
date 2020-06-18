@@ -6,7 +6,7 @@ echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
 
-echo "testing classic nas..."
+echo "testing nnictl ss_gen (classic nas)..."
 cd $EXAMPLE_DIR/classic_nas
 SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
 if [ -f $SEARCH_SPACE_JSON ]; then
