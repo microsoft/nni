@@ -138,6 +138,11 @@ export class MountedStorageService extends StorageService {
         return results;
     }
 
+    protected async internalAttach(remotePath: string, content: string): Promise<boolean> {
+        await fs.promises.appendFile(remotePath, content + "\n");
+        return true;
+    }
+
     protected internalIsRelativePath(remotePath: string): boolean {
         return !path.isAbsolute(remotePath);
     }

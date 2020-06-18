@@ -105,28 +105,12 @@ export class StorageTrialService extends TrialService {
 
     private async sendCommand(commantType: string, data: any, environment: EnvironmentInformation): Promise<void> {
         let retryCount = 10;
-        let fileName: string;
-        let filePath: string = "";
         let findingName: boolean = true;
         const command = encodeCommand(commantType, JSON.stringify(data));
         const storageService = component.get<StorageService>(StorageService);
-        const commandPath = storageService.joinPath(environment.workingFolder, `commands`);
-
-        while (findingName) {
-            fileName = `manager_command_${new Date().getTime()}.txt`;
-            filePath = storageService.joinPath(commandPath, fileName);
-            if (!await storageService.exists(filePath)) {
-                findingName = false;
-                break;
-            }
-            if (retryCount == 0) {
-                throw new Error(`EnvironmentManager retry too many times to send command!`);
-            }
-            retryCount--;
-            await delay(1);
-        }
+        const fileName = storageService.joinPath(environment.workingFolder, `commands`, `manager_commands.txt`);
 
         // prevent to have imcomplete command, so save as temp name and then rename.
-        await storageService.save(command.toString("utf8"), filePath);
+        await storageService.save(command.toString("utf8"), fileName, true);
     }
 }

@@ -39,6 +39,7 @@ export abstract class StorageService {
     protected abstract async internalExists(remotePath: string): Promise<boolean>;
     protected abstract async internalRead(remotePath: string, offset: number, length: number): Promise<string>;
     protected abstract async internalList(remotePath: string): Promise<string[]>;
+    protected abstract async internalAttach(remotePath: string, content: string): Promise<boolean>;
     protected abstract internalIsRelativePath(path: string): boolean;
     protected abstract internalJoin(...paths: string[]): string;
     protected abstract internalDirname(...paths: string[]): string;
@@ -126,7 +127,7 @@ export abstract class StorageService {
         return exists
     }
 
-    public async save(content: string, remotePath: string): Promise<void> {
+    public async save(content: string, remotePath: string, isAttach: boolean = false): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`saving content to remotePath: ${remotePath}, length: ${content.length}`);
         const fileName = this.internalBasename(remotePath);
@@ -137,13 +138,20 @@ export abstract class StorageService {
         const remoteDir = this.internalDirname(remotePath);
         const remoteTempFile = this.internalJoin(remoteDir, tempFileName);
 
-        if (await this.internalExists(remotePath) === true) {
-            await this.internalRemove(remotePath, false, false);
+        if (isAttach) {
+            const result = await this.internalAttach(remotePath, content);
+            if (false === result){
+                throw new Error("this.internalAttach doesn't support");
+            }
+        } else {
+            if (await this.internalExists(remotePath) === true) {
+                await this.internalRemove(remotePath, false, false);
+            }
+            await fs.promises.writeFile(localTempFileName, content);
+            await this.internalCopy(localTempFileName, remoteDir, false, false, true);
+            await this.rename(remoteTempFile, fileName);
+            await fs.promises.unlink(localTempFileName);
         }
-        await fs.promises.writeFile(localTempFileName, content);
-        await this.internalCopy(localTempFileName, remoteDir, false, false, true);
-        await this.rename(remoteTempFile, fileName);
-        await fs.promises.unlink(localTempFileName);
     }
 
     public async copyFile(localPath: string, remotePath: string): Promise<void> {
