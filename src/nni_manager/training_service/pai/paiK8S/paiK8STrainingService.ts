@@ -233,9 +233,9 @@ class PAIK8STrainingService extends PAITrainingService {
                     }
                 },
                 extras: {
-                    'com.microsoft.pai.runtimeplugin': [
+                    'storages': [
                         {
-                            plugin: this.paiTrialConfig.paiStoragePlugin
+                            name: this.paiTrialConfig.paiStorageConfigName
                         }
                     ],
                     submitFrom: 'submit-job-v2'

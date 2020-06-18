@@ -528,9 +528,9 @@ Required in remote mode. A list of key-value pairs with the following keys.
 
 #### ip
 
-Required. IP address that is accessible from the current machine.
+Required. IP address or host name that is accessible from the current machine.
 
-The IP address of remote machine.
+The IP address or host name of remote machine.
 
 #### port
 
