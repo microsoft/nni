@@ -1,6 +1,5 @@
-# Code for "AMC: AutoML for Model Compression and Acceleration on Mobile Devices"
-# Yihui He*, Ji Lin*, Zhijian Liu, Hanrui Wang, Li-Jia Li, Song Han
-# {jilin, songhan}@mit.edu
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import time
 from copy import deepcopy
@@ -10,8 +9,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from ..lib.utils import AverageMeter, accuracy, prGreen
-from .rewards import *
+from .lib.utils import AverageMeter, accuracy, prGreen
+
+# for pruning
+def acc_reward(net, acc, flops):
+    return acc * 0.01
+
+
+def acc_flops_reward(net, acc, flops):
+    error = (100 - acc) * 0.01
+    return -error * np.log(flops)
+
 
 class ChannelPruningEnv:
     """
@@ -228,7 +236,7 @@ class ChannelPruningEnv:
         # reconstruct, X, Y <= [N, C]
         masked_X = X[:, mask]
         if weight.shape[2] == 1:  # 1x1 conv or fc
-            from ..lib.utils import least_square_sklearn
+            from .lib.utils import least_square_sklearn
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
             rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
             rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
@@ -393,7 +401,7 @@ class ChannelPruningEnv:
         self.wsize_list = []
         self.flops_list = []
 
-        from ..lib.utils import measure_layer_for_pruning
+        from .lib.utils import measure_layer_for_pruning
 
         # extend the forward fn to record layer info
         def new_forward(m):

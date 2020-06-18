@@ -9,9 +9,6 @@ from copy import deepcopy
 import torch
 torch.backends.cudnn.deterministic = True
 
-from nni.compression.torch.pruning.amc.env.channel_pruning_env import ChannelPruningEnv
-from nni.compression.torch.pruning.amc.lib.agent import DDPG
-from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
 from nni.compression.torch.pruning.amc.amc_pruner import AMCPruner
 from data import get_split_dataset
 

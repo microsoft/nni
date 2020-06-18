@@ -1,6 +1,5 @@
-# Code for "AMC: AutoML for Model Compression and Acceleration on Mobile Devices"
-# Yihui He*, Ji Lin*, Zhijian Liu, Hanrui Wang, Li-Jia Li, Song Han
-# {jilin, songhan}@mit.edu
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 from __future__ import absolute_import
 from collections import deque, namedtuple

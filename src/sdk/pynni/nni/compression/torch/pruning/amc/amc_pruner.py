@@ -1,19 +1,19 @@
-# Code for "AMC: AutoML for Model Compression and Acceleration on Mobile Devices"
-# Yihui He*, Ji Lin*, Zhijian Liu, Hanrui Wang, Li-Jia Li, Song Han
-# {jilin, songhan}@mit.edu
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import os
-import numpy as np
-import argparse
 from copy import deepcopy
+
+import numpy as np
 import torch
 torch.backends.cudnn.deterministic = True
 
-from .env.channel_pruning_env import ChannelPruningEnv
-from .lib.agent import DDPG
-from .lib.utils import get_output_folder
 from nni.compression.torch.compressor import Pruner
 from tensorboardX import SummaryWriter
+
+from .channel_pruning_env import ChannelPruningEnv
+from .lib.agent import DDPG
+from .lib.utils import get_output_folder
 
 class AMCPruner(object):
     def __init__(self, model, config_list, val_loader, args):
@@ -135,25 +135,25 @@ class AMCPruner(object):
         self.text_writer.close()
 
 
-def export_model(env, args):
-    assert args.ratios is not None or args.channels is not None, 'Please provide a valid ratio list or pruned channels'
-    assert args.export_path is not None, 'Please provide a valid export path'
-    env.set_export_path(args.export_path)
+    def export_model(self):
+        assert self.args.ratios is not None or self.args.channels is not None, 'Please provide a valid ratio list or pruned channels'
+        assert self.args.export_path is not None, 'Please provide a valid export path'
+        self.env.set_export_path(self.args.export_path)
 
-    print('=> Original model channels: {}'.format(env.org_channels))
-    if args.ratios:
-        ratios = args.ratios.split(',')
-        ratios = [float(r) for r in ratios]
-        assert  len(ratios) == len(env.org_channels)
-        channels = [int(r * c) for r, c in zip(ratios, env.org_channels)]
-    else:
-        channels = args.channels.split(',')
-        channels = [int(r) for r in channels]
-        ratios = [c2 / c1 for c2, c1 in zip(channels, env.org_channels)]
-    print('=> Pruning with ratios: {}'.format(ratios))
-    print('=> Channels after pruning: {}'.format(channels))
+        print('=> Original model channels: {}'.format(self.env.org_channels))
+        if self.args.ratios:
+            ratios = self.args.ratios.split(',')
+            ratios = [float(r) for r in ratios]
+            assert  len(ratios) == len(self.env.org_channels)
+            channels = [int(r * c) for r, c in zip(ratios, self.env.org_channels)]
+        else:
+            channels = self.args.channels.split(',')
+            channels = [int(r) for r in channels]
+            ratios = [c2 / c1 for c2, c1 in zip(channels, self.env.org_channels)]
+        print('=> Pruning with ratios: {}'.format(ratios))
+        print('=> Channels after pruning: {}'.format(channels))
 
-    for r in ratios:
-        env.step(r)
+        for r in ratios:
+            self.env.step(r)
 
-    return
+        return
