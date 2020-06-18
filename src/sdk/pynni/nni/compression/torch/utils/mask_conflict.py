@@ -4,7 +4,7 @@ import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency, GroupDependency
+from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDepency
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
 
@@ -43,8 +43,72 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     masks = fix_group_mask.fix_mask_conflict()
     fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, traced)
     masks = fix_channel_mask.fix_mask_conflict()
+    padding_cat_mask = CatMaskPadding(masks, model, dummy_input, traced)
+    masks = padding_cat_mask.fix_mask()
     return masks
 
+class MaskFix:
+    def __init__(self, masks, model=None, dummy_input=None, traced=None):
+        # check if the parameters are valid
+        parameter_valid = False
+        if traced is not None:
+            parameter_valid = True
+        elif (model is not None) and (dummy_input is not None):
+            parameter_valid = True
+        if not parameter_valid:
+            raise Exception('The input parameters is invalid!')
+        self.model = model
+        self.dummy_input = dummy_input
+        self.traced = traced
+        self.masks = masks
+
+    def fix_mask(self):
+        raise NotImplementedError
+
+    def export(self):
+        raise NotImplementedError
+
+class CatMaskPadding(MaskFix):
+    def __init__(self, masks, model, dummy_input=None, traced=None):
+        super(CatMaskPadding, self).__init__(masks, model, dummy_input, traced)
+    
+    def fix_mask(self):
+        cat_padding_depen = CatPaddingDepency(self.model, self.dummy_input, self.traced)
+        name_to_module = {}
+        for name, module in self.model.named_modules():
+            name_to_module[name] = module
+        depen = cat_padding_depen.dependency_sets
+        for layers in depen:
+            device = None
+            count = 0
+            for layer in layers:
+                if layer in self.masks:
+                    count += 1
+                    if device is None:
+                        device = self.masks[layer]['weight'].device
+            if count == 0:
+                # no layer is pruned
+                continue
+            elif count == len(layers):
+                # all the layers have been pruned
+                continue
+            # pad the mask for the non-pruned layers
+            for layer in layers:
+                module = name_to_module[layer]
+                w_shape = module.weight.data.size()
+                w_mask = torch.ones(w_shape).to(device)
+                b_mask = None
+                if hasattr(module, 'bias'):
+                    b_shape = module.bias.data.size()
+                    b_mask = torch.ones(b_shape).to(device)
+                self.masks[layer] = {'weight':w_mask, 'bias':b_mask}
+        return self.masks
+
+    def export(self, path):
+        """
+        Export the masks after fixing the conflict to file.
+        """
+        torch.save(self.masks, path)
 
 class GroupMaskConflict:
     def __init__(self, masks, model=None, dummy_input=None, traced=None):

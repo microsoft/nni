@@ -6,7 +6,7 @@ import logging
 
 from nni._graph_utils import TorchModuleGraph
 
-__all__ = ['ChannelDependency', 'GroupDependency']
+__all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDepency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -14,7 +14,27 @@ CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 
 
-class ChannelDependency:
+class Dependency:
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        """
+        Build the graph for the model.
+        """
+        # check if the input is legal
+        if traced_model is None:
+            # user should provide model & dummy_input to trace
+            # the model or a already traced model
+            assert model is not None and dummy_input is not None
+        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.dependency = dict()
+        self.build_dependency()
+
+    def build_dependency(self):
+        raise NotImplementedError
+
+    def export(self, filepath):
+        raise NotImplementedError
+
+class ChannelDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
         This model analyze the channel dependencis between the conv
@@ -30,13 +50,7 @@ class ChannelDependency:
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
         """
-        # check if the input is legal
-        if traced_model is None:
-            # user should provide model & dummy_input to trace the model or a already traced model
-            assert model is not None and dummy_input is not None
-        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
-        self.dependency = dict()
-        self.build_channel_dependency()
+        super(ChannelDependency, self).__init__(model, dummy_input, traced_model)
 
     def _get_parent_layers(self, node):
         """
@@ -67,7 +81,7 @@ class ChannelDependency:
                 queue.append(parent)
         return parent_layers
 
-    def build_channel_dependency(self):
+    def build_dependency(self):
         """
         Build the channel dependency for the conv layers
         in the model.
@@ -168,8 +182,38 @@ class ChannelDependency:
             d_sets.append(tmp_set)
         return d_sets
 
+class CatPaddingDepency(ChannelDependency):
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        super(CatPaddingDepency, self).__init__(model, dummy_input, traced_model)
+    
+    def build_dependency(self):
+        for node in self.graph.nodes_py.nodes_op:
+            parent_layers = []
+            if node.op_type == CAT_TYPE:
+                parent_layers = self._get_parent_layers(node)
+                dependency_set = set(parent_layers)
+                # merge the dependencies
+                for parent in parent_layers:
+                    if parent in self.dependency:
+                        dependency_set.update(self.dependency[parent])
+                # save the dependencies
+                for _node in dependency_set:
+                    self.dependency[_node] = dependency_set
 
-class GroupDependency:
+    @property
+    def dependency_sets(self):
+        d_sets = []
+        visited = set()
+        for nodename in self.dependency:
+            if nodename in visited:
+                continue
+            d_sets.append(self.dependency[nodename])
+        return d_sets
+
+    def export(self, filepath):
+        pass
+
+class GroupDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
         This model analyze the group dependencis between the conv
@@ -185,13 +229,7 @@ class GroupDependency:
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
         """
-        # check if the input is legal
-        if traced_model is None:
-            # user should provide model & dummy_input to trace the model or a already traced model
-            assert model is not None and dummy_input is not None
-        self.graph = TorchModuleGraph(model, dummy_input, traced_model)
-        self.dependency = dict()
-        self.build_group_dependency()
+        super(GroupDependency, self).__init__(model, dummy_input, traced_model)
 
     def _get_parent_convs(self, node):
         """
@@ -248,7 +286,7 @@ class GroupDependency:
         group = inputs[8].toIValue()
         return group
         
-    def build_group_dependency(self):
+    def build_dependency(self):
         """
         Build the channel dependency for the conv layers
         in the model. This function return the group number
