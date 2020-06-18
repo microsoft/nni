@@ -41,7 +41,7 @@ def to_tensor(ndarray, requires_grad=False):  # return a float tensor by default
     return tensor.cuda() if torch.cuda.is_available() else tensor
 
 
-def measure_layer_for_pruning(layer, x):
+def measure_layer_for_pruning(wrapper, x):
     def get_layer_type(layer):
         layer_str = str(layer)
         return layer_str[:layer_str.find('(')].strip()
@@ -53,7 +53,9 @@ def measure_layer_for_pruning(layer, x):
         return sum([functools.reduce(operator.mul, i.size(), 1) for i in model.parameters()])
 
     multi_add = 1
+    layer = wrapper.module
     type_name = get_layer_type(layer)
+    #print(type_name)
 
     # ops_conv
     if type_name in ['Conv2d']:
@@ -61,15 +63,15 @@ def measure_layer_for_pruning(layer, x):
                     layer.stride[0] + 1)
         out_w = int((x.size()[3] + 2 * layer.padding[1] - layer.kernel_size[1]) /
                     layer.stride[1] + 1)
-        layer.flops = layer.in_channels * layer.out_channels * layer.kernel_size[0] *  \
+        wrapper.flops = layer.in_channels * layer.out_channels * layer.kernel_size[0] *  \
                     layer.kernel_size[1] * out_h * out_w / layer.groups * multi_add
-        layer.params = get_layer_param(layer)
+        wrapper.params = get_layer_param(layer)
     # ops_linear
     elif type_name in ['Linear']:
         weight_ops = layer.weight.numel() * multi_add
         bias_ops = layer.bias.numel()
-        layer.flops = weight_ops + bias_ops
-        layer.params = get_layer_param(layer)
+        wrapper.flops = weight_ops + bias_ops
+        wrapper.params = get_layer_param(layer)
     return
 
 

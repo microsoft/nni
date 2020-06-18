@@ -172,11 +172,6 @@ if __name__ == "__main__":
                                                  n_gpu=args.n_gpu)
     _, val_loader = init_data(args)
 
-    config_list = [
-        {
-            'op_types': ['Conv2d']
-        }
-    ]
-
-    pruner = AMCPruner(model, config_list, validate, val_loader, args)
+    print(model)
+    pruner = AMCPruner(model, validate, val_loader, args)
     pruner.compress()

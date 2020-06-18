@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 #from .lib.utils import AverageMeter, accuracy, prGreen
+from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .lib.utils import prGreen
 
 # for pruning
@@ -22,13 +23,19 @@ def acc_flops_reward(net, acc, flops):
     return -error * np.log(flops)
 
 
-class ChannelPruningEnv:
+class AMCChannelPruner(Pruner):
     """
     Env for channel pruning search
     """
     def __init__(self, model, val_func, val_loader, preserve_ratio, args, export_model=False, use_new_input=False):
-        # default setting
         self.prunable_layer_types = [torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear]
+
+        config_list = [{
+            'op_types': ['Conv2d', 'Linear']
+        }]
+        super().__init__(model, config_list, optimizer=None)
+
+        # default setting
 
         # save options
         self.model = model
@@ -193,7 +200,7 @@ class ChannelPruningEnv:
     def prune_kernel(self, op_idx, preserve_ratio, preserve_idx=None):
         '''Return the real ratio'''
         m_list = list(self.model.modules())
-        op = m_list[op_idx]
+        op = m_list[op_idx].module
         assert (preserve_ratio <= 1.)
 
         if preserve_ratio == 1:  # do not prune
@@ -237,6 +244,7 @@ class ChannelPruningEnv:
 
         # reconstruct, X, Y <= [N, C]
         masked_X = X[:, mask]
+        #print('op_idx:', op_idx, 'size:', weight.shape, 'op:', op)
         if weight.shape[2] == 1:  # 1x1 conv or fc
             from .lib.utils import least_square_sklearn
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
@@ -260,7 +268,7 @@ class ChannelPruningEnv:
         if self.export_model:  # prune previous buffer ops
             prev_idx = self.prunable_idx[self.prunable_idx.index(op_idx) - 1]
             for idx in range(prev_idx, op_idx):
-                m = m_list[idx]
+                m = m_list[idx].module
                 if type(m) == nn.Conv2d:  # depthwise
                     m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask, :, :, :])#.cuda()
                     if m.groups == m.in_channels:
@@ -327,19 +335,6 @@ class ChannelPruningEnv:
         reduced = self.org_flops - self._cur_flops()
         return reduced
 
-    #def _init_data(self):
-        # split the train set into train + val
-        # for CIFAR, split 5k for val
-        # for ImageNet, split 3k for val
-        #val_size = 5000 if 'cifar' in self.data_type else 3000
-        #self.train_loader, self.val_loader, n_class = get_split_dataset(self.data_type, self.batch_size,
-        #                                                                self.n_data_worker, val_size,
-        #                                                                data_root=self.data_root,
-        #                                                                use_real_val=self.use_real_val,
-        #                                                                shuffle=False)  # same sampling
-        #if self.use_real_val:  # use the real val set for eval, which is actually wrong
-        #    print('*** USE REAL VALIDATION SET!')
-
     def _build_index(self):
         self.prunable_idx = []
         self.prunable_ops = []
@@ -350,7 +345,9 @@ class ChannelPruningEnv:
         self.org_channels = []
         # build index and the min strategy dict
         for i, m in enumerate(self.model.modules()):
-            if type(m) in self.prunable_layer_types:
+            #if type(m) in self.prunable_layer_types + [PrunerModuleWrapper]:
+            if isinstance(m, PrunerModuleWrapper):
+                m = m.module
                 if type(m) == nn.Conv2d and m.groups == m.in_channels:  # depth-wise conv, buffer
                     this_buffer_list.append(i)
                 else:  # really prunable
@@ -440,13 +437,14 @@ class ChannelPruningEnv:
                         self.layer_info_dict[idx]['flops'] = m_list[idx].flops
                         self.wsize_list.append(m_list[idx].params)
                         self.flops_list.append(m_list[idx].flops)
+                    print('flops:', self.flops_list)
                 for idx in self.prunable_idx:
                     f_in_np = m_list[idx].input_feat.data.cpu().numpy()
                     f_out_np = m_list[idx].output_feat.data.cpu().numpy()
                     if len(f_in_np.shape) == 4:  # conv
                         if self.prunable_idx.index(idx) == 0:  # first conv
                             f_in2save, f_out2save = None, None
-                        elif m_list[idx].weight.size(3) > 1:  # normal conv
+                        elif m_list[idx].module.weight.size(3) > 1:  # normal conv
                             f_in2save, f_out2save = f_in_np, f_out_np
                         else:  # 1x1 conv
                             # assert f_out_np.shape[2] == f_in_np.shape[2]  # now support k=3
@@ -514,10 +512,11 @@ class ChannelPruningEnv:
 
     def _build_state_embedding(self):
         # build the static part of the state embedding
+        print('Building state embedding...')
         layer_embedding = []
         module_list = list(self.model.modules())
         for i, ind in enumerate(self.prunable_idx):
-            m = module_list[ind]
+            m = module_list[ind].module
             this_state = []
             if type(m) == nn.Conv2d:
                 this_state.append(i)  # index
