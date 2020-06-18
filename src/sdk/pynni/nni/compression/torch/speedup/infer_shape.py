@@ -57,9 +57,18 @@ class CoarseMask:
         """
         device = index_a.device
         s = set()
-        for num in index_a:
+        for num in index_a.tolist():
+            # we need to transfer the tensor to list here
+            # first, directly traversing the tensor by for
+            # loop will return the list of tensor(x) object,
+            # even the value are the same, but they are different
+            # tensor objects, so the set will contains multiple
+            # tensor objects that has the same value. For example
+            # for num in torch.ones(2):
+            #   s.add(num)
+            # s will be {tensor(1), tensor(1)}
             s.add(num)
-        for num in index_b:
+        for num in index_b.tolist():
             s.add(num)
         # move the output tensor to the same device with index_a
         return torch.tensor(sorted(s)).to(device)  # pylint: disable=not-callable
@@ -277,6 +286,8 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
         The mask of its output tensor
 
     """
+    print('CATINPUT', last_visited)
+    print(mask)
     assert isinstance(mask, CoarseMask)
     out_shape = cat_info['out_shape']
     cat_dim = cat_info['cat_dim']
@@ -307,6 +318,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                     output_mask.mask_index[dim] = mask.mask_index[dim].data.clone(
                     )
         module_masks.set_output_mask(output_mask)
+        print("CATOUTPUT_FIRST", module_masks.output_mask)
         return module_masks.output_mask
     # If this cat node is already visited, we need
     # validating if the mask is legel, for cat operation,
@@ -324,7 +336,6 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                 offset += offsets[i]
             device = mask.mask_index[dim].device
             new_mask = mask.mask_index[dim] + offset
-            print(new_mask.device)
             module_masks.output_mask.mask_index[dim] = CoarseMask.merge_index(
                 module_masks.output_mask.mask_index[dim], new_mask).to(device)
         else:
@@ -646,6 +657,8 @@ def conv2d_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     if module_masks.input_mask is None:
+        print('First visited')
+        print(mask)
         module_masks.set_input_mask(mask)
     else:
         # the same conv layer may be accessed more
@@ -654,6 +667,7 @@ def conv2d_inshape(module_masks, mask):
         print(mask)
         assert module_masks.input_mask <= mask
         module_masks.input_mask.merge(mask)
+        print(module_masks.input_mask)
     return None
 
 

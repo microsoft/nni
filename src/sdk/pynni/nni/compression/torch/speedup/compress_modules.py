@@ -103,6 +103,7 @@ def replace_conv2d(conv, mask):
     torch.nn.Conv2d
         The new conv2d module
     """
+    print(mask)
     assert isinstance(mask, ModuleMasks)
     if mask.input_mask is None:
         in_channels = conv.in_channels
@@ -138,4 +139,7 @@ def replace_conv2d(conv, mask):
     new_conv.weight.data.copy_(tmp_weight_data)
     if conv.bias is not None:
         new_conv.bias.data.copy_(conv.bias.data if tmp_bias_data is None else tmp_bias_data)
+    print('Replacing the conv layers')
+    print(mask)
+    print(new_conv)
     return new_conv
