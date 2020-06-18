@@ -16,7 +16,7 @@ from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
 class AMCPruner(object):
-    def __init__(self, model, config_list, val_loader, args):
+    def __init__(self, model, config_list, val_func, val_loader, args):
         #super().__init__(model, config_list, optimizer=None)
         
         if args.seed is not None:
@@ -24,7 +24,7 @@ class AMCPruner(object):
             torch.manual_seed(args.seed)
             torch.cuda.manual_seed(args.seed)
 
-        self.env = ChannelPruningEnv(model, val_loader,
+        self.env = ChannelPruningEnv(model, val_func, val_loader,
                                 preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
                                 args=args, export_model=args.job == 'export', use_new_input=args.use_new_input)
 

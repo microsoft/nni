@@ -9,7 +9,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from .lib.utils import AverageMeter, accuracy, prGreen
+#from .lib.utils import AverageMeter, accuracy, prGreen
+from .lib.utils import prGreen
 
 # for pruning
 def acc_reward(net, acc, flops):
@@ -25,7 +26,7 @@ class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, model, val_loader, preserve_ratio, args, export_model=False, use_new_input=False):
+    def __init__(self, model, val_func, val_loader, preserve_ratio, args, export_model=False, use_new_input=False):
         # default setting
         self.prunable_layer_types = [torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear]
 
@@ -61,6 +62,7 @@ class ChannelPruningEnv:
         # prepare data
         #self._init_data()
         self.val_loader = val_loader
+        self._validate = val_func
 
         # build indexs
         self._build_index()
@@ -552,51 +554,3 @@ class ChannelPruningEnv:
 
         self.layer_embedding = layer_embedding
 
-    def _validate(self, val_loader, model, verbose=False):
-        '''
-        Validate the performance on validation set
-        :param val_loader:
-        :param model:
-        :param verbose:
-        :return:
-        '''
-        batch_time = AverageMeter()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
-
-        criterion = nn.CrossEntropyLoss()#.cuda()
-        # switch to evaluate mode
-        model.eval()
-        end = time.time()
-
-        t1 = time.time()
-        with torch.no_grad():
-            for i, (input, target) in enumerate(val_loader):
-                #target = target.cuda(non_blocking=True)
-                input_var = torch.autograd.Variable(input)#.cuda()
-                target_var = torch.autograd.Variable(target)#.cuda()
-
-                # compute output
-                output = model(input_var)
-                loss = criterion(output, target_var)
-
-                # measure accuracy and record loss
-                prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-                losses.update(loss.item(), input.size(0))
-                top1.update(prec1.item(), input.size(0))
-                top5.update(prec5.item(), input.size(0))
-
-                # measure elapsed time
-                batch_time.update(time.time() - end)
-                end = time.time()
-        t2 = time.time()
-        if verbose:
-            print('* Test loss: %.3f    top1: %.3f    top5: %.3f    time: %.3f' %
-                  (losses.avg, top1.avg, top5.avg, t2 - t1))
-        if self.acc_metric == 'acc1':
-            return top1.avg
-        elif self.acc_metric == 'acc5':
-            return top5.avg
-        else:
-            raise NotImplementedError
