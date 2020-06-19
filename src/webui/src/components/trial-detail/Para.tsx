@@ -86,19 +86,18 @@ class Para extends React.Component<ParaProps, ParaState> {
             let paraYdata: number[][] = [];
             const { isNested } = this.state;
             if (isNested === false) {
-                Object.keys(eachTrialParams).map(item => {
+                for(const item of eachTrialParams) {
                     const temp: number[] = [];
                     for (let i = 0; i < dimName.length; i++) {
-                        // if ('type' in parallelAxis[i]) {
-                        if (parallelAxis[i].type === 'category') {
-                            temp.push(eachTrialParams[item][dimName[i]].toString());
+                        if ('type' in parallelAxis[i]) {
+                            temp.push(item[dimName[i]].toString());
                         } else {
                             // default metric
-                            temp.push(eachTrialParams[item][dimName[i]]);
+                            temp.push(item[dimName[i]]);
                         }
                     }
                     paraYdata.push(temp);
-                });
+                }
             } else {
                 paraYdata = this.state.paraYdataNested;
             }
