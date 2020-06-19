@@ -608,12 +608,12 @@ class TorchModuleGraph(TorchGraph):
         for node_group in self.nodes_py.nodes_op:
             if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean']:
                 # get shape infor for view (aten::view) func
-                cpp_node = list(filter(lambda x: x.kind() ==node_group.op_type,
+                cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,
                                        node_group.node_cpps))[0]
                 node_group.auxiliary = self._extract_shape_info(cpp_node)
             elif node_group.op_type == CAT_KIND:
                 # get the detail information for cat func
-                cpp_node = list(filter(lambda x: x.kind() ==node_group.op_type,
+                cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,
                                        node_group.node_cpps))[0]
                 node_group.auxiliary = self._extract_cat_info(
                     node_group, cpp_node)

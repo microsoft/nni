@@ -185,7 +185,7 @@ class ChannelDependency(Dependency):
 class CatPaddingDependency(ChannelDependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         super(CatPaddingDependency, self).__init__(model, dummy_input, traced_model)
-    
+
     def build_dependency(self):
         """
         Build the cat padding dependencies.
@@ -306,14 +306,14 @@ class GroupDependency(Dependency):
         group : int
             the number of the groups of the target conv layer.
         """
-        cpp_conv = list(filter(lambda x: x.kind()==CONV_TYPE, node_group.node_cpps))
+        cpp_conv = list(filter(lambda x: x.kind() == CONV_TYPE, node_group.node_cpps))
         assert len(cpp_conv) == 1
         cpp_conv = cpp_conv[0]
         inputs = list(cpp_conv.inputs())
         # get the number of the group from the input parameters
         group = inputs[8].toIValue()
         return group
-        
+
     def build_dependency(self):
         """
         Build the channel dependency for the conv layers
@@ -321,7 +321,7 @@ class GroupDependency(Dependency):
         of each conv layers. Note that, here, the group count
         of conv layers may be larger than their originl groups.
         This is because that the input channel will also be grouped
-        for the group conv layers. To make this clear, assume we 
+        for the group conv layers. To make this clear, assume we
         have two group conv layers: conv1(group=2), conv2(group=4).
         conv2 takes the output features of conv1 as input.
         Then we have to the filters of conv1 can still be
@@ -363,7 +363,7 @@ class GroupDependency(Dependency):
         name of the conv layer. The second part of each
         line is the group count of the filters in this layer.
         Note that, the group count may be larger than this
-        layers original group number. 
+        layers original group number.
 
         output example:
         Conv layer, Groups

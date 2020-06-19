@@ -3,7 +3,6 @@
 
 import logging
 import torch
-import numpy as np
 from nni._graph_utils import build_module_graph
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 from .compress_modules import replace_module

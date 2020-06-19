@@ -72,7 +72,7 @@ class CoarseMask:
             s.add(num)
         # move the output tensor to the same device with index_a
         return torch.tensor(sorted(s)).to(device)  # pylint: disable=not-callable
-        
+
     def merge(self, cmask):
         """
         Merge another CoarseMask
@@ -125,7 +125,7 @@ class CoarseMask:
         Judge if the mask is a subset of another CoarseMask.
         """
         assert isinstance(other, CoarseMask)
-        for dim, indexs in enumerate(self.mask_index):
+        for dim, _ in enumerate(self.mask_index):
             # if self has more dimensions
             if dim >= len(other.mask_index):
                 return False
@@ -141,7 +141,7 @@ class CoarseMask:
                 if not s1 < s2:
                     return False
         return True
-            
+
     def __le__(self, other):
         """
         Return if self's mask is less or equal to other's mask.
@@ -310,7 +310,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                 for i in range(pos):
                     offset += offsets[i]
                 _tmp_mask = (mask.mask_index[dim] + offset).to(device)
-                output_mask.mask_index[dim] = _tmp_mask 
+                output_mask.mask_index[dim] = _tmp_mask
             else:
                 # directly copy the mask
                 if mask.mask_index[dim] is not None:
@@ -345,7 +345,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
 
 def add_inshape(module_masks, mask):
     """
-    Inference the output mask of the add operation from the 
+    Inference the output mask of the add operation from the
     input mask.
     """
     assert isinstance(mask, CoarseMask)
@@ -455,8 +455,7 @@ def view_inshape(module_masks, mask, shape):
     step_size = shape['in_shape'][2] * shape['in_shape'][3]
     for loc in mask.mask_index[1]:
         index.extend([loc * step_size + i for i in range(step_size)])
-    output_cmask.add_index_mask(dim=1, index=torch.tensor(
-        index))  # pylint: disable=not-callable
+    output_cmask.add_index_mask(dim=1, index=torch.tensor(index))  # pylint: disable=not-callable
     module_masks.set_output_mask(output_cmask)
     return output_cmask
 
@@ -476,14 +475,14 @@ def mean_inshape(module_masks, mask, shape):
     assert shape['out_shape'][1] == shape['in_shape'][1]
     assert len(shape['in_shape']) == 4
     assert len(shape['out_shape']) == 2
-    
-    assert(isinstance(mask,CoarseMask))
+
+    assert isinstance(mask, CoarseMask)
     assert mask.mask_index[1] is not None
     assert mask.mask_index[0] is None
     assert mask.mask_index[2] is None
     assert mask.mask_index[3] is None
     module_masks.set_input_mask(mask)
-    device = mask.mask_index[1].device
+
     output_cmask = CoarseMask(num_dim=2)
     output_cmask.add_index_mask(dim=1, index=mask.mask_index[1])
     module_masks.set_output_mask(output_cmask)

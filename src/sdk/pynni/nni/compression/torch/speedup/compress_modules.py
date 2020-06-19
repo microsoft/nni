@@ -146,7 +146,7 @@ def replace_conv2d(conv, mask):
         for groupid in range(conv.groups):
             start = groupid * input_step
             end = (groupid + 1) * input_step
-            current_input_index = list(filter(lambda x: start<=x and x<end, in_channels_index.tolist()))
+            current_input_index = list(filter(lambda x: start <= x and x < end, in_channels_index.tolist()))
             # shift the global index into the group index
             current_input_index = [x-start for x in current_input_index]
             current_input_index = torch.tensor(current_input_index).to(tmp_weight_data.device)

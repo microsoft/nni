@@ -74,7 +74,7 @@ class MaskFix:
 class CatMaskPadding(MaskFix):
     def __init__(self, masks, model, dummy_input=None, traced=None):
         super(CatMaskPadding, self).__init__(masks, model, dummy_input, traced)
-    
+
     def fix_mask(self):
         cat_padding_depen = CatPaddingDependency(self.model, self.dummy_input, self.traced)
         name_to_module = {}
@@ -242,7 +242,7 @@ class ChannelMaskConflict(MaskFix):
                 continue
             if not all_pruned:
                 # if some layer are not pruned at all
-                # then all the layers in this dependency set 
+                # then all the layers in this dependency set
                 # cannot be pruned due to the shape dependency.
                 channel_remain.update(range(out_channels))
             ori_channels = 0
@@ -251,7 +251,7 @@ class ChannelMaskConflict(MaskFix):
                     # this layer is not pruned at all
                     # in this case, all_pruned is False
                     # and the other layers in the same dset
-                    # will not be pruned either. 
+                    # will not be pruned either.
                     continue
                 mask = self.masks[name]
                 w_shape = mask['weight'].size()
