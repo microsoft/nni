@@ -77,12 +77,12 @@ features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 NNI 还提供了在模型压缩过程中，进行模型拓扑分析的工具。 这些工具可帮助用户更好的压缩模型。 压缩模型时，因为网络结构的复杂性，经常需要花时间检查压缩配置是否合理。 因此，NNI 提供了这些工具用于模型拓扑分析，来减轻用户负担。
 
 ### ChannelDependency
-Complicated models may have residual connection/concat operations in their models. When the user prunes these models, they need to be careful about the channel-count dependencies between the convolution layers in the model. Taking the following residual block in the resnet18 as an example. The output features of the `layer2.0.conv2` and `layer2.0.downsample.0` are added together, so the number of the output channels of `layer2.0.conv2` and `layer2.0.downsample.0` should be the same, or there may be a tensor shape conflict.
+复杂模型中还会有残差或连接的操作。 对这些模型剪枝时，需要小心卷积层之间通道数量的依赖关系。 以 resnet18 中残差模块为例。 `layer2.0.conv2` 和 `layer2.0.downsample.0` 层输出的特征会加到一起，所以 `layer2.0.conv2` 和 `layer2.0.downsample.0` 的输出通道数量必须一样，否则会有 Tensor 形状的冲突。
 
 ![](../../img/channel_dependency_example.jpg)
 
 
-If the layers have channel dependency are assigned with different sparsities (here we only discuss the structured pruning by L1FilterPruner/L2FilterPruner), then there will be a shape conflict during these layers. Even the pruned model with mask works fine, the pruned model cannot be speedup to the final model directly that runs on the devices, because there will be a shape conflict when the model tries to add/concat the outputs of these layers. This tool is to find the layers that have channel count dependencies to help users better prune their model.
+如果有通道依赖的图层，被分配了不同的稀疏度 (此处仅讨论 L1FilterPruner/L2FilterPruner 的结构化剪枝)，就会造成形状冲突。 即使剪枝后的掩码模型也能正常使用，剪枝后的模型也因为模型在加和、连接这些层的输出时有冲突，不能在设备上加速。 此工具可用于查找有通道依赖的层，帮助更好的剪枝模型。
 
 #### 用法
 ```python
@@ -93,7 +93,7 @@ channel_depen.export('dependency.csv')
 ```
 
 #### Output Example
-The following lines are the output example of torchvision.models.resnet18 exported by ChannelDependency. The layers at the same line have output channel dependencies with each other. For example, layer1.1.conv2, conv1, and layer1.0.conv2 have output channel dependencies with each other, which means the output channel(filters) numbers of these three layers should be same with each other, otherwise, the model may have shape conflict.
+下列代码是 由 ChannelDependency 导出的 torchvision.models.resnet18 示例。 每行上，有相互依赖的输出通道。 For example, layer1.1.conv2, conv1, and layer1.0.conv2 have output channel dependencies with each other, which means the output channel(filters) numbers of these three layers should be same with each other, otherwise, the model may have shape conflict.
 ```
 Dependency Set,Convolutional Layers
 Set 1,layer1.1.conv2,layer1.0.conv2,conv1
