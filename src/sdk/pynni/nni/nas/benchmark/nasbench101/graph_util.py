@@ -2,17 +2,11 @@ import hashlib
 
 import numpy as np
 
-LABEL2ID = {
-    'input': -1,
-    'output': -2,
-    'conv3x3-bn-relu': 0,
-    'conv1x1-bn-relu': 1,
-    'maxpool3x3': 2
-}
+from .constants import INPUT, LABEL2ID, OUTPUT
 
 
 def labeling_from_architecture(architecture, vertices):
-    return ['input'] + [architecture['op{}'.format(i)] for i in range(1, vertices - 1)] + ['output']
+    return [INPUT] + [architecture['op{}'.format(i)] for i in range(1, vertices - 1)] + [OUTPUT]
 
 
 def adjancency_matrix_from_architecture(architecture, vertices):
@@ -29,7 +23,7 @@ def nasbench_format_to_architecture_repr(adjacency_matrix, labeling):
     architecture = {}
     for i in range(1, num_vertices - 1):
         architecture['op{}'.format(i)] = labeling[i]
-        assert labeling[i] not in ['input', 'output']
+        assert labeling[i] not in [INPUT, OUTPUT]
     for i in range(1, num_vertices):
         architecture['input{}'.format(i)] = [k for k in range(i) if adjacency_matrix[k, i]]
     return num_vertices, architecture
