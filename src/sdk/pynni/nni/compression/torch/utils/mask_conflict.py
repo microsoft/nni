@@ -40,9 +40,9 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
             traced = torch.jit.trace(model, dummy_input)
 
     fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
-    masks = fix_group_mask.fix_mask_conflict()
+    masks = fix_group_mask.fix_mask()
     fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, traced)
-    masks = fix_channel_mask.fix_mask_conflict()
+    masks = fix_channel_mask.fix_mask()
     padding_cat_mask = CatMaskPadding(masks, model, dummy_input, traced)
     masks = padding_cat_mask.fix_mask()
     return masks
@@ -65,8 +65,11 @@ class MaskFix:
     def fix_mask(self):
         raise NotImplementedError
 
-    def export(self):
-        raise NotImplementedError
+    def export(self, path):
+        """
+        Export the masks after fixing the conflict to file.
+        """
+        torch.save(self.masks, path)
 
 class CatMaskPadding(MaskFix):
     def __init__(self, masks, model, dummy_input=None, traced=None):
@@ -104,13 +107,9 @@ class CatMaskPadding(MaskFix):
                 self.masks[layer] = {'weight':w_mask, 'bias':b_mask}
         return self.masks
 
-    def export(self, path):
-        """
-        Export the masks after fixing the conflict to file.
-        """
-        torch.save(self.masks, path)
 
-class GroupMaskConflict:
+
+class GroupMaskConflict(MaskFix):
     def __init__(self, masks, model=None, dummy_input=None, traced=None):
         """
         GroupMaskConflict fix the mask conflict between the layers that
@@ -128,20 +127,10 @@ class GroupMaskConflict:
             the traced model of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
         """
-        # check if the parameters are valid
-        parameter_valid = False
-        if traced is not None:
-            parameter_valid = True
-        elif (model is not None) and (dummy_input is not None):
-            parameter_valid = True
-        if not parameter_valid:
-            raise Exception('The input parameters is invalid!')
-        self.model = model
-        self.dummy_input = dummy_input
-        self.traced = traced
-        self.masks = masks
+        super(GroupMaskConflict, self).__init__(masks, model, dummy_input, traced)
 
-    def fix_mask_conflict(self):
+
+    def fix_mask(self):
         """
         Fix the mask conflict before the mask inference for the layers that
         has group dependencies. This function should be called before the
@@ -187,15 +176,10 @@ class GroupMaskConflict:
                         self.masks[layername]['bias'][pos] = 1
         return self.masks
 
-    def export(self, path):
-        """
-        Export the masks after fixing the conflict to file.
-        """
-        torch.save(self.masks, path)
 
 
-class ChannelMaskConflict:
-    def __init__(self, masks, model=None, dummy_input=None, graph=None):
+class ChannelMaskConflict(MaskFix):
+    def __init__(self, masks, model=None, dummy_input=None, traced=None):
         """
         ChannelMaskConflict fix the mask conflict between the layers that
         has channel dependecy with each other.
@@ -208,30 +192,19 @@ class ChannelMaskConflict:
             input example to trace the model
         masks : dict
             a dict object that stores the masks
-        graph : torch._C.Graph
+        graph : torch._C.torch.jit.TopLevelTracedModule
             the traced graph of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
         """
-        # check if the parameters are valid
-        parameter_valid = False
-        if graph is not None:
-            parameter_valid = True
-        elif (model is not None) and (dummy_input is not None):
-            parameter_valid = True
-        if not parameter_valid:
-            raise Exception('The input parameters is invalid!')
-        self.model = model
-        self.dummy_input = dummy_input
-        self.graph = graph
-        self.masks = masks
+        super(ChannelMaskConflict, self).__init__(masks, model, dummy_input, traced)
 
-    def fix_mask_conflict(self):
+    def fix_mask(self):
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
         mask inference of the 'speedup' module.
         """
-        channel_depen = ChannelDependency(self.model, self.dummy_input, self.graph)
+        channel_depen = ChannelDependency(self.model, self.dummy_input, self.traced)
         depen_sets = channel_depen.dependency_sets
         for dset in depen_sets:
             if len(dset) == 1:
@@ -292,9 +265,3 @@ class ChannelMaskConflict:
             pruned_filters = set(list(range(ori_channels)))-channel_remain
             _logger.info(str(sorted(pruned_filters)))
         return self.masks
-
-    def export(self, path):
-        """
-        Export the masks after fixing the conflict to file.
-        """
-        torch.save(self.masks, path)
