@@ -134,7 +134,7 @@ class ChannelDependency(Dependency):
         Set 2,layer1.0.conv1
         Set 3,layer1.1.conv1
         """
-        header = ['Dependency Set', 'Convolutional Layers']
+        header = ['Dependency Set', 'Layers']
         setid = 0
         visited = set()
         with open(filepath, 'w') as csvf:
@@ -187,6 +187,14 @@ class CatPaddingDepency(ChannelDependency):
         super(CatPaddingDepency, self).__init__(model, dummy_input, traced_model)
     
     def build_dependency(self):
+        """
+        Build the cat padding dependencies.
+        If the output features of several layers are stitched together
+        by cat operation, then these layers have cat padding dependencies.
+        This is because when inferring the cat mask, we need all the input
+        masks for the cat operation. At this time we need to know the source
+        of all input vectors of a cat operation.
+        """
         for node in self.graph.nodes_py.nodes_op:
             parent_layers = []
             if node.op_type == CAT_TYPE:
@@ -211,7 +219,27 @@ class CatPaddingDepency(ChannelDependency):
         return d_sets
 
     def export(self, filepath):
-        pass
+        """
+        Export the dependencies into a file.
+        In the output file, each line contains a set of layers
+        whose output features are stitched together by the cat
+        operation.
+
+        output example:
+        Dependency Set, Layers
+        set1, Conv1, Conv2
+        set2, Conv3, Conv4
+        """
+        header = ['Dependency Set', 'Layers']
+        setid = 0
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for layers in self.dependency_sets:
+                setid += 1
+                row = ['Set %d' % setid]
+                row.extend(list(layers))
+                csv_w.writerow(row)
 
 class GroupDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
