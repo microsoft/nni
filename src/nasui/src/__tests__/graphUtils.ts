@@ -1,4 +1,4 @@
-import { Graph } from './graphUtils';
+import { Graph } from '../graphUtils';
 import *  as fs from 'fs';
 
 describe('Graph utils test', () => {
