@@ -86,7 +86,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             let paraYdata: number[][] = [];
             const { isNested } = this.state;
             if (isNested === false) {
-                for(const item of eachTrialParams) {
+                for (const item of eachTrialParams) {
                     const temp: number[] = [];
                     for (let i = 0; i < dimName.length; i++) {
                         if ('type' in parallelAxis[i]) {
@@ -376,20 +376,23 @@ class Para extends React.Component<ParaProps, ParaState> {
                 for (const i in eachTrialParams) {
                     const eachTrialData: Array<any> = [];
                     for (const m in eachTrialParams[i]) {
+                        const eachTrialParamsObj = eachTrialParams[i][m];
                         for (const n in yAxisOrderList.get(m)) {
-                            if (yAxisOrderList.get(m)[n] === eachTrialParams[i][m]._name) {
-                                for (const index in eachTrialParams[i][m]) {
+                            if (yAxisOrderList.get(m)[n] === eachTrialParamsObj._name) {
+                                for (const index in eachTrialParamsObj) {
                                     if (index !== '_name') {
-                                        eachTrialData.push(eachTrialParams[i][m][index].toString());
+                                        eachTrialData.push(eachTrialParamsObj[index].toString());
                                     }
-                                    if (eachTrialParams[i][m][index] === 'Empty') {
+                                    if (eachTrialParamsObj[index] === 'Empty') {
                                         eachTrialData.push('Empty');
                                     }
                                 }
-                            } else if (yAxisOrderList.get(m)[n] === 'Empty') {
-                                eachTrialData.push(eachTrialParams[i][m]._name.toString());
                             } else {
-                                eachTrialData.push('null');
+                                if (yAxisOrderList.get(m)[n] === 'Empty') {
+                                    eachTrialData.push(eachTrialParamsObj._name.toString());
+                                } else {
+                                    eachTrialData.push('null');
+                                }
                             }
                         }
                     }
