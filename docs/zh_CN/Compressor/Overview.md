@@ -26,6 +26,7 @@ NNI 提供了几种压缩算法，包括剪枝和量化算法：
 | [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | 基于指标 APoZ（平均百分比零）的剪枝过滤器，该指标测量（卷积）图层激活中零的百分比。 [参考论文](https://arxiv.org/abs/1607.03250)                                                   |
 | [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | 基于计算输出激活最小平均值指标的剪枝过滤器                                                                                                                   |
 | [Slim Pruner](./Pruner.md#slim-pruner)                                       | 通过修剪 BN 层中的缩放因子来修剪卷积层中的通道 (Learning Efficient Convolutional Networks through Network Slimming) [参考论文](https://arxiv.org/abs/1708.06519) |
+| [TaylorFO Pruner](./Pruner.md#taylorfoweightfilterpruner)                    | 基于一阶泰勒展开的权重 (Importance Estimation for Neural Network Pruning) [参考论文](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) |
 
 
 **量化**
