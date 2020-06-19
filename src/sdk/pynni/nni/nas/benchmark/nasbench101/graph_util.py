@@ -2,28 +2,36 @@ import hashlib
 
 import numpy as np
 
+LABEL2ID = {
+    'input': -1,
+    'output': -2,
+    'conv3x3-bn-relu': 0,
+    'conv1x1-bn-relu': 1,
+    'maxpool3x3': 2
+}
 
-def get_labeling(architecture, vertices):
-    return ["input"] + [architecture["op{}".format(i)] for i in range(1, vertices - 1)] + ["output"]
+
+def labeling_from_architecture(architecture, vertices):
+    return ['input'] + [architecture['op{}'.format(i)] for i in range(1, vertices - 1)] + ['output']
 
 
-def get_adjancency_matrix(architecture, vertices):
+def adjancency_matrix_from_architecture(architecture, vertices):
     matrix = np.zeros((vertices, vertices), dtype=np.bool)
     for i in range(1, vertices):
-        for k in architecture["input{}".format(i)]:
+        for k in architecture['input{}'.format(i)]:
             matrix[k, i] = 1
     return matrix
 
 
-def get_architecture_repr(adjacency_matrix, labeling):
+def nasbench_format_to_architecture_repr(adjacency_matrix, labeling):
     num_vertices = adjacency_matrix.shape[0]
     assert len(labeling) == num_vertices
     architecture = {}
+    for i in range(1, num_vertices - 1):
+        architecture['op{}'.format(i)] = labeling[i]
+        assert labeling[i] not in ['input', 'output']
     for i in range(1, num_vertices):
-        architecture["op{}".format(i)] = labeling[i]
-        assert labeling[i] not in ["input", "output"]
-    for i in range(1, num_vertices):
-        architecture["input{}".format(i)] = [k for k in range(i) if adjacency_matrix[k, i]]
+        architecture['input{}'.format(i)] = [k for k in range(i) if adjacency_matrix[k, i]]
     return num_vertices, architecture
 
 
@@ -38,13 +46,14 @@ def hash_module(architecture, vertices):
         Square upper-triangular adjacency matrix.
     labeling : list of int
         Labels of length equal to both dimensions of matrix.
-    
+
     Returns
     -------
         MD5 hash of the matrix and labeling.
     """
-    labeling = get_labeling(architecture, vertices)
-    matrix = get_adjancency_matrix(architecture, vertices)
+    labeling = labeling_from_architecture(architecture, vertices)
+    labeling = [LABEL2ID[t] for t in labeling]
+    matrix = adjancency_matrix_from_architecture(architecture, vertices)
     in_edges = np.sum(matrix, axis=0).tolist()
     out_edges = np.sum(matrix, axis=1).tolist()
 

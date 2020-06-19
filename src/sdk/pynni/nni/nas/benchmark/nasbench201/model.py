@@ -3,9 +3,9 @@ import os
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
-from constants import DATABASE_DIR
+from nni.nas.benchmark.constants import DATABASE_DIR
 
-db = SqliteExtDatabase(os.path.join(DATABASE_DIR, "nasbench201.db"), autoconnect=True)
+db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench201.db'), autoconnect=True)
 
 
 class Nb201RunConfig(Model):
@@ -18,10 +18,10 @@ class Nb201RunConfig(Model):
     num_channels = IntegerField()
     num_cells = IntegerField()
     dataset = CharField(max_length=20, index=True, choices=[
-        "cifar10-valid",  # 25k+25k+10k
-        "cifar10",  # 50k+5k+5k
-        "cifar100",  # 50k+5k+5k
-        "imagenet16-120",
+        'cifar10-valid',  # 25k+25k+10k
+        'cifar10',  # 50k+5k+5k
+        'cifar100',  # 50k+5k+5k
+        'imagenet16-120',
     ])
 
     class Meta:
@@ -37,7 +37,7 @@ class Nb201ComputedStats(Model):
     config : 
 
     """
-    config = ForeignKeyField(Nb201RunConfig, backref="computed_stats")
+    config = ForeignKeyField(Nb201RunConfig, backref='computed_stats')
     seed = IntegerField()
     train_acc = FloatField()
     valid_acc = FloatField()
@@ -65,7 +65,7 @@ class Nb201IntermediateStats(Model):
 
     """
 
-    run = ForeignKeyField(Nb201ComputedStats, backref="intermediates")
+    run = ForeignKeyField(Nb201ComputedStats, backref='intermediates')
     current_epoch = IntegerField(index=True)
     train_acc = FloatField(null=True)
     valid_acc = FloatField(null=True)

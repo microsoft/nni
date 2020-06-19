@@ -3,9 +3,9 @@ import os
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
-from constants import DATABASE_DIR
+from nni.nas.benchmark.constants import DATABASE_DIR
 
-db = SqliteExtDatabase(os.path.join(DATABASE_DIR, "nasbench101.db"), autoconnect=True)
+db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench101.db'), autoconnect=True)
 
 
 class Nb101RunConfig(Model):
@@ -32,7 +32,7 @@ class Nb101ComputedStats(Model):
     config : 
 
     """
-    config = ForeignKeyField(Nb101RunConfig, backref="computed_stats")
+    config = ForeignKeyField(Nb101RunConfig, backref='computed_stats')
     train_acc = FloatField()
     valid_acc = FloatField()
     test_acc = FloatField()
@@ -49,7 +49,7 @@ class Nb101IntermediateStats(Model):
 
     """
 
-    run = ForeignKeyField(Nb101ComputedStats, backref="intermediates")
+    run = ForeignKeyField(Nb101ComputedStats, backref='intermediates')
     current_epoch = IntegerField(index=True)
     train_acc = FloatField()
     valid_acc = FloatField()
