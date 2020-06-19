@@ -93,7 +93,7 @@ channel_depen.export('dependency.csv')
 ```
 
 #### Output Example
-下列代码是 由 ChannelDependency 导出的 torchvision.models.resnet18 示例。 每行上，有相互依赖的输出通道。 For example, layer1.1.conv2, conv1, and layer1.0.conv2 have output channel dependencies with each other, which means the output channel(filters) numbers of these three layers should be same with each other, otherwise, the model may have shape conflict.
+下列代码是 由 ChannelDependency 导出的 torchvision.models.resnet18 示例。 每行上，有相互依赖的输出通道。 例如，layer1.1.conv2, conv1 和 layer1.0.conv2 相互间有输出依赖。这表示这三个层的输出通道（过滤器）数量需要一致，否则模型会产生形状冲突。
 ```
 Dependency Set,Convolutional Layers
 Set 1,layer1.1.conv2,layer1.0.conv2,conv1
@@ -111,7 +111,7 @@ Set 12,layer4.1.conv1
 ```
 
 ### 掩码冲突
-When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
+当不同层的掩码有冲突时，（例如，为通道依赖的层设置了不同的稀疏度），可通过 MaskConflict 来修复。 即，MaskConflict 可加载由 (L1FilterPruner, 等) 导出的掩码，并检查是否有掩码冲突。如果有 MaskConflict 会将冲突的掩码设置为相同的值。
 
 ```
 from nni.compression.torch.utils.mask_conflict import MaskConflict
