@@ -34,15 +34,15 @@ os.makedir(outdir)
 s_analyzer.export(os.path.join(outdir, filename))
 ```
 
-SensitivityAnalysis 的两个重要参数是 `model`, 和 `val_func`。 `model` 是要分析的神经网络，`val_func` 是返回验证数据集的精度、损失或其它指标的验证函数。 根据不同的场景，可能需要不同的方法来计算损失和精度，因此用户需要定义能返回模型精度、损失的函数，并传给 SensitivityAnalysis。 SensitivityAnalysis can export the sensitivity results as a csv file usage is shown in the example above.
+SensitivityAnalysis 的两个重要参数是 `model`, 和 `val_func`。 `model` 是要分析的神经网络，`val_func` 是返回验证数据集的精度、损失或其它指标的验证函数。 根据不同的场景，可能需要不同的方法来计算损失和精度，因此用户需要定义能返回模型精度、损失的函数，并传给 SensitivityAnalysis。 上面的示例也展示了如何用 SensitivityAnalysis 将敏感度结果导出为 csv 文件。
 
-Futhermore, users can specify the sparsities values used to prune for each layer by optional parameter `sparsities`.
+除此之外，还可以使用可选参数 `sparsities` 来为每一层设置稀疏度值。
 ```python
 s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5, 0.75])
 ```
-the SensitivityAnalysis will prune 25% 50% 75% weights gradually for each layer, and record the model's accuracy at the same time (SensitivityAnalysis only prune a layer once a time, the other layers are set to their original weights). If the sparsities is not set, SensitivityAnalysis will use the numpy.arange(0.1, 1.0, 0.1) as the default sparsity values.
+SensitivityAnalysis 会为每一层逐渐剪枝 25% 50% 75% 的权重，并同时记录模型精度 (SensitivityAnalysis 一次只修建一层，其他层会使用原始权重)。 如果没有设置稀疏度，SensitivityAnalysis 会将 numpy.arange(0.1, 1.0, 0.1) 作为默认的稀疏度值。
 
-Users can also speed up the progress of sensitivity analysis by the early_stop_mode and early_stop_value option. By default, the SensitivityAnalysis will test the accuracy under all sparsities for each layer. In contrast, when the early_stop_mode and early_stop_value are set, the sensitivity analysis for a layer will stop, when the accuracy/loss has already met the threshold set by early_stop_value. We support four early stop modes:  minimize, maximize, dropped, raised.
+还可以通过 early_stop_mode 和 early_stop_value 选项来加快灵敏度分析。 默认情况下，SensitivityAnalysis 会为每一层测试所有的稀疏度值下的精度。 In contrast, when the early_stop_mode and early_stop_value are set, the sensitivity analysis for a layer will stop, when the accuracy/loss has already met the threshold set by early_stop_value. We support four early stop modes:  minimize, maximize, dropped, raised.
 
 minimize: The analysis stops when the validation metric return by the val_func lower than `early_stop_value`.
 
