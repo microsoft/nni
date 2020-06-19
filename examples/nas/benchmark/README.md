@@ -8,6 +8,17 @@ This document will be moved to documentation folder later.
 * Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
 * Please install `peewee` by `pip install peewee`, which NNI uses to connect to database.
 
+## NAS-Bench-101
+
+### Preparation
+
+```bash
+docker run -e NNI_VERSION=${NNI_VERSION} -v ${HOME}/.nni/nasbenchmark:/outputs .:/root tensorflow/tensorflow:1.15.2-py3 /bin/bash /root/nasbench101.sh
+```
+
+### API Documentation
+
+
 ## NAS-Bench-201
 
 ### Preparation
