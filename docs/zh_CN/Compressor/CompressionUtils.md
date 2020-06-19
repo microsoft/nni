@@ -59,11 +59,11 @@ s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5,
 ```python
 sensitivity = s_analyzer.analysis(val_args=[net], specified_layers=['Conv1'])
 ```
-在此例中，只会分析 `Conv1` 层。 In addtion, users can quickly and easily achieve the analysis parallelization by launching multiple processes and assigning different conv layers of the same model to each process.
+在此例中，只会分析 `Conv1` 层。 另外，也可以通过并行启动多个进程，将同一个模型的不同层分给每个进程来加速。
 
 
 ### 输出示例
-The following lines are the example csv file exported from SensitivityAnalysis. The first line is constructed by 'layername' and sparsity list. Here the sparsity value means how much weight SensitivityAnalysis prune for each layer. Each line below records the model accuracy when this layer is under different sparsities. Note that, due to the early_stop option, some layers may not have model accuracies/losses under all sparsities, for example, its accuracy drop has already exceeded the threshold set by the user.
+下面是从 SensitivityAnalysis 中导出的 csv 文件示例。 第一行由 'layername' 和稀疏度值的列表组成。 稀疏度值表示 SensitivityAnalysis 为每一层剪枝的权重比例。 每行表示某层在不同稀疏度下的模型精度。 注意，根据 early_stop 选项，某些层可能不会有所有稀疏度下的精度或损失值。比如，精度下降的值超过了定义的阈值。
 ```
 layername,0.05,0.1,0.2,0.3,0.4,0.5,0.7,0.85,0.95
 features.0,0.54566,0.46308,0.06978,0.0374,0.03024,0.01512,0.00866,0.00492,0.00184
@@ -74,7 +74,7 @@ features.10,0.55468,0.5394,0.49576,0.4291,0.3591,0.28138,0.14256,0.05446,0.01578
 ```
 
 ## 拓扑结构分析
-We also provide several tools for the topology analysis during the model compression. These tools are to help users compress their model better. Because of the complex topology of the network, when compressing the model, users often need to spend a lot of effort to check whether the compression configuration is reasonable. So we provide these tools for topology analysis to reduce the burden on users.
+NNI 还提供了在模型压缩过程中，进行模型拓扑分析的工具。 这些工具可帮助用户更好的压缩模型。 压缩模型时，因为网络结构的复杂性，经常需要花时间检查压缩配置是否合理。 因此，NNI 提供了这些工具用于模型拓扑分析，来减轻用户负担。
 
 ### ChannelDependency
 Complicated models may have residual connection/concat operations in their models. When the user prunes these models, they need to be careful about the channel-count dependencies between the convolution layers in the model. Taking the following residual block in the resnet18 as an example. The output features of the `layer2.0.conv2` and `layer2.0.downsample.0` are added together, so the number of the output channels of `layer2.0.conv2` and `layer2.0.downsample.0` should be the same, or there may be a tensor shape conflict.
