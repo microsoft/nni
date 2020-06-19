@@ -46,7 +46,7 @@ export class RunnerSettings {
 
     // specify which communication channel is used by runner.
     // supported channel includes: api, storage, aml
-    public commandChannel: string = "api";
+    public commandChannel: string = "file";
 }
 
 export class EnvironmentInformation {
@@ -70,7 +70,7 @@ export class EnvironmentInformation {
     public command: string = "";
     public nodeCount: number = 1;
 
-    public gpuSummary: GPUSummary | undefined;
+    public gpuSummary: Map<string, GPUSummary> = new Map<string, GPUSummary>();
 
     constructor(id: string, jobName: string, jobId?: string) {
         this.id = id;

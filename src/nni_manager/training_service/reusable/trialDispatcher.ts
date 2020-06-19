@@ -27,14 +27,18 @@ import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getLogLevel, getVersion, uniqueString } from '../../common/utils';
+import { GPU_INFO, TRIAL_END } from '../../core/commands';
+import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
+import { FileCommandChannel } from './channels/fileCommandChannel';
+import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, RunnerSettings } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
-import { TrialDetail, TrialService } from './trial';
+import { NodeInfomation, TrialDetail, TrialService } from './trial';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -55,8 +59,11 @@ class TrialDispatcher implements TrainingService {
     private trialConfig: TrialConfig | undefined;
     private runnerSettings: RunnerSettings;
 
+    private commandEmitter: EventEmitter;
+
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
+    private readonly commandChannel: CommandChannel;
 
     constructor() {
         this.log = getLogger();
@@ -69,8 +76,10 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
 
-        const logLevel = getLogLevel();
+        this.commandEmitter = new EventEmitter();
+        this.commandChannel = new FileCommandChannel(this.commandEmitter);
 
+        const logLevel = getLogLevel();
         this.log.debug(`current folder ${__dirname}`);
         // different source folder in Linux and Windows
         if (logLevel == "debug" && (fs.existsSync("../../../src/nni_manager") || __dirname.endsWith("src\\nni_manager\\dist\\training_service\\reusable"))) {
@@ -154,16 +163,28 @@ class TrialDispatcher implements TrainingService {
 
         await this.jobRestServer.start();
         this.jobRestServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`Environment Manager rest server listening on: ${this.jobRestServer.endPoint}`);
+        this.log.info(`TrialDispatcher: rest server listening on: ${this.jobRestServer.endPoint}`);
         this.runnerSettings.nniManagerPort = this.jobRestServer.clusterRestServerPort;
+
+        // start channel
+        this.commandEmitter.on("command", (command: Command): void => {
+            this.handleCommand(command).catch((err: Error) => {
+                this.log.error(`TrialDispatcher: error on handle env ${command.environment.id} command: ${command.command}, data: ${command.data}, error: ${err}`);
+            })
+        });
+        this.commandChannel.start();
+        this.log.info(`TrialDispatcher: started channel ${typeof (this.commandChannel)}`);
 
         if (this.trialConfig === undefined) {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
 
+        const trialService = component.get<TrialService>(TrialService);
+        trialService.config("channel", this.commandChannel);
+
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         if (environmentService.hasStorageService) {
-            this.log.info(`Environment Manager copying code and settings.`);
+            this.log.info(`TrialDispatcher: copying code and settings.`);
             const storageService = component.get<StorageService>(StorageService);
             // Copy the compressed file to remoteDirectory and delete it
             const codeDir = path.resolve(this.trialConfig.codeDir);
@@ -186,7 +207,7 @@ class TrialDispatcher implements TrainingService {
             }
         }
 
-        this.log.info(`Environment Manager run loop started.`);
+        this.log.info(`TrialDispatcher: run loop started.`);
         await Promise.all([
             this.environmentMaintenanceLoop(),
             this.trialManagementLoop(),
@@ -238,11 +259,13 @@ class TrialDispatcher implements TrainingService {
         this.stopping = true;
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const environments = [...this.environments.values()];
+
         for (let index = 0; index < environments.length; index++) {
             const environment = environments[index];
             if (environment.isAlive === true) {
                 this.log.info(`stopping environment ${environment.id}...`);
                 await environmentService.stopEnvironment(environment);
+                await this.commandChannel.close(environment);
                 this.log.info(`stopped environment ${environment.id}.`);
             }
         }
@@ -253,17 +276,22 @@ class TrialDispatcher implements TrainingService {
         } catch (error) {
             this.log.error(`Rest server stopped failed, error: ${error.message}`);
         }
+
+        this.commandEmitter.off("command", this.handleCommand);
+        this.commandChannel.stop();
     }
 
     private async environmentMaintenanceLoop(): Promise<void> {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         while (!this.stopping) {
             const environments: EnvironmentInformation[] = [];
-            this.environments.forEach((environment) => {
+            for (const environment of this.environments.values()) {
                 if (environment.isAlive === true) {
                     environments.push(environment);
+                } else {
+                    await this.commandChannel.close(environment);
                 }
-            });
+            }
             await environmentService.refreshEnvironmentsStatus(environments);
 
             environments.forEach((environment) => {
@@ -301,9 +329,6 @@ class TrialDispatcher implements TrainingService {
                 continue;
             }
 
-            const trialService = component.get<TrialService>(TrialService);
-            trialService.refreshTrialsStatus(toRefreshedTrials);
-
             const waitingTrials: TrialDetail[] = [];
             let liveTrialsCount = 0;
             for (const trial of toRefreshedTrials) {
@@ -322,9 +347,10 @@ class TrialDispatcher implements TrainingService {
                             const environmentStatus = environment.status;
 
                             // any node exit, then make sure the whole trial stopped.
-                            if (trial.nodeExitResults.length > 0) {
-                                const completedCount = trial.nodeExitResults.length;
+                            if (trial.nodes.size > 0) {
+                                const completedCount = trial.nodes.size;
                                 let finalStatus: TrialJobStatus = "SUCCEEDED";
+                                let lastTimestamp: number | undefined;
                                 this.log.debug(`found ${completedCount} completed trial node(s), nodeCount: ${environment.nodeCount}`);
 
                                 // if some trial processes doesn't exit, kill it for next one.
@@ -334,12 +360,22 @@ class TrialDispatcher implements TrainingService {
                                     const trialService = component.get<TrialService>(TrialService);
                                     await trialService.stopTrial(trial);
                                 }
-                                for (const nodeStatus of trial.nodeExitResults) {
-                                    if (nodeStatus == "FAILED") {
+                                for (const node of trial.nodes.values()) {
+                                    if (node.status === "FAILED") {
                                         finalStatus = "FAILED";
+                                    }
+                                    if (node.endTime !== undefined) {
+                                        if (lastTimestamp === undefined) {
+                                            lastTimestamp = node.endTime
+                                        } else {
+                                            lastTimestamp = Math.max(node.endTime, lastTimestamp);
+                                        }
                                     }
                                 }
                                 trial.status = finalStatus;
+                                if (lastTimestamp === undefined) {
+                                    trial.endTime = lastTimestamp;
+                                }
                                 this.releaseEnvironment(trial);
                             } else if (environmentStatus !== "RUNNING") {
                                 this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environmentStatus}', set trial to environment status.`);
@@ -417,6 +453,8 @@ class TrialDispatcher implements TrainingService {
             environment.isIdle = true;
             environment.isAlive = true;
         }
+
+        await this.commandChannel.open(environment);
         this.log.info(`requested environment ${environment.id} and job id is ${environment.jobId}.`);
     }
 
@@ -451,6 +489,43 @@ class TrialDispatcher implements TrainingService {
         }
         trial.environment.isIdle = true;
         trial.environment = undefined;
+    }
+
+    private async handleCommand(command: Command): Promise<void> {
+        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}, data: ${command.data}`);
+        const environment = command.environment;
+        const data = command.data;
+        const nodeId = data["node"];
+        switch (command.command) {
+            case GPU_INFO:
+                environment.gpuSummary.set(nodeId, <GPUSummary>(data));
+                break
+            case TRIAL_END:
+                {
+                    const trialId = data["trial"];
+                    const trial = await this.getTrialJob(trialId);
+                    const code = parseInt(data["code"]);
+                    const timestamp = parseInt(data["time"]);
+                    let exitStatus: TrialJobStatus = "SUCCEEDED";
+                    if (code !== 0) {
+                        exitStatus = "FAILED";
+                    }
+
+                    let node: NodeInfomation | undefined;
+                    if (trial.nodes.has(nodeId)) {
+                        node = trial.nodes.get(nodeId);
+                    } else {
+                        node = new NodeInfomation(nodeId);
+                        trial.nodes.set(nodeId, node);
+                    }
+                    if (undefined === node) {
+                        throw new Error("node is impossible to be undefined (see above code), but make eslint happy!");
+                    }
+                    node.status = exitStatus;
+                    node.endTime = timestamp;
+                }
+                break
+        }
     }
 }
 

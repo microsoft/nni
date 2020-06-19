@@ -86,6 +86,7 @@ class BaseChannel(ABC):
         data: string payload.
         the message is sent synchronized.
         """
+        data["node"] = self.args.node_id
         data = json.dumps(data)
         data = data.encode('utf8')
         message = b'%b%014d%b' % (command.value, len(data), data)

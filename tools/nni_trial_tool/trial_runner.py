@@ -34,6 +34,7 @@ def main_loop(args):
     else:
         command_channel = FileChannel(args)
     nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
+    args.command_channel = command_channel
 
     trial = None
 

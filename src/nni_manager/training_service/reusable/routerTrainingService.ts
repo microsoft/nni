@@ -29,11 +29,13 @@ import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { TrialDispatcher } from './trialDispatcher';
 import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
-import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
+import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
 import { StorageService } from './storageService';
-import { MountedStorageService } from './mountedStorageService';
+import { MountedStorageService } from './storages/mountedStorageService';
 import { TrialService } from './trial';
-import { StorageTrialService } from './storageTrialService';
+import { StorageTrialService } from './trials/storageTrialService';
+import { CommandChannel } from './commandChannel';
+import { FileCommandChannel } from './channels/fileCommandChannel';
 
 
 /**
@@ -125,6 +127,10 @@ class RouterTrainingService implements TrainingService {
                     // TODO to support other trialService  later.
                     Container.bind(TrialService)
                         .to(StorageTrialService)
+                        .scope(Scope.Singleton);
+
+                    Container.bind(CommandChannel)
+                        .to(FileCommandChannel)
                         .scope(Scope.Singleton);
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);

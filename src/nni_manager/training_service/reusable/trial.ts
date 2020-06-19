@@ -27,8 +27,7 @@ import { GPUInfo } from "training_service/common/gpuData";
 export abstract class TrialService {
     protected readonly log: Logger;
 
-    public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshTrialsStatus(trials: TrialDetail[]): Promise<void>;
+    public abstract config(key: string, value: any): Promise<void>;
     public abstract updateTrial(trial: TrialDetail, form: TrialJobApplicationForm): Promise<void>;
     public abstract startTrial(trial: TrialDetail): Promise<void>;
     public abstract stopTrial(trial: TrialDetail): Promise<void>;
@@ -54,7 +53,7 @@ export class TrialDetail implements TrialJobDetail {
     // init settings of trial
     public settings = {};
     // it's used to aggregate node status for multiple node trial
-    public nodeExitResults: TrialJobStatus[];
+    public nodes: Map<string, NodeInfomation>;
     // assigned GPUs for multi-trial scheduled.
     public assignedGpus: GPUInfo[] = [];
 
@@ -68,6 +67,16 @@ export class TrialDetail implements TrialJobDetail {
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.tags = [];
-        this.nodeExitResults = [];
+        this.nodes = new Map<string, NodeInfomation>();
+    }
+}
+
+export class NodeInfomation {
+    public id: string;
+    public status: TrialJobStatus = "UNKNOWN";
+    public endTime?: number;
+
+    constructor(id: string) {
+        this.id = id;
     }
 }

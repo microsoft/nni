@@ -50,13 +50,13 @@ class FileChannel(BaseChannel):
         self.out_file.flush()
 
     def _open_manager_command(self):
-        manager_command_file_name = os.path.join(command_path, manager_commands_file_name)
+        full_name = os.path.join(command_path, manager_commands_file_name)
 
         if self.in_file is not None and self.in_file.closed:
             self.in_file = None
 
-        if self.in_file is None and os.path.exists(manager_command_file_name):
-            self.in_file = open(manager_command_file_name, "rb")
+        if self.in_file is None and os.path.exists(full_name):
+            self.in_file = open(full_name, "rb")
             self.in_file.seek(self.in_offset)
 
     def _inner_receive(self):

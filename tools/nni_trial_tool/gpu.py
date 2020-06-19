@@ -16,7 +16,6 @@ def collect_gpu_usage(node_id):
     except Exception:
         traceback.print_exc()
         info = gen_empty_gpu_metric()
-    info["node"] = node_id
     return info
 
 

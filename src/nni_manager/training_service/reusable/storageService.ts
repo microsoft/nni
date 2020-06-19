@@ -19,11 +19,11 @@
 
 'use strict';
 
-import { uniqueString } from '../../common/utils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { Logger, getLogger } from '../../common/log';
+import { getLogger, Logger } from '../../common/log';
+import { uniqueString } from '../../common/utils';
 import { tarAdd } from '../common/util';
 
 export abstract class StorageService {
@@ -129,21 +129,23 @@ export abstract class StorageService {
 
     public async save(content: string, remotePath: string, isAttach: boolean = false): Promise<void> {
         remotePath = this.expandPath(true, remotePath);
-        this.logger.debug(`saving content to remotePath: ${remotePath}, length: ${content.length}`);
-        const fileName = this.internalBasename(remotePath);
-        const tempFileName = `temp_${uniqueString(4)}_${fileName}`;
-
-        const localTempFileName = path.join(os.tmpdir(), tempFileName);
-
+        this.logger.debug(`saving content to remotePath: ${remotePath}, length: ${content.length}, isAttach: ${isAttach}`);
         const remoteDir = this.internalDirname(remotePath);
-        const remoteTempFile = this.internalJoin(remoteDir, tempFileName);
 
         if (isAttach) {
+            if (await this.internalExists(remoteDir) === false) {
+                await this.internalMkdir(remoteDir);
+            }
             const result = await this.internalAttach(remotePath, content);
-            if (false === result){
+            if (false === result) {
                 throw new Error("this.internalAttach doesn't support");
             }
         } else {
+            const fileName = this.internalBasename(remotePath);
+            const tempFileName = `temp_${uniqueString(4)}_${fileName}`;
+            const localTempFileName = path.join(os.tmpdir(), tempFileName);
+            const remoteTempFile = this.internalJoin(remoteDir, tempFileName);
+
             if (await this.internalExists(remotePath) === true) {
                 await this.internalRemove(remotePath, false, false);
             }

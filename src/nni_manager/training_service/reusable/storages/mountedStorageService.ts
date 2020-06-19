@@ -20,7 +20,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from "ts-deferred";
-import { StorageService } from "./storageService";
+import { StorageService } from "../storageService";
 
 export class MountedStorageService extends StorageService {
 
@@ -139,7 +139,10 @@ export class MountedStorageService extends StorageService {
     }
 
     protected async internalAttach(remotePath: string, content: string): Promise<boolean> {
-        await fs.promises.appendFile(remotePath, content + "\n");
+        await fs.promises.appendFile(remotePath, content, {
+            encoding: "utf8",
+            flag: "a",
+        });
         return true;
     }
 

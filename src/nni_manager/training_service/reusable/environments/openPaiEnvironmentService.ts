@@ -22,14 +22,14 @@
 import * as fs from 'fs';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
-import * as component from '../../common/component';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { PAIClusterConfig } from '../pai/paiConfig';
-import { NNIPAIK8STrialConfig } from '../pai/paiK8S/paiK8SConfig';
-import { EnvironmentInformation, EnvironmentService } from './environment';
-import { StorageService } from './storageService';
+import * as component from '../../../common/component';
+import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../../common/log';
+import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { PAIClusterConfig } from '../../pai/paiConfig';
+import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
+import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { StorageService } from '../storageService';
 
 const yaml = require('js-yaml');
 

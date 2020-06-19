@@ -12,6 +12,7 @@ from subprocess import Popen
 import psutil
 
 from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
+from .base_channel import CommandType
 
 trial_output_path_name = ".nni"
 
@@ -21,6 +22,7 @@ class Trial:
         self.process = None
         self.data = data
         self.args = args
+        self.command_channel = args.command_channel
         self.trial_syslogger_stdout = None
 
         global NNI_TRIAL_JOB_ID
@@ -101,15 +103,13 @@ class Trial:
             retCode = ctypes.c_long(retCode).value
             nni_log(LogType.Info, '{0}: subprocess terminated. Exit code is {1}.'.format(self.name, retCode))
 
-            # Exit as the retCode of subprocess(trial)
-            exit_code_file_name = os.path.join(self.trial_output_dir, "code")
-            if (self.node_id is not None):
-                while True:
-                    exit_code_file_name = "%s_%s" % (exit_code_file_name, self.node_id)
-                    if not os.path.exists(exit_code_file_name):
-                        break
-            with open(exit_code_file_name, "w") as exit_file:
-                exit_file.write("%s %s" % (retCode, int(datetime.now().timestamp() * 1000)))
+            end_time = int(datetime.now().timestamp() * 1000)
+            end_message = {
+                "code": retCode,
+                "time": end_time,
+                "trial": self.id,
+            }
+            self.command_channel.send(CommandType.TrialEnd, end_message)
             self.cleanup()
             return False
         else:
