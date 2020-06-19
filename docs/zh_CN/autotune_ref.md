@@ -78,3 +78,9 @@
 ..  autoclass:: nni.bohb_advisor.bohb_advisor.BOHB
     :members:
 ```
+
+## Utilities
+
+```eval_rst
+..  autofunction:: nni.utils.merge_parameter
+```
