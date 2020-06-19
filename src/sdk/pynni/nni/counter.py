@@ -15,7 +15,7 @@ try:
 except ImportError:
     _logger.warning('Please install thop first.')
     
-def count_flops_params(model: nn.Module, input_size=None, verbose=False):
+def count_flops_params(model: nn.Module, input_size=None, verbose=True):
     """
     Count FLOPs and Params of the given model. 
     This function would identify the mask on the module 
@@ -29,6 +29,7 @@ def count_flops_params(model: nn.Module, input_size=None, verbose=False):
         target model.
     input_size: list, tuple
         the input shape of data
+
 
     Returns
     -------
@@ -45,7 +46,7 @@ def count_flops_params(model: nn.Module, input_size=None, verbose=False):
 
     hook_module_list = []
     prev_m = None
-    for idx, m in enumerate(model.modules()):
+    for m in model.modules():
         weight_mask = None
         m_type = type(m)
         if m_type in custom_ops:
@@ -56,7 +57,7 @@ def count_flops_params(model: nn.Module, input_size=None, verbose=False):
             hook_module_list.append(m)
         prev_m = m
 
-    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=False)
+    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=verbose)
 
     for m in hook_module_list:
         m._buffers.pop("weight_mask")
