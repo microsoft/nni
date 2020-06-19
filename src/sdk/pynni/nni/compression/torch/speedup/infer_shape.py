@@ -238,6 +238,7 @@ infer_from_inshape = {
     'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
     'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
+    'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
@@ -469,6 +470,27 @@ def size_inshape(module_masks, mask):
     """
     return None
 
+def mean_inshape(module_masks, mask, shape):
+    """
+    Similar to view operation, currently mask inference only supports
+    the mean operation on the 3rd and 4th dimensions.
+    """
+    assert shape['in_shape'][0] == shape['out_shape'][0]
+    assert shape['out_shape'][1] == shape['in_shape'][1]
+    assert len(shape['in_shape']) == 4
+    assert len(shape['out_shape']) == 2
+    
+    assert(isinstance(mask,CoarseMask))
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+    module_masks.set_input_mask(mask)
+    device = mask.mask_index[1].device
+    output_cmask = CoarseMask(num_dim=2)
+    output_cmask.add_index_mask(dim=1, index=mask.mask_index[1])
+    module_masks.set_output_mask(output_cmask)
+    return output_cmask
 
 def maxpool2d_inshape(module_masks, mask):
     """

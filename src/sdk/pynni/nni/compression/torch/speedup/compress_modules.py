@@ -14,6 +14,7 @@ replace_module = {
     'AvgPool2d': lambda module, mask: no_replace(module, mask),
     'AdaptiveAvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
+    'ReLU6': lambda module, mask: no_replace(module, mask),
     'Linear': lambda module, mask: replace_linear(module, mask),
     'Dropout': lambda module, mask: no_replace(module, mask),
     'Dropout2d': lambda module, mask: no_replace(module, mask),
@@ -45,6 +46,7 @@ def replace_linear(linear, mask):
     assert mask.input_mask is not None
     assert mask.output_mask is None
     assert not mask.param_masks
+    print(mask.input_mask)
     index = mask.input_mask.mask_index[-1]
     in_features = index.size()[0]
     _logger.debug("replace linear with new in_features: %d", in_features)
@@ -104,6 +106,8 @@ def replace_conv2d(conv, mask):
         The new conv2d module
     """
     print(mask)
+    print(conv)
+    print(conv.weight.size())
     assert isinstance(mask, ModuleMasks)
     if mask.input_mask is None:
         in_channels = conv.in_channels
@@ -115,6 +119,8 @@ def replace_conv2d(conv, mask):
     else:
         out_channels_index = mask.output_mask.mask_index[1]
         out_channels = out_channels_index.size()[0]
+    print('OutChannels', out_channels)
+    print('InChannels', in_channels)
     _logger.debug("replace conv2d with in_channels: %d, out_channels: %d", in_channels, out_channels)
     new_conv = torch.nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
@@ -125,18 +131,49 @@ def replace_conv2d(conv, mask):
                                groups=conv.groups,
                                bias=conv.bias is not None,
                                padding_mode=conv.padding_mode)
+    print('new weight size: 1', new_conv.weight.data.size())
     new_conv.to(conv.weight.device)
     tmp_weight_data = tmp_bias_data = None
+    print('new weight size: 2', new_conv.weight.data.size())
     if mask.output_mask is not None:
         tmp_weight_data = torch.index_select(conv.weight.data, 0, out_channels_index)
         if conv.bias is not None:
             tmp_bias_data = torch.index_select(conv.bias.data, 0, out_channels_index)
-    # NOTE: does not support group
+    else:
+        tmp_weight_data = conv.weight.data
+    # For the convolutional layers that have more than one group
+    # we need to copy the weight group by group, because the input
+    # channal is also divided into serveral groups and each group
+    # filter may have different input channel indexes.
+    input_step = int(conv.in_channels / conv.groups)
+    filter_step = int(out_channels / conv.groups)
     if mask.input_mask is not None:
-        tmp_weight_data = torch.index_select(conv.weight.data if tmp_weight_data is None else tmp_weight_data,
-                                             1, in_channels_index)
-    assert tmp_weight_data is not None, "Conv2d weight should be updated based on masks"
-    new_conv.weight.data.copy_(tmp_weight_data)
+        for groupid in range(conv.groups):
+            start = groupid * input_step
+            end = (groupid + 1) * input_step
+            print(start, end)
+            current_input_index = list(filter(lambda x: start<=x and x<end, in_channels_index.tolist()))
+            print(len(current_input_index))
+            # shift the global index into the group index
+            current_input_index = [x-start for x in current_input_index]
+            current_input_index = torch.tensor(current_input_index).to(tmp_weight_data.device)
+            f_start = groupid * filter_step
+            f_end = (groupid + 1) * filter_step
+            print(f_start, f_end)
+            new_conv.weight.data[f_start:f_end] = torch.index_select(tmp_weight_data[f_start:f_end], 1, current_input_index)
+    else:
+        new_conv.weight.data.copy_(tmp_weight_data)
+    # # NOTE: does not support group
+    # print('new weight size: 3', new_conv.weight.data.size())
+    # if mask.input_mask is not None:
+    #     tmp_weight_data = torch.index_select(conv.weight.data if tmp_weight_data is None else tmp_weight_data,
+    #                                          1, in_channels_index)
+    # assert tmp_weight_data is not None, "Conv2d weight should be updated based on masks"
+    # print('new weight size:', new_conv.weight.data.size())
+    # print(new_conv)
+    # print('tmp_weight_size:',tmp_weight_data.size())
+    # new_conv.weight.data.copy_(tmp_weight_data)
+
     if conv.bias is not None:
         new_conv.bias.data.copy_(conv.bias.data if tmp_bias_data is None else tmp_bias_data)
     print('Replacing the conv layers')

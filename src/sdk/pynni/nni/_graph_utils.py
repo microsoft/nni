@@ -606,7 +606,7 @@ class TorchModuleGraph(TorchGraph):
         """
         # extract the input & output shape for the view and flatten
         for node_group in self.nodes_py.nodes_op:
-            if node_group.op_type in ['aten::view', 'aten::flatten']:
+            if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean']:
                 # get shape infor for view (aten::view) func
                 cpp_node = list(filter(lambda x: x.kind() ==node_group.op_type,
                                        node_group.node_cpps))[0]
