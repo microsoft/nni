@@ -16,6 +16,10 @@ This document will be moved to documentation folder later.
 docker run -e NNI_VERSION=${NNI_VERSION} -v ${HOME}/.nni/nasbenchmark:/outputs .:/root tensorflow/tensorflow:1.15.2-py3 /bin/bash /root/nasbench101.sh
 ```
 
+Please replace `${NNI_VERSION}` with any NNI version, for example, v1.6 or master.
+
+It takes about 70 minutes to dump the records and build index. Output size is about 1.9GB.
+
 ### API Documentation
 
 

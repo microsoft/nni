@@ -11,7 +11,7 @@ cd nasbench && pip install -e . && cd ..
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 cd nni && source install.sh && cd ..
 
-echo "Downloading NAS-Bench-201..."
+echo "Downloading NAS-Bench-101..."
 wget https://storage.googleapis.com/nasbench/nasbench_full.tfrecord
 
 echo "Generating database..."
