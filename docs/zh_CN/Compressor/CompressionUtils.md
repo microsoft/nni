@@ -42,24 +42,24 @@ s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5,
 ```
 SensitivityAnalysis 会为每一层逐渐剪枝 25% 50% 75% 的权重，并同时记录模型精度 (SensitivityAnalysis 一次只修建一层，其他层会使用原始权重)。 如果没有设置稀疏度，SensitivityAnalysis 会将 numpy.arange(0.1, 1.0, 0.1) 作为默认的稀疏度值。
 
-还可以通过 early_stop_mode 和 early_stop_value 选项来加快灵敏度分析。 默认情况下，SensitivityAnalysis 会为每一层测试所有的稀疏度值下的精度。 In contrast, when the early_stop_mode and early_stop_value are set, the sensitivity analysis for a layer will stop, when the accuracy/loss has already met the threshold set by early_stop_value. We support four early stop modes:  minimize, maximize, dropped, raised.
+还可以通过 early_stop_mode 和 early_stop_value 选项来加快灵敏度分析。 默认情况下，SensitivityAnalysis 会为每一层测试所有的稀疏度值下的精度。 而设置了 early_stop_mode 和 early_stop_value 后，当精度或损失值到了 early_stop_value 所设置的阈值时，会停止灵敏度分析。 支持的提前终止模式包括：minimize, maximize, dropped, raised。
 
-minimize: The analysis stops when the validation metric return by the val_func lower than `early_stop_value`.
+minimize: 当 val_func 的返回值低于 `early_stop_value` 时，会停止分析。
 
-maximize: The analysis stops when the validation metric return by the val_func larger than `early_stop_value`.
+maximize: 当 val_func 的返回值大于 `early_stop_value` 时，会停止分析。
 
-dropped: The analysis stops when the validation metric has dropped by `early_stop_value`.
+dropped: 当验证指标下降 `early_stop_value` 时，会停止分析。
 
-raised: The analysis stops when the validation metric has raised by `early_stop_value`.
+raised: 当验证指标增加 `early_stop_value` 时，会停止分析。
 
 ```python
 s_analyzer = SensitivityAnalysis(model=net, val_func=val, sparsities=[0.25, 0.5, 0.75], early_stop_mode='dropped', early_stop_value=0.1)
 ```
-If users only want to analyze several specified convolutional layers, users can specify the target conv layers by the `specified_layers` in analysis function. `specified_layers` is a list that consists of the Pytorch module names of the conv layers. For example
+如果只想分析部分卷积层，可在分析函数中通过 `specified_layers` 指定。 `specified_layers` 是卷积层的 Pytorch 模块名称。 例如：
 ```python
 sensitivity = s_analyzer.analysis(val_args=[net], specified_layers=['Conv1'])
 ```
-In this example, only the `Conv1` layer is analyzed. In addtion, users can quickly and easily achieve the analysis parallelization by launching multiple processes and assigning different conv layers of the same model to each process.
+在此例中，只会分析 `Conv1` 层。 In addtion, users can quickly and easily achieve the analysis parallelization by launching multiple processes and assigning different conv layers of the same model to each process.
 
 
 ### 输出示例
