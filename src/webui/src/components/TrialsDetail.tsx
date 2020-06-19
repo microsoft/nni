@@ -109,7 +109,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Pivot defaultSelectedKey={"0"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichGraph}>
+                    <Pivot defaultSelectedKey={"1"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichGraph}>
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                         <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="Default metric">
                             <Stack className="graph">

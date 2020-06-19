@@ -420,28 +420,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
-        let allColumnList = COLUMNPro.concat(parameterStr);
-
-        // only succeed trials have final keys
-        if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
-            if (temp !== undefined && typeof temp === 'object') {
-                // concat default column and finalkeys
-                const item = Object.keys(temp);
-                // item: ['default', 'other-keys', 'maybe loss']
-                if (item.length > 1) {
-                    const want: string[] = [];
-                    item.forEach(value => {
-                        if (value !== 'default') {
-                            want.push(value);
-                        }
-                    });
-                    allColumnList = allColumnList.concat(want);
-                }
-            }
-        }
-
-        return allColumnList;
+        // concat trial all final keys and remove dup "default" val, return list
+        return (COLUMNPro.concat(parameterStr)).concat(Array.from(new Set(TRIALS.finalKeys())));
+        
     }
 
     // get IColumn[]

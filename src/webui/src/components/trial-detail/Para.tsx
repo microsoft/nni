@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { filterByStatus } from '../../static/function';
-import { EXPERIMENT } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption, } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
 import { ParaObj, Dimobj, TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
 import 'echarts/lib/chart/parallel';
@@ -28,6 +28,7 @@ interface ParaState {
     // office-fabric-ui
     selectedItem?: { key: string | number | undefined }; // percent Selector
     swapyAxis?: string[]; // yAxis Selector
+    showFinalMetricKey: string;
 }
 
 interface ParaProps {
@@ -68,7 +69,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             succeedRenderCount: 10000000,
             clickCounts: 1,
             isLoadConfirm: false,
-            swapyAxis: []
+            swapyAxis: [],
+            showFinalMetricKey: "default"
         };
     }
 
@@ -86,13 +88,13 @@ class Para extends React.Component<ParaProps, ParaState> {
                     if ('type' in parallelAxis[i]) {
                         temp.push(eachTrialParams[item][dimName[i]].toString());
                     } else {
-                        // default metric
+                        // default metric ？？？
                         temp.push(eachTrialParams[item][dimName[i]]);
                     }
                 }
                 paraYdata.push(temp);
             });
-            // add acc
+            // add metric value
             Object.keys(paraYdata).map(item => {
                 paraYdata[item].push(accPara[item]);
             });
@@ -277,9 +279,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                 }
             }
         }
+        // 放轴的时候现在默认放的default metric 轴, 改成user 选择的轴
+        const {showFinalMetricKey} = this.state;
+        console.info(showFinalMetricKey); // eslint-disable-line
         parallelAxis.push({
             dim: i,
-            name: 'default metric',
+            name: showFinalMetricKey,
             scale: true,
             nameTextStyle: {
                 fontWeight: 700
@@ -335,9 +340,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                 eachTrialParams.push(trial.description.parameters || '');
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
+                // 根据user 选择的metric轴来存放U对应的metric轴数据
                 if (trial.acc !== undefined) {
-                    if (trial.acc.default !== undefined) {
-                        accPara.push(JSON.parse(trial.acc.default));
+                    if (trial.acc[showFinalMetricKey] !== undefined) {
+                        accPara.push(JSON.parse(trial.acc[showFinalMetricKey]));
                     }
                 }
             });
@@ -587,12 +593,20 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
+    // select all final keys
+    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+        if (item !== undefined) {
+            console.info('select key', item.key); // eslint-disable-line
+            this.setState({showFinalMetricKey: item.key}, ()=>{this.reInit()});
+        }
+    }
+
     componentDidMount(): void {
         this.reInit();
     }
 
     componentDidUpdate(prevProps: ParaProps): void {
-        if(this.props.dataSource !== prevProps.dataSource) {
+        if (this.props.dataSource !== prevProps.dataSource) {
             const { dataSource, expSearchSpace, whichGraph } = this.props;
             if (whichGraph === 'Hyper-parameter') {
                 this.hyperParaPic(dataSource, expSearchSpace);
@@ -601,7 +615,14 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
+        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis, showFinalMetricKey } = this.state;
+        const finalKeysDropdown: any = [];
+        TRIALS.finalKeys().forEach(item => {
+            finalKeysDropdown.push({
+                key: item, text: item
+            });
+        });
+       
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
@@ -617,7 +638,15 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.8', text: '80%' },
                             { key: '1', text: '100%' },
                         ]}
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 120 } }}
+                        className="para-filter-percent"
+                    />
+                    <span className="para-filter-text">Metrics</span>
+                    <Dropdown
+                        selectedKey={showFinalMetricKey}
+                        options={finalKeysDropdown}
+                        onChange={this.updateEntries}
+                        styles={{ root: { width: 150 } }}
                         className="para-filter-percent"
                     />
                     <Dropdown
@@ -632,7 +661,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                                 };
                             })
                         }
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 240 } }}
                     />
                     <PrimaryButton
                         text="Confirm"
