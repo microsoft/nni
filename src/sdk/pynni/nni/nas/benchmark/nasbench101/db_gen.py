@@ -27,18 +27,18 @@ def main():
                 for seed in range(3):
                     cur = metrics[epochs][seed]
                     run = Nb101ComputedStats.create(config=run_config,
-                                                    train_acc=cur['final_train_accuracy'],
-                                                    valid_acc=cur['final_validation_accuracy'],
-                                                    test_acc=cur['final_test_accuracy'],
+                                                    train_acc=cur['final_train_accuracy'] * 100,
+                                                    valid_acc=cur['final_validation_accuracy'] * 100,
+                                                    test_acc=cur['final_test_accuracy'] * 100,
                                                     parameters=metadata['trainable_parameters'],
                                                     training_time=cur['final_training_time'])
                     for t in ['halfway', 'final']:
                         Nb101IntermediateStats.create(run=run,
                                                       current_epoch=epochs // 2 if t == 'halfway' else epochs,
                                                       training_time=cur[t + '_training_time'],
-                                                      train_acc=cur[t + '_train_accuracy'],
-                                                      valid_acc=cur[t + '_validation_accuracy'],
-                                                      test_acc=cur[t + '_test_accuracy'])
+                                                      train_acc=cur[t + '_train_accuracy'] * 100,
+                                                      valid_acc=cur[t + '_validation_accuracy'] * 100,
+                                                      test_acc=cur[t + '_test_accuracy'] * 100)
 
 
 if __name__ == '__main__':

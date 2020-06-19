@@ -29,6 +29,13 @@ def nasbench_format_to_architecture_repr(adjacency_matrix, labeling):
     return num_vertices, architecture
 
 
+def infer_num_vertices(architecture):
+    op_keys = set([k for k in architecture.keys() if k.startswith('op')])
+    intermediate_vertices = len(op_keys)
+    assert op_keys == {'op{}'.format(i) for i in range(1, intermediate_vertices + 1)}
+    return intermediate_vertices + 2
+
+
 def hash_module(architecture, vertices):
     """
     Computes a graph-invariance MD5 hash of the matrix and label pair.
