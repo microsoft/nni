@@ -4,7 +4,7 @@ import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDepency
+from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDependency
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
 
@@ -76,7 +76,7 @@ class CatMaskPadding(MaskFix):
         super(CatMaskPadding, self).__init__(masks, model, dummy_input, traced)
     
     def fix_mask(self):
-        cat_padding_depen = CatPaddingDepency(self.model, self.dummy_input, self.traced)
+        cat_padding_depen = CatPaddingDependency(self.model, self.dummy_input, self.traced)
         name_to_module = {}
         for name, module in self.model.named_modules():
             name_to_module[name] = module

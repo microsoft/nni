@@ -6,7 +6,7 @@ import logging
 
 from nni._graph_utils import TorchModuleGraph
 
-__all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDepency']
+__all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDependency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -182,9 +182,9 @@ class ChannelDependency(Dependency):
             d_sets.append(tmp_set)
         return d_sets
 
-class CatPaddingDepency(ChannelDependency):
+class CatPaddingDependency(ChannelDependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
-        super(CatPaddingDepency, self).__init__(model, dummy_input, traced_model)
+        super(CatPaddingDependency, self).__init__(model, dummy_input, traced_model)
     
     def build_dependency(self):
         """
