@@ -112,7 +112,6 @@ class CoarseMask:
             return False
 
     def __eq__(self, other):
-        # print(other)
         assert isinstance(other, CoarseMask)
         if len(self.mask_index) != len(other.mask_index):
             return False
@@ -288,8 +287,6 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
         The mask of its output tensor
 
     """
-    print('CATINPUT', last_visited)
-    print(mask)
     assert isinstance(mask, CoarseMask)
     out_shape = cat_info['out_shape']
     cat_dim = cat_info['cat_dim']
@@ -320,7 +317,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                     output_mask.mask_index[dim] = mask.mask_index[dim].data.clone(
                     )
         module_masks.set_output_mask(output_mask)
-        print("CATOUTPUT_FIRST", module_masks.output_mask)
+
         return module_masks.output_mask
     # If this cat node is already visited, we need
     # validating if the mask is legel, for cat operation,
@@ -342,7 +339,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
                 module_masks.output_mask.mask_index[dim], new_mask).to(device)
         else:
             assert module_masks.output_mask.eq_on_dim(mask, dim)
-    print("CATOUTPUT", module_masks.output_mask)
+
     return module_masks.output_mask
 
 
@@ -539,7 +536,6 @@ def relu_inshape(module_masks, mask):
     # TODO: double check this assert, is it possible that a module is passed twice
     if module_masks.input_mask is not None:
         # check if has a mask conflict
-        # print('### mask', mask)
         assert module_masks.input_mask == mask
         # No need to pass the mask again
         return None
@@ -680,17 +676,12 @@ def conv2d_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     if module_masks.input_mask is None:
-        print('First visited')
-        print(mask)
         module_masks.set_input_mask(mask)
     else:
         # the same conv layer may be accessed more
         # than once, such as a concat operation.
-        print(module_masks.input_mask)
-        print(mask)
         assert module_masks.input_mask <= mask
         module_masks.input_mask.merge(mask)
-        print(module_masks.input_mask)
     return None
 
 

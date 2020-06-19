@@ -81,7 +81,6 @@ class ModelSpeedup:
         out_shape : ModuleMasks
             Output shape of this node
         """
-        print('#########\n', module_name)
         input_cmask = output_cmask = None
         if module_name in self.inferred_masks:
             module_masks = self.inferred_masks[module_name]
@@ -127,12 +126,10 @@ class ModelSpeedup:
 
         if input_cmask:
             predecessors = self.torch_graph.find_predecessors(module_name)
-            print('fathers:', predecessors)
             for _module_name in predecessors:
                 self.infer_module_mask(_module_name, module_name, out_shape=input_cmask)
         if output_cmask:
             successors = self.torch_graph.find_successors(module_name)
-            print('sons:', successors)
             for _module_name in successors:
                 self.infer_module_mask(_module_name, module_name, in_shape=output_cmask)
 
@@ -141,8 +138,7 @@ class ModelSpeedup:
         Do shape inference of involved modules, including the shape of weights, inputs, output
         """
         for module_name, mask in self.masks.items():
-            print('%%%%%%%%%%')
-            print('start_from', module_name)
+            _logger.debug('Start mask inference from %s', module_name)
             self.infer_module_mask(module_name, None, mask=mask)
 
     def replace_compressed_modules(self):
