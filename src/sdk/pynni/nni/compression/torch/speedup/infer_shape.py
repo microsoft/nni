@@ -221,6 +221,7 @@ Infer output and weight shape of a module/function from its input shape
 """
 infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'ReLU6': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),

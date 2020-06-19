@@ -239,11 +239,18 @@ class ChannelMaskConflict:
                 continue
             channel_remain = set()
             fine_grained = False
+            out_channels = None
+            # A flag that represents if all the layers in
+            # the dependency set are pruned
+            all_pruned = True
             for name in dset:
                 if name not in self.masks:
                     # this layer is not pruned
+                    all_pruned = False
                     continue
                 w_mask = self.masks[name]['weight']
+                if out_channels is None:
+                    out_channels = w_mask.size(0)
                 shape = w_mask.size()
                 count = np.prod(shape[1:])
                 all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
@@ -260,8 +267,19 @@ class ChannelMaskConflict:
             # Update the masks for the layers in the dependency set
             if fine_grained:
                 continue
+            if not all_pruned:
+                # if some layer are not pruned at all
+                # then all the layers in this dependency set 
+                # cannot be pruned due to the shape dependency.
+                channel_remain.update(range(out_channels))
             ori_channels = 0
             for name in dset:
+                if name not in self.masks:
+                    # this layer is not pruned at all
+                    # in this case, all_pruned is False
+                    # and the other layers in the same dset
+                    # will not be pruned either. 
+                    continue
                 mask = self.masks[name]
                 w_shape = mask['weight'].size()
                 ori_channels = w_shape[0]

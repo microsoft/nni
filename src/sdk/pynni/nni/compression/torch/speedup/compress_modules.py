@@ -122,7 +122,7 @@ def replace_conv2d(conv, mask):
                                stride=conv.stride,
                                padding=conv.padding,
                                dilation=conv.dilation,
-                               groups=1, # currently only support groups is 1
+                               groups=conv.groups,
                                bias=conv.bias is not None,
                                padding_mode=conv.padding_mode)
     new_conv.to(conv.weight.device)
