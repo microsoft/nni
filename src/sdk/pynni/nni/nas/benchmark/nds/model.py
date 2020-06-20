@@ -48,10 +48,10 @@ class NdsComputedStats(Model):
     config = ForeignKeyField(NdsRunConfig, backref='computed_stats', index=True)
     seed = IntegerField()
     final_train_acc = FloatField()
-    final_train_loss = FloatField()
+    final_train_loss = FloatField(null=True)
     final_test_acc = FloatField()
     best_train_acc = FloatField()
-    best_train_loss = FloatField()
+    best_train_loss = FloatField(null=True)
     best_test_acc = FloatField()
     parameters = FloatField()
     flops = FloatField()
@@ -69,7 +69,7 @@ class NdsIntermediateStats(Model):
 
     run = ForeignKeyField(NdsComputedStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
-    train_loss = FloatField()
+    train_loss = FloatField(null=True)
     train_acc = FloatField()
     test_acc = FloatField()
 

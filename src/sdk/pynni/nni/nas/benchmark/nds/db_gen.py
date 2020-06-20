@@ -2,6 +2,7 @@ import json
 import argparse
 import os
 
+import numpy as np
 import tqdm
 
 from .model import db, NdsRunConfig, NdsComputedStats, NdsIntermediateStats
@@ -28,7 +29,7 @@ def inject_item(db, item, dataset, generator):
                         item['net']['genotype'][cell_type][i * 2 + j][0]
                     cell_spec['{}_{}_input_{}'.format(cell_type, i, label)] = \
                         item['net']['genotype'][cell_type][i * 2 + j][1]
-            cell_spec['{}_concat'.format(cell_type)] = item['net']['{}_concat'.format(cell_type)]
+            cell_spec['{}_concat'.format(cell_type)] = item['net']['genotype']['{}_concat'.format(cell_type)]
     else:
         if item['net']['block_type'].startswith('res_bottleneck'):
             model_family = 'residual_bottleneck'
@@ -54,7 +55,7 @@ def inject_item(db, item, dataset, generator):
                                   final_train_loss=item['train_ep_loss'][-1],
                                   final_test_acc=100 - item['test_ep_top1'][-1],
                                   best_train_acc=100 - min(item['train_ep_top1']),
-                                  best_train_loss=min(item['train_ep_loss']),
+                                  best_train_loss=np.nanmin(item['train_ep_loss']).item(),
                                   best_test_acc=100 - min(item['test_ep_top1']),
                                   parameters=item['params'] / 1e6,
                                   flops=item['flops'] / 1e6,
@@ -62,6 +63,7 @@ def inject_item(db, item, dataset, generator):
     intermediate_stats = []
     for i in range(run_config.num_epochs):
         intermediate_stats.append({
+            'run': run,
             'current_epoch': i + 1,
             'train_loss': item['train_ep_loss'][i],
             'train_acc': 100 - item['train_ep_top1'][i],
