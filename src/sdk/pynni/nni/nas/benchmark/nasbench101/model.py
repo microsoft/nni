@@ -32,7 +32,7 @@ class Nb101ComputedStats(Model):
     config : 
 
     """
-    config = ForeignKeyField(Nb101RunConfig, backref='computed_stats')
+    config = ForeignKeyField(Nb101RunConfig, backref='computed_stats', index=True)
     train_acc = FloatField()
     valid_acc = FloatField()
     test_acc = FloatField()
@@ -49,7 +49,7 @@ class Nb101IntermediateStats(Model):
 
     """
 
-    run = ForeignKeyField(Nb101ComputedStats, backref='intermediates')
+    run = ForeignKeyField(Nb101ComputedStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
     train_acc = FloatField()
     valid_acc = FloatField()
