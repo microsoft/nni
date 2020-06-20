@@ -70,6 +70,8 @@ export class EnvironmentInformation {
     public command: string = "";
     public nodeCount: number = 1;
 
+    public environmentLocalTempFolder: string = "";
+
     public gpuSummary: GPUSummary | undefined;
 
     constructor(id: string, jobName: string, jobId?: string) {

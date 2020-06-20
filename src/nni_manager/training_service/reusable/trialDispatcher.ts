@@ -26,11 +26,11 @@ import * as component from '../../common/component';
 import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getLogLevel, getVersion, uniqueString } from '../../common/utils';
+import { delay, getLogLevel, getVersion, uniqueString, getExperimentRootDir } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir } from '../common/util';
+import { validateCodeDir, execCopydir, execMkdir } from '../common/util';
 import { EnvironmentInformation, EnvironmentService, RunnerSettings } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
@@ -51,6 +51,7 @@ class TrialDispatcher implements TrainingService {
     private readonly metricsEmitter: EventEmitter;
     private versionCheck: boolean = true;
     private readonly experimentId: string;
+    private readonly experimentRootDir: string;
 
     private trialConfig: TrialConfig | undefined;
     private runnerSettings: RunnerSettings;
@@ -65,6 +66,8 @@ class TrialDispatcher implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.jobRestServer = new JobRestServer(this.metricsEmitter);
         this.experimentId = getExperimentId();
+        this.experimentRootDir = getExperimentRootDir();
+
         this.runnerSettings = new RunnerSettings();
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
@@ -394,6 +397,10 @@ class TrialDispatcher implements TrainingService {
         const name = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = new EnvironmentInformation(envId, name);
 
+        if (this.trialConfig === undefined) {
+            throw new Error(`trial config shouldn't be undefined in run()`);
+        }
+
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
@@ -404,6 +411,19 @@ class TrialDispatcher implements TrainingService {
             const storageService = component.get<StorageService>(StorageService);
             environment.workingFolder = storageService.joinPath("envs", envId);
             await storageService.createDirectory(environment.workingFolder);
+        } else {
+            //write configuration to local folder, for AML
+            let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp", envId);
+            await execMkdir(environmentLocalTempFolder);
+            const runnerSettingsPath = path.join(environmentLocalTempFolder, "settings.json");
+            await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
+            const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
+            await fs.promises.writeFile(installFilePath, CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+            environment.command = `import os\nos.system('sh install_nni.sh && python3 -m nni_trial_tool.trial_runner')`;
+            environment.environmentLocalTempFolder = environmentLocalTempFolder;
+            let environmentLocalTempTrialFolder = path.join(environmentLocalTempFolder, 'code');
+            await execMkdir(environmentLocalTempTrialFolder);
+            await execCopydir(this.trialConfig.codeDir, environmentLocalTempTrialFolder);
         }
 
         this.environments.set(environment.id, environment);

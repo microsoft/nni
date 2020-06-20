@@ -34,8 +34,4 @@ if __name__ == "__main__":
     run_config.node_count = 1
     config = ScriptRunConfig(source_directory=args.code_dir, script=args.script, run_config=run_config)
     script_run = experiment.submit(config)
-    print(script_run.get_portal_url())
-    while True:
-        time.sleep(5)
-        print(script_run.get_status())
-        print(script_run.get_metrics())
+    print(script_run.get_details()["runId"])
