@@ -29,7 +29,21 @@ def setPathCheck(key):
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
 
 class AlgoSchema:
+    """
+    This class is the schema of 'tuner', 'assessor' and 'advisor' sections of experiment configuraion file.
+    For example:
+    AlgoSchema('tuner') creates the schema of tuner section.
+    """
     def __init__(self, algo_type):
+        """
+        Parameters:
+        -----------
+        algo_type: str
+            One of ['tuner', 'assessor', 'advisor'].
+            'tuner': This AlgoSchema class create the schema of tuner section.
+            'assessor': This AlgoSchema class create the schema of assessor section.
+            'advisor': This AlgoSchema class create the schema of advisor section.
+        """
         assert algo_type in ['tuner', 'assessor', 'advisor']
         self.algo_type = algo_type
         self.algo_schema = {
