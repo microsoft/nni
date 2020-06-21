@@ -21,3 +21,10 @@
 ..  autoclass:: nni.compression.torch.utils.mask_conflict.MaskConflict
     :members:
 ```
+
+## Model Counter
+
+```eval_rst
+..  autofunction:: nni.compression.torch.utils.counter.count_flops_params
+
+```

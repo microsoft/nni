@@ -121,3 +121,16 @@ mc = MaskConflict('./resnet18_mask', net, data)
 mc.fix_mask_conflict()
 mc.export('./resnet18_fixed_mask')
 ```
+
+
+### ModelCounter
+We provide a model counter for calculating the model FLOPs and parameters. Users can easily get the model complexity during compression. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number.
+
+### Usage
+```
+from nni.compression.torch.utils.counter import count_flops_params
+****
+# Given input size (1, 1, 28, 28)
+flops, params = count_flops_params(model, (1, 1, 28, 28))
+print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
+```
