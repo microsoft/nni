@@ -13,14 +13,16 @@ _logger = logging.getLogger(__name__)
 try:
     from thop import profile
 except ImportError:
-    _logger.warning('Please install thop first.')
+    _logger.warning('Please install thop using command: pip install thop')
     
 def count_flops_params(model: nn.Module, input_size=None, verbose=True):
     """
     Count FLOPs and Params of the given model. 
     This function would identify the mask on the module 
-    and take the pruend shape into consideration. 
-    Note that, we only identify the output shape of the module, 
+    and take the pruned shape into consideration. 
+    Note that, for sturctured pruning, we only identify 
+    the remained filters according to its mask, which 
+    not taking the pruned input channels into consideration,
     so the calculated FLOPs will be larger than real number.
 
     Parameters
