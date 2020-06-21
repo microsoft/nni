@@ -19,7 +19,7 @@ Note: Please follow the provided format when writing your `config.yml` file.
 
 <a name="MedianStop"></a>
 
-### Median Stop Assessor
+![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
 > Builtin Assessor Name: **Medianstop**
 
@@ -47,7 +47,7 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-### Curve Fitting Assessor
+![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
 
 > Builtin Assessor Name: **Curvefitting**
 
