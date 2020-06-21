@@ -151,14 +151,16 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         }
     }
 
-    componentWillReceiveProps(nextProps: CustomizeProps): void {
-        const { copyTrialId } = nextProps;
-        if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
-            const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
-            this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
+    componentDidUpdate(prevProps: CustomizeProps): void {
+        if (this.props.copyTrialId !== prevProps.copyTrialId) {
+            const { copyTrialId } = this.props;
+            if (copyTrialId !== undefined && TRIALS.getTrial(copyTrialId) !== undefined) {
+                const originCopyTrialPara = TRIALS.getTrial(copyTrialId).description.parameters;
+                this.setState(() => ({ copyTrialParameter: originCopyTrialPara }));
+            }
         }
     }
- 
+
     render(): React.ReactNode {
         const { closeCustomizeModal, visible } = this.props;
         const { isShowSubmitSucceed, isShowSubmitFailed, isShowWarning, customID, copyTrialParameter } = this.state;

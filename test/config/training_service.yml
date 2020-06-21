@@ -92,7 +92,7 @@ pai:
     memoryMB: 8192
     nniManagerNFSMountPath: 
     containerNFSMountPath: 
-    paiStoragePlugin: 
+    paiStorageConfigName: 
 remote:
   machineList:
   - ip:

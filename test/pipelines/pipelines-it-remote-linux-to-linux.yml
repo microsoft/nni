@@ -6,6 +6,7 @@ jobs:
   - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
+      set -e
       cd deployment/pypi
       echo 'building prerelease package...'
       make build
@@ -15,6 +16,7 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      set -e
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
@@ -45,6 +47,7 @@ jobs:
     inputs:
       secureFile: $(remote_private_key)
   - script: |
+      set -e
       cp $(Agent.TempDirectory)/$(remote_private_key) test/id_rsa
       chmod 600 test/id_rsa
       scp -P $(remote_port) -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
