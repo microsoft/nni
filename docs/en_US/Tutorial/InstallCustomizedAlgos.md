@@ -5,9 +5,9 @@
 
 NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/BuiltinTuner.md#Hyperband) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
 
-NNI also provides the ability to build your own [customized tuners](../Tuner/CustomizeTuner.md), [advisors](../Tuner/CustomizeAdvisor.md) and [assessors](../Assessor/CustomizeAssessor.md).
+NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of [customized tuners](../Tuner/CustomizeTuner.md)/[advisors](../Tuner/CustomizeAdvisor.md)/[assessors](../Assessor/CustomizeAssessor.md).
 
-Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
+NNI also allows users to install the customized algorithm as a builtin algorithm, in order for users to use the algorithm in the same way as NNI builtin tuners/advisors/assessors. More importantly, it becomes much easier for users to share or distribute their implemented algorithm to others. Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
 ```yaml
 tuner:
   builtinTunerName: mytuner
