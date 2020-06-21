@@ -31,7 +31,7 @@ Note: Please follow the format when you write your `config.yml` file. Some built
 
 <a name="TPE"></a>
 
-### TPE
+![](https://placehold.it/15/1589F0/000000?text=+) `TPE`
 
 > Built-in Tuner Name: **TPE**
 
@@ -60,7 +60,7 @@ tuner:
 
 <a name="Random"></a>
 
-### Random Search
+![](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
 
 > Built-in Tuner Name: **Random**
 
@@ -80,7 +80,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-### Anneal
+![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
 
 > Built-in Tuner Name: **Anneal**
 
@@ -107,7 +107,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-### Naïve Evolution
+![](https://placehold.it/15/1589F0/000000?text=+) `Naïve Evolution`
 
 > Built-in Tuner Name: **Evolution**
 
@@ -136,7 +136,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-### SMAC
+![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > Built-in Tuner Name: **SMAC**
 
@@ -173,7 +173,7 @@ tuner:
 
 <a name="Batch"></a>
 
-### Batch Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
 
 > Built-in Tuner Name: BatchTuner
 
@@ -212,7 +212,7 @@ The search space file should include the high-level key `combine_params`. The ty
 
 <a name="GridSearch"></a>
 
-### Grid Search
+![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
 
 > Built-in Tuner Name: **Grid Search**
 
@@ -234,7 +234,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-### Hyperband
+![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
 
 > Built-in Advisor Name: **Hyperband**
 
@@ -264,7 +264,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-### Network Morphism
+![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
 > Built-in Tuner Name: **NetworkMorphism**
 
@@ -302,7 +302,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-### Metis Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
 
 > Built-in Tuner Name: **MetisTuner**
 
@@ -330,7 +330,7 @@ tuner:
 
 <a name="BOHB"></a>
 
-### BOHB Advisor
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
 
 > Built-in Tuner Name: **BOHB**
 
@@ -375,7 +375,7 @@ advisor:
 
 <a name="GPTuner"></a>
 
-### GP Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `GP Tuner`
 
 > Built-in Tuner Name: **GPTuner**
 
@@ -417,7 +417,7 @@ tuner:
 
 <a name="PPOTuner"></a>
 
-### PPO Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
 
 > Built-in Tuner Name: **PPOTuner**
 
@@ -453,7 +453,7 @@ tuner:
 
 <a name="PBTTuner"></a>
 
-### PBT Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
 
 > Built-in Tuner Name: **PBTTuner**
 
