@@ -218,6 +218,45 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
         y = copy.deepcopy(x)
     return y
 
+def merge_parameter(base_params, override_params):
+    """
+    Update the parameters in ``base_params`` with ``override_params``.
+    Can be useful to override parsed command line arguments.
+
+    Parameters
+    ----------
+    base_params : namespace or dict
+        Base parameters. A key-value mapping.
+    override_params : dict or None
+        Parameters to override. Usually the parameters got from ``get_next_parameters()``.
+        When it is none, nothing will happen.
+
+    Returns
+    -------
+    namespace or dict
+        The updated ``base_params``. Note that ``base_params`` will be updated inplace. The return value is
+        only for convenience.
+    """
+    if override_params is None:
+        return base_params
+    is_dict = isinstance(base_params, dict)
+    for k, v in override_params.items():
+        if is_dict:
+            if k not in base_params:
+                raise ValueError('Key \'%s\' not found in base parameters.' % k)
+            if type(base_params[k]) != type(v) and base_params[k] is not None:
+                raise TypeError('Expected \'%s\' in override parameters to have type \'%s\', but found \'%s\'.' %
+                                (k, type(base_params[k]), type(v)))
+            base_params[k] = v
+        else:
+            if not hasattr(base_params, k):
+                raise ValueError('Key \'%s\' not found in base parameters.' % k)
+            if type(getattr(base_params, k)) != type(v) and getattr(base_params, k) is not None:
+                raise TypeError('Expected \'%s\' in override parameters to have type \'%s\', but found \'%s\'.' %
+                                (k, type(getattr(base_params, k)), type(v)))
+            setattr(base_params, k, v)
+    return base_params
+
 class ClassArgsValidator(object):
     """
     NNI tuners/assessors/adivisors accept a `classArgs` parameter in experiment configuration file.
