@@ -29,6 +29,7 @@ interface ParaState {
     selectedItem?: { key: string | number | undefined }; // percent Selector
     swapyAxis?: string[]; // yAxis Selector
     showFinalMetricKey: string;
+    metricType: string;
 }
 
 interface ParaProps {
@@ -70,7 +71,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             clickCounts: 1,
             isLoadConfirm: false,
             swapyAxis: [],
-            showFinalMetricKey: "default"
+            showFinalMetricKey: "default",
+            metricType: 'numberType'
         };
     }
 
@@ -88,7 +90,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                     if ('type' in parallelAxis[i]) {
                         temp.push(eachTrialParams[item][dimName[i]].toString());
                     } else {
-                        // default metric ？？？
                         temp.push(eachTrialParams[item][dimName[i]]);
                     }
                 }
@@ -98,6 +99,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             Object.keys(paraYdata).map(item => {
                 paraYdata[item].push(accPara[item]);
             });
+            console.info('paraYdata', paraYdata); // eslint-disable-line
             // according acc to sort ydata // sort to find top percent dataset
             if (paraYdata.length !== 0) {
                 const len = paraYdata[0].length - 1;
@@ -279,9 +281,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                 }
             }
         }
-        // 放轴的时候现在默认放的default metric 轴, 改成user 选择的轴
-        const {showFinalMetricKey} = this.state;
-        console.info(showFinalMetricKey); // eslint-disable-line
+        // metric yAxis
+        const { showFinalMetricKey } = this.state;
         parallelAxis.push({
             dim: i,
             name: showFinalMetricKey,
@@ -340,10 +341,21 @@ class Para extends React.Component<ParaProps, ParaState> {
                 eachTrialParams.push(trial.description.parameters || '');
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
-                // 根据user 选择的metric轴来存放U对应的metric轴数据
+                // metric yAxis data
                 if (trial.acc !== undefined) {
-                    if (trial.acc[showFinalMetricKey] !== undefined) {
-                        accPara.push(JSON.parse(trial.acc[showFinalMetricKey]));
+                    const val = trial.acc[showFinalMetricKey];
+                    if (val !== undefined) {
+                        const typeOfVal = typeof val;
+                        if(typeOfVal === 'number'){
+                            this.setState(() => ({metricType: 'numberType'}));
+                        } else {
+                            // string type
+                            console.info(parallelAxis); // eslint-disable-line
+                            parallelAxis[parallelAxis.length - 1].type = 'category';
+                            parallelAxis[parallelAxis.length - 1].data = [val];
+                            this.setState(() => ({metricType: 'stringType'}));
+                        }
+                        accPara.push(val);
                     }
                 }
             });
@@ -364,7 +376,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     });
                 });
             }
-            // if not return final result
+            
             const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
             const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
             this.setState({ max: maxVal, min: minVal }, () => {
@@ -388,7 +400,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     // deal with response data into pic data
     getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
         // dataObj [[y1], [y2]... [default metric]]
-        const { max, min } = this.state;
+        const { max, min, metricType } = this.state;
         const parallelAxis = dataObj.parallelAxis;
         const paralleData = dataObj.data;
         let visualMapObj = {};
@@ -436,7 +448,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     },
                 }
             },
-            visualMap: visualMapObj,
+            visualMap: metricType === 'numberType' ? visualMapObj : null,
             series: {
                 type: 'parallel',
                 smooth: true,
@@ -596,8 +608,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     // select all final keys
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            console.info('select key', item.key); // eslint-disable-line
-            this.setState({showFinalMetricKey: item.key}, ()=>{this.reInit()});
+            this.setState({ showFinalMetricKey: item.key }, () => { this.reInit() });
         }
     }
 
@@ -615,14 +626,8 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis, showFinalMetricKey } = this.state;
-        const finalKeysDropdown: any = [];
-        TRIALS.finalKeys().forEach(item => {
-            finalKeysDropdown.push({
-                key: item, text: item
-            });
-        });
-       
+        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
+
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
@@ -641,14 +646,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                         styles={{ dropdown: { width: 120 } }}
                         className="para-filter-percent"
                     />
-                    <span className="para-filter-text">Metrics</span>
-                    <Dropdown
-                        selectedKey={showFinalMetricKey}
-                        options={finalKeysDropdown}
-                        onChange={this.updateEntries}
-                        styles={{ root: { width: 150 } }}
-                        className="para-filter-percent"
-                    />
+                    {this.finalKeysDropdown()}
                     <Dropdown
                         placeholder="Select options"
                         selectedKeys={swapyAxis}
@@ -681,6 +679,34 @@ class Para extends React.Component<ParaProps, ParaState> {
             </div>
         );
     }
+
+    private finalKeysDropdown = (): any => {
+        const { showFinalMetricKey } = this.state;
+        if (TRIALS.finalKeys().length === 1) {
+            return null;
+        } else {
+            const finalKeysDropdown: any = [];
+            TRIALS.finalKeys().forEach(item => {
+                finalKeysDropdown.push({
+                    key: item, text: item
+                });
+            });
+            return (
+                <div>
+                    <span className="para-filter-text para-filter-middle">Metrics</span>
+                    <Dropdown
+                        selectedKey={showFinalMetricKey}
+                        options={finalKeysDropdown}
+                        onChange={this.updateEntries}
+                        styles={{ root: { width: 150, display: 'inline-block' } }}
+                        className="para-filter-percent"
+                    />
+                </div>
+            );
+        }
+
+    };
+
 }
 
 export default Para;
