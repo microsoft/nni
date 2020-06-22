@@ -79,7 +79,7 @@
     :members:
 ```
 
-## Utilities
+## 工具
 
 ```eval_rst
 ..  autofunction:: nni.utils.merge_parameter
