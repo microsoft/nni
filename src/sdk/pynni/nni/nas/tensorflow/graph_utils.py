@@ -2,11 +2,11 @@ import functools
 import weakref
 
 from tensorflow.python.eager import function as function_lib
-from tensorflow.python.eager import lift_to_graph
 from tensorflow.python.framework import func_graph, ops
 from tensorflow.python.ops import array_ops, control_flow_ops, math_ops, resource_variable_ops
 from tensorflow.python.util import object_identity, tf_decorator
 
+from . import lift_to_graph
 
 class Function:
     def __init__(self, python_function, name, input_signature=None, autograph=True):
