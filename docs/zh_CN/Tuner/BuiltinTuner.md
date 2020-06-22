@@ -31,7 +31,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 <a name="TPE"></a>
 
-### TPE
+![](https://placehold.it/15/1589F0/000000?text=+) `TPE`
 
 > 名称：**TPE**
 
@@ -59,7 +59,7 @@ tuner:
 
 <a name="Random"></a>
 
-### Random Search
+![](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
 
 > 名称：**Random**
 
@@ -79,7 +79,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-### Anneal
+![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
 
 > 名称：**Anneal**
 
@@ -105,7 +105,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-### Naïve Evolution
+![](https://placehold.it/15/1589F0/000000?text=+) `Naïve Evolution`
 
 > 名称：**Evolution**
 
@@ -134,7 +134,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-### SMAC
+![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > 名称：**SMAC**
 
@@ -171,7 +171,7 @@ tuner:
 
 <a name="Batch"></a>
 
-### Batch Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
 
 > 名称：BatchTuner
 
@@ -210,7 +210,7 @@ tuner:
 
 <a name="GridSearch"></a>
 
-### Grid Search
+![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
 
 > 名称：**Grid Search**
 
@@ -232,7 +232,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-### Hyperband
+![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
 
 > 名称：**Hyperband**
 
@@ -262,7 +262,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-### Network Morphism
+![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
 > 名称：**NetworkMorphism**
 
@@ -300,7 +300,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-### Metis Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
 
 > 名称：**MetisTuner**
 
@@ -328,7 +328,7 @@ tuner:
 
 <a name="BOHB"></a>
 
-### BOHB Adivisor
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
 
 > 名称：**BOHB**
 
@@ -373,7 +373,7 @@ advisor:
 
 <a name="GPTuner"></a>
 
-### GP Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `GP Tuner`
 
 > 名称：**GPTuner**
 
@@ -415,7 +415,7 @@ tuner:
 
 <a name="PPOTuner"></a>
 
-### PPO Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
 
 > 内置 Tuner 名称：**PPOTuner**
 
@@ -451,7 +451,7 @@ tuner:
 
 <a name="PBTTuner"></a>
 
-### PBT Tuner
+![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
 
 > 内置 Tuner 名称：**PBTTuner**
 
