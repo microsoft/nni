@@ -379,7 +379,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState(() => ({metricType: 'numberType'}));
                         } else {
                             // string type
-                            console.info(parallelAxis); // eslint-disable-line
                             parallelAxis[parallelAxis.length - 1].type = 'category';
                             parallelAxis[parallelAxis.length - 1].data = [val];
                             this.setState(() => ({metricType: 'stringType'}));
