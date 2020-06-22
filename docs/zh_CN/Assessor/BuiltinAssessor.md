@@ -19,7 +19,7 @@ NNI 提供了先进的评估算法，使用上也很简单。 下面是内置 As
 
 <a name="MedianStop"></a>
 
-### Median Stop Assessor
+![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
 > 名称：**Medianstop**
 
@@ -47,7 +47,7 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-### Curve Fitting Assessor
+![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
 
 > 名称：**Curvefitting**
 
