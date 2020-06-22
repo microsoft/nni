@@ -29,37 +29,42 @@ def main_loop(args):
 
     # init command channel
     command_channel = None
-    if args.command_channel == "api":
+    if args.command_channel == "rest":
         command_channel = FileChannel(args)
     else:
         command_channel = FileChannel(args)
     nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
     args.command_channel = command_channel
 
-    trial = None
+    trials = dict()
 
     try:
         # command loop
         while True:
             command_type, command_data = command_channel.receive()
             if command_type == CommandType.NewTrialJob:
-                if trial is not None:
+                trial_id = command_data["trialId"]
+                if trial_id in trials.keys():
                     if trial.is_running():
                         raise Exception('trial %s is running already, cannot start a new one' % trial.id)
                     else:
-                        trial = None
+                        del trials[trial_id]
                 trial = Trial(args, command_data)
                 trial.run()
+                trials[trial_id] = trial
             elif command_type == CommandType.KillTrialJob:
-                if trial is not None:
+                trial_id = command_data
+                if trial_id in trials.keys():
                     trial.kill(command_data)
             elif command_type is not None:
                 raise Exception("unknown command %s" % command_type)
 
-            if trial is not None and trial.is_running():
-                idle_last_time = datetime.now()
-            else:
-                trial = None
+            trial_list = list(trials.values())
+            for trial in trial_list:
+                if trial is not None and trial.is_running():
+                    idle_last_time = datetime.now()
+                else:
+                    del trials[trial.id]
 
             if (datetime.now() - idle_last_time).seconds > idle_timeout_seconds:
                 nni_log(LogType.Info, "trial runner is idle more than {0} seconds, so exit.".format(
@@ -76,8 +81,16 @@ def main_loop(args):
         traceback.print_exc()
     finally:
         nni_log(LogType.Info, "main_loop exits.")
-        if trial is not None:
+
+        trial_list = list(trials.values())
+        for trial in trial_list:
             trial.kill()
+            del trials[trial.id]
+        # wait to send commands
+        for i in range(10):
+            if command_channel.sent():
+                break
+            time.sleep(1)
         command_channel.close()
 
 

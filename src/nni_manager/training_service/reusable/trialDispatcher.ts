@@ -433,7 +433,7 @@ class TrialDispatcher implements TrainingService {
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
-            environment.command = "mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool &&" + environment.command;
+            environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) &&" + environment.command;
         }
 
         if (environmentService.hasStorageService) {

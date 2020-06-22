@@ -23,13 +23,14 @@ import { GPUSummary } from "training_service/common/gpuData";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
+export type Channel = "rest" | "file" | "aml"
 
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
 
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentsStatus(environment: EnvironmentInformation[]): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
 }
@@ -45,8 +46,8 @@ export class RunnerSettings {
     public enableGpuCollector: boolean = false;
 
     // specify which communication channel is used by runner.
-    // supported channel includes: api, storage, aml
-    public commandChannel: string = "file";
+    // supported channel includes: rest, storage, aml
+    public commandChannel: Channel = "file";
 }
 
 export class EnvironmentInformation {

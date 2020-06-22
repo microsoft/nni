@@ -38,6 +38,7 @@ class BaseChannel(ABC):
     def __init__(self, args):
         self.is_keep_parsed = args.node_count > 1
         self.args = args
+        self.node_id = self.args.node_id
 
         # initialize receive, send threads.
         self.is_running = True
@@ -74,7 +75,10 @@ class BaseChannel(ABC):
                 # do nothing, if no command received.
                 pass
             if message is not None:
-                nni_log(LogType.Info, 'Sending command: %s' % message)
+                if self.node_id is None:
+                    nni_log(LogType.Info, 'Sending command: %s' % message)
+                else:
+                    nni_log(LogType.Info, 'Sending command(%s): %s' % (self.node_id, message))
                 self._inner_send(message)
 
     def close(self):
@@ -86,7 +90,7 @@ class BaseChannel(ABC):
         data: string payload.
         the message is sent synchronized.
         """
-        data["node"] = self.args.node_id
+        data["node"] = self.node_id
         data = json.dumps(data)
         data = data.encode('utf8')
         message = b'%b%014d%b' % (command.value, len(data), data)
@@ -121,7 +125,10 @@ class BaseChannel(ABC):
                     return None, None
                 data = command_content[16:16+length]
                 data = json.loads(data.decode('utf8'))
-                nni_log(LogType.Info, 'Received command, header: [%s], data: [%s]' % (header, data))
+                if self.node_id is None:
+                    nni_log(LogType.Info, 'Received command, header: [%s], data: [%s]' % (header, data))
+                else:
+                    nni_log(LogType.Info, 'Received command(%s), header: [%s], data: [%s]' % (self.node_id, header, data))
         except Empty:
             # do nothing, if no command received.
             pass

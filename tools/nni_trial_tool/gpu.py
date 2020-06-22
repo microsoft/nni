@@ -52,7 +52,6 @@ def parse_nvidia_smi_result(smi):
 
             output["gpuInfos"].append(gpuInfo)
     except Exception:
-        # e_info = sys.exc_info()
         traceback.print_exc()
         output = {}
     return output
