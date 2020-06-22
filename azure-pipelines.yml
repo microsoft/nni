@@ -10,7 +10,6 @@ jobs:
   - script: |
       set -e
       python3 -m pip install --upgrade pip setuptools --user
-      python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
       python3 -m pip install coverage --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
@@ -37,21 +36,6 @@ jobs:
       nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
-      set -e
-      python3 -m pylint --rcfile pylintrc nni_annotation
-      python3 -m pylint --rcfile pylintrc nni_cmd
-      python3 -m pylint --rcfile pylintrc nni_gpu_tool
-      python3 -m pylint --rcfile pylintrc nni_trial_tool
-      python3 -m pylint --rcfile pylintrc nni
-      python3 -m pylint --rcfile pylintrc nnicli
-    displayName: 'Run pylint'
-  - script: |
-      set -e
-      python3 -m pip install flake8 --user
-      EXCLUDES=./src/nni_manager/,./src/webui,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-    displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
-  - script: |
       cd test
       source scripts/unittest.sh
     displayName: 'Unit test'
@@ -72,6 +56,7 @@ jobs:
   - script: |
       set -e
       python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
       python3 -m pip install coverage --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
@@ -88,6 +73,21 @@ jobs:
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
     displayName: 'Install dependencies'
+  - script: |
+      set -e
+      python3 -m pylint --rcfile pylintrc nni_annotation
+      python3 -m pylint --rcfile pylintrc nni_cmd
+      python3 -m pylint --rcfile pylintrc nni_gpu_tool
+      python3 -m pylint --rcfile pylintrc nni_trial_tool
+      python3 -m pylint --rcfile pylintrc nni
+      python3 -m pylint --rcfile pylintrc nnicli
+    displayName: 'Run pylint'
+  - script: |
+      set -e
+      python3 -m pip install flake8 --user
+      EXCLUDES=./src/nni_manager/,./src/webui,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
+      python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+    displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
       source scripts/unittest.sh
