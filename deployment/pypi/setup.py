@@ -58,6 +58,7 @@ setuptools.setup(
         'PythonWebHDFS',
         'hyperopt==0.1.2',
         'json_tricks',
+        'netifaces',
         'numpy',
         'scipy',
         'coverage',
