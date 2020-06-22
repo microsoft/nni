@@ -24,7 +24,7 @@ jobs:
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests_tf2.yml --ts local
     displayName: 'Integration test'
   - script: |
       cd test
