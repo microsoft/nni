@@ -1,3 +1,4 @@
+import argparse
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (AveragePooling2D, BatchNormalization, Conv2D, Dense, MaxPool2D)
@@ -66,11 +67,9 @@ def grad(model, inputs, targets):
         loss_value = loss(model, inputs, targets, training=True)
     return loss_value, tape.gradient(loss_value, model.trainable_variables)
 
-def train(net, train_dataset, optimizer):
+def train(net, train_dataset, optimizer, num_epochs):
     train_loss_results = []
     train_accuracy_results = []
-
-    num_epochs = 2
 
     for epoch in range(num_epochs):
         epoch_loss_avg = tf.keras.metrics.Mean()
@@ -104,6 +103,12 @@ def test(model, test_dataset):
     return test_accuracy.result()
 
 if __name__ == '__main__':
+    # Training settings
+    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 10)')
+    args, _ = parser.parse_known_args()
+
     cifar10 = tf.keras.datasets.cifar10
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     x_train, x_test = x_train / 255.0, x_test / 255.0
@@ -118,7 +123,7 @@ if __name__ == '__main__':
 
     optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
 
-    train(net, dataset_train, optimizer)
+    train(net, dataset_train, optimizer, args.epochs)
 
     acc = test(net, dataset_test)
 
