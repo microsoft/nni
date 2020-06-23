@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import os
-import json
 from schema import SchemaError
 from .config_schema import NNIConfigSchema
 from .common_utils import print_normal
