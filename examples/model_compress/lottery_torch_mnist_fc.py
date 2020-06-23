@@ -133,7 +133,7 @@ if __name__ == '__main__':
     if best_accuracy > orig_accuracy:
         # load weights and masks
         pruner.bound_model.load_state_dict(best_state_dict)
-        # reset weights to original untrained model to export winning ticket
+        # reset weights to original untrained model and keep masks unchanged to export winning ticket
         pruner.load_model_state_dict(orig_state)
         pruner.export_model('model_winning_ticket.pth', 'mask_winning_ticket.pth')
         print('winning ticket are saved: model_winning_ticket.pth, mask_winning_ticket.pth')
