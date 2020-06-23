@@ -6,6 +6,7 @@ import copy
 import functools
 from enum import Enum, unique
 import json_tricks
+from schema import And
 
 from . import parameter_expressions
 from .common import init_logger
@@ -217,7 +218,6 @@ def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
         y = copy.deepcopy(x)
     return y
 
-
 def merge_parameter(base_params, override_params):
     """
     Update the parameters in ``base_params`` with ``override_params``.
@@ -256,3 +256,64 @@ def merge_parameter(base_params, override_params):
                                 (k, type(getattr(base_params, k)), type(v)))
             setattr(base_params, k, v)
     return base_params
+
+class ClassArgsValidator(object):
+    """
+    NNI tuners/assessors/adivisors accept a `classArgs` parameter in experiment configuration file.
+    This ClassArgsValidator interface is used to validate the classArgs section in exeperiment
+    configuration file.
+    """
+    def validate_class_args(self, **kwargs):
+        """
+        Validate the classArgs configuration in experiment configuration file.
+
+        Parameters
+        ----------
+        kwargs: dict
+            kwargs passed to tuner/assessor/advisor constructor
+
+        Raises:
+            Raise an execption if the kwargs is invalid.
+        """
+        pass
+
+    def choices(self, key, *args):
+        """
+        Utility method to create a scheme to check whether the `key` is one of the `args`.
+
+        Parameters:
+        ----------
+        key: str
+            key name of the data to be validated
+        args: list of str
+            list of the choices
+
+        Returns: Schema
+        --------
+            A scheme to check whether the `key` is one of the `args`.
+        """
+        return And(lambda n: n in args, error='%s should be in [%s]!' % (key, str(args)))
+
+    def range(self, key, keyType, start, end):
+        """
+        Utility method to create a schema to check whether the `key` is in the range of [start, end].
+
+        Parameters:
+        ----------
+        key: str
+            key name of the data to be validated
+        keyType: type
+            python data type, such as int, float
+        start: type is specified by keyType
+            start of the range
+        end: type is specified by keyType
+            end of the range
+
+        Returns: Schema
+        --------
+            A scheme to check whether the `key` is in the range of [start, end].
+        """
+        return And(
+            And(keyType, error='%s should be %s type!' % (key, keyType.__name__)),
+            And(lambda n: start <= n <= end, error='%s should be in range of (%s, %s)!' % (key, start, end))
+        )

@@ -25,3 +25,9 @@ cd ${CWD}/../src/nni_manager
 echo ""
 echo "===========================Testing: nni_manager==========================="
 npm run test
+
+## ------Run nnictl unit test------
+echo ""
+echo "===========================Testing: nnictl==========================="
+cd ${CWD}/../tools/nni_cmd/
+python3 -m unittest discover -v tests
