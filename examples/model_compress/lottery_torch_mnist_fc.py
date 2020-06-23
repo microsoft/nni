@@ -99,8 +99,9 @@ if __name__ == '__main__':
     orig_accuracy = test(model, test_loader, criterion)
     print('unpruned model accuracy: {}'.format(orig_accuracy))
 
-    # reset weights to find winning ticket
+    # reset model weights and optimizer to find winning ticket
     model.load_state_dict(orig_state)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)
 
     # Prune the model to find a winning ticket
     configure_list = [{
