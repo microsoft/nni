@@ -57,6 +57,12 @@ testCases:
   stopCommand:
   experimentStatusCheck: False
 
+- name: classic-nas-install-ppo
+  configFile: test/config/examples/classic-nas-tf2.yml
+  launchCommand: nnictl package install --name=PPOTuner
+  stopCommand:
+  experimentStatusCheck: False
+
 - name: classic-nas-tensorflow2
   configFile: test/config/examples/classic-nas-tf2.yml
   # remove search space file

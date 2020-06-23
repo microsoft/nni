@@ -78,6 +78,12 @@ testCases:
   stopCommand:
   experimentStatusCheck: False
 
+- name: classic-nas-install-ppo
+  configFile: test/config/examples/classic-nas-pytorch.yml
+  launchCommand: nnictl package install --name=PPOTuner
+  stopCommand:
+  experimentStatusCheck: False
+
 - name: classic-nas-pytorch
   configFile: test/config/examples/classic-nas-pytorch.yml
   # remove search space file
