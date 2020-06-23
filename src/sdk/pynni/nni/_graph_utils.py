@@ -382,6 +382,14 @@ class TorchModuleGraph(TorchGraph):
         -------
         dict
             Include auxiliary information for the cat operation.
+            This dict objec has four keys: 'cat_dim', 'out_shape',
+            'in_order' and 'in_shape'. cat_dim is the dimension of
+            the cat operation to concat the input tensors. out_shape
+            is the shape of the output tensor of the cat operation.
+            in_order is an ordered list which contains the corresponding
+            parent operaion nodes of the input tensors. in_shape is also
+            an ordered list that contains the input shapes of the input
+            tensor.
         """
         # only suport the cat operation
         assert cpp_node.kind() == CAT_KIND
@@ -606,7 +614,7 @@ class TorchModuleGraph(TorchGraph):
         """
         # extract the input & output shape for the view and flatten
         for node_group in self.nodes_py.nodes_op:
-            if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean']:
+            if node_group.op_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape']:
                 # get shape infor for view (aten::view) func
                 cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,
                                        node_group.node_cpps))[0]

@@ -231,6 +231,7 @@ infer_from_inshape = {
     'AdaptiveAvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
     'aten::view': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
+    'aten::reshape': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
     # support only start_dim=1
     'aten::flatten': lambda module_masks, mask, shape: view_inshape(module_masks, mask, shape),
     'Linear': lambda module_masks, mask: linear_inshape(module_masks, mask),

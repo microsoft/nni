@@ -73,6 +73,8 @@ class ModelSpeedup:
         ----------
         module_name : str
             The name of the node
+        last_module : str
+            The name of last visited node
         mask : tensor of mask or ModuleMasks
             Mask of the weights in this node (i.e., module)
         in_shape : ModuleMasks
@@ -102,7 +104,7 @@ class ModelSpeedup:
                 raise RuntimeError(
                     "Has not supported infering output shape from input shape for module/function: `{}`, {}"
                     .format(m_type, module_name))
-            if m_type in ['aten::view', 'aten::flatten', 'aten::mean']:
+            if m_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape']:
                 output_cmask = infer_from_inshape[m_type](module_masks,
                                                           in_shape,
                                                           self.torch_graph.name_to_node[module_name].auxiliary)
