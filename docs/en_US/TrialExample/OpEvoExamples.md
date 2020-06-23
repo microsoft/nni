@@ -4,7 +4,7 @@
 
 Abundant applications raise the demands of training and inference deep neural networks (DNNs) efficiently on diverse hardware platforms ranging from cloud servers to embedded devices. Moreover, computational graph-level optimization of deep neural network, like tensor operator fusion, may introduce new tensor operators. Thus, manually optimized tensor operators provided by hardware-specific libraries have limitations in terms of supporting new hardware platforms or supporting new operators, so automatically optimizing tensor operators on diverse hardware platforms is essential for large-scale deployment and application of deep learning technologies in the real-world problems.
 
-Tensor operator optimization is substantially a combinatorial optimization problem. The objective function is the performance of a tensor operator on specific hardware platform, which should be maximized with respect to the hyper-parameters of corresponding device code, such as how to tile a matrix or whether to unroll a loop. This example illustrates how to automatically tune tensor operators with NNI. Three tuning algorithms, OpEvo, G-BFS and N-A2C are provided. Please refer to [OpEvo: An Evolutionary Method for Tensor Operator Optimization](https://128.84.21.199/abs/2006.05664) for detailed explanation about these algorithms.
+Tensor operator optimization is substantially a combinatorial optimization problem. The objective function is the performance of a tensor operator on specific hardware platform, which should be maximized with respect to the hyper-parameters of corresponding device code, such as how to tile a matrix or whether to unroll a loop. This example illustrates how to automatically tune tensor operators with NNI. Three tuning algorithms, OpEvo, G-BFS and N-A2C are provided. Please refer to [OpEvo: An Evolutionary Method for Tensor Operator Optimization](https://arxiv.org/abs/2006.05664) for detailed explanation about these algorithms.
 
 
 ## Environment Setup
@@ -19,7 +19,7 @@ make rocm-env
 
 ## Run Experiments:
 
-Three representative kinds of tensor operators, matrix multiplication, batched matrix multiplication and 2D convolution, are chosen from BERT and AlexNet, and tuned with NNI. The `Trial` code for all tensor operators is `/root/compiler_auto_tune_stable.py`, and `Search Space` files and `config` files for each tuning algorithm locate in `/root/experiments/`, which are categorized by tensor operators. Here `/root` refers to the root of the container.
+Three representative kinds of tensor operators, **matrix multiplication**, **batched matrix multiplication** and **2D convolution**, are chosen from BERT and AlexNet, and tuned with NNI. The `Trial` code for all tensor operators is `/root/compiler_auto_tune_stable.py`, and `Search Space` files and `config` files for each tuning algorithm locate in `/root/experiments/`, which are categorized by tensor operators. Here `/root` refers to the root of the container.
 
 For tuning the operators of matrix multiplication, please run below commands from `/root`:
 ```bash
