@@ -75,10 +75,11 @@ def run_test_case(test_case_config, it_config, args):
         stop_command = get_command(test_case_config, 'stopCommand')
         print('Stop command:', stop_command, flush=True)
         if stop_command:
-            proc = subprocess.run(stop_command, shell=True)
-            #for command in stop_command.split('&'):
-            #    print('Command:', command, flush=True)
-            #    subprocess.run(shlex.split(command))
+            subprocess.run(shlex.split(stop_command))
+        exit_command = get_command(test_case_config, 'onExitCommand')
+        print('Exit command:', exit_command, flush=True)
+        if exit_command:
+            subprocess.run(shlex.split(exit_command))
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
