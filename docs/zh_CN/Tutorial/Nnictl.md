@@ -711,38 +711,104 @@ nnictl 支持的命令：
   
   * 说明
     
-    安装 NNI 实验所需要的包。
+    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
   
   * 用法
     
     ```bash
-    nnictl package install [OPTIONS]
+    nnictl package install --name <package name>
     ```
-  
-  * 选项
-  
-  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
-  | ------ | ---- | --- | ------- |
-  | --name | True |     | 要安装的包名称 |
-  
-  * 示例
     
-    > 安装 SMAC Tuner 所需要的包
+    The available `<package name>` can be checked via `nnictl package list` command.
+    
+    or
     
     ```bash
-    nnictl package install --name=SMAC
+    nnictl package install <installation source>
+    ```
+    
+    Reference [Install customized algorithms](InstallCustomizedAlgos.md) to prepare the installation source.
+  
+  * Example
+    
+    > Install SMAC tuner
+    
+    ```bash
+    nnictl package install --name SMAC
+    ```
+    
+    > Install a customized tuner
+    
+    ```bash
+    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
     ```
 
 * **nnictl package show**
   
   * 说明
     
-    列出支持的安装包
+    Show the detailed information of specified packages.
   
   * 用法
     
     ```bash
-    nnictl package show
+    nnictl package show <package name>
+    ```
+  
+  * Example
+    
+    ```bash
+    nnictl package show SMAC
+    ```
+
+* **nnictl package list**
+  
+  * Description
+    
+    List the installed/all packages.
+  
+  * Usage
+    
+    ```bash
+    nnictl package list [OPTIONS]
+    ```
+  
+  * Options
+  
+  | Name, shorthand | Required | Default | Description       |
+  | --------------- | -------- | ------- | ----------------- |
+  | --all           | False    |         | List all packages |
+  
+  * Example
+    
+    > List installed packages
+    
+    ```bash
+    nnictl package list
+    ```
+    
+    > List all packages
+    
+    ```bash
+    nnictl package list --all
+    ```
+
+* **nnictl package uninstall**
+  
+  * Description
+    
+    Uninstall a package.
+  
+  * Usage
+    
+    ```bash
+    nnictl package uninstall <package name>
+    ```
+  
+  * Example Uninstall SMAC package
+    
+    ```bash
+    nnictl package uninstall SMAC
     ```
 
 <a name="ss_gen"></a>
