@@ -94,10 +94,8 @@ if __name__ == '__main__':
     orig_state = copy.deepcopy(model.state_dict())
 
     # train the model to get unpruned metrics
-    model.train()
     for epoch in range(args.train_epochs):
         train(model, train_loader, optimizer, criterion)
-    model.eval()
     orig_accuracy = test(model, test_loader, criterion)
     print('unpruned model accuracy: {}'.format(orig_accuracy))
 
