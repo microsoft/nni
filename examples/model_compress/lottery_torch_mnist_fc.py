@@ -1,4 +1,5 @@
 import argparse
+import copy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -89,6 +90,21 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)
     criterion = nn.CrossEntropyLoss()
 
+    # Record the random intialized model weights
+    orig_state = copy.deepcopy(model.state_dict())
+
+    # train the model to get unpruned metrics
+    model.train()
+    for epoch in range(args.train_epochs):
+        train(model, train_loader, optimizer, criterion)
+    model.eval()
+    orig_accuracy = test(model, test_loader, criterion)
+    print('unpruned model accuracy: {}'.format(orig_accuracy))
+
+    # reset weights to find winning ticket
+    model.load_state_dict(orig_state)
+
+    # Prune the model to find a winning ticket
     configure_list = [{
         'prune_iterations': 5,
         'sparsity': 0.96,
@@ -97,6 +113,8 @@ if __name__ == '__main__':
     pruner = LotteryTicketPruner(model, configure_list, optimizer)
     pruner.compress()
 
+    best_accuracy = 0.
+    best_state_dict = None
 
     for i in pruner.get_prune_iterations():
         pruner.prune_iteration_start()
@@ -106,8 +124,18 @@ if __name__ == '__main__':
             loss = train(model, train_loader, optimizer, criterion)
             accuracy = test(model, test_loader, criterion)
             print('current epoch: {0}, loss: {1}, accuracy: {2}'.format(epoch, loss, accuracy))
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                # state dict of weights and masks
+                best_state_dict = copy.deepcopy(model.state_dict())
         print('prune iteration: {0}, loss: {1}, accuracy: {2}'.format(i, loss, accuracy))
 
-    # reset weight to original untrained model to export winning ticket
-    pruner.load_model_state_dict(pruner._model_state)
-    pruner.export_model('model_winning_ticket.pth', 'mask_winning_ticket.pth')
+    if best_accuracy > orig_accuracy:
+        # load weights and masks
+        pruner.bound_model.load_state_dict(best_state_dict)
+        # reset weights to original untrained model to export winning ticket
+        pruner.load_model_state_dict(orig_state)
+        pruner.export_model('model_winning_ticket.pth', 'mask_winning_ticket.pth')
+        print('winning ticket are saved: model_winning_ticket.pth, mask_winning_ticket.pth')
+    else:
+        print('winning ticket is not found in this run, you can run it again.')
