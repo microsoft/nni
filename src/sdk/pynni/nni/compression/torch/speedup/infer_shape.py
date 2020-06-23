@@ -226,6 +226,7 @@ infer_from_inshape = {
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
+    'aten::adaptive_avg_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'AvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'AdaptiveAvgPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::size': lambda module_masks, mask: size_inshape(module_masks, mask),
