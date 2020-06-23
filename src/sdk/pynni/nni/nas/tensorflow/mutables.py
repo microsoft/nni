@@ -85,7 +85,7 @@ class LayerChoice(Mutable):
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.names.append(name)
         elif isinstance(op_candidates, list):
-            for i, module in enumerate(op_candidates):
+            for i, _ in enumerate(op_candidates):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
