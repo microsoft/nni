@@ -3,6 +3,7 @@
 
 import os
 import json
+import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
 from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
@@ -386,6 +387,7 @@ class NNIConfigSchema:
         self.validate_tuner_adivosr_assessor(experiment_config)
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
+        self.validate_eth0_device(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -473,7 +475,6 @@ class NNIConfigSchema:
             if experiment_config.get('trial').get('shmMB') and \
             experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
                 raise SchemaError('shmMB should be no more than memoryMB!')
-                exit(1)
             #backward compatibility
             warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
             please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
@@ -483,3 +484,10 @@ class NNIConfigSchema:
             if experiment_config.get('trial').get('outputDir'):
                 print_warning(warning_information.format('outputDir'))
             self.validate_pai_config_path(experiment_config)
+
+    def validate_eth0_device(self, experiment_config):
+        '''validate whether the machine has eth0 device'''
+        if experiment_config.get('trainingServicePlatform') not in ['local'] \
+        and not experiment_config.get('nniManagerIp') \
+        and 'eth0' not in netifaces.interfaces():
+            raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')

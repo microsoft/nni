@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import json
 from schema import SchemaError
 from .config_schema import NNIConfigSchema
 from .common_utils import print_normal
@@ -103,7 +104,6 @@ def set_default_values(experiment_config):
         for index in range(len(experiment_config['machineList'])):
             if experiment_config['machineList'][index].get('port') is None:
                 experiment_config['machineList'][index]['port'] = 22
-
 
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
