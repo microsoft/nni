@@ -99,7 +99,7 @@ if __name__ == '__main__':
     orig_accuracy = test(model, test_loader, criterion)
     print('unpruned model accuracy: {}'.format(orig_accuracy))
 
-    # reset model weights and optimizer to find winning ticket
+    # reset model weights and optimizer for pruning
     model.load_state_dict(orig_state)
     optimizer = torch.optim.Adam(model.parameters(), lr=1.2e-3)
 
@@ -135,6 +135,6 @@ if __name__ == '__main__':
         # reset weights to original untrained model and keep masks unchanged to export winning ticket
         pruner.load_model_state_dict(orig_state)
         pruner.export_model('model_winning_ticket.pth', 'mask_winning_ticket.pth')
-        print('winning ticket are saved: model_winning_ticket.pth, mask_winning_ticket.pth')
+        print('winning ticket has been saved: model_winning_ticket.pth, mask_winning_ticket.pth')
     else:
         print('winning ticket is not found in this run, you can run it again.')
