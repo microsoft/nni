@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import torch
+import torchvision.models as models
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.vgg import vgg16
@@ -13,6 +14,9 @@ from unittest import TestCase, main
 from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
 
 torch.manual_seed(0)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+BATCH_SIZE = 32
+THRESHOLD = 0.01
 
 class BackboneModel1(nn.Module):
     def __init__(self):
@@ -72,6 +76,27 @@ def prune_model_l1(model):
     pruner.compress()
     pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
 
+def generate_random_sparsity(model):
+    cfg_list = []
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Conv2d):
+            sparsity = np.random.uniform(0.5, 0.99)
+            cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
+                             'sparsity': sparsity})
+    return cfg_list
+
+def zero_bn_bias(model):
+    with torch.no_grad():
+        for name, module in model.named_modules():
+            if isinstance(module, nn.BatchNorm2d) \
+            or isinstance(module, nn.BatchNorm3d) \
+            or isinstance(module, nn.BatchNorm1d):
+                shape = module.bias.data.size()
+                device = module.bias.device
+                module.bias.data = torch.zeros(shape).to(device)
+                shape = module.running_mean.data.size()
+                module.running_mean = torch.zeros(shape).to(device)
+
 class SpeedupTestCase(TestCase):
     def test_speedup_vgg16(self):
         prune_model_l1(vgg16())
@@ -84,10 +109,6 @@ class SpeedupTestCase(TestCase):
         assert model.training
         assert model.features[2].out_channels == int(orig_model.features[2].out_channels * SPARSITY)
         assert model.classifier[0].in_features == int(orig_model.classifier[0].in_features * SPARSITY)
-
-    #def test_speedup_resnet(self):
-        #TODO support resnet
-        #model = resnet18()
 
     def test_speedup_bigmodel(self):
         prune_model_l1(BigModel())
@@ -115,6 +136,35 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.conv2.in_channels == int(orig_model.backbone2.conv2.in_channels * SPARSITY)
         assert model.backbone2.conv2.out_channels == int(orig_model.backbone2.conv2.out_channels * SPARSITY)
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
+
+    def test_speedup_integration(self):
+        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2']:
+            Model = getattr(models, model_name)
+            net = Model(pretrained=True).to(device)
+            net.eval() # this line is necessary
+            # random generate the prune config for the pruner
+            cfgs = generate_random_sparsity(net)
+            pruner = L1FilterPruner(net, cfgs)
+            pruner.compress()
+            pruner.export_model(MODEL_FILE, MASK_FILE)
+            pruner._unwrap_model()
+            speedup_model = Model().to(device)
+            speedup_model.eval()
+            state_dict = torch.load(MODEL_FILE)
+            speedup_model.load_state_dict(state_dict)
+            zero_bn_bias(net)
+            zero_bn_bias(speedup_model)
+
+            data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
+            ms = ModelSpeedup(speedup_model, data, MASK_FILE)
+            ms.speedup_model()
+            ori_out = net(data)
+            speeded_out = speedup_model(data)
+            ori_sum = torch.sum(ori_out).item()
+            speeded_sum = torch.sum(speeded_out).item()
+            print('Sum of the output of %s (before speedup):'%model_name, ori_sum)
+            print('Sum of the output of %s (after speedup):'%model_name, speeded_sum)
+            assert abs(ori_sum - speeded_sum) / ori_sum < THRESHOLD
 
     def tearDown(self):
         os.remove(MODEL_FILE)
