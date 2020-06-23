@@ -16,8 +16,15 @@ from nni.compression.torch import L1FilterPruner, apply_compression_results, Mod
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 BATCH_SIZE = 32
-THRESHOLD = 0.01
-
+# the relative distance
+RELATIVE_THRESHOLD = 0.01
+# Because of the precision of floating-point numbers, some errors
+# between the original output tensors(without speedup) and the output
+# tensors of the speedup model are normal. When the output tensor itself
+# is small, such errors may exceed the relative threshold, so we also add
+# an absolute threshold to determine whether the final result is correct.
+# The error should meet the RELATIVE_THREHOLD or the ABSOLUTE_THRESHOLD.
+ABSOLUTE_THRESHOLD = 0.0001
 class BackboneModel1(nn.Module):
     def __init__(self):
         super().__init__()
@@ -164,7 +171,8 @@ class SpeedupTestCase(TestCase):
             speeded_sum = torch.sum(speeded_out).item()
             print('Sum of the output of %s (before speedup):'%model_name, ori_sum)
             print('Sum of the output of %s (after speedup):'%model_name, speeded_sum)
-            assert abs(ori_sum - speeded_sum) / ori_sum < THRESHOLD
+            assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
+                   (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def tearDown(self):
         os.remove(MODEL_FILE)
