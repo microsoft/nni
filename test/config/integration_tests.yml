@@ -81,7 +81,7 @@ testCases:
 - name: classic-nas-pytorch
   configFile: test/config/examples/classic-nas-pytorch.yml
   # remove search space file
-  stopCommand: nnictl stop & python3 -c 'import os; os.remove("config/examples/nni-nas-search-space.json")'
+  stopCommand: nnictl stop; python3 -c 'import os; os.remove("config/examples/nni-nas-search-space.json")'
 
 #########################################################################
 # nni features test

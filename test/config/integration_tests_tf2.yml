@@ -60,7 +60,7 @@ testCases:
 - name: classic-nas-tensorflow2
   configFile: test/config/examples/classic-nas-tf2.yml
   # remove search space file
-  stopCommand: nnictl stop & python3 -c 'import os; os.remove("config/examples/nni-nas-search-space-tf2.json")'
+  stopCommand: nnictl stop; python3 -c 'import os; os.remove("config/examples/nni-nas-search-space-tf2.json")'
 
 #########################################################################
 # nni features test
