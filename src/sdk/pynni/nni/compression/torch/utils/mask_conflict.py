@@ -15,12 +15,12 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
 
     Parameters
     ----------
+    masks : dict/str
+        A dict object that stores the masks or the path of the mask file
     model : torch.nn.Module
         model to fix the mask conflict
     dummy_input : torch.Tensor
         input example to trace the model
-    masks : dict/str
-        a dict object that stores the masks or the path of the mask file
     traced : torch._C.torch.jit.TopLevelTracedModule
         the traced model of the target model, is this parameter is not None,
         we donnot use the model and dummpy_input to get the trace graph.
@@ -73,6 +73,27 @@ class MaskFix:
 
 class CatMaskPadding(MaskFix):
     def __init__(self, masks, model, dummy_input=None, traced=None):
+        """
+        CatMaskPadding find the layers whose output tensor is passed
+        to the same cat operation. The cat operation concatnates the
+        masks of the input tensors as the output mask, so when some
+        of the input layers of the cat operation are not pruned, we still
+        need to pass the masks of these non-pruned layers(the mask are
+        all ones) to the cat operation to ensure the shape of the output
+        mask is right.
+
+        Parameters
+        ----------
+        masks : dict
+            a dict object that stores the masks
+        model : torch.nn.Module
+            model to fix the mask conflict
+        dummy_input : torch.Tensor
+            input example to trace the model
+        traced : torch._C.torch.jit.TopLevelTracedModule
+            the traced model of the target model, is this parameter is not None,
+            we donnot use the model and dummpy_input to get the trace graph.
+        """
         super(CatMaskPadding, self).__init__(masks, model, dummy_input, traced)
 
     def fix_mask(self):
@@ -117,12 +138,12 @@ class GroupMaskConflict(MaskFix):
 
         Parameters
         ----------
+        masks : dict
+            a dict object that stores the masks
         model : torch.nn.Module
             model to fix the mask conflict
         dummy_input : torch.Tensor
             input example to trace the model
-        masks : dict
-            a dict object that stores the masks
         traced : torch._C.torch.jit.TopLevelTracedModule
             the traced model of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
@@ -186,12 +207,12 @@ class ChannelMaskConflict(MaskFix):
 
         Parameters
         ----------
+        masks : dict
+            a dict object that stores the masks
         model : torch.nn.Module
             model to fix the mask conflict
         dummy_input : torch.Tensor
             input example to trace the model
-        masks : dict
-            a dict object that stores the masks
         graph : torch._C.torch.jit.TopLevelTracedModule
             the traced graph of the target model, is this parameter is not None,
             we donnot use the model and dummpy_input to get the trace graph.
