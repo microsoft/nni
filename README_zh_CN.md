@@ -186,6 +186,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       <ul>
         <li><a href="docs/zh_CN/Tuner/CustomizeTuner.md">自定义 Tuner</a></li>
         <li><a href="docs/zh_CN/Assessor/CustomizeAssessor.md">自定义 Assessor</a></li>
+        <li><a href="docs/en_US/Tutorial/InstallCustomizedAlgos.md">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
