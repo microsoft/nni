@@ -3,9 +3,9 @@
 
 ## 概述
 
-NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/BuiltinTuner.md#Hyperband) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
+NNI 提供了大量可用于超参优化的[内置 Tuner](../Tuner/BuiltinTuner.md), [Advisor](../Tuner/BuiltinTuner.md#Hyperband) 以及 [Assessor](../Assessor/BuiltinAssessor.md)，其它算法可在 NNI 安装后，通过 `nnictl package install --name <name>` 安装。 可通过 `nnictl package list` 命令查看其它算法。
 
-NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of [customized tuners](../Tuner/CustomizeTuner.md)/[advisors](../Tuner/CustomizeAdvisor.md)/[assessors](../Assessor/CustomizeAssessor.md).
+NNI 中，还可以创建自定义的 Tuner，Advisor 和 Assessor。 并根据 Experiment 配置文件的说明来使用这些自定义的算法，可参考 [自定义 Tuner](../Tuner/CustomizeTuner.md)/[Advisor](../Tuner/CustomizeAdvisor.md)/[Assessor](../Assessor/CustomizeAssessor.md)。
 
 NNI also allows users to install the customized algorithm as a builtin algorithm, in order for users to use the algorithm in the same way as NNI builtin tuners/advisors/assessors. More importantly, it becomes much easier for users to share or distribute their implemented algorithm to others. Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
 ```yaml
