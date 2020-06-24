@@ -63,7 +63,7 @@ export class WebCommandChannel extends CommandChannel {
         }
     }
 
-    public start(): void {
+    public async start(): Promise<void> {
         if (this.httpServer === undefined) {
             throw new Error(`http server is not initialized!`);
         }
@@ -81,7 +81,7 @@ export class WebCommandChannel extends CommandChannel {
         });
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         if (this.webSocketServer !== undefined) {
             this.webSocketServer.close();
         }

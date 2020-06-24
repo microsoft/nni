@@ -53,13 +53,13 @@ export class FileCommandChannel extends CommandChannel {
         // do nothing
     }
 
-    public start(): void {
+    public async start(): Promise<void> {
         // start command loops
         this.receiveLoop();
         this.sendLoop();
     }
 
-    public stop(): void {
+    public async stop(): Promise<void> {
         this.stopping = true;
     }
 

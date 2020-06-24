@@ -72,8 +72,8 @@ export abstract class CommandChannel {
 
     public abstract get channelName(): Channel;
     public abstract config(key: string, value: any): Promise<void>;
-    public abstract start(): void;
-    public abstract stop(): void;
+    public abstract start(): Promise<void>;
+    public abstract stop(): Promise<void>;
 
     protected abstract sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void>;
     protected abstract createRunnerConnection(environment: EnvironmentInformation): RunnerConnection;

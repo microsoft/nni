@@ -25,7 +25,7 @@ import { TrialJobStatus } from "../../common/trainingService";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
-export type Channel = "web" | "file" | "aml"
+export type Channel = "web" | "file" | "aml" | "ut";
 
 export abstract class EnvironmentService {
 

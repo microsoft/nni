@@ -19,10 +19,9 @@
 
 'use strict';
 
-import { Logger, getLogger } from "../../common/log";
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
+import { GPUInfo } from "../../training_service/common/gpuData";
 import { EnvironmentInformation, NodeInfomation } from "./environment";
-import { GPUInfo } from "training_service/common/gpuData";
 
 export class TrialDetail implements TrialJobDetail {
     public id: string;
