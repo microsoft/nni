@@ -147,7 +147,7 @@ class SpeedupTestCase(TestCase):
     def test_speedup_integration(self):
         for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2']:
             Model = getattr(models, model_name)
-            net = Model(pretrained=True).to(device)
+            net = Model(pretrained=True, progress=False).to(device)
             net.eval() # this line is necessary
             # random generate the prune config for the pruner
             cfgs = generate_random_sparsity(net)
