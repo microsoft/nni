@@ -52,7 +52,7 @@ export class WebCommandChannel extends CommandChannel {
     private clients: Map<WebSocket, WebRunnerConnection | undefined> = new Map<WebSocket, WebRunnerConnection | undefined>();
 
     public get channelName(): Channel {
-        return "rest";
+        return "web";
     }
 
     public async config(key: string, value: any): Promise<void> {

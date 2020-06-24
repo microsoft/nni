@@ -504,36 +504,38 @@ class TrialDispatcher implements TrainingService {
                 environment.gpuSummary.set(nodeId, <GPUSummary>(data));
                 break;
             case INITIALIZED:
-                const oldStatus = environment.status;
-                let isAllReady = true;
+                {
+                    const oldStatus = environment.status;
+                    let isAllReady = true;
 
-                if (environment.nodeCount > 1) {
-                    let node = environment.nodes.get(nodeId);
-                    if (node === undefined) {
-                        node = new NodeInfomation(nodeId);
-                        environment.nodes.set(nodeId, node);
-                    }
-                    const oldNodeStatus = node.status;
-                    if (oldNodeStatus === "UNKNOWN") {
-                        node.status = "RUNNING";
-                    }
-
-                    if (environment.nodes.size === environment.nodeCount) {
-                        for (const node of environment.nodes.values()) {
-                            if (node.status !== "RUNNING") {
-                                isAllReady = false;
-                                break;
-                            }
+                    if (environment.nodeCount > 1) {
+                        let node = environment.nodes.get(nodeId);
+                        if (node === undefined) {
+                            node = new NodeInfomation(nodeId);
+                            environment.nodes.set(nodeId, node);
                         }
-                    } else {
-                        isAllReady = false;
-                    }
-                }
+                        const oldNodeStatus = node.status;
+                        if (oldNodeStatus === "UNKNOWN") {
+                            node.status = "RUNNING";
+                        }
 
-                // single node is always ready to set env status
-                if (isAllReady && oldStatus === "UNKNOWN") {
-                    environment.status = "RUNNING";
-                    this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                        if (environment.nodes.size === environment.nodeCount) {
+                            for (const node of environment.nodes.values()) {
+                                if (node.status !== "RUNNING") {
+                                    isAllReady = false;
+                                    break;
+                                }
+                            }
+                        } else {
+                            isAllReady = false;
+                        }
+                    }
+
+                    // single node is always ready to set env status
+                    if (isAllReady && oldStatus === "UNKNOWN") {
+                        environment.status = "RUNNING";
+                        this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                    }
                 }
                 break;
             case TRIAL_END:
