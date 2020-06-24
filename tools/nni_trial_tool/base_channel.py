@@ -40,6 +40,23 @@ class BaseChannel(ABC):
         self.args = args
         self.node_id = self.args.node_id
 
+    @abstractmethod
+    def _inner_send(self, message):
+        pass
+
+    @abstractmethod
+    def _inner_receive(self):
+        return []
+
+    @abstractmethod
+    def _inner_open(self):
+        pass
+
+    @abstractmethod
+    def _inner_close(self):
+        pass
+
+    def open(self):
         # initialize receive, send threads.
         self.is_running = True
         self.receive_queue = Queue()
@@ -49,40 +66,19 @@ class BaseChannel(ABC):
         self.send_thread = threading.Thread(target=self._send_loop)
         self.send_thread.start()
 
-    @abstractmethod
-    def _inner_send(self, message):
-        pass
+        self._inner_open()
 
-    @abstractmethod
-    def _inner_receive(self):
-        return []
-
-    def _receive_loop(self):
-        while (self.is_running):
-            messages = self._inner_receive()
-            if messages is not None:
-                for message in messages:
-                    self.receive_queue.put(message)
-            time.sleep(INTERVAL_SECONDS)
-
-    def _send_loop(self):
-        while (self.is_running):
-            message = None
-            try:
-                # no sleep, since it's a block call with INTERVAL_SECONDS second timeout
-                message = self.send_queue.get(True, INTERVAL_SECONDS)
-            except Empty:
-                # do nothing, if no command received.
-                pass
-            if message is not None:
-                if self.node_id is None:
-                    nni_log(LogType.Info, 'Sending command: %s' % message)
-                else:
-                    nni_log(LogType.Info, 'Sending command(%s): %s' % (self.node_id, message))
-                self._inner_send(message)
+        client_info = {
+            "isReady": True,
+            "runnerId": self.args.runner_id,
+            "expId": self.args.exp_id,
+        }
+        nni_log(LogType.Info, 'Channel: send ready information %s' % client_info)
+        self.send(CommandType.Initialized, client_info)
 
     def close(self):
         self.is_running = False
+        self._inner_close()
 
     def send(self, command, data):
         """Send command to Training Service.
@@ -135,3 +131,49 @@ class BaseChannel(ABC):
         except Exception as identifier:
             nni_log(LogType.Error, 'meet unhandled exception in base_channel: %s' % identifier)
         return command, data
+
+    def _fetch_message(self, buffer, has_new_line=False):
+        messages = []
+        while(len(buffer)) >= 16:
+            header = buffer[:16]
+            length = int(header[2:])
+
+            message_length = length+16
+            total_length = message_length
+            if has_new_line:
+                total_length += 1
+
+            # break, if buffer is too short.
+            if len(buffer) < total_length:
+                break
+            data = buffer[16:message_length]
+            if has_new_line and 10 != buffer[total_length-1]:
+                nni_log(LogType.Error, 'end of message should be \\n, but got {}'.format(self.in_cache[total_length-1]))
+            buffer = buffer[total_length:]
+            messages.append(header + data)
+
+        return messages, buffer
+
+    def _receive_loop(self):
+        while (self.is_running):
+            messages = self._inner_receive()
+            if messages is not None:
+                for message in messages:
+                    self.receive_queue.put(message)
+            time.sleep(INTERVAL_SECONDS)
+
+    def _send_loop(self):
+        while (self.is_running):
+            message = None
+            try:
+                # no sleep, since it's a block call with INTERVAL_SECONDS second timeout
+                message = self.send_queue.get(True, INTERVAL_SECONDS)
+            except Empty:
+                # do nothing, if no command received.
+                pass
+            if message is not None:
+                if self.node_id is None:
+                    nni_log(LogType.Info, 'Sending command: %s' % message)
+                else:
+                    nni_log(LogType.Info, 'Sending command(%s): %s' % (self.node_id, message))
+                self._inner_send(message)

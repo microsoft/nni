@@ -21,8 +21,8 @@
 
 import * as component from "../../../common/component";
 import { delay } from "../../../common/utils";
-import { CommandChannel } from "../commandChannel";
-import { EnvironmentInformation } from "../environment";
+import { CommandChannel, RunnerConnection } from "../commandChannel";
+import { EnvironmentInformation, Channel } from "../environment";
 import { StorageService } from "../storageService";
 
 class FileHandler {
@@ -35,22 +35,23 @@ class FileHandler {
 }
 
 
-class EnvironmentHandler {
-    public environment: EnvironmentInformation;
+class FileRunnerConnection extends RunnerConnection {
     public handlers: Map<string, FileHandler> = new Map<string, FileHandler>();
-
-    constructor(environment: EnvironmentInformation) {
-        this.environment = environment;
-    }
 }
 
 export class FileCommandChannel extends CommandChannel {
     private readonly commandPath = "commands";
     private stopping: boolean = false;
-    // each node have a receiver
-    private receive_handlers: Map<string, EnvironmentHandler> = new Map<string, EnvironmentHandler>();
     // make sure no concurrent issue when sending commands.
-    private send_queues: [EnvironmentInformation, string][] = [];
+    private sendQueues: [EnvironmentInformation, string][] = [];
+
+    public get channelName(): Channel {
+        return "file";
+    }
+
+    public async config(_key: string, _value: any): Promise<void> {
+        // do nothing
+    }
 
     public start(): void {
         // start command loops
@@ -62,21 +63,12 @@ export class FileCommandChannel extends CommandChannel {
         this.stopping = true;
     }
 
-    public async open(environment: EnvironmentInformation): Promise<void> {
-        if (this.receive_handlers.has(environment.id)) {
-            throw new Error(`FileCommandChannel: env ${environment.id} is opened already, shouldn't be opened again.`);
-        }
-        this.receive_handlers.set(environment.id, new EnvironmentHandler(environment));
-    }
-
-    public async close(environment: EnvironmentInformation): Promise<void> {
-        if (this.receive_handlers.has(environment.id)) {
-            this.receive_handlers.delete(environment.id);
-        }
-    }
-
     protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
-        this.send_queues.push([environment, message]);
+        this.sendQueues.push([environment, message]);
+    }
+
+    protected createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
+        return new FileRunnerConnection(environment);
     }
 
     private async sendLoop(): Promise<void> {
@@ -84,11 +76,11 @@ export class FileCommandChannel extends CommandChannel {
         while (!this.stopping) {
             const start = new Date();
 
-            if (this.send_queues.length > 0) {
+            if (this.sendQueues.length > 0) {
                 const storageService = component.get<StorageService>(StorageService);
 
-                while (this.send_queues.length > 0) {
-                    const item = this.send_queues.shift();
+                while (this.sendQueues.length > 0) {
+                    const item = this.sendQueues.shift();
                     if (item === undefined) {
                         break;
                     }
@@ -115,16 +107,16 @@ export class FileCommandChannel extends CommandChannel {
         while (!this.stopping) {
             const start = new Date();
 
-            const envs = [...this.receive_handlers.values()];
-            for (const environmentHandler of envs) {
-                const envCommandFolder = storageService.joinPath(environmentHandler.environment.workingFolder, this.commandPath);
+            const runnerConnections = [...this.runnerConnections.values()] as FileRunnerConnection[];
+            for (const runnerConnection of runnerConnections) {
+                const envCommandFolder = storageService.joinPath(runnerConnection.environment.workingFolder, this.commandPath);
                 // open new command files
-                if (environmentHandler.handlers.size < environmentHandler.environment.nodeCount) {
+                if (runnerConnection.handlers.size < runnerConnection.environment.nodeCount) {
                     // to find all node commands file
                     const commandFileNames = await storageService.listDirectory(envCommandFolder);
                     const toAddedFileNames = [];
                     for (const commandFileName of commandFileNames) {
-                        if (commandFileName.startsWith("runner_commands") && !environmentHandler.handlers.has(commandFileName)) {
+                        if (commandFileName.startsWith("runner_commands") && !runnerConnection.handlers.has(commandFileName)) {
                             toAddedFileNames.push(commandFileName);
                         }
                     }
@@ -132,18 +124,18 @@ export class FileCommandChannel extends CommandChannel {
                     for (const toAddedFileName of toAddedFileNames) {
                         const fullPath = storageService.joinPath(envCommandFolder, toAddedFileName);
                         const fileHandler: FileHandler = new FileHandler(fullPath);
-                        environmentHandler.handlers.set(toAddedFileName, fileHandler);
-                        this.log.debug(`FileCommandChannel: added fileHandler env ${environmentHandler.environment.id} ${toAddedFileName}`);
+                        runnerConnection.handlers.set(toAddedFileName, fileHandler);
+                        this.log.debug(`FileCommandChannel: added fileHandler env ${runnerConnection.environment.id} ${toAddedFileName}`);
                     }
                 }
 
                 // to loop all commands
-                for (const fileHandler of environmentHandler.handlers.values()) {
+                for (const fileHandler of runnerConnection.handlers.values()) {
                     const newContent = await storageService.readFileContent(fileHandler.fileName, fileHandler.offset, undefined);
                     if (newContent.length > 0) {
                         const commands = newContent.split('\n');
                         for (const command of commands) {
-                            this.handleCommand(environmentHandler.environment, command);
+                            this.handleCommand(runnerConnection.environment, command);
                         }
                         fileHandler.offset += newContent.length;
                     }

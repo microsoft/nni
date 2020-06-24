@@ -134,19 +134,21 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                         if (jobResponse && jobResponse.state) {
                             const oldEnvironmentStatus = environment.status;
                             switch (jobResponse.state) {
-                                case 'WAITING':
                                 case 'RUNNING':
+                                    // RUNNING state is set by runner.
+                                    break;
+                                case 'WAITING':
                                 case 'SUCCEEDED':
                                 case 'FAILED':
-                                    environment.status = jobResponse.state;
+                                    environment.setFinalStatus(jobResponse.state);
                                     break;
                                 case 'STOPPED':
                                 case 'STOPPING':
-                                    environment.status = 'USER_CANCELED';
+                                    environment.setFinalStatus('USER_CANCELED');
                                     break;
                                 default:
                                     this.log.error(`OpenPAI: job ${environment.jobId} returns unknown state ${jobResponse.state}.`);
-                                    environment.status = 'UNKNOWN';
+                                    environment.setFinalStatus('UNKNOWN');
                             }
                             if (oldEnvironmentStatus !== environment.status) {
                                 this.log.debug(`OpenPAI: job ${environment.jobId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)

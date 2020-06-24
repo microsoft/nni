@@ -20,6 +20,8 @@
 'use strict';
 
 import { GPUSummary } from "training_service/common/gpuData";
+import { getLogger, Logger } from "../../common/log";
+import { TrialJobStatus } from "../../common/trainingService";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -33,6 +35,16 @@ export abstract class EnvironmentService {
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+}
+
+export class NodeInfomation {
+    public id: string;
+    public status: TrialJobStatus = "UNKNOWN";
+    public endTime?: number;
+
+    constructor(id: string) {
+        this.id = id;
+    }
 }
 
 export class RunnerSettings {
@@ -51,6 +63,8 @@ export class RunnerSettings {
 }
 
 export class EnvironmentInformation {
+    private log: Logger;
+
     // NNI environment ID
     public id: string;
     // training platform unique job ID.
@@ -63,6 +77,7 @@ export class EnvironmentInformation {
     public isIdle: boolean = false;
     // true: environment is running, waiting, or unknown.
     public isAlive: boolean = true;
+    // don't set status in environment directly, use setFinalState function to set a final state.
     public status: EnvironmentStatus = "UNKNOWN";
 
     public trackingUrl: string = "";
@@ -71,11 +86,29 @@ export class EnvironmentInformation {
     public command: string = "";
     public nodeCount: number = 1;
 
+    // it's used to aggregate node status for multiple node trial
+    public nodes: Map<string, NodeInfomation>;
     public gpuSummary: Map<string, GPUSummary> = new Map<string, GPUSummary>();
 
     constructor(id: string, jobName: string, jobId?: string) {
+        this.log = getLogger();
         this.id = id;
         this.jobName = jobName;
         this.jobId = jobId ? jobId : jobName;
+        this.nodes = new Map<string, NodeInfomation>();
+    }
+
+    public setFinalStatus(status: EnvironmentStatus): void {
+        switch (status) {
+            case 'WAITING':
+            case 'SUCCEEDED':
+            case 'FAILED':
+            case 'USER_CANCELED':
+                this.status = status;
+                break;
+            default:
+                this.log.error(`Environment: job ${this.jobId} set an invalid final state ${status}.`);
+                break;
+        }
     }
 }

@@ -24,8 +24,10 @@ class FileChannel(BaseChannel):
 
         super(FileChannel, self).__init__(args)
 
-    def close(self):
-        super(FileChannel, self).close()
+    def _inner_open(self):
+        pass
+
+    def _inner_close(self):
         if self.out_file is not None:
             self.out_file.close()
             self.out_file = None
@@ -72,18 +74,5 @@ class FileChannel(BaseChannel):
             if count > 0:
                 self.in_cache += self.in_file.read(count)
                 self.in_offset = new_offset
-                while(len(self.in_cache)) >= 16:
-                    header = self.in_cache[:16]
-                    length = int(header[2:])
-
-                    # consider there is an \n at end of a message.
-                    total_length = length+16+1
-                    # break, if buffer is too short.
-                    if len(self.in_cache) < total_length:
-                        break
-                    data = self.in_cache[16:total_length-1]
-                    if 10 != self.in_cache[total_length-1]:
-                        nni_log(LogType.Error, 'end of message should be \\n, but got {}'.format(self.in_cache[total_length-1]))
-                    self.in_cache = self.in_cache[total_length:]
-                    messages.append(header + data)
+                messages, self.in_cache = self._fetch_message(self.in_cache, True)
         return messages

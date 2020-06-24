@@ -22,15 +22,10 @@
 import { EventEmitter } from "events";
 import { TRIAL_COMMANDS } from "../../core/commands";
 import { encodeCommand } from "../../core/ipcInterface";
-import { EnvironmentInformation } from "./environment";
+import { EnvironmentInformation, Channel } from "./environment";
 import { Logger, getLogger } from "../../common/log";
 
 const acceptedCommands: Set<string> = new Set<string>(TRIAL_COMMANDS);
-
-export enum ChannelType {
-    API = "api",
-    Storage = "storage",
-}
 
 export class Command {
     public readonly environment: EnvironmentInformation;
@@ -47,10 +42,27 @@ export class Command {
     }
 }
 
+export abstract class RunnerConnection {
+    public readonly environment: EnvironmentInformation;
+
+    constructor(environment: EnvironmentInformation) {
+        this.environment = environment;
+    }
+
+    public async open(): Promise<void> {
+        // do nothing
+    }
+
+    public async close(): Promise<void> {
+        // do nothing
+    }
+}
+
 export abstract class CommandChannel {
     protected readonly log: Logger;
-
+    protected runnerConnections: Map<string, RunnerConnection> = new Map<string, RunnerConnection>();
     protected readonly commandEmitter: EventEmitter;
+
     private readonly commandPattern: RegExp = /(?<type>[\w]{2})(?<length>[\d]{14})(?<data>.*)\n?/gm;
 
     public constructor(commandEmitter: EventEmitter) {
@@ -58,21 +70,42 @@ export abstract class CommandChannel {
         this.commandEmitter = commandEmitter;
     }
 
+    public abstract get channelName(): Channel;
+    public abstract config(key: string, value: any): Promise<void>;
     public abstract start(): void;
     public abstract stop(): void;
 
-    public abstract open(environment: EnvironmentInformation): Promise<void>;
-    public abstract close(environment: EnvironmentInformation): Promise<void>;
-
     protected abstract sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void>;
+    protected abstract createRunnerConnection(environment: EnvironmentInformation): RunnerConnection;
 
     public async sendCommand(environment: EnvironmentInformation, commantType: string, data: any): Promise<void> {
         const command = encodeCommand(commantType, JSON.stringify(data));
+        this.log.debug(`CommandChannel: env ${environment.id} sending command: ${command}`);
         await this.sendCommandInternal(environment, command.toString("utf8"));
-        this.log.debug(`CommandChannel: env ${environment.id} sent command: ${command}`);
     }
 
-    protected handleCommand(environment: EnvironmentInformation, content: string): void {
+    public async open(environment: EnvironmentInformation): Promise<void> {
+        if (this.runnerConnections.has(environment.id)) {
+            throw new Error(`CommandChannel: env ${environment.id} is opened already, shouldn't be opened again.`);
+        }
+        const connection = this.createRunnerConnection(environment);
+        this.runnerConnections.set(environment.id, connection);
+        await connection.open();
+    }
+
+    public async close(environment: EnvironmentInformation): Promise<void> {
+        if (this.runnerConnections.has(environment.id)) {
+            const connection = this.runnerConnections.get(environment.id);
+            this.runnerConnections.delete(environment.id);
+            if (connection !== undefined) {
+                await connection.close();
+            }
+        }
+    }
+
+    protected parseCommands(content: string): [string, any][] {
+        const commands: [string, any][] = [];
+
         let matches = this.commandPattern.exec(content);
 
         while (matches) {
@@ -86,11 +119,23 @@ export abstract class CommandChannel {
                 // to handle encode('utf8') of Python
                 data = JSON.parse('"' + data.split('"').join('\\"') + '"');
                 const finalData = JSON.parse(data);
-                const command = new Command(environment, commandType, finalData);
-                this.commandEmitter.emit("command", command);
-                this.log.debug(`CommandChannel: env ${environment.id} emit command: ${commandType}, ${data}`);
+                commands.push([commandType, finalData]);
             }
             matches = this.commandPattern.exec(content);
+        }
+
+        return commands;
+    }
+
+    protected handleCommand(environment: EnvironmentInformation, content: string): void {
+        const parsedResults = this.parseCommands(content);
+
+        for (const parsedResult of parsedResults) {
+            const commandType = parsedResult[0];
+            const data = parsedResult[1];
+            const command = new Command(environment, commandType, data);
+            this.commandEmitter.emit("command", command);
+            this.log.trace(`CommandChannel: env ${environment.id} emit command: ${commandType}, ${data}`);
         }
     }
 }

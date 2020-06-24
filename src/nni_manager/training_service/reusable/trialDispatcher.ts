@@ -27,18 +27,18 @@ import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getLogLevel, getVersion, uniqueString } from '../../common/utils';
-import { GPU_INFO, TRIAL_END } from '../../core/commands';
+import { GPU_INFO, INITIALIZED, TRIAL_END } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
-import { FileCommandChannel } from './channels/fileCommandChannel';
+import { WebCommandChannel } from './channels/webCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, RunnerSettings } from './environment';
+import { EnvironmentInformation, EnvironmentService, RunnerSettings, NodeInfomation } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
-import { NodeInfomation, TrialDetail, TrialService } from './trial';
+import { TrialDetail, TrialService } from './trial';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -77,7 +77,7 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings.platform = getPlatform();
 
         this.commandEmitter = new EventEmitter();
-        this.commandChannel = new FileCommandChannel(this.commandEmitter);
+        this.commandChannel = new WebCommandChannel(this.commandEmitter);
 
         const logLevel = getLogLevel();
         this.log.debug(`current folder ${__dirname}`);
@@ -165,7 +165,10 @@ class TrialDispatcher implements TrainingService {
         this.jobRestServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`TrialDispatcher: rest server listening on: ${this.jobRestServer.endPoint}`);
         this.runnerSettings.nniManagerPort = this.jobRestServer.clusterRestServerPort;
+        this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
+        // for restful api, other channel can ignore this.
+        this.commandChannel.config("RestServer", this.jobRestServer.Server);
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
             this.handleCommand(command).catch((err: Error) => {
@@ -173,7 +176,7 @@ class TrialDispatcher implements TrainingService {
             })
         });
         this.commandChannel.start();
-        this.log.info(`TrialDispatcher: started channel ${typeof (this.commandChannel)}`);
+        this.log.info(`TrialDispatcher: started channel: ${this.commandChannel.constructor.name}`);
 
         if (this.trialConfig === undefined) {
             throw new Error(`trial config shouldn't be undefined in run()`);
@@ -433,7 +436,7 @@ class TrialDispatcher implements TrainingService {
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
-            environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) &&" + environment.command;
+            environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
         }
 
         if (environmentService.hasStorageService) {
@@ -499,7 +502,40 @@ class TrialDispatcher implements TrainingService {
         switch (command.command) {
             case GPU_INFO:
                 environment.gpuSummary.set(nodeId, <GPUSummary>(data));
-                break
+                break;
+            case INITIALIZED:
+                const oldStatus = environment.status;
+                let isAllReady = true;
+
+                if (environment.nodeCount > 1) {
+                    let node = environment.nodes.get(nodeId);
+                    if (node === undefined) {
+                        node = new NodeInfomation(nodeId);
+                        environment.nodes.set(nodeId, node);
+                    }
+                    const oldNodeStatus = node.status;
+                    if (oldNodeStatus === "UNKNOWN") {
+                        node.status = "RUNNING";
+                    }
+
+                    if (environment.nodes.size === environment.nodeCount) {
+                        for (const node of environment.nodes.values()) {
+                            if (node.status !== "RUNNING") {
+                                isAllReady = false;
+                                break;
+                            }
+                        }
+                    } else {
+                        isAllReady = false;
+                    }
+                }
+
+                // single node is always ready to set env status
+                if (isAllReady && oldStatus === "UNKNOWN") {
+                    environment.status = "RUNNING";
+                    this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                }
+                break;
             case TRIAL_END:
                 {
                     const trialId = data["trial"];
@@ -511,10 +547,8 @@ class TrialDispatcher implements TrainingService {
                         exitStatus = "FAILED";
                     }
 
-                    let node: NodeInfomation | undefined;
-                    if (trial.nodes.has(nodeId)) {
-                        node = trial.nodes.get(nodeId);
-                    } else {
+                    let node = environment.nodes.get(nodeId);
+                    if (node === undefined) {
                         node = new NodeInfomation(nodeId);
                         trial.nodes.set(nodeId, node);
                     }
@@ -524,7 +558,7 @@ class TrialDispatcher implements TrainingService {
                     node.status = exitStatus;
                     node.endTime = timestamp;
                 }
-                break
+                break;
         }
     }
 }

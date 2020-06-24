@@ -21,7 +21,7 @@
 
 import { Logger, getLogger } from "../../common/log";
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
-import { EnvironmentInformation } from "./environment";
+import { EnvironmentInformation, NodeInfomation } from "./environment";
 import { GPUInfo } from "training_service/common/gpuData";
 
 export abstract class TrialService {
@@ -68,15 +68,5 @@ export class TrialDetail implements TrialJobDetail {
         this.form = form;
         this.tags = [];
         this.nodes = new Map<string, NodeInfomation>();
-    }
-}
-
-export class NodeInfomation {
-    public id: string;
-    public status: TrialJobStatus = "UNKNOWN";
-    public endTime?: number;
-
-    constructor(id: string) {
-        this.id = id;
     }
 }

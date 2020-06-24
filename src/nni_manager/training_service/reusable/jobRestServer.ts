@@ -22,6 +22,7 @@
 import { EventEmitter } from 'events';
 import { Request, Response, Router } from 'express';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
+import { Server } from 'http';
 
 export interface ParameterFileMeta {
     readonly experimentId: string;
@@ -45,6 +46,11 @@ export class JobRestServer extends ClusterJobRestServer {
         this.metricsEmitter = metricsEmitter;
         this.setEnableVersionCheck = true;
     }
+
+    public get Server(): Server {
+        return this.server;
+    }
+
 
     protected handleTrialMetrics(jobId: string, metrics: any[]): void {
         // Split metrics array into single metric, then emit

@@ -21,11 +21,15 @@ const NO_MORE_TRIAL_JOBS = 'NO';
 const KILL_TRIAL_JOB = 'KI';
 
 const TRIAL_COMMANDS: Set<string> = new Set([
+    // from ctl to node
     NEW_TRIAL_JOB,
-    TRIAL_END,
     SEND_TRIAL_JOB_PARAMETER,
-    GPU_INFO,
     KILL_TRIAL_JOB,
+
+    // from node to ctl
+    INITIALIZED,
+    TRIAL_END,
+    GPU_INFO,
 ]);
 
 const TUNER_COMMANDS: Set<string> = new Set([

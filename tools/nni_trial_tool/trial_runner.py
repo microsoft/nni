@@ -27,18 +27,20 @@ def main_loop(args):
     idle_last_time = datetime.now()
     gpu_refresh_last_time = datetime.now() - timedelta(minutes=1)
 
-    # init command channel
-    command_channel = None
-    if args.command_channel == "rest":
-        command_channel = FileChannel(args)
-    else:
-        command_channel = FileChannel(args)
-    nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
-    args.command_channel = command_channel
-
-    trials = dict()
-
     try:
+        trials = dict()
+
+        # init command channel
+        command_channel = None
+        if args.command_channel == "file":
+            command_channel = FileChannel(args)
+        else:
+            command_channel = WebChannel(args)
+        command_channel.open()
+
+        nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
+        args.command_channel = command_channel
+
         # command loop
         while True:
             command_type, command_data = command_channel.receive()
@@ -77,8 +79,9 @@ def main_loop(args):
                 command_channel.send(CommandType.ReportGpuInfo, gpu_info)
                 gpu_refresh_last_time = datetime.now()
             time.sleep(0.5)
-    except Exception:
+    except Exception as ex:
         traceback.print_exc()
+        raise ex
     finally:
         nni_log(LogType.Info, "main_loop exits.")
 
@@ -111,26 +114,26 @@ def check_version(args):
     else:
         try:
             trial_runner_version = regular.search(trial_runner_version).group('version')
-            nni_log(LogType.Info, '{0}: runner_version is {1}'.format(args.runner_name, trial_runner_version))
+            nni_log(LogType.Info, '{0}: runner_version is {1}'.format(args.node_id, trial_runner_version))
             nni_manager_version = regular.search(args.nni_manager_version).group('version')
-            nni_log(LogType.Info, '{0}: nni_manager_version is {1}'.format(args.runner_name, nni_manager_version))
+            nni_log(LogType.Info, '{0}: nni_manager_version is {1}'.format(args.node_id, nni_manager_version))
             log_entry = {}
             if trial_runner_version != nni_manager_version:
-                nni_log(LogType.Error, '{0}: Version does not match!'.format(args.runner_name))
+                nni_log(LogType.Error, '{0}: Version does not match!'.format(args.node_id))
                 error_message = '{0}: NNIManager version is {1}, Trial runner version is {2}, NNI version does not match!'.format(
-                    args.runner_name, nni_manager_version, trial_runner_version)
+                    args.node_id, nni_manager_version, trial_runner_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_id), json.dumps(log_entry), 10,
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
                           False)
                 os._exit(1)
             else:
-                nni_log(LogType.Info, '{0}: Version match!'.format(args.runner_name))
+                nni_log(LogType.Info, '{0}: Version match!'.format(args.node_id))
                 log_entry['tag'] = 'VCSuccess'
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_id), json.dumps(log_entry), 10,
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
                           False)
         except AttributeError as err:
-            nni_log(LogType.Error, '{0}: {1}'.format(args.runner_name, err))
+            nni_log(LogType.Error, '{0}: {1}'.format(args.node_id, err))
 
 
 def fetch_parameter_file(args):
@@ -179,8 +182,9 @@ if __name__ == '__main__':
 
     args.exp_id = settings["experimentId"]
     args.platform = settings["platform"]
-    # runner_id is unique runner in experiment, and will be updated if it's multi-nodes
-    args.runner_id = "runner_"+os.path.basename(os.path.realpath(os.path.curdir))
+    # runner_id is unique runner in experiment
+    args.runner_id = os.path.basename(os.path.realpath(os.path.curdir))
+    args.runner_name = "runner_"+args.runner_id
     args.enable_gpu_collect = settings["enableGpuCollector"]
     args.command_channel = settings["commandChannel"]
 
@@ -210,6 +214,7 @@ if __name__ == '__main__':
     from .url_utils import gen_parameter_meta_url, gen_send_version_url
     from .trial import Trial
     from .file_channel import FileChannel
+    from .web_channel import WebChannel
     from .base_channel import CommandType
 
     is_multi_node = args.node_count > 1
@@ -224,26 +229,23 @@ if __name__ == '__main__':
         with open(unique_check_file_name, "w") as unique_check_file:
             unique_check_file.write("%s" % (int(datetime.now().timestamp() * 1000)))
         args.node_id = node_id
-        args.runner_name = "%s_%s" % (args.runner_id, node_id)
     else:
         # node id is unique in the runner
         args.node_id = None
-        # runner_name is unique node in experiment, and will be updated if it's multi-nodes
-        args.runner_name = args.runner_id
 
     trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
-                                          StdOutputType.Stdout, args.log_collection, args.runner_id)
+                                          StdOutputType.Stdout, args.log_collection, args.runner_name)
     sys.stdout = sys.stderr = trial_runner_syslogger
-    nni_log(LogType.Info, "{}: merged args is {}".format(args.runner_name, args))
+    nni_log(LogType.Info, "{}: merged args is {}".format(args.node_id, args))
 
     if args.trial_command is None:
-        nni_log(LogType.Error, "{}: no command is found.".format(args.runner_name))
+        nni_log(LogType.Error, "{}: no command is found.".format(args.node_id))
         os._exit(1)
     check_version(args)
     try:
         main_loop(args)
     except SystemExit as se:
-        nni_log(LogType.Info, '{}: NNI trial runner exit with code {}'.format(args.runner_name, se.code))
+        nni_log(LogType.Info, '{}: NNI trial runner exit with code {}'.format(args.node_id, se.code))
         os._exit(se.code)
     finally:
         if trial_runner_syslogger is not None:
