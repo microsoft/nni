@@ -58,11 +58,13 @@ setuptools.setup(
         'PythonWebHDFS',
         'hyperopt==0.1.2',
         'json_tricks',
+        'netifaces',
         'numpy',
         'scipy',
         'coverage',
         'colorama',
         'scikit-learn>=0.20,<0.22',
+        'pkginfo',
         'websockets'
     ],
     classifiers = [

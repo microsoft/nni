@@ -17,6 +17,7 @@ setuptools.setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
+        'netifaces',
         'websockets'
     ],
 

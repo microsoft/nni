@@ -236,7 +236,7 @@ class CG_BOHB:
         return sample
 
     def impute_conditional_data(self, array):
-        return_array = np.empty_like(array)
+        return_array = np.zeros(array.shape)
         for i in range(array.shape[0]):
             datum = np.copy(array[i])
             nan_indices = np.argwhere(np.isnan(datum)).flatten()

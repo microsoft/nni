@@ -2,8 +2,12 @@
 # Licensed under the MIT license.
 
 import os
-from schema import Schema, And, Optional, Regex, Or
+import json
+import netifaces
+from schema import Schema, And, Optional, Regex, Or, SchemaError
+from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
+from .common_utils import get_yml_content, print_warning
 
 
 def setType(key, valueType):
@@ -25,6 +29,85 @@ def setPathCheck(key):
     '''check if path exist'''
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
 
+class AlgoSchema:
+    """
+    This class is the schema of 'tuner', 'assessor' and 'advisor' sections of experiment configuraion file.
+    For example:
+    AlgoSchema('tuner') creates the schema of tuner section.
+    """
+    def __init__(self, algo_type):
+        """
+        Parameters:
+        -----------
+        algo_type: str
+            One of ['tuner', 'assessor', 'advisor'].
+            'tuner': This AlgoSchema class create the schema of tuner section.
+            'assessor': This AlgoSchema class create the schema of assessor section.
+            'advisor': This AlgoSchema class create the schema of advisor section.
+        """
+        assert algo_type in ['tuner', 'assessor', 'advisor']
+        self.algo_type = algo_type
+        self.algo_schema = {
+            Optional('codeDir'): setPathCheck('codeDir'),
+            Optional('classFileName'): setType('classFileName', str),
+            Optional('className'): setType('className', str),
+            Optional('classArgs'): dict,
+            Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+            Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        }
+        self.builtin_keys = {
+            'tuner': 'builtinTunerName',
+            'assessor': 'builtinAssessorName',
+            'advisor': 'builtinAdvisorName'
+        }
+        self.builtin_name_schema = {}
+        for k, n in self.builtin_keys.items():
+            self.builtin_name_schema[k] = {Optional(n): setChoice(n, *get_all_builtin_names(k+'s'))}
+
+        self.customized_keys = set(['codeDir', 'classFileName', 'className'])
+
+    def validate_class_args(self, class_args, algo_type, builtin_name):
+        if not builtin_name or not class_args:
+            return
+        meta = get_builtin_algo_meta(algo_type+'s', builtin_name)
+        if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
+            raise SchemaError('classArgs is not allowed.')
+
+        validator = create_validator_instance(algo_type+'s', builtin_name)
+        if validator:
+            try:
+                validator.validate_class_args(**class_args)
+            except Exception as e:
+                raise SchemaError(str(e))
+
+    def missing_customized_keys(self, data):
+        return self.customized_keys - set(data.keys())
+
+    def validate_extras(self, data, algo_type):
+        builtin_key = self.builtin_keys[algo_type]
+        if (builtin_key in data) and (set(data.keys()) & self.customized_keys):
+            raise SchemaError('{} and {} cannot be specified at the same time.'.format(
+                builtin_key, set(data.keys()) & self.customized_keys
+            ))
+
+        if self.missing_customized_keys(data) and builtin_key not in data:
+            raise SchemaError('Either customized {} ({}) or builtin {} ({}) must be set.'.format(
+                algo_type, self.customized_keys, algo_type, builtin_key))
+
+        if not self.missing_customized_keys(data):
+            class_file_name = os.path.join(data['codeDir'], data['classFileName'])
+            if not os.path.isfile(class_file_name):
+                raise SchemaError('classFileName {} not found.'.format(class_file_name))
+
+        builtin_name = data.get(builtin_key)
+        class_args = data.get('classArgs')
+        self.validate_class_args(class_args, algo_type, builtin_name)
+
+    def validate(self, data):
+        self.algo_schema.update(self.builtin_name_schema[self.algo_type])
+        Schema(self.algo_schema).validate(data)
+        self.validate_extras(data, self.algo_type)
+
 common_schema = {
     'authorName': setType('authorName', str),
     'experimentName': setType('experimentName', str),
@@ -44,194 +127,13 @@ common_schema = {
     Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
     Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
     'useAnnotation': setType('useAnnotation', bool),
-    Optional('tuner'): dict,
-    Optional('advisor'): dict,
-    Optional('assessor'): dict,
+    Optional('tuner'): AlgoSchema('tuner'),
+    Optional('advisor'): AlgoSchema('advisor'),
+    Optional('assessor'): AlgoSchema('assessor'),
     Optional('localConfig'): {
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool)
-    }
-}
-tuner_schema_dict = {
-    'Anneal': {
-        'builtinTunerName': 'Anneal',
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'SMAC': {
-        'builtinTunerName': 'SMAC',
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('config_dedup'): setType('config_dedup', bool)
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    ('Evolution'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'Evolution'),
-        Optional('classArgs'): {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    ('BatchTuner', 'GridSearch', 'Random'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'TPE': {
-        'builtinTunerName': 'TPE',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('parallel_optimize'): setType('parallel_optimize', bool),
-            Optional('constant_liar_type'): setChoice('constant_liar_type', 'min', 'max', 'mean')
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'NetworkMorphism': {
-        'builtinTunerName': 'NetworkMorphism',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('task'): setChoice('task', 'cv', 'nlp', 'common'),
-            Optional('input_width'): setType('input_width', int),
-            Optional('input_channel'): setType('input_channel', int),
-            Optional('n_output_node'): setType('n_output_node', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'MetisTuner': {
-        'builtinTunerName': 'MetisTuner',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('no_resampling'): setType('no_resampling', bool),
-            Optional('no_candidates'): setType('no_candidates', bool),
-            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
-            Optional('cold_start_num'): setType('cold_start_num', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'GPTuner': {
-        'builtinTunerName': 'GPTuner',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('utility'): setChoice('utility', 'ei', 'ucb', 'poi'),
-            Optional('kappa'): setType('kappa', float),
-            Optional('xi'): setType('xi', float),
-            Optional('nu'): setType('nu', float),
-            Optional('alpha'): setType('alpha', float),
-            Optional('cold_start_num'): setType('cold_start_num', int),
-            Optional('selection_num_warm_up'):  setType('selection_num_warm_up', int),
-            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
-            },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'PPOTuner': {
-        'builtinTunerName': 'PPOTuner',
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('trials_per_update'): setNumberRange('trials_per_update', int, 0, 99999),
-            Optional('epochs_per_update'): setNumberRange('epochs_per_update', int, 0, 99999),
-            Optional('minibatch_size'): setNumberRange('minibatch_size', int, 0, 99999),
-            Optional('ent_coef'): setType('ent_coef', float),
-            Optional('lr'): setType('lr', float),
-            Optional('vf_coef'): setType('vf_coef', float),
-            Optional('max_grad_norm'): setType('max_grad_norm', float),
-            Optional('gamma'): setType('gamma', float),
-            Optional('lam'): setType('lam', float),
-            Optional('cliprange'): setType('cliprange', float),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'PBTTuner': {
-        'builtinTunerName': 'PBTTuner',
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('all_checkpoint_dir'): setType('all_checkpoint_dir', str),
-            Optional('population_size'): setNumberRange('population_size', int, 0, 99999),
-            Optional('factors'): setType('factors', tuple),
-            Optional('fraction'): setType('fraction', float),
-        },
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'customized': {
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
-        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    }
-}
-
-advisor_schema_dict = {
-    'Hyperband':{
-        'builtinAdvisorName': Or('Hyperband'),
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('R'): setType('R', int),
-            Optional('eta'): setType('eta', int)
-        },
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'BOHB':{
-        'builtinAdvisorName': Or('BOHB'),
-        'classArgs': {
-            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
-            Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
-            Optional('eta'):setNumberRange('eta', int, 0, 9999),
-            Optional('min_points_in_model'): setNumberRange('min_points_in_model', int, 0, 9999),
-            Optional('top_n_percent'): setNumberRange('top_n_percent', int, 1, 99),
-            Optional('num_samples'): setNumberRange('num_samples', int, 1, 9999),
-            Optional('random_fraction'): setNumberRange('random_fraction', float, 0, 9999),
-            Optional('bandwidth_factor'): setNumberRange('bandwidth_factor', float, 0, 9999),
-            Optional('min_bandwidth'): setNumberRange('min_bandwidth', float, 0, 9999),
-        },
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    },
-    'customized':{
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    }
-}
-
-assessor_schema_dict = {
-    'Medianstop': {
-        'builtinAssessorName': 'Medianstop',
-        Optional('classArgs'): {
-            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-        },
-    },
-    'Curvefitting': {
-        'builtinAssessorName': 'Curvefitting',
-        Optional('classArgs'): {
-            'epoch_num': setNumberRange('epoch_num', int, 0, 9999),
-            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-            Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
-            Optional('gap'): setNumberRange('gap', int, 1, 9999),
-        },
-    },
-    'customized': {
-        'codeDir': setPathCheck('codeDir'),
-        'classFileName': setType('classFileName', str),
-        'className': setType('className', str),
-        Optional('classArgs'): dict,
     }
 }
 
@@ -443,7 +345,7 @@ frameworkcontroller_config_schema = {
 }
 
 machine_list_schema = {
-    Optional('machineList'):[Or(
+    'machineList':[Or(
         {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -465,16 +367,129 @@ machine_list_schema = {
         })]
 }
 
-LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
+training_service_schema_dict = {
+    'local': Schema({**common_schema, **common_trial_schema}),
+    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema}),
+    'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
+    'paiYarn': Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema}),
+    'kubeflow': Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema}),
+    'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
+    'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
+}
 
-REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schema})
+class NNIConfigSchema:
+    def validate(self, data):
+        train_service = data['trainingServicePlatform']
+        Schema(common_schema['trainingServicePlatform']).validate(train_service)
+        train_service_schema = training_service_schema_dict[train_service]
+        train_service_schema.validate(data)
+        self.validate_extras(data)
 
-PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+    def validate_extras(self, experiment_config):
+        self.validate_tuner_adivosr_assessor(experiment_config)
+        self.validate_pai_trial_conifg(experiment_config)
+        self.validate_kubeflow_operators(experiment_config)
+        self.validate_eth0_device(experiment_config)
 
-PAI_YARN_CONFIG_SCHEMA = Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema})
+    def validate_tuner_adivosr_assessor(self, experiment_config):
+        if experiment_config.get('advisor'):
+            if experiment_config.get('assessor') or experiment_config.get('tuner'):
+                raise SchemaError('advisor could not be set with assessor or tuner simultaneously!')
+            self.validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
+        else:
+            if not experiment_config.get('tuner'):
+                raise SchemaError('Please provide tuner spec!')
+            self.validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
 
-DLTS_CONFIG_SCHEMA = Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema})
+    def validate_search_space_content(self, experiment_config):
+        '''Validate searchspace content,
+        if the searchspace file is not json format or its values does not contain _type and _value which must be specified,
+        it will not be a valid searchspace file'''
+        try:
+            search_space_content = json.load(open(experiment_config.get('searchSpacePath'), 'r'))
+            for value in search_space_content.values():
+                if not value.get('_type') or not value.get('_value'):
+                    raise SchemaError('please use _type and _value to specify searchspace!')
+        except Exception as e:
+            raise SchemaError('searchspace file is not a valid json format! ' + str(e))
 
-KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
+    def validate_kubeflow_operators(self, experiment_config):
+        '''Validate whether the kubeflow operators are valid'''
+        if experiment_config.get('kubeflowConfig'):
+            if experiment_config.get('kubeflowConfig').get('operator') == 'tf-operator':
+                if experiment_config.get('trial').get('master') is not None:
+                    raise SchemaError('kubeflow with tf-operator can not set master')
+                if experiment_config.get('trial').get('worker') is None:
+                    raise SchemaError('kubeflow with tf-operator must set worker')
+            elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
+                if experiment_config.get('trial').get('ps') is not None:
+                    raise SchemaError('kubeflow with pytorch-operator can not set ps')
+                if experiment_config.get('trial').get('master') is None:
+                    raise SchemaError('kubeflow with pytorch-operator must set master')
 
-FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+            if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
+                if experiment_config.get('kubeflowConfig').get('nfs') is None:
+                    raise SchemaError('please set nfs configuration!')
+            elif experiment_config.get('kubeflowConfig').get('storage') == 'azureStorage':
+                if experiment_config.get('kubeflowConfig').get('azureStorage') is None:
+                    raise SchemaError('please set azureStorage configuration!')
+            elif experiment_config.get('kubeflowConfig').get('storage') is None:
+                if experiment_config.get('kubeflowConfig').get('azureStorage'):
+                    raise SchemaError('please set storage type!')
+
+    def validate_annotation_content(self, experiment_config, spec_key, builtin_name):
+        '''
+        Valid whether useAnnotation and searchSpacePath is coexist
+        spec_key: 'advisor' or 'tuner'
+        builtin_name: 'builtinAdvisorName' or 'builtinTunerName'
+        '''
+        if experiment_config.get('useAnnotation'):
+            if experiment_config.get('searchSpacePath'):
+                raise SchemaError('If you set useAnnotation=true, please leave searchSpacePath empty')
+        else:
+            # validate searchSpaceFile
+            if experiment_config[spec_key].get(builtin_name) == 'NetworkMorphism':
+                return
+            if experiment_config[spec_key].get(builtin_name):
+                if experiment_config.get('searchSpacePath') is None:
+                    raise SchemaError('Please set searchSpacePath!')
+                self.validate_search_space_content(experiment_config)
+
+    def validate_pai_config_path(self, experiment_config):
+        '''validate paiConfigPath field'''
+        if experiment_config.get('trainingServicePlatform') == 'pai':
+            if experiment_config.get('trial', {}).get('paiConfigPath'):
+                # validate commands
+                pai_config = get_yml_content(experiment_config['trial']['paiConfigPath'])
+                taskRoles_dict = pai_config.get('taskRoles')
+                if not taskRoles_dict:
+                    raise SchemaError('Please set taskRoles in paiConfigPath config file!')
+            else:
+                pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
+                for trial_field in pai_trial_fields_required_list:
+                    if experiment_config['trial'].get(trial_field) is None:
+                        raise SchemaError('Please set {0} in trial configuration,\
+                                    or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
+
+    def validate_pai_trial_conifg(self, experiment_config):
+        '''validate the trial config in pai platform'''
+        if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
+            if experiment_config.get('trial').get('shmMB') and \
+            experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
+                raise SchemaError('shmMB should be no more than memoryMB!')
+            #backward compatibility
+            warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
+            please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
+            for the practices of how to get data and output model in trial code'
+            if experiment_config.get('trial').get('dataDir'):
+                print_warning(warning_information.format('dataDir'))
+            if experiment_config.get('trial').get('outputDir'):
+                print_warning(warning_information.format('outputDir'))
+            self.validate_pai_config_path(experiment_config)
+
+    def validate_eth0_device(self, experiment_config):
+        '''validate whether the machine has eth0 device'''
+        if experiment_config.get('trainingServicePlatform') not in ['local'] \
+        and not experiment_config.get('nniManagerIp') \
+        and 'eth0' not in netifaces.interfaces():
+            raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')

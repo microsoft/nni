@@ -170,7 +170,7 @@ export namespace ValidationSchemas {
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({
-                builtinAdvisorName: joi.string().valid('Hyperband', 'BOHB'),
+                builtinAdvisorName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -179,7 +179,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string()
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner', 'PBTTuner'),
+                builtinTunerName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -189,7 +189,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string()
             }),
             assessor: joi.object({
-                builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
+                builtinAssessorName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
