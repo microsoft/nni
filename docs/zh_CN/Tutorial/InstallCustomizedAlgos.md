@@ -1,7 +1,7 @@
 **如何将自定义的算法安装为内置的 Tuner，Assessor 和 Advisor**
 ===
 
-## Overview
+## 概述
 
 NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/BuiltinTuner.md#Hyperband) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
 
