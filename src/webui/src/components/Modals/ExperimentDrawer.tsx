@@ -7,11 +7,12 @@ import {
 import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
 import '../../static/style/logDrawer.scss';
+import { EXPERIMENT } from '../../static/datamodel';
 import { TrialManager } from '../../static/model/trialmanager';
 
 interface ExpDrawerProps {
-    isVisble: boolean;
     closeExpDrawer: () => void;
+    experimentProfile: object;
 }
 
 interface ExpDrawerState {
@@ -21,7 +22,9 @@ interface ExpDrawerState {
 
 class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
-    public _isCompareMount!: boolean;
+    public _isExperimentMount!: boolean;
+    private refreshId!: number | undefined;
+
     constructor(props: ExpDrawerProps) {
         super(props);
 
@@ -32,40 +35,45 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     getExperimentContent = (): void => {
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((resExperiment, resTrialJobs, resMetricData) => {
-                if (resExperiment.status === 200 && resTrialJobs.status === 200 && resMetricData.status === 200) {
-                    if (resExperiment.data.params.searchSpace) {
-                        resExperiment.data.params.searchSpace = JSON.parse(resExperiment.data.params.searchSpace);
-                    }
-                    const trialMessagesArr = TrialManager.expandJobsToTrials(resTrialJobs.data);
-                    const interResultList = resMetricData.data;
-                    Object.keys(trialMessagesArr).map(item => {
-                        // not deal with trial's hyperParameters
-                        const trialId = trialMessagesArr[item].id;
-                        // add intermediate result message
-                        trialMessagesArr[item].intermediate = [];
-                        Object.keys(interResultList).map(key => {
-                            const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
-                            if (trialId === interId) {
-                                trialMessagesArr[item].intermediate.push(interResultList[key]);
-                            }
+        if(!['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)){
+            window.clearTimeout(this.refreshId);
+        } else {
+            axios
+                .all([
+                    axios.get(`${MANAGER_IP}/trial-jobs`),
+                    axios.get(`${MANAGER_IP}/metric-data`)
+                ])
+                .then(axios.spread(( resTrialJobs, resMetricData) => {
+                    if ( resTrialJobs.status === 200 && resMetricData.status === 200) {
+                        
+                        const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
+                        if(experimentData.params.searchSpace){
+                            experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
+                        }
+                        const trialMessagesArr = TrialManager.expandJobsToTrials(resTrialJobs.data);
+                        const interResultList = resMetricData.data;
+                        Object.keys(trialMessagesArr).map(item => {
+                            // not deal with trial's hyperParameters
+                            const trialId = trialMessagesArr[item].id;
+                            // add intermediate result message
+                            trialMessagesArr[item].intermediate = [];
+                            Object.keys(interResultList).map(key => {
+                                const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
+                                if (trialId === interId) {
+                                    trialMessagesArr[item].intermediate.push(interResultList[key]);
+                                }
+                            });
                         });
-                    });
-                    const result = {
-                        experimentParameters: resExperiment.data,
-                        trialMessage: trialMessagesArr
-                    };
-                    if (this._isCompareMount === true) {
-                        this.setState({ experiment: JSON.stringify(result, null, 4) });
+                        const result = {
+                            experimentParameters: experimentData,
+                            trialMessage: trialMessagesArr
+                        };
+                        if (this._isExperimentMount === true) {
+                            this.setState({ experiment: JSON.stringify(result, null, 4) });
+                        }
                     }
-                }
-            }));
+                }));
+        }
     }
 
     downExperimentParameters = (): void => {
@@ -78,30 +86,26 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     componentDidMount(): void {
-        this._isCompareMount = true;
+        this._isExperimentMount = true;
         this.getExperimentContent();
+        this.refreshId = window.setTimeout(this.getExperimentContent, 10000);
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    componentWillReceiveProps(nextProps: ExpDrawerProps): void {
-        const { isVisble } = nextProps;
-        if (isVisble === true) {
-            this.getExperimentContent();
-        }
-    }
-
     componentWillUnmount(): void {
-        this._isCompareMount = false;
+        this._isExperimentMount = false;
+        window.clearTimeout(this.refreshId);
         window.removeEventListener('resize', this.onWindowResize);
     }
 
     render(): React.ReactNode {
-        const { isVisble, closeExpDrawer } = this.props;
+        const { closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
         return (
             <Stack className="logDrawer">
+
                 <Panel
-                    isOpen={isVisble}
+                    isOpen={true}
                     hasCloseButton={false}
                     styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
