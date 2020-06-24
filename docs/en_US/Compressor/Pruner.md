@@ -154,6 +154,14 @@ The above configuration means that there are 5 times of iterative pruning. As th
 * **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
 * **sparsity:** The final sparsity when the compression is done.
 
+### Reproduced Experiment
+
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+
+![](../../img/lottery_ticket_mnist_fc.png)
+
+The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+
 ***
 
 ## Slim Pruner
@@ -179,6 +187,17 @@ pruner.compress()
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
 - **op_types:** Only BatchNorm2d is supported in Slim Pruner
+
+### Reproduced Experiment
+
+We implemented one of the experiments in ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+
+| Model         | Error(paper/ours) | Parameters | Pruned    |
+| ------------- | ----------------- | ---------- | --------- |
+| VGGNet        | 6.34/6.40     | 20.04M   |           |
+| Pruned-VGGNet | 6.20/6.26     | 2.03M    | 88.5% |
+
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
 
 ## WeightRankFilterPruner
@@ -268,6 +287,17 @@ pruner.compress()
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to
 - **op_types:** Only Conv1d and Conv2d is supported in L1Filter Pruner
+
+#### Reproduced Experiment
+
+We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) with **L1FilterPruner**, we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+
+| Model           | Error(paper/ours) | Parameters      | Pruned   |
+| --------------- | ----------------- | --------------- | -------- |
+| VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
+| VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
+
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
 ***
 
