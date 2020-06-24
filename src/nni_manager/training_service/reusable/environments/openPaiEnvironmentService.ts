@@ -135,9 +135,9 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                             const oldEnvironmentStatus = environment.status;
                             switch (jobResponse.state) {
                                 case 'RUNNING':
-                                    // RUNNING state is set by runner.
-                                    break;
                                 case 'WAITING':
+                                    // RUNNING status is set by runner, and ignore waiting status
+                                    break;
                                 case 'SUCCEEDED':
                                 case 'FAILED':
                                     environment.setFinalStatus(jobResponse.state);

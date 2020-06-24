@@ -55,6 +55,7 @@ class Trial:
         environ['NNI_TRIAL_SEQ_ID'] = str(self.data["sequenceId"])
         environ['NNI_OUTPUT_DIR'] = os.path.join(trial_working_dir, "nnioutput")
         environ['NNI_SYS_DIR'] = trial_working_dir
+        self.working_dir = trial_working_dir
 
         # prepare code and parameters
         prepared_flag_file_name = os.path.join(trial_working_dir, "trial_prepared")
@@ -90,6 +91,18 @@ class Trial:
                              stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=dict(environ))
         nni_log(LogType.Info, '{0}: spawns a subprocess (pid {1}) to run command: {2}'.
                 format(self.name, self.process.pid, shlex.split(self.args.trial_command)))
+
+    def save_parameter_file(self, command_data):
+        parameters = command_data["parameters"]
+        file_index = int(parameters["index"])
+        if file_index == 0:
+            parameter_file_name = "parameter.cfg"
+        else:
+            parameter_file_name = "parameter_{}.cfg".format(file_index)
+        parameter_file_name = os.path.join(self.working_dir, parameter_file_name)
+        with open(parameter_file_name, "w") as parameter_file:
+            nni_log(LogType.Info, '%s: saving parameter %s' % (self.name, parameters["value"]))
+            parameter_file.write(parameters["value"])
 
     def is_running(self):
         if (self.process is None):

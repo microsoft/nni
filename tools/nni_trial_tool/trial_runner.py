@@ -57,7 +57,13 @@ def main_loop(args):
             elif command_type == CommandType.KillTrialJob:
                 trial_id = command_data
                 if trial_id in trials.keys():
+                    trial = trials[trial_id]
                     trial.kill(command_data)
+            elif command_type == CommandType.SendTrialJobParameter:
+                trial_id = command_data["trialId"]
+                if trial_id in trials.keys():
+                    trial = trials[trial_id]
+                    trial.save_parameter_file(command_data)
             elif command_type is not None:
                 raise Exception("unknown command %s" % command_type)
 

@@ -127,6 +127,9 @@ export class WebCommandChannel extends CommandChannel {
                     runnerConnection.AddClient(client);
                     connection = runnerConnection;
                     isValid = true;
+                    this.log.debug(`WebCommandChannel: client of env ${runnerConnection.environment.id} initialized`);
+                } else {
+                    this.log.warning(`WebCommandChannel: client is not initialized, runnerId: ${result.runnerId}, command: ${commandType}, expId: ${this.expId}, exists: ${this.runnerConnections.has(result.runnerId)}`);
                 }
             }
 

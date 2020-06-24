@@ -27,7 +27,7 @@ import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getLogLevel, getVersion, uniqueString } from '../../common/utils';
-import { GPU_INFO, INITIALIZED, TRIAL_END } from '../../core/commands';
+import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
@@ -35,10 +35,10 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { WebCommandChannel } from './channels/webCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, RunnerSettings, NodeInfomation } from './environment';
+import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
 import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
-import { TrialDetail, TrialService } from './trial';
+import { TrialDetail } from './trial';
 
 /**
  * It uses to manage jobs on training platforms 
@@ -131,9 +131,16 @@ class TrialDispatcher implements TrainingService {
     // to support multi phase
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialDetail> {
         const trialDetail = await this.getTrialJob(trialJobId);
+        const environment = trialDetail.environment;
+        if (environment === undefined) {
+            throw new Error(`TrialDispatcher: trial ${trialJobId}'s env shouldn't be undefined in updateTrialJob.`);
+        }
 
-        const trialService = component.get<TrialService>(TrialService);
-        await trialService.updateTrial(trialDetail, form);
+        const message = {
+            "trialId": trialJobId,
+            "parameters": form.hyperParameters,
+        }
+        await this.commandChannel.sendCommand(environment, SEND_TRIAL_JOB_PARAMETER, message);
 
         return trialDetail;
     }
@@ -147,8 +154,7 @@ class TrialDispatcher implements TrainingService {
                 {
                     const environment = trial.environment;
                     if (environment) {
-                        const trialService = component.get<TrialService>(TrialService);
-                        await trialService.stopTrial(trial);
+                        await this.commandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
                         trial.isEarlyStopped = isEarlyStopped;
                         trial.status = trial.isEarlyStopped === true ?
                             'EARLY_STOPPED' : 'USER_CANCELED';
@@ -181,9 +187,6 @@ class TrialDispatcher implements TrainingService {
         if (this.trialConfig === undefined) {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
-
-        const trialService = component.get<TrialService>(TrialService);
-        trialService.config("channel", this.commandChannel);
 
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         if (environmentService.hasStorageService) {
@@ -360,8 +363,7 @@ class TrialDispatcher implements TrainingService {
                                 // for example, in horovod, it's just sleep command, has no impact on trial result.
                                 if (environment.nodeCount > completedCount) {
                                     this.log.info(`stop partial completed trial ${trial.id}`);
-                                    const trialService = component.get<TrialService>(TrialService);
-                                    await trialService.stopTrial(trial);
+                                    await this.commandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
                                 }
                                 for (const node of trial.nodes.values()) {
                                     if (node.status === "FAILED") {
@@ -479,8 +481,7 @@ class TrialDispatcher implements TrainingService {
         }
         trial.startTime = Date.now();
         trial.status = "RUNNING";
-        const trialService = component.get<TrialService>(TrialService);
-        await trialService.startTrial(trial);
+        await this.commandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
     }
 
     private releaseEnvironment(trial: TrialDetail): void {
@@ -515,7 +516,7 @@ class TrialDispatcher implements TrainingService {
                             environment.nodes.set(nodeId, node);
                         }
                         const oldNodeStatus = node.status;
-                        if (oldNodeStatus === "UNKNOWN") {
+                        if (oldNodeStatus === "UNKNOWN" || oldNodeStatus === "WAITING") {
                             node.status = "RUNNING";
                         }
 

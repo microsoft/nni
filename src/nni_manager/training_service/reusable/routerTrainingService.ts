@@ -19,6 +19,7 @@
 
 'use strict';
 
+import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
@@ -26,16 +27,11 @@ import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
-import { TrialDispatcher } from './trialDispatcher';
-import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
-import { StorageService } from './storageService';
 import { MountedStorageService } from './storages/mountedStorageService';
-import { TrialService } from './trial';
-import { StorageTrialService } from './trials/storageTrialService';
-import { CommandChannel } from './commandChannel';
-import { FileCommandChannel } from './channels/fileCommandChannel';
+import { StorageService } from './storageService';
+import { TrialDispatcher } from './trialDispatcher';
 
 
 /**
@@ -123,14 +119,6 @@ class RouterTrainingService implements TrainingService {
                     // TODO to support other storages later.
                     Container.bind(StorageService)
                         .to(MountedStorageService)
-                        .scope(Scope.Singleton);
-                    // TODO to support other trialService  later.
-                    Container.bind(TrialService)
-                        .to(StorageTrialService)
-                        .scope(Scope.Singleton);
-
-                    Container.bind(CommandChannel)
-                        .to(FileCommandChannel)
                         .scope(Scope.Singleton);
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
