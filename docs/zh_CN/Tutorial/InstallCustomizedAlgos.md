@@ -1,4 +1,4 @@
-**How to install customized algorithms as builtin tuners, assessors and advisors**
+**如何将自定义的算法安装为内置的 Tuner，Assessor 和 Advisor**
 ===
 
 ## Overview
