@@ -57,7 +57,7 @@ NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full c
 * `full class name of tuner`: Tuner 类名，包括模块名，如：`demo_tuner.DemoTuner`
 * `full class name of class args validator`: 类的参数验证类 validator 的类名，包括模块名，如：`demo_tuner.MyClassArgsValidator`
 
-Following is an example of classfiers in package's `setup.py`:
+安装包 `setup.py` 中的 classfiers 示例如下：
 
 ```python
     classifiers = [
@@ -68,15 +68,15 @@ Following is an example of classfiers in package's `setup.py`:
     ],
 ```
 
-Once you have the meta info in `setup.py`, you can build your pip installation source via:
-* Run command `python setup.py develop` from the package directory, this command will build the directory as a pip installation source.
-* Run command `python setup.py bdist_wheel` from the package directory, this command build a whl file which is a pip installation source.
+在 `setup.py` 中加入元信息后，可构建 pip 安装源：
+* 在包目录中运行 `python setup.py develop` 命令，此命令会将目录作为 pip 安装源。
+* 在包目录中运行 `python setup.py bdist_wheel` 命令，会构建 whl 文件。
 
-NNI will look for the classifier starts with `NNI Package` to retrieve the package meta information while the package being installed with `nnictl package install <source>` command.
+在通过 `nnictl package install <source>` 命令安装时，NNI 会查找 `NNI Package` 开头的 classifier，获取包的元信息。
 
-Reference [customized tuner example](https://github.com/microsoft/nni/blob/master/examples/tuners/customized_tuner/README.md) for a full example.
+参考[自定义 Tuner 的完整示例](https://github.com/microsoft/nni/blob/master/examples/tuners/customized_tuner/README.md)。
 
-### 4. Install customized algorithms package into NNI
+### 4. 将自定义算法包安装到 NNI 中
 
 If your installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
 
