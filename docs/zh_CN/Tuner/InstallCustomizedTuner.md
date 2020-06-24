@@ -1,12 +1,12 @@
-# How to install customized tuner as a builtin tuner
+# 如何将自定义的 Tuner 安装为内置 Tuner
 
-You can following below steps to install a customized tuner in `nni/examples/tuners/customized_tuner` as a builtin tuner.
+参考下列步骤将自定义 Tuner： `nni/examples/tuners/customized_tuner` 安装为内置 Tuner。
 
-## Prepare installation source and install package
+## 准备安装源和安装包
 
-There are 2 options to install this customized tuner:
+有两种方法安装自定义的 Tuner：
 
-### Option 1: install from directory
+### 方法 1: 从目录安装
 
 Step 1: From `nni/examples/tuners/customized_tuner` directory, run:
 
