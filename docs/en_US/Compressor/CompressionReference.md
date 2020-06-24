@@ -22,7 +22,7 @@
     :members:
 ```
 
-## Model Counter
+## Model FLOPs/Parameters Counter
 
 ```eval_rst
 ..  autofunction:: nni.compression.torch.utils.counter.count_flops_params

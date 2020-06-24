@@ -122,8 +122,7 @@ mc.fix_mask_conflict()
 mc.export('./resnet18_fixed_mask')
 ```
 
-
-### Model Flops/Parameters Calculator
+### Model FLOPs/Parameters Counter
 We provide a model counter for calculating the model FLOPs and parameters. Users can easily get the model complexity during compression. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number.
 
 ### Usage
