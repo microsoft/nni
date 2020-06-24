@@ -11,8 +11,8 @@ tuner:
   classFileName: graphnas_tuner.py
   className: GraphNASTuner
   classArgs:
-    arc_save_path: <absolute_path_to_save_final_arcs>
+    arc_save_path: /tmp/arcs.pkl
 trial:
-  command: python3 main.py
+  command: python3 main.py --dataset Citeseer
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0

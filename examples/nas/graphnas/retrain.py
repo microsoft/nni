@@ -37,7 +37,7 @@ def main():
                         help="epochs")
     parser.add_argument('--arc_save_path',
                         type=str,
-                        default='./arcs.pkl',
+                        default='/tmp/arcs.pkl',
                         help="Architecture save path")
     args = parser.parse_args()
 
