@@ -8,5 +8,5 @@
     编写新的 Assessor <Assessor/CustomizeAssessor>
     编写新的 Advisor <Tuner/CustomizeAdvisor>
     编写新的训练平台 <TrainingService/HowToImplementTrainingService>
-    Install Customized Algorithms as Builtin Tuners/Assessors/Advisors <Tutorial/InstallCustomizedAlgos>
-    How to install customized tuner as a builtin tuner <Tuner/InstallCustomizedTuner.md>
+    安装自定义的 Tuner，Assessor，Advisor <Tutorial/InstallCustomizedAlgos>
+    如何将自定义的 Tuner 安装为内置 Tuner <Tuner/InstallCustomizedTuner.md>
