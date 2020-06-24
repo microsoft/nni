@@ -52,7 +52,7 @@ Quantization algorithms compress the original network by reducing the number of 
 
 ## Automatic Model Compression
 
-TBD.
+Given targeted compression ratio, it is pretty hard to obtain the best compressed ratio in a one shot manner. An automatic model compression algorithm usually need to explore the compression space by compressing different layers with different sparsities. NNI provides such algorithms to free users from specifying sparsity of each layer in a model. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Detailed document can be found [here](./AutoCompression.md).
 
 ## Model Speedup
 
