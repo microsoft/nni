@@ -149,6 +149,7 @@ self.pruner.remove_activation_collector(collector_id)
 On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective.
 Since `calc_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
 
+***
 
 ## Customize a new quantization algorithm
 
