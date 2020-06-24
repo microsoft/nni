@@ -67,13 +67,13 @@ class DartsCell(nn.Module):
     '''
     def __init__(self, n_nodes, channels_pp, channels_p, channels):
         super().__init__()
-        self.reduction = False  # TODO
+        self.reduction = False
         self.n_nodes = n_nodes
         self.reduction_p = False
 
         # If previous cell is reduction cell, current input size does not match with
         # output size of cell[k-2]. So the output[k-2] should be reduced by preprocessing.
-        if self.reduction_p:  # TODO
+        if self.reduction_p:
             self.preproc0 = ops.FactorizedReduce(channels_pp, channels, affine=False)
         else:
             self.preproc0 = ops.StdConv(channels_pp, channels, 1, 1, 0, affine=False)
@@ -82,8 +82,8 @@ class DartsCell(nn.Module):
         # generate dag
         self.mutable_ops = nn.ModuleList()
         for depth in range(2, self.n_nodes + 2):
-            self.mutable_ops.append(Node("{}_n{}".format("reduce" if reduction else "normal", depth),
-                                         depth, channels, 2 if reduction else 0))
+            self.mutable_ops.append(Node("{}_n{}".format("reduce" if self.reduction else "normal", depth),
+                                         depth, channels, 2 if self.reduction else 0))
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
