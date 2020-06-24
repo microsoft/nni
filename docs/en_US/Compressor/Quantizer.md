@@ -1,5 +1,11 @@
-Quantizer on NNI Compressor
-===
+# Supported Quantization Algorithms on NNI
+
+Index of supported quantization algorithms
+* [Naive Quantizer](#naive-quantizer)
+* [QAT Quantizer](#qat-quantizer)
+* [DoReFa Quantizer](#dorefa-quantizer)
+* [BNN Quantizer](#bnn-quantizer)
+
 ## Naive Quantizer
 
 We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
@@ -9,8 +15,6 @@ pytorch
 ```python 
 model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
-
-***
 
 ## QAT Quantizer
 In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
@@ -58,7 +62,6 @@ state where activation quantization ranges do not exclude a signiﬁcant fractio
 
 ### note
 batch normalization folding is currently not supported.
-***
 
 ## DoReFa Quantizer
 In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160), authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.

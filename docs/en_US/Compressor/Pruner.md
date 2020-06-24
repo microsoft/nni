@@ -1,5 +1,4 @@
-Pruner on NNI Compressor
-===
+# Supported Pruning Algorithms on NNI
 
 Index of supported pruning algorithms
 * [Level Pruner](#level-pruner)
