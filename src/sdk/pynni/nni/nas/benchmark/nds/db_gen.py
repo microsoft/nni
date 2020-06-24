@@ -40,6 +40,7 @@ def inject_item(db, item, dataset, generator):
         else:
             raise ValueError('Unrecognized block type')
         model_spec = {k: v for k, v in item['net'].items() if v and k != 'block_type'}
+        cell_spec = {}
     run_config, created = NdsRunConfig.get_or_create(model_family=model_family,
                                                      model_spec=model_spec,
                                                      cell_spec=cell_spec,
@@ -78,21 +79,21 @@ def main():
     args = parser.parse_args()
 
     sweep_list = [
-        'Amoeba.json',
-        'Amoeba_in.json',
-        'DARTS.json',
-        'DARTS_fix-w-d.json',
-        'DARTS_in.json',
-        'DARTS_lr-wd.json',
-        'DARTS_lr-wd_in.json',
-        'ENAS.json',
-        'ENAS_fix-w-d.json',
-        'ENAS_in.json',
-        'NASNet.json',
-        'NASNet_in.json',
-        'PNAS.json',
-        'PNAS_fix-w-d.json',
-        'PNAS_in.json',
+        # 'Amoeba.json',
+        # 'Amoeba_in.json',
+        # 'DARTS.json',
+        # 'DARTS_fix-w-d.json',
+        # 'DARTS_in.json',
+        # 'DARTS_lr-wd.json',
+        # 'DARTS_lr-wd_in.json',
+        # 'ENAS.json',
+        # 'ENAS_fix-w-d.json',
+        # 'ENAS_in.json',
+        # 'NASNet.json',
+        # 'NASNet_in.json',
+        # 'PNAS.json',
+        # 'PNAS_fix-w-d.json',
+        # 'PNAS_in.json',
         'ResNeXt-A.json',
         'ResNeXt-A_in.json',
         'ResNeXt-B.json',
@@ -116,7 +117,7 @@ def main():
 
     with db:
         db.create_tables([NdsRunConfig, NdsComputedStats, NdsIntermediateStats])
-        for json_file in sweep_list:
+        for json_idx, json_file in enumerate(sweep_list, start=1):
             if 'fix-w-d' in json_file:
                 generator = 'fix_w_d'
             elif 'lr-wd' in json_file:
@@ -130,12 +131,15 @@ def main():
             with open(os.path.join(args.input_dir, json_file), 'r') as f:
                 data = json.load(f)
             if 'top' in data and 'mid' in data:
-                for t in tqdm.tqdm(data['top'], desc='Processing {} (top)'.format(json_file)):
+                for t in tqdm.tqdm(data['top'],
+                                   desc='[{}/{}] Processing {} (top)'.format(json_idx, len(sweep_list), json_file)):
                     inject_item(db, t, dataset, generator)
-                for t in tqdm.tqdm(data['mid'], desc='Processing {} (mid)'.format(json_file)):
+                for t in tqdm.tqdm(data['mid'],
+                                   desc='[{}/{}] Processing {} (mid)'.format(json_idx, len(sweep_list), json_file)):
                     inject_item(db, t, dataset, generator)
             else:
-                for job in tqdm.tqdm(data, desc='Processing {}'.format(json_file)):
+                for job in tqdm.tqdm(data,
+                                     desc='[{}/{}] Processing {}'.format(json_idx, len(sweep_list), json_file)):
                     inject_item(db, job, dataset, generator)
 
 
