@@ -2,11 +2,8 @@
 # Licensed under the MIT license.
 
 import os
-import time
-from datetime import datetime
 
 from .base_channel import BaseChannel
-from .log_utils import LogType, nni_log
 
 command_path = "./commands"
 runner_commands_file_name_prefix = "runner_commands"

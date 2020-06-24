@@ -96,7 +96,7 @@ def main_loop(args):
             trial.kill()
             del trials[trial.id]
         # wait to send commands
-        for i in range(10):
+        for _ in range(10):
             if command_channel.sent():
                 break
             time.sleep(1)
