@@ -78,24 +78,24 @@ NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full c
 
 ### 4. 将自定义算法包安装到 NNI 中
 
-If your installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
+如果安装源是通过 `python setup.py develop` 准备的源代码目录，可通过下列命令安装：
 
-`nnictl package install <installation source directory>`
+`nnictl package install <安装源目录>`
 
-For example:
+例如：
 
 `nnictl package install nni/examples/tuners/customized_tuner/`
 
-If your installation source is prepared as a whl file with `python setup.py bdist_wheel`, you can install the package by following command:
+如果安装源是通过 `python setup.py bdist_wheel` 准备的 whl 文件，可通过下列命令安装：
 
-`nnictl package install <whl file path>`
+`nnictl package install <whl 文件路径>`
 
-For example:
+例如：
 
 `nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl`
 
-## 5. Use the installed builtin algorithms in experiment
-Once your customized algorithms is installed, you can use it in experiment configuration file the same way as other builtin tuners/assessors/advisors, for example:
+## 5. 在 Experiment 中使用安装的算法
+在自定义算法安装后，可用其它内置 Tuner、Assessor、Advisor 的方法在 Experiment 配置文件中使用，例如：
 
 ```yaml
 tuner:
