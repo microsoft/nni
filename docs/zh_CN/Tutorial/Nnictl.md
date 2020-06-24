@@ -711,23 +711,23 @@ nnictl 支持的命令：
   
   * 说明
     
-    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
+    安装自定义的 Tuner，Assessor，Advisor（定制或 NNI 提供的算法）。
   
   * 用法
     
     ```bash
-    nnictl package install --name <package name>
+    nnictl package install --name <包名称>
     ```
     
-    The available `<package name>` can be checked via `nnictl package list` command.
+    可通过 `nnictl package list` 命令查看可用的`<包名称>`。
     
-    or
+    或者
     
     ```bash
-    nnictl package install <installation source>
+    nnictl package install <安装源>
     ```
     
-    Reference [Install customized algorithms](InstallCustomizedAlgos.md) to prepare the installation source.
+    参考[安装自定义算法](InstallCustomizedAlgos.md)，来准备安装源。
   
   * Example
     
