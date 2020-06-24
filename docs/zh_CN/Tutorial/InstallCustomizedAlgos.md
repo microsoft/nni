@@ -7,33 +7,33 @@ NNI 提供了大量可用于超参优化的[内置 Tuner](../Tuner/BuiltinTuner.
 
 NNI 中，还可以创建自定义的 Tuner，Advisor 和 Assessor。 并根据 Experiment 配置文件的说明来使用这些自定义的算法，可参考 [自定义 Tuner](../Tuner/CustomizeTuner.md)/[Advisor](../Tuner/CustomizeAdvisor.md)/[Assessor](../Assessor/CustomizeAssessor.md)。
 
-NNI also allows users to install the customized algorithm as a builtin algorithm, in order for users to use the algorithm in the same way as NNI builtin tuners/advisors/assessors. More importantly, it becomes much easier for users to share or distribute their implemented algorithm to others. Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name `mytuner`, then you can use this tuner in your configuration file like below:
+用户可将自定义的算法作为内置算法安装，以便像其它内置 Tuner、Advisor、Assessor 一样使用。 更重要的是，这样更容易向其他人分享或发布自己实现的算法。 自定义的 Tuner、Advisor、Assessor 可作为内置算法安装到 NNI 中，安装完成后，可在 Experiment 配置文件中像内置算法一样使用。 例如，将自定义的算法 `mytuner` 安装到 NNI 后，可在配置文件中直接使用：
 ```yaml
 tuner:
   builtinTunerName: mytuner
 ```
 
-## Install customized algorithms as builtin tuners, assessors and advisors
-You can follow below steps to build a customized tuner/assessor/advisor, and install it into NNI as builtin algorithm.
+## 将自定义的算法安装为内置的 Tuner，Assessor 或 Advisor
+可参考下列步骤来构建自定义的 Tuner、Assessor、Advisor，并作为内置算法安装。
 
-### 1. Create a customized tuner/assessor/advisor
-Reference following instructions to create:
-* [customized tuner](../Tuner/CustomizeTuner.md)
-* [customized assessor](../Assessor/CustomizeAssessor.md)
-* [customized advisor](../Tuner/CustomizeAdvisor.md)
+### 1. 创建自定义的 Tuner、Assessor、Advisor
+参考下列说明来创建：
+* [自定义 Tuner](../Tuner/CustomizeTuner.md)
+* [自定义 Assessor](../Assessor/CustomizeAssessor.md)
+* [自定义 Advisor](../Tuner/CustomizeAdvisor.md)
 
-### 2. (Optional) Create a validator to validate classArgs
-NNI provides a `ClassArgsValidator` interface for customized algorithms author to validate the classArgs parameters in experiment configuration file which are passed to customized algorithms constructors. The `ClassArgsValidator` interface is defined as:
+### 2. (可选) 创建 Validator 来验证 classArgs
+NNI 提供了 `ClassArgsValidator` 接口，自定义的算法可用它来验证 Experiment 配置文件中传给构造函数的 classArgs 参数。 `ClassArgsValidator` 接口如下：
 ```python
 class ClassArgsValidator(object):
     def validate_class_args(self, **kwargs):
         """
-        The classArgs fields in experiment configuration are packed as a dict and
-        passed to validator as kwargs.
+        Experiment 配置中的 classArgs 字段会作为 dict
+        传入到 kwargs。
         """
         pass
 ```
-For example, you can implement your validator such as:
+例如，可将 Validator 如下实现：
 ```python
 from schema import Schema, Optional
 from nni import ClassArgsValidator
@@ -45,9 +45,9 @@ class MedianstopClassArgsValidator(ClassArgsValidator):
             Optional('start_step'): self.range('start_step', int, 0, 9999),
         }).validate(kwargs)
 ```
-The validator will be invoked before experiment is started to check whether the classArgs fields are valid for your customized algorithms.
+在 Experiment 启动时，会调用 Validator，检查 classArgs 字段是否正确。
 
-### 3. Prepare package installation source
+### 3. 准备安装源
 In order to be installed as builtin tuners, assessors and advisors, the customized algorithms need to be packaged as installable source which can be recognized by `pip` command, under the hood nni calls `pip` command to install the package. Besides being a common pip source, the package needs to provide meta information in the `classifiers` field. Format of classifiers field is a following:
 ```
 NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full class name of class args validator>
