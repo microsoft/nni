@@ -15,7 +15,7 @@ from nni.compression.torch import L1FilterPruner, apply_compression_results, Mod
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-BATCH_SIZE = 32
+BATCH_SIZE = 2
 # the relative distance
 RELATIVE_THRESHOLD = 0.01
 # Because of the precision of floating-point numbers, some errors
