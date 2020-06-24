@@ -5,12 +5,14 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+import copy
 
 import ops
+from darts_cell import DartsCell
 from nni.nas.pytorch import mutables
 
 
-class DartsSearchSpace(nn.Module):
+class DartsStackedCells(nn.Module):
     '''
     builtin Darts Search Space
     Compared to Darts example, DartsSearchSpace removes Auxiliary Head, which 
@@ -26,12 +28,14 @@ class DartsSearchSpace(nn.Module):
         classes for final classification
     n_layers: int
         the number of cells contained in this network
+    cell: DartsCell (to be refined)
+        specified cell structure
     n_nodes: int
         the number of nodes contained in each cell
     stem_multiplier: int
         channels multiply coefficient when passing a cell
     '''
-    def __init__(self, in_channels, channels, n_classes, n_layers, n_nodes=4,
+    def __init__(self, in_channels, channels, n_classes, n_layers, cell: DartsCell, n_nodes=4,
                  stem_multiplier=3):
         super().__init__()
         self.in_channels = in_channels
@@ -58,8 +62,11 @@ class DartsSearchSpace(nn.Module):
                 c_cur *= 2
                 reduction = True
 
-            cell = Cell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
-            self.cells.append(cell)
+            # cell = DartsCell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
+            temp_cell = copy.deepcopy(cell)
+            setattr(temp_cell, 'reduction', reduction)
+            setattr(temp_cell, 'reduction_p', reduction_p)
+            self.cells.append(temp_cell)
             c_cur_out = c_cur * n_nodes
             channels_pp, channels_p = channels_p, c_cur_out
 

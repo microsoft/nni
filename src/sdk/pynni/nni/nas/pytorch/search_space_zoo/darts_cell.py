@@ -5,9 +5,9 @@ from collections import OrderedDict
 
 import torch
 import torch.nn as nn
+from nni.nas.pytorch import mutables
 
 import ops
-from nni.nas.pytorch import mutables
 
 
 class Node(nn.Module):
@@ -32,7 +32,7 @@ class Node(nn.Module):
             choice_keys.append("{}_p{}".format(node_id, i))
             self.ops.append(
                 mutables.LayerChoice(OrderedDict([
-                    ("maxpool", ops.PoolBN('max', channels, 3, stride, 1, affine=False)), 
+                    ("maxpool", ops.PoolBN('max', channels, 3, stride, 1, affine=False)),
                     ("avgpool", ops.PoolBN('avg', channels, 3, stride, 1, affine=False)),
                     ("skipconnect", nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False)),
                     ("sepconv3x3", ops.SepConv(channels, channels, 3, stride, 1, affine=False)),
@@ -64,19 +64,16 @@ class DartsCell(nn.Module):
         the number of previous cell's output channels
     channels: int
         the number of output channels for each node
-    reduction_p: bool
-        Is previous cell a reduction cell
-    reduction: bool
-        is current cell a reduction cell
     '''
-    def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
+    def __init__(self, n_nodes, channels_pp, channels_p, channels):
         super().__init__()
-        self.reduction = reduction
+        self.reduction = False  # TODO
         self.n_nodes = n_nodes
+        self.reduction_p = False
 
         # If previous cell is reduction cell, current input size does not match with
         # output size of cell[k-2]. So the output[k-2] should be reduced by preprocessing.
-        if reduction_p:
+        if self.reduction_p:  # TODO
             self.preproc0 = ops.FactorizedReduce(channels_pp, channels, affine=False)
         else:
             self.preproc0 = ops.StdConv(channels_pp, channels, 1, 1, 0, affine=False)
