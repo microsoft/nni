@@ -729,15 +729,15 @@ nnictl 支持的命令：
     
     参考[安装自定义算法](InstallCustomizedAlgos.md)，来准备安装源。
   
-  * Example
+  * 示例
     
-    > Install SMAC tuner
+    > 安装 SMAC Tuner
     
     ```bash
     nnictl package install --name SMAC
     ```
     
-    > Install a customized tuner
+    > 安装自定义 Tuner
     
     ```bash
     nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
@@ -747,15 +747,15 @@ nnictl 支持的命令：
   
   * 说明
     
-    Show the detailed information of specified packages.
+    显示包的详情。
   
   * 用法
     
     ```bash
-    nnictl package show <package name>
+    nnictl package show <包名称>
     ```
   
-  * Example
+  * 示例
     
     ```bash
     nnictl package show SMAC
@@ -763,31 +763,31 @@ nnictl 支持的命令：
 
 * **nnictl package list**
   
-  * Description
+  * 说明
     
-    List the installed/all packages.
+    列出安装的、所有包。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl package list [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description       |
-  | --------------- | -------- | ------- | ----------------- |
-  | --all           | False    |         | List all packages |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明    |
+  | ----- | ----- | --- | ----- |
+  | --all | False |     | 列出所有包 |
   
-  * Example
+  * 示例
     
-    > List installed packages
+    > 列出已安装的包
     
     ```bash
     nnictl package list
     ```
     
-    > List all packages
+    > 列出所有包
     
     ```bash
     nnictl package list --all
@@ -795,17 +795,17 @@ nnictl 支持的命令：
 
 * **nnictl package uninstall**
   
-  * Description
+  * 说明
     
-    Uninstall a package.
+    卸载包。
   
-  * Usage
+  * 用法
     
     ```bash
-    nnictl package uninstall <package name>
+    nnictl package uninstall <包名称>
     ```
   
-  * Example Uninstall SMAC package
+  * 示例 卸载 SMAC 包
     
     ```bash
     nnictl package uninstall SMAC
