@@ -199,6 +199,7 @@ We implemented one of the experiments in ['Learning Efficient Convolutional Netw
 
 The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
+***
 
 ## WeightRankFilterPruner
 WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
@@ -321,6 +322,8 @@ pruner.compress()
 - **sparsity:** This is to specify the sparsity operations to be compressed to
 - **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
 
+***
+
 ## ActivationRankFilterPruner
 ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
 
@@ -384,6 +387,7 @@ You can view example for more information
 - **sparsity:** How much percentage of convolutional filters are to be pruned.
 - **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
 
+***
 
 ## GradientRankFilterPruner
 

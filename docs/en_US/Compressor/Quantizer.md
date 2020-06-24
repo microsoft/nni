@@ -16,6 +16,8 @@ pytorch
 model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
 
+***
+
 ## QAT Quantizer
 In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
 
@@ -63,6 +65,8 @@ state where activation quantization ranges do not exclude a signiﬁcant fractio
 ### note
 batch normalization folding is currently not supported.
 
+***
+
 ## DoReFa Quantizer
 In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160), authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
 
@@ -88,6 +92,7 @@ common configuration needed by compression algorithms can be found at : [Common 
 
 configuration needed by this algorithm :
 
+***
 
 ## BNN Quantizer
 In [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), 
