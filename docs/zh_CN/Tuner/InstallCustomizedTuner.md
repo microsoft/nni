@@ -8,31 +8,31 @@
 
 ### 方法 1: 从目录安装
 
-Step 1: From `nni/examples/tuners/customized_tuner` directory, run:
+步骤 1: 在 `nni/examples/tuners/customized_tuner` 目录下，运行：
 
 `python setup.py develop`
 
-This command will build the `nni/examples/tuners/customized_tuner` directory as a pip installation source.
+此命令会将 `nni/examples/tuners/customized_tuner` 目录编译为 pip 安装源。
 
-Step 2: Run command:
+步骤 2: 运行命令
 
 `nnictl package install ./`
 
-### Option 2: install from whl file
+### 方法 2: 从 whl 文件安装
 
-Step 1: From `nni/examples/tuners/customized_tuner` directory, run:
+步骤 1: 在 `nni/examples/tuners/customized_tuner` 目录下，运行：
 
 `python setup.py bdist_wheel`
 
-This command build a whl file which is a pip installation source.
+此命令会从 pip 安装源编译出 whl 文件。
 
-Step 2: Run command:
+步骤 2: 运行命令
 
 `nnictl package install dist/demo_tuner-0.1-py3-none-any.whl`
 
-## Check the installed package
+## 检查安装的包
 
-Then run command `nnictl package list`, you should be able to see that demotuner is installed:
+运行命令 `nnictl package list`，可以看到已安装的 demotuner：
 ```
 +-----------------+------------+-----------+--------=-------------+------------------------------------------+
 |      Name       |    Type    | Installed |      Class Name      |               Module Name                |
@@ -41,14 +41,14 @@ Then run command `nnictl package list`, you should be able to see that demotuner
 +-----------------+------------+-----------+----------------------+------------------------------------------+
 ```
 
-## Use the installed tuner in experiment
+## 在 Experiment 中使用安装的 Tuner
 
-Now you can use the demotuner in experiment configuration file the same way as other builtin tuners:
+可以像使用其它内置 Tuner 一样，在 Experiment 配置文件中使用 demotuner：
 
 ```yaml
 tuner:
   builtinTunerName: demotuner
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
 ```
