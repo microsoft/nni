@@ -1,0 +1,18 @@
+authorName: default
+experimentName: GraphNAS
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 2000
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  codeDir: .
+  classFileName: graphnas_tuner.py
+  className: GraphNASTuner
+  classArgs:
+    arc_save_path: <absolute_path_to_save_final_arcs>
+trial:
+  command: python3 main.py
+  codeDir: .
+  gpuNum: 1

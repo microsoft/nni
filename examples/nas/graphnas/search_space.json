@@ -1,0 +1,41 @@
+{
+    "attention_type": {
+        "_type": "choice",
+        "_value": ["gat",
+                   "gcn",
+                   "cos",
+                   "const",
+                   "gat_sym",
+                   "linear",
+                   "generalized_linear"
+        ]
+    },
+    "aggregator_type": {
+        "_type": "choice",
+        "_value": ["sum",
+                   "mean",
+                   "max",
+                   "mlp"
+        ]
+    },
+    "activate_function": {
+        "_type": "choice",
+        "_value": ["sigmoid",
+                   "tanh",
+                   "relu",
+                   "linear",
+                   "softplus",
+                   "leaky_relu",
+                   "relu6",
+                   "elu"
+        ]
+    },
+    "number_of_heads": {
+        "_type": "choice",
+        "_value": [1, 2, 4, 6, 8, 16]
+    },
+    "hidden_units": {
+        "_type": "choice",
+        "_value": [4, 8, 16, 32, 64, 128, 256]
+    }
+}
