@@ -15,7 +15,7 @@ try:
 except ImportError:
     _logger.warning('Please install thop using command: pip install thop')
     
-def count_flops_params(model: nn.Module, input_size=None, verbose=True):
+def count_flops_params(model: nn.Module, input_size, verbose=True):
     """
     Count FLOPs and Params of the given model. 
     This function would identify the mask on the module 
@@ -67,6 +67,18 @@ def count_flops_params(model: nn.Module, input_size=None, verbose=True):
     return flops, params
 
 def count_convNd_mask(m, x, y):
+    """
+    The forward hook to count FLOPs and Parameters of convolution operation.
+
+    Parameters
+    ----------
+    m : torch.nn.Module
+        convolution module to calculate the FLOPs and Parameters
+    x : torch.Tensor
+        input data
+    y : torch.Tensor
+        output data
+    """
     output_channel = y.size()[1]
     output_size =  torch.zeros(y.size()[2:]).numel()
     kernel_size = torch.zeros(m.weight.size()[2:]).numel()
@@ -82,6 +94,18 @@ def count_convNd_mask(m, x, y):
 
 
 def count_linear_mask(m, x, y):
+    """
+    The forward hook to count FLOPs and Parameters of linear transformation.
+
+    Parameters
+    ----------
+    m : torch.nn.Module
+        linear to calculate the FLOPs and Parameters
+    x : torch.Tensor
+        input data
+    y : torch.Tensor
+        output data
+    """
     output_channel = y.size()[1]
     output_size =  torch.zeros(y.size()[2:]).numel()
 
