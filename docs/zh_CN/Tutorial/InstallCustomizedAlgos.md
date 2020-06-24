@@ -48,14 +48,14 @@ class MedianstopClassArgsValidator(ClassArgsValidator):
 在 Experiment 启动时，会调用 Validator，检查 classArgs 字段是否正确。
 
 ### 3. 准备安装源
-In order to be installed as builtin tuners, assessors and advisors, the customized algorithms need to be packaged as installable source which can be recognized by `pip` command, under the hood nni calls `pip` command to install the package. Besides being a common pip source, the package needs to provide meta information in the `classifiers` field. Format of classifiers field is a following:
+要作为内置 Tuner，Assessor，Advisor 安装，自定义算法需要用 `pip` 命令能识别的方法来打包，NNI 会调用 `pip` 命令来安装包。 除了能作为公共的 pip 源，包需要在 `classifiers` 字段中提供元信息。 classifiers 字段格式如下：
 ```
 NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full class name of class args validator>
 ```
-* `type`: type of algorithms, could be one of `tuner`, `assessor`, `advisor`
-* `builtin name`: builtin name used in experiment configuration file
-* `full class name of tuner`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
-* `full class name of class args validator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
+* `type`: 算法类型，可为 `tuner`, `assessor`, `advisor`
+* `builtin name`: 在 Experiment 配置文件中使用的内置名称
+* `full class name of tuner`: Tuner 类名，包括模块名，如：`demo_tuner.DemoTuner`
+* `full class name of class args validator`: 类的参数验证类 validator 的类名，包括模块名，如：`demo_tuner.MyClassArgsValidator`
 
 Following is an example of classfiers in package's `setup.py`:
 
@@ -101,16 +101,16 @@ Once your customized algorithms is installed, you can use it in experiment confi
 tuner:
   builtinTunerName: demotuner
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
 ```
 
 
-## Manage packages using `nnictl package`
+## 用 `nnictl package` 命令管理包
 
-### List installed packages
+### 列出已安装的包
 
-Run following command to list the installed packages:
+运行以下命令列出已安装的包：
 
 ```
 nnictl package list
@@ -124,7 +124,7 @@ nnictl package list
 +-----------------+------------+-----------+----------------------+------------------------------------------+
 ```
 
-Run following command to list all packages, including the builtin packages can not be uninstalled.
+运行以下命令列出包括不能卸载的所有包。
 
 ```
 nnictl package list --all
@@ -150,12 +150,12 @@ nnictl package list --all
 +-----------------+------------+-----------+----------------------+------------------------------------------+
 ```
 
-### Uninstall package
+### 卸载包
 
-Run following command to uninstall an installed package:
+运行以下命令卸载已安装的包：
 
-`nnictl package uninstall <builtin name>`
+`nnictl package uninstall <包名称>`
 
-For example:
+例如：
 
 `nnictl package uninstall demotuner`
