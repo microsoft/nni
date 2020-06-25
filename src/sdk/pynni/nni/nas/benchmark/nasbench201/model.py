@@ -16,10 +16,10 @@ class Nb201RunConfig(Model):
     ----------
     arch : dict
         A dict with keys ``0_1``, ``0_2``, ``0_3``, ``1_2``, ``1_3``, ``2_3``, each of which
-        is an operator chosen from :const:`nni.nas.benchmark.nasbench201.ZERO`,
-        :const:`nni.nas.benchmark.nasbench201.SKIPCONNECT`,
-        :const:`nni.nas.benchmark.nasbench201.CONV1X1`,
-        :const:`nni.nas.benchmark.nasbench201.CONV3X3` and :const:`nni.nas.benchmark.nasbench201.AP3X3`.
+        is an operator chosen from :const:`nni.nas.benchmark.nasbench201.NONE`,
+        :const:`nni.nas.benchmark.nasbench201.SKIP_CONNECT`,
+        :const:`nni.nas.benchmark.nasbench201.CONV_1X1`,
+        :const:`nni.nas.benchmark.nasbench201.CONV_3X3` and :const:`nni.nas.benchmark.nasbench201.AVG_POOL_3X3`.
     num_epochs : int
         Number of epochs planned for this run. Should be one of 12 and 200.
     num_channels: int

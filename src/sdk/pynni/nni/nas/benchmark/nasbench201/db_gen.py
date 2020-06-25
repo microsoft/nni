@@ -4,17 +4,17 @@ import re
 import tqdm
 import torch
 
-from .constants import ZERO, SKIPCONNECT, CONV1X1, CONV3X3, AP3X3
+from .constants import NONE, SKIP_CONNECT, CONV_1X1, CONV_3X3, AVG_POOL_3X3
 from .model import db, Nb201RunConfig, Nb201ComputedStats, Nb201IntermediateStats
 
 
 def parse_arch_str(arch_str):
     mp = {
-        'none': ZERO,
-        'skip_connect': SKIPCONNECT,
-        'nor_conv_1x1': CONV1X1,
-        'nor_conv_3x3': CONV3X3,
-        'avg_pool_3x3': AP3X3
+        'none': NONE,
+        'skip_connect': SKIP_CONNECT,
+        'nor_conv_1x1': CONV_1X1,
+        'nor_conv_3x3': CONV_3X3,
+        'avg_pool_3x3': AVG_POOL_3X3
     }
     m = re.match(r'\|(.*)~0\|\+\|(.*)~0\|(.*)~1\|\+\|(.*)~0\|(.*)~1\|(.*)~2\|', arch_str)
     return {

@@ -64,15 +64,15 @@ The process takes about several minutes to download (~4GB) depending on the netw
 ```eval_rst
 .. autofunction:: nni.nas.benchmark.nasbench201.query_nb201_computed_stats
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.ZERO
+.. autoattribute:: nni.nas.benchmark.nasbench201.NONE
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.SKIPCONNECT
+.. autoattribute:: nni.nas.benchmark.nasbench201.SKIP_CONNECT
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.CONV1X1
+.. autoattribute:: nni.nas.benchmark.nasbench201.CONV_1X1
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.CONV3X3
+.. autoattribute:: nni.nas.benchmark.nasbench201.CONV_3X3
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.AP3X3
+.. autoattribute:: nni.nas.benchmark.nasbench201.AVG_POOL_3X3
 
 .. autoclass:: nni.nas.benchmark.nasbench201.Nb201RunConfig
 

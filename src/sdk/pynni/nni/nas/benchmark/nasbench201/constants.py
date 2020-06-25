@@ -1,12 +1,12 @@
-ZERO = "zero"
-SKIPCONNECT = "skipconnect"
-CONV1X1 = "conv1x1"
-CONV3X3 = "conv3x3"
-AP3X3 = "ap3x3"  # average pooling 3x3
+NONE = 'none'
+SKIP_CONNECT = 'skip_connect'
+CONV_1X1 = 'conv_1x1'
+CONV_3X3 = 'conv_3x3'
+AVG_POOL_3X3 = 'avg_pool_3x3'
 PRIMITIVES = [
-    ZERO,
-    SKIPCONNECT,
-    CONV1X1,
-    CONV3X3,
-    AP3X3,
+    NONE,
+    SKIP_CONNECT,
+    CONV_1X1,
+    CONV_3X3,
+    AVG_POOL_3X3,
 ]
