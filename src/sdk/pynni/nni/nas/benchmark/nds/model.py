@@ -21,16 +21,16 @@ class NdsRunConfig(Model):
     ])
     model_spec = JSONField(index=True)
     cell_spec = JSONField(index=True, null=True)
-    base_lr = FloatField()
-    weight_decay = FloatField()
-    num_epochs = IntegerField()
-    generator = CharField()
     dataset = CharField(max_length=15, index=True, choices=['cifar10', 'imagenet'])
     generator = CharField(max_length=15, index=True, choices=[
         'random',
         'fix_w_d',
         'tune_lr_wd',
     ])
+    proposer = CharField(max_length=15, index=True)
+    base_lr = FloatField()
+    weight_decay = FloatField()
+    num_epochs = IntegerField()
 
     class Meta:
         database = db

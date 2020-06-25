@@ -38,3 +38,18 @@ The process takes about several minutes to download (~4GB) depending on the netw
 ### API Documentation
 
 TODO
+
+
+## NDS
+
+```bash
+docker run -e NNI_VERSION=${NNI_VERSION} -v ${HOME}/.nni/nasbenchmark:/outputs .:/root python:3.8 /bin/bash /root/nds.sh
+```
+
+Please replace `${NNI_VERSION}` with any NNI version, for example, v1.6 or master.
+
+The conversion takes around XX minutes to complete. Output size is ~XX MB.
+
+### API Documentation
+
+TODO

@@ -8,7 +8,7 @@ import tqdm
 from .model import db, NdsRunConfig, NdsComputedStats, NdsIntermediateStats
 
 
-def inject_item(db, item, dataset, generator):
+def inject_item(db, item, proposer, dataset, generator):
     if 'genotype' in item['net']:
         model_family = 'nas_cell'
         num_nodes_normal = len(item['net']['genotype']['normal']) // 2
@@ -44,6 +44,7 @@ def inject_item(db, item, dataset, generator):
     run_config, created = NdsRunConfig.get_or_create(model_family=model_family,
                                                      model_spec=model_spec,
                                                      cell_spec=cell_spec,
+                                                     proposer=proposer,
                                                      base_lr=item['optim']['base_lr'],
                                                      weight_decay=item['optim']['wd'],
                                                      num_epochs=item['optim']['max_ep'],
@@ -70,7 +71,7 @@ def inject_item(db, item, dataset, generator):
             'train_acc': 100 - item['train_ep_top1'][i],
             'test_acc': 100 - item['test_ep_top1'][i]
         })
-        NdsIntermediateStats.insert_many(intermediate_stats).execute(db)
+    NdsIntermediateStats.insert_many(intermediate_stats).execute(db)
 
 
 def main():
@@ -79,21 +80,21 @@ def main():
     args = parser.parse_args()
 
     sweep_list = [
-        # 'Amoeba.json',
-        # 'Amoeba_in.json',
-        # 'DARTS.json',
-        # 'DARTS_fix-w-d.json',
-        # 'DARTS_in.json',
-        # 'DARTS_lr-wd.json',
-        # 'DARTS_lr-wd_in.json',
-        # 'ENAS.json',
-        # 'ENAS_fix-w-d.json',
-        # 'ENAS_in.json',
-        # 'NASNet.json',
-        # 'NASNet_in.json',
-        # 'PNAS.json',
-        # 'PNAS_fix-w-d.json',
-        # 'PNAS_in.json',
+        'Amoeba.json',
+        'Amoeba_in.json',
+        'DARTS.json',
+        'DARTS_fix-w-d.json',
+        'DARTS_in.json',
+        'DARTS_lr-wd.json',
+        'DARTS_lr-wd_in.json',
+        'ENAS.json',
+        'ENAS_fix-w-d.json',
+        'ENAS_in.json',
+        'NASNet.json',
+        'NASNet_in.json',
+        'PNAS.json',
+        'PNAS_fix-w-d.json',
+        'PNAS_in.json',
         'ResNeXt-A.json',
         'ResNeXt-A_in.json',
         'ResNeXt-B.json',
@@ -128,19 +129,20 @@ def main():
                 dataset = 'imagenet'
             else:
                 dataset = 'cifar10'
+            proposer = json_file.split(".")[0].split("_")[0].lower()
             with open(os.path.join(args.input_dir, json_file), 'r') as f:
                 data = json.load(f)
             if 'top' in data and 'mid' in data:
                 for t in tqdm.tqdm(data['top'],
                                    desc='[{}/{}] Processing {} (top)'.format(json_idx, len(sweep_list), json_file)):
-                    inject_item(db, t, dataset, generator)
+                    inject_item(db, t, proposer, dataset, generator)
                 for t in tqdm.tqdm(data['mid'],
                                    desc='[{}/{}] Processing {} (mid)'.format(json_idx, len(sweep_list), json_file)):
-                    inject_item(db, t, dataset, generator)
+                    inject_item(db, t, proposer, dataset, generator)
             else:
                 for job in tqdm.tqdm(data,
                                      desc='[{}/{}] Processing {}'.format(json_idx, len(sweep_list), json_file)):
-                    inject_item(db, job, dataset, generator)
+                    inject_item(db, job, proposer, dataset, generator)
 
 
 if __name__ == '__main__':
