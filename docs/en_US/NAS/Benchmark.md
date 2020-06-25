@@ -1,6 +1,4 @@
-# Documentation Draft for NAS Benchmarks
-
-This document will be moved to documentation folder later.
+# NAS Benchmark (experimental)
 
 ## Prerequisites
 
@@ -22,6 +20,31 @@ It takes about 70 minutes to dump the records and build index. Output size is ab
 
 ### API Documentation
 
+```eval_rst
+.. autofunction:: nni.nas.benchmark.nasbench101.query_nb101_computed_stats
+
+.. autoattribute:: nni.nas.benchmark.nasbench101.INPUT
+
+.. autoattribute:: nni.nas.benchmark.nasbench101.OUTPUT
+
+.. autoattribute:: nni.nas.benchmark.nasbench101.CONV3X3_BN_RELU
+
+.. autoattribute:: nni.nas.benchmark.nasbench101.CONV1X1_BN_RELU
+
+.. autoattribute:: nni.nas.benchmark.nasbench101.MAXPOOL3X3
+
+.. autoclass:: nni.nas.benchmark.nasbench101.Nb101RunConfig
+
+.. autoclass:: nni.nas.benchmark.nasbench101.Nb101ComputedStats
+
+.. autoclass:: nni.nas.benchmark.nasbench101.Nb101IntermediateStats
+
+.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.nasbench_format_to_architecture_repr
+
+.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.infer_num_vertices
+
+.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.hash_module
+```
 
 ## NAS-Bench-201
 

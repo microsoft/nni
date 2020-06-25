@@ -30,8 +30,8 @@ def main():
                                                     train_acc=cur['final_train_accuracy'] * 100,
                                                     valid_acc=cur['final_validation_accuracy'] * 100,
                                                     test_acc=cur['final_test_accuracy'] * 100,
-                                                    parameters=metadata['trainable_parameters'],
-                                                    training_time=cur['final_training_time'])
+                                                    parameters=metadata['trainable_parameters'] / 1e6,
+                                                    training_time=cur['final_training_time'] * 60)
                     for t in ['halfway', 'final']:
                         Nb101IntermediateStats.create(run=run,
                                                       current_epoch=epochs // 2 if t == 'halfway' else epochs,

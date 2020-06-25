@@ -29,4 +29,5 @@ For details, please refer to the following tutorials:
     TextNAS <NAS/TextNAS>
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
+    NAS Benchmark <NAS/Benchmark>
     API Reference <NAS/NasReference>
