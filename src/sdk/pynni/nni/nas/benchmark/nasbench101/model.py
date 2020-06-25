@@ -78,6 +78,8 @@ class Nb101IntermediateStats(Model):
     ----------
     run : Nb101ComputedStats
         The exact run where the intermediate result is produced.
+    current_epoch : int
+        Elapsed epochs when evaluation is done.
     train_acc : float
         Intermediate accuracy on training data, ranging from 0 to 100.
     valid_acc : float

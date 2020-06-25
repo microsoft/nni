@@ -6,6 +6,30 @@ from .model import Nb201ComputedStats, Nb201IntermediateStats, Nb201RunConfig
 
 
 def query_nb201_computed_stats(arch, num_epochs, dataset, reduction=None):
+    """
+    Query computed stats of NAS-Bench-201 given conditions.
+
+    Parameters
+    ----------
+    arch : dict or None
+        If a dict, it is in the format that is described in
+        :class:`nni.nas.benchmark.nasbench201.Nb201RunConfig`. Only computed stats
+        matched will be returned. If none, architecture will be a wildcard.
+    num_epochs : int or None
+        If int, matching results will be returned. Otherwise a wildcard.
+    dataset : str or None
+        If specified, can be one of the dataset available in :class:`nni.nas.benchmark.nasbench201.Nb201RunConfig`.
+        Otherwise a wildcard.
+    reduction : str or None
+        If 'none' or None, all computed stats will be returned directly.
+        If 'mean', fields in computed stats will be averaged given the same run config.
+
+    Returns
+    -------
+    generator of dict
+        A generator of :class:`nni.nas.benchmark.nasbench201.Nb201ComputedStats` objects,
+        where each of them has been converted into a dict.
+    """
     fields = []
     if reduction == 'none':
         reduction = None

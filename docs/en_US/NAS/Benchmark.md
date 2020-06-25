@@ -60,8 +60,26 @@ The process takes about several minutes to download (~4GB) depending on the netw
 
 ### API Documentation
 
-TODO
 
+```eval_rst
+.. autofunction:: nni.nas.benchmark.nasbench201.query_nb201_computed_stats
+
+.. autoattribute:: nni.nas.benchmark.nasbench201.ZERO
+
+.. autoattribute:: nni.nas.benchmark.nasbench201.SKIPCONNECT
+
+.. autoattribute:: nni.nas.benchmark.nasbench201.CONV1X1
+
+.. autoattribute:: nni.nas.benchmark.nasbench201.CONV3X3
+
+.. autoattribute:: nni.nas.benchmark.nasbench201.AP3X3
+
+.. autoclass:: nni.nas.benchmark.nasbench201.Nb201RunConfig
+
+.. autoclass:: nni.nas.benchmark.nasbench201.Nb201ComputedStats
+
+.. autoclass:: nni.nas.benchmark.nasbench201.Nb201IntermediateStats
+```
 
 ## NDS
 
