@@ -77,9 +77,11 @@ def main():
                         'test_evaluation_time': r['eval_times']['{}@{}'.format(sp[2], epochs - 1)],
                         'ori_test_evaluation_time': r['eval_times']['{}@{}'.format(sp[3], epochs - 1)],
                     }
-                    config = Nb201RunConfig.get((Nb201RunConfig.num_epochs == epochs) & \
-                                                (Nb201RunConfig.arch == arch_json) & \
-                                                (Nb201RunConfig.dataset == dataset.lower()))
+                    config = Nb201RunConfig.get(
+                        (Nb201RunConfig.num_epochs == epochs) & \
+                        (Nb201RunConfig.arch == arch_json) & \
+                        (Nb201RunConfig.dataset == dataset.lower())
+                    )
                     computed_stats = Nb201ComputedStats.create(config=config, seed=seed, **data_parsed)
                     intermediate_stats = []
                     for epoch in range(epochs):

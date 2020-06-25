@@ -41,27 +41,31 @@ def inject_item(db, item, proposer, dataset, generator):
             raise ValueError('Unrecognized block type')
         model_spec = {k: v for k, v in item['net'].items() if v and k != 'block_type'}
         cell_spec = {}
-    run_config, created = NdsRunConfig.get_or_create(model_family=model_family,
-                                                     model_spec=model_spec,
-                                                     cell_spec=cell_spec,
-                                                     proposer=proposer,
-                                                     base_lr=item['optim']['base_lr'],
-                                                     weight_decay=item['optim']['wd'],
-                                                     num_epochs=item['optim']['max_ep'],
-                                                     dataset=dataset,
-                                                     generator=generator)
+    run_config, created = NdsRunConfig.get_or_create(
+        model_family=model_family,
+        model_spec=model_spec,
+        cell_spec=cell_spec,
+        proposer=proposer,
+        base_lr=item['optim']['base_lr'],
+        weight_decay=item['optim']['wd'],
+        num_epochs=item['optim']['max_ep'],
+        dataset=dataset,
+        generator=generator
+    )
     assert len(item['train_ep_top1']) == len(item['test_ep_top1']) == run_config.num_epochs
-    run = NdsComputedStats.create(config=run_config,
-                                  seed=item['rng_seed'],
-                                  final_train_acc=100 - item['train_ep_top1'][-1],
-                                  final_train_loss=item['train_ep_loss'][-1],
-                                  final_test_acc=100 - item['test_ep_top1'][-1],
-                                  best_train_acc=100 - min(item['train_ep_top1']),
-                                  best_train_loss=np.nanmin(item['train_ep_loss']).item(),
-                                  best_test_acc=100 - min(item['test_ep_top1']),
-                                  parameters=item['params'] / 1e6,
-                                  flops=item['flops'] / 1e6,
-                                  iter_time=item['iter_time'])
+    run = NdsComputedStats.create(
+        config=run_config,
+        seed=item['rng_seed'],
+        final_train_acc=100 - item['train_ep_top1'][-1],
+        final_train_loss=item['train_ep_loss'][-1],
+        final_test_acc=100 - item['test_ep_top1'][-1],
+        best_train_acc=100 - min(item['train_ep_top1']),
+        best_train_loss=np.nanmin(item['train_ep_loss']).item(),
+        best_test_acc=100 - min(item['test_ep_top1']),
+        parameters=item['params'] / 1e6,
+        flops=item['flops'] / 1e6,
+        iter_time=item['iter_time']
+    )
     intermediate_stats = []
     for i in range(run_config.num_epochs):
         intermediate_stats.append({
