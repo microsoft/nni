@@ -48,7 +48,7 @@ docker run -e NNI_VERSION=${NNI_VERSION} -v ${HOME}/.nni/nasbenchmark:/outputs .
 
 Please replace `${NNI_VERSION}` with any NNI version, for example, v1.6 or master.
 
-The conversion takes around XX minutes to complete. Output size is ~XX MB.
+The conversion takes around 80 minutes to complete. Output size is about 1.6GB.
 
 ### API Documentation
 
