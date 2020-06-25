@@ -7,6 +7,27 @@ from .model import NdsComputedStats, NdsIntermediateStats, NdsRunConfig
 
 def query_nds_computed_stats(model_family, proposer, generator, model_spec, cell_spec, dataset,
                              base_lr=None, weight_decay=None, num_epochs=None, reduction=None):
+    """
+    Query computed stats of NDS given conditions.
+
+    Parameters
+    ----------
+    model_family : str or None
+    proposer : str or None
+    generator : str or None
+    model_spec : dict or None
+    dataset : str or None
+    base_lr : float or None
+    weight_decay : float or None
+    num_epochs : float or None
+    reduction : str or None
+
+    Returns
+    -------
+    generator of dict
+        A generator of :class:`nni.nas.benchmark.nds.NdsComputedStats` objects,
+        where each of them has been converted into a dict.
+    """
     fields = []
     if reduction == 'none':
         reduction = None
