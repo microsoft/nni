@@ -22,12 +22,13 @@ if __name__ == "__main__":
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
     compute_target = ComputeTarget(workspace=ws, name=args.computer_target)
     experiment = Experiment(ws, args.experiment_name)
-    dependencies = CondaDependencies()
-    dependencies.add_pip_package("azureml-sdk")
-    dependencies.add_pip_package("azureml")
+    #dependencies = CondaDependencies()
+    #dependencies.add_pip_package("azureml-sdk")
+    #dependencies.add_pip_package("azureml")
 
     run_config = RunConfiguration()
-    run_config.environment.python.conda_dependencies = dependencies
+    #run_config.environment.python.conda_dependencies = dependencies
+    run_config.environment.python.interpreter_path = "/root/miniconda3/bin/python"
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image
     run_config.target = compute_target

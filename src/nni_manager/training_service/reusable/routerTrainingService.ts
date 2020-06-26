@@ -37,6 +37,7 @@ import { StorageService } from './storageService';
 import { MountedStorageService } from './mountedStorageService';
 import { TrialService } from './trial';
 import { StorageTrialService } from './storageTrialService';
+import { AMLTrialService } from './amlTrialService';
 
 
 /**
@@ -153,11 +154,8 @@ class RouterTrainingService implements TrainingService {
                 Container.bind(EnvironmentService)
                     .to(AMLEnvironmentService)
                     .scope(Scope.Singleton);
-                Container.bind(StorageService)
-                    .to(MountedStorageService)
-                    .scope(Scope.Singleton);
                 Container.bind(TrialService)
-                    .to(StorageTrialService)
+                    .to(AMLTrialService)
                     .scope(Scope.Singleton);
                 for (const [key, value] of this.metaDataCache) {
                     if (this.internalTrainingService === undefined) {

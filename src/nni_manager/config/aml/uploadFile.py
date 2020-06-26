@@ -14,6 +14,8 @@ if __name__ == "__main__":
     parser.add_argument('--workspace_name', help='the workspace name of aml')
     parser.add_argument('--experiment_name', help='the experiment name')
     parser.add_argument('--environment_id', help='the experiment id')
+    parser.add_argument('--remote_file_name', help='the remote file name')
+    parser.add_argument('--local_file_path', help='the local file path')
     args = parser.parse_args()
 
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
@@ -21,7 +23,8 @@ if __name__ == "__main__":
 
     run_list = experiment.get_runs()
     for run in run_list:
-        if run['runId'] == args.environment_id:
-            print(run['status'])
-            return
-    print('Unknown')
+        if run.get_details()['runId'] == args.environment_id:
+            run.upload_file(args.remote_file_name, args.local_file_path)
+            print('succeed')
+            exit(0)
+    print('failed')

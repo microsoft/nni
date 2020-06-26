@@ -27,7 +27,7 @@ import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getLogLevel, getVersion, uniqueString, getExperimentRootDir } from '../../common/utils';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir, execCopydir, execMkdir } from '../common/util';
@@ -299,11 +299,11 @@ class TrialDispatcher implements TrainingService {
                     toRefreshedTrials.push(trial);
                 }
             }
-
+            console.log('-------------------trial dispatcher----302-------------')
+            console.log(toRefreshedTrials.length)
             if (toRefreshedTrials.length == 0) {
                 continue;
             }
-
             const trialService = component.get<TrialService>(TrialService);
             trialService.refreshTrialsStatus(toRefreshedTrials);
 
@@ -361,10 +361,14 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
             }
-
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
+                console.log('-----------env status-------')
+                console.log(environment.id)
+                console.log(environment.isAlive)
+                console.log(environment.status)
+                console.log(environment.isIdle)
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isIdle) {
@@ -372,11 +376,14 @@ class TrialDispatcher implements TrainingService {
                     }
                 }
             });
-
+            console.log('------------before assign environment---------')
+            console.log(idleEnvironments.length)
+            console.log(waitingTrials.length)
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
                 const trial = waitingTrials.shift();
                 const idleEnvironment = idleEnvironments.shift();
                 if (trial !== undefined && idleEnvironment != undefined) {
+                    console.log('--------start assign env----------')
                     await this.assignEnvironment(trial, idleEnvironment);
                 }
             }
@@ -416,18 +423,20 @@ class TrialDispatcher implements TrainingService {
             let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp", envId);
             await execMkdir(environmentLocalTempFolder);
             const runnerSettingsPath = path.join(environmentLocalTempFolder, "settings.json");
+            this.runnerSettings.command = "python3 test.py";
             await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
             const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
-            await fs.promises.writeFile(installFilePath, CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
-            environment.command = `import os\nos.system('sh install_nni.sh && python3 -m nni_trial_tool.trial_runner')`;
+            await fs.promises.writeFile(installFilePath, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+            environment.command = `import os\nos.system('sh install_nni.sh && cd code && python3 -m nni_trial_tool.trial_runner')`;
             environment.environmentLocalTempFolder = environmentLocalTempFolder;
             let environmentLocalTempTrialFolder = path.join(environmentLocalTempFolder, 'code');
             await execMkdir(environmentLocalTempTrialFolder);
             await execCopydir(this.trialConfig.codeDir, environmentLocalTempTrialFolder);
         }
 
-        this.environments.set(environment.id, environment);
         await environmentService.startEnvironment(environment);
+        console.log('--------------finish start experiment-----' + environment.id)
+        this.environments.set(environment.id, environment);
 
         if (environment.status === "FAILED") {
             environment.isIdle = false;

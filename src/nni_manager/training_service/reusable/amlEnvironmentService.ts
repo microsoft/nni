@@ -50,8 +50,8 @@ const yaml = require('js-yaml');
 export class AMLEnvironmentService implements EnvironmentService {
 
     private readonly log: Logger = getLogger();
-    private amlClusterConfig: AMLClusterConfig | undefined;
-    private amlTrialConfig: AMLTrialConfig | undefined;
+    public amlClusterConfig: AMLClusterConfig | undefined;
+    public amlTrialConfig: AMLTrialConfig | undefined;
     private amlJobConfig: any;
     private stopping: boolean = false;
     private versionCheck: boolean = true;
@@ -104,31 +104,29 @@ export class AMLEnvironmentService implements EnvironmentService {
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach((environment) => {
-
             if (this.amlClusterConfig === undefined) {
                 throw new Error('AML Cluster config is not initialized');
             }
             if (this.amlTrialConfig === undefined) {
                 throw new Error('AML trial config is not initialized');
             }
-
-            let pyshell = new PythonShell('createEnvironment.py', {
+            
+            let pyshell = new PythonShell('checkEnvironment.py', {
                 scriptPath: './config/aml',
                 pythonOptions: ['-u'], // get print results in real-time
                 args: [
                     '--subscription_id', this.amlClusterConfig.subscriptionId,
                     '--resource_group', this.amlClusterConfig.resourceGroup,
                     '--workspace_name', this.amlClusterConfig.workspaceName,
-                    '--computer_target', this.amlTrialConfig.computerTarget,
                     '--experiment_name', `nni_exp_${this.experimentId}`,
-                    '--code_dir', environment.environmentLocalTempFolder,
-                    '--script', 'nni_script.py'
+                    '--environment_id', environment.id
                   ]
             });
             pyshell.on('message', function (status: any) {
                 // received a message sent from the Python script (a simple "print" statement)
-                console.log(`update status ${status}`);
+                console.log(`------------------get status from aml: ${status}--------------`);
                 switch (status.toUpperCase()) {
                     case 'QUEUED':
                         environment.status = 'WAITING';
@@ -137,7 +135,7 @@ export class AMLEnvironmentService implements EnvironmentService {
                     case 'RUNNING':
                     case 'SUCCEEDED':
                     case 'FAILED':
-                        environment.status = status;
+                        environment.status = status.toUpperCase();
                         break;
                     case 'STOPPED':
                     case 'STOPPING':
@@ -146,14 +144,15 @@ export class AMLEnvironmentService implements EnvironmentService {
                     default:
                         environment.status = 'UNKNOWN';
                 }
+                console.log('-------------update environment status to ' + environment.status)
             });
         });
-        return;
+        deferred.resolve();
+        return deferred.promise;
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        const deferred: Deferred<boolean> = new Deferred<boolean>();
-        
+        const deferred: Deferred<void> = new Deferred<void>();
         if (this.amlClusterConfig === undefined) {
             throw new Error('AML Cluster config is not initialized');
         }
@@ -182,11 +181,40 @@ export class AMLEnvironmentService implements EnvironmentService {
             // received a message sent from the Python script (a simple "print" statement)
             console.log(envId);
             environment.id = envId;
+            deferred.resolve();
         });
-        return deferred.resolve();
+        return deferred.promise;
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
+        
+        if (this.amlClusterConfig === undefined) {
+            throw new Error('AML Cluster config is not initialized');
+        }
+        if (this.amlTrialConfig === undefined) {
+            throw new Error('AML trial config is not initialized');
+        }
+        //TODO: use temp folder
+        //let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId);
+        await fs.promises.writeFile(path.join(environment.environmentLocalTempFolder, 'nni_script.py'), environment.command ,{ encoding: 'utf8' });
 
+        let pyshell = new PythonShell('stopEnvironment.py', {
+            scriptPath: './config/aml',
+            pythonOptions: ['-u'], // get print results in real-time
+            args: [
+                '--subscription_id', this.amlClusterConfig.subscriptionId,
+                '--resource_group', this.amlClusterConfig.resourceGroup,
+                '--workspace_name', this.amlClusterConfig.workspaceName,
+                '--experiment_name', `nni_exp_${this.experimentId}`,
+                '--environment_id', environment.id
+              ]
+        });
+        pyshell.on('message', function (envId: any) {
+            // received a message sent from the Python script (a simple "print" statement)
+            console.log(envId);
+            environment.id = envId;
+        });
+        return deferred.resolve();
     }
 }
