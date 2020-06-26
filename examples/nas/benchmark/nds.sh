@@ -7,7 +7,7 @@ cd /nni && echo "y" | source install.sh
 cd /tmp
 
 echo "Installing dependencies..."
-apt install -y wget
+apt update && apt install -y wget
 pip install --no-cache-dir tqdm peewee
 
 echo "Downloading NDS..."

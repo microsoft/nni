@@ -2,7 +2,7 @@ set -e
 mkdir -p /outputs /tmp
 
 echo "Installing dependencies..."
-apt install -y wget git
+apt update && apt install -y wget git
 pip install --no-cache-dir tqdm peewee
 
 echo "Installing NNI..."
