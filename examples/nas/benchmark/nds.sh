@@ -1,14 +1,14 @@
 set -e
 mkdir -p /outputs /tmp
 
+echo "Installing dependencies..."
+apt update && apt install -y wget
+pip install --no-cache-dir tqdm peewee
+
 echo "Installing NNI..."
 cd /nni && echo "y" | source install.sh
 
 cd /tmp
-
-echo "Installing dependencies..."
-apt update && apt install -y wget
-pip install --no-cache-dir tqdm peewee
 
 echo "Downloading NDS..."
 wget https://dl.fbaipublicfiles.com/nds/data.zip -O data.zip
