@@ -114,8 +114,6 @@ Set 12,layer4.1.conv1
 当不同层的掩码有冲突时，（例如，为通道依赖的层设置了不同的稀疏度），可通过 MaskConflict 来修复。 即，MaskConflict 可加载由 (L1FilterPruner, 等) 导出的掩码，并检查是否有掩码冲突。如果有 MaskConflict 会将冲突的掩码设置为相同的值。
 
 ```
-from nni.compression.torch.utils.mask_conflict import MaskConflict
-mc = MaskConflict('./resnet18_mask', net, data)
-mc.fix_mask_conflict()
-mc.export('./resnet18_fixed_mask')
+from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
 ```

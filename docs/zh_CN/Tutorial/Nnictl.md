@@ -711,38 +711,104 @@ nnictl 支持的命令：
   
   * 说明
     
-    安装 NNI 实验所需要的包。
+    安装自定义的 Tuner，Assessor，Advisor（定制或 NNI 提供的算法）。
   
   * 用法
     
     ```bash
-    nnictl package install [OPTIONS]
+    nnictl package install --name <包名称>
     ```
-  
-  * 选项
-  
-  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
-  | ------ | ---- | --- | ------- |
-  | --name | True |     | 要安装的包名称 |
+    
+    可通过 `nnictl package list` 命令查看可用的`<包名称>`。
+    
+    或者
+    
+    ```bash
+    nnictl package install <安装源>
+    ```
+    
+    参考[安装自定义算法](InstallCustomizedAlgos.md)，来准备安装源。
   
   * 示例
     
-    > 安装 SMAC Tuner 所需要的包
+    > 安装 SMAC Tuner
     
     ```bash
-    nnictl package install --name=SMAC
+    nnictl package install --name SMAC
+    ```
+    
+    > 安装自定义 Tuner
+    
+    ```bash
+    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
     ```
 
 * **nnictl package show**
   
   * 说明
     
-    列出支持的安装包
+    显示包的详情。
   
   * 用法
     
     ```bash
-    nnictl package show
+    nnictl package show <包名称>
+    ```
+  
+  * 示例
+    
+    ```bash
+    nnictl package show SMAC
+    ```
+
+* **nnictl package list**
+  
+  * 说明
+    
+    列出安装的、所有包。
+  
+  * 用法
+    
+    ```bash
+    nnictl package list [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写 | 是否必需  | 默认值 | 说明    |
+  | ----- | ----- | --- | ----- |
+  | --all | False |     | 列出所有包 |
+  
+  * 示例
+    
+    > 列出已安装的包
+    
+    ```bash
+    nnictl package list
+    ```
+    
+    > 列出所有包
+    
+    ```bash
+    nnictl package list --all
+    ```
+
+* **nnictl package uninstall**
+  
+  * 说明
+    
+    卸载包。
+  
+  * 用法
+    
+    ```bash
+    nnictl package uninstall <包名称>
+    ```
+  
+  * 示例 卸载 SMAC 包
+    
+    ```bash
+    nnictl package uninstall SMAC
     ```
 
 <a name="ss_gen"></a>
