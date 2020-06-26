@@ -2,7 +2,7 @@ set -e
 mkdir -p /outputs /tmp
 
 echo "Installing dependencies..."
-apt update && apt install -y wget
+apt update && apt install -y wget zip
 pip install --no-cache-dir tqdm peewee
 
 echo "Installing NNI..."
@@ -12,6 +12,7 @@ cd /tmp
 
 echo "Downloading NDS..."
 wget https://dl.fbaipublicfiles.com/nds/data.zip -O data.zip
+unzip data.zip
 
 echo "Generating database..."
 rm -f /outputs/nds.db /outputs/nds.db-journal
