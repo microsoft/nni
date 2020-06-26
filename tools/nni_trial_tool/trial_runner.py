@@ -47,6 +47,7 @@ def main_loop(args):
             if command_type == CommandType.NewTrialJob:
                 trial_id = command_data["trialId"]
                 if trial_id in trials.keys():
+                    trial = trials[trial_id]
                     if trial.is_running():
                         raise Exception('trial %s is running already, cannot start a new one' % trial.id)
                     else:
