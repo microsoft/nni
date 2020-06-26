@@ -6,21 +6,32 @@ from .model import NdsComputedStats, NdsIntermediateStats, NdsRunConfig
 
 
 def query_nds_computed_stats(model_family, proposer, generator, model_spec, cell_spec, dataset,
-                             base_lr=None, weight_decay=None, num_epochs=None, reduction=None):
+                             num_epochs=None, reduction=None):
     """
     Query computed stats of NDS given conditions.
 
     Parameters
     ----------
     model_family : str or None
+        If str, can be one of the model families available in :class:`nni.nas.benchmark.nds.NdsRunConfig`.
+        Otherwise a wildcard.
     proposer : str or None
+        If str, can be one of the proposers available in :class:`nni.nas.benchmark.nds.NdsRunConfig`. Otherwise a wildcard.
     generator : str or None
+        If str, can be one of the generators available in :class:`nni.nas.benchmark.nds.NdsRunConfig`. Otherwise a wildcard.
     model_spec : dict or None
+        If specified, can be one of the model spec available in :class:`nni.nas.benchmark.nds.NdsRunConfig`.
+        Otherwise a wildcard.
+    cell_spec : dict or None
+        If specified, can be one of the cell spec available in :class:`nni.nas.benchmark.nds.NdsRunConfig`.
+        Otherwise a wildcard.
     dataset : str or None
-    base_lr : float or None
-    weight_decay : float or None
+        If str, can be one of the datasets available in :class:`nni.nas.benchmark.nds.NdsRunConfig`. Otherwise a wildcard.
     num_epochs : float or None
+        If int, matching results will be returned. Otherwise a wildcard.
     reduction : str or None
+        If 'none' or None, all computed stats will be returned directly.
+        If 'mean', fields in computed stats will be averaged given the same run config.
 
     Returns
     -------
@@ -42,7 +53,7 @@ def query_nds_computed_stats(model_family, proposer, generator, model_spec, cell
     query = NdsComputedStats.select(*fields, NdsRunConfig).join(NdsRunConfig)
     conditions = []
     for field_name in ['model_family', 'proposer', 'generator', 'model_spec', 'cell_spec',
-                       'dataset', 'base_lr', 'weight_decay', 'num_epochs']:
+                       'dataset', 'num_epochs']:
         if locals()[field_name] is not None:
             conditions.append(getattr(NdsRunConfig, field_name) == locals()[field_name])
     if conditions:

@@ -12,20 +12,34 @@ class NdsRunConfig(Model):
     """
     Run config for NDS.
 
+`model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
+
     Attributes
     ----------
     model_family : str
         Could be ``nas_cell``, ``residual_bottleneck``, ``residual_basic`` or ``vanilla``.
     model_spec : dict
-        TODO
+        If ``model_family`` is ``nas_cell``, it contains ``num_nodes_normal``, ``num_nodes_reduce``, ``depth``,
+        ``width``, ``aux`` and ``drop_prob``. If ``model_family`` is ``residual_bottleneck``, it contains ``bot_muls``,
+        ``ds`` (depths), ``num_gs`` (number of groups) and ``ss`` (strides). If ``model_family`` is ``residual_basic`` or
+        ``vanilla``, it contains ``ds``, ``ss`` and ``ws``.
     cell_spec : dict
-        TODO
+        If ``model_family`` is not ``nas_cell`` it will be an empty dict. Otherwise, it specifies
+        ``<normal/reduce>_<i>_<op/input>_<x/y>``, where i ranges from 0 to ``num_nodes_<normal/reduce> - 1``.
+        If it is an ``op``, the value is chosen from the constants specified previously like :const:`nni.nas.benchmark.nds.CONV_1X1`.
+        If it is i's ``input``, the value range from 0 to ``i + 1``, as ``nas_cell`` uses previous two nodes as inputs, and
+        node 0 is actually the second node. Refer to NASNet paper for details. Finally, another two key-value pairs
+        ``normal_concat`` and ``reduce_concat`` specify which nodes are eventually concatenated into output.
     dataset : str
         Dataset used. Could be ``cifar10`` or ``imagenet``.
     generator : str
-        TODO
+        Can be one of ``random`` which generates configurations at random, while keeping learning rate and weight decay fixed,
+        ``fix_w_d`` which further keeps ``width`` and ``depth`` fixed, only applicable for ``nas_cell``. ``tune_lr_wd`` which
+        further tunes learning rate and weight decay. 
     proposer : str
-        TODO
+        Paper who has proposed the distribution for random sampling. Available proposers include ``nasnet``, ``darts``, ``enas``,
+        ``pnas``, ``amoeba``, ``vanilla``, ``resnext-a``, ``resnext-b``, ``resnet``, ``resnet-b`` (ResNet with bottleneck).
+        See NDS paper for details.
     base_lr : float
         Initial learning rate.
     weight_decay : float
