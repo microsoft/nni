@@ -1,13 +1,14 @@
 set -e
 mkdir -p /outputs /tmp
 
+echo "Installing NNI..."
+cd /nni && echo "y" | source install.sh
+
 cd /tmp
 
 echo "Installing dependencies..."
 apt install -y wget
 pip install --no-cache-dir tqdm peewee
-git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
-cd nni && source install.sh && cd ..
 
 echo "Downloading NDS..."
 wget https://dl.fbaipublicfiles.com/nds/data.zip -O data.zip

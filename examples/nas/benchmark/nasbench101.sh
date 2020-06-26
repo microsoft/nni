@@ -1,15 +1,18 @@
 set -e
 mkdir -p /outputs /tmp
 
-cd /tmp
-
 echo "Installing dependencies..."
 apt install -y wget
 pip install --no-cache-dir tqdm peewee
+
+echo "Installing NNI..."
+cd /nni && echo "y" | source install.sh
+
+cd /tmp
+
+echo "Installing NASBench..."
 git clone https://github.com/google-research/nasbench
 cd nasbench && pip install -e . && cd ..
-git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
-cd nni && source install.sh && cd ..
 
 echo "Downloading NAS-Bench-101..."
 wget https://storage.googleapis.com/nasbench/nasbench_full.tfrecord
