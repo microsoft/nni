@@ -20,19 +20,19 @@ git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 For NAS-Bench-101,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmark/nasbench101.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmark/nasbench101.sh
 ```
 
 For NAS-Bench-201,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs /path/to/your/nni:/nni ufoym/deepo:torch-cpu /bin/bash /nni/examples/nas/benchmark/nasbench201.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:torch-cpu /bin/bash /nni/examples/nas/benchmark/nasbench201.sh
 ```
 
 For NDS,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs /path/to/your/nni:/nni python:3.8 /bin/bash /nni/examples/nas/benchmark/nds.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmark/nds.sh
 ```
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
