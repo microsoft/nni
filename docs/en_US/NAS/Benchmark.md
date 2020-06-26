@@ -8,7 +8,7 @@
 
 ## NAS-Bench-101
 
-[Paper link](https://arxiv.org/abs/1902.09635) [Open-source](https://github.com/google-research/nasbench)
+[Paper link](https://arxiv.org/abs/1902.09635) &nbsp; &nbsp; [Open-source](https://github.com/google-research/nasbench)
 
 NAS-Bench-101 contains 423,624 unique neural networks, combined with 4 variations in number of epochs (4, 12, 36, 108), each of which is trained 3 times. It is a cell-wise search space, which constructs and stacks a cell by enumerating DAGs with at most 7 operators, and no more than 9 connections. All operators can be chosen from `CONV3X3_BN_RELU`, `CONV1X1_BN_RELU` and `MAXPOOL3X3`, except the first operator (always `INPUT`) and last operator (always `OUTPUT`).
 
@@ -54,7 +54,7 @@ It takes about 70 minutes to dump the records and build index. Output size is ab
 
 ## NAS-Bench-201
 
-[Paper link](https://arxiv.org/abs/2001.00326) [Open-source API](https://github.com/D-X-Y/NAS-Bench-201) [Implementations](https://github.com/D-X-Y/AutoDL-Projects)
+[Paper link](https://arxiv.org/abs/2001.00326) &nbsp; &nbsp; [Open-source API](https://github.com/D-X-Y/NAS-Bench-201) &nbsp; &nbsp;[Implementations](https://github.com/D-X-Y/AutoDL-Projects)
 
 NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges as operators. The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` and `AVG_POOL_3X3`). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
 
@@ -93,7 +93,7 @@ The process takes about several minutes to download (~4GB) depending on the netw
 
 ## NDS
 
-[Paper link](https://arxiv.org/abs/1905.13214) [Open-source](https://github.com/facebookresearch/nds)
+[Paper link](https://arxiv.org/abs/1905.13214) &nbsp; &nbsp; [Open-source](https://github.com/facebookresearch/nds)
 
 _On Network Design Spaces for Visual Recognition_ released computed statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
 
@@ -109,6 +109,52 @@ Please replace `${NNI_VERSION}` with any NNI version, for example, v1.6 or maste
 
 The conversion takes around 80 minutes to complete. Output size is about 1.6GB.
 
+## Available Operators
+
+Here is a list of available operators used in NDS.
+
+```eval_rst
+.. autoattribute:: nni.nas.benchmark.nds.constants.NONE
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.SKIP_CONNECT
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.AVG_POOL_3X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_3X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_5X5
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_7X7
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_1X1
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_3X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_3X1_1X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_7X1_1X7
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_CONV_3X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_CONV_5X5
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_3X3
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_5X5
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_7X7
+
+.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_SEP_CONV_3X3
+```
+
 ### API Documentation
 
-TODO
+```eval_rst
+.. autofunction:: nni.nas.benchmark.nds.query_nds_computed_stats
+
+.. autoclass:: nni.nas.benchmark.nds.NdsRunConfig
+
+.. autoclass:: nni.nas.benchmark.nds.NdsComputedStats
+
+.. autoclass:: nni.nas.benchmark.nds.NdsIntermediateStats
+```

@@ -12,8 +12,6 @@ class NdsRunConfig(Model):
     """
     Run config for NDS.
 
-`model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
-
     Attributes
     ----------
     model_family : str
