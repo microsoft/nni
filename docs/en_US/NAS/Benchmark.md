@@ -26,7 +26,7 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tenso
 For NAS-Bench-201,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:torch-cpu /bin/bash /nni/examples/nas/benchmark/nasbench201.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmark/nasbench201.sh
 ```
 
 For NDS,

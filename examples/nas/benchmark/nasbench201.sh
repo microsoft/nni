@@ -3,6 +3,7 @@ mkdir -p /outputs /tmp
 
 echo "Installing dependencies..."
 apt update && apt install -y wget
+pip uninstall -y enum34  # https://github.com/iterative/dvc/issues/1995
 pip install --no-cache-dir gdown tqdm peewee
 
 echo "Installing NNI..."
