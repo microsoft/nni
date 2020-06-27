@@ -79,7 +79,7 @@ def run_test_case(test_case_config, it_config, args):
         exit_command = get_command(test_case_config, 'onExitCommand')
         print('Exit command:', exit_command, flush=True)
         if exit_command:
-            subprocess.run(shlex.split(exit_command))
+            subprocess.run(shlex.split(exit_command), check=True)
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
