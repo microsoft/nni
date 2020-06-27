@@ -421,7 +421,7 @@ tuner:
 
 > Built-in Tuner Name: **PPOTuner**
 
-Note that the only acceptable types within the search space is `mutable_layer`. `optional_input_size` can only be 0, 1, or [0, 1].
+Note that the only acceptable types within the search space are `layer_choice` and `input_choice`. For `input_choice`, `n_chosen` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command [`nnictl ss_gen`](../Tutorial/Nnictl.md).
 
 **Suggested scenario**
 
