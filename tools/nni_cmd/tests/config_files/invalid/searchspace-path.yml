@@ -1,0 +1,24 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 15m
+maxTrialNum: 2
+trialConcurrency: 2
+
+# error: searchSpacePath can not be found
+searchSpacePath: ./wrong_search_space.json
+
+tuner:
+  builtinTunerName: Random
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ./
+  command: python3 mnist.py  --epochs 1 --batch_num 10
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local
