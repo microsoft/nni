@@ -5,7 +5,8 @@
 build policy/value network from model
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 from .distri import CategoricalPdType
 from .util import lstm_model, fc, observation_placeholder, adjust_shape
