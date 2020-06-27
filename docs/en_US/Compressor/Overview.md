@@ -48,7 +48,7 @@ Quantization algorithms compress the original network by reducing the number of 
 | [Naive Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#naive-quantizer) |  Quantize weights to default 8 bits |
 | [QAT Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
 | [DoReFa Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
-| [BNN Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#BNN-Quantizer) | Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. [Reference Paper](https://arxiv.org/abs/1602.02830)|
+| [BNN Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#bnn-quantizer) | Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. [Reference Paper](https://arxiv.org/abs/1602.02830)|
 
 ## Automatic Model Compression
 

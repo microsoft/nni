@@ -1,5 +1,9 @@
 # Customize A New Compression Algorithm
 
+```eval_rst
+.. contents::
+```
+
 To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruning and quantization respectively. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
 
 ## Customize a new pruning algorithm

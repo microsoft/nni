@@ -1,5 +1,9 @@
 # Tutorial for Model Compression
 
+```eval_rst
+.. contents::
+```
+
 In this tutorial, we use the [first section](#quick-start-to-compress-a-model) to quickly go through the usage of model compression on NNI. Then use the [second section](#detailed-usage-guide) to explain more details of the usage.
 
 ## Quick Start to Compress a Model
