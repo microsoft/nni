@@ -18,15 +18,9 @@
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    快速入门 <NAS/QuickStart>
-    教程 <NAS/NasGuide>
-    ENAS <NAS/ENAS>
-    DARTS <NAS/DARTS>
-    P-DARTS <NAS/PDARTS>
-    SPOS <NAS/SPOS>
-    CDARTS <NAS/CDARTS>
-    ProxylessNAS <NAS/Proxylessnas>
-    TextNAS <NAS/TextNAS>
+    Write A Search Space <NAS/WriteSearchSpace>
+    Classic NAS <NAS/ClassicNas>
+    One-shot NAS <NAS/one_shot_nas>
     自定义 NAS 算法 <NAS/Advanced>
     NAS 可视化 <NAS/Visualization>
     API 参考 <NAS/NasReference>
