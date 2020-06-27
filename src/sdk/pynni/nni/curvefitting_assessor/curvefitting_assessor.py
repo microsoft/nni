@@ -3,12 +3,23 @@
 
 import logging
 import datetime
+from schema import Schema, Optional
+
+from nni import ClassArgsValidator
 from nni.assessor import Assessor, AssessResult
 from nni.utils import extract_scalar_history
 from .model_factory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
 
+class CurvefittingClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'epoch_num': self.range('epoch_num', int, 0, 9999),
+            Optional('start_step'): self.range('start_step', int, 0, 9999),
+            Optional('threshold'): self.range('threshold', float, 0, 9999),
+            Optional('gap'): self.range('gap', int, 1, 9999),
+        }).validate(kwargs)
 
 class CurvefittingAssessor(Assessor):
     """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
