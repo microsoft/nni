@@ -23,6 +23,11 @@ class GraphNASController(nn.Module):
                        entropy_coeff=1e-4,
                        num_layers=2,
                        max_epoch=10):
+        """
+        The controller to sample gnn architectures.
+        Some parameters are defined by the original implementation.
+        See https://github.com/GraphNAS/GraphNAS.
+        """
         super(GraphNASController, self).__init__()
         self.tanh_c = tanh_c
         self.search_space = search_space
@@ -177,6 +182,11 @@ class GraphNASController(nn.Module):
         return scale_value / max_reward * value
 
 class GraphNASTuner(Tuner):
+    """
+    Tuner to get feedback from a specific architecture and train the controller.
+    When the controller finish training, it will generate the final architecture for 
+    retraining and save them into /tmp/arcs.pkl by default.
+    """
     def __init__(self, arc_save_path, derive_num_samples=100):
         self.controller = None
         self.arc_save_path = arc_save_path

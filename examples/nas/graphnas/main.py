@@ -1,3 +1,8 @@
+"""
+A modification of the original GraphNAS implementation based on nni.
+See https://github.com/GraphNAS/GraphNAS. 
+"""
+
 import torch
 import torch.nn.functional as F
 import numpy as np
