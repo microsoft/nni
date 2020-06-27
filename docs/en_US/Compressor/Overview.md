@@ -27,16 +27,16 @@ Pruning algorithms compress the original network by removing redundant weights o
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
-| [Level Pruner](./Pruner.md#level-pruner) | Pruning the specified ratio on each weight based on absolute values of weights |
-| [AGP Pruner](./Pruner.md#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
-| [Lottery Ticket Pruner](./Pruner.md#agp-pruner) | The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. [Reference Paper](https://arxiv.org/abs/1803.03635)|
-| [FPGM Pruner](./Pruner.md#fpgm-pruner) | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)|
-| [L1Filter Pruner](./Pruner.md#l1filter-pruner) | Pruning filters with the smallest L1 norm of weights in convolution layers (Pruning Filters for Efficient Convnets) [Reference Paper](https://arxiv.org/abs/1608.08710) |
-| [L2Filter Pruner](./Pruner.md#l2filter-pruner) | Pruning filters with the smallest L2 norm of weights in convolution layers |
-| [ActivationAPoZRankFilterPruner](./Pruner.md#ActivationAPoZRankFilterPruner) | Pruning filters based on the metric APoZ (average percentage of zeros) which measures the percentage of zeros in activations of (convolutional) layers. [Reference Paper](https://arxiv.org/abs/1607.03250) |
-| [ActivationMeanRankFilterPruner](./Pruner.md#ActivationMeanRankFilterPruner) | Pruning filters based on the metric that calculates the smallest mean value of output activations |
-| [Slim Pruner](./Pruner.md#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming) [Reference Paper](https://arxiv.org/abs/1708.06519) |
-| [TaylorFO Pruner](./Pruner.md#taylorfoweightfilterpruner) | Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) [Reference Paper](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) |
+| [Level Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#level-pruner) | Pruning the specified ratio on each weight based on absolute values of weights |
+| [AGP Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#agp-pruner) | Automated gradual pruning (To prune, or not to prune: exploring the efficacy of pruning for model compression) [Reference Paper](https://arxiv.org/abs/1710.01878)|
+| [Lottery Ticket Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#lottery-ticket-hypothesis) | The pruning process used by "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks". It prunes a model iteratively. [Reference Paper](https://arxiv.org/abs/1803.03635)|
+| [FPGM Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#fpgm-pruner) | Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration [Reference Paper](https://arxiv.org/pdf/1811.00250.pdf)|
+| [L1Filter Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#l1filter-pruner) | Pruning filters with the smallest L1 norm of weights in convolution layers (Pruning Filters for Efficient Convnets) [Reference Paper](https://arxiv.org/abs/1608.08710) |
+| [L2Filter Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#l2filter-pruner) | Pruning filters with the smallest L2 norm of weights in convolution layers |
+| [ActivationAPoZRankFilterPruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#ActivationAPoZRankFilterPruner) | Pruning filters based on the metric APoZ (average percentage of zeros) which measures the percentage of zeros in activations of (convolutional) layers. [Reference Paper](https://arxiv.org/abs/1607.03250) |
+| [ActivationMeanRankFilterPruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#ActivationMeanRankFilterPruner) | Pruning filters based on the metric that calculates the smallest mean value of output activations |
+| [Slim Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming) [Reference Paper](https://arxiv.org/abs/1708.06519) |
+| [TaylorFO Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#taylorfoweightfilterpruner) | Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) [Reference Paper](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) |
 
 
 ### Quantization Algorithms
@@ -45,10 +45,10 @@ Quantization algorithms compress the original network by reducing the number of 
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
-| [Naive Quantizer](./Quantizer.md#naive-quantizer) |  Quantize weights to default 8 bits |
-| [QAT Quantizer](./Quantizer.md#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
-| [DoReFa Quantizer](./Quantizer.md#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
-| [BNN Quantizer](./Quantizer.md#BNN-Quantizer) | Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. [Reference Paper](https://arxiv.org/abs/1602.02830)|
+| [Naive Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#naive-quantizer) |  Quantize weights to default 8 bits |
+| [QAT Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#qat-quantizer) | Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference. [Reference Paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf)|
+| [DoReFa Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#dorefa-quantizer) | DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. [Reference Paper](https://arxiv.org/abs/1606.06160)|
+| [BNN Quantizer](https://nni.readthedocs.io/en/latest/Compressor/Quantizer.html#BNN-Quantizer) | Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. [Reference Paper](https://arxiv.org/abs/1602.02830)|
 
 ## Automatic Model Compression
 
