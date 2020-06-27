@@ -64,7 +64,7 @@ A `pruner` is responsible for:
 
 ### Implement a new pruning algorithm
 
-Implementing a new pruning algorithm requires implementing a `weight masker` class which shoud be a subclass of `WeightMasker`, and a `pruner` class, which should a subclass `Pruner`.
+Implementing a new pruning algorithm requires implementing a `weight masker` class which shoud be a subclass of `WeightMasker`, and a `pruner` class, which should be a subclass `Pruner`.
 
 An implementation of `weight masker` may look like this:
 

@@ -8,7 +8,7 @@ In this tutorial, we use the [first section](#quick-start-to-compress-a-model) t
 
 ## Quick Start to Compress a Model
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use slim pruner as an example to show the usage.
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use [slim pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#slim-pruner) as an example to show the usage.
 
 ### Write configuration
 
