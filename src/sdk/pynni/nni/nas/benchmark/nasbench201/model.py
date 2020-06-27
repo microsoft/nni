@@ -81,7 +81,7 @@ class Nb201ComputedStats(Model):
     parameters : float
         Number of trainable parameters in million.
     latency : float
-        Latency in milliseconds.
+        Latency in seconds.
     flops : float
         FLOPs in million.
     training_time : float
