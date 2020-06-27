@@ -1,21 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from collections import OrderedDict
 
-import torch
 import torch.nn as nn
 import copy
 
 import ops
 from darts_cell import DartsCell
-from nni.nas.pytorch import mutables
 
 
 class DartsStackedCells(nn.Module):
-    '''
+    """
     builtin Darts Search Space
-    Compared to Darts example, DartsSearchSpace removes Auxiliary Head, which 
+    Compared to Darts example, DartsSearchSpace removes Auxiliary Head, which
     is considered as a trick rather than part of model.
 
     Attributes
@@ -34,7 +31,8 @@ class DartsStackedCells(nn.Module):
         the number of nodes contained in each cell
     stem_multiplier: int
         channels multiply coefficient when passing a cell
-    '''
+    """
+
     def __init__(self, in_channels, channels, n_classes, n_layers, cell: DartsCell, n_nodes=4,
                  stem_multiplier=3):
         super().__init__()
@@ -64,8 +62,12 @@ class DartsStackedCells(nn.Module):
 
             # cell = DartsCell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
             temp_cell = copy.deepcopy(cell)
-            setattr(temp_cell, 'reduction', reduction)
-            setattr(temp_cell, 'reduction_p', reduction_p)
+            temp_cell.reduction = reduction
+            temp_cell.reduction_p = reduction_p
+            temp_cell.channels_p = channels_p
+            temp_cell.channels_pp = channels_pp
+            temp_cell.channels = c_cur
+            temp_cell.init()
             self.cells.append(temp_cell)
             c_cur_out = c_cur * n_nodes
             channels_pp, channels_p = channels_p, c_cur_out
@@ -76,7 +78,7 @@ class DartsStackedCells(nn.Module):
     def forward(self, x):
         s0 = s1 = self.stem(x)
 
-        for i, cell in enumerate(self.cells):
+        for cell in self.cells:
             s0, s1 = s1, cell(s0, s1)
 
         out = self.gap(s1)

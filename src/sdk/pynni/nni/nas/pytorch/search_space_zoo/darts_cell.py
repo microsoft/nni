@@ -12,7 +12,7 @@ import ops
 
 class Node(nn.Module):
     def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect):
-        '''
+        """
         builtin Darts Node structure
 
         Attributes
@@ -23,7 +23,7 @@ class Node(nn.Module):
         channels: int
             output channels
         num_downsample_connect: int
-        '''
+        """
         super().__init__()
         self.ops = nn.ModuleList()
         choice_keys = []
@@ -34,7 +34,8 @@ class Node(nn.Module):
                 mutables.LayerChoice(OrderedDict([
                     ("maxpool", ops.PoolBN('max', channels, 3, stride, 1, affine=False)),
                     ("avgpool", ops.PoolBN('avg', channels, 3, stride, 1, affine=False)),
-                    ("skipconnect", nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False)),
+                    ("skipconnect",
+                     nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False)),
                     ("sepconv3x3", ops.SepConv(channels, channels, 3, stride, 1, affine=False)),
                     ("sepconv5x5", ops.SepConv(channels, channels, 5, stride, 2, affine=False)),
                     ("dilconv3x3", ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False)),
@@ -51,39 +52,43 @@ class Node(nn.Module):
 
 
 class DartsCell(nn.Module):
-    '''
-    Builtin Darts Cell structure.
+    """
+    Builtin Darts Cell structure. MUST manually call `init()` to setup.
 
     Attributes
     ---
     n_nodes: int
         the number of nodes contained in this cell
-    channels_pp: int
-        the number of previous previous cell's output channels
-    channels_p: int
-        the number of previous cell's output channels
-    channels: int
-        the number of output channels for each node
-    '''
-    def __init__(self, n_nodes, channels_pp, channels_p, channels):
+    """
+
+    def __init__(self, n_nodes):
         super().__init__()
         self.reduction = False
         self.n_nodes = n_nodes
         self.reduction_p = False
 
+        self.channels_p = 0
+        self.channels_pp = 0
+        self.channels = 0
+
+        self.preproc0 = None
+        self.preproc1 = None
+        self.mutable_ops = None
+
+    def init(self):
         # If previous cell is reduction cell, current input size does not match with
         # output size of cell[k-2]. So the output[k-2] should be reduced by preprocessing.
         if self.reduction_p:
-            self.preproc0 = ops.FactorizedReduce(channels_pp, channels, affine=False)
+            self.preproc0 = ops.FactorizedReduce(self.channels_pp, self.channels, affine=False)
         else:
-            self.preproc0 = ops.StdConv(channels_pp, channels, 1, 1, 0, affine=False)
-        self.preproc1 = ops.StdConv(channels_p, channels, 1, 1, 0, affine=False)
+            self.preproc0 = ops.StdConv(self.channels_pp, self.channels, 1, 1, 0, affine=False)
+        self.preproc1 = ops.StdConv(self.channels_p, self.channels, 1, 1, 0, affine=False)
 
         # generate dag
         self.mutable_ops = nn.ModuleList()
         for depth in range(2, self.n_nodes + 2):
             self.mutable_ops.append(Node("{}_n{}".format("reduce" if self.reduction else "normal", depth),
-                                         depth, channels, 2 if self.reduction else 0))
+                                         depth, self.channels, 2 if self.reduction else 0))
 
     def forward(self, s0, s1):
         # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
