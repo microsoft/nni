@@ -1,4 +1,4 @@
-# NAS Benchmark (experimental)
+# NAS Benchmarks (experimental)
 
 ## Prerequisites
 
@@ -20,19 +20,19 @@ git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 For NAS-Bench-101,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmark/nasbench101.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
 ```
 
 For NAS-Bench-201,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmark/nasbench201.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
 ```
 
 For NDS,
 
 ```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmark/nds.sh
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
 ```
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
@@ -48,29 +48,29 @@ Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from inp
 ### API Documentation
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nasbench101.query_nb101_trial_stats
+.. autofunction:: nni.nas.benchmarks.nasbench101.query_nb101_trial_stats
 
-.. autoattribute:: nni.nas.benchmark.nasbench101.INPUT
+.. autoattribute:: nni.nas.benchmarks.nasbench101.INPUT
 
-.. autoattribute:: nni.nas.benchmark.nasbench101.OUTPUT
+.. autoattribute:: nni.nas.benchmarks.nasbench101.OUTPUT
 
-.. autoattribute:: nni.nas.benchmark.nasbench101.CONV3X3_BN_RELU
+.. autoattribute:: nni.nas.benchmarks.nasbench101.CONV3X3_BN_RELU
 
-.. autoattribute:: nni.nas.benchmark.nasbench101.CONV1X1_BN_RELU
+.. autoattribute:: nni.nas.benchmarks.nasbench101.CONV1X1_BN_RELU
 
-.. autoattribute:: nni.nas.benchmark.nasbench101.MAXPOOL3X3
+.. autoattribute:: nni.nas.benchmarks.nasbench101.MAXPOOL3X3
 
-.. autoclass:: nni.nas.benchmark.nasbench101.Nb101TrialConfig
+.. autoclass:: nni.nas.benchmarks.nasbench101.Nb101TrialConfig
 
-.. autoclass:: nni.nas.benchmark.nasbench101.Nb101TrialStats
+.. autoclass:: nni.nas.benchmarks.nasbench101.Nb101TrialStats
 
-.. autoclass:: nni.nas.benchmark.nasbench101.Nb101IntermediateStats
+.. autoclass:: nni.nas.benchmarks.nasbench101.Nb101IntermediateStats
 
-.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.nasbench_format_to_architecture_repr
+.. autofunction:: nni.nas.benchmarks.nasbench101.graph_util.nasbench_format_to_architecture_repr
 
-.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.infer_num_vertices
+.. autofunction:: nni.nas.benchmarks.nasbench101.graph_util.infer_num_vertices
 
-.. autofunction:: nni.nas.benchmark.nasbench101.graph_util.hash_module
+.. autofunction:: nni.nas.benchmarks.nasbench101.graph_util.hash_module
 ```
 
 ## NAS-Bench-201
@@ -83,23 +83,23 @@ NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges 
 
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nasbench201.query_nb201_trial_stats
+.. autofunction:: nni.nas.benchmarks.nasbench201.query_nb201_trial_stats
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.NONE
+.. autoattribute:: nni.nas.benchmarks.nasbench201.NONE
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.SKIP_CONNECT
+.. autoattribute:: nni.nas.benchmarks.nasbench201.SKIP_CONNECT
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.CONV_1X1
+.. autoattribute:: nni.nas.benchmarks.nasbench201.CONV_1X1
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.CONV_3X3
+.. autoattribute:: nni.nas.benchmarks.nasbench201.CONV_3X3
 
-.. autoattribute:: nni.nas.benchmark.nasbench201.AVG_POOL_3X3
+.. autoattribute:: nni.nas.benchmarks.nasbench201.AVG_POOL_3X3
 
-.. autoclass:: nni.nas.benchmark.nasbench201.Nb201TrialConfig
+.. autoclass:: nni.nas.benchmarks.nasbench201.Nb201TrialConfig
 
-.. autoclass:: nni.nas.benchmark.nasbench201.Nb201TrialStats
+.. autoclass:: nni.nas.benchmarks.nasbench201.Nb201TrialStats
 
-.. autoclass:: nni.nas.benchmark.nasbench201.Nb201IntermediateStats
+.. autoclass:: nni.nas.benchmarks.nasbench201.Nb201IntermediateStats
 ```
 
 ## NDS
@@ -115,47 +115,47 @@ Instead of storing results obtained with different configurations in separate fi
 Here is a list of available operators used in NDS.
 
 ```eval_rst
-.. autoattribute:: nni.nas.benchmark.nds.constants.NONE
+.. autoattribute:: nni.nas.benchmarks.nds.constants.NONE
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.SKIP_CONNECT
+.. autoattribute:: nni.nas.benchmarks.nds.constants.SKIP_CONNECT
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.AVG_POOL_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.AVG_POOL_3X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.MAX_POOL_3X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_5X5
+.. autoattribute:: nni.nas.benchmarks.nds.constants.MAX_POOL_5X5
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.MAX_POOL_7X7
+.. autoattribute:: nni.nas.benchmarks.nds.constants.MAX_POOL_7X7
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_1X1
+.. autoattribute:: nni.nas.benchmarks.nds.constants.CONV_1X1
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.CONV_3X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_3X1_1X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.CONV_3X1_1X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.CONV_7X1_1X7
+.. autoattribute:: nni.nas.benchmarks.nds.constants.CONV_7X1_1X7
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_CONV_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.DIL_CONV_3X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_CONV_5X5
+.. autoattribute:: nni.nas.benchmarks.nds.constants.DIL_CONV_5X5
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.SEP_CONV_3X3
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_5X5
+.. autoattribute:: nni.nas.benchmarks.nds.constants.SEP_CONV_5X5
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.SEP_CONV_7X7
+.. autoattribute:: nni.nas.benchmarks.nds.constants.SEP_CONV_7X7
 
-.. autoattribute:: nni.nas.benchmark.nds.constants.DIL_SEP_CONV_3X3
+.. autoattribute:: nni.nas.benchmarks.nds.constants.DIL_SEP_CONV_3X3
 ```
 
 ### API Documentation
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nds.query_nds_trial_stats
+.. autofunction:: nni.nas.benchmarks.nds.query_nds_trial_stats
 
-.. autoclass:: nni.nas.benchmark.nds.NdsTrialConfig
+.. autoclass:: nni.nas.benchmarks.nds.NdsTrialConfig
 
-.. autoclass:: nni.nas.benchmark.nds.NdsTrialStats
+.. autoclass:: nni.nas.benchmarks.nds.NdsTrialStats
 
-.. autoclass:: nni.nas.benchmark.nds.NdsIntermediateStats
+.. autoclass:: nni.nas.benchmarks.nds.NdsIntermediateStats
 ```
