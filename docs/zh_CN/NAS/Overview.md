@@ -14,22 +14,22 @@
 
 通过统一的接口，有两种方法来使用神经网络架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 <a href="#支持的经典-nas-算法"">第二种</a>是经典的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行。 称之为经典的 NAS。
 
-NNI also provides dedicated [visualization tool](#nas-visualization) for users to check the status of the neural architecture search process.
+NNI 还提供了专门的[可视化工具](#nas-可视化)，用于查看神经网络架构搜索的过程。
 
 ## 支持的经典 NAS 算法
 
-The procedure of classic NAS algorithms is similar to hyper-parameter tuning, users use `nnictl` to start experiments and each model runs as a trial. The difference is that search space file is automatically generated from user model (with search space in it) by running `nnictl ss_gen`. The following table listed supported tuning algorihtms for classic NAS mode. More algorihtms will be supported in future release.
+经典 NAS 算法的过程类似于超参调优，通过 `nnictl` 来启动 Experiment，每个子模型会作为 Trial 运行。 不同之处在于，搜索空间文件是通过运行 `nnictl ss_gen`，从用户模型（已包含搜索空间）中自动生成。 下表列出了经典 NAS 模式支持的算法。 将来版本会支持更多算法。
 
-| 名称                                                                                             | 算法简介                                                                                                                    |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| [Random Search](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner) | Randomly pick a model from search space                                                                                 |
-| [PPO Tuner](https://nni.readthedocs.io/en/latest/Tuner/BuiltinTuner.html#PPOTuner)             | PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. [Reference Paper](https://arxiv.org/abs/1707.06347) |
+| 名称                                                                                                   | 算法简介                                                                      |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| [Random Search（随机搜索）](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner) | 从搜索空间中随机选择模型                                                              |
+| [PPO Tuner](https://nni.readthedocs.io/en/latest/Tuner/BuiltinTuner.html#PPOTuner)                   | PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 [参考论文](https://arxiv.org/abs/1707.06347) |
 
-Please refer to [here](ClassicNas.md) for the usage of classic NAS algorithms.
+参考[这里](ClassicNas.md)，了解如何使用经典 NAS 算法。
 
-## Supported One-shot NAS Algorithms
+## 支持的 One-shot NAS 算法
 
-NNI currently supports the one-shot NAS algorithms listed below and is adding more. Users can reproduce an algorithm or use it on their own dataset. We also encourage users to implement other algorithms with [NNI API](#use-nni-api), to benefit more people.
+NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多算法。 用户可以重现算法或在自己的数据集上使用它。 鼓励用户使用 [NNI API](#use-nni-api) 实现其它算法，以使更多人受益。
 
 | 名称                                                                         | 算法简介                                                                                                                                                                                                                                                                                                                                           |
 | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +63,7 @@ The programming interface of designing and searching a model is often demanded i
 
 For using NNI NAS, we suggest users to first go through [the tutorial of NAS API for building search space](./WriteSearchSpace.md).
 
-## NAS Visualization
+## NAS 可视化
 
 To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
