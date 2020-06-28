@@ -1,7 +1,7 @@
 import argparse
 
 from tqdm import tqdm
-from nasbench import api
+from nasbench import api  # pylint: disable=import-error
 
 from .model import db, Nb101TrialConfig, Nb101TrialStats, Nb101IntermediateStats
 from .graph_util import nasbench_format_to_architecture_repr, hash_module

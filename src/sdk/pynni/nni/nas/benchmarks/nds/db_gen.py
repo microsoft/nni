@@ -41,7 +41,7 @@ def inject_item(db, item, proposer, dataset, generator):
             raise ValueError('Unrecognized block type')
         model_spec = {k: v for k, v in item['net'].items() if v and k != 'block_type'}
         cell_spec = {}
-    trial_config, created = NdsTrialConfig.get_or_create(
+    trial_config, _ = NdsTrialConfig.get_or_create(
         model_family=model_family,
         model_spec=model_spec,
         cell_spec=cell_spec,
@@ -107,14 +107,14 @@ def main():
         'ResNet.json',
         'ResNet_lr-wd.json',
         'ResNet_lr-wd_in.json',
-        'ResNet_retrials.json',
+        'ResNet_reruns.json',
         'ResNet_rng1.json',
         'ResNet_rng2.json',
         'ResNet_rng3.json',
         'Vanilla.json',
         'Vanilla_lr-wd.json',
         'Vanilla_lr-wd_in.json',
-        'Vanilla_retrials.json',
+        'Vanilla_reruns.json',
         'Vanilla_rng1.json',
         'Vanilla_rng2.json',
         'Vanilla_rng3.json'
