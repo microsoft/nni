@@ -196,7 +196,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/TrainingService/SupportTrainingService.md">Support TrainingService</li>
+        <li><a href="docs/en_US/TrainingService/Overview.md">Support TrainingService</li>
         <li><a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">Implement TrainingService</a></li>
       </ul>
       </td>
