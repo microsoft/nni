@@ -2,11 +2,6 @@
 # Licensed under the MIT license.
 
 import os
-<<<<<<< HEAD
-import json
-import netifaces
-=======
->>>>>>> 57c300efeb6870fbaef4dba96a780db1d97f931d
 from schema import SchemaError
 from .config_schema import NNIConfigSchema
 from .common_utils import print_normal
