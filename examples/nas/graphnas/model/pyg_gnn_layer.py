@@ -181,7 +181,7 @@ class GeoLayer(MessagePassing):
 
     def get_param_dict(self):
         params = {}
-        key = f"{self.att_type}_{self.agg_type}_{self.in_channels}_{self.out_channels}_{self.heads}"
+        key = "{}_{}_{}_{}_{}".format(self.att_type, self.agg_type, self.in_channels, self.out_channels, self.heads)
         weight_key = key + "_weight"
         att_key = key + "_att"
         agg_key = key + "_agg"
@@ -196,7 +196,7 @@ class GeoLayer(MessagePassing):
         return params
 
     def load_param(self, params):
-        key = f"{self.att_type}_{self.agg_type}_{self.in_channels}_{self.out_channels}_{self.heads}"
+        key = "{}_{}_{}_{}_{}".format(self.att_type, self.agg_type, self.in_channels, self.out_channels, self.heads)
         weight_key = key + "_weight"
         att_key = key + "_att"
         agg_key = key + "_agg"

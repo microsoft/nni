@@ -54,6 +54,8 @@ class GraphNet(torch.nn.Module):
         return out_channels_list[-1] == self.num_label
 
     def build_hidden_layers(self, actions, batch_normal, drop_out, layer_nums, num_feat, num_label, state_num=6):
+        out_channels = None
+        head_num = None
 
         # build hidden layer
         for i in range(layer_nums):

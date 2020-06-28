@@ -44,6 +44,9 @@ class GraphNet(BaseNet):
         self.build_hidden_layers(actions, batch_normal, drop_out, self.layer_nums, num_feat, num_label, state_num)
 
     def build_hidden_layers(self, actions, batch_normal, drop_out, layer_nums, num_feat, num_label, state_num=6):
+        out_channels = None
+        head_num = None
+
         # build hidden layer
         for i in range(layer_nums):
 
@@ -120,11 +123,11 @@ class GraphNet(BaseNet):
                 result[key] = new_param
         if self.residual:
             for i, fc in enumerate(self.fcs):
-                key = f"layer_{i}_fc_{fc.weight.size(0)}_{fc.weight.size(1)}"
+                key = "layer_{}_fc_{}_{}".format(i, fc.weight.size(0), fc.weight.size(1))
                 result[key] = self.fcs[i]
         if self.batch_normal:
             for i, bn in enumerate(self.bns):
-                key = f"layer_{i}_fc_{bn.weight.size(0)}"
+                key = "layer_{}_fc_{}".format(i, bn.weight.size(0))
                 result[key] = self.bns[i]
         return result
 
@@ -137,11 +140,11 @@ class GraphNet(BaseNet):
 
         if self.residual:
             for i, fc in enumerate(self.fcs):
-                key = f"layer_{i}_fc_{fc.weight.size(0)}_{fc.weight.size(1)}"
+                key = "layer_{}_fc_{}_{}".format(i, fc.weight.size(0), fc.weight.size(1))
                 if key in param:
                     self.fcs[i] = param[key]
         if self.batch_normal:
             for i, bn in enumerate(self.bns):
-                key = f"layer_{i}_fc_{bn.weight.size(0)}"
+                key = "layer_{}_fc_{}".format(i, bn.weight.size(0))
                 if key in param:
                     self.bns[i] = param[key]
