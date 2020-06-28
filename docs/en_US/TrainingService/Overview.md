@@ -1,7 +1,38 @@
 # Training Service
 
-NNI Training service provides the training platform for running NNI trial jobs. NNI supports [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md) and [FrameworkController](./FrameworkControllerMode.md) built-in training services.
-NNI not only provides few built-in training service options, but also provides a method for customers to build their own training service easily.
+## What is Training Service?
+
+NNI training service is designed to allow users to focus on AutoML itself, agnostic to the underlying computing infrastructure where the trials are actually run. When migrating from one cluster to another (e.g., local machine to Kubeflow), users only need to tweak several configurations, and the experiment can be easily scaled.
+
+Users can use training service provided by NNI, to run trial jobs on [local machine](./LocalMode.md), [remote machines](./RemoteMachineMode.md), and on clusters like [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md) and [FrameworkController](./FrameworkControllerMode.md). These are called *built-in training services*.
+
+If the computing resource customers try to use is not listed above, NNI provides interface so that users can build their own training service easily. Please refer to "[how to implement training service](./HowToImplementTrainingService)" for details.
+
+## What does Training Service do?
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
+</p>
+
+According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiates a new trial; 2) collecting metrics and communicating with NNI core (NNI manager). Note that a lot is going on here. To demonstrated how training service works, we show the workflow of training service from the very beginning to the timing when first trial succeeds.
+
+Step 1. **Validate config and prepare the training platform.** Training service will first check whether the training platform user specifies is valid (e.g., is there anything wrong with authentication). After that, training service will starts to prepare for the experiment by making the code directory (`codeDir`) accessible to training platform.
+
+```eval_rst
+.. Note:: Different training services have different ways to handle ``codeDir``. For example, local training service directly runs trials in ``codeDir``. Remote training service packs ``codeDir`` into a zip and uploads it to each machine. K8S-based training services copy ``codeDir`` onto a shared storage, which is either provided by training platform itself, or configured by users in config file.
+```
+
+```eval_rst
+.. Note:: If you are planning to use built-in training services on remote machines or clusters, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`_.
+```
+
+Step 2. **Submit the first trial.** To initiate a trial, usually (in non-reuse mode), NNI copies another few files (including parameters, launch script and etc.) onto training platform. After that, NNI launches the trial through subprocess, SSH, RESTful API, and etc.
+
+```eval_rst
+.. Warning:: The working directory of trial command has the exact same content as ``codeDir``, but can have a differen path (even on differen machines) Local mode is the only training service that shares one ``codeDir`` across all trials. Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
+```
+
+Step 3. **Collect metrics.**  NNI will then monitors the status of trial, updates the status (e.g., from `WAITING` to `RUNNING`, `RUNNING` to `SUCCEEDED`) recorded, and also collects the metrics. Currently, most training services are implemented in an "active" way, i.e., training service will call the RESTful API on NNI manager to update the metrics. Note that this usually requires the machine that runs NNI manager to be at least accessible to the worker node.
 
 ## Built-in TrainingService
 
@@ -12,28 +43,3 @@ NNI not only provides few built-in training service options, but also provides a
 |[__Pai__](./PaiMode.md)|NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.|
 |[__Kubeflow__](./KubeflowMode.md)|NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a Kubernetes cluster, either on-premises or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is setup to connect to your Kubernetes cluster. If you are not familiar with Kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a good start. In kubeflow mode, your trial program will run as Kubeflow job in Kubernetes cluster.|
 |[__FrameworkController__](./FrameworkControllerMode.md)|NNI supports running experiment using [FrameworkController](https://github.com/Microsoft/frameworkcontroller), called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, you don't need to install Kubeflow for specific deep learning framework like tf-operator or pytorch-operator. Now you can use FrameworkController as the training service to run NNI experiment.|
-
-## TrainingService Implementation
-
-TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainingService, users just need to inherit the parent class and complete their own child class if they want to implement customized TrainingService.  
-The abstract function in TrainingService is shown below:
-
-```javascript
-abstract class TrainingService {
-    public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
-    public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
-    public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
-    public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
-    public abstract get isMultiPhaseJobSupported(): boolean;
-    public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
-    public abstract setClusterMetadata(key: string, value: string): Promise<void>;
-    public abstract getClusterMetadata(key: string): Promise<string>;
-    public abstract cleanUp(): Promise<void>;
-    public abstract run(): Promise<void>;
-}
-```
-
-The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.  
-For more information about how to write your own TrainingService, please [refer](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/HowToImplementTrainingService.md).
