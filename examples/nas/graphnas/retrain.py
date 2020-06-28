@@ -91,7 +91,7 @@ def main():
                 max_val_acc = val_acc
                 max_test_acc = test_acc
 
-        print(f'Current architecture: {arc} | Val acc: {max_val_acc} | Test acc: {max_test_acc}')
+        print('Current architecture: {} | Val acc: {} | Test acc: {}'.format(arc, max_val_acc, max_test_acc))
 
         if max_val_acc > total_max_val_acc:
             total_max_val_acc = max_val_acc
@@ -99,7 +99,7 @@ def main():
             best_arc = arc
 
     print('*' * 80)
-    print(f'Best architecture: {best_arc} | Val acc: {total_max_val_acc} | Test acc: {total_max_test_acc}')
+    print('Best architecture: {} | Val acc: {} | Test acc: {}'.format(best_arc, total_max_val_acc, total_max_test_acc))
     print('*' * 80)
 
 if __name__ == '__main__':
