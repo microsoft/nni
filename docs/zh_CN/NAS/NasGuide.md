@@ -46,20 +46,20 @@ trainer.export(file="model_dir/final_architecture.json")  # 将最终架构导�
 
 **注意**，在使用 One-Shot NAS 算法时，不需要启动 NNI Experiment。 不需要 `nnictl`，可直接运行 Python 脚本（即：`train.py`)，如：`python3 train.py`。 训练完成后，可通过 `trainer.export()` 导出找到的最好的模型。
 
-NNI 中每个 Trainer 都用其对应的场景和用法。 一些 Trainer 假定任务是分类任务；一些 Trainer 对 "epoch" 有不同的定义（如：ENAS 的每个 Epoch 是 一些子步骤加上 Controller 的步骤）。 大部分 Trainer 不支持分布式训练：没有使用 `DataParallel` 或 `DistributedDataParallel` 来包装模型。 So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to [customize your trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers).
+NNI 中每个 Trainer 都用其对应的场景和用法。 一些 Trainer 假定任务是分类任务；一些 Trainer 对 "epoch" 有不同的定义（如：ENAS 的每个 Epoch 是 一些子步骤加上 Controller 的步骤）。 大部分 Trainer 不支持分布式训练：没有使用 `DataParallel` 或 `DistributedDataParallel` 来包装模型。 因此，在试用后，如果要在自己的应用中使用 Trainer，需要[自定义 Trainer](./Advanced.md#extend-the-ability-of-one-shot-trainers)。
 
-Furthermore, one-shot NAS can be visualized with our NAS UI. [See more details.](./Visualization.md)
+此外，可以使用 NAS 可视化来显示 One-Shot NAS。 [了解详情](./Visualization.md)。
 
-### Retrain with Exported Architecture
+### 使用导出的架构重新训练
 
-After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. For example
+搜索阶段后，就该训练找到的架构了。 与很多开源 NAS 算法不同，它们为重新训练专门写了新的模型。 实际上搜索模型和重新训练模型的过程非常相似，因而可直接将一样的模型代码用到最终模型上。 例如
 
 ```python
 model = Net()
 apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
-The JSON is simply a mapping from mutable keys to choices. Choices can be expressed in:
+此 JSON 是从 Mutable 键值到 Choice 的映射。 Choice 可为：
 
 * string: 根据名称来指定候选项。
 * number: 根据索引来指定候选项。
@@ -67,7 +67,7 @@ The JSON is simply a mapping from mutable keys to choices. Choices can be expres
 * number 数组: 根据索引来指定候选项。
 * boolean 数组: 可直接选定多项的数组。
 
-For example,
+例如：
 
 ```json
 {
@@ -79,6 +79,6 @@ For example,
 }
 ```
 
-After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules are pruned.
+应用后，模型会被固定，并准备好进行最终训练。 该模型作为单独的模型来工作，未使用的参数和模块已被剪除。
 
-Also, refer to [DARTS](./DARTS.md) for code exemplifying retraining.
+也可参考 [DARTS](./DARTS.md) 的重新训练代码。
