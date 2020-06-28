@@ -31,3 +31,9 @@ cd ${CWD}/../src/nasui
 echo ""
 echo "===========================Testing: nasui==========================="
 CI=true npm test
+
+## ------Run nnictl unit test------
+echo ""
+echo "===========================Testing: nnictl==========================="
+cd ${CWD}/../tools/nni_cmd/
+python3 -m unittest discover -v tests

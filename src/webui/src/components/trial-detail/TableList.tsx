@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
-    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton
+    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost
 } from 'office-ui-fabric-react';
 import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
@@ -149,7 +149,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
-        onRender: (item): React.ReactNode => <div>{item.formattedLatestAccuracy}</div>
+        onRender: (item): React.ReactNode => <TooltipHost content={item.formattedLatestAccuracy}>
+            <div className="ellipsis">{item.formattedLatestAccuracy}</div>
+        </TooltipHost>
     };
 
     SequenceIdColumnConfig: any = {
@@ -556,7 +558,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 other = accDictionary[item].toString();
                             }
                             return (
-                                <div>{other}</div>
+                                <TooltipHost content={other}>
+                                    <div className="ellipsis">{other}</div>
+                                </TooltipHost>
                             );
                         }
                     });
@@ -569,15 +573,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    UNSAFE_componentWillReceiveProps(nextProps: TableListProps): void {
-        const { columnList, tableSource } = nextProps;
-        this.setState({
-            tableSourceForSort: tableSource,
-            tableColumns: this.initTableColumnList(columnList),
-            allColumnList: this.getAllColumnKeys()
-        });
-
+    componentDidUpdate(prevProps: TableListProps): void {
+        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource) {
+            const { columnList, tableSource } = this.props;
+            this.setState({
+                tableSourceForSort: tableSource,
+                tableColumns: this.initTableColumnList(columnList),
+                allColumnList: this.getAllColumnKeys()
+            });
+        }
     }
+
     render(): React.ReactNode {
         const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,

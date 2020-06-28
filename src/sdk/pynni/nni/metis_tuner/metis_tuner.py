@@ -12,7 +12,9 @@ import statistics
 import warnings
 from multiprocessing.dummy import Pool as ThreadPool
 import numpy as np
+from schema import Schema, Optional
 
+from nni import ClassArgsValidator
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
 import nni.metis_tuner.lib_data as lib_data
 import nni.metis_tuner.Regression_GMM.CreateModel as gmm_create_model
@@ -31,6 +33,15 @@ CONSTRAINT_LOWERBOUND = None
 CONSTRAINT_UPPERBOUND = None
 CONSTRAINT_PARAMS_IDX = []
 
+class MetisClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('no_resampling'): bool,
+            Optional('no_candidates'): bool,
+            Optional('selection_num_starting_points'): int,
+            Optional('cold_start_num'): int,
+        }).validate(kwargs)
 
 class MetisTuner(Tuner):
     """

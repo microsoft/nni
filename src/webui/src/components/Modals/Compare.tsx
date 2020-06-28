@@ -5,7 +5,7 @@ import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
 import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/compare.scss';
-import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
 
 // the modal of trial compare
 interface CompareProps {
