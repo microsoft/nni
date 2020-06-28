@@ -5,7 +5,8 @@
 the main model of policy/value network
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 from .util import initialize, get_session
 

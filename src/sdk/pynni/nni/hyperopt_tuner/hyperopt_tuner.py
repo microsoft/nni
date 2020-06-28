@@ -10,6 +10,8 @@ import logging
 
 import hyperopt as hp
 import numpy as np
+from schema import Optional, Schema
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
@@ -178,6 +180,13 @@ def _add_index(in_x, parameter):
             return parameter
     return None  # note: this is not written by original author, feel free to modify if you think it's incorrect
 
+class HyperoptClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('parallel_optimize'): bool,
+            Optional('constant_liar_type'): self.choices('constant_liar_type', 'min', 'max', 'mean')
+        }).validate(kwargs)
 
 class HyperoptTuner(Tuner):
     """
