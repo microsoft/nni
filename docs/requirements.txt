@@ -11,6 +11,7 @@ scipy
 coverage
 peewee
 nbsphinx
+pandoc
 schema
 tensorboard
 scikit-learn==0.20
