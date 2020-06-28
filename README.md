@@ -192,6 +192,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
       <ul>
         <li><a href="docs/en_US/Tuner/CustomizeTuner.md">CustomizeTuner</a></li>
         <li><a href="docs/en_US/Assessor/CustomizeAssessor.md">CustomizeAssessor</a></li>
+        <li><a href="docs/en_US/Tutorial/InstallCustomizedAlgos.md">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">

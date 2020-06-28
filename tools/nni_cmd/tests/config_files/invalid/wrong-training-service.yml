@@ -1,0 +1,23 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 15m
+maxTrialNum: 2
+trialConcurrency: 2
+searchSpacePath: ./search_space.json
+
+tuner:
+  builtinTunerName: Random
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ./
+  command: python3 main.py
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+# error: wrong training service name
+trainingServicePlatform: local222
