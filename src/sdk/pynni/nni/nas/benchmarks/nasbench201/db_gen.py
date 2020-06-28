@@ -49,7 +49,7 @@ def main():
             for epochs in [12, 200]:
                 for dataset in Nb201TrialConfig.dataset.choices:
                     Nb201TrialConfig.create(arch=arch_json, num_epochs=epochs, dataset=dataset,
-                                          num_channels=16, num_cells=5)
+                                            num_channels=16, num_cells=5)
         for arch_info in tqdm.tqdm(nb201_data['arch2infos'].values(),
                                    desc='Processing architecture statistics'):
             for epochs_verb, d in arch_info.items():
@@ -78,8 +78,8 @@ def main():
                         'ori_test_evaluation_time': r['eval_times']['{}@{}'.format(sp[3], epochs - 1)],
                     }
                     config = Nb201TrialConfig.get(
-                        (Nb201TrialConfig.num_epochs == epochs) & \
-                        (Nb201TrialConfig.arch == arch_json) & \
+                        (Nb201TrialConfig.num_epochs == epochs) &
+                        (Nb201TrialConfig.arch == arch_json) &
                         (Nb201TrialConfig.dataset == dataset.lower())
                     )
                     trial_stats = Nb201TrialStats.create(config=config, seed=seed, **data_parsed)

@@ -2,7 +2,7 @@ import functools
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import Nb101TrialStats, Nb101IntermediateStats, Nb101TrialConfig
+from .model import Nb101TrialStats, Nb101TrialConfig
 from .graph_util import hash_module, infer_num_vertices
 
 

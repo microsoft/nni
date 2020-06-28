@@ -1,8 +1,7 @@
 import argparse
-import numpy as np
 
-from nasbench import api
 from tqdm import tqdm
+from nasbench import api
 
 from .model import db, Nb101TrialConfig, Nb101TrialStats, Nb101IntermediateStats
 from .graph_util import nasbench_format_to_architecture_repr, hash_module

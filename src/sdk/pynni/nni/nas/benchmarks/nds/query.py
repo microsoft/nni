@@ -2,11 +2,11 @@ import functools
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import NdsTrialStats, NdsIntermediateStats, NdsTrialConfig
+from .model import NdsTrialStats, NdsTrialConfig
 
 
 def query_nds_trial_stats(model_family, proposer, generator, model_spec, cell_spec, dataset,
-                             num_epochs=None, reduction=None):
+                          num_epochs=None, reduction=None):
     """
     Query trial stats of NDS given conditions.
 

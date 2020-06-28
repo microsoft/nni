@@ -1,5 +1,12 @@
 # NAS Benchmarks (experimental)
 
+```eval_rst
+..  toctree::
+    :hidden:
+
+    Example Usages <BenchmarksExample>
+```
+
 ## Prerequisites
 
 * Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
@@ -36,6 +43,10 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni pytho
 ```
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
+
+## Example Usages
+
+Please refer to [examples usages of Benchmarks API](./BenchmarksExample).
 
 ## NAS-Bench-101
 

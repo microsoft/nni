@@ -33,7 +33,7 @@ class NdsTrialConfig(Model):
     generator : str
         Can be one of ``random`` which generates configurations at random, while keeping learning rate and weight decay fixed,
         ``fix_w_d`` which further keeps ``width`` and ``depth`` fixed, only applicable for ``nas_cell``. ``tune_lr_wd`` which
-        further tunes learning rate and weight decay. 
+        further tunes learning rate and weight decay.
     proposer : str
         Paper who has proposed the distribution for random sampling. Available proposers include ``nasnet``, ``darts``, ``enas``,
         ``pnas``, ``amoeba``, ``vanilla``, ``resnext-a``, ``resnext-b``, ``resnet``, ``resnet-b`` (ResNet with bottleneck).

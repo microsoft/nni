@@ -21,7 +21,7 @@ class Nb101TrialConfig(Model):
         :const:`nni.nas.benchmark.nasbench101.CONV1X1_BN_RELU`, and :const:`nni.nas.benchmark.nasbench101.MAXPOOL3X3`.
         Each ``input`` is a list of previous nodes. For example ``input5`` can be ``[0, 1, 3]``.
     num_vertices : int
-        Number of vertices in one cell. Should be less than or equal to 7 in default setup.
+        Number of vertices (nodes) in one cell. Should be less than or equal to 7 in default setup.
     hash : str
         Graph-invariant MD5 string for this architecture.
     num_epochs : int
