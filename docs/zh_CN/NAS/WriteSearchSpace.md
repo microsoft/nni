@@ -1,6 +1,6 @@
 # 编写搜索空间
 
-Genrally, a search space describes candiate architectures from which users want to find the best one. Different search algorithms, no matter classic NAS or one-shot NAS, can be applied on the search space. NNI provides APIs to unified the expression of neural architecture search space.
+通常，搜索空间是要在其中找到最好结构的候选项。 无论是经典 NAS 还是 One-Shot NAS，不同的搜索算法都需要搜索空间。 NNI 提供了统一的 API 来表达神经网络架构的搜索空间。
 
 A search space can be built on a base model. This is also a common practice when a user wants to apply NAS on an existing model. Take [MNIST on PyTorch](https://github.com/pytorch/examples/blob/master/mnist/main.py) as an example. Note that NNI provides the same APIs for expressing search space on PyTorch and TensorFlow.
 
