@@ -6,11 +6,43 @@
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import * as fs from 'fs';
-import * as os from 'os';
+import ignore from 'ignore';
 import * as path from 'path';
+import * as tar from 'tar';
 import { String } from 'typescript-string-operations';
-import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
+import { validateFileName } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
+
+/**
+ * List all files in directory except those ignored by .nniignore.
+ * @param source
+ * @param destination
+ */
+export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFiles: string[]): Iterable<string> {
+    let ignoreFile = undefined;
+    const source = path.join(root, relDir);
+    if (fs.existsSync(path.join(source, '.nniignore'))) {
+        ignoreFile = path.join(source, '.nniignore');
+        ignoreFiles.push(ignoreFile);
+    }
+    const ig = ignore();
+    ignoreFiles.forEach((i) => ig.add(fs.readFileSync(i).toString()));
+    for (const d of fs.readdirSync(source)) {
+        const entry = path.join(relDir, d);
+        if (ig.ignores(entry))
+            continue;
+        const entryStat = fs.statSync(path.join(root, entry));
+        if (entryStat.isDirectory()) {
+            yield entry;
+            yield* listDirWithIgnoredFiles(root, entry, ignoreFiles);
+        }
+        else if (entryStat.isFile())
+            yield entry;
+    }
+    if (ignoreFile !== undefined) {
+        ignoreFiles.pop();
+    }
+}
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -19,28 +51,28 @@ import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
  * @returns file number under codeDir
  */
 export async function validateCodeDir(codeDir: string): Promise<number> {
-    let fileCount: number | undefined;
+    let fileCount: number = 0;
+    let fileTotalSize: number = 0;
     let fileNameValid: boolean = true;
-    try {
-        fileCount = await countFilesRecursively(codeDir);
-    } catch (error) {
-        throw new Error(`Call count file error: ${error}`);
-    }
-    try {
-        fileNameValid = await validateFileNameRecursively(codeDir);
-    } catch (error) {
-        throw new Error(`Validate file name error: ${error}`);
-    }
-
-    if (fileCount !== undefined && fileCount > 1000) {
-        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
-                                    + ` please check if it's a valid code dir`;
-        throw new Error(errMessage);
-    }
-
-    if (!fileNameValid) {
-        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`;
-        throw new Error(errMessage);
+    for (const relPath of listDirWithIgnoredFiles(codeDir, '', [])) {
+        const d = path.join(codeDir, relPath);
+        fileCount += 1;
+        fileTotalSize += fs.statSync(d).size;
+        if (fileCount > 2000) {
+            throw new Error(`Too many files and directories (${fileCount} already scanned) in ${codeDir},`
+                + ` please check if it's a valid code dir`);
+        }
+        if (fileTotalSize > 300 * 1024 * 1024) {
+            throw new Error(`File total size too large in code dir (${fileTotalSize} bytes already scanned, exceeds 300MB).`);
+        }
+        fileNameValid = true;
+        relPath.split(path.sep).forEach(fpart => {
+            if (fpart !== '' && !validateFileName(fpart))
+                fileNameValid = false;
+        });
+        if (!fileNameValid) {
+            throw new Error(`Validate file name error: '${d}' is an invalid file name.`);
+        }
     }
 
     return fileCount;
@@ -68,10 +100,16 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
  * @param destination
  */
 export async function execCopydir(source: string, destination: string): Promise<void> {
-    if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Copy-Item "${source}\\*" -Destination "${destination}" -Recurse`);
-    } else {
-        await cpp.exec(`cp -r '${source}/.' '${destination}'`);
+    if (!fs.existsSync(destination))
+        await fs.promises.mkdir(destination);
+    for (const relPath of listDirWithIgnoredFiles(source, '', [])) {
+        const sourcePath = path.join(source, relPath);
+        const destPath = path.join(destination, relPath);
+        if (fs.statSync(sourcePath).isDirectory()) {
+            await fs.promises.mkdir(destPath);
+        } else {
+            await fs.promises.copyFile(sourcePath, destPath);
+        }
     }
 
     return Promise.resolve();
@@ -165,28 +203,19 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
  * @param  tarPath
  */
 export async function tarAdd(tarPath: string, sourcePath: string): Promise<void> {
-    if (process.platform === 'win32') {
-        const tarFilePath: string = tarPath.split('\\')
-                                    .join('\\\\');
-        const sourceFilePath: string = sourcePath.split('\\')
-                                   .join('\\\\');
-        const script: string[] = [];
-        script.push(
-            `import os`,
-            `import tarfile`,
-            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nroot="{1}"\r\nfor file_path,dir,files in os.walk(root):`, tarFilePath, sourceFilePath),
-            `    for file in files:`,
-            `        full_path = os.path.join(file_path, file)`,
-            `        file = os.path.relpath(full_path, root)`,
-            `        tar.add(full_path, arcname=file)`,
-            `tar.close()`);
-        await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
-        const tarScript: string = path.join(os.tmpdir(), 'tar.py');
-        await cpp.exec(`python ${tarScript}`);
-    } else {
-        await cpp.exec(`tar -czf ${tarPath} -C ${sourcePath} .`);
+    const fileList = [];
+    for (const d of listDirWithIgnoredFiles(sourcePath, '', [])) {
+        fileList.push(d);
     }
-
+    tar.create(
+        {
+            gzip: true,
+            file: tarPath,
+            sync: true,
+            cwd: sourcePath,
+        },
+        fileList
+    );
     return Promise.resolve();
 }
 

@@ -9,8 +9,8 @@ from subprocess import call, Popen
 from .rest_utils import rest_get, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
-from .constants import COLOR_GREEN_FORMAT, REST_TIME_OUT
-from .common_utils import print_normal, print_error, detect_process, detect_port, check_tensorboard_version
+from .constants import REST_TIME_OUT
+from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
 from .nnictl_utils import check_experiment_id, check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
@@ -81,7 +81,8 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
         cmds = ['tensorboard', log_dir_cmd, format_tensorboard_log_path(path_list), '--port', str(args.port)]
         tensorboard_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     url_list = get_local_urls(args.port)
-    print_normal(COLOR_GREEN_FORMAT % 'Start tensorboard success!\n' + 'Tensorboard urls: ' + '     '.join(url_list))
+    print_green('Start tensorboard success!')
+    print_normal('Tensorboard urls: ' + '     '.join(url_list))
     tensorboard_process_pid_list = nni_config.get_config('tensorboardPidList')
     if tensorboard_process_pid_list is None:
         tensorboard_process_pid_list = [tensorboard_process.pid]
