@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiment new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **[NNI v1.5 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **[NNI v1.6 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 
@@ -192,6 +192,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
       <ul>
         <li><a href="docs/en_US/Tuner/CustomizeTuner.md">CustomizeTuner</a></li>
         <li><a href="docs/en_US/Assessor/CustomizeAssessor.md">CustomizeAssessor</a></li>
+        <li><a href="docs/en_US/Tutorial/InstallCustomizedAlgos.md">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
@@ -229,7 +230,7 @@ For detail system requirements of NNI, please refer to [here](https://nni.readth
 Note:
 
 * If there is any privilege issue, add `--user` to install NNI in the user directory.
-* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md).
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md#faq).
 
 ### **Verify installation**
@@ -239,7 +240,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.5 https://github.com/Microsoft/nni.git
+  git clone -b v1.6 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -319,8 +320,7 @@ After getting familiar with contribution agreements, you are ready to create you
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
 * ### **External Repositories** ###
-   * Run [ENAS](examples/tuners/enas_nni/README.md) with NNI
-   * Run [Neural Network Architecture Search](examples/trials/nas_cifar10/README.md) with NNI
+   * Run [ENAS](examples/nas/enas/README.md) with NNI
    * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
    * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
@@ -342,7 +342,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 Join IM discussion groups:
 |Gitter||WeChat|
 |----|----|----|
-|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/JSong-Jia/NNI-user-group/blob/master/user%20group%20code_0512.png)|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
 
 
 ## Related Projects

@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from nni.utils import merge_parameter
 from torchvision import datasets, transforms
 
 logger = logging.getLogger('mnist_AutoML')
@@ -157,8 +158,7 @@ if __name__ == '__main__':
         # get parameters form tuner
         tuner_params = nni.get_next_parameter()
         logger.debug(tuner_params)
-        params = vars(get_params())
-        params.update(tuner_params)
+        params = vars(merge_parameter(get_params(), tuner_params))
         print(params)
         main(params)
     except Exception as exception:

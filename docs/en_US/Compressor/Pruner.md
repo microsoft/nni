@@ -80,11 +80,21 @@ config_list = [{
     'frequency': 1,
     'op_types': ['default']
 }]
-pruner = AGP_Pruner(model, config_list)
+pruner = AGP_Pruner(model, config_list, pruning_algorithm='level')
 pruner.compress()
 ```
 
-you should add code below to update epoch number when you finish one epoch in your training code.
+AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however you can set `pruning_algorithm` parameter to other values to use other pruning algorithms:
+* `level`: LevelPruner
+* `slim`: SlimPruner
+* `l1`: L1FilterPruner
+* `l2`: L2FilterPruner
+* `fpgm`: FPGMPruner
+* `taylorfo`: TaylorFOWeightFilterPruner
+* `apoz`: ActivationAPoZRankFilterPruner
+* `mean_activation`: ActivationMeanRankFilterPruner
+
+You should add code below to update epoch number when you finish one epoch in your training code.
 
 Tensorflow code 
 ```python
@@ -209,7 +219,7 @@ pruner.compress()
 ```
 Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-you should add code below to update epoch number at beginning of each epoch.
+You should add code below to update epoch number at beginning of each epoch.
 
 Tensorflow code
 ```python
