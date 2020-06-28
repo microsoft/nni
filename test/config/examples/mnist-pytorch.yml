@@ -1,8 +1,8 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 15m
-maxTrialNum: 1
-trialConcurrency: 1
+maxTrialNum: 2
+trialConcurrency: 2
 searchSpacePath: ./mnist_pytorch_search_space.json
 
 tuner:
