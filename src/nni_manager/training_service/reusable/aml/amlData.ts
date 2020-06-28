@@ -35,6 +35,7 @@ export class AMLClient {
     public pythonShellClient: undefined | PythonShell;
     public codeDir: string;
     public computerTarget: string;
+    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 
     constructor(
         subscriptionId: string,
@@ -86,6 +87,23 @@ export class AMLClient {
         this.pythonShellClient.send('stop');
     }
 
+    public getTrackingUrl(): Promise<string> {
+        const deferred: Deferred<string> = new Deferred<string>();
+        if (this.pythonShellClient === undefined) {
+            throw Error('python shell client not initialized!');
+        }
+        this.pythonShellClient.send('tracking_url');
+        let trackingUrl = '';
+        this.pythonShellClient.on('message', function (status: any) {
+            let items = status.split(':');
+            if (items[0] === 'tracking_url') {
+                trackingUrl = items.splice(1, items.length).join('')
+            }
+            deferred.resolve(trackingUrl);
+        });
+        return deferred.promise;
+    }
+
     public updateStatus(oldStatus: string): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
         if (this.pythonShellClient === undefined) {
@@ -117,7 +135,10 @@ export class AMLClient {
         }
         this.pythonShellClient.send('receive');
         this.pythonShellClient.on('message', function (command: any) {
-            deferred.resolve(command);
+            let items = command.split(':')
+            if (items[0] === 'receive') {
+                deferred.resolve(JSON.parse(command.slice(8)))
+            }
         });
         return deferred.promise;
     }

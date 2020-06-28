@@ -22,7 +22,13 @@ class AMLChannel(BaseChannel):
         pass
 
     def _inner_send(self, message):
-        self.run.log('trial_runner', str(message))
+        try:
+            if type(message) is bytes:
+                self.run.log('trial_runner', message.decode('utf8'))
+            else:
+                self.run.log('trial_runner', message)
+        except Exception as exception:
+             nni_log(LogType.Error, 'meet unhandled exception when send message: %s' % exception)
 
     def _inner_receive(self):
         messages = []
@@ -38,4 +44,7 @@ class AMLChannel(BaseChannel):
         elif self.current_message_index == -1:
             messages = [message_list] 
             self.current_message_index += 1
-        return messages
+        newMessage = []
+        for message in messages:
+            newMessage.append(message.encode('utf8'))
+        return newMessage

@@ -32,7 +32,7 @@ import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir, execMkdir, execCopydir } from '../common/util';
+import { validateCodeDir, execMkdir, execCopydir, tarAdd } from '../common/util';
 import { WebCommandChannel } from './channels/webCommandChannel';
 import { AMLCommandChannel } from './channels/amlCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
@@ -82,7 +82,7 @@ class TrialDispatcher implements TrainingService {
 
         this.commandEmitter = new EventEmitter();
         if (this.runnerSettings.platform === 'aml') {
-            this.commandChannel = new AMLCommandChannel(this.commandEmitter);
+            this.commandChannel = new AMLCommandChannel(this.commandEmitter, this.metricsEmitter);
         } else {
             this.commandChannel = new WebCommandChannel(this.commandEmitter);
         }
@@ -175,9 +175,11 @@ class TrialDispatcher implements TrainingService {
 
     public async run(): Promise<void> {
 
-        await this.jobRestServer.start();
+        if (this.runnerSettings.platform !== 'aml') {
+            await this.jobRestServer.start();
+            this.log.info(`TrialDispatcher: rest server listening on: ${this.jobRestServer.endPoint}`);
+        }
         this.jobRestServer.setEnableVersionCheck = this.versionCheck;
-        this.log.info(`TrialDispatcher: rest server listening on: ${this.jobRestServer.endPoint}`);
         this.runnerSettings.nniManagerPort = this.jobRestServer.clusterRestServerPort;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
@@ -338,8 +340,6 @@ class TrialDispatcher implements TrainingService {
                     toRefreshedTrials.push(trial);
                 }
             }
-            console.log('-------------------trial dispatcher----302-------------')
-            console.log(toRefreshedTrials.length)
             if (toRefreshedTrials.length == 0) {
                 continue;
             }
@@ -411,11 +411,6 @@ class TrialDispatcher implements TrainingService {
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
-                console.log('-----------env status-------')
-                console.log(environment.id)
-                console.log(environment.isAlive)
-                console.log(environment.status)
-                console.log(environment.isIdle)
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isIdle) {
@@ -423,14 +418,10 @@ class TrialDispatcher implements TrainingService {
                     }
                 }
             });
-            console.log('------------before assign environment---------')
-            console.log(idleEnvironments.length)
-            console.log(waitingTrials.length)
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
                 const trial = waitingTrials.shift();
                 const idleEnvironment = idleEnvironments.shift();
                 if (trial !== undefined && idleEnvironment != undefined) {
-                    console.log('--------start assign env----------')
                     await this.assignEnvironment(trial, idleEnvironment);
                 }
             }
@@ -470,15 +461,13 @@ class TrialDispatcher implements TrainingService {
             let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp", envId);
             await execMkdir(environmentLocalTempFolder);
             const runnerSettingsPath = path.join(environmentLocalTempFolder, "settings.json");
-            this.runnerSettings.command = `python3 ${this.trialConfig.command}`;
+            this.runnerSettings.command = this.trialConfig.command;
             await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
             const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
             await fs.promises.writeFile(installFilePath, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
-            environment.command = `import os\nos.system('sh install_nni.sh && cd code && python3 -m nni_trial_tool.trial_runner')`;
+            environment.command = `import os\nos.system('sh install_nni.sh && mkdir ${this.experimentId} && cd ${this.experimentId} && python3 -m nni_trial_tool.trial_runner')`;
             environment.environmentLocalTempFolder = environmentLocalTempFolder;
-            let environmentLocalTempTrialFolder = path.join(environmentLocalTempFolder, 'code');
-            await execMkdir(environmentLocalTempTrialFolder);
-            await execCopydir(this.trialConfig.codeDir, environmentLocalTempTrialFolder);
+            await tarAdd(path.join(environmentLocalTempFolder, 'nni-code.tar.gz'), this.trialConfig.codeDir);
         }
 
         await environmentService.startEnvironment(environment);

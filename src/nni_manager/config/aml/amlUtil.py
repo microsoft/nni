@@ -42,11 +42,13 @@ if __name__ == "__main__":
         line = sys.stdin.readline().rstrip()
         if line == 'update_status':
             print('status:' + run.get_status())
+        elif line == 'tracking_url':
+            print('tracking_url:' + run.get_portal_url())
         elif line == 'stop':
             run.cancel()
             exit(0)
         elif line == 'receive':
-            print(run.get_metrics())
+            print('receive:' + json.dumps(run.get_metrics()))
         elif line:
             items = line.split(':')
             if items[0] == 'command':

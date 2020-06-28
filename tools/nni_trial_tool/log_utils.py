@@ -10,12 +10,14 @@ import time
 import threading
 import re
 
+from azureml.core.run import Run
 from datetime import datetime
 from enum import Enum, unique
 from logging import StreamHandler
 
 from queue import Queue
 
+from .constants import NNI_PLATFORM
 from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
 
@@ -52,16 +54,21 @@ class NNIRestLogHanlder(StreamHandler):
         self.trial_id = trial_id
         self.orig_stdout = sys.__stdout__
         self.orig_stderr = sys.__stderr__
+        if NNI_PLATFORM == 'aml':
+            self.run = Run.get_context()
 
     def emit(self, record):
         log_entry = {}
         log_entry['tag'] = self.tag
+        log_entry['trialId'] = self.trial_id
         log_entry['stdOutputType'] = self.std_output_type.name
         log_entry['msg'] = self.format(record)
 
         try:
             if self.host:
                 rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
+            elif NNI_PLATFORM == 'aml' and self.tag == 'trial':
+                self.run.log('trial_runner_sdk', json.dumps(log_entry))
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()

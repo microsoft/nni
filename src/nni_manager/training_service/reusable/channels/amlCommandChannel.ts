@@ -23,19 +23,25 @@ import * as component from "../../../common/component";
 import { delay } from "../../../common/utils";
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { EnvironmentInformation, Channel } from "../environment";
-import { AMLClient } from "../amlData";
+import { EventEmitter } from 'events';
 
 class AMLRunnerConnection extends RunnerConnection {
     
 }
 
 export class AMLCommandChannel extends CommandChannel {
-    private readonly commandPath = "commands";
     private stopping: boolean = false;
     private currentMessageIndex: number = -1;
+    private currentMetricIndex: number = -1;
     // make sure no concurrent issue when sending commands.
     private sendQueues: [EnvironmentInformation, string][] = [];
-
+    private readonly metricEmitter: EventEmitter;
+    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
+    
+    public constructor(commandEmitter: EventEmitter, metricsEmitter: EventEmitter) {
+        super(commandEmitter);
+        this.metricEmitter = metricsEmitter;
+    }
     public get channelName(): Channel {
         return "aml";
     }
@@ -76,10 +82,9 @@ export class AMLCommandChannel extends CommandChannel {
                     const environment = item[0];
                     const message = item[1];
                     const amlClient = environment.environmentClient;
-                    amlClient.sendCommand(`b'${message}'`);
+                    amlClient.sendCommand(message);
                     // send command
                     sendCount += 1;
-                    console.log(`----------sending command ${sendCount} b'${message}'`)
                 }
             }
 
@@ -100,24 +105,35 @@ export class AMLCommandChannel extends CommandChannel {
             for (const runnerConnection of runnerConnections) {
                 // to loop all commands
                 const amlClient = runnerConnection.environment.environmentClient;
-                const command = await amlClient.receiveCommand();
+                let command = await amlClient.receiveCommand();
                 if (command && command.hasOwnProperty('trial_runner')) {
                     let messages = command['trial_runner'];
                     if (messages) {
                         if (messages instanceof Object && this.currentMessageIndex < messages.length - 1) {
                             for (let index = this.currentMessageIndex + 1; index < messages.length; index ++) {
-                                console.log(`---------------handle command ${messages[index]}`)
-                                this.handleCommand(runnerConnection.environment, messages[index]);
+                                this.handleCommand(runnerConnection.environment, messages[index].toString());
                             }
                             this.currentMessageIndex = messages.length - 1;
                         } else if (this.currentMessageIndex === -1){
-                            console.log(`---------------handle command ${messages}`)
-                            this.handleCommand(runnerConnection.environment, messages);
+                            this.handleCommand(runnerConnection.environment, messages.toString());
                             this.currentMessageIndex += 1;
                         }
                     }
+                } 
+                if (command && command.hasOwnProperty('trial_runner_sdk')) {
+                    let messages = command['trial_runner_sdk'];
+                    if (messages) {
+                        if (messages instanceof Object && this.currentMetricIndex < messages.length - 1) {
+                            for (let index = this.currentMetricIndex + 1; index < messages.length; index ++) {
+                                this.handleTrialMetrics(messages[index].toString());
+                            }
+                            this.currentMetricIndex = messages.length - 1;
+                        } else if (this.currentMetricIndex === -1){
+                            this.handleTrialMetrics(messages.toString());
+                            this.currentMetricIndex += 1;
+                        }
+                    }
                 }
-
             }
 
             const end = new Date();
@@ -125,6 +141,23 @@ export class AMLCommandChannel extends CommandChannel {
             if (delayMs > 0) {
                 await delay(delayMs);
             }
+        }
+    }
+
+    private handleTrialMetrics(message: string): void {
+        console.log('-------handle trial metric------' + message)
+        let messageObj = JSON.parse(message);
+        let trialId = messageObj['trialId'];
+        let msg = messageObj['msg'];
+        const metricsContent: any = msg.match(this.NNI_METRICS_PATTERN);
+        if (metricsContent && metricsContent.groups) {
+            const key: string = 'metrics';
+            const metric = metricsContent.groups[key];
+            console.log(`-----get ${metric} for trial ${trialId}------`);
+            this.metricEmitter.emit('metric', {
+                id: trialId,
+                data: metric
+            });
         }
     }
 }

@@ -20,7 +20,6 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as request from 'request';
 import * as path from 'path';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
@@ -29,9 +28,7 @@ import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { AMLClusterConfig, AMLTrialConfig, AMLTrialJobDetail } from '../../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { StorageService } from '../storageService';
-import { PythonShell } from 'python-shell';
-import { AMLClient } from '../amlData';
+import { AMLClient } from '../aml/amlData';
 import {
     NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
@@ -41,16 +38,13 @@ import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
     getVersion, uniqueString
 } from '../../../common/utils';
-import { AMLCommandChannel } from '../channels/amlCommandChannel';
-
-const yaml = require('js-yaml');
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
 @component.Singleton
 export class AMLEnvironmentService implements EnvironmentService {
-
+    
     private readonly log: Logger = getLogger();
     public amlClusterConfig: AMLClusterConfig | undefined;
     public amlTrialConfig: AMLTrialConfig | undefined;
@@ -107,11 +101,9 @@ export class AMLEnvironmentService implements EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        console.log('-----------line 110--------------------')
         environments.forEach(async (environment) => {
             let amlClient = environment.environmentClient;
             let status = await amlClient.updateStatus(environment.status);
-            console.log(`------------------get status from aml: ${status}--------------`);
             switch (status.toUpperCase()) {
                 case 'QUEUED':
                     environment.status = 'WAITING';
@@ -132,7 +124,6 @@ export class AMLEnvironmentService implements EnvironmentService {
                 default:
                     environment.status = 'UNKNOWN';
             }
-            console.log('-------------update environment status to ' + environment.status)
         });
         deferred.resolve();
         return deferred.promise;
@@ -157,6 +148,7 @@ export class AMLEnvironmentService implements EnvironmentService {
             environment.environmentLocalTempFolder
         );
         environment.id = await amlClient.submit();
+        environment.trackingUrl = await amlClient.getTrackingUrl();
         environment.environmentClient = amlClient;
     }
 
