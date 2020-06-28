@@ -4,7 +4,7 @@
 .. contents::
 ```
 
-## Overview
+## 概述
 
 自动化的神经网络架构（NAS）搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动化 NAS 的可行性，并发现了一些超越手动设计和调整的模型。 代表算法有 [NASNet](https://arxiv.org/abs/1707.07012)，[ENAS](https://arxiv.org/abs/1802.03268)，[DARTS](https://arxiv.org/abs/1806.09055)，[Network Morphism](https://arxiv.org/abs/1806.10282)，以及 [Evolution](https://arxiv.org/abs/1703.01041) 等。 此外，新的创新不断涌现。
 
@@ -12,11 +12,11 @@
 
 以此为动力，NNI 的目标是提供统一的体系结构，以加速NAS上的创新，并将最新的算法更快地应用于现实世界中的问题上。
 
-通过统一的接口，有两种方法来使用神经网络架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 [The other](#supported-classic-nas-algorithms) is the traditional search-based approach, where each child model within the search space runs as an independent trial. We call it classic NAS.
+通过统一的接口，有两种方法来使用神经网络架构搜索。 [一种](#supported-one-shot-nas-algorithms)称为 one-shot NAS，基于搜索空间构建了一个超级网络，并使用 one-shot 训练来生成性能良好的子模型。 <a href="#支持的经典-nas-算法"">第二种</a>是经典的搜索方法，搜索空间中每个子模型作为独立的 Trial 运行。 称之为经典的 NAS。
 
 NNI also provides dedicated [visualization tool](#nas-visualization) for users to check the status of the neural architecture search process.
 
-## Supported Classic NAS Algorithms
+## 支持的经典 NAS 算法
 
 The procedure of classic NAS algorithms is similar to hyper-parameter tuning, users use `nnictl` to start experiments and each model runs as a trial. The difference is that search space file is automatically generated from user model (with search space in it) by running `nnictl ss_gen`. The following table listed supported tuning algorihtms for classic NAS mode. More algorihtms will be supported in future release.
 
