@@ -51,7 +51,7 @@ testCases:
 - name: mnist-pytorch
   configFile: test/config/examples/mnist-pytorch.yml
   # download data first, to prevent concurrent issue.
-  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 0 && nnictl create --config $configFile --debug
+  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 && nnictl create --config $configFile --debug
 
 - name: mnist-annotation
   configFile: test/config/examples/mnist-annotation.yml
