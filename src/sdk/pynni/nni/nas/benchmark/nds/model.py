@@ -8,9 +8,9 @@ from nni.nas.benchmark.constants import DATABASE_DIR
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nds.db'), autoconnect=True)
 
 
-class NdsRunConfig(Model):
+class NdsTrialConfig(Model):
     """
-    Run config for NDS.
+    Trial config for NDS.
 
     Attributes
     ----------
@@ -69,14 +69,14 @@ class NdsRunConfig(Model):
         database = db
 
 
-class NdsComputedStats(Model):
+class NdsTrialStats(Model):
     """
-    Computation statistics for NDS. Each corresponds to one run.
+    Computation statistics for NDS. Each corresponds to one trial.
 
     Attributes
     ----------
-    config : NdsRunConfig
-        Corresponding config for run.
+    config : NdsTrialConfig
+        Corresponding config for trial.
     seed : int
         Random seed selected, for reproduction.
     final_train_acc : float
@@ -98,7 +98,7 @@ class NdsComputedStats(Model):
     iter_time : float
         Seconds elapsed for each iteration.
     """
-    config = ForeignKeyField(NdsRunConfig, backref='computed_stats', index=True)
+    config = ForeignKeyField(NdsTrialConfig, backref='trial_stats', index=True)
     seed = IntegerField()
     final_train_acc = FloatField()
     final_train_loss = FloatField(null=True)
@@ -120,8 +120,8 @@ class NdsIntermediateStats(Model):
 
     Attributes
     ----------
-    run : NdsComputedStats
-        Corresponding run.
+    trial : NdsTrialStats
+        Corresponding trial.
     current_epoch : int
         Elapsed epochs.
     train_loss : float or None
@@ -132,7 +132,7 @@ class NdsIntermediateStats(Model):
         Current accuracy on test data, ranging from 0 to 100.
     """
 
-    run = ForeignKeyField(NdsComputedStats, backref='intermediates', index=True)
+    trial = ForeignKeyField(NdsTrialStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
     train_loss = FloatField(null=True)
     train_acc = FloatField()

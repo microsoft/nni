@@ -5,7 +5,7 @@ import tqdm
 import torch
 
 from .constants import NONE, SKIP_CONNECT, CONV_1X1, CONV_3X3, AVG_POOL_3X3
-from .model import db, Nb201RunConfig, Nb201ComputedStats, Nb201IntermediateStats
+from .model import db, Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats
 
 
 def parse_arch_str(arch_str):
@@ -40,15 +40,15 @@ def main():
     }
 
     with db:
-        db.create_tables([Nb201RunConfig, Nb201ComputedStats, Nb201IntermediateStats])
+        db.create_tables([Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats])
         print('Loading NAS-Bench-201 pickle...')
         nb201_data = torch.load(args.input_file)
         print('Dumping architectures...')
         for arch_str in nb201_data['meta_archs']:
             arch_json = parse_arch_str(arch_str)
             for epochs in [12, 200]:
-                for dataset in Nb201RunConfig.dataset.choices:
-                    Nb201RunConfig.create(arch=arch_json, num_epochs=epochs, dataset=dataset,
+                for dataset in Nb201TrialConfig.dataset.choices:
+                    Nb201TrialConfig.create(arch=arch_json, num_epochs=epochs, dataset=dataset,
                                           num_channels=16, num_cells=5)
         for arch_info in tqdm.tqdm(nb201_data['arch2infos'].values(),
                                    desc='Processing architecture statistics'):
@@ -77,12 +77,12 @@ def main():
                         'test_evaluation_time': r['eval_times']['{}@{}'.format(sp[2], epochs - 1)],
                         'ori_test_evaluation_time': r['eval_times']['{}@{}'.format(sp[3], epochs - 1)],
                     }
-                    config = Nb201RunConfig.get(
-                        (Nb201RunConfig.num_epochs == epochs) & \
-                        (Nb201RunConfig.arch == arch_json) & \
-                        (Nb201RunConfig.dataset == dataset.lower())
+                    config = Nb201TrialConfig.get(
+                        (Nb201TrialConfig.num_epochs == epochs) & \
+                        (Nb201TrialConfig.arch == arch_json) & \
+                        (Nb201TrialConfig.dataset == dataset.lower())
                     )
-                    computed_stats = Nb201ComputedStats.create(config=config, seed=seed, **data_parsed)
+                    trial_stats = Nb201TrialStats.create(config=config, seed=seed, **data_parsed)
                     intermediate_stats = []
                     for epoch in range(epochs):
                         data_parsed = {
@@ -97,7 +97,7 @@ def main():
                         }
                         if all([v is None for v in data_parsed.values()]):
                             continue
-                        data_parsed.update(current_epoch=epoch + 1, run=computed_stats)
+                        data_parsed.update(current_epoch=epoch + 1, trial=trial_stats)
                         intermediate_stats.append(data_parsed)
                     Nb201IntermediateStats.insert_many(intermediate_stats).execute(db)
 

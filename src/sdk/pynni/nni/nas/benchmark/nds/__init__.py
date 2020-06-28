@@ -1,3 +1,3 @@
 from .constants import *
-from .model import NdsRunConfig, NdsComputedStats, NdsIntermediateStats
-from .query import query_nds_computed_stats
+from .model import NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
+from .query import query_nds_trial_stats

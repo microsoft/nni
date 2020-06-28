@@ -8,9 +8,9 @@ from nni.nas.benchmark.constants import DATABASE_DIR
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench201.db'), autoconnect=True)
 
 
-class Nb201RunConfig(Model):
+class Nb201TrialConfig(Model):
     """
-    Run config for NAS-Bench-201.
+    Trial config for NAS-Bench-201.
 
     Attributes
     ----------
@@ -21,7 +21,7 @@ class Nb201RunConfig(Model):
         :const:`nni.nas.benchmark.nasbench201.CONV_1X1`,
         :const:`nni.nas.benchmark.nasbench201.CONV_3X3` and :const:`nni.nas.benchmark.nasbench201.AVG_POOL_3X3`.
     num_epochs : int
-        Number of epochs planned for this run. Should be one of 12 and 200.
+        Number of epochs planned for this trial. Should be one of 12 and 200.
     num_channels: int
         Number of channels for initial convolution. 16 by default.
     num_cells: int
@@ -50,14 +50,14 @@ class Nb201RunConfig(Model):
         database = db
 
 
-class Nb201ComputedStats(Model):
+class Nb201TrialStats(Model):
     """
-    Computation statistics for NAS-Bench-201. Each corresponds to one run.
+    Computation statistics for NAS-Bench-201. Each corresponds to one trial.
 
     Attributes
     ----------
-    config : Nb201RunConfig
-        Setup for this computed data.
+    config : Nb201TrialConfig
+        Setup for this trial data.
     seed : int
         Random seed selected, for reproduction.
     train_acc : float
@@ -93,7 +93,7 @@ class Nb201ComputedStats(Model):
     ori_test_evaluation_time : float
         Time elapsed to evaluate on original test set.
     """
-    config = ForeignKeyField(Nb201RunConfig, backref='computed_stats', index=True)
+    config = ForeignKeyField(Nb201TrialConfig, backref='trial_stats', index=True)
     seed = IntegerField()
     train_acc = FloatField()
     valid_acc = FloatField()
@@ -121,8 +121,8 @@ class Nb201IntermediateStats(Model):
 
     Attributes
     ----------
-    run : Nb201ComputedStats
-        Corresponding run.
+    trial : Nb201TrialStats
+        Corresponding trial.
     current_epoch : int
         Elapsed epochs.
     train_acc : float
@@ -144,7 +144,7 @@ class Nb201IntermediateStats(Model):
         Current cross entropy loss on original validation set.
     """
 
-    run = ForeignKeyField(Nb201ComputedStats, backref='intermediates', index=True)
+    trial = ForeignKeyField(Nb201TrialStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
     train_acc = FloatField(null=True)
     valid_acc = FloatField(null=True)

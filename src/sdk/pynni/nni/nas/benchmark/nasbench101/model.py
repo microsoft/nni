@@ -8,9 +8,9 @@ from nni.nas.benchmark.constants import DATABASE_DIR
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench101.db'), autoconnect=True)
 
 
-class Nb101RunConfig(Model):
+class Nb101TrialConfig(Model):
     """
-    Run config for NAS-Bench-101.
+    Trial config for NAS-Bench-101.
 
     Attributes
     ----------
@@ -25,7 +25,7 @@ class Nb101RunConfig(Model):
     hash : str
         Graph-invariant MD5 string for this architecture.
     num_epochs : int
-        Number of epochs planned for this run. Should be one of 4, 12, 36, 108 in default setup.
+        Number of epochs planned for this trial. Should be one of 4, 12, 36, 108 in default setup.
     """
 
     arch = JSONField(index=True)
@@ -37,17 +37,17 @@ class Nb101RunConfig(Model):
         database = db
 
 
-class Nb101ComputedStats(Model):
+class Nb101TrialStats(Model):
     """
-    Computation statistics for NAS-Bench-101. Each corresponds to one run.
-    Each config has multiple runs with different random seeds, but unfortunately seed for each run is unavailable.
+    Computation statistics for NAS-Bench-101. Each corresponds to one trial.
+    Each config has multiple trials with different random seeds, but unfortunately seed for each trial is unavailable.
     NAS-Bench-101 trains and evaluates on CIFAR-10 by default. The original training set is divided into
     40k training images and 10k validation images, and the original validation set is used for test only.
 
     Attributes
     ----------
-    config : Nb101RunConfig
-        Setup for this computed data.
+    config : Nb101TrialConfig
+        Setup for this trial data.
     train_acc : float
         Final accuracy on training data, ranging from 0 to 100.
     valid_acc : float
@@ -59,7 +59,7 @@ class Nb101ComputedStats(Model):
     training_time : float
         Duration of training in seconds.
     """
-    config = ForeignKeyField(Nb101RunConfig, backref='computed_stats', index=True)
+    config = ForeignKeyField(Nb101TrialConfig, backref='trial_stats', index=True)
     train_acc = FloatField()
     valid_acc = FloatField()
     test_acc = FloatField()
@@ -76,8 +76,8 @@ class Nb101IntermediateStats(Model):
 
     Attributes
     ----------
-    run : Nb101ComputedStats
-        The exact run where the intermediate result is produced.
+    trial : Nb101TrialStats
+        The exact trial where the intermediate result is produced.
     current_epoch : int
         Elapsed epochs when evaluation is done.
     train_acc : float
@@ -90,7 +90,7 @@ class Nb101IntermediateStats(Model):
         Time elapsed in seconds.
     """
 
-    run = ForeignKeyField(Nb101ComputedStats, backref='intermediates', index=True)
+    trial = ForeignKeyField(Nb101TrialStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
     train_acc = FloatField()
     valid_acc = FloatField()

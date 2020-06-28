@@ -5,7 +5,7 @@ import os
 import numpy as np
 import tqdm
 
-from .model import db, NdsRunConfig, NdsComputedStats, NdsIntermediateStats
+from .model import db, NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
 
 
 def inject_item(db, item, proposer, dataset, generator):
@@ -41,7 +41,7 @@ def inject_item(db, item, proposer, dataset, generator):
             raise ValueError('Unrecognized block type')
         model_spec = {k: v for k, v in item['net'].items() if v and k != 'block_type'}
         cell_spec = {}
-    run_config, created = NdsRunConfig.get_or_create(
+    trial_config, created = NdsTrialConfig.get_or_create(
         model_family=model_family,
         model_spec=model_spec,
         cell_spec=cell_spec,
@@ -52,9 +52,9 @@ def inject_item(db, item, proposer, dataset, generator):
         dataset=dataset,
         generator=generator
     )
-    assert len(item['train_ep_top1']) == len(item['test_ep_top1']) == run_config.num_epochs
-    run = NdsComputedStats.create(
-        config=run_config,
+    assert len(item['train_ep_top1']) == len(item['test_ep_top1']) == trial_config.num_epochs
+    trial = NdsTrialStats.create(
+        config=trial_config,
         seed=item['rng_seed'],
         final_train_acc=100 - item['train_ep_top1'][-1],
         final_train_loss=item['train_ep_loss'][-1],
@@ -67,9 +67,9 @@ def inject_item(db, item, proposer, dataset, generator):
         iter_time=item['iter_time']
     )
     intermediate_stats = []
-    for i in range(run_config.num_epochs):
+    for i in range(trial_config.num_epochs):
         intermediate_stats.append({
-            'run': run,
+            'trial': trial,
             'current_epoch': i + 1,
             'train_loss': item['train_ep_loss'][i],
             'train_acc': 100 - item['train_ep_top1'][i],
@@ -107,21 +107,21 @@ def main():
         'ResNet.json',
         'ResNet_lr-wd.json',
         'ResNet_lr-wd_in.json',
-        'ResNet_reruns.json',
+        'ResNet_retrials.json',
         'ResNet_rng1.json',
         'ResNet_rng2.json',
         'ResNet_rng3.json',
         'Vanilla.json',
         'Vanilla_lr-wd.json',
         'Vanilla_lr-wd_in.json',
-        'Vanilla_reruns.json',
+        'Vanilla_retrials.json',
         'Vanilla_rng1.json',
         'Vanilla_rng2.json',
         'Vanilla_rng3.json'
     ]
 
     with db:
-        db.create_tables([NdsRunConfig, NdsComputedStats, NdsIntermediateStats])
+        db.create_tables([NdsTrialConfig, NdsTrialStats, NdsIntermediateStats])
         for json_idx, json_file in enumerate(sweep_list, start=1):
             if 'fix-w-d' in json_file:
                 generator = 'fix_w_d'

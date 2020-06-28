@@ -48,7 +48,7 @@ Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from inp
 ### API Documentation
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nasbench101.query_nb101_computed_stats
+.. autofunction:: nni.nas.benchmark.nasbench101.query_nb101_trial_stats
 
 .. autoattribute:: nni.nas.benchmark.nasbench101.INPUT
 
@@ -60,9 +60,9 @@ Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from inp
 
 .. autoattribute:: nni.nas.benchmark.nasbench101.MAXPOOL3X3
 
-.. autoclass:: nni.nas.benchmark.nasbench101.Nb101RunConfig
+.. autoclass:: nni.nas.benchmark.nasbench101.Nb101TrialConfig
 
-.. autoclass:: nni.nas.benchmark.nasbench101.Nb101ComputedStats
+.. autoclass:: nni.nas.benchmark.nasbench101.Nb101TrialStats
 
 .. autoclass:: nni.nas.benchmark.nasbench101.Nb101IntermediateStats
 
@@ -83,7 +83,7 @@ NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges 
 
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nasbench201.query_nb201_computed_stats
+.. autofunction:: nni.nas.benchmark.nasbench201.query_nb201_trial_stats
 
 .. autoattribute:: nni.nas.benchmark.nasbench201.NONE
 
@@ -95,9 +95,9 @@ NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges 
 
 .. autoattribute:: nni.nas.benchmark.nasbench201.AVG_POOL_3X3
 
-.. autoclass:: nni.nas.benchmark.nasbench201.Nb201RunConfig
+.. autoclass:: nni.nas.benchmark.nasbench201.Nb201TrialConfig
 
-.. autoclass:: nni.nas.benchmark.nasbench201.Nb201ComputedStats
+.. autoclass:: nni.nas.benchmark.nasbench201.Nb201TrialStats
 
 .. autoclass:: nni.nas.benchmark.nasbench201.Nb201IntermediateStats
 ```
@@ -106,7 +106,7 @@ NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges 
 
 [Paper link](https://arxiv.org/abs/1905.13214) &nbsp; &nbsp; [Open-source](https://github.com/facebookresearch/nds)
 
-_On Network Design Spaces for Visual Recognition_ released computed statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
+_On Network Design Spaces for Visual Recognition_ released trial statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
 
 Instead of storing results obtained with different configurations in separate files, we dump them into one single database to enable comparison in multiple dimensions. Specifically, we use `model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
 
@@ -151,11 +151,11 @@ Here is a list of available operators used in NDS.
 ### API Documentation
 
 ```eval_rst
-.. autofunction:: nni.nas.benchmark.nds.query_nds_computed_stats
+.. autofunction:: nni.nas.benchmark.nds.query_nds_trial_stats
 
-.. autoclass:: nni.nas.benchmark.nds.NdsRunConfig
+.. autoclass:: nni.nas.benchmark.nds.NdsTrialConfig
 
-.. autoclass:: nni.nas.benchmark.nds.NdsComputedStats
+.. autoclass:: nni.nas.benchmark.nds.NdsTrialStats
 
 .. autoclass:: nni.nas.benchmark.nds.NdsIntermediateStats
 ```
