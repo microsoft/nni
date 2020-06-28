@@ -12,7 +12,7 @@ import {
     timeIcon, disableUpdates, requency, closeTimer
 } from './Buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
-import { EXPERIMENT, TRIALS } from '../static/datamodel';
+import { EXPERIMENT } from '../static/datamodel';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 

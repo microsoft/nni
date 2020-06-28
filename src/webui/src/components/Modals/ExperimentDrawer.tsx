@@ -1,14 +1,12 @@
 import * as React from 'react';
-import axios from 'axios';
 import { downFile } from '../../static/function';
 import {
     Stack, PrimaryButton, DefaultButton, Panel, StackItem, Pivot, PivotItem
 } from 'office-ui-fabric-react';
-import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
+import { DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import '../../static/style/logDrawer.scss';
-import { EXPERIMENT } from '../../static/datamodel';
-import { TrialManager } from '../../static/model/trialmanager';
 
 interface ExpDrawerProps {
     closeExpDrawer: () => void;
@@ -35,44 +33,36 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     getExperimentContent = (): void => {
-        if(!['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)){
-            window.clearTimeout(this.refreshId);
+        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+            window.clearInterval(this.refreshId);
         } else {
-            axios
-                .all([
-                    axios.get(`${MANAGER_IP}/trial-jobs`),
-                    axios.get(`${MANAGER_IP}/metric-data`)
-                ])
-                .then(axios.spread(( resTrialJobs, resMetricData) => {
-                    if ( resTrialJobs.status === 200 && resMetricData.status === 200) {
-                        
-                        const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
-                        if(experimentData.params.searchSpace){
-                            experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
-                        }
-                        const trialMessagesArr = TrialManager.expandJobsToTrials(resTrialJobs.data);
-                        const interResultList = resMetricData.data;
-                        Object.keys(trialMessagesArr).map(item => {
-                            // not deal with trial's hyperParameters
-                            const trialId = trialMessagesArr[item].id;
-                            // add intermediate result message
-                            trialMessagesArr[item].intermediate = [];
-                            Object.keys(interResultList).map(key => {
-                                const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
-                                if (trialId === interId) {
-                                    trialMessagesArr[item].intermediate.push(interResultList[key]);
-                                }
-                            });
-                        });
-                        const result = {
-                            experimentParameters: experimentData,
-                            trialMessage: trialMessagesArr
-                        };
-                        if (this._isExperimentMount === true) {
-                            this.setState({ experiment: JSON.stringify(result, null, 4) });
-                        }
+            const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
+            console.info('experimentData', experimentData); // eslint-disable-line
+            if (experimentData.params.searchSpace) {
+                experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
+            }
+            console.info(TRIALS.getTrialJobList()); // eslint-disable-line
+            const trialMessagesArr = TRIALS.getTrialJobList();
+            const interResultList = TRIALS.getMetricsList();
+            Object.keys(trialMessagesArr).map(item => {
+                // not deal with trial's hyperParameters
+                const trialId = trialMessagesArr[item].id;
+                // add intermediate result message
+                trialMessagesArr[item].intermediate = [];
+                Object.keys(interResultList).map(key => {
+                    const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
+                    if (trialId === interId) {
+                        trialMessagesArr[item].intermediate.push(interResultList[key]);
                     }
-                }));
+                });
+            });
+            const result = {
+                experimentParameters: experimentData,
+                trialMessage: trialMessagesArr
+            };
+            if (this._isExperimentMount === true) {
+                this.setState({ experiment: JSON.stringify(result, null, 4) });
+            }
         }
     }
 
@@ -88,7 +78,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     componentDidMount(): void {
         this._isExperimentMount = true;
         this.getExperimentContent();
-        this.refreshId = window.setTimeout(this.getExperimentContent, 10000);
+        this.refreshId = window.setInterval(this.getExperimentContent, 10000);
         window.addEventListener('resize', this.onWindowResize);
     }
 
@@ -103,7 +93,6 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         const { experiment, expDrawerHeight } = this.state;
         return (
             <Stack className="logDrawer">
-
                 <Panel
                     isOpen={true}
                     hasCloseButton={false}
