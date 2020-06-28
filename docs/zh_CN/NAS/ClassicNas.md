@@ -1,22 +1,22 @@
-# Classic NAS Algorithms
+# 经典 NAS 算法
 
-In classic NAS algorithms, each architecture is trained as a trial and the NAS algorithm acts as a tuner. Thus, this training mode naturally fits within the NNI hyper-parameter tuning framework, where Tuner generates new architecture for the next trial and trials run in the training service.
+在经典 NAS 算法中，每个结构都作为 Trial 来训练，而 NAS 算法来充当 Tuner。 因此，训练过程能使用 NNI 中的超参调优框架，Tuner 为下一个 Trial 生成新的结构，Trial 在训练平台中运行。
 
-## Quick Start
+## 快速入门
 
-The following example shows how to use classic NAS algorithms. You can see it is quite similar to NNI hyper-parameter tuning.
+下例展示了如何使用经典 NAS 算法。 与 NNI 超参优化非常相似。
 
 ```python
 model = Net()
 
-# get the chosen architecture from tuner and apply it on model
+# 从 Tuner 中获得选择的架构，并应用到模型上
 get_and_apply_next_architecture(model)
-train(model)  # your code for training the model
-acc = test(model)  # test the trained model
-nni.report_final_result(acc)  # report the performance of the chosen architecture
+train(model)  # 训练模型的代码
+acc = test(model)  # 测试训练好的模型
+nni.report_final_result(acc)  # 报告所选架构的性能
 ```
 
-First, instantiate the model. Search space has been defined in this model through `LayerChoice` and `InputChoice`. After that, user should invoke `get_and_apply_next_architecture(model)` to settle down to a specific architecture. This function receives the architecture from tuner (i.e., the classic NAS algorithm) and applies the architecture to `model`. At this point, `model` becomes a specific architecture rather than a search space. Then users are free to train this model just like training a normal PyTorch model. After get the accuracy of this model, users should invoke `nni.report_final_result(acc)` to report the result to the tuner.
+首先，实例化模型。 Search space has been defined in this model through `LayerChoice` and `InputChoice`. After that, user should invoke `get_and_apply_next_architecture(model)` to settle down to a specific architecture. This function receives the architecture from tuner (i.e., the classic NAS algorithm) and applies the architecture to `model`. At this point, `model` becomes a specific architecture rather than a search space. Then users are free to train this model just like training a normal PyTorch model. After get the accuracy of this model, users should invoke `nni.report_final_result(acc)` to report the result to the tuner.
 
 At this point, trial code is ready. Then, we can prepare an NNI experiment, i.e., search space file and experiment config file. Different from NNI hyper-parameter tuning, search space file is automatically generated from the trial code by running the command (the detailed usage of this command can be found [here](../Tutorial/Nnictl.md)):
 
