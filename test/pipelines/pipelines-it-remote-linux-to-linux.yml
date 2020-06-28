@@ -47,6 +47,7 @@ jobs:
       secureFile: $(remote_private_key)
   - script: |
       set -e
+      sudo apt-get install swig -y
       cp $(Agent.TempDirectory)/$(remote_private_key) test/id_rsa
       chmod 600 test/id_rsa
       scp -P $(remote_port) -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port

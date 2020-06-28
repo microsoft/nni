@@ -28,6 +28,7 @@ jobs:
 
   - script: |
       set -e
+      sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
     displayName: 'Install dependencies for integration tests in PAI mode'
