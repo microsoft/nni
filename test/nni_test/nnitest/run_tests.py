@@ -125,7 +125,7 @@ def launch_test(config_file, training_service, test_case_config):
     launch_command = get_command(test_case_config, 'launchCommand')
     print('launch command: ', launch_command, flush=True)
 
-    proc = subprocess.run(shlex.split(launch_command))
+    proc = subprocess.run(shlex.split(launch_command), shell=True)
 
     assert proc.returncode == 0, 'launch command failed with code %d' % proc.returncode
 
