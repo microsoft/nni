@@ -143,7 +143,7 @@ class CompressorTestCase(TestCase):
 
     @tf2
     def test_tf_fpgm_pruner(self):
-        w = np.array([np.ones((5, 5, 5)) * (i+1) for i in range(10)]).astype(np.float32)
+        w = np.array([np.ones((5, 3, 3)) * (i+1) for i in range(10)]).astype(np.float32)
         model = get_tf_model()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}]
 
