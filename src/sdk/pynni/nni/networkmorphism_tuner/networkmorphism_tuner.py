@@ -7,17 +7,26 @@ networkmorphsim_tuner.py
 
 import logging
 import os
-
+from schema import Optional, Schema
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
 from nni.networkmorphism_tuner.utils import Constant
-
 from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
+from nni import ClassArgsValidator
 
 logger = logging.getLogger("NetworkMorphism_AutoML")
 
+class NetworkMorphismClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            Optional('optimize_mode'): self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('task'): self.choices('task', 'cv', 'nlp', 'common'),
+            Optional('input_width'): int,
+            Optional('input_channel'): int,
+            Optional('n_output_node'): int
+        }).validate(kwargs)
 
 class NetworkMorphismTuner(Tuner):
     """

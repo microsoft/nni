@@ -1,0 +1,177 @@
+
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile --debug
+  stopCommand: nnictl stop
+  experimentStatusCheck: True
+  platform: linux darwin win32
+
+testCases:
+#######################################################################
+# nni examples test
+#######################################################################
+- name: sklearn-classification
+  # test case config yml file relative to nni source code directory
+  configFile: test/config/examples/sklearn-classification.yml
+
+  # test case specific config, the content of configFile will be overrided
+  # by config section
+  config:
+
+  # validator is called after experiment is done
+  # validator class needs to be implemented in nni_test/nnitest/validators.py
+  validator:
+
+  # launch command, default launch command is 'nnictl create --config $configFile'
+  launchCommand: nnictl create --config $configFile --debug
+
+  # stop command, default stop command is 'nnictl stop', empty means no stop command
+  stopCommand: nnictl stop
+
+  # set experiment ID into variable, variable name should start with $, such as $expId
+  setExperimentIdtoVar: $expId
+
+  # check status of experiment before calling validator
+  experimentStatusCheck: True
+
+- name: sklearn-regression
+  configFile: test/config/examples/sklearn-regression.yml
+
+- name: mnist-pytorch
+  configFile: test/config/examples/mnist-pytorch.yml
+
+- name: cifar10-pytorch
+  configFile: test/config/examples/cifar10-pytorch.yml
+  config:
+    # this example downloads large pretrained model weights
+    # test 1 trial to save time
+    maxExecDuration: 10m
+    maxTrialNum: 1
+    trialConcurrency: 1
+    trial:
+      command: python3 main.py --epochs 1 --batches 1
+      gpuNum: 0
+
+- name: classic-nas-gen-ss
+  configFile: test/config/examples/classic-nas-tf2.yml
+  launchCommand: nnictl ss_gen --trial_command="python3 train.py --epochs 1" --trial_dir=../examples/nas/classic_nas-tf --file=config/examples/nni-nas-search-space-tf2.json
+  stopCommand:
+  experimentStatusCheck: False
+
+- name: classic-nas-install-ppo
+  configFile: test/config/examples/classic-nas-tf2.yml
+  launchCommand: nnictl package install --name=PPOTuner
+  stopCommand:
+  experimentStatusCheck: False
+
+- name: classic-nas-tensorflow2
+  configFile: test/config/examples/classic-nas-tf2.yml
+  # remove search space file
+  stopCommand: nnictl stop
+  onExitCommand: python3 -c 'import os; os.remove("config/examples/nni-nas-search-space-tf2.json")'
+
+#########################################################################
+# nni features test
+#########################################################################
+- name: metrics-float
+  configFile: test/config/metrics_test/config.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics.json
+
+- name: export-float
+  configFile: test/config/metrics_test/config.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: ExportValidator
+
+- name: metrics-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: MetricsValidator
+    kwargs:
+      expected_result_file: expected_metrics_dict.json
+
+- name: export-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: ExportValidator
+
+- name: nnicli
+  configFile: test/config/examples/sklearn-regression.yml
+  config:
+    maxTrialNum: 4
+    trialConcurrency: 4
+  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
+  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+  validator:
+    class: NnicliValidator
+  platform: linux darwin
+
+- name: foreground
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: python3 nni_test/nnitest/foreground.py --config $configFile --timeout 45
+  stopCommand:
+  experimentStatusCheck: False
+  platform: linux darwin
+
+# Experiment resume test part 1
+- name: nnictl-resume-1
+  configFile: test/config/examples/sklearn-regression.yml
+  setExperimentIdtoVar: $resumeExpId
+
+# Experiment resume test part 2
+- name: nnictl-resume-2
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: nnictl resume $resumeExpId
+
+# Experiment view test
+- name: nnictl-view
+  configFile: test/config/examples/sklearn-regression.yml
+  launchCommand: nnictl view $resumeExpId
+  experimentStatusCheck: False
+
+- name: multi-thread
+  configFile: test/config/multi_thread/config.yml
+
+- name: multi-phase-batch
+  configFile: test/config/multi_phase/batch.yml
+  config:
+    # for batch tuner, maxTrialNum can not exceed length of search space
+    maxTrialNum: 2
+    trialConcurrency: 2
+
+- name: multi-phase-evolution
+  configFile: test/config/multi_phase/evolution.yml
+
+- name: multi-phase-grid
+  configFile: test/config/multi_phase/grid.yml
+  config:
+    maxTrialNum: 2
+    trialConcurrency: 2
+
+- name: multi-phase-metis
+  configFile: test/config/multi_phase/metis.yml
+
+- name: multi-phase-tpe
+  configFile: test/config/multi_phase/tpe.yml
+
+#########################################################################
+# nni assessor test
+#########################################################################
+- name: assessor-curvefitting
+  configFile: test/config/assessors/curvefitting.yml
+
+- name: assessor-medianstop
+  configFile: test/config/assessors/medianstop.yml
