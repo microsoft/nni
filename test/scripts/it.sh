@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 CWD=${PWD}
 
 ## Export certain environment variables for unittest code to work
