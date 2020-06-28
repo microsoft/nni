@@ -419,7 +419,7 @@ tuner:
 
 > 内置 Tuner 名称：**PPOTuner**
 
-Note that the only acceptable types within the search space are `layer_choice` and `input_choice`. `input_choice`, `n_chosen` 只能是 0, 1, 或 [0, 1]。 注意，NAS 的搜索空间文件通常通过 [`nnictl ss_gen`](../Tutorial/Nnictl.md) 命令自动生成。
+注意，搜索空间仅接受 `layer_choice` 和 `input_choice` 类型。 `input_choice`, `n_chosen` 只能是 0, 1, 或 [0, 1]。 注意，NAS 的搜索空间文件通常通过 [`nnictl ss_gen`](../Tutorial/Nnictl.md) 命令自动生成。
 
 **建议场景**
 
