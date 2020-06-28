@@ -19,6 +19,7 @@
 
 'use strict';
 
+import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
@@ -27,17 +28,12 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
 import { AMLClusterConfig } from '../aml/amlConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
-import { AMLTrainingService } from '../aml/amlTrainingService';
-import { TrialDispatcher } from './trialDispatcher';
-import { Container, Scope } from 'typescript-ioc';
 import { EnvironmentService } from './environment';
-import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
-import { AMLEnvironmentService } from './amlEnvironmentService';
+import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
+import { AMLEnvironmentService } from './environments/amlEnvironmentService';
+import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
-import { MountedStorageService } from './mountedStorageService';
-import { TrialService } from './trial';
-import { StorageTrialService } from './storageTrialService';
-import { AMLTrialService } from './amlTrialService';
+import { TrialDispatcher } from './trialDispatcher';
 
 
 /**
@@ -126,10 +122,6 @@ class RouterTrainingService implements TrainingService {
                     Container.bind(StorageService)
                         .to(MountedStorageService)
                         .scope(Scope.Singleton);
-                    // TODO to support other trialService  later.
-                    Container.bind(TrialService)
-                        .to(StorageTrialService)
-                        .scope(Scope.Singleton);
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(PAIK8STrainingService);
@@ -148,14 +140,10 @@ class RouterTrainingService implements TrainingService {
 
                 this.metaDataCache.clear();
             } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
-                const config = <AMLClusterConfig>JSON.parse(value);
                 this.internalTrainingService = component.get(TrialDispatcher);
 
                 Container.bind(EnvironmentService)
                     .to(AMLEnvironmentService)
-                    .scope(Scope.Singleton);
-                Container.bind(TrialService)
-                    .to(AMLTrialService)
                     .scope(Scope.Singleton);
                 for (const [key, value] of this.metaDataCache) {
                     if (this.internalTrainingService === undefined) {

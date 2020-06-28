@@ -20,18 +20,31 @@
 'use strict';
 
 import { GPUSummary } from "training_service/common/gpuData";
+import { getLogger, Logger } from "../../common/log";
+import { TrialJobStatus } from "../../common/trainingService";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
+export type Channel = "web" | "file" | "aml" | "ut";
 
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
 
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentsStatus(environment: EnvironmentInformation[]): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+}
+
+export class NodeInfomation {
+    public id: string;
+    public status: TrialJobStatus = "UNKNOWN";
+    public endTime?: number;
+
+    constructor(id: string) {
+        this.id = id;
+    }
 }
 
 export class RunnerSettings {
@@ -45,11 +58,13 @@ export class RunnerSettings {
     public enableGpuCollector: boolean = false;
 
     // specify which communication channel is used by runner.
-    // supported channel includes: api, storage, aml
-    public commandChannel: string = "api";
+    // supported channel includes: rest, storage, aml
+    public commandChannel: Channel = "file";
 }
 
 export class EnvironmentInformation {
+    private log: Logger;
+
     // NNI environment ID
     public id: string;
     // training platform unique job ID.
@@ -62,6 +77,7 @@ export class EnvironmentInformation {
     public isIdle: boolean = false;
     // true: environment is running, waiting, or unknown.
     public isAlive: boolean = true;
+    // don't set status in environment directly, use setFinalState function to set a final state.
     public status: EnvironmentStatus = "UNKNOWN";
 
     public trackingUrl: string = "";
@@ -69,14 +85,33 @@ export class EnvironmentInformation {
     public runnerWorkingFolder: string = "";
     public command: string = "";
     public nodeCount: number = 1;
-
+    // aml related resource, need to refactor
     public environmentLocalTempFolder: string = "";
+    public environmentClient: any = "";
 
-    public gpuSummary: GPUSummary | undefined;
+    // it's used to aggregate node status for multiple node trial
+    public nodes: Map<string, NodeInfomation>;
+    public gpuSummary: Map<string, GPUSummary> = new Map<string, GPUSummary>();
 
     constructor(id: string, jobName: string, jobId?: string) {
+        this.log = getLogger();
         this.id = id;
         this.jobName = jobName;
         this.jobId = jobId ? jobId : jobName;
+        this.nodes = new Map<string, NodeInfomation>();
+    }
+
+    public setFinalStatus(status: EnvironmentStatus): void {
+        switch (status) {
+            case 'WAITING':
+            case 'SUCCEEDED':
+            case 'FAILED':
+            case 'USER_CANCELED':
+                this.status = status;
+                break;
+            default:
+                this.log.error(`Environment: job ${this.jobId} set an invalid final state ${status}.`);
+                break;
+        }
     }
 }

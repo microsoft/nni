@@ -20,7 +20,7 @@ if python3 -c 'import nni' > /dev/null 2>&1; then
   return
 else
   # Install nni
-  python3 -m pip install --user --no-cache-dir -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nni==1.6777
+  python3 -m pip install --user --no-cache-dir -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple nni==1.680
 fi`;
 
 

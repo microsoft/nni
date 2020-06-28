@@ -22,14 +22,14 @@
 import * as fs from 'fs';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
-import * as component from '../../common/component';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { PAIClusterConfig } from '../pai/paiConfig';
-import { NNIPAIK8STrialConfig } from '../pai/paiK8S/paiK8SConfig';
-import { EnvironmentInformation, EnvironmentService } from './environment';
-import { StorageService } from './storageService';
+import * as component from '../../../common/component';
+import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../../common/log';
+import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { PAIClusterConfig } from '../../pai/paiConfig';
+import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
+import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { StorageService } from '../storageService';
 
 const yaml = require('js-yaml');
 
@@ -134,19 +134,21 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                         if (jobResponse && jobResponse.state) {
                             const oldEnvironmentStatus = environment.status;
                             switch (jobResponse.state) {
-                                case 'WAITING':
                                 case 'RUNNING':
+                                case 'WAITING':
+                                    // RUNNING status is set by runner, and ignore waiting status
+                                    break;
                                 case 'SUCCEEDED':
                                 case 'FAILED':
-                                    environment.status = jobResponse.state;
+                                    environment.setFinalStatus(jobResponse.state);
                                     break;
                                 case 'STOPPED':
                                 case 'STOPPING':
-                                    environment.status = 'USER_CANCELED';
+                                    environment.setFinalStatus('USER_CANCELED');
                                     break;
                                 default:
                                     this.log.error(`OpenPAI: job ${environment.jobId} returns unknown state ${jobResponse.state}.`);
-                                    environment.status = 'UNKNOWN';
+                                    environment.setFinalStatus('UNKNOWN');
                             }
                             if (oldEnvironmentStatus !== environment.status) {
                                 this.log.debug(`OpenPAI: job ${environment.jobId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)

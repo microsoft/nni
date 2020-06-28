@@ -60,7 +60,8 @@ class NNIRestLogHanlder(StreamHandler):
         log_entry['msg'] = self.format(record)
 
         try:
-            rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
+            if self.host:
+                rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()

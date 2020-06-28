@@ -20,15 +20,15 @@ export class AMLClusterConfig {
 
 export class AMLTrialConfig extends TrialConfig {
     public readonly image: string;
-    public readonly script: string;
+    public readonly command: string;
     public readonly codeDir: string;
     public readonly nodeCount: number;
     public readonly computerTarget: string;
 
-    constructor(codeDir: string, script: string, image: string, nodeCount: number, computerTarget: string) {
+    constructor(codeDir: string, command: string, image: string, nodeCount: number, computerTarget: string) {
         super("", codeDir, 0);
         this.codeDir = codeDir;
-        this.script = script;
+        this.command = command;
         this.image = image;
         this.nodeCount = nodeCount;
         this.computerTarget = computerTarget;

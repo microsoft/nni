@@ -16,7 +16,6 @@ def collect_gpu_usage(node_id):
     except Exception:
         traceback.print_exc()
         info = gen_empty_gpu_metric()
-    info["node"] = node_id
     return info
 
 
@@ -53,7 +52,6 @@ def parse_nvidia_smi_result(smi):
 
             output["gpuInfos"].append(gpuInfo)
     except Exception:
-        # e_info = sys.exc_info()
         traceback.print_exc()
         output = {}
     return output

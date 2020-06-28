@@ -1,5 +1,7 @@
 import os
+import sys
 import time
+import json
 from argparse import ArgumentParser
 from azureml.core import Experiment, RunConfiguration, ScriptRunConfig
 from azureml.core.compute import ComputeTarget
@@ -22,17 +24,30 @@ if __name__ == "__main__":
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
     compute_target = ComputeTarget(workspace=ws, name=args.computer_target)
     experiment = Experiment(ws, args.experiment_name)
-    #dependencies = CondaDependencies()
-    #dependencies.add_pip_package("azureml-sdk")
-    #dependencies.add_pip_package("azureml")
+    dependencies = CondaDependencies()
+    dependencies.add_pip_package("azureml-sdk")
+    dependencies.add_pip_package("azureml")
 
     run_config = RunConfiguration()
-    #run_config.environment.python.conda_dependencies = dependencies
+    run_config.environment.python.conda_dependencies = dependencies
     run_config.environment.python.interpreter_path = "/root/miniconda3/bin/python"
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image
     run_config.target = compute_target
     run_config.node_count = 1
     config = ScriptRunConfig(source_directory=args.code_dir, script=args.script, run_config=run_config)
-    script_run = experiment.submit(config)
-    print(script_run.get_details()["runId"])
+    run = experiment.submit(config)
+    print(run.get_details()["runId"])
+    while True:
+        line = sys.stdin.readline().rstrip()
+        if line == 'update_status':
+            print('status:' + run.get_status())
+        elif line == 'stop':
+            run.cancel()
+            exit(0)
+        elif line == 'receive':
+            print(run.get_metrics())
+        elif line:
+            items = line.split(':')
+            if items[0] == 'command':
+                run.log('nni_manager', line[8:])

@@ -16,6 +16,7 @@
     "child-process-promise": "^2.2.1",
     "express": "^4.16.3",
     "express-joi-validator": "^2.0.0",
+    "ignore": "^5.1.4",
     "js-base64": "^2.4.9",
     "kubernetes-client": "^6.5.0",
     "python-shell": "^2.0.1",
@@ -24,11 +25,13 @@
     "ssh2": "^0.6.1",
     "stream-buffers": "^3.0.2",
     "tail-stream": "^0.3.4",
+    "tar": "^6.0.2",
     "tree-kill": "^1.2.0",
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.4",
     "typescript-string-operations": "^1.3.1",
-    "webhdfs": "^1.2.0"
+    "webhdfs": "^1.2.0",
+    "ws": "^7.3.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -43,7 +46,9 @@
     "@types/sqlite3": "^3.1.3",
     "@types/ssh2": "^0.5.35",
     "@types/stream-buffers": "^3.0.2",
+    "@types/tar": "^4.0.3",
     "@types/tmp": "^0.0.33",
+    "@types/ws": "^7.2.5",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^2.10.0",
     "chai": "^4.1.2",

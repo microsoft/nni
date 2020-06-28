@@ -32,7 +32,7 @@ prune_config = {
             'start_epoch': 0,
             'end_epoch': 10,
             'frequency': 1,
-            'op_types': ['default']
+            'op_types': ['Conv2d']
         }]
     },
     'slim': {
@@ -79,7 +79,7 @@ prune_config = {
         'pruner_class': ActivationAPoZRankFilterPruner,
         'config_list': [{
             'sparsity': 0.5,
-            'op_types': ['default'],
+            'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
     }

@@ -12,6 +12,7 @@ from subprocess import Popen
 import psutil
 
 from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
+from .base_channel import CommandType
 
 trial_output_path_name = ".nni"
 
@@ -21,6 +22,7 @@ class Trial:
         self.process = None
         self.data = data
         self.args = args
+        self.command_channel = args.command_channel
         self.trial_syslogger_stdout = None
 
         global NNI_TRIAL_JOB_ID
@@ -53,6 +55,7 @@ class Trial:
         environ['NNI_TRIAL_SEQ_ID'] = str(self.data["sequenceId"])
         environ['NNI_OUTPUT_DIR'] = os.path.join(trial_working_dir, "nnioutput")
         environ['NNI_SYS_DIR'] = trial_working_dir
+        self.working_dir = trial_working_dir
 
         # prepare code and parameters
         prepared_flag_file_name = os.path.join(trial_working_dir, "trial_prepared")
@@ -89,6 +92,18 @@ class Trial:
         nni_log(LogType.Info, '{0}: spawns a subprocess (pid {1}) to run command: {2}'.
                 format(self.name, self.process.pid, shlex.split(self.args.trial_command)))
 
+    def save_parameter_file(self, command_data):
+        parameters = command_data["parameters"]
+        file_index = int(parameters["index"])
+        if file_index == 0:
+            parameter_file_name = "parameter.cfg"
+        else:
+            parameter_file_name = "parameter_{}.cfg".format(file_index)
+        parameter_file_name = os.path.join(self.working_dir, parameter_file_name)
+        with open(parameter_file_name, "w") as parameter_file:
+            nni_log(LogType.Info, '%s: saving parameter %s' % (self.name, parameters["value"]))
+            parameter_file.write(parameters["value"])
+
     def is_running(self):
         if (self.process is None):
             return False
@@ -101,15 +116,13 @@ class Trial:
             retCode = ctypes.c_long(retCode).value
             nni_log(LogType.Info, '{0}: subprocess terminated. Exit code is {1}.'.format(self.name, retCode))
 
-            # Exit as the retCode of subprocess(trial)
-            exit_code_file_name = os.path.join(self.trial_output_dir, "code")
-            if (self.node_id is not None):
-                while True:
-                    exit_code_file_name = "%s_%s" % (exit_code_file_name, self.node_id)
-                    if not os.path.exists(exit_code_file_name):
-                        break
-            with open(exit_code_file_name, "w") as exit_file:
-                exit_file.write("%s %s" % (retCode, int(datetime.now().timestamp() * 1000)))
+            end_time = int(datetime.now().timestamp() * 1000)
+            end_message = {
+                "code": retCode,
+                "time": end_time,
+                "trial": self.id,
+            }
+            self.command_channel.send(CommandType.TrialEnd, end_message)
             self.cleanup()
             return False
         else:
