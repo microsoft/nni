@@ -9,6 +9,9 @@ import copy
 import random
 
 import numpy as np
+from schema import Schema, Optional
+
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
@@ -65,6 +68,12 @@ class Individual:
         self.save_dir = save_dir
         self.info = info
 
+class EvolutionClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('population_size'): self.range('population_size', int, 0, 99999),
+        }).validate(kwargs)
 
 class EvolutionTuner(Tuner):
     """

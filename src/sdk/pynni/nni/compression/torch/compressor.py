@@ -4,6 +4,7 @@
 import types
 import logging
 import torch
+from .utils.shape_dependency import ChannelDependency
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -68,20 +69,37 @@ class Compressor:
         """
         pass
 
-    def _detect_modules_to_compress(self):
+    def _detect_modules_to_compress(self, ops_no_dependency_only=False, dummy_input=None):
         """
         detect all modules should be compressed, and save the result in `self.modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
+
+        Parameters
+        ----------
+        ops_no_dependency_only : bool
+            whether to consider only the layers without dependencies
+        dummy_input:
+            necessary if ops_no_dependency_only is True
+
         """
         if self.modules_to_compress is None:
             self.modules_to_compress = []
+
+            if ops_no_dependency_only:
+                assert dummy_input is not None
+                channel_dependency = ChannelDependency(self.bound_model, dummy_input)
+                ops_no_dependency = channel_dependency.ops_no_dependency
+
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
+                    continue
+                if ops_no_dependency_only and name not in ops_no_dependency:
                     continue
                 layer = LayerInfo(name, module)
                 config = self.select_config(layer)
                 if config is not None:
                     self.modules_to_compress.append((layer, config))
+
         return self.modules_to_compress
 
     def _wrap_model(self):

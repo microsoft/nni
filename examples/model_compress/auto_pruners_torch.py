@@ -94,10 +94,9 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch, callba
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
+        optimizer.step()
         if callback:
             callback()
-        optimizer.step()
-
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -170,16 +169,10 @@ def get_trained_model(args, device, train_loader, val_loader, criterion):
 
 
 def get_dummy_input(args, device):
-    if args.model == 'LeNet':
+    if args.dataset == 'mnist':
         dummy_input = torch.randn(
             [args.test_batch_size, 1, 28, 28]).to(device)
-    elif args.model == 'vgg16':
-        dummy_input = torch.randn(
-            [args.test_batch_size, 3, 32, 32]).to(device)
-    elif args.model == 'resnet18':
-        dummy_input = torch.randn(
-            [args.test_batch_size, 3, 32, 32]).to(device)
-    elif args.model == 'mobilenet_v2':
+    elif args.dataset in ['cifar10', 'imagenet']:
         dummy_input = torch.randn(
             [args.test_batch_size, 3, 32, 32]).to(device)
 
@@ -188,22 +181,14 @@ def get_dummy_input(args, device):
 
 def main(args):
     # prepare dataset
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    train_loader, val_loader, criterion = get_data(args)
-
     torch.manual_seed(0)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    train_loader, val_loader, criterion = get_data(args)
+    model, optimizer = get_trained_model(args, device, train_loader, val_loader, criterion)
 
-    model, optimizer = get_trained_model(
-        args, device, train_loader, val_loader, criterion)
-
-    def fine_tuner(model, epochs):
+    def short_term_fine_tuner(model, epochs=1):
         for epoch in range(epochs):
-            train(args, model, device, train_loader,
-                  criterion, optimizer, epoch)
-
-    def short_term_fine_tuner(model):
-        return fine_tuner(model, epochs=1)
+            train(args, model, device, train_loader, criterion, optimizer, epoch)
 
     def trainer(model, optimizer, criterion, epoch, callback):
         return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
@@ -211,6 +196,7 @@ def main(args):
     def evaluator(model):
         return test(model, device, criterion, val_loader)
 
+    # used to save the performance of the original & pruned & finetuned models
     result = {}
 
     evaluation_result = evaluator(model)
@@ -218,9 +204,9 @@ def main(args):
     result['original'] = evaluation_result
 
     # module types to prune, only "Conv2d" supported for channel pruning
-    if args.pruning_mode == 'channel':
+    if args.base_algo in ['l1', 'l2']:
         op_types = ['Conv2d']
-    elif args.pruning_mode == 'fine_grained':
+    elif args.base_algo == 'level':
         op_types = ['default']
 
     config_list = [{
@@ -230,15 +216,14 @@ def main(args):
     dummy_input = get_dummy_input(args, device)
 
     if args.pruner == 'L1FilterPruner':
-        pruner = L1FilterPruner(
-            model, config_list)
+        pruner = L1FilterPruner(model, config_list)
     elif args.pruner == 'NetAdaptPruner':
-        pruner = NetAdaptPruner(model, config_list, fine_tuner=short_term_fine_tuner, evaluator=evaluator,
-                                pruning_mode=args.pruning_mode, experiment_data_dir=args.experiment_data_dir)
+        pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,
+                                base_algo=args.base_algo, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'ADMMPruner':
         # users are free to change the config here
         if args.model == 'LeNet':
-            if args.pruning_mode == 'channel':
+            if args.base_algo in ['l1', 'l2']:
                 config_list = [{
                     'sparsity': 0.8,
                     'op_types': ['Conv2d'],
@@ -248,7 +233,7 @@ def main(args):
                     'op_types': ['Conv2d'],
                     'op_names': ['conv2']
                 }]
-            elif args.pruning_mode == 'fine_grained':
+            elif args.base_algo == 'level':
                 config_list = [{
                     'sparsity': 0.8,
                     'op_names': ['conv1']
@@ -264,61 +249,53 @@ def main(args):
                 }]
         else:
             raise ValueError('Example only implemented for LeNet.')
-        pruner = ADMMPruner(
-            model, config_list, trainer=trainer, optimize_iterations=2, training_epochs=2)
+        pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=2, training_epochs=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
-            model, config_list, evaluator=evaluator, pruning_mode=args.pruning_mode,
+            model, config_list, evaluator=evaluator, base_algo=args.base_algo,
             cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'AutoCompressPruner':
         pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
-            optimize_iterations=3, optimize_mode='maximize', pruning_mode=args.pruning_mode,
-            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5,
+            optimize_iterations=3, optimize_mode='maximize', base_algo=args.base_algo,
+            # cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5,
+            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=3, admm_training_epochs=2,
             experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(
             "Please use L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner in this example.")
 
-    # pruner.compress() returns the masked model
-    # but for AutoCompressPruner, pruner.compress() returns directly the pruned model
+    # Pruner.compress() returns the masked model
+    # but for AutoCompressPruner, Pruner.compress() returns directly the pruned model
     model_masked = pruner.compress()
     evaluation_result = evaluator(model_masked)
     print('Evaluation result (masked model): %s' % evaluation_result)
     result['pruned'] = evaluation_result
 
     if args.save_model:
-        pruner.export_model(os.path.join(args.experiment_data_dir, 'model_masked.pth'), os.path.join(
-            args.experiment_data_dir, 'mask.pth'))
+        pruner.export_model(
+            os.path.join(args.experiment_data_dir, 'model_masked.pth'), os.path.join(args.experiment_data_dir, 'mask.pth'))
         print('Masked model saved to %s', args.experiment_data_dir)
 
     if args.fine_tune:
         if args.dataset == 'mnist':
-            optimizer = torch.optim.Adadelta(
-                model_masked.parameters(), lr=1)
+            optimizer = torch.optim.Adadelta(model_masked.parameters(), lr=1)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
             for epoch in range(args.fine_tune_epochs):
-                train(args, model_masked, device,
-                      train_loader, criterion, optimizer, epoch)
-                test(model_masked, device, criterion, val_loader)
+                train(args, model_masked, device, train_loader, criterion, optimizer, epoch)
                 scheduler.step()
+                test(model_masked, device, criterion, val_loader)
         elif args.dataset == 'cifar10':
-            optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.01,
-                                        momentum=0.9,
-                                        weight_decay=5e-4)
+            optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
             for epoch in range(args.fine_tune_epochs):
-                train(args, model_masked, device,
-                      train_loader, criterion, optimizer, epoch)
+                train(args, model_masked, device, train_loader, criterion, optimizer, epoch)
                 scheduler.step()
                 test(model_masked, device, criterion, val_loader)
         elif args.dataset == 'imagenet':
             for epoch in range(args.fine_tune_epochs):
-                optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.05,
-                                            momentum=0.9,
-                                            weight_decay=5e-4)
-                train(args, model_masked, device,
-                      train_loader, criterion, optimizer, epoch)
+                optimizer = torch.optim.SGD(model_masked.parameters(), lr=0.05, momentum=0.9, weight_decay=5e-4)
+                train(args, model_masked, device, train_loader, criterion, optimizer, epoch)
                 test(model_masked, device, criterion, val_loader)
 
     evaluation_result = evaluator(model_masked)
@@ -337,14 +314,11 @@ def main(args):
         elif args.model == 'vgg16':
             model = VGG(depth=16).to(device)
         elif args.model == 'resnet18':
-            model = models.resnet18(
-                pretrained=False, num_classes=10).to(device)
+            model = models.resnet18(pretrained=False, num_classes=10).to(device)
         elif args.model == 'mobilenet_v2':
-            model = models.mobilenet_v2(pretrained=True).to(device)
+            model = models.mobilenet_v2(pretrained=False).to(device)
 
-        model.load_state_dict(torch.load(os.path.join(
-            args.experiment_data_dir, 'model_fine_tuned.pth')))
-
+        model.load_state_dict(torch.load(os.path.join(args.experiment_data_dir, 'model_fine_tuned.pth')))
         masks_file = os.path.join(args.experiment_data_dir, 'mask.pth')
 
         m_speedup = ModelSpeedup(model, dummy_input, masks_file, device)
@@ -353,8 +327,7 @@ def main(args):
         print('Evaluation result (speed up model): %s' % evaluation_result)
         result['speedup'] = evaluation_result
 
-        torch.save(model.state_dict(), os.path.join(
-            args.experiment_data_dir, 'model_speed_up.pth'))
+        torch.save(model.state_dict(), os.path.join(args.experiment_data_dir, 'model_speed_up.pth'))
         print('Speed up model saved to %s', args.experiment_data_dir)
 
     with open(os.path.join(args.experiment_data_dir, 'performance.json'), 'w+') as f:
@@ -372,24 +345,23 @@ if __name__ == '__main__':
         else:
             raise argparse.ArgumentTypeError('Boolean value expected.')
 
-    parser = argparse.ArgumentParser(
-        description='PyTorch Example for SimulatedAnnealingPruner')
+    parser = argparse.ArgumentParser(description='PyTorch Example for SimulatedAnnealingPruner')
 
     parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner',
                         help='pruner to use, L1FilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner or AutoCompressPruner')
-    parser.add_argument('--pruning-mode', type=str, default='channel',
-                        help='pruning mode, channel or fine_grained')
+    parser.add_argument('--base-algo', type=str, default='l1',
+                        help='base pruning algorithm. level, l1 or l2')
     parser.add_argument('--sparsity', type=float, default=0.3,
                         help='overall target sparsity')
-    parser.add_argument('--speed-up', type=str2bool, default=True,
+    parser.add_argument('--speed-up', type=str2bool, default=False,
                         help='Whether to speed-up the pruned model')
 
     # param for SimulatedAnnealingPruner
     parser.add_argument('--cool-down-rate', type=float, default=0.9,
                         help='cool down rate')
     # param for NetAdaptPruner
-    parser.add_argument('--pruning-step', type=float, default=0.05,
-                        help='pruning_step of NetAdaptPruner')
+    parser.add_argument('--sparsity-per-iteration', type=float, default=0.05,
+                        help='sparsity_per_iteration of NetAdaptPruner')
 
     parser.add_argument('--dataset', type=str, default='mnist',
                         help='dataset to use, mnist, cifar10 or imagenet (default MNIST)')
@@ -399,10 +371,10 @@ if __name__ == '__main__':
                         help='whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=10,
                         help='epochs to fine tune')
-    parser.add_argument('--data-dir', type=str,
-                        default='/datasets/')
-    parser.add_argument('--experiment-data-dir', type=str,
-                        default='./', help='For saving experiment data')
+    parser.add_argument('--data-dir', type=str, default='/datasets/',
+                        help='dataset directory')
+    parser.add_argument('--experiment-data-dir', type=str, default='./',
+                        help='For saving experiment data')
 
     parser.add_argument('--batch-size', type=int, default=64,
                         help='input batch size for training (default: 64)')

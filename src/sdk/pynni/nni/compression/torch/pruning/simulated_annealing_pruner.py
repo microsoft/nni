@@ -12,11 +12,9 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from ..compressor import Pruner, LayerInfo
+from ..compressor import Pruner
 from ..utils.config_validation import CompressorSchema
-from ..utils.op_dependency import get_layers_no_dependency
-from .pruners import LevelPruner
-from .weight_rank_filter_pruners import L1FilterPruner
+from .constants_pruner import PRUNER_DICT
 
 
 _logger = logging.getLogger(__name__)
@@ -35,7 +33,7 @@ class SimulatedAnnealingPruner(Pruner):
         4. cool down, current_temperature <- current_temperature * cool_down_rate
     """
 
-    def __init__(self, model, config_list, evaluator, optimize_mode='maximize', pruning_mode='channel',
+    def __init__(self, model, config_list, evaluator, optimize_mode='maximize', base_algo='l1',
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35, experiment_data_dir='./'):
         """
         Parameters
@@ -44,14 +42,15 @@ class SimulatedAnnealingPruner(Pruner):
             The model to be pruned
         config_list : list
             Supported keys:
-                - sparsity : The final sparsity when the compression is done.
+                - sparsity : The target overall sparsity.
                 - op_types : The operation type to prune.
         evaluator : function
-            function to evaluate the pruned model
+            function to evaluate the pruned model.
+            This function should include `model` as the only parameter, and returns a scalar value.
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        pruning_mode : str
-            'channel' or 'fine_grained, by default 'channel'
+        base_algo : str
+            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float
@@ -65,7 +64,7 @@ class SimulatedAnnealingPruner(Pruner):
         """
         # original model
         self._model_to_prune = copy.deepcopy(model)
-        self._pruning_mode = pruning_mode
+        self._base_algo = base_algo
 
         super().__init__(model, config_list)
 
@@ -95,37 +94,16 @@ class SimulatedAnnealingPruner(Pruner):
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
 
-    def _detect_modules_to_compress(self):
-        """
-        redefine this function, consider only the layers without dependencies
-        """
-        if self.modules_to_compress is None:
-            self.modules_to_compress = []
-            # consider only the layers without dependencies
-            model_name = self._model_to_prune.__class__.__name__
-            ops_no_dependency = get_layers_no_dependency(model_name)
-
-            for name, module in self.bound_model.named_modules():
-                if module == self.bound_model:
-                    continue
-                if self._pruning_mode == 'channel' and model_name in ['MobileNetV2', 'RetinaFace'] and name not in ops_no_dependency:
-                    continue
-                layer = LayerInfo(name, module)
-                config = self.select_config(layer)
-                if config is not None:
-                    self.modules_to_compress.append((layer, config))
-        return self.modules_to_compress
-
     def validate_config(self, model, config_list):
         """
         Parameters
         ----------
-        model : torch.nn.module
-            Model to be pruned
+        model : pytorch model
+            The model to be pruned
         config_list : list
             Supported keys:
-                - prune_iterations : The number of rounds for the iterative pruning.
-                - sparsity : The final sparsity when the compression is done.
+                - sparsity : The target overall sparsity.
+                - op_types : The operation type to prune.
         """
         schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
@@ -157,10 +135,10 @@ class SimulatedAnnealingPruner(Pruner):
         # a layer with more weights will have no less pruning rate
         for idx, wrapper in enumerate(self.get_modules_wrapper()):
             # L1Filter Pruner requires to specify op_types
-            if self._pruning_mode == 'channel':
+            if self._base_algo in ['l1', 'l2']:
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_types': ['Conv2d'], 'op_names': [wrapper.name]})
-            elif self._pruning_mode == 'fine_grained':
+            elif self._base_algo == 'level':
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
 
@@ -288,12 +266,7 @@ class SimulatedAnnealingPruner(Pruner):
                     "config_list for Pruner generated: %s", config_list)
 
                 # fast evaluation
-                if self._pruning_mode == 'channel':
-                    pruner = L1FilterPruner(
-                        model=copy.deepcopy(self._model_to_prune), config_list=config_list)
-                elif self._pruning_mode == 'fine_grained':
-                    pruner = LevelPruner(
-                        model=copy.deepcopy(self._model_to_prune), config_list=config_list)
+                pruner = PRUNER_DICT[self._base_algo](copy.deepcopy(self._model_to_prune), config_list)
                 model_masked = pruner.compress()
                 evaluation_result = self._evaluator(model_masked)
 

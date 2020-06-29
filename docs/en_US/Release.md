@@ -105,7 +105,7 @@
 * WebUI refactor: adopt fabric framework
 
 #### Others
-* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
 * Support canceling the trials in UNKNOWN state
 * Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
 
@@ -338,7 +338,7 @@
   * NNI running on windows for local mode
 * [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment)
+* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md)
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
 * [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig)

@@ -33,7 +33,7 @@ class AutoCompressPruner(Pruner):
     """
 
     def __init__(self, model, config_list, trainer, evaluator, dummy_input,
-                 optimize_iterations=3, optimize_mode='maximize', pruning_mode='channel',
+                 optimize_iterations=3, optimize_mode='maximize', base_algo='l1',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
                  # ADMM related
@@ -46,22 +46,23 @@ class AutoCompressPruner(Pruner):
             The model to be pruned
         config_list : list
             Supported keys:
-                - sparsity : The final sparsity when the compression is done.
+                - sparsity : The target overall sparsity.
                 - op_types : The operation type to prune.
         trainer : function
-            Function used for the first step of ADMM pruning. This function should take 
-            a pytorch model, optimizer, criterion, epoch, callback as parameters and train the model, no return is required.
+            function used for the first optimization subproblem.
+            This function should include `model, optimizer, criterion, epoch, callback` as parameters,
+            where callback should be inserted after loss.backward of the normal training process.
         evaluator : function
-            Function to evaluate the masked model.
-            This function should take a pytorch model as the only parameter and return a scalar reward (accuracy, -loss... etc.)
+            function to evaluate the pruned model.
+            This function should include `model` as the only parameter, and returns a scalar value.
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
         optimize_iterations : int
             number of overall iterations
         optimize_mode : str
             optimize mode, 'maximize' or 'minimize', by default 'maximize'
-        pruning_mode : str
-            'channel' or 'fine_grained, by default 'channel'
+        base_algo : str
+            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float
@@ -81,7 +82,7 @@ class AutoCompressPruner(Pruner):
         """
         # original model
         self._model_to_prune = model
-        self._pruning_mode = pruning_mode
+        self._base_algo = base_algo
 
         self._trainer = trainer
         self._evaluator = evaluator
@@ -107,22 +108,16 @@ class AutoCompressPruner(Pruner):
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
 
-    def _detect_modules_to_compress(self):
-        """
-        redefine this function, consider only the layers without dependencies
-        """
-        SimulatedAnnealingPruner._detect_modules_to_compress(self)
-
     def validate_config(self, model, config_list):
         """
         Parameters
         ----------
-        model : torch.nn.module
-            Model to be pruned
+        model : pytorch model
+            The model to be pruned
         config_list : list
             Supported keys:
-                - prune_iterations : The number of rounds for the iterative pruning.
-                - sparsity : The final sparsity when the compression is done.
+                - sparsity : The target overall sparsity.
+                - op_types : The operation type to prune.
         """
         schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
@@ -136,7 +131,7 @@ class AutoCompressPruner(Pruner):
 
     def compress(self):
         """
-        Compress the model with Simulated Annealing.
+        Compress the model with AutoCompress.
 
         Returns
         -------
@@ -161,7 +156,7 @@ class AutoCompressPruner(Pruner):
                     {"sparsity": sparsity_each_round, "op_types": ['Conv2d']}],
                 evaluator=self._evaluator,
                 optimize_mode=self._optimize_mode,
-                pruning_mode=self._pruning_mode,
+                base_algo=self._base_algo,
                 start_temperature=self._start_temperature,
                 stop_temperature=self._stop_temperature,
                 cool_down_rate=self._cool_down_rate,
@@ -179,13 +174,13 @@ class AutoCompressPruner(Pruner):
                 optimize_iterations=self._admm_optimize_iterations,
                 training_epochs=self._admm_training_epochs,
                 row=self._row,
-                pruning_mode=self._pruning_mode)
+                base_algo=self._base_algo)
             ADMMpruner.compress()
 
             ADMMpruner.export_model(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'), os.path.join(
                 self._experiment_data_dir, 'mask.pth'))
 
-            # use speed up to do pruning before next iteration, because SimulatedAnnealingPruner & ADMMPruner don't take maked models
+            # use speed up to prune the model before next iteration, because SimulatedAnnealingPruner & ADMMPruner don't take masked models
             self._model_to_prune.load_state_dict(torch.load(os.path.join(
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 
@@ -199,7 +194,7 @@ class AutoCompressPruner(Pruner):
             m_speedup.speedup_model()
 
             evaluation_result = self._evaluator(self._model_to_prune)
-            _logger.info('Evaluation result of iteration %d: %s',
+            _logger.info('Evaluation result of the pruned model in iteration %d: %s',
                          i, evaluation_result)
 
         _logger.info('----------Compression finished--------------')
@@ -211,7 +206,7 @@ class AutoCompressPruner(Pruner):
         return self._model_to_prune
 
     def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
-        _logger.info("AutoCompressPruner export only model, not mask")
+        _logger.info("AutoCompressPruner export directly the pruned model without mask")
 
         torch.save(self._model_to_prune.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
@@ -222,7 +217,5 @@ class AutoCompressPruner(Pruner):
             if device is None:
                 device = torch.device('cpu')
             input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self._model_to_prune,
-                              input_data.to(device), onnx_path)
-            _logger.info(
-                'Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+            torch.onnx.export(self._model_to_prune, input_data.to(device), onnx_path)
+            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
