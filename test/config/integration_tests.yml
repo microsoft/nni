@@ -4,6 +4,7 @@ defaultTestCaseConfig:
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
+  trainingService: all
 
 testCases:
 #######################################################################
@@ -79,18 +80,14 @@ testCases:
   launchCommand: nnictl ss_gen --trial_command="python3 mnist.py --epochs 1" --trial_dir=../examples/nas/classic_nas --file=config/examples/nni-nas-search-space.json
   stopCommand:
   experimentStatusCheck: False
-
-- name: classic-nas-install-ppo
-  configFile: test/config/examples/classic-nas-pytorch.yml
-  launchCommand: nnictl package install --name=PPOTuner
-  stopCommand:
-  experimentStatusCheck: False
+  trainingService: local
 
 - name: classic-nas-pytorch
   configFile: test/config/examples/classic-nas-pytorch.yml
   # remove search space file
   stopCommand: nnictl stop
   onExitCommand: python3 -c 'import os; os.remove("config/examples/nni-nas-search-space.json")'
+  trainingService: local
 
 #########################################################################
 # nni features test

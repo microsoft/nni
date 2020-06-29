@@ -91,6 +91,15 @@ class TrialManager {
         return this.filter(trial => trial.status === 'SUCCEEDED');
     }
 
+    public finalKeys(): string[] {
+        const succeedTrialsList = this.filter(trial => trial.status === 'SUCCEEDED');
+        if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
+            return succeedTrialsList[0].finalKeys();
+        } else {
+            return ["default"];
+        }
+    }
+
     public sort(): Trial[] {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
@@ -230,7 +239,7 @@ class TrialManager {
                 updated = true;
             });
 
-            return updated;
+        return updated;
     }
 
     private async updateMetrics(lastTime?: boolean): Promise<boolean> {
