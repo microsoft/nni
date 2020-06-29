@@ -116,7 +116,7 @@
 
 #### 其它
 
-* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
 * 支持取消 UNKNOWN 状态的 Trial。
 * 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
 
@@ -363,7 +363,7 @@
   * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
   * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
-* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md) 
   * 在 Experiment 执行完后，可生成分析结果报告
   * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
 * [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
