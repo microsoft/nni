@@ -244,30 +244,6 @@ def test_agp(pruning_algorithm):
             # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
             assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
 
-def test_agp(pruning_algorithm):
-        model = Model()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-        config_list = prune_config['agp']['config_list']
-
-        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
-        pruner.compress()
-
-        x = torch.randn(2, 1, 28, 28)
-        y = torch.tensor([0, 1]).long()
-
-        for epoch in range(config_list[0]['start_epoch'], config_list[0]['end_epoch']+1):
-            pruner.update_epoch(epoch)
-            out = model(x)
-            loss = F.cross_entropy(out, y)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            target_sparsity = pruner.compute_target_sparsity(config_list[0])
-            actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
-            # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
-            assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
-
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
