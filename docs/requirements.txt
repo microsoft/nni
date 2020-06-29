@@ -9,6 +9,8 @@ json_tricks
 numpy
 scipy
 coverage
+peewee
+nbsphinx
 schema
 tensorboard
 scikit-learn==0.20
