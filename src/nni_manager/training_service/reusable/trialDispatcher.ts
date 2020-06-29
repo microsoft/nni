@@ -43,11 +43,11 @@ class TrialDispatcher implements TrainingService {
     private trialConfig: TrialConfig | undefined;
     private runnerSettings: RunnerSettings;
 
-    private commandEmitter: EventEmitter;
+    private commandEmitter: EventEmitter | undefined;
+    private commandChannel: CommandChannel | undefined;
 
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
-    private readonly commandChannel: CommandChannel;
 
     constructor() {
         this.log = getLogger();
@@ -59,9 +59,6 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings = new RunnerSettings();
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
-
-        this.commandEmitter = new EventEmitter();
-        this.commandChannel = new WebCommandChannel(this.commandEmitter);
 
         const logLevel = getLogLevel();
         this.log.debug(`current folder ${__dirname}`);
@@ -119,6 +116,9 @@ class TrialDispatcher implements TrainingService {
         if (environment === undefined) {
             throw new Error(`TrialDispatcher: trial ${trialJobId}'s env shouldn't be undefined in updateTrialJob.`);
         }
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in updateTrialJob.`);
+        }
 
         const message = {
             "trialId": trialJobId,
@@ -130,6 +130,9 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean | undefined): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in cancelTrialJob.`);
+        }
         const trial = await this.getTrialJob(trialJobId);
         switch (trial.status) {
             case "RUNNING":
@@ -150,6 +153,11 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async run(): Promise<void> {
+        const environmentService = component.get<EnvironmentService>(EnvironmentService);
+
+        this.commandEmitter = new EventEmitter();
+        this.commandChannel = new WebCommandChannel(this.commandEmitter);
+
 
         await this.jobRestServer.start();
         this.jobRestServer.setEnableVersionCheck = this.versionCheck;
@@ -157,8 +165,11 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings.nniManagerPort = this.jobRestServer.clusterRestServerPort;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
+        // for AML channel, other channels can ignore this.
+        this.commandChannel.config("MetricEmitter", this.metricsEmitter);
         // for restful api, other channel can ignore this.
         this.commandChannel.config("RestServer", this.jobRestServer.Server);
+
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
             this.handleCommand(command).catch((err: Error) => {
@@ -172,7 +183,6 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
 
-        const environmentService = component.get<EnvironmentService>(EnvironmentService);
         if (environmentService.hasStorageService) {
             this.log.info(`TrialDispatcher: copying code and settings.`);
             const storageService = component.get<StorageService>(StorageService);
@@ -246,6 +256,12 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async cleanUp(): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in cleanUp.`);
+        }
+        if (this.commandEmitter === undefined) {
+            throw new Error(`TrialDispatcher: commandEmitter shouldn't be undefined in cleanUp.`);
+        }
         this.stopping = true;
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const environments = [...this.environments.values()];
@@ -272,6 +288,9 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async environmentMaintenanceLoop(): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in environmentMaintenanceLoop.`);
+        }
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         while (!this.stopping) {
             const environments: EnvironmentInformation[] = [];
@@ -305,6 +324,10 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async trialManagementLoop(): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in trialManagementLoop.`);
+        }
+
         while (!this.stopping) {
             await delay(2000);
 
@@ -414,10 +437,14 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async requestEnvironment(): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in requestEnvironment.`);
+        }
+
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const envId = uniqueString(5);
-        const name = `nni_exp_${this.experimentId}_env_${envId}`;
-        const environment = new EnvironmentInformation(envId, name);
+        const envName = `nni_exp_${this.experimentId}_env_${envId}`;
+        const environment = environmentService.createEnviornmentInfomation(envId, envName);
 
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
@@ -448,6 +475,10 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async assignEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
+        if (this.commandChannel === undefined) {
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in assignEnvironment.`);
+        }
+
         if (trial.environment) {
             throw new Error(`trial ${trial.id} has assigned environment ${trial.environment.id} already, not assign to ${environment.id}!`);
         }

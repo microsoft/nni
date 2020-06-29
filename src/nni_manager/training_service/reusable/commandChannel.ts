@@ -26,7 +26,7 @@ export class Command {
     }
 }
 
-export abstract class RunnerConnection {
+export class RunnerConnection {
     public readonly environment: EnvironmentInformation;
 
     constructor(environment: EnvironmentInformation) {

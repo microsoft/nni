@@ -6,6 +6,9 @@
 import { GPUSummary } from "training_service/common/gpuData";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
+import { EventEmitter } from "events";
+import { WebCommandChannel } from "./channels/webCommandChannel";
+import { CommandChannel } from "./commandChannel";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -19,6 +22,14 @@ export abstract class EnvironmentService {
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+
+    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+        return new WebCommandChannel(commandEmitter);
+    }
+
+    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+        return new EnvironmentInformation(envId, envName);
+    }
 }
 
 export class NodeInfomation {

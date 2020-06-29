@@ -21,7 +21,7 @@ const yaml = require('js-yaml');
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
 @component.Singleton
-export class OpenPaiEnvironmentService implements EnvironmentService {
+export class OpenPaiEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger();
     private paiClusterConfig: PAIClusterConfig | undefined;
@@ -35,10 +35,10 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
     private experimentId: string;
 
     constructor() {
+        super();
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.experimentId = getExperimentId();
     }
-
 
     public get hasStorageService(): boolean {
         return true;
