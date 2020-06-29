@@ -10,6 +10,8 @@ setuptools.setup(
 
     python_requires = '>=3.5',
     install_requires = [
+        'azureml',
+        'azureml-sdk',
         'requests',
         'ruamel.yaml',
         'psutil',

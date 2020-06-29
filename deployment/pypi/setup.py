@@ -50,6 +50,8 @@ setuptools.setup(
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
     install_requires = [
+        'azureml',
+        'azureml-sdk',
         'schema',
         'ruamel.yaml',
         'psutil',

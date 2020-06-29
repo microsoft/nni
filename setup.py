@@ -30,6 +30,8 @@ setup(
     python_requires = '>=3.5',
     install_requires = [
         'astor',
+        'azureml',
+        'azureml-sdk',
         'hyperopt==0.1.2',
         'json_tricks',
         'netifaces',
