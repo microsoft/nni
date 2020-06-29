@@ -14,48 +14,6 @@ import { CommandChannel } from "./commandChannel";
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 export type Channel = "web" | "file" | "aml" | "ut";
 
-export abstract class EnvironmentService {
-
-    public abstract get hasStorageService(): boolean;
-
-    public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
-    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
-    public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
-
-    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new WebCommandChannel(commandEmitter);
-    }
-
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
-        return new EnvironmentInformation(envId, envName);
-    }
-}
-
-export class NodeInfomation {
-    public id: string;
-    public status: TrialJobStatus = "UNKNOWN";
-    public endTime?: number;
-
-    constructor(id: string) {
-        this.id = id;
-    }
-}
-
-export class RunnerSettings {
-    public experimentId: string = "";
-    public platform: string = "";
-    public nniManagerIP: string = "";
-    public nniManagerPort: number = 8081;
-    public nniManagerVersion: string = "";
-    public logCollection: string = "none";
-    public command: string = "";
-    public enableGpuCollector: boolean = false;
-
-    // specify which communication channel is used by runner.
-    // supported channel includes: rest, storage, aml
-    public commandChannel: Channel = "file";
-}
 
 export class EnvironmentInformation {
     private log: Logger;
@@ -106,4 +64,46 @@ export class EnvironmentInformation {
                 break;
         }
     }
+}
+export abstract class EnvironmentService {
+
+    public abstract get hasStorageService(): boolean;
+
+    public abstract config(key: string, value: string): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
+    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+
+    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+        return new WebCommandChannel(commandEmitter);
+    }
+
+    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+        return new EnvironmentInformation(envId, envName);
+    }
+}
+
+export class NodeInfomation {
+    public id: string;
+    public status: TrialJobStatus = "UNKNOWN";
+    public endTime?: number;
+
+    constructor(id: string) {
+        this.id = id;
+    }
+}
+
+export class RunnerSettings {
+    public experimentId: string = "";
+    public platform: string = "";
+    public nniManagerIP: string = "";
+    public nniManagerPort: number = 8081;
+    public nniManagerVersion: string = "";
+    public logCollection: string = "none";
+    public command: string = "";
+    public enableGpuCollector: boolean = false;
+
+    // specify which communication channel is used by runner.
+    // supported channel includes: rest, storage, aml
+    public commandChannel: Channel = "file";
 }
