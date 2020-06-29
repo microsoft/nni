@@ -1,0 +1,7 @@
+# Exclude the following directories when uploading codeDir.
+data
+logs
+checkpoints
+
+# They can also be files
+outputs.log
