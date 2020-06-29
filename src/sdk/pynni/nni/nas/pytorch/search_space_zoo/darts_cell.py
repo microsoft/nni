@@ -59,7 +59,7 @@ class DartsCell(nn.Module):
     ---
     n_nodes: int
         the number of nodes contained in this cell
-    channels_pp: int	    channels_pp: int
+    channels_pp: int
         the number of previous previous cell's output channels
     channels_p: int
         the number of previous cell's output channels

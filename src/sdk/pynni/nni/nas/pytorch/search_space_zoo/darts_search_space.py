@@ -22,8 +22,20 @@ class DartsStackedCells(nn.Module):
     n_layers: int
         the number of cells contained in this network
     factory_func: function
-        return an instance for certain cell structure
-        user should pass in `__init__` of demand cell class
+        return a callable instance for demand cell structure
+        user should pass in ``__init__`` of the cell class with following parameters (see darts_cell for detail)
+            n_nodes: int
+                the number of nodes contained in this cell
+            channels_pp: int
+                the number of previous previous cell's output channels
+            channels_p: int
+                the number of previous cell's output channels
+            channels: int
+                the number of output channels for each node
+            reduction_p: bool
+                Is previous cell a reduction cell
+            reduction: bool
+                is current cell a reduction cell
     n_nodes: int
         the number of nodes contained in each cell
     stem_multiplier: int
