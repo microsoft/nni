@@ -23,4 +23,5 @@ For details, please refer to the following tutorials:
     One-shot NAS <NAS/one_shot_nas>
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
+    NAS Benchmarks <NAS/Benchmarks>
     API Reference <NAS/NasReference>
