@@ -17,6 +17,7 @@ jobs:
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
+      PATH=$HOME/.local/bin:$PATH nnictl package install --name=PPOTuner
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
