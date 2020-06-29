@@ -32,6 +32,7 @@ class PoolBN(nn.Module):
     """
     AvgPool or MaxPool with BN. `pool_type` must be `max` or `avg`.
     """
+
     def __init__(self, pool_type, C, kernel_size, stride, padding, affine=True):
         super().__init__()
         if pool_type.lower() == 'max':
@@ -49,26 +50,24 @@ class PoolBN(nn.Module):
         return out
 
 
-class StdConv(nn.Module):
+class StdConv(nn.Sequential):
     """
     Standard conv: ReLU - Conv - BN
     """
+
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.ReLU(),
-            nn.Conv2d(C_in, C_out, kernel_size, stride, padding, bias=False),
-            nn.BatchNorm2d(C_out, affine=affine)
-        )
-
-    def forward(self, x):
-        return self.net(x)
+        self.net = nn.Sequential
+        for idx, ops in enumerate((nn.ReLU(), nn.Conv2d(C_in, C_out, kernel_size, stride, padding, bias=False),
+                                   nn.BatchNorm2d(C_out, affine=affine))):
+            self.add_module(str(idx), ops)
 
 
 class FacConv(nn.Module):
     """
     Factorized conv: ReLU - Conv(Kx1) - Conv(1xK) - BN
     """
+
     def __init__(self, C_in, C_out, kernel_length, stride, padding, affine=True):
         super().__init__()
         self.net = nn.Sequential(
@@ -88,6 +87,7 @@ class DilConv(nn.Module):
     ReLU - (Dilated) depthwise separable - Pointwise - BN.
     If dilation == 2, 3x3 conv => 5x5 receptive field, 5x5 conv => 9x9 receptive field.
     """
+
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
         super().__init__()
         self.net = nn.Sequential(
@@ -107,6 +107,7 @@ class SepConv(nn.Module):
     Depthwise separable conv.
     DilConv(dilation=1) * 2.
     """
+
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__()
         self.net = nn.Sequential(
@@ -122,6 +123,7 @@ class FactorizedReduce(nn.Module):
     """
     Reduce feature map size by factorized pointwise (stride=2).
     """
+
     def __init__(self, C_in, C_out, affine=True):
         super().__init__()
         self.relu = nn.ReLU()

@@ -1,11 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
 import torch.nn as nn
-
 import ops
-from darts_cell import DartsCell
 
 
 class DartsStackedCells(nn.Module):
@@ -24,15 +21,16 @@ class DartsStackedCells(nn.Module):
         classes for final classification
     n_layers: int
         the number of cells contained in this network
-    cell: DartsCell (to be refined)
-        specified cell structure
+    factory_func: function
+        return an instance for certain cell structure
+        user should keep this function's signature same as the Cell's `__init__` function
     n_nodes: int
         the number of nodes contained in each cell
     stem_multiplier: int
         channels multiply coefficient when passing a cell
     """
 
-    def __init__(self, in_channels, channels, n_classes, n_layers, cell: DartsCell, n_nodes=4,
+    def __init__(self, in_channels, channels, n_classes, n_layers, factory_func, n_nodes=4,
                  stem_multiplier=3):
         super().__init__()
         self.in_channels = in_channels
@@ -59,15 +57,8 @@ class DartsStackedCells(nn.Module):
                 c_cur *= 2
                 reduction = True
 
-            # cell = DartsCell(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
-            temp_cell = copy.deepcopy(cell)
-            temp_cell.reduction = reduction
-            temp_cell.reduction_p = reduction_p
-            temp_cell.channels_p = channels_p
-            temp_cell.channels_pp = channels_pp
-            temp_cell.channels = c_cur
-            temp_cell.init()
-            self.cells.append(temp_cell)
+            cell = factory_func(n_nodes, channels_pp, channels_p, c_cur, reduction_p, reduction)
+            self.cells.append(cell)
             c_cur_out = c_cur * n_nodes
             channels_pp, channels_p = channels_p, c_cur_out
 
