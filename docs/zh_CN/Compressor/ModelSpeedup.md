@@ -1,6 +1,6 @@
 # 加速掩码的模型
 
-*此功能还处于预览版。*
+*This feature is in Beta version.*
 
 ## 介绍
 
