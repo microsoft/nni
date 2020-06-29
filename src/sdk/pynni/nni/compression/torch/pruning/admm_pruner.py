@@ -5,7 +5,6 @@ import logging
 import torch
 from schema import And, Optional
 
-from ..compressor import Pruner
 from ..utils.config_validation import CompressorSchema
 from .constants import MASKER_DICT
 from .one_shot import OneshotPruner
@@ -15,7 +14,7 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
-class ADMMPruner(Pruner):
+class ADMMPruner(OneshotPruner):
     """
     This is a Pytorch implementation of ADMM Pruner algorithm.
 
@@ -58,6 +57,7 @@ class ADMMPruner(Pruner):
         self._row = row
 
         self.set_wrappers_attribute("if_calculated", False)
+        self.masker = MASKER_DICT[self._base_algo](self.bound_model, self)
 
     def validate_config(self, model, config_list):
         """
@@ -120,24 +120,6 @@ class ADMMPruner(Pruner):
 
         return weight.data.mul(mask_weight)
 
-    def calc_mask(self, wrapper, **kwargs):
-        """
-        Calculate the mask of given layer.
-        Use the function of LevelPruner or L1FilterPruner according to the pruning mode.
-
-        Parameters
-        ----------
-        wrapper : Module
-            the module to instrument the compression operation
-        Returns
-        -------
-        dict
-            dictionary for storing masks
-        """
-        self.masker = MASKER_DICT[self._base_algo](self.bound_model, self)
-
-        return OneshotPruner.calc_mask(self, wrapper)
-
     def compress(self):
         """
         Compress the model with ADMM.
@@ -194,4 +176,3 @@ class ADMMPruner(Pruner):
         _logger.info('Compression finished.')
 
         return self.bound_model
-
