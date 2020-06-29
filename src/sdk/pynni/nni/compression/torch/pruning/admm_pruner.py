@@ -68,11 +68,19 @@ class ADMMPruner(Pruner):
         config_list : list
             List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): [str],
-            Optional('op_names'): [str],
-        }], model, _logger)
+
+        if self._base_algo == 'level':
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('op_types'): [str],
+                Optional('op_names'): [str],
+            }], model, _logger)
+        elif self._base_algo in ['l1', 'l2']:
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                'op_types': ['Conv2d'],
+                Optional('op_names'): [str]
+            }], model, _logger)
 
         schema.validate(config_list)
 
