@@ -84,7 +84,7 @@ class MyMasker(WeightMasker):
 
 You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py) implementations to implement your own weight masker.
 
-A basic pruner looks likes this:
+A basic `pruner` looks likes this:
 
 ```python
 class MyPruner(Pruner):

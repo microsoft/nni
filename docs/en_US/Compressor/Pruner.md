@@ -1,9 +1,13 @@
 # Supported Pruning Algorithms on NNI
 
-Index of supported pruning algorithms
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Weight pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
+
+
+**Weight Pruning**
 * [Level Pruner](#level-pruner)
-* [AGP Pruner](#agp-pruner)
 * [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
+  
+**Filter Pruning**
 * [Slim Pruner](#slim-pruner)
 * [Filter Pruners with Weight Rank](#weightrankfilterpruner)
     * [FPGM Pruner](#fpgm-pruner)
@@ -14,6 +18,9 @@ Index of supported pruning algorithms
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
 * [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+  
+**Pruning Schedule**
+* [AGP Pruner](#agp-pruner)
 
 ## Level Pruner
 
