@@ -5,30 +5,10 @@ import json
 import threading
 import time
 from abc import ABC, abstractmethod
-from enum import Enum
 from queue import Empty, Queue
 
 from .log_utils import LogType, nni_log
-
-
-class CommandType(Enum):
-    Initialize = b'IN'
-    RequestTrialJobs = b'GE'
-    ReportMetricData = b'ME'
-    ReportGpuInfo = b'GI'
-    UpdateSearchSpace = b'SS'
-    ImportData = b'FD'
-    AddCustomizedTrialJob = b'AD'
-    TrialEnd = b'EN'
-    Terminate = b'TE'
-    Ping = b'PI'
-
-    Initialized = b'ID'
-    NewTrialJob = b'TR'
-    SendTrialJobParameter = b'SP'
-    NoMoreTrialJobs = b'NO'
-    KillTrialJob = b'KI'
-
+from .commands import CommandType
 
 INTERVAL_SECONDS = 0.5
 
@@ -171,8 +151,4 @@ class BaseChannel(ABC):
                 # do nothing, if no command received.
                 pass
             if message is not None:
-                if self.node_id is None:
-                    nni_log(LogType.Info, 'Sending command: %s' % message)
-                else:
-                    nni_log(LogType.Info, 'Sending command(%s): %s' % (self.node_id, message))
                 self._inner_send(message)

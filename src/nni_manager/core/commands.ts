@@ -13,6 +13,7 @@ const TERMINATE = 'TE';
 const PING = 'PI';
 
 const GPU_INFO = 'GI';
+const STDOUT = 'SO';
 
 const INITIALIZED = 'ID';
 const NEW_TRIAL_JOB = 'TR';
@@ -30,6 +31,7 @@ const TRIAL_COMMANDS: Set<string> = new Set([
     INITIALIZED,
     TRIAL_END,
     GPU_INFO,
+    STDOUT,
 ]);
 
 const TUNER_COMMANDS: Set<string> = new Set([
@@ -68,6 +70,7 @@ export {
     TERMINATE,
     PING,
     GPU_INFO,
+    STDOUT,
     INITIALIZED,
     NEW_TRIAL_JOB,
     NO_MORE_TRIAL_JOBS,

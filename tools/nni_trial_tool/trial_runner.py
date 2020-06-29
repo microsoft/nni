@@ -30,17 +30,7 @@ def main_loop(args):
     try:
         trials = dict()
 
-        # init command channel
-        command_channel = None
-        if args.command_channel == "file":
-            command_channel = FileChannel(args)
-        else:
-            command_channel = WebChannel(args)
-        command_channel.open()
-
-        nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
-        args.command_channel = command_channel
-
+        command_channel = args.command_channel
         # command loop
         while True:
             command_type, command_data = command_channel.receive()
@@ -222,7 +212,7 @@ if __name__ == '__main__':
     from .trial import Trial
     from .file_channel import FileChannel
     from .web_channel import WebChannel
-    from .base_channel import CommandType
+    from .commands import CommandType
 
     is_multi_node = args.node_count > 1
 
@@ -240,8 +230,19 @@ if __name__ == '__main__':
         # node id is unique in the runner
         args.node_id = None
 
+    # init command channel
+    command_channel = None
+    if args.command_channel == "file":
+        command_channel = FileChannel(args)
+    else:
+        command_channel = WebChannel(args)
+    command_channel.open()
+
+    nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
+    args.command_channel = command_channel
+
     trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
-                                          StdOutputType.Stdout, args.log_collection, args.runner_name)
+                                          StdOutputType.Stdout, args.log_collection, args.runner_name, command_channel)
     sys.stdout = sys.stderr = trial_runner_syslogger
     nni_log(LogType.Info, "{}: merged args is {}".format(args.node_id, args))
 
