@@ -117,7 +117,7 @@ When the masks of different layers in a model have conflict (for example, assign
 
 ```
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
-fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
+fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)****
 ```
 
 ### Model FLOPs/Parameters Counter

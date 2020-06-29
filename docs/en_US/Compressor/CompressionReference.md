@@ -18,8 +18,18 @@
 ..  autoclass:: nni.compression.torch.utils.shape_dependency.ChannelDependency
     :members:
 
-..  autoclass:: nni.compression.torch.utils.mask_conflict.MaskConflict
+..  autoclass:: nni.compression.torch.utils.shape_dependency.GroupDependency
     :members:
+
+..  autoclass:: nni.compression.torch.utils.mask_conflict.CatMaskPadding
+    :members:
+
+..  autoclass:: nni.compression.torch.utils.mask_conflict.GroupMaskConflict
+    :members:
+
+..  autoclass:: nni.compression.torch.utils.mask_conflict.ChannelMaskConflict
+    :members:
+
 ```
 
 ## Model FLOPs/Parameters Counter

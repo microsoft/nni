@@ -28,7 +28,7 @@ nnictl support commands:
 ### Manage an experiment
 
 <a name="create"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
+### nnictl create
 
 * Description
 
@@ -79,7 +79,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="resume"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
+### nnictl resume
 
 * Description
 
@@ -110,7 +110,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="view"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+### nnictl view
 
 * Description
 
@@ -138,7 +138,7 @@ Debug mode will disable version check function in Trialkeeper.
   ```
 
 <a name="stop"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
+### nnictl stop
 
 * Description
 
@@ -190,7 +190,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="update"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
+### nnictl update
 
 * __nnictl update searchspace__
   * Description
@@ -299,7 +299,7 @@ Debug mode will disable version check function in Trialkeeper.
     ```
 
 <a name="trial"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
+### nnictl trial
 
 * __nnictl trial ls__
 
@@ -348,7 +348,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="top"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
+### nnictl top
 
 * Description
 
@@ -368,7 +368,7 @@ Debug mode will disable version check function in Trialkeeper.
   |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
 
 <a name="experiment"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage experiment information`
+### Manage experiment information
 
 * __nnictl experiment show__
 
@@ -532,7 +532,7 @@ Debug mode will disable version check function in Trialkeeper.
     ```
 
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+### Manage platform information
 
 * __nnictl platform clean__
 
@@ -558,7 +558,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 
 <a name="config"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
+### nnictl config show
 
 * Description
 
@@ -572,7 +572,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+### Manage log
 
 * __nnictl log stdout__
 
@@ -643,12 +643,12 @@ Debug mode will disable version check function in Trialkeeper.
   |--trial_id, -T|  False| |ID of the trial to be found the log path, required when id is not empty.|
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
+### Manage webui
 
 * __nnictl webui url__
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
+### Manage tensorboard
 
 * __nnictl tensorboard start__
 
@@ -697,48 +697,116 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage package`
+### Manage package
 
 * __nnictl package install__
   * Description
 
-    Install the packages needed in nni experiments.
+    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
 
   * Usage
 
     ```bash
-    nnictl package install [OPTIONS]
+    nnictl package install --name <package name>
+    ```
+
+    The available `<package name>` can be checked via `nnictl package list` command.
+
+    or
+
+    ```bash
+    nnictl package install <installation source>
+    ```
+
+    Reference [Install customized algorithms](InstallCustomizedAlgos.md) to prepare the installation source.
+
+  * Example
+
+    > Install SMAC tuner
+
+    ```bash
+    nnictl package install --name SMAC
+    ```
+
+    > Install a customized tuner
+
+    ```bash
+    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
+    ```
+
+
+* __nnictl package show__
+
+  * Description
+
+    Show the detailed information of specified packages.
+
+  * Usage
+
+    ```bash
+    nnictl package show <package name>
+    ```
+
+  * Example
+
+    ```bash
+    nnictl package show SMAC
+    ```
+
+* __nnictl package list__
+  * Description
+
+    List the installed/all packages.
+
+  * Usage
+
+    ```bash
+    nnictl package list [OPTIONS]
     ```
 
   * Options
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |--name|  True| |The name of package to be installed|
+  |--all|  False| |List all packages|
 
   * Example
 
-    > Install the packages needed in tuner SMAC
+    > List installed packages
 
     ```bash
-    nnictl package install --name=SMAC
+    nnictl package list
     ```
 
-* __nnictl package show__
+    > List all packages
+
+    ```bash
+    nnictl package list --all
+    ```
+
+* __nnictl package uninstall__
 
   * Description
 
-    List the packages supported.
+    Uninstall a package.
 
   * Usage
 
     ```bash
-    nnictl package show
+    nnictl package uninstall <package name>
     ```
+
+  * Example
+    Uninstall SMAC package
+
+    ```bash
+    nnictl package uninstall SMAC
+    ```
+
 
 <a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Generate search space`
+### Generate search space
 
 * __nnictl ss_gen__
   * Description
@@ -769,7 +837,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
+### Check NNI version
 
 * __nnictl --version__
 

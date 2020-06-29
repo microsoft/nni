@@ -9,6 +9,7 @@ import logging
 import sys
 
 import numpy as np
+from schema import Schema, Optional
 
 from smac.facade.epils_facade import EPILS
 from smac.facade.roar_facade import ROAR
@@ -19,12 +20,20 @@ from smac.utils.io.cmd_reader import CMDReader
 from ConfigSpaceNNI import Configuration
 
 import nni
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .convert_ss_to_scenario import generate_scenario
 
 logger = logging.getLogger('smac_AutoML')
+
+class SMACClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('config_dedup'): bool
+        }).validate(kwargs)
 
 class SMACTuner(Tuner):
     """
