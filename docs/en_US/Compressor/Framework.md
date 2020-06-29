@@ -32,7 +32,7 @@ model = pruner.compress()
 # the model will be pruned during training automatically
 ```
 
-To use a quntizer:
+To use a quantizer:
 ```python
 from nni.compression.torch import DoReFaQuantizer
 
@@ -90,6 +90,7 @@ collector_id = self.pruner.add_activation_collector(collector)
 self.pruner.remove_activation_collector(collector_id)
 ```
 
+***
 
 ## Pruner
 
