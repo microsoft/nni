@@ -19,9 +19,6 @@ from nni.nas.pytorch.search_space_zoo import DartsStackedCells
 
 logger = logging.getLogger('nni')
 
-def factory_func(n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
-    return DartsCell(n_nodes, channels_pp, channels_p, channels, reduction_p, reduction)
-
 if __name__ == "__main__":
     parser = ArgumentParser("darts")
     parser.add_argument("--layers", default=8, type=int)
@@ -35,7 +32,7 @@ if __name__ == "__main__":
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
 
-    model = DartsStackedCells(3, args.channels, 10, args.layers, factory_func)
+    model = DartsStackedCells(3, args.channels, 10, args.layers, DartsCell)
     criterion = nn.CrossEntropyLoss()
 
     optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)

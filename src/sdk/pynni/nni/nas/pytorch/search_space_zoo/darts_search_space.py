@@ -23,7 +23,7 @@ class DartsStackedCells(nn.Module):
         the number of cells contained in this network
     factory_func: function
         return an instance for certain cell structure
-        user should keep this function's signature same as the Cell's `__init__` function
+        user should pass in `__init__` of demand cell class
     n_nodes: int
         the number of nodes contained in each cell
     stem_multiplier: int
