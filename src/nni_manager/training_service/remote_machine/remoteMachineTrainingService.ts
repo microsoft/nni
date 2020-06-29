@@ -422,7 +422,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.info(`connected to ${executor.name}`);
         }
 
-        Promise.all(connectionPromises);
+        await Promise.all(connectionPromises);
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {
