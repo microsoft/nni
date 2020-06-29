@@ -46,6 +46,7 @@ extensions = [
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
+    'nbsphinx',
 ]
 
 # 添加示例模块
