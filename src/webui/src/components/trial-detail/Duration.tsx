@@ -1,6 +1,6 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { TableObj, EventMap } from '../../static/interface';
 import { filterDuration, convertDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';

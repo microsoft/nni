@@ -29,6 +29,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Backdrop from '@material-ui/core/Backdrop';
+import Tooltip from '@material-ui/core/Tooltip';
 import Chart from './Chart';
 import { Graph } from './graphUtils';
 
@@ -272,15 +273,21 @@ class App extends React.Component<AppProps, AppState>  {
             <Typography variant='h6' className={classes.title}>
               NNI NAS Board
             </Typography>
-            <IconButton color='inherit' onClick={handleLayoutStateChanged(true)}>
-              <ShuffleIcon />
-            </IconButton>
-            <IconButton color='inherit' onClick={this.refresh}>
-              <RefreshIcon />
-            </IconButton>
-            <IconButton color='inherit' onClick={handleSettingsDialogToggle(true)}>
-              <SettingsIcon />
-            </IconButton>
+            <Tooltip title="Re-layout graph">
+              <IconButton color='inherit' onClick={handleLayoutStateChanged(true)}>
+                <ShuffleIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Refresh">
+              <IconButton color='inherit' onClick={this.refresh}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Settings">
+              <IconButton color='inherit' onClick={handleSettingsDialogToggle(true)}>
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
           </Toolbar>
         </AppBar>
         <AppBar position='fixed' color='default' className={classes.bottomAppBar}>
