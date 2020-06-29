@@ -182,13 +182,6 @@ class ChannelDependency(Dependency):
             d_sets.append(tmp_set)
         return d_sets
 
-    def ops_no_dependencies(self):
-        ops_no_dependency = []
-        for group in self.dependency_sets:
-            if len(group) == 1:
-                ops_no_dependency.extend(group)
-        return ops_no_dependency
-
 class CatPaddingDependency(ChannelDependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         super(CatPaddingDependency, self).__init__(model, dummy_input, traced_model)

@@ -90,9 +90,10 @@ pai:
     cpuNum: 1
     image:
     memoryMB: 8192
+    virtualCluster: default
     nniManagerNFSMountPath: 
     containerNFSMountPath: 
-    paiStoragePlugin: 
+    paiStorageConfigName: 
 remote:
   machineList:
   - ip:

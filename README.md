@@ -29,7 +29,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **NNI capabilities in a glance**
 
-NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms.
+NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in state-of-the-art AutoML algorithms and out of box support for popular training platforms.
 
 Within the following table, we summarized the current NNI capabilities, we are gradually adding new capabilities and we'd love to have your contribution.
 
@@ -196,6 +196,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
       <ul>
         <li><a href="docs/en_US/Tuner/CustomizeTuner.md">CustomizeTuner</a></li>
         <li><a href="docs/en_US/Assessor/CustomizeAssessor.md">CustomizeAssessor</a></li>
+        <li><a href="docs/en_US/Tutorial/InstallCustomizedAlgos.md">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
@@ -233,7 +234,7 @@ For detail system requirements of NNI, please refer to [here](https://nni.readth
 Note:
 
 * If there is any privilege issue, add `--user` to install NNI in the user directory.
-* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly recommended to install [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md).
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/Tutorial/FAQ.md). For FAQ on Windows, please refer to [NNI on Windows](docs/en_US/Tutorial/InstallationWin.md#faq).
 
 ### **Verify installation**
@@ -345,7 +346,7 @@ With authors' permission, we listed a set of NNI usage examples and relevant art
 Join IM discussion groups:
 |Gitter||WeChat|
 |----|----|----|
-|<img src="https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png" width="180"/>| OR |<img src="https://user-images.githubusercontent.com/39592018/83108240-113d9600-a0f2-11ea-91f8-8754af11a0ee.png" width="180"/>|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
 
 
 ## Related Projects

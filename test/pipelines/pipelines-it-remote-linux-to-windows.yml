@@ -27,6 +27,7 @@ jobs:
       - script: make easy-install
         displayName: "Install nni via source code"
       - script: |
+          set -e
           sudo apt-get install swig -y
           PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
           PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB

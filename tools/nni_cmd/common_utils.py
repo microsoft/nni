@@ -2,14 +2,14 @@
 # Licensed under the MIT license.
 
 import os
-import site
 import sys
 import json
 import socket
-from pathlib import Path
 import ruamel.yaml as yaml
 import psutil
-from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO, COLOR_RED_FORMAT, COLOR_YELLOW_FORMAT
+from colorama import Fore
+
+from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
 
 def get_yml_content(file_path):
     '''Load yaml file content'''
@@ -34,17 +34,22 @@ def get_json_content(file_path):
         print_error(err)
         return None
 
-def print_error(content):
-    '''Print error information to screen'''
-    print(COLOR_RED_FORMAT % (ERROR_INFO % content))
 
-def print_normal(content):
+def print_error(*content):
     '''Print error information to screen'''
-    print(NORMAL_INFO % content)
+    print(Fore.RED + ERROR_INFO + ' '.join([str(c) for c in content]) + Fore.RESET)
 
-def print_warning(content):
+def print_green(*content):
+    '''Print information to screen in green'''
+    print(Fore.GREEN + ' '.join([str(c) for c in content]) + Fore.RESET)
+
+def print_normal(*content):
+    '''Print error information to screen'''
+    print(NORMAL_INFO, *content)
+
+def print_warning(*content):
     '''Print warning information to screen'''
-    print(COLOR_YELLOW_FORMAT % (WARNING_INFO % content))
+    print(Fore.YELLOW + WARNING_INFO + ' '.join([str(c) for c in content]) + Fore.RESET)
 
 def detect_process(pid):
     '''Detect if a process is alive'''
@@ -70,12 +75,6 @@ def get_user():
     else:
         return os.environ['USER']
 
-def get_python_dir(sitepackages_path):
-    if sys.platform == "win32":
-        return str(Path(sitepackages_path))
-    else:
-        return str(Path(sitepackages_path).parents[2])
-
 def check_tensorboard_version():
     try:
         import tensorboard
@@ -84,43 +83,3 @@ def check_tensorboard_version():
         print_error('import tensorboard error!')
         exit(1)
 
-def get_nni_installation_path():
-    ''' Find nni lib from the following locations in order
-    Return nni root directory if it exists
-    '''
-    def try_installation_path_sequentially(*sitepackages):
-        '''Try different installation path sequentially util nni is found.
-        Return None if nothing is found
-        '''
-        def _generate_installation_path(sitepackages_path):
-            python_dir = get_python_dir(sitepackages_path)
-            entry_file = os.path.join(python_dir, 'nni', 'main.js')
-            if os.path.isfile(entry_file):
-                return python_dir
-            return None
-
-        for sitepackage in sitepackages:
-            python_dir = _generate_installation_path(sitepackage)
-            if python_dir:
-                return python_dir
-        return None
-
-    if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
-        # Note that conda venv will not have VIRTUAL_ENV
-        python_dir = os.getenv('VIRTUAL_ENV')
-    else:
-        python_sitepackage = site.getsitepackages()[0]
-        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
-        # that nni exists there
-        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
-        else:
-            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
-
-    if python_dir:
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        if os.path.isfile(entry_file):
-            return os.path.join(python_dir, 'nni')
-    print_error('Fail to find nni under python library')
-    exit(1)

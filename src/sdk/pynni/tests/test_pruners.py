@@ -10,7 +10,6 @@ from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner
-    
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
@@ -220,6 +219,30 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
     for f in filePaths:
         if os.path.exists(f):
             os.remove(f)
+
+def test_agp(pruning_algorithm):
+        model = Model()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        config_list = prune_config['agp']['config_list']
+
+        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
+        pruner.compress()
+
+        x = torch.randn(2, 1, 28, 28)
+        y = torch.tensor([0, 1]).long()
+
+        for epoch in range(config_list[0]['start_epoch'], config_list[0]['end_epoch']+1):
+            pruner.update_epoch(epoch)
+            out = model(x)
+            loss = F.cross_entropy(out, y)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            target_sparsity = pruner.compute_target_sparsity(config_list[0])
+            actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
+            # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
+            assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
 
 def test_agp(pruning_algorithm):
         model = Model()
