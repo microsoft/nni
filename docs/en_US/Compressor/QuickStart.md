@@ -21,7 +21,7 @@ configure_list = [{
 }]
 ```
 
-The specification of configuration can be found [here](Overview.md#user-configuration-for-a-compression-algorithm). Note that different pruners may have their own defined fields in configuration, for exmaple `start_epoch` in AGP pruner. Please refer to each pruner's [usage](Overview.md#supported-algorithms) for details, and adjust the configuration accordingly.
+The specification of configuration can be found [here](#specification-of-config-list). Note that different pruners may have their own defined fields in configuration, for exmaple `start_epoch` in AGP pruner. Please refer to each pruner's [usage](./Pruner.md) for details, and adjust the configuration accordingly.
 
 ### Choose a compression algorithm
 
