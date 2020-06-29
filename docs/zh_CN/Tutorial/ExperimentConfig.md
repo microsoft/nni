@@ -228,7 +228,7 @@ machineList:
 
 ### versionCheck
 
-可选。 布尔。 默认值：false。
+可选。 布尔。 Default: true.
 
 NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
 
