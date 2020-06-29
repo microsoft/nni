@@ -33,7 +33,7 @@ In case users intend to use large files in their experiment (like large-scaled d
 <img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
 </p>
 
-According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiates a new trial; 2) collecting metrics and communicating with NNI core (NNI manager). To demonstrated in detail how training service works, we show the workflow of training service from the very beginning to the moment when first trial succeeds.
+According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiating a new trial; 2) collecting metrics and communicating with NNI core (NNI manager). To demonstrated in detail how training service works, we show the workflow of training service from the very beginning to the moment when first trial succeeds.
 
 Step 1. **Validate config and prepare the training platform.** Training service will first check whether the training platform user specifies is valid (e.g., is there anything wrong with authentication). After that, training service will start to prepare for the experiment by making the code directory (`codeDir`) accessible to training platform.
 
