@@ -1,6 +1,6 @@
 # TrainingService
 
-NNI TrainingService provides the training platform for running NNI trial jobs. NNI supports [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md), [kubeflow](./KubeflowMode.md) and [frameworkcontroller](./FrameworkControllerMode.md) built-in training services.   
+NNI TrainingService provides the training platform for running NNI trial jobs. NNI supports [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md), [aml](./AMLMode.md), [kubeflow](./KubeflowMode.md) and [frameworkcontroller](./FrameworkControllerMode.md) built-in training services.   
 NNI not only provides few built-in training service options, but also provides a method for customers to build their own training service easily.
 
 ## Built-in TrainingService
@@ -12,6 +12,7 @@ NNI not only provides few built-in training service options, but also provides a
 |[__Pai__](./PaiMode.md)|NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.|
 |[__Kubeflow__](./KubeflowMode.md)|NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a Kubernetes cluster, either on-premises or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is setup to connect to your Kubernetes cluster. If you are not familiar with Kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a good start. In kubeflow mode, your trial program will run as Kubeflow job in Kubernetes cluster.|
 |[__FrameworkController__](./FrameworkControllerMode.md)|NNI supports running experiment using [FrameworkController](https://github.com/Microsoft/frameworkcontroller), called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, you don't need to install Kubeflow for specific deep learning framework like tf-operator or pytorch-operator. Now you can use FrameworkController as the training service to run NNI experiment.|
+|[__AML__](./AMLMode.md)|NNI supports running an experiment on [AML](https://azure.microsoft.com/en-us/services/machine-learning/) called aml mode. Before starting to use NNI aml mode, you should have an account to access an [AML](https://ml.azure.com/) cluster. |
 
 ## TrainingService Implementation
 

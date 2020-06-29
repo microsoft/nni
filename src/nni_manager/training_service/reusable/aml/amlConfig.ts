@@ -3,8 +3,8 @@
 
 'use strict';
 
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import {TrialConfig} from '../common/trialConfig';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../../common/trainingService';
+import {TrialConfig} from '../../common/trialConfig';
 
 export class AMLClusterConfig {
     public readonly subscriptionId: string;

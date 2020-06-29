@@ -26,9 +26,9 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { AMLClusterConfig, AMLTrialConfig, AMLTrialJobDetail } from '../../aml/amlConfig';
+import { AMLClusterConfig, AMLTrialConfig, AMLTrialJobDetail } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { AMLClient } from '../aml/amlData';
+import { AMLClient } from '../aml/amlClient';
 import {
     NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
@@ -143,6 +143,7 @@ export class AMLEnvironmentService implements EnvironmentService {
             this.amlClusterConfig.workspaceName,
             this.experimentId,
             this.amlTrialConfig.computerTarget,
+            this.amlTrialConfig.nodeCount,
             this.amlTrialConfig.image,
             'nni_script.py',
             environment.environmentLocalTempFolder

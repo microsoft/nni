@@ -18,7 +18,8 @@ if __name__ == "__main__":
     parser.add_argument('--docker_image', help='the docker image of job')
     parser.add_argument('--experiment_name', help='the experiment name')
     parser.add_argument('--code_dir', help='code directory')
-    parser.add_argument('--script', help='script')
+    parser.add_argument('--script', help='script name')
+    parser.add_argument('--node_count', help='the nodeCount of a run in aml')
     args = parser.parse_args()
 
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
@@ -29,7 +30,7 @@ if __name__ == "__main__":
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image
     run_config.target = compute_target
-    run_config.node_count = 1
+    run_config.node_count = args.node_count
     config = ScriptRunConfig(source_directory=args.code_dir, script=args.script, run_config=run_config)
     run = experiment.submit(config)
     print(run.get_details()["runId"])

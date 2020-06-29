@@ -34,6 +34,7 @@ export class AMLClient {
     public scriptName: string;
     public pythonShellClient: undefined | PythonShell;
     public codeDir: string;
+    public nodeCount: number;
     public computerTarget: string;
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 
@@ -43,6 +44,7 @@ export class AMLClient {
         workspaceName: string,
         experimentId: string,
         computerTarget: string,
+        nodeCount: number,
         image: string,
         scriptName: string,
         codeDir: string,
@@ -52,6 +54,7 @@ export class AMLClient {
         this.workspaceName = workspaceName;
         this.experimentId = experimentId;
         this.image = image;
+        this.nodeCount = nodeCount;
         this.scriptName = scriptName;
         this.codeDir = codeDir;
         this.computerTarget = computerTarget;
@@ -70,7 +73,8 @@ export class AMLClient {
                 '--docker_image', this.image,
                 '--experiment_name', `nni_exp_${this.experimentId}`,
                 '--code_dir', this.codeDir,
-                '--script', this.scriptName
+                '--script', this.scriptName,
+                '--node_count', this.nodeCount.toString()
               ]
         });
         this.pythonShellClient.on('message', function (envId: any) {

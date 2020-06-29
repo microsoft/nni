@@ -26,7 +26,7 @@ import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetri
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
-import { AMLClusterConfig } from '../aml/amlConfig';
+import { AMLClusterConfig } from './aml/amlConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';

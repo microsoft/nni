@@ -29,7 +29,7 @@ import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobM
 import { delay, getLogLevel, getVersion, uniqueString, getExperimentRootDir } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir, execMkdir, execCopydir, tarAdd } from '../common/util';
@@ -464,7 +464,7 @@ class TrialDispatcher implements TrainingService {
             this.runnerSettings.command = this.trialConfig.command;
             await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
             const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
-            await fs.promises.writeFile(installFilePath, AML_CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+            await fs.promises.writeFile(installFilePath, { encoding: 'utf8' });
             environment.command = `import os\nos.system('sh install_nni.sh && mkdir ${this.experimentId} && cd ${this.experimentId} && python3 -m nni_trial_tool.trial_runner')`;
             environment.environmentLocalTempFolder = environmentLocalTempFolder;
             await tarAdd(path.join(environmentLocalTempFolder, 'nni-code.tar.gz'), this.trialConfig.codeDir);
