@@ -4,74 +4,94 @@
 
 目前支持 Linux、macOS 和 Windows。 Ubuntu 16.04 或更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-**Linux 和 macOS**
+### Linux and macOS
 
 ```bash
-    python3 -m pip install --upgrade nni
+python3 -m pip install --upgrade nni
 ```
 
-**Windows**
+### Windows
 
 ```bash
-    python -m pip install --upgrade nni
+python -m pip install --upgrade nni
 ```
 
-注意：
+```eval_rst
+.. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory; this does not require any special privileges.
+```
 
-* 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
-* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
-* 有关 NNI 的`系统要求`，参考[在 Linux 和 macOS 上安装](InstallationLinux.md) 或 [Windows](InstallationWin.md)。
+```eval_rst
+.. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
+```
+
+```eval_rst
+.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
+```
 
 ## MNIST 上的 "Hello World"
 
-NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
 
-这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
+Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
 ```python
 def run_trial(params):
-    # 输入数据
+    # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # 构建网络
-    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
+    # Build network
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
+                                 channel_2_num=params['channel_2_num'],
+                                 conv_size=params['conv_size'],
+                                 hidden_size=params['hidden_size'],
+                                 pool_size=params['pool_size'],
+                                 learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # 训练网络
+        # Train network
         mnist_network.train(sess, mnist)
-        # 评估网络
+        # Evaluate network
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
-    params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
+    params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
+              'dropout_rate': 0.5,
+              'channel_1_num': 32,
+              'channel_2_num': 64,
+              'conv_size': 5,
+              'pool_size': 2,
+              'hidden_size': 1024,
+              'learning_rate': 1e-4,
+              'batch_num': 2000,
+              'batch_size': 32}
     run_trial(params)
 ```
 
-注意：完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
+If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
 
-上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
+The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
-NNI 用来帮助超参调优。它的流程如下：
+NNI is born to help the user do tuning jobs; the NNI working process is presented below:
 
 ```text
-输入: 搜索空间, Trial 代码, 配置文件
-输出: 一组最佳的超参配置
+input: search space, trial code, config file
+output: one optimal hyperparameter configuration
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
-2:      hyperparameter = 从搜索空间选择一组参数
+2:      hyperparameter = chose a set of parameter from search space
 3:      final result = run_trial_and_evaluate(hyperparameter)
-4:      返回最终结果给 NNI
-5:      If 时间达到上限,
-6:          停止实验
-7: return 最好的实验结果
+4:      report final result to NNI
+5:      If reach the upper limit time,
+6:          Stop the experiment
+7: return hyperparameter value with best final result
 ```
 
-如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
 
-**启动 Experiment 的三个步骤**
+### Three steps to start an experiment
 
-**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
+**Step 1**: Write a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -85,9 +105,9 @@ NNI 用来帮助超参调优。它的流程如下：
 + }
 ```
 
-*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*Example: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
-**第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
+**Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 ```diff
 + import nni
@@ -112,9 +132,9 @@ NNI 用来帮助超参调优。它的流程如下：
       run_trial(params)
 ```
 
-*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*Example: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
-**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`。 它还提供其他信息，例如调整算法，最大 Trial 运行次数和最大持续时间的参数。
+**Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
 ```yaml
 authorName: default
@@ -123,45 +143,51 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: local
-# 搜索空间文件
+# The path to Search Space
 searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
-# 运行的命令，以及 Trial 代码的路径
+# The path and the running command of trial
 trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
 ```
 
-注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**。
-
-*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
-
-上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
-
-**Linux 和 macOS**
-
-从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
-
-```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+```eval_rst
+.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`_.
 ```
 
-**Windows**
+*Example: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
 
-从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
+All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-注意：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
+#### Linux and macOS
+
+Run the **config.yml** file from your command line to start an MNIST experiment.
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-注意：`nnictl` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
+#### Windows
 
-在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
+Run the **config_windows.yml** file from your command line to start an MNIST experiment.
+
+```bash
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+```
+
+```eval_rst
+.. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
+```
+
+```eval_rst
+.. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <Nnictl>` for more usage of ``nnictl``.
+```
+
+Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
 
 ```text
 INFO: Starting restful server...
@@ -190,68 +216,68 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-如果根据上述步骤准备好了相应 `Trial`, `搜索空间`和`配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
+If you prepared `trial`, `search space`, and `config` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the requirements you set. You can clearly see its progress through the NNI WebUI.
 
 ## Web 界面
 
-启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
+After you start your experiment in NNI successfully, you can find a message in the command-line interface that tells you the `Web UI url` like this:
 
 ```text
-Web 地址为：[IP 地址]:8080
+The Web UI urls are: [Your IP]:8080
 ```
 
-在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考[常见问题](FAQ.md)。
+Open the `Web UI url` (Here it's: `[Your IP]:8080`) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the [FAQ](FAQ.md).
 
-### 查看概要页面
+### View summary page
 
-点击 "Overview" 标签。
+Click the "Overview" tab.
 
-Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来下载信息和参数。 可以在 Experiment 运行时随时下载结果，也可以等到执行结束。
+Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
 
 ![](../../img/QuickStart1.png)
 
-前 10 个 Trial 将列在 Overview 页上。 可以在 "Trials Detail" 页面上浏览所有 Trial。
+The top 10 trials will be listed on the Overview page. You can browse all the trials on the "Trials Detail" page.
 
 ![](../../img/QuickStart2.png)
 
-### 查看 Trial 详情页面
+### View trials detail page
 
-点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
+Click the "Default Metric" tab to see the point graph of all trials. Hover to see specific default metrics and search space messages.
 
 ![](../../img/QuickStart3.png)
 
-点击 "Hyper Parameter" 标签查看图像。
+Click the "Hyper Parameter" tab to see the parallel graph.
 
-* 可选择百分比查看最好的 Trial。
-* 选择两个轴来交换位置。
+* You can select the percentage to see the top trials.
+* Choose two axis to swap their positions.
 
 ![](../../img/QuickStart4.png)
 
-点击 "Trial Duration" 标签来查看柱状图。
+Click the "Trial Duration" tab to see the bar graph.
 
 ![](../../img/QuickStart5.png)
 
-下面是所有 Trial 的状态。 包括：
+Below is the status of all trials. Specifically:
 
-* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
-* 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。
-* Kill: 可结束在 `Running` 状态的任务。
-* Support: 用于搜索某个指定的 Trial。
+* Trial detail: trial's id, duration, start time, end time, status, accuracy, and search space file.
+* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
+* Kill: you can kill a job that has the `Running` status.
+* Support: Used to search for a specific trial.
 
 ![](../../img/QuickStart6.png)
 
-* 中间结果图
+* Intermediate Result Graph
 
 ![](../../img/QuickStart7.png)
 
 ## 相关主题
 
-* [尝试不同的 Tuner](../Tuner/BuiltinTuner.md)
-* [尝试不同的 Assessor](../Assessor/BuiltinAssessor.md)
-* [使用命令行工具 nnictl](Nnictl.md)
-* [如何实现 Trial 代码](../TrialExample/Trials.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
-* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
-* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
-* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
+* [Try different Tuners](../Tuner/BuiltinTuner.md)
+* [Try different Assessors](../Assessor/BuiltinAssessor.md)
+* [How to use command line tool nnictl](Nnictl.md)
+* [How to write a trial](../TrialExample/Trials.md)
+* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
+* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
