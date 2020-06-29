@@ -4,10 +4,7 @@
 import logging
 import torch
 import torch.nn as nn
-from torch.nn.modules.conv import _ConvNd
-from torch.nn.modules.batchnorm import _BatchNorm
 from nni.compression.torch.compressor import PrunerModuleWrapper
-
 
 _logger = logging.getLogger(__name__)
 
