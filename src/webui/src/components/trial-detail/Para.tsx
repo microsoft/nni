@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { filterByStatus } from '../../static/function';
-import { EXPERIMENT } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from 'office-ui-fabric-react';
 import { ParaObj, Dimobj, TableObj } from '../../static/interface';
 import 'echarts/lib/chart/parallel';
@@ -30,6 +30,8 @@ interface ParaState {
     swapyAxis?: string[]; // yAxis Selector
     paraYdataNested: number[][];
     isNested: false;
+    showFinalMetricKey: string;
+    metricType: string;
 }
 
 interface ParaProps {
@@ -72,7 +74,9 @@ class Para extends React.Component<ParaProps, ParaState> {
             isLoadConfirm: false,
             swapyAxis: [],
             paraYdataNested: [],
-            isNested: false
+            isNested: false,
+            showFinalMetricKey: "default",
+            metricType: 'numberType'
         };
     }
 
@@ -101,7 +105,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             } else {
                 paraYdata = this.state.paraYdataNested;
             }
-            // add acc
+            // add metric value
             Object.keys(paraYdata).map(item => {
                 paraYdata[item].push(accPara[item]);
             });
@@ -305,9 +309,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             }
             this.setState({ dimName: dimName });
         }
+        // metric yAxis
+        const { showFinalMetricKey } = this.state;
         parallelAxis.push({
             dim: i,
-            name: 'default metric',
+            name: showFinalMetricKey,
             scale: true,
             nameTextStyle: {
                 fontWeight: 700
@@ -364,9 +370,20 @@ class Para extends React.Component<ParaProps, ParaState> {
                 eachTrialParams.push(trial.description.parameters);
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
+                // metric yAxis data
                 if (trial.acc !== undefined) {
-                    if (trial.acc.default !== undefined) {
-                        accPara.push(JSON.parse(trial.acc.default));
+                    const val = trial.acc[showFinalMetricKey];
+                    if (val !== undefined) {
+                        const typeOfVal = typeof val;
+                        if(typeOfVal === 'number'){
+                            this.setState(() => ({metricType: 'numberType'}));
+                        } else {
+                            // string type
+                            parallelAxis[parallelAxis.length - 1].type = 'category';
+                            parallelAxis[parallelAxis.length - 1].data = [val];
+                            this.setState(() => ({metricType: 'stringType'}));
+                        }
+                        accPara.push(val);
                     }
                 }
             });
@@ -400,7 +417,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 }
                 this.setState({ paraYdataNested: renderDataSource });
             }
-            // if not return final result
+            
             const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
             const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
             this.setState({ max: maxVal, min: minVal }, () => {
@@ -424,7 +441,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     // deal with response data into pic data
     getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
         // dataObj [[y1], [y2]... [default metric]]
-        const { max, min } = this.state;
+        const { max, min, metricType } = this.state;
         const parallelAxis = dataObj.parallelAxis;
         const paralleData = dataObj.data;
         let visualMapObj = {};
@@ -472,7 +489,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     },
                 }
             },
-            visualMap: visualMapObj,
+            visualMap: metricType === 'numberType' ? visualMapObj : null,
             series: {
                 type: 'parallel',
                 smooth: true,
@@ -629,6 +646,13 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
+    // select all final keys
+    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+        if (item !== undefined) {
+            this.setState({ showFinalMetricKey: item.key }, () => { this.reInit() });
+        }
+    }
+
     componentDidMount(): void {
         this.reInit();
     }
@@ -644,6 +668,7 @@ class Para extends React.Component<ParaProps, ParaState> {
 
     render(): React.ReactNode {
         const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
+
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
@@ -659,9 +684,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.8', text: '80%' },
                             { key: '1', text: '100%' },
                         ]}
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 120 } }}
                         className="para-filter-percent"
                     />
+                    {this.finalKeysDropdown()}
                     <Dropdown
                         placeholder="Select options"
                         selectedKeys={swapyAxis}
@@ -674,7 +700,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                                 };
                             })
                         }
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 240 } }}
                     />
                     <PrimaryButton
                         text="Confirm"
@@ -694,6 +720,34 @@ class Para extends React.Component<ParaProps, ParaState> {
             </div>
         );
     }
+
+    private finalKeysDropdown = (): any => {
+        const { showFinalMetricKey } = this.state;
+        if (TRIALS.finalKeys().length === 1) {
+            return null;
+        } else {
+            const finalKeysDropdown: any = [];
+            TRIALS.finalKeys().forEach(item => {
+                finalKeysDropdown.push({
+                    key: item, text: item
+                });
+            });
+            return (
+                <div>
+                    <span className="para-filter-text para-filter-middle">Metrics</span>
+                    <Dropdown
+                        selectedKey={showFinalMetricKey}
+                        options={finalKeysDropdown}
+                        onChange={this.updateEntries}
+                        styles={{ root: { width: 150, display: 'inline-block' } }}
+                        className="para-filter-percent"
+                    />
+                </div>
+            );
+        }
+
+    };
+
 }
 
 export default Para;
