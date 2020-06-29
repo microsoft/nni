@@ -371,7 +371,7 @@ class TorchModuleGraph(TorchGraph):
                     outputs.append(output_name)
 
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
-                             node_group, inputs=inputs, outputs=outputs, key_node=node)
+                             node_group, inputs=inputs, outputs=outputs)
         return nodepy
 
     def _extract_cat_info(self, node_group, cpp_node):
