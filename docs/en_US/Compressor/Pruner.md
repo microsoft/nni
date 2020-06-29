@@ -550,7 +550,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **op_types:** "Conv2d" or "default".
 - **trainer:** Function used for the first optimization subproblem.
 This function should include `model, optimizer, criterion, epoch, callback` as parameters, where callback should be inserted after loss.backward of the normal training process.
-- **evaluator:** Function to evaluate the masked model.
+- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
 - **iterations:** The number of overall iterations.
 - **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
