@@ -463,7 +463,7 @@ class NNIConfigSchema:
                 if not taskRoles_dict:
                     raise SchemaError('Please set taskRoles in paiConfigPath config file!')
             else:
-                pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStoragePlugin', 'command']
+                pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStorageConfigName', 'command']
                 for trial_field in pai_trial_fields_required_list:
                     if experiment_config['trial'].get(trial_field) is None:
                         raise SchemaError('Please set {0} in trial configuration,\
