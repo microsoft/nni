@@ -34,9 +34,12 @@ class ADMMPruner(OneshotPruner):
         config_list : list
             List on pruning configs
         trainer : function
-            function used for the first subproblem.
-            This function should include `model, optimizer, criterion, epoch, callback` as parameters,
-            where callback should be inserted after loss.backward of the normal training process.
+            Function used for the first subproblem.
+            Users should write this function as a normal function to train the Pytorch model
+            and include `model, optimizer, criterion, epoch, callback` as function arguments.
+            Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
+            The logic of `callback` is implemented inside the Pruner,
+            users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
         num_iterations : int
             Total number of iterations.
         training_epochs : int

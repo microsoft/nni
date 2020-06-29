@@ -548,7 +548,9 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **sparsity:** This is to specify the sparsity operations to be compressed to.
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **trainer:** Function used for the first subproblem.
-This function should include `model, optimizer, criterion, epoch, callback` as parameters, where callback should be inserted after loss.backward of the normal training process.
+Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
+Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
+The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
 - **num_iterations:** Total number of iterations.
 - **training_epochs:** Training epochs of the first subproblem.
 - **row:** Penalty parameters for ADMM training.
@@ -586,8 +588,10 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 - **sparsity:** The target overall sparsity.
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first optimization subproblem.
-This function should include `model, optimizer, criterion, epoch, callback` as parameters, where callback should be inserted after loss.backward of the normal training process.
+- **trainer:** Function used for the first subproblem.
+Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
+Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
+The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
 - **iterations:** The number of overall iterations.
