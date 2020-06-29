@@ -14,6 +14,7 @@ const PING = 'PI';
 
 const GPU_INFO = 'GI';
 const STDOUT = 'SO';
+const VERSION_CHECK = 'VC';
 
 const INITIALIZED = 'ID';
 const NEW_TRIAL_JOB = 'TR';
@@ -32,6 +33,7 @@ const TRIAL_COMMANDS: Set<string> = new Set([
     TRIAL_END,
     GPU_INFO,
     STDOUT,
+    VERSION_CHECK,
 ]);
 
 const TUNER_COMMANDS: Set<string> = new Set([
@@ -71,6 +73,7 @@ export {
     PING,
     GPU_INFO,
     STDOUT,
+    VERSION_CHECK,
     INITIALIZED,
     NEW_TRIAL_JOB,
     NO_MORE_TRIAL_JOBS,

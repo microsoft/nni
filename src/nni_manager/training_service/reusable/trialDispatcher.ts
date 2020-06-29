@@ -13,7 +13,7 @@ import { getExperimentId, getPlatform, getBasePort } from '../../common/experime
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
-import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END } from '../../core/commands';
+import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
@@ -39,8 +39,9 @@ class TrialDispatcher implements TrainingService {
     private stopping: boolean = false;
 
     private readonly metricsEmitter: EventEmitter;
-    private versionCheck: boolean = true;
     private readonly experimentId: string;
+
+    private enableVersionCheck: boolean = true;
 
     private trialConfig: TrialConfig | undefined;
     private runnerSettings: RunnerSettings;
@@ -228,8 +229,8 @@ class TrialDispatcher implements TrainingService {
                 this.runnerSettings.nniManagerIP = (<NNIManagerIpConfig>JSON.parse(value)).nniManagerIp;
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                this.runnerSettings.nniManagerVersion = this.versionCheck ? await getVersion() : '';
+                this.enableVersionCheck = (value === 'true' || value === 'True');
+                this.runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.runnerSettings.logCollection = value;
@@ -593,6 +594,19 @@ class TrialDispatcher implements TrainingService {
                     if (isAllReady && oldStatus === "UNKNOWN") {
                         environment.status = "RUNNING";
                         this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                    }
+                }
+                break;
+            case VERSION_CHECK:
+                {
+                    if (this.enableVersionCheck) {
+                        const checkResultSuccess: boolean = data["tag"] === 'VCSuccess' ? true : false;
+                        if (checkResultSuccess) {
+                            this.log.info(`TrialDispatcher: Version check in trialKeeper success!`);
+                        } else {
+                            const errorMessage = `TrialDispatcher: Version check error, ${data["msg"]}!`;
+                            this.log.error(errorMessage);
+                        }
                     }
                 }
                 break;

@@ -22,3 +22,4 @@ class CommandType(Enum):
     NoMoreTrialJobs = b'NO'
     KillTrialJob = b'KI'
     StdOut = b'SO'
+    VersionCheck = b'VC'

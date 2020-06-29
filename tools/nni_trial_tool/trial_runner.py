@@ -110,6 +110,7 @@ def check_version(args):
         nni_log(LogType.Warning, 'Skipping version check!')
     else:
         try:
+            command_channel = args.command_channel
             trial_runner_version = regular.search(trial_runner_version).group('version')
             nni_log(LogType.Info, '{0}: runner_version is {1}'.format(args.node_id, trial_runner_version))
             nni_manager_version = regular.search(args.nni_manager_version).group('version')
@@ -121,14 +122,14 @@ def check_version(args):
                     args.node_id, nni_manager_version, trial_runner_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
-                          False)
+                command_channel.send(CommandType.VersionCheck, log_entry)
+                while not command_channel.sent():
+                    time.sleep(1)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, '{0}: Version match!'.format(args.node_id))
                 log_entry['tag'] = 'VCSuccess'
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
-                          False)
+                command_channel.send(CommandType.VersionCheck, log_entry)
         except AttributeError as err:
             nni_log(LogType.Error, '{0}: {1}'.format(args.node_id, err))
 
@@ -254,6 +255,12 @@ if __name__ == '__main__':
         main_loop(args)
     except SystemExit as se:
         nni_log(LogType.Info, '{}: NNI trial runner exit with code {}'.format(args.node_id, se.code))
+
+        # try best to send latest errors to server
+        timeout = 10
+        while not command_channel.sent() and timeout > 0:
+            timeout -= 1
+            time.sleep(1)
         os._exit(se.code)
     finally:
         if trial_runner_syslogger is not None:
