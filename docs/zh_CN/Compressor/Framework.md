@@ -1,13 +1,23 @@
-# 设计文档
+# Customize A New Compression Algorithm
 
-## 概述
+```eval_rst
+.. contents::
+```
 
-下列示例展示了如何使用 Pruner：
+To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruning and quantization respectively. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
+
+## Customize a new pruning algorithm
+
+To better demonstrate how to customize a new pruning algorithm, it is necessary for users to first understand the framework for supporting various pruning algorithms in NNI.
+
+### Framework overview for pruning algorithms
+
+Following example shows how to use a pruner:
 
 ```python
 from nni.compression.torch import LevelPruner
 
-# 读取预训练的模型，或在使用 Pruner 前进行训练。
+# load a pretrained model or train a model before using a pruner
 
 configure_list = [{
     'sparsity': 0.7,
@@ -18,122 +28,247 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_d
 pruner = LevelPruner(model, configure_list, optimizer)
 model = pruner.compress()
 
-# 剪枝已准备好，开始调优模型，
-# 模型会在训练过程中自动剪枝
+# model is ready for pruning, now start finetune the model,
+# the model will be pruned during training automatically
 ```
 
-Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 通过往 `optimizer.step()` 上增加回调，在训练过程中根据 `config_list` 来对模型剪枝。
+A pruner receives `model`, `config_list` and `optimizer` as arguments. It prunes the model per the `config_list` during training loop by adding a hook on `optimizer.step()`.
 
-从实现上来看，Pruner 由 `权重掩码`实例和若干个 `module 包装`实例组成。
+From implementation perspective, a pruner consists of a `weight masker` instance and multiple `module wrapper` instances.
 
-### 权重掩码
+#### Weight masker
 
-`权重掩码`是剪枝算法的实现，可将由 `module 包装`所包装起来的一层根据稀疏度进行修建。
+A `weight masker` is the implementation of pruning algorithms, it can prune a specified layer wrapped by `module wrapper` with specified sparsity.
 
-### module 的包装
+#### Module wrapper
 
-`module 的包装` 包含：
+A `module wrapper` is a module containing:
 
 1. 原始的 module
 2. `calc_mask` 使用的一些缓存
 3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
 
-使用 `module 包装`的原因：
+the reasons to use `module wrapper`:
 
 1. 计算掩码所需要的 `calc_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
 2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
 
-### Pruner
+#### Pruner
 
-`Pruner` 用于：
+A `pruner` is responsible for:
 
 1. 管理、验证 config_list.
 2. 使用 `module 包装`来包装模型层，并在 `optimizer.step` 上添加回调
 3. 使用`权重掩码`在剪枝时计算层的掩码。
 4. 导出剪枝后模型的权重和掩码。
 
-## 实现新的剪枝算法
+### Implement a new pruning algorithm
 
-要实现新的剪枝算法，需要实现`权重掩码`类，它是 `WeightMasker` 的子类，以及`Pruner` 类，它是 `Pruner` 的子类。
+Implementing a new pruning algorithm requires implementing a `weight masker` class which shoud be a subclass of `WeightMasker`, and a `pruner` class, which should be a subclass `Pruner`.
 
-`权重掩码`的实现如下：
+An implementation of `weight masker` may look like this:
 
 ```python
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # 此处可初始化，如为算法收集计算权重所需要的统计信息。
+        # You can do some initialization here, such as collecting some statistics data
+        # if it is necessary for your algorithms to calculate the masks.
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-        # 根据 wrapper.weight, 和 sparsity, 
-        # 及其它信息来计算掩码
+        # calculate the masks based on the wrapper.weight, and sparsity, 
+        # and anything else
         # mask = ...
         return {'weight_mask': mask}
 ```
 
-参考 NNI 提供的[权重掩码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py)来实现自己的。
+You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py) implementations to implement your own weight masker.
 
-基本的 Pruner 如下所示：
+A basic `pruner` looks likes this:
 
 ```python
 class MyPruner(Pruner):
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        # 创建权重掩码实例
+        # construct a weight masker instance
         self.masker = MyMasker(model, self)
 
     def calc_mask(self, wrapper, wrapper_idx=None):
         sparsity = wrapper.config['sparsity']
         if wrapper.if_calculated:
-            # 如果是一次性剪枝算法，不需要再次剪枝
+            # Already pruned, do not prune again as a one-shot pruner
             return None
         else:
-            # 调用掩码函数来实际计算当前层的掩码
+            # call your masker to actually calcuate the mask for this layer
             masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
             wrapper.if_calculated = True
             return masks
 
 ```
 
-参考 NNI 提供的[Pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) 来实现自己的。
+Reference nni provided [pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) implementations to implement your own pruner class.
 
-### 设置包装的属性
+### Set wrapper attribute
 
-有时，`calc_mask` 需要保存一些状态数据，可以像 PyTorch 的 module 一样，使用 `set_wrappers_attribute` API 来注册属性。 这些缓存会注册到 `module 包装`中。 用户可以通过 `module 包装`来直接访问这些缓存。 在上述示例中，使用了 `set_wrappers_attribute` 类设置缓冲 `if_calculated`，它用来标识某层的掩码是否已经计算过了。
+Sometimes `calc_mask` must save some state data, therefore users can use `set_wrappers_attribute` API to register attribute just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`. In above example, we use `set_wrappers_attribute` to set a buffer `if_calculated` which is used as flag indicating if the mask of a layer is already calculated.
 
-### 在 forward 时收集数据
+### Collect data during forward
 
-有时，需要在 forward 方法中收集数据，例如，需要激活的平均值。 可通过向 module 中添加定制的 Collector 来做到。
+Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. This can be done by adding a customized collector to module.
 
 ```python
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # 为所有包装类设置 `collected_activation` 属性
-        # 保存所有层的激活值
+        # Set attribute `collected_activation` for all wrappers to store
+        # activations for each layer
         self.pruner.set_wrappers_attribute("collected_activation", [])
         self.activation = torch.nn.functional.relu
 
         def collector(wrapper, input_, output):
-            # 通过每个包装的 collected_activation 属性，来评估收到的激活值
+            # The collected activation can be accessed via each wrapper's collected_activation
+            # attribute
             wrapper.collected_activation.append(self.activation(output.detach().cpu()))
 
         self.pruner.hook_id = self.pruner.add_activation_collector(collector)
 ```
 
-收集函数会在每次 forward 方法运行时调用。
+The collector function will be called each time the forward method runs.
 
-还可这样来移除收集方法：
+Users can also remove this collector like this:
 
 ```python
-# 保存 Collector 的标识
+# Save the collector identifier
 collector_id = self.pruner.add_activation_collector(collector)
 
-# 当 Collector 不再需要后，可以通过保存的 Collector 标识来删除
+# When the collector is not used any more, it can be remove using
+# the saved collector identifier
 self.pruner.remove_activation_collector(collector_id)
 ```
 
-### 多 GPU 支持
+### Multi-GPU support
 
-在多 GPU 训练中，缓存和参数会在每次 `forward` 方法被调用时，复制到多个 GPU 上。 如果缓存和参数要在 `forward` 更新，就需要通过`原地`更新来提高效率。 因为 `calc_mask` 会在 `optimizer.step` 方法中的调用，会在 `forward` 方法后才被调用，且只会发生在单 GPU 上，因此它天然的就支持多 GPU 的情况。
+On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective. Since `calc_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
+
+***
+
+## Customize a new quantization algorithm
+
+To write a new quantization algorithm, you can write a class that inherits `nni.compression.torch.Quantizer`. Then, override the member functions with the logic of your algorithm. The member function to override is `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+
+```python
+from nni.compression.torch import Quantizer
+
+class YourQuantizer(Quantizer):
+    def __init__(self, model, config_list):
+        """
+        Suggest you to use the NNI defined spec for config
+        """
+        super().__init__(model, config_list)
+
+    def quantize_weight(self, weight, config, **kwargs):
+        """
+        quantize should overload this method to quantize weight tensors.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        weight : Tensor
+            weight that needs to be quantized
+        config : dict
+            the configuration for weight quantization
+        """
+
+        # Put your code to generate `new_weight` here
+
+        return new_weight
+
+    def quantize_output(self, output, config, **kwargs):
+        """
+        quantize should overload this method to quantize output.
+        This method is effectively hooked to `:meth:`forward` of the model.
+
+        Parameters
+        ----------
+        output : Tensor
+            output that needs to be quantized
+        config : dict
+            the configuration for output quantization
+        """
+
+        # Put your code to generate `new_output` here
+
+        return new_output
+
+    def quantize_input(self, *inputs, config, **kwargs):
+        """
+        quantize should overload this method to quantize input.
+        This method is effectively hooked to :meth:`forward` of the model.
+
+        Parameters
+        ----------
+        inputs : Tensor
+            inputs that needs to be quantized
+        config : dict
+            the configuration for inputs quantization
+        """
+
+        # Put your code to generate `new_input` here
+
+        return new_input
+
+    def update_epoch(self, epoch_num):
+        pass
+
+    def step(self):
+        """
+        Can do some processing based on the model or weights binded
+        in the func bind_model
+        """
+        pass
+```
+
+### Customize backward function
+
+Sometimes it's necessary for a quantization operation to have a customized backward function, such as [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste), user can customize a backward function as follow:
+
+```python
+from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
+
+class ClipGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type):
+        """
+        This method should be overrided by subclass to provide customized backward function,
+        default implementation is Straight-Through Estimator
+        Parameters
+        ----------
+        tensor : Tensor
+            input of quantization operation
+        grad_output : Tensor
+            gradient of the output of quantization operation
+        quant_type : QuantType
+            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            you can define different behavior for different types.
+        Returns
+        -------
+        tensor
+            gradient of the input of quantization operation
+        """
+
+        # for quant_output function, set grad to zero if the absolute value of tensor is larger than 1
+        if quant_type == QuantType.QUANT_OUTPUT: 
+            grad_output[torch.abs(tensor) > 1] = 0
+        return grad_output
+
+
+class YourQuantizer(Quantizer):
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list)
+        # set your customized backward function to overwrite default backward function
+        self.quant_grad = ClipGrad
+
+```
+
+If you do not customize `QuantGrad`, the default backward is Straight-Through Estimator. _Coming Soon_ ...
