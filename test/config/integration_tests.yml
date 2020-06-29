@@ -86,7 +86,7 @@ testCases:
   configFile: test/config/examples/classic-nas-pytorch.yml
   # remove search space file
   stopCommand: nnictl stop
-  onExitCommand: python3 -c 'import os; os.remove("config/examples/nni-nas-search-space.json")'
+  onExitCommand: python3 -c "import os; os.remove('config/examples/nni-nas-search-space.json')"
   trainingService: local
 
 #########################################################################
