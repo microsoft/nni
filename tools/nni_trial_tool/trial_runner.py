@@ -7,7 +7,6 @@ import os
 import random
 import re
 import sys
-import threading
 import time
 import traceback
 from datetime import datetime, timedelta
@@ -133,28 +132,6 @@ def check_version(args):
         except AttributeError as err:
             nni_log(LogType.Error, '{0}: {1}'.format(args.node_id, err))
 
-
-def fetch_parameter_file(args):
-    class FetchThread(threading.Thread):
-        def __init__(self, args):
-            super(FetchThread, self).__init__()
-            self.args = args
-
-        def run(self):
-            uri = gen_parameter_meta_url(self.args.nnimanager_ip, self.args.nnimanager_port)
-            nni_log(LogType.Info, uri)
-
-            while True:
-                res = rest_get(uri, 10)
-                nni_log(LogType.Debug, 'status code: {}'.format(res.status_code))
-                if res.status_code != 200:
-                    nni_log(LogType.Warning, 'rest response: {}'.format(str(res)))
-                time.sleep(2)
-
-    fetch_file_thread = FetchThread(args)
-    fetch_file_thread.start()
-
-
 if __name__ == '__main__':
 
     '''NNI Trial Runner main function'''
@@ -208,8 +185,6 @@ if __name__ == '__main__':
     os.environ['NNI_TRIAL_JOB_ID'] = "runner"
 
     from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
-    from .rest_utils import rest_get, rest_post
-    from .url_utils import gen_parameter_meta_url, gen_send_version_url
     from .trial import Trial
     from .file_channel import FileChannel
     from .web_channel import WebChannel
