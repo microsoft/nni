@@ -4,6 +4,7 @@ defaultTestCaseConfig:
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
+  trainingService: all
 
 testCases:
 

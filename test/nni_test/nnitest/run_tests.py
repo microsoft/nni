@@ -76,6 +76,10 @@ def run_test_case(test_case_config, it_config, args):
         print('Stop command:', stop_command, flush=True)
         if stop_command:
             subprocess.run(shlex.split(stop_command))
+        exit_command = get_command(test_case_config, 'onExitCommand')
+        print('Exit command:', exit_command, flush=True)
+        if exit_command:
+            subprocess.run(shlex.split(exit_command), check=True)
         # remove tmp config file
         if os.path.exists(new_config_file):
             os.remove(new_config_file)
@@ -192,6 +196,15 @@ def case_included(name, cases):
 def match_platform(test_case_config):
     return sys.platform in test_case_config['platform'].split(' ')
 
+def match_training_service(test_case_config, cur_training_service):
+    case_ts = test_case_config['trainingService']
+    assert case_ts is not None
+    if case_ts == 'all':
+        return True
+    if cur_training_service in case_ts.split(' '):
+        return True
+    return False
+
 def run(args):
     it_config = get_yml_content(args.config)
 
@@ -211,6 +224,10 @@ def run(args):
 
         if not match_platform(test_case_config):
             print('skipped {}, platform {} not match [{}]'.format(name, sys.platform, test_case_config['platform']))
+            continue
+
+        if not match_training_service(test_case_config, args.ts):
+            print('skipped {}, training service {} not match [{}]'.format(name, args.ts, test_case_config['trainingService']))
             continue
 
         wait_for_port_available(8080, 30)
