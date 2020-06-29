@@ -23,4 +23,4 @@ For details, please refer to the following tutorials:
     Model Speedup <Compressor/ModelSpeedup>
     Compression Utilities <Compressor/CompressionUtils>
     Compression Framework <Compressor/Framework>
-    Customize Compression Algorithms <Compressor/Framework>
+    Customize Compression Algorithms <Compressor/CustomizeCompressor>
