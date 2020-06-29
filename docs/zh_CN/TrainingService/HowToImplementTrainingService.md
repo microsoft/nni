@@ -1,4 +1,4 @@
-# **实现 NNI TrainingService**
+# How to Implement Training Service in NNI
 
 ## 概述
 
