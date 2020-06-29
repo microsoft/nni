@@ -71,7 +71,7 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy localPath: ${localPath} to remotePath: ${remotePath}, asGzip ${asGzip}`);
-        if (!await this.exists(remotePath)) {
+        if (!await this.internalExists(remotePath)) {
             await this.internalMkdir(remotePath);
         }
 

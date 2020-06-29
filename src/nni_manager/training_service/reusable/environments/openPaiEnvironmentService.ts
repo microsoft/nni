@@ -90,8 +90,6 @@ export class OpenPaiEnvironmentService implements EnvironmentService {
                 }
                 break;
             }
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                break;
             default:
                 this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
         }
