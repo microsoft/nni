@@ -17,9 +17,9 @@ For details, please refer to the following tutorials:
 
     Overview <Compressor/Overview>
     Quick Start <Compressor/QuickStart>
-    Pruners <pruners>
-    Quantizers <quantizers>
-    Model Speedup <Compressor/ModelSpeedup>
+    Pruners <Compressor/Pruner>
+    Quantizers <Compressor/Quantizer>
     Automatic Model Compression <Compressor/AutoCompression>
-    Implementation <Compressor/Framework>
+    Model Speedup <Compressor/ModelSpeedup>
     Compression Utilities <Compressor/CompressionUtils>
+    Customize Compression Algorithms <Compressor/Framework>

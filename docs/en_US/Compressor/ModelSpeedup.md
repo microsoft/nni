@@ -1,6 +1,6 @@
 # Speed up Masked Model
 
-*This feature is still in Alpha version.*
+*This feature is in Beta version.*
 
 ## Introduction
 
