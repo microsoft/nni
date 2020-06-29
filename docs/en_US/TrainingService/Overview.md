@@ -6,15 +6,15 @@ NNI training service is designed to allow users to focus on AutoML itself, agnos
 
 Users can use training service provided by NNI, to run trial jobs on [local machine](./LocalMode.md), [remote machines](./RemoteMachineMode.md), and on clusters like [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md) and [FrameworkController](./FrameworkControllerMode.md). These are called *built-in training services*.
 
-If the computing resource customers try to use is not listed above, NNI provides interface that allows users can build their own training service easily. Please refer to "[how to implement training service](./HowToImplementTrainingService)" for details.
+If the computing resource customers try to use is not listed above, NNI provides interface that allows users to build their own training service easily. Please refer to "[how to implement training service](./HowToImplementTrainingService)" for details.
 
 ## How to use Training Service?
 
-Training service needs to be chosen and configured properly in configuration YAML file. See [tutorial](../Tutorial/QuickStart) and [reference](../Tutorial/ExperimentConfig) on how to write this file.
+Training service needs to be chosen and configured properly in experiment configuration YAML file. Users could refer to the document of each training service for how to write the configuration. Also, [reference](../Tutorial/ExperimentConfig) provides more details on the specification of the experiment configuration file.
 
 Next, users should prepare code directory, which is specified as `codeDir` in config file. Please note that in non-local mode, the code directory will be uploaded to remote or cluster before the experiment. Therefore, we limit the number of files to 2000 and total size to 300MB. If the code directory contains too many files, users can choose which files and subfolders should be excluded by adding a `.nniignore` file that works like a `.gitignore` file. For more details on how to write this file, see the [git documentation](https://git-scm.com/docs/gitignore#_pattern_format).
 
-In case users intend to use large files in their experiment (like large-scaled datasets) and they are not using local mode, they can either: 1) download the data before each trial launches by putting it into trial command; or 2) use a shared storage that is accessible to worker nodes. NNI has no configuration or helper functions for that, and users need to do everything in trial command (concatenating several commands with `&&` if necessary).
+In case users intend to use large files in their experiment (like large-scaled datasets) and they are not using local mode, they can either: 1) download the data before each trial launches by putting it into trial command; or 2) use a shared storage that is accessible to worker nodes. Usually, training platforms are equipped with shared storage, and NNI allows users to easily use them. Refer to docs of each built-in training service for details.
 
 ## Built-in Training Services
 
@@ -33,7 +33,7 @@ In case users intend to use large files in their experiment (like large-scaled d
 <img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
 </p>
 
-According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiating a new trial; 2) collecting metrics and communicating with NNI core (NNI manager). To demonstrated in detail how training service works, we show the workflow of training service from the very beginning to the moment when first trial succeeds.
+According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiating a new trial; 2) collecting metrics and communicating with NNI core (NNI manager); 3) monitoring trial job status. To demonstrated in detail how training service works, we show the workflow of training service from the very beginning to the moment when first trial succeeds.
 
 Step 1. **Validate config and prepare the training platform.** Training service will first check whether the training platform user specifies is valid (e.g., is there anything wrong with authentication). After that, training service will start to prepare for the experiment by making the code directory (`codeDir`) accessible to training platform.
 
