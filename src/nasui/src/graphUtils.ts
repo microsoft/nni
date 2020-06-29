@@ -47,6 +47,10 @@ export class NodeTs {
   isParent(): boolean {
     return this.children.length > 0;
   }
+
+  toString(): string {
+    return `Node(id=${this.id})`;
+  }
 };
 
 export class Edge {
@@ -58,6 +62,10 @@ export class Edge {
     this.source = source;
     this.target = target;
     this.id = JSON.stringify([this.source.id, this.target.id]);
+  }
+
+  toString(): string {
+    return `Edge(${this.source} -> ${this.target})`;
   }
 };
 
@@ -76,12 +84,12 @@ export class Graph {
   nodes: NodeTs[];
   edges: Edge[];
   defaultExpandSet: Set<string>;
+  mutableEdges: Map<string, Edge[][]>;
   private id2idx: Map<string, number>;
   private edgeId2idx: Map<string, number>;
   private forwardGraph: Map<string, string[]>;
   private backwardGraph: Map<string, string[]>;
   private node2edge: Map<string, Edge[]>;
-  private mutableEdges: Map<string, Edge[][]>;
 
   private build() {
     this.id2idx.clear();
@@ -359,16 +367,24 @@ export class Graph {
   weightFromMutables(mutable: any): Map<string, number> {
     const elemWeight = new Map<string, number>();
     Object.entries(mutable).forEach(entry => {
+      const elemWeightPartial = new Map<string, number>();
       const key = entry[0];
       const weights = entry[1] as number[];
       this.mutableEdges.get(key)!.forEach((edges: any, i: number) => {
         edges.forEach((edge: any) => {
-          if (elemWeight.has(edge.id)) {
-            elemWeight.set(edge.id, elemWeight.get(edge.id)! + weights[i]);
+          if (elemWeightPartial.has(edge.id)) {
+            elemWeightPartial.set(edge.id, elemWeightPartial.get(edge.id)! + weights[i]);
           } else {
-            elemWeight.set(edge.id, weights[i]);
+            elemWeightPartial.set(edge.id, weights[i]);
           }
         })
+      });
+      elemWeightPartial.forEach((v, k) => {
+        if (elemWeight.has(k)) {
+          elemWeight.set(k, Math.min(elemWeight.get(k)!, v));
+        } else {
+          elemWeight.set(k, v);
+        }
       });
     });
     this.nodes.forEach(node => {

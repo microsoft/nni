@@ -114,3 +114,7 @@ td.framework{
 .or{
     vertical-align: middle;
 }
+
+.wy-plain-list-disc li, .rst-content .section ul li, .rst-content .toctree-wrapper ul li, article ul li {
+    margin-bottom: 0px;
+}

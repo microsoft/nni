@@ -83,12 +83,12 @@ class LotteryTicketPruner(Pruner):
         return max(1 - curr_keep_ratio, 0)
 
     def _calc_mask(self, wrapper, sparsity):
-        weight = wrapper.weight.data
+        weight = wrapper.module.weight.data
         if self.curr_prune_iteration == 0:
             mask = {'weight_mask': torch.ones(weight.shape).type_as(weight)}
         else:
             curr_sparsity = self._calc_sparsity(sparsity)
-            mask = self.masker.calc_mask(wrapper, curr_sparsity)
+            mask = self.masker.calc_mask(sparsity=curr_sparsity, wrapper=wrapper)
         return mask
 
     def calc_mask(self, wrapper, **kwargs):
