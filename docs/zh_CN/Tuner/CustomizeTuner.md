@@ -38,7 +38,7 @@ class CustomizedTuner(Tuner):
         parameters: 'generate_parameters()' 创建出的对象
         value: Trial 的最终指标，包括 default 指标
         '''
-        # 代码实现位置。
+        # 代码实现位置
     ...
 
     def generate_parameters(self, parameter_id, **kwargs):
@@ -52,12 +52,12 @@ class CustomizedTuner(Tuner):
 
     def update_search_space(self, search_space):
         '''
-        Tuners are advised to support updating search space at run-time.
-        If a tuner can only set search space once before generating first hyper-parameters,
-        it should explicitly document this behaviour.
-        search_space: JSON object created by experiment owner
+         在运行时，需要更新搜索空间的 Tuner 可实现此函数。
+        如果 Tuner 只在生成第一个超参前设置搜索空间，
+        需要将其行为写到文档里。
+        search_space: 定义 Experiment 时创建的 JSON 对象
         '''
-        # your code implements here.
+        # 代码实现位置
     ...
 ```
 
