@@ -1,4 +1,4 @@
-# Supported Pruning Algorithms on NNI
+# NNI 支持的剪枝算法
 
 We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Weight pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
 
