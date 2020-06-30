@@ -22,4 +22,4 @@ NNI 中也内置了一些流程的模型压缩算法。
     自动模型压缩 <Compressor/AutoCompression>
     模型加速 <Compressor/ModelSpeedup>
     模型压缩 <Compressor/CompressionUtils>
-    Customize Compression Algorithms <Compressor/Framework>
+    自定义压缩算法 <Compressor/Framework>
