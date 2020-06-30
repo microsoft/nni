@@ -5,7 +5,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
@@ -15,14 +14,10 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { AMLClient } from '../aml/amlClient';
 import {
-    NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    NNIManagerIpConfig,
 } from '../../../common/trainingService';
-import { execMkdir, validateCodeDir, execCopydir } from '../../common/util';
-import {
-    delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
-    getVersion, uniqueString
-} from '../../../common/utils';
+import { validateCodeDir } from '../../common/util';
+import { getExperimentRootDir } from '../../../common/utils';
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { CommandChannel } from "../commandChannel";
 import { EventEmitter } from "events";
@@ -87,11 +82,11 @@ export class AMLEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         environments.forEach(async (environment) => {
-            let amlClient = (environment as AMLEnvironmentInformation).amlClient;
+            const amlClient = (environment as AMLEnvironmentInformation).amlClient;
                     if (!amlClient) {
             throw new Error('AML client not initialized!');
             }
-            let status = await amlClient.updateStatus(environment.status);
+            const status = await amlClient.updateStatus(environment.status);
             switch (status.toUpperCase()) {
                 case 'WAITING':
                 case 'RUNNING':
@@ -110,7 +105,7 @@ export class AMLEnvironmentService extends EnvironmentService {
                     environment.setFinalStatus('USER_CANCELED');
                     break;
                 default:
-                    environment.status = 'UNKNOWN';
+                    environment.setFinalStatus('UNKNOWN');
             }
         });
     }
@@ -122,8 +117,8 @@ export class AMLEnvironmentService extends EnvironmentService {
         if (this.amlTrialConfig === undefined) {
             throw new Error('AML trial config is not initialized');
         }
-        let amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
-        let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+        const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
+        const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
         environment.command = `import os\nos.system('${amlEnvironment.command}')`;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command ,{ encoding: 'utf8' });
         let amlClient = new AMLClient(
@@ -143,8 +138,8 @@ export class AMLEnvironmentService extends EnvironmentService {
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
-        let amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
-        let amlClient = amlEnvironment.amlClient;
+        const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
+        const amlClient = amlEnvironment.amlClient;
         if (!amlClient) {
             throw new Error('AML client not initialized!');
         }

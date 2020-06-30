@@ -93,9 +93,9 @@ export class AMLCommandChannel extends CommandChannel {
                 if (!amlClient) {
                     throw new Error('AML client not initialized!');
                 }
-                let command = await amlClient.receiveCommand();
-                if (command && command.hasOwnProperty('trial_runner')) {
-                    let messages = command['trial_runner'];
+                const command = await amlClient.receiveCommand();
+                if (command && Object.prototype.hasOwnProperty.call(command, "trial_runner")) {
+                    const messages = command['trial_runner'];
                     if (messages) {
                         if (messages instanceof Object && this.currentMessageIndex < messages.length - 1) {
                             for (let index = this.currentMessageIndex + 1; index < messages.length; index ++) {

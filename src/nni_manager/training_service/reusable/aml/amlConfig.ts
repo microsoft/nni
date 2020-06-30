@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../../common/trainingService';
 import { TrialConfig } from '../../common/trialConfig';
 import { EnvironmentInformation } from '../environment';
 import { AMLClient } from '../aml/amlClient';

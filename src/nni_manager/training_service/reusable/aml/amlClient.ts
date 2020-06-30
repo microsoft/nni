@@ -3,9 +3,6 @@
 
 'use strict';
 
-import * as fs from 'fs';
-import * as request from 'request';
-import * as path from 'path';
 import { Deferred } from 'ts-deferred';
 import { PythonShell } from 'python-shell';
 
@@ -82,7 +79,7 @@ export class AMLClient {
         this.pythonShellClient.send('tracking_url');
         let trackingUrl = '';
         this.pythonShellClient.on('message', function (status: any) {
-            let items = status.split(':');
+            const items = status.split(':');
             if (items[0] === 'tracking_url') {
                 trackingUrl = items.splice(1, items.length).join('')
             }
@@ -99,7 +96,7 @@ export class AMLClient {
         let newStatus = oldStatus;
         this.pythonShellClient.send('update_status');
         this.pythonShellClient.on('message', function (status: any) {
-            let items = status.split(':');
+            const items = status.split(':');
             if (items[0] === 'status') {
                 newStatus = items.splice(1, items.length).join('')
             }
@@ -122,7 +119,7 @@ export class AMLClient {
         }
         this.pythonShellClient.send('receive');
         this.pythonShellClient.on('message', function (command: any) {
-            let items = command.split(':')
+            const items = command.split(':')
             if (items[0] === 'receive') {
                 deferred.resolve(JSON.parse(command.slice(8)))
             }
