@@ -48,45 +48,43 @@ quantizer = DoReFaQuantizer(model, configure_list, optimizer)
 quantizer.compress()
 
 ```
-View [example code](https://github.com/microsoft/nni/tree/master/examples/model_compress) for more information.
+查看[示例代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)了解更多信息。
 
-`Compressor` class provides some utility methods for subclass and users:
+`Compressor` 类提供了一些工具函数：
 
-### Set wrapper attribute
+### 设置包装的属性
 
-Sometimes `calc_mask` must save some state data, therefore users can use `set_wrappers_attribute` API to register attribute just like how buffers are registered in PyTorch modules. These buffers will be registered to `module wrapper`. Users can access these buffers through `module wrapper`. In above example, we use `set_wrappers_attribute` to set a buffer `if_calculated` which is used as flag indicating if the mask of a layer is already calculated.
+有时，`calc_mask` 需要保存一些状态数据，可以像 PyTorch 的 module 一样，使用 `set_wrappers_attribute` API 来注册属性。 这些缓存会注册到 `module 包装`中。 用户可以通过 `module 包装`来直接访问这些缓存。 在上述示例中，使用了 `set_wrappers_attribute` 类设置缓冲 `if_calculated`，它用来标识某层的掩码是否已经计算过了。
 
-### Collect data during forward
+### 在 forward 时收集数据
 
-Sometimes users want to collect some data during the modules' forward method, for example, the mean value of the activation. This can be done by adding a customized collector to module.
+有时，需要在 forward 方法中收集数据，例如，需要激活的平均值。 可通过向 module 中添加定制的 Collector 来做到。
 
 ```python
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # Set attribute `collected_activation` for all wrappers to store
-        # activations for each layer
+        # 为所有包装类设置 `collected_activation` 属性
+        # 保存所有层的激活值
         self.pruner.set_wrappers_attribute("collected_activation", [])
         self.activation = torch.nn.functional.relu
 
         def collector(wrapper, input_, output):
-            # The collected activation can be accessed via each wrapper's collected_activation
-            # attribute
+            # 通过每个包装的 collected_activation 属性，来评估收到的激活值
             wrapper.collected_activation.append(self.activation(output.detach().cpu()))
 
         self.pruner.hook_id = self.pruner.add_activation_collector(collector)
 ```
 
-The collector function will be called each time the forward method runs.
+收集函数会在每次 forward 方法运行时调用。
 
-Users can also remove this collector like this:
+还可这样来移除收集方法：
 
 ```python
-# Save the collector identifier
+# 保存 Collector 的标识
 collector_id = self.pruner.add_activation_collector(collector)
 
-# When the collector is not used any more, it can be remove using
-# the saved collector identifier
+# 当 Collector 不再需要后，可以通过保存的 Collector 标识来删除
 self.pruner.remove_activation_collector(collector_id)
 ```
 
@@ -94,28 +92,28 @@ self.pruner.remove_activation_collector(collector_id)
 
 ## Pruner
 
-A pruner receives `model`, `config_list` and `optimizer` as arguments. It prunes the model per the `config_list` during training loop by adding a hook on `optimizer.step()`.
+Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 通过往 `optimizer.step()` 上增加回调，在训练过程中根据 `config_list` 来对模型剪枝。
 
-Pruner class is a subclass of Compressor, so it contains everything in the Compressor class and some additional components only for pruning, it contains:
+Pruner 类是 Compressor 的子类，因此它包含了 Compressor 的所有功能，并添加了剪枝所需要的组件，包括：
 
-### Weight masker
+### 权重掩码
 
-A `weight masker` is the implementation of pruning algorithms, it can prune a specified layer wrapped by `module wrapper` with specified sparsity.
+`权重掩码`是剪枝算法的实现，可将由 `module 包装`所包装起来的一层根据稀疏度进行修建。
 
-### Pruning module wrapper
+### 剪枝模块包装
 
-A `pruning module wrapper` is a module containing:
+`剪枝 module 的包装` 包含：
 
 1. 原始的 module
 2. `calc_mask` 使用的一些缓存
 3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
 
-the reasons to use `module wrapper`:
+使用 `module 包装`的原因：
 
 1. 计算掩码所需要的 `calc_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
 2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
 
-### Pruning hook
+### 剪枝回调
 
 A pruning hook is installed on a pruner when the pruner is constructed, it is used to call pruner's calc_mask method at `optimizer.step()` is invoked.
 
