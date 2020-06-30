@@ -255,14 +255,14 @@ pruner.compress()
 
 ## TaylorFOWeightFilterPruner
 
-TaylorFOWeightFilterPruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+TaylorFOWeightFilterPruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 过滤器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
 >
 
 ![](../../img/importance_estimation_sum.png)
 
-### Usage
+### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import TaylorFOWeightFilterPruner
@@ -274,23 +274,23 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
 pruner.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
-### User configuration for TaylorFOWeightFilterPruner
+### TaylorFOWeightFilterPruner 的用户配置
 
 - **sparsity:** 卷积过滤器要修剪的百分比。
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **op_types:** 当前 TaylorFOWeightFilterPruner 中仅支持 Conv2d。
 
 ***
 
 ## AGP Pruner
-This is an iterative pruner, In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
-> We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t: ![](../../img/agp_pruner.png) The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation
+这是一种迭代的 Pruner，在 [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)中，作者 Michael Zhu 和 Suyog Gupta 提出了一种逐渐修建权重的算法。
+> 我们引入了一种新的自动梯度剪枝算法。这种算法从初始的稀疏度值 si（一般为 0）开始，通过 n 步的剪枝操作，增加到最终所需的稀疏度 sf。从训练步骤 t0 开始，以 ∆t 为剪枝频率： ![](../../img/agp_pruner.png) 在神经网络训练时‘逐步增加网络稀疏度时，每训练  ∆t 步更新一次权重剪枝的二进制掩码。同时也允许训练步骤恢复因为剪枝而造成的精度损失。 根据我们的经验，∆t 设为 100 到 1000 个训练步骤之间时，对于模型最终精度的影响可忽略不计。 一旦模型达到了稀疏度目标 sf，权重掩码将不再更新。 公式背后的稀疏函数直觉。
 
-### Usage
-You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
+### 用法
+通过下列代码，可以在 10 个 Epoch 中将权重稀疏度从 0% 剪枝到 80%。
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import AGP_Pruner
 config_list = [{
@@ -302,19 +302,19 @@ config_list = [{
     'op_types': ['default']
 }]
 
-# load a pretrained model or train a model before using a pruner
+# 使用 Pruner 前，加载预训练模型、或训练模型。
 # model = MyModel()
 # model.load_state_dict(torch.load('mycheckpoint.pth'))
 
-# AGP pruner prunes model while fine tuning the model by adding a hook on
-# optimizer.step(), so an optimizer is required to prune the model.
+# AGP Pruner 会在 optimizer.step() 上回调，在微调模型时剪枝，
+# 因此，必须要有 optimizer 才能完成模型剪枝。
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
 pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm='level')
 pruner.compress()
 ```
 
-AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however you can set `pruning_algorithm` parameter to other values to use other pruning algorithms:
+AGP Pruner 默认使用 `LevelPruner` 算法来修建权重，还可以设置 `pruning_algorithm` 参数来使用其它剪枝算法：
 * `level`: LevelPruner
 * `slim`: SlimPruner
 * `l1`: L1FilterPruner
@@ -324,38 +324,38 @@ AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however
 * `apoz`: ActivationAPoZRankFilterPruner
 * `mean_activation`: ActivationMeanRankFilterPruner
 
-You should add code below to update epoch number when you finish one epoch in your training code.
+在训练代码中每完成一个 Epoch，需要更新一下 Epoch 的值。
 
-PyTorch code
+PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+查看示例进一步了解
 
-#### User configuration for AGP Pruner
-* **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
-* **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
-* **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
+#### AGP Pruner 的用户配置
+* **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
+* **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
+* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值，默认为 0。
+* **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
+* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝，默认 frequency=1。
 
 ***
 
-## Lottery Ticket Hypothesis
-[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+## Lottery Ticket 假设
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
 
-In this paper, the authors use the following process to prune a model, called *iterative prunning*:
-> 1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
-> 2. Train the network for j iterations, arriving at parameters theta_j.
-> 3. Prune p% of the parameters in theta_j, creating a mask m.
-> 4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
-> 5. Repeat step 2, 3, and 4.
+本文中，作者使用叫做*迭代剪枝*的方法：
+> 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
+> 2. 将网络训练 j 次，得出参数 theta_j。
+> 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
+> 4. 将其余参数重置为 theta_0 的值，创建获胜彩票 f(x;m*theta_0)。
+> 5. 重复步骤 2、3 和 4。
 
-If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+如果配置的最终稀疏度为 P (e.g., 0.8) 并且有 n 次修建迭代，每次迭代修剪前一轮中剩余权重的 1-(1-P)^(1/n)。
 
-### Usage
+### 用法
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import LotteryTicketPruner
 config_list = [{
@@ -371,23 +371,23 @@ for _ in pruner.get_prune_iterations():
         ...
 ```
 
-The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round.
+上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 `model` 和 `optimizer` (**注意，如果使用 `lr_scheduler`，也需要添加**) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 `get_prune_iterations` 来获取修建迭代，并在每次迭代开始时调用 `prune_iteration_start`。 为了模型能较好收敛，`epoch_num` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。
 
 
-*Tensorflow version will be supported later.*
+*稍后支持 TensorFlow 版本。*
 
-#### User configuration for LotteryTicketPruner
+#### LotteryTicketPruner 的用户配置
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+* **prune_iterations:** 迭代修剪的次数。
+* **sparsity:** 压缩完成后的最终稀疏度。
 
-### Reproduced Experiment
+### 重现实验
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+在重现时，在 MNIST 使用了与论文相同的配置。 [此处](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py)为实现代码。 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
 
 ![](../../img/lottery_ticket_mnist_fc.png)
 
-The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+上图展示了全连接网络的结果。 `round0-sparsity-0.0` 是没有剪枝的性能。 与论文一致，修剪约 80% 也能获得与不修剪时相似的性能，收敛速度也会更快。 如果修剪过多（例如，大于 94%），则精度会降低，收敛速度会稍慢。 与本文稍有不同，论文中数据的趋势比较明显。
 
 
 
