@@ -121,7 +121,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
         environment.command = `import os\nos.system('${amlEnvironment.command}')`;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command ,{ encoding: 'utf8' });
-        let amlClient = new AMLClient(
+        const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,
             this.amlClusterConfig.resourceGroup,
             this.amlClusterConfig.workspaceName,
