@@ -19,14 +19,14 @@ class ADMMPruner(OneshotPruner):
     This is a Pytorch implementation of ADMM Pruner algorithm.
 
     Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
-    by decomposing an original problem into two subproblems that can be solved separately.
-    In weight pruning problem, the two subproblems are solved via gradient descent algorithm and Euclidean projection respectively.
+    by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
+    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
     This solution framework applies both to non-structured and different variations of structured pruning schemes.
 
     For more details, please refer to the paper: https://arxiv.org/abs/1804.03294.
     """
 
-    def __init__(self, model, config_list, trainer, optimize_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
+    def __init__(self, model, config_list, trainer, num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
         """
         Parameters
         ----------
@@ -35,24 +35,24 @@ class ADMMPruner(OneshotPruner):
         config_list : list
             List on pruning configs
         trainer : function
-            function used for the first optimization subproblem.
+            function used for the first subproblem.
             This function should include `model, optimizer, criterion, epoch, callback` as parameters,
             where callback should be inserted after loss.backward of the normal training process.
-        optimize_iterations : int
-            ADMM optimize iterations
+        num_iterations : int
+            Total number of iterations.
         training_epochs : int
-            training epochs of the first optimization subproblem.
+            Training epochs of the first subproblem.
         row : float
-            penalty parameters for ADMM training
+            Penalty parameters for ADMM training
         base_algo : str
-            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
+            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`
         """
         self._base_algo = base_algo
 
         super().__init__(model, config_list)
 
         self._trainer = trainer
-        self._optimize_iterations = optimize_iterations
+        self._num_iterations = num_iterations
         self._training_epochs = training_epochs
         self._row = row
 
@@ -154,8 +154,8 @@ class ADMMPruner(OneshotPruner):
                     (wrapper.module.weight.data - Z[i] + U[i])
 
         # optimization iteration
-        for k in range(self._optimize_iterations):
-            print('ADMM iteration : ', k)
+        for k in range(self._num_iterations):
+            _logger.info('ADMM iteration : %d', k)
 
             # step 1: optimize W with AdamOptimizer
             for epoch in range(self._training_epochs):

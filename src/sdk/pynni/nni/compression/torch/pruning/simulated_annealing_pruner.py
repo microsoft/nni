@@ -48,9 +48,9 @@ class SimulatedAnnealingPruner(Pruner):
             function to evaluate the pruned model.
             This function should include `model` as the only parameter, and returns a scalar value.
         optimize_mode : str
-            optimize mode, 'maximize' or 'minimize', by default 'maximize'
+            optimize mode, `maximize` or `minimize`, by default `maximize`.
         base_algo : str
-            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
+            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float
@@ -60,7 +60,8 @@ class SimulatedAnnealingPruner(Pruner):
         perturbation_magnitude : float
             initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
         experiment_data_dir : string
-            PATH to save experiment data
+            PATH to save experiment data,
+            including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
         """
         # original model
         self._model_to_prune = copy.deepcopy(model)
@@ -98,17 +99,24 @@ class SimulatedAnnealingPruner(Pruner):
         """
         Parameters
         ----------
-        model : pytorch model
-            The model to be pruned
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
+            List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): [str],
-        }], model, _logger)
+
+        if self._base_algo == 'level':
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('op_types'): [str],
+                Optional('op_names'): [str],
+            }], model, _logger)
+        elif self._base_algo in ['l1', 'l2']:
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                'op_types': ['Conv2d'],
+                Optional('op_names'): [str]
+            }], model, _logger)
 
         schema.validate(config_list)
 

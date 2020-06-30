@@ -37,7 +37,7 @@ class NetAdaptPruner(Pruner):
     For the details of this algorithm, please refer to the paper: https://arxiv.org/abs/1804.03230
     """
 
-    def __init__(self, model, config_list, evaluator, short_term_fine_tuner,
+    def __init__(self, model, config_list, short_term_fine_tuner, evaluator,
                  optimize_mode='maximize', base_algo='l1', sparsity_per_iteration=0.05, experiment_data_dir='./'):
         """
         Parameters
@@ -48,21 +48,22 @@ class NetAdaptPruner(Pruner):
             Supported keys:
                 - sparsity : The target overall sparsity.
                 - op_types : The operation type to prune.
-        evaluator : function
-            function to evaluate the masked model.
-            This function should include `model` as the only parameter, and returns a scalar value.
         short_term_fine_tuner : function
             function to short-term fine tune the masked model.
             This function should include `model` as the only parameter,
             and fine tune the model for a short term after each pruning iteration.
+        evaluator : function
+            function to evaluate the masked model.
+            This function should include `model` as the only parameter, and returns a scalar value.
         optimize_mode : str
-            optimize mode, 'maximize' or 'minimize', by default 'maximize'
+            optimize mode, `maximize` or `minimize`, by default `maximize`.
         base_algo : str
-            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
+            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
         sparsity_per_iteration : float
             sparsity to prune in each iteration
         experiment_data_dir : str
-            PATH to save experiment data
+            PATH to save experiment data,
+            including the config_list generated for the base pruning algorithm and the performance of the pruned model.
         """
         # models used for iterative pruning and evaluation
         self._model_to_prune = copy.deepcopy(model)
@@ -93,17 +94,24 @@ class NetAdaptPruner(Pruner):
         """
         Parameters
         ----------
-        model : pytorch model
-            The model to be pruned
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
+            List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): [str],
-        }], model, _logger)
+
+        if self._base_algo == 'level':
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('op_types'): [str],
+                Optional('op_names'): [str],
+            }], model, _logger)
+        elif self._base_algo in ['l1', 'l2']:
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                'op_types': ['Conv2d'],
+                Optional('op_names'): [str]
+            }], model, _logger)
 
         schema.validate(config_list)
 

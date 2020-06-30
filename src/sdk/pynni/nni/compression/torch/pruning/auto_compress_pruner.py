@@ -24,7 +24,7 @@ class AutoCompressPruner(Pruner):
     """
     This is a Pytorch implementation of AutoCompress pruning algorithm.
 
-    For each round t, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
+    For each round, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
         2. Perform ADMM-based structured pruning to generate pruning result for the next round.
            Here we use 'speedup' to perform real pruning.
@@ -33,11 +33,11 @@ class AutoCompressPruner(Pruner):
     """
 
     def __init__(self, model, config_list, trainer, evaluator, dummy_input,
-                 optimize_iterations=3, optimize_mode='maximize', base_algo='l1',
+                 num_iterations=3, optimize_mode='maximize', base_algo='l1',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
                  # ADMM related
-                 admm_optimize_iterations=30, admm_training_epochs=5, row=1e-4,
+                 admm_num_iterations=30, admm_training_epochs=5, row=1e-4,
                  experiment_data_dir='./'):
         """
         Parameters
@@ -57,12 +57,12 @@ class AutoCompressPruner(Pruner):
             This function should include `model` as the only parameter, and returns a scalar value.
         dummy_input : pytorch tensor
             The dummy input for ```jit.trace```, users should put it on right device before pass in
-        optimize_iterations : int
-            number of overall iterations
+        num_iterations : int
+            Number of overall iterations
         optimize_mode : str
-            optimize mode, 'maximize' or 'minimize', by default 'maximize'
+            optimize mode, `maximize` or `minimize`, by default `maximize`
         base_algo : str
-            base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'
+            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float
@@ -70,15 +70,15 @@ class AutoCompressPruner(Pruner):
         cool_down_rate : float
             Simualated Annealing related parameter
         perturbation_magnitude : float
-            initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
-        admm_optimize_iterations : int
-            ADMM optimize iterations
+            Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
+        admm_num_iterations : int
+            Number of iterations of ADMM Pruner
         admm_training_epochs : int
-            training epochs of the first optimization subproblem of ADMMPruner
+            Training epochs of the first optimization subproblem of ADMMPruner
         row : float
-            penalty parameters for ADMM training
+            Penalty parameters for ADMM training
         experiment_data_dir : string
-            PATH to save experiment data
+            PATH to store temporary experiment data
         """
         # original model
         self._model_to_prune = model
@@ -87,7 +87,7 @@ class AutoCompressPruner(Pruner):
         self._trainer = trainer
         self._evaluator = evaluator
         self._dummy_input = dummy_input
-        self._optimize_iterations = optimize_iterations
+        self._num_iterations = num_iterations
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for SA algorithm
@@ -97,7 +97,7 @@ class AutoCompressPruner(Pruner):
         self._perturbation_magnitude = perturbation_magnitude
 
         # hyper parameters for ADMM algorithm
-        self._admm_optimize_iterations = admm_optimize_iterations
+        self._admm_num_iterations = admm_num_iterations
         self._admm_training_epochs = admm_training_epochs
         self._row = row
 
@@ -112,17 +112,24 @@ class AutoCompressPruner(Pruner):
         """
         Parameters
         ----------
-        model : pytorch model
-            The model to be pruned
+        model : torch.nn.module
+            Model to be pruned
         config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
+            List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            Optional('op_types'): [str],
-        }], model, _logger)
+
+        if self._base_algo == 'level':
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('op_types'): [str],
+                Optional('op_names'): [str],
+            }], model, _logger)
+        elif self._base_algo in ['l1', 'l2']:
+            schema = CompressorSchema([{
+                'sparsity': And(float, lambda n: 0 < n < 1),
+                'op_types': ['Conv2d'],
+                Optional('op_names'): [str]
+            }], model, _logger)
 
         schema.validate(config_list)
 
@@ -140,9 +147,9 @@ class AutoCompressPruner(Pruner):
         """
         _logger.info('Starting AutoCompress pruning...')
 
-        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._optimize_iterations)
+        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._num_iterations)
 
-        for i in range(self._optimize_iterations):
+        for i in range(self._num_iterations):
             _logger.info('Pruning iteration: %d', i)
             _logger.info('Target sparsity this round: %s',
                          1-pow(1-sparsity_each_round, i+1))
@@ -171,7 +178,7 @@ class AutoCompressPruner(Pruner):
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=config_list,
                 trainer=self._trainer,
-                optimize_iterations=self._admm_optimize_iterations,
+                num_iterations=self._admm_num_iterations,
                 training_epochs=self._admm_training_epochs,
                 row=self._row,
                 base_algo=self._base_algo)
@@ -185,22 +192,18 @@ class AutoCompressPruner(Pruner):
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 
             masks_file = os.path.join(self._experiment_data_dir, 'mask.pth')
-            device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu")
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
             _logger.info('Speeding up models...')
-            m_speedup = ModelSpeedup(
-                self._model_to_prune, self._dummy_input, masks_file, device)
+            m_speedup = ModelSpeedup(self._model_to_prune, self._dummy_input, masks_file, device)
             m_speedup.speedup_model()
 
             evaluation_result = self._evaluator(self._model_to_prune)
-            _logger.info('Evaluation result of the pruned model in iteration %d: %s',
-                         i, evaluation_result)
+            _logger.info('Evaluation result of the pruned model in iteration %d: %s', i, evaluation_result)
 
         _logger.info('----------Compression finished--------------')
 
-        os.remove(os.path.join(
-            self._experiment_data_dir, 'model_admm_masked.pth'))
+        os.remove(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'))
         os.remove(os.path.join(self._experiment_data_dir, 'mask.pth'))
 
         return self._model_to_prune

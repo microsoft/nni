@@ -397,7 +397,7 @@ You can view example for more information
 
 ## NetAdapt Pruner
 NetAdapt allows a user to automatically simplify a pretrained network to meet the resource budget. 
-For example, given the ovrall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
+Given the overall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
 
 For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
 
@@ -421,14 +421,15 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for NetAdapt Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+- **sparsity:** The target overall sparsity.
+- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **short_term_fine_tuner:** Function to short-term fine tune the masked model.
 This function should include `model` as the only parameter, and fine tune the model for a short term after each pruning iteration.
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-- **base_algo:** base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'.
-- **sparsity_per_iteration:** sparsity to prune in each iteration
-- **experiment_data_dir:** PATH to save experiment data.
+- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+- **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
+- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
 
 
 ## SimulatedAnnealing Pruner
@@ -463,23 +464,21 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for SimulatedAnnealing Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** "Conv2d" or "default".
+- **sparsity:** The target overall sparsity.
+- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-- **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
-- **base_algo:** base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'.
+- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
 - **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **experiment_data_dir:** PATH to save experiment data.
+- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
 
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
-by decomposing an original problem into two subproblems that can be solved separately.
-In weight pruning problem, the two subproblems are solved via gradient descent algorithm and Euclidean projection respectively.
-This solution framework applies both to non-structured and different variations of structured pruning schemes.
+by decomposing the original nonconvex problem into two subproblems that can be solved iteratively. In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. This solution framework applies both to non-structured and different variations of structured pruning schemes.
 
 For more details, please refer to [A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers](https://arxiv.org/abs/1804.03294).
 
@@ -498,7 +497,7 @@ config_list = [{
             'op_types': ['Conv2d'],
             'op_names': ['conv2']
         }]
-pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=30, epochs=5)
+pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
 pruner.compress()
 ```
 
@@ -506,22 +505,21 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for ADMM Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in ADMMPruner.
-- **trainer:** Function used for the first optimization subproblem.
+- **sparsity:** This is to specify the sparsity operations to be compressed to.
+- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
+- **trainer:** Function used for the first subproblem.
 This function should include `model, optimizer, criterion, epoch, callback` as parameters, where callback should be inserted after loss.backward of the normal training process.
-- **optimize_iteration:** ADMM optimize iterations.
-- **training_epochs:** training epochs of the first optimization subproblem.
-- **row:** penalty parameters for ADMM training.
-- **base_algo:** base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'.
+- **num_iterations:** Total number of iterations.
+- **training_epochs:** Training epochs of the first subproblem.
+- **row:** Penalty parameters for ADMM training.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
             
 
 ## AutoCompress Pruner
-For each round t, AutoCompressPruner prune the model for the same sparsity each round to achive the ovrall sparsity:
+For each round, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result, for the next round t
-
-Perform prurification step (the speedup process in nni)
+        2. Perform ADMM-based structured pruning to generate pruning result for the next round.
+           Here we use `speedup` to perform real pruning.
 
 For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
 
@@ -537,8 +535,8 @@ config_list = [{
     }]
 pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator,
-            dummy_input=dummy_input, iterations=3, optimize_mode='maximize', base_algo='l1',
-            cool_down_rate=0.9, optimize_iterations=30, epochs=5, experiment_data_dir='./')
+            dummy_input=dummy_input, num_iterations=3, optimize_mode='maximize', base_algo='l1',
+            cool_down_rate=0.9, admm_num_iterations=30, admm_training_epochs=5, experiment_data_dir='./')
 pruner.compress()
 ```
 
@@ -546,19 +544,19 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for AutoCompress Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** "Conv2d" or "default".
+- **sparsity:** The target overall sparsity.
+- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **trainer:** Function used for the first optimization subproblem.
 This function should include `model, optimizer, criterion, epoch, callback` as parameters, where callback should be inserted after loss.backward of the normal training process.
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
 - **iterations:** The number of overall iterations.
-- **optimize_mode:** Optimize mode, 'maximize' or 'minimize', by default 'maximize'.
-- **base_algo:** base pruning algorithm. 'level', 'l1' or 'l2', by default 'l1'.
+- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
 - **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **optimize_iteration:** ADMM optimize iterations.
-- **epochs:** training epochs of the first optimization subproblem.
-- **experiment_data_dir:** PATH to save experiment data.
+- **admm_num_iterations:** Number of iterations of ADMM Pruner.
+- **admm_training_epochs:** Training epochs of the first optimization subproblem of ADMMPruner.
+- **experiment_data_dir:** PATH to store temporary experiment data.
