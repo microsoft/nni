@@ -115,16 +115,16 @@ Pruner 类是 Compressor 的子类，因此它包含了 Compressor 的所有功�
 
 ### 剪枝回调
 
-A pruning hook is installed on a pruner when the pruner is constructed, it is used to call pruner's calc_mask method at `optimizer.step()` is invoked.
+当 Pruner 构造时会添加剪枝的回调，用来在 `optimizer.step()` 被调用时，调用 Pruner 的 calc_mask。
 
 
 ***
 
 ## Quantizer
 
-Quantizer class is also a subclass of `Compressor`, it is used to compress models by reducing the number of bits required to represent weights or activations, which can reduce the computations and the inference time. It contains:
+Quantizer 也是 `Compressor` 的子类，用来通过减少权重或激活值的位宽来压缩模型，这样可以减少模型推理时的计算时间。 它包含：
 
-### Quantization module wrapper
+### 量化 module 包装
 
 Each module/layer of the model to be quantized is wrapped by a quantization module wrapper, it provides a new `forward` method to quantize the original module's weight, input and output.
 
@@ -184,7 +184,7 @@ class Quantizer(Compressor):
 
 ***
 
-## Multi-GPU support
+## 多 GPU 支持
 
-On multi-GPU training, buffers and parameters are copied to multiple GPU every time the `forward` method runs on multiple GPU. If buffers and parameters are updated in the `forward` method, an `in-place` update is needed to ensure the update is effective. Since `calc_mask` is called in the `optimizer.step` method, which happens after the `forward` method and happens only on one GPU, it supports multi-GPU naturally.
+在多 GPU 训练中，缓存和参数会在每次 `forward` 方法被调用时，复制到多个 GPU 上。 如果缓存和参数要在 `forward` 更新，就需要通过`原地`更新来提高效率。 因为 `calc_mask` 会在 `optimizer.step` 方法中的调用，会在 `forward` 方法后才被调用，且只会发生在单 GPU 上，因此它天然的就支持多 GPU 的情况。
 
