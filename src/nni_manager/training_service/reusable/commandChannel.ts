@@ -59,6 +59,9 @@ export abstract class CommandChannel {
     public abstract start(): Promise<void>;
     public abstract stop(): Promise<void>;
 
+    // Pull-based command channels need loop to check messages, the loop should be started with await here.
+    public abstract run(): Promise<void>;
+
     protected abstract sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void>;
     protected abstract createRunnerConnection(environment: EnvironmentInformation): RunnerConnection;
 
