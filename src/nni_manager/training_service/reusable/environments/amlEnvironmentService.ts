@@ -98,7 +98,6 @@ export class AMLEnvironmentService extends EnvironmentService {
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach(async (environment) => {
             let amlClient = (environment as AMLEnvironmentInformation).amlClient;
                     if (!amlClient) {
@@ -126,8 +125,6 @@ export class AMLEnvironmentService extends EnvironmentService {
                     environment.status = 'UNKNOWN';
             }
         });
-        deferred.resolve();
-        return deferred.promise;
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
