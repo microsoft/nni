@@ -28,7 +28,7 @@ class NetAdaptPruner(Pruner):
         1. Con = Res_i - delta_Res
         2. for every layer:
             Choose Num Filters to prune
-            Choose which filter to prunee
+            Choose which filter to prune
             Short-term fine tune the pruned model
         3. Pick the best layer to prune
     Long-term fine tune
@@ -51,13 +51,44 @@ class NetAdaptPruner(Pruner):
             function to short-term fine tune the masked model.
             This function should include `model` as the only parameter,
             and fine tune the model for a short term after each pruning iteration.
+            Example:
+            >>> def short_term_fine_tuner(model, epoch=3):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     train_loader = ...
+            >>>     criterion = torch.nn.CrossEntropyLoss()
+            >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+            >>>     model.train()
+            >>>     for _ in range(epoch):
+            >>>         for _, (data, target) in enumerate(train_loader):
+            >>>             data, target = data.to(device), target.to(device)
+            >>>             optimizer.zero_grad()
+            >>>             output = model(data)
+            >>>             loss = criterion(output, target)
+            >>>             loss.backward()
+            >>>             optimizer.step()
         evaluator : function
             function to evaluate the masked model.
             This function should include `model` as the only parameter, and returns a scalar value.
+            Example::
+            >>> def evaluator(model):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     val_loader = ...
+            >>>     model.eval()
+            >>>     correct = 0
+            >>>     with torch.no_grad():
+            >>>         for data, target in val_loader:
+            >>>             data, target = data.to(device), target.to(device)
+            >>>             output = model(data)
+            >>>             # get the index of the max log-probability
+            >>>             pred = output.argmax(dim=1, keepdim=True)
+            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
+            >>>     accuracy = correct / len(val_loader.dataset)
+            >>>     return accuracy
         optimize_mode : str
             optimize mode, `maximize` or `minimize`, by default `maximize`.
         base_algo : str
-            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         sparsity_per_iteration : float
             sparsity to prune in each iteration
         experiment_data_dir : str
