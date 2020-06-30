@@ -20,7 +20,7 @@ export abstract class RestServer {
     private startTask!: Deferred<void>;
     private stopTask!: Deferred<void>;
     private server!: http.Server;
-    
+
     /** The fields can be inherited by subclass */
     protected hostName: string = '0.0.0.0';
     protected port?: number;
