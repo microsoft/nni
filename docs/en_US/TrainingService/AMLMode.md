@@ -5,10 +5,16 @@ NNI supports running an experiment on [AML](https://azure.microsoft.com/en-us/se
 ## Setup environment
 Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).   
 
-Step 2. Create AML account, follow the document [here](https://docs.microsoft.com/en-us/azure/machine-learning/how-to-manage-workspace-cli)
+Step 2. Create AML account, follow the document [here](https://docs.microsoft.com/en-us/azure/machine-learning/how-to-manage-workspace-cli).
 
 Step 3. Get your account information.
 ![](../../img/aml_account.png)
+
+Step4. Install AML package environment.
+```
+python3 -m pip install azureml --user
+python3 -m pip install azureml-sdk --user
+```
 
 ## Run an experiment
 Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's content is like:
