@@ -228,7 +228,7 @@ Note: The maxExecDuration spec set the time of an experiment, not a trial job. I
 
 ### versionCheck
 
-Optional. Bool. Default: false.
+Optional. Bool. Default: true.
   
 NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 

@@ -16,13 +16,13 @@
 
 To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. Please follow the following steps.
 
-1. Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
+**Step 1.** Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
 
 ```bash
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 ```
 
-2. Run docker.
+**Step 2.** Run docker.
 
 For NAS-Bench-101,
 
