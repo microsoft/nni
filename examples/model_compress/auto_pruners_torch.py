@@ -249,7 +249,7 @@ def main(args):
                 }]
         else:
             raise ValueError('Example only implemented for LeNet.')
-        pruner = ADMMPruner(model, config_list, trainer=trainer, optimize_iterations=2, training_epochs=2)
+        pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=2, training_epochs=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, base_algo=args.base_algo,
@@ -257,9 +257,8 @@ def main(args):
     elif args.pruner == 'AutoCompressPruner':
         pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
-            optimize_iterations=3, optimize_mode='maximize', base_algo=args.base_algo,
-            # cool_down_rate=args.cool_down_rate, admm_optimize_iterations=30, admm_training_epochs=5,
-            cool_down_rate=args.cool_down_rate, admm_optimize_iterations=3, admm_training_epochs=2,
+            num_iterations=3, optimize_mode='maximize', base_algo=args.base_algo,
+            cool_down_rate=args.cool_down_rate, admm_num_iterations=30, admm_training_epochs=5,
             experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(

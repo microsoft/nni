@@ -17,7 +17,6 @@ from .admm_pruner import ADMMPruner
 
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
 
 
 class AutoCompressPruner(Pruner):

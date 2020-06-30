@@ -17,7 +17,6 @@ from .constants_pruner import PRUNER_DICT
 
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
 
 
 class NetAdaptPruner(Pruner):

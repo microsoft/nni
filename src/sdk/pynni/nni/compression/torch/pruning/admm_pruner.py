@@ -11,7 +11,6 @@ from .one_shot import OneshotPruner
 
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
 
 
 class ADMMPruner(OneshotPruner):
