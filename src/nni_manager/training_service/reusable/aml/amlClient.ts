@@ -15,7 +15,6 @@ export class AMLClient {
     public scriptName: string;
     public pythonShellClient: undefined | PythonShell;
     public codeDir: string;
-    public nodeCount: number;
     public computeTarget: string;
 
     constructor(
@@ -24,7 +23,6 @@ export class AMLClient {
         workspaceName: string,
         experimentId: string,
         computeTarget: string,
-        nodeCount: number,
         image: string,
         scriptName: string,
         codeDir: string,
@@ -34,7 +32,6 @@ export class AMLClient {
         this.workspaceName = workspaceName;
         this.experimentId = experimentId;
         this.image = image;
-        this.nodeCount = nodeCount;
         this.scriptName = scriptName;
         this.codeDir = codeDir;
         this.computeTarget = computeTarget;
@@ -53,8 +50,7 @@ export class AMLClient {
                 '--docker_image', this.image,
                 '--experiment_name', `nni_exp_${this.experimentId}`,
                 '--script_dir', this.codeDir,
-                '--script_name', this.scriptName,
-                '--node_count', this.nodeCount.toString()
+                '--script_name', this.scriptName
               ]
         });
         this.pythonShellClient.on('message', function (envId: any) {

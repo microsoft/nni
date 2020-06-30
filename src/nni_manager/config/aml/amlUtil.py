@@ -22,7 +22,6 @@ if __name__ == "__main__":
     parser.add_argument('--experiment_name', help='the experiment name')
     parser.add_argument('--script_dir', help='script directory')
     parser.add_argument('--script_name', help='script name')
-    parser.add_argument('--node_count', help='node count of run')
     args = parser.parse_args()
 
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
@@ -36,7 +35,7 @@ if __name__ == "__main__":
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image
     run_config.target = compute_target
-    run_config.node_count = args.node_count
+    run_config.node_count = 1
     config = ScriptRunConfig(source_directory=args.script_dir, script=args.script_name, run_config=run_config)
     run = experiment.submit(config)
     print(run.get_details()["runId"])

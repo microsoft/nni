@@ -23,19 +23,17 @@ export class AMLTrialConfig extends TrialConfig {
     public readonly image: string;
     public readonly command: string;
     public readonly codeDir: string;
-    public readonly nodeCount: number;
     public readonly computeTarget: string;
 
-    constructor(codeDir: string, command: string, image: string, nodeCount: number, computeTarget: string) {
+    constructor(codeDir: string, command: string, image: string, computeTarget: string) {
         super("", codeDir, 0);
         this.codeDir = codeDir;
         this.command = command;
         this.image = image;
-        this.nodeCount = nodeCount;
         this.computeTarget = computeTarget;
     }
 }
 
 export class AMLEnvironmentInformation extends EnvironmentInformation {
-        public amlClient?: AMLClient;
+    public amlClient?: AMLClient;
 }

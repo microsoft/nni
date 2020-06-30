@@ -17,8 +17,8 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computeTarget: ussc40rscl
-  nodeCount: 1
+  computeTarget: ${replace_to_your_computeTarget}
+  image: msranni/nni
 amlConfig:
   subscriptionId: ${replace_to_your_subscriptionId}
   resourceGroup: ${replace_to_your_resourceGroup}
