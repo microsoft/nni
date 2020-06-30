@@ -1,5 +1,11 @@
-Quantizer on NNI Compressor
-===
+# Supported Quantization Algorithms on NNI
+
+Index of supported quantization algorithms
+* [Naive Quantizer](#naive-quantizer)
+* [QAT Quantizer](#qat-quantizer)
+* [DoReFa Quantizer](#dorefa-quantizer)
+* [BNN Quantizer](#bnn-quantizer)
+
 ## Naive Quantizer
 
 We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
@@ -47,7 +53,8 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for QAT Quantizer
-common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+
+common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
 
 configuration needed by this algorithm :
 
@@ -57,13 +64,17 @@ disable quantization until model are run by certain number of steps, this allows
 state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
 ### note
+
 batch normalization folding is currently not supported.
+
 ***
 
 ## DoReFa Quantizer
+
 In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160), authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
 
 ### Usage
+
 To implement DoReFa Quantizer, you can add code below before your training code
 
 PyTorch code
@@ -81,12 +92,15 @@ quantizer.compress()
 You can view example for more information
 
 #### User configuration for DoReFa Quantizer
-common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+
+common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
 
 configuration needed by this algorithm :
 
+***
 
 ## BNN Quantizer
+
 In [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), 
 
 >We introduce a method to train Binarized Neural Networks (BNNs) - neural networks with binary weights and activations at run-time. At training-time the binary weights and activations are used for computing the parameters gradients. During the forward pass, BNNs drastically reduce memory size and accesses, and replace most arithmetic operations with bit-wise operations, which is expected to substantially improve power-efficiency.
@@ -118,11 +132,13 @@ model = quantizer.compress()
 You can view example [examples/model_compress/BNN_quantizer_cifar10.py]( https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
 
 #### User configuration for BNN Quantizer
-common configuration needed by compression algorithms can be found at : [Common configuration](./Overview.md#User-configuration-for-a-compression-algorithm)
+
+common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
 
 configuration needed by this algorithm :
 
 ### Experiment
+
 We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
 
 | Model         | Accuracy  | 

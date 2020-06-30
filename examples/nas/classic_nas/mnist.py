@@ -109,8 +109,7 @@ def main(args):
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    #data_dir = os.path.join(args['data_dir'], nni.get_trial_id())
-    data_dir = os.path.join(args['data_dir'], 'data')
+    data_dir = args['data_dir']
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(data_dir, train=True, download=True,

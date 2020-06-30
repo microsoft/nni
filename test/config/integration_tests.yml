@@ -49,8 +49,17 @@ testCases:
     maxTrialNum: 2
     trialConcurrency: 1
 
-- name: mnist-pytorch
+- name: mnist-pytorch-local
   configFile: test/config/examples/mnist-pytorch.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 --data_dir ../examples/trials/mnist-pytorch/data && nnictl create --config $configFile --debug
+  trainingService: local
+
+- name: mnist-pytorch-non-local
+  configFile: test/config/examples/mnist-pytorch.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: nnictl create --config $configFile --debug
+  trainingService: remote pai kubeflow frameworkcontroller dlts
 
 - name: mnist-annotation
   configFile: test/config/examples/mnist-annotation.yml
@@ -84,7 +93,7 @@ testCases:
   configFile: test/config/examples/classic-nas-pytorch.yml
   # remove search space file
   stopCommand: nnictl stop
-  onExitCommand: python3 -c 'import os; os.remove("config/examples/nni-nas-search-space.json")'
+  onExitCommand: python3 -c "import os; os.remove('config/examples/nni-nas-search-space.json')"
   trainingService: local
 
 #########################################################################
