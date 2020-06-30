@@ -35,17 +35,17 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 > 名称：**TPE**
 
-**Suggested scenario**
+**建议场景**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. [Detailed Description](./HyperoptTuner.md)
+TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况下都能得到较好的结果。 特别是在计算资源有限，只能运行少量 Trial 的情况。 大量的实验表明，TPE 的性能远远优于随机搜索。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-Note: We have optimized the parallelism of TPE for large-scale trial concurrency. For the principle of optimization or turn-on optimization, please refer to [TPE document](./HyperoptTuner.md).
+注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 [TPE 文档](HyperoptTuner.md)。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -59,15 +59,15 @@ tuner:
 
 <a name="Random"></a>
 
-### Random Search
+### Random Search（随机搜索）
 
 > 名称：**Random**
 
-**Suggested scenario**
+**建议场景**
 
-Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. [Detailed Description](./HyperoptTuner.md)
+随机搜索，可用于每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 如果要均衡的探索搜索空间，它也很有用。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -79,19 +79,19 @@ tuner:
 
 <a name="Anneal"></a>
 
-### Anneal
+### Anneal（退火算法）
 
 > 名称：**Anneal**
 
-**Suggested scenario**
+**建议场景**
 
-Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
+退火算法，用于每个 Trial 的时间不长，并且有足够的计算资源（与随机搜索基本相同）。 当搜索空间中的变量可以从某些先前的分布中采样时，它也很有用。 [详细说明](./HyperoptTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -105,21 +105,21 @@ tuner:
 
 <a name="Evolution"></a>
 
-### Naïve Evolution
+### Naïve Evolution（朴素进化）
 
 > 名称：**Evolution**
 
-**Suggested scenario**
+**建议场景**
 
-Its computational resource requirements are relatively high. Specifically, it requires a large initial population to avoid falling into a local optimum. If your trial is short or leverages assessor, this tuner is a good choice. It is also suggested when your trial code supports weight transfer; that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training process. [Detailed Description](./EvolutionTuner.md)
+其计算资源要求相对较高。 特别是，它需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或使用了 Assessor，就非常合适。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 * **population_size** (*int 类型 (需要大于 0), 可选项, 默认值为 20*) - 表示遗传 Tuner 中的初始种群（Trial 数量）。 建议 `population_size` 比 `concurrency` 取值更大，这样能充分利用算法（至少要等于 `concurrency`，否则 Tuner 在生成第一代参数的时候就会失败）。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -138,26 +138,26 @@ tuner:
 
 > 名称：**SMAC**
 
-**Please note that SMAC doesn't support running on Windows currently. For the specific reason, please refer to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).**
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[GitHub issue](https://github.com/automl/SMAC3/issues/483)。**
 
-**Installation**
+**安装**
 
-SMAC needs to be installed by following command before the first usage. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
+SMAC 在第一次使用前，必须用下面的命令先安装。 注意：SMAC 依赖于 `swig`，Ubuntu 下可通过 `apt` 命令来安装 `swig`。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner that can be tried in various scenarios and is suggested when computational resources are limited. It is optimized for discrete hyperparameters, thus, it's suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。 [详细说明](./SmacTuner.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **config_dedup** (*True 或 False, 可选, 默认为 False*) - 如果为 True，则 Tuner 不会生成重复的配置。 如果为 False，则配置可能会重复生成，但对于相对较大的搜索空间，此概率较小。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -171,13 +171,13 @@ tuner:
 
 <a name="Batch"></a>
 
-### Batch Tuner
+### Batch Tuner（批处理 Tuner）
 
 > 名称：BatchTuner
 
-**Suggested scenario**
+**建议场景**
 
-If the configurations you want to try have been decided beforehand, you can list them in search space file (using `choice`) and run them using batch tuner. [Detailed Description](./BatchTuner.md)
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。 [详细说明](./BatchTuner.md)
 
 **配置示例：**
 
@@ -189,7 +189,7 @@ tuner:
 
 <br />
 
-Note that the search space for BatchTuner should look like:
+注意，BatchTuner 的搜索空间如下所示：
 
 ```json
 {
@@ -206,21 +206,21 @@ Note that the search space for BatchTuner should look like:
 }
 ```
 
-The search space file should include the high-level key `combine_params`. The type of params in the search space must be `choice` and the `values` must include all the combined params values.
+搜索空间文件使用了高层的键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要的参数组合。
 
 <a name="GridSearch"></a>
 
-### Grid Search
+### Grid Search（遍历搜索）
 
 > 名称：**Grid Search**
 
-**Suggested scenario**
+**建议场景**
 
-Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `randint`。
 
-This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. [Detailed Description](./GridsearchTuner.md)
+当搜索空间较小时，建议这样做。 建议使用在可以穷尽整个搜索空间的情况下。 [详细说明](./GridsearchTuner.md)
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -236,17 +236,17 @@ tuner:
 
 > 名称：**Hyperband**
 
-**Suggested scenario**
+**建议场景**
 
-This is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. For example, when models that are more accurate early on in training are also more accurate later on. [Detailed Description](./HyperbandAdvisor.md)
+当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 例如，当训练初期更准确的模型在以后也更准确的情况下。 [详细说明](./HyperbandAdvisor.md)
 
-**classArgs Requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, 可选, 默认为 60*) - 分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
 * **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**Example Configuration:**
+**配置示例：**
 
 ```yaml
 # config.yml
@@ -266,13 +266,13 @@ advisor:
 
 > 名称：**NetworkMorphism**
 
-**Installation**
+**安装**
 
-NetworkMorphism requires [PyTorch](https://pytorch.org/get-started/locally) and [Keras](https://keras.io/#installation), so users should install them first. The corresponding requirements file is [here](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt).
+NetworkMorphism 需要先安装 [PyTorch](https://pytorch.org/get-started/locally) 和 [Keras](https://keras.io/#installation) 才能使用。 对应的 requirements 文件在[这里](https://github.com/microsoft/nni/blob/master/examples/trials/network_morphism/requirements.txt)。
 
 **建议场景**
 
-This is suggested when you want to apply deep learning methods to your task but you have no idea how to choose or design a network. You may modify this [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate, or optimizer. Currently, this tuner only supports the computer vision domain. [Detailed Description](./NetworkmorphismTuner.md)
+需要将深度学习方法应用到自己的任务上，但不清楚该如何选择或设计网络。 可修改[示例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 当前，此 Tuner 仅支持视觉领域。 [详细说明](./NetworkmorphismTuner.md)
 
 **classArgs 要求：**
 
@@ -304,11 +304,11 @@ tuner:
 
 > 名称：**MetisTuner**
 
-Note that the only acceptable types of search space types are `quniform`, `uniform`, `randint`, and numerical `choice`. Only numerical values are supported since the values will be used to evaluate the 'distance' between different points.
+此 Tuner 搜索空间仅接受 `quniform`，`uniform`，`randint` 和数值的 `choice` 类型。 因为数值会被用来评估点之间的距离，所以只支持数值。
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on subsequent trials. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) on the use of Metis. Users only need to send the final result, such as `accuracy`, to the tuner by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) on the use of Metis. Users only need to send the final result, such as `accuracy`, to the tuner by calling the NNI SDK. [Detailed Description](./MetisTuner.md)
 
 **classArgs Requirements:**
 
@@ -457,9 +457,9 @@ tuner:
 
 **Suggested scenario**
 
-Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [See details](./PBTTuner.md)
+Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. [查看详情](./PBTTuner.md)
 
-**classArgs requirements:**
+**classArgs 要求：**
 
 * **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **all_checkpoint_dir** (*str, 可选, 默认为 None*) - Trial 保存读取检查点的目录，如果不指定，其为 "~/nni/checkpoint/<exp-id>". 注意，如果 Experiment 不是本机模式，用户需要提供能被所有 Trial 所访问的共享存储。
@@ -467,7 +467,7 @@ Population Based Training (PBT) bridges and extends parallel search methods and 
 * **factors** (*tuple, 可选, 默认为 (1.2, 0.8)*) - 超参变动量的因子。
 * **fraction** (*float, 可选, 默认为 0.2*) - 选择的最低和最高 Trial 的比例。
 
-**Usage example**
+**示例**
 
 ```yaml
 # config.yml
@@ -477,7 +477,7 @@ tuner:
     optimize_mode: maximize
 ```
 
-Note that, to use this tuner, your trial code should be modified accordingly, please refer to [the document of PBTTuner](./PBTTuner.md) for details.
+注意，要使用此 Tuner，Trial 代码也需要相应的修改，参考 [PBTTuner 文档](./PBTTuner.md)了解详情。
 
 ## **参考和反馈**
 
