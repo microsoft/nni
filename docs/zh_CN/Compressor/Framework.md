@@ -1,14 +1,14 @@
-# Framework overview of model compression
+# 模型压缩框架概述
 
 ```eval_rst
 .. contents::
 ```
 
-Below picture shows the components overview of model compression framework.
+下图展示了模型压缩框架的组件概览。
 
 ![](../../img/compressor_framework.jpg)
 
-There are 3 major components/classes in NNI model compression framework: `Compressor`, `Pruner` and `Quantizer`. Let's look at them in detail one by one:
+NNI 模型压缩框架中主要有三个组件/类：`Compressor`, `Pruner` 和 `Quantizer`。 下面会逐个详细介绍：
 
 ## Compressor
 
