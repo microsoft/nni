@@ -72,7 +72,7 @@ nnictl create --config experiments/conv/N512C64HW27F192K5ST1PD2/config_opevo.yml
 
 ## 引用 OpEvo
 
-If you use OpEvo in your research, please consider citing the paper as follows:
+如果在研究中使用了 OpEvo，请考虑如下引用论文：
 ```
 @misc{gao2020opevo,
     title={OpEvo: An Evolutionary Method for Tensor Operator Optimization},
