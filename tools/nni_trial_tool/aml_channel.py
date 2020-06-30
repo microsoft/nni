@@ -31,7 +31,6 @@ class AMLChannel(BaseChannel):
         messages = []
         # receive message is string, to get consistent result, encode it here.
         message_dict = self.run.get_metrics()
-        print(message_dict)
         if 'nni_manager' not in message_dict:
             return []
         message_list = message_dict['nni_manager']

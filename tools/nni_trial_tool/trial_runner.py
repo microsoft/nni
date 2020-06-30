@@ -9,7 +9,6 @@ import re
 import sys
 import time
 import traceback
-import logging
 from datetime import datetime, timedelta
 
 import pkg_resources
@@ -207,7 +206,7 @@ if __name__ == '__main__':
     else:
         # node id is unique in the runner
         args.node_id = None
-    
+
     # init command channel
     command_channel = None
     if args.command_channel == "file":

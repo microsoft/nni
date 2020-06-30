@@ -3,10 +3,6 @@
 
 import ctypes
 import os
-<<<<<<< HEAD
-import logging
-=======
->>>>>>> 0b9d6ce6d1cf6515c5b553a61f78cd333bf4700f
 import shlex
 import tarfile
 import time

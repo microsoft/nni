@@ -6,18 +6,12 @@ from .constants import API_ROOT_URL, BASE_URL, STDOUT_API, NNI_TRIAL_JOB_ID, NNI
 
 def gen_send_stdout_url(ip, port):
     '''Generate send stdout url'''
-    if trial_id is None:
-        trial_id = NNI_TRIAL_JOB_ID
-    return '{0}:{1}{2}{3}/{4}/{5}'.format(BASE_URL.format(ip), port, API_ROOT_URL, STDOUT_API, NNI_EXP_ID, trial_id)
-
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(BASE_URL.format(ip), port, API_ROOT_URL, STDOUT_API, NNI_EXP_ID, NNI_TRIAL_JOB_ID)
 
 
 def gen_send_version_url(ip, port):
     '''Generate send error url'''
-    if trial_id is None:
-        trial_id = NNI_TRIAL_JOB_ID
-    return '{0}:{1}{2}{3}/{4}/{5}'.format(BASE_URL.format(ip), port, API_ROOT_URL, VERSION_API, NNI_EXP_ID, trial_id)
-
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(BASE_URL.format(ip), port, API_ROOT_URL, VERSION_API, NNI_EXP_ID, NNI_TRIAL_JOB_ID)
 
 
 def gen_parameter_meta_url(ip, port):

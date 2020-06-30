@@ -16,7 +16,6 @@ from logging import StreamHandler
 
 from queue import Queue
 
-from .constants import NNI_PLATFORM
 from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
 from .commands import CommandType
@@ -59,7 +58,6 @@ class NNIRestLogHanlder(StreamHandler):
     def emit(self, record):
         log_entry = {}
         log_entry['tag'] = self.tag
-        log_entry['trialId'] = self.trial_id
         log_entry['stdOutputType'] = self.std_output_type.name
         log_entry['msg'] = self.format(record)
 

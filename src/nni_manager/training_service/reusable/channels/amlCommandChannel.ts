@@ -34,7 +34,6 @@ class AMLRunnerConnection extends RunnerConnection {
 export class AMLCommandChannel extends CommandChannel {
     private stopping: boolean = false;
     private currentMessageIndex: number = -1;
-    private currentMetricIndex: number = -1;
     // make sure no concurrent issue when sending commands.
     private sendQueues: [EnvironmentInformation, string][] = [];
     private metricEmitter: EventEmitter | undefined;
@@ -50,7 +49,6 @@ export class AMLCommandChannel extends CommandChannel {
     public async config(_key: string, _value: any): Promise<void> {
         switch (_key) {
             case "MetricEmitter":
-                console.log('------init metric emitter---------')
                 this.metricEmitter = _value as EventEmitter;
                 break;
         }
@@ -90,8 +88,6 @@ export class AMLCommandChannel extends CommandChannel {
                     if (!amlClient) {
                         throw new Error('aml client not initialized!');
                     }
-                    console.log('--------sending message-------')
-                    console.log(message)
                     amlClient.sendCommand(message);
                 }
             }
@@ -142,25 +138,21 @@ export class AMLCommandChannel extends CommandChannel {
     }
 
     private handleTrialMessage(environment: EnvironmentInformation, message: string) {
-        console.log('---------handling message-------')
-        console.log(message)
         const commands = this.parseCommands(message);
         if (commands.length > 0) {
-            console.log(commands)
             const commandType = commands[0][0];
             if (commandType === STDOUT) {
-                this.handleTrialMetrics(message);
+                this.handleTrialMetrics(commands[0][1]);
             } else {
-                this.handleCommand(environment, commands[0][1]);
+                this.handleCommand(environment, message);
             }
         }
     }
 
-    private handleTrialMetrics(message: string): void {
-        let messageObj = JSON.parse(message);
-        let trialId = messageObj['trialId'];
-        let msg = messageObj['msg'];
-        let tag = messageObj['tag'];
+    private handleTrialMetrics(message: any): void {
+        let trialId = message['trialId'];
+        let msg = message['msg'];
+        let tag = message['tag'];
         if (tag === 'trial') {
             const metricsContent: any = msg.match(this.NNI_METRICS_PATTERN);
             if (metricsContent && metricsContent.groups) {

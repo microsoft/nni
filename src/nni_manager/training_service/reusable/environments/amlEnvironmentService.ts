@@ -128,7 +128,6 @@ export class AMLEnvironmentService extends EnvironmentService {
                     break;
                 case 'COMPLETED':
                     environment.status = 'SUCCEEDED';
-                    break;
                 case 'SUCCEEDED':
                     environment.status = 'SUCCEEDED';
                     break;
