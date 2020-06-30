@@ -9,7 +9,7 @@
 
 ## 配置环境
 
-此示例准备了 Dockerfile 作为 Experiment 的环境。 开始前，确保 Docker 守护进程已启动，GPU 加速驱动已正确安装。 进入示例文件夹 `examples/trials/systems/opevo` 并运行下列命令，从 Dockerfile 构建并实例化 Docker 映像。
+此示例准备了 Dockerfile 作为 Experiment 的环境。 开始前，确保 Docker 守护进程已启动，GPU 加速驱动已正确安装。 进入示例目录 `examples/trials/systems/opevo` 并运行下列命令，从 Dockerfile 构建并实例化 Docker 映像。
 ```bash
 # 如果使用 Nvidia GPU
 make cuda-env
@@ -19,9 +19,9 @@ make rocm-env
 
 ## 运行 Experiment
 
-Three representative kinds of tensor operators, **matrix multiplication**, **batched matrix multiplication** and **2D convolution**, are chosen from BERT and AlexNet, and tuned with NNI. The `Trial` code for all tensor operators is `/root/compiler_auto_tune_stable.py`, and `Search Space` files and `config` files for each tuning algorithm locate in `/root/experiments/`, which are categorized by tensor operators. Here `/root` refers to the root of the container.
+这里从 BERT 和 AlexNet 中选择了三种有代表性的张量算子：**矩阵乘法**、**批处理的矩阵乘法**，以及**二维卷积**，并使用 NNI 进行调优。 所有张量算子的 `Trial` 代码都是 `/root/compiler_auto_tune_stable.py`，每个调优算法的`搜索空间`和`配置`文件都在按张量算子分类的 `/root/experiments/` 目录中。 这里的 `/root` 表示容器中的 root 目录。
 
-For tuning the operators of matrix multiplication, please run below commands from `/root`:
+在 `/root` 中运行以下命令来调优矩阵乘法：
 ```bash
 # (N, K) x (K, M) 表示形状为 (N, K) 的矩阵乘以形状为 (K, M) 的矩阵
 
@@ -50,27 +50,27 @@ nnictl create --config experiments/mm/N512K1024M4096/config_gbfs.yml
 nnictl create --config experiments/mm/N512K1024M4096/config_na2c.yml
 ```
 
-For tuning the operators of batched matrix multiplication, please run below commands from `/root`:
+在 `/root` 中运行以下命令来调优批处理矩阵乘法：
 ```bash
-# batched matrix with batch size 960 and shape of matrix (128, 128) multiplies batched matrix with batch size 960 and shape of matrix (128, 64)
+# 批处理大小为 960，形状为 (128, 128) 的矩阵，乘以批处理大小为 960，形状为 (128, 64) 的矩阵
 nnictl create --config experiments/bmm/B960N128K128M64PNN/config_opevo.yml
-# batched matrix with batch size 960 and shape of matrix (128, 128) is transposed first and then multiplies batched matrix with batch size 960 and shape of matrix (128, 64)
+# 批处理大小为 960，形状为 (128, 128) 的矩阵，先转置，然后乘以批处理大小为 960，形状为 (128, 64) 的矩阵
 nnictl create --config experiments/bmm/B960N128K128M64PTN/config_opevo.yml
-# batched matrix with batch size 960 and shape of matrix (128, 64) is transposed first and then right multiplies batched matrix with batch size 960 and shape of matrix (128, 64).
+# 批处理大小为 960，形状为 (128, 128) 的矩阵，先转置，然后右乘批处理大小为 960，形状为 (128, 64) 的矩阵
 nnictl create --config experiments/bmm/B960N128K64M128PNT/config_opevo.yml
 ```
 
-For tuning the operators of 2D convolution, please run below commands from `/root`:
+在 `/root` 中运行以下命令来调优二维卷积：
 ```bash
-# image tensor of shape $(512, 3, 227, 227)$ convolves with kernel tensor of shape $(64, 3, 11, 11)$ with stride 4 and padding 0
+# 图片张量形状为 $(512, 3, 227, 227)$ 与形状为 $(64, 3, 11, 11)$ 的核进行卷积，stride 为 4、padding 为 0
 nnictl create --config experiments/conv/N512C3HW227F64K11ST4PD0/config_opevo.yml
-# image tensor of shape $(512, 64, 27, 27)$ convolves with kernel tensor of shape $(192, 64, 5, 5)$ with stride 1 and padding 2
+# 图片张量形状为 $(512, 64, 27, 27)$ 与形状为 $(192, 64, 5, 5)$ 的核进行卷积，stride 为 1、padding 为 2
 nnictl create --config experiments/conv/N512C64HW27F192K5ST1PD2/config_opevo.yml
 ```
 
-Please note that G-BFS and N-A2C are not eligible to tune the operators of batched matrix multiplication and 2D convolution, since there are unsupportable parameters in the search spaces of these operators.
+注意，G-BFS 和 N-A2C 算法不能用于调优批处理矩阵乘法和二维卷积，因为这些算子的搜索空间中有不支持的参数。
 
-## Citing OpEvo
+## 引用 OpEvo
 
 If you use OpEvo in your research, please consider citing the paper as follows:
 ```
