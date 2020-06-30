@@ -25,6 +25,7 @@ import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
+import { MountedStorageService } from './storages/mountedStorageService';
 
 
 /**
@@ -184,38 +185,36 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
 
+        this.log.info(`TrialDispatcher: copying code and settings.`);
+        let storageService: StorageService;
         if (environmentService.hasStorageService) {
-            this.log.info(`TrialDispatcher: copying code and settings.`);
-            const storageService = component.get<StorageService>(StorageService);
-            // Copy the compressed file to remoteDirectory and delete it
-            const codeDir = path.resolve(this.trialConfig.codeDir);
-            const envDir = storageService.joinPath("envs");
-            const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
-            storageService.rename(codeFileName, "nni-code.tar.gz");
-
-            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
-            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
-
-            const runnerSettings = storageService.joinPath(envDir, "settings.json");
-            await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
-
-            if (this.isDeveloping) {
-                let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
-                if (false === fs.existsSync(trialToolsPath)) {
-                    trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
-                }
-                await storageService.copyDirectory(trialToolsPath, envDir, true);
-            }
+            this.log.debug(`TrialDispatcher: use existing storage service.`);
+            storageService = component.get<StorageService>(StorageService);
         } else {
-            //write configuration to local folder, for AML
-            let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp", "envs");
-            await execMkdir(environmentLocalTempFolder);
-            const runnerSettingsPath = path.join(environmentLocalTempFolder, "settings.json");
-            this.runnerSettings.command = this.trialConfig.command;
-            await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
-            const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
-            await fs.promises.writeFile(installFilePath, CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
-            await tarAdd(path.join(environmentLocalTempFolder, 'nni-code.tar.gz'), this.trialConfig.codeDir);
+            this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
+            storageService = new MountedStorageService();
+            let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+            storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
+        }
+
+        // Copy the compressed file to remoteDirectory and delete it
+        const codeDir = path.resolve(this.trialConfig.codeDir);
+        const envDir = storageService.joinPath("envs");
+        const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
+        storageService.rename(codeFileName, "nni-code.tar.gz");
+
+        const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+        await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+
+        const runnerSettings = storageService.joinPath(envDir, "settings.json");
+        await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+
+        if (this.isDeveloping) {
+            let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
+            if (false === fs.existsSync(trialToolsPath)) {
+                trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
+            }
+            await storageService.copyDirectory(trialToolsPath, envDir, true);
         }
 
         this.log.info(`TrialDispatcher: run loop started.`);
@@ -454,13 +453,7 @@ class TrialDispatcher implements TrainingService {
             environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
         }
 
-        if (environmentService.hasStorageService) {
-            const storageService = component.get<StorageService>(StorageService);
-            environment.workingFolder = storageService.joinPath("envs", envId);
-            await storageService.createDirectory(environment.workingFolder);
-        } else {
-            environment.command = `mkdir envs/${envId} && cd envs/${envId} && ${environment.command}`;
-        }
+        environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
 
         await environmentService.startEnvironment(environment);
         this.environments.set(environment.id, environment);
