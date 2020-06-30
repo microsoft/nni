@@ -121,7 +121,7 @@ export class AMLCommandChannel extends CommandChannel {
         }
     }
 
-    private handleTrialMessage(environment: EnvironmentInformation, message: string) {
+    private handleTrialMessage(environment: EnvironmentInformation, message: string): void {
         const commands = this.parseCommands(message);
         if (commands.length > 0) {
             const commandType = commands[0][0];
