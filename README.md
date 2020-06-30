@@ -90,6 +90,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
            <li><a href="docs/en_US/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
            <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
+           <li><a href="docs/en_US/TrialExample/OpEvoExamples.md">Kernel Tunning</li></a>
               <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br/>
           </ul>
         </ul>
@@ -170,7 +171,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">FrameworkController on K8S (AKS etc.)</a></li>
             </ul>
-            <ul><li><a href="docs/en_US/TrainingService/DLTSMode.md">DLWorkspace (aka. DLTS)</a></li>        
+            <ul><li><a href="docs/en_US/TrainingService/DLTSMode.md">DLWorkspace (aka. DLTS)</a></li>
       </ul>
       </td>
     </tr>
