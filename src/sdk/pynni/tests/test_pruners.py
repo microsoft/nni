@@ -9,7 +9,7 @@ import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
-    TaylorFOWeightFilterPruner
+    TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
@@ -113,6 +113,47 @@ prune_config = {
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
+    },
+    'netadapt': {
+        'pruner_class': NetAdaptPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d']
+        }],
+        'short_term_fine_tuner': lambda model:model, 
+        'evaluator':lambda model: 0.9,
+        'validators': []
+    },
+    'simulatedannealing': {
+        'pruner_class': SimulatedAnnealingPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d']
+        }],
+        'evaluator':lambda model: 0.9,
+        'validators': []
+    },
+    'admm': {
+        'pruner_class': ADMMPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'trainer': lambda model, optimizer, criterion, epoch, callback : model, 
+        'validators': [
+            lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
+        ]
+    },
+    'autocompress': {
+        'pruner_class': AutoCompressPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'evaluator': lambda model: 0.9,
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': []
     }
 }
 
@@ -127,25 +168,36 @@ class Model(nn.Module):
     def forward(self, x):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
-def pruners_test(pruner_names=['agp', 'level', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz'], bias=True):
+def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt', 'simulatedannealing', 'admm', 'autocompress'], bias=True):
     for pruner_name in pruner_names:
-        model = Model(bias=bias)
+        print('testing {}...'.format(pruner_name))
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = Model(bias=bias).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config[pruner_name]['config_list']
 
-        x = torch.randn(2, 1, 28, 28)
-        y = torch.tensor([0, 1]).long()
+        x = torch.randn(2, 1, 28, 28).to(device)
+        y = torch.tensor([0, 1]).long().to(device)
         out = model(x)
         loss = F.cross_entropy(out, y)
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
+        if pruner_name == 'netadapt':
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, short_term_fine_tuner=prune_config[pruner_name]['short_term_fine_tuner'], evaluator=prune_config[pruner_name]['evaluator'])
+        elif pruner_name == 'simulatedannealing':
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, evaluator=prune_config[pruner_name]['evaluator'])
+        elif pruner_name == 'admm':
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
+        elif pruner_name == 'autocompress':
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
+        else:
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
         pruner.compress()
 
-        x = torch.randn(2, 1, 28, 28)
-        y = torch.tensor([0, 1]).long()
+        x = torch.randn(2, 1, 28, 28).to(device)
+        y = torch.tensor([0, 1]).long().to(device)
         out = model(x)
         loss = F.cross_entropy(out, y)
         optimizer.zero_grad()
@@ -157,14 +209,16 @@ def pruners_test(pruner_names=['agp', 'level', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             # when iteration >= statistics_batch_num (default 1)
             optimizer.step()
 
-        pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=(2,1,28,28))
+        pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=(2,1,28,28), device=device)
 
         for v in prune_config[pruner_name]['validators']:
             v(model)
 
-    os.remove('./model_tmp.pth')
-    os.remove('./mask_tmp.pth')
-    os.remove('./onnx_tmp.pth')
+    
+    filePaths = ['./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', './search_history.csv', './search_result.json']
+    for f in filePaths:
+        if os.path.exists(f):
+            os.remove(f)
 
 def test_agp(pruning_algorithm):
         model = Model()

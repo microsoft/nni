@@ -37,6 +37,10 @@ Pruning algorithms compress the original network by removing redundant weights o
 | [ActivationMeanRankFilterPruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#activationmeanrankfilterpruner) | Pruning filters based on the metric that calculates the smallest mean value of output activations |
 | [Slim Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#slim-pruner) | Pruning channels in convolution layers by pruning scaling factors in BN layers(Learning Efficient Convolutional Networks through Network Slimming) [Reference Paper](https://arxiv.org/abs/1708.06519) |
 | [TaylorFO Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#taylorfoweightfilterpruner) | Pruning filters based on the first order taylor expansion on weights(Importance Estimation for Neural Network Pruning) [Reference Paper](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) |
+| [ADMM Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#admm-pruner) | Pruning based on ADMM optimization technique [Reference Paper](https://arxiv.org/abs/1804.03294) |
+| [NetAdapt Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#netadapt-pruner) | Automatically simplify a pretrained network to meet the resource budget by iterative pruning  [Reference Paper](https://arxiv.org/abs/1804.03230) |
+| [SimulatedAnnealing Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#simulatedannealing-pruner) | Automatic pruning with a guided heuristic search method, Simulated Annealing algorithm [Reference Paper](https://arxiv.org/abs/1907.03141) |
+| [AutoCompress Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#autocompress-pruner) | Automatic pruning by iteratively call SimulatedAnnealing Pruner and ADMM Pruner [Reference Paper](https://arxiv.org/abs/1907.03141) |
 
 
 ### Quantization Algorithms
