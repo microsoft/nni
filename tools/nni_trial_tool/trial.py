@@ -3,7 +3,10 @@
 
 import ctypes
 import os
+<<<<<<< HEAD
 import logging
+=======
+>>>>>>> 0b9d6ce6d1cf6515c5b553a61f78cd333bf4700f
 import shlex
 import tarfile
 import time
@@ -43,9 +46,10 @@ class Trial:
     def run(self):
         # redirect trial's stdout and stderr to syslog
         self.trial_syslogger_stdout = RemoteLogger(self.args.nnimanager_ip, self.args.nnimanager_port, 'trial', StdOutputType.Stdout,
-                                                   self.args.log_collection, self.id, self.command_channel)
+                                                   self.args.log_collection, self.id, self.args.command_channel)
 
         nni_log(LogType.Info, "%s: start to run trial" % self.name)
+
         trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
         self.trial_output_dir = os.path.join(trial_working_dir, trial_output_path_name)
         trial_code_dir = os.path.join(trial_working_dir, "code")

@@ -65,13 +65,11 @@ class NNIRestLogHanlder(StreamHandler):
 
         try:
             if self.channel is None:
-                rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
+                rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
             else:
                 if self.trial_id is not None:
                     log_entry["trial"] = self.trial_id
-                # only send metrics information
-                if self.tag == 'trial':
-                    self.channel.send(CommandType.StdOut, log_entry)
+                self.channel.send(CommandType.StdOut, log_entry)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()

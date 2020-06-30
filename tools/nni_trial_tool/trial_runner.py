@@ -33,7 +33,7 @@ def main_loop(args):
         command_channel = args.command_channel
         # command loop
         while True:
-            command_type, command_data = args.command_channel.receive()
+            command_type, command_data = command_channel.receive()
             if command_type == CommandType.NewTrialJob:
                 trial_id = command_data["trialId"]
                 if trial_id in trials.keys():
@@ -73,7 +73,7 @@ def main_loop(args):
             if args.enable_gpu_collect and (datetime.now() - gpu_refresh_last_time).seconds > gpu_refressh_interval_seconds:
                 # collect gpu information
                 gpu_info = collect_gpu_usage(args.node_id)
-                args.command_channel.send(CommandType.ReportGpuInfo, gpu_info)
+                command_channel.send(CommandType.ReportGpuInfo, gpu_info)
                 gpu_refresh_last_time = datetime.now()
             time.sleep(0.5)
     except Exception as ex:
@@ -88,10 +88,10 @@ def main_loop(args):
             del trials[trial.id]
         # wait to send commands
         for _ in range(10):
-            if args.command_channel.sent():
+            if command_channel.sent():
                 break
             time.sleep(1)
-        args.command_channel.close()
+        command_channel.close()
 
 
 def trial_runner_help_info(*args):
