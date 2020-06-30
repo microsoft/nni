@@ -149,22 +149,22 @@ pruner.compress()
 
 ### 更新优化状态的 API
 
-Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: `pruner.update_epoch(epoch)` and `pruner.step()`.
+一些压缩算法使用 Epoch 来控制压缩过程（如，[AGP](https://nni.readthedocs.io/zh/latest/Compressor/Pruner.html#agp-pruner)），一些算法需要在每个批处理步骤后执行一些逻辑。 因此，NNI 提供了两个 API：`pruner.update_epoch(epoch)` 和 `pruner.step()`。
 
-`update_epoch` should be invoked in every epoch, while `step` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
+`update_epoch` 会在每个 Epoch 时调用，而 `step` 会在每次批处理后调用。 注意，大多数算法不需要调用这两个 API。 详细情况可参考具体算法文档。 对于不需要这两个 API 的算法，可以调用它们，但不会有实际作用。
 
 ### 导出压缩模型
 
-You can easily export the compressed model using the following API if you are pruning your model, `state_dict` of the sparse model weights will be stored in `model.pth`, which can be loaded by `torch.load('model.pth')`. In this exported `model.pth`, the masked weights are zero.
+使用下列 API 可轻松将压缩后的模型导出，稀疏模型的 `state_dict` 会保存在 `model.pth` 文件中，可通过 `torch.load('model.pth')` 加载。 在导出的 `model.pth` 中，被掩码遮盖的权重为零。
 
 ```
 pruner.export_model(model_path='model.pth')
 ```
 
-`mask_dict` and pruned model in `onnx` format(`input_shape` need to be specified) can also be exported like this:
+`mask_dict` 和 `onnx` 格式的剪枝模型（需要指定 `input_shape`）可这样导出：
 
 ```python
 pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
 ```
 
-If you want to really speed up the compressed model, please refer to [NNI model speedup](./ModelSpeedup.md) for details.
+如果需要实际加速压缩后的模型，参考 [NNI 模型加速](./ModelSpeedup.md)。
