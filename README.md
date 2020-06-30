@@ -144,6 +144,10 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
               <li><a href="docs/en_US/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
               <li><a href="docs/en_US/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#netadapt-pruner">NetAdapt Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#admm-pruner">ADMM Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#autocompress-pruner">AutoCompress Pruner</a></li>
             </ul>
             <b>Quantization</b>
             <ul>

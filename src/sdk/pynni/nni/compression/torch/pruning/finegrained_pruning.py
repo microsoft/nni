@@ -29,4 +29,3 @@ class LevelPrunerMasker(WeightMasker):
         mask_weight = torch.gt(w_abs, threshold).type_as(weight)
         mask = {'weight_mask': mask_weight}
         return mask
-
