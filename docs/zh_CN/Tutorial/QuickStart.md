@@ -36,9 +36,9 @@ NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进
 
 ```python
 def run_trial(params):
-    # Input data
+    # 输入数据
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # Build network
+    # 构建网络
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
                                  channel_2_num=params['channel_2_num'],
                                  conv_size=params['conv_size'],
@@ -49,9 +49,9 @@ def run_trial(params):
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # Train network
+        # 训练网络
         mnist_network.train(sess, mnist)
-        # Evaluate network
+        # 评估网络
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -68,30 +68,30 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
+完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
-The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
+上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
-NNI is born to help the user do tuning jobs; the NNI working process is presented below:
+NNI 用来帮助超参调优。它的流程如下：
 
 ```text
-input: search space, trial code, config file
-output: one optimal hyperparameter configuration
+输入: 搜索空间, Trial 代码, 配置文件
+输出: 一组最优的参数配置
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
-2:      hyperparameter = chose a set of parameter from search space
+2:      hyperparameter = 从搜索空间选择一组参数
 3:      final result = run_trial_and_evaluate(hyperparameter)
-4:      report final result to NNI
-5:      If reach the upper limit time,
-6:          Stop the experiment
-7: return hyperparameter value with best final result
+4:      返回最终结果给 NNI
+5:      If 时间达到上限,
+6:          停止实验
+7: 返回最好的实验结果
 ```
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
+如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
 
-### Three steps to start an experiment
+### 启动 Experiment 的三个步骤
 
-**Step 1**: Write a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
+**第一步**：编写 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -105,9 +105,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Example: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*示例：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
-**Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
+**第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
 ```diff
 + import nni
@@ -132,9 +132,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Example: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*示例：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
-**Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
+**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`。 它还提供其他信息，例如调整算法，最大 Trial 运行次数和最大持续时间的参数。
 
 ```yaml
 authorName: default
@@ -143,12 +143,12 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: local
-# The path to Search Space
+# 搜索空间文件
 searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
-# The path and the running command of trial
+# 运行的命令，以及 Trial 代码的路径
 trial:
   command: python3 mnist.py
   codeDir: .
@@ -156,16 +156,16 @@ trial:
 ```
 
 ```eval_rst
-.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`_.
+.. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>` ，了解更多如何编写此文件的详细信息 _。
 ```
 
-*Example: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
+*示例: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
 
-All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
+上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
 
-#### Linux and macOS
+#### Linux 和 macOS
 
-Run the **config.yml** file from your command line to start an MNIST experiment.
+从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
 
 ```bash
 nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
@@ -173,7 +173,7 @@ nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 
 #### Windows
 
-Run the **config_windows.yml** file from your command line to start an MNIST experiment.
+从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
 ```bash
 nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
