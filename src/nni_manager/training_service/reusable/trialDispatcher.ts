@@ -18,8 +18,9 @@ import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir } from '../common/util';
+import { validateCodeDir, execMkdir, execCopydir, tarAdd } from '../common/util';
 import { WebCommandChannel } from './channels/webCommandChannel';
+import { AMLCommandChannel } from './channels/amlCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
 import { StorageService } from './storageService';
@@ -40,6 +41,7 @@ class TrialDispatcher implements TrainingService {
 
     private readonly metricsEmitter: EventEmitter;
     private readonly experimentId: string;
+    private readonly experimentRootDir: string;
 
     private enableVersionCheck: boolean = true;
 
@@ -58,6 +60,8 @@ class TrialDispatcher implements TrainingService {
         this.environments = new Map<string, EnvironmentInformation>();
         this.metricsEmitter = new EventEmitter();
         this.experimentId = getExperimentId();
+        this.experimentRootDir = getExperimentRootDir();
+
         this.runnerSettings = new RunnerSettings();
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
@@ -158,7 +162,7 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
 
         this.commandEmitter = new EventEmitter();
-        this.commandChannel = new WebCommandChannel(this.commandEmitter);
+        this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
 
         // TODO it's a hard code of web channel, it needs to be improved.
         this.runnerSettings.nniManagerPort = getBasePort() + 1;
@@ -202,6 +206,16 @@ class TrialDispatcher implements TrainingService {
                 }
                 await storageService.copyDirectory(trialToolsPath, envDir, true);
             }
+        } else {
+            //write configuration to local folder, for AML
+            let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp", "envs");
+            await execMkdir(environmentLocalTempFolder);
+            const runnerSettingsPath = path.join(environmentLocalTempFolder, "settings.json");
+            this.runnerSettings.command = this.trialConfig.command;
+            await fs.promises.writeFile(runnerSettingsPath, JSON.stringify(this.runnerSettings), { encoding: 'utf8' });
+            const installFilePath = path.join(environmentLocalTempFolder, "install_nni.sh");
+            await fs.promises.writeFile(installFilePath, CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
+            await tarAdd(path.join(environmentLocalTempFolder, 'nni-code.tar.gz'), this.trialConfig.codeDir);
         }
 
         this.log.info(`TrialDispatcher: run loop started.`);
@@ -396,7 +410,6 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
             }
-
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
@@ -407,7 +420,6 @@ class TrialDispatcher implements TrainingService {
                     }
                 }
             });
-
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
                 const trial = waitingTrials.shift();
                 const idleEnvironment = idleEnvironments.shift();
@@ -446,10 +458,12 @@ class TrialDispatcher implements TrainingService {
             const storageService = component.get<StorageService>(StorageService);
             environment.workingFolder = storageService.joinPath("envs", envId);
             await storageService.createDirectory(environment.workingFolder);
+        } else {
+            environment.command = `mkdir envs/${envId} && cd envs/${envId} && ${environment.command}`;
         }
 
-        this.environments.set(environment.id, environment);
         await environmentService.startEnvironment(environment);
+        this.environments.set(environment.id, environment);
 
         if (environment.status === "FAILED") {
             environment.isIdle = false;
