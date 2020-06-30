@@ -1,6 +1,6 @@
-# Supported Quantization Algorithms on NNI
+# 支持的量化算法
 
-Index of supported quantization algorithms
+支持的量化算法列表
 * [Naive Quantizer](#naive-quantizer)
 * [QAT Quantizer](#qat-quantizer)
 * [DoReFa Quantizer](#dorefa-quantizer)
@@ -8,10 +8,10 @@ Index of supported quantization algorithms
 
 ## Naive Quantizer
 
-We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it to test quantize algorithm without any configure.
+Naive Quantizer 将 Quantizer 权重默认设置为 8 位，可用它来测试量化算法。
 
 ### 用法
-pytorch
+PyTorch
 ```python 
 model = nni.compression.torch.NaiveQuantizer(model).compress()
 ```
