@@ -63,7 +63,7 @@ class NNIRestLogHanlder(StreamHandler):
 
         try:
             if self.channel is None:
-                rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
+                rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
             else:
                 if self.trial_id is not None:
                     log_entry["trial"] = self.trial_id

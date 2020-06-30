@@ -19,9 +19,9 @@ import { getBasePort } from './experimentStartupInfo';
 export abstract class RestServer {
     private startTask!: Deferred<void>;
     private stopTask!: Deferred<void>;
+    private server!: http.Server;
     
     /** The fields can be inherited by subclass */
-    protected server!: http.Server;
     protected hostName: string = '0.0.0.0';
     protected port?: number;
     protected app: express.Application = express();
