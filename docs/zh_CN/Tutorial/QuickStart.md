@@ -180,14 +180,14 @@ nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 ```eval_rst
-.. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
+.. Note:: 如果使用 Windows，则需要在 config.yml 文件中，将 ``python3`` 改为 ``python``，或者使用 config_windows.yml 来开始 Experiment。
 ```
 
 ```eval_rst
-.. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <Nnictl>` for more usage of ``nnictl``.
+.. Note:: ``nnictl`` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 点击 :doc:`这里 <Nnictl>` 查看 ``nnictl`` 的更多用法。
 ```
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
+在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
 ```text
 INFO: Starting restful server...
@@ -216,68 +216,68 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-If you prepared `trial`, `search space`, and `config` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the requirements you set. You can clearly see its progress through the NNI WebUI.
+如果根据上述步骤准备好了相应 `Trial`, `搜索空间`和`配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
 
 ## Web 界面
 
-After you start your experiment in NNI successfully, you can find a message in the command-line interface that tells you the `Web UI url` like this:
+启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
 
 ```text
-The Web UI urls are: [Your IP]:8080
+Web 地址为：[IP 地址]:8080
 ```
 
-Open the `Web UI url` (Here it's: `[Your IP]:8080`) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the [FAQ](FAQ.md).
+在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考[常见问题](FAQ.md)。
 
-### View summary page
+### 查看概要页面
 
-Click the "Overview" tab.
+点击 "Overview" 标签。
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
+Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来下载信息和参数。 可以在 Experiment 运行时随时下载结果，也可以等到执行结束。
 
 ![](../../img/QuickStart1.png)
 
-The top 10 trials will be listed on the Overview page. You can browse all the trials on the "Trials Detail" page.
+前 10 个 Trial 将列在 Overview 页上。 可以在 "Trials Detail" 页面上浏览所有 Trial。
 
 ![](../../img/QuickStart2.png)
 
-### View trials detail page
+### 查看 Trial 详情页面
 
-Click the "Default Metric" tab to see the point graph of all trials. Hover to see specific default metrics and search space messages.
+点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
 ![](../../img/QuickStart3.png)
 
-Click the "Hyper Parameter" tab to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
-* You can select the percentage to see the top trials.
-* Choose two axis to swap their positions.
+* 可选择百分比查看最好的 Trial。
+* 选择两个轴来交换位置。
 
 ![](../../img/QuickStart4.png)
 
-Click the "Trial Duration" tab to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](../../img/QuickStart5.png)
 
-Below is the status of all trials. Specifically:
+下面是所有 Trial 的状态。 包括：
 
-* Trial detail: trial's id, duration, start time, end time, status, accuracy, and search space file.
-* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
-* Kill: you can kill a job that has the `Running` status.
-* Support: Used to search for a specific trial.
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
+* 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。
+* Kill: 可结束在 `Running` 状态的任务。
+* Support: 用于搜索某个指定的 Trial。
 
 ![](../../img/QuickStart6.png)
 
-* Intermediate Result Graph
+* 中间结果图
 
 ![](../../img/QuickStart7.png)
 
 ## 相关主题
 
-* [Try different Tuners](../Tuner/BuiltinTuner.md)
-* [Try different Assessors](../Assessor/BuiltinAssessor.md)
-* [How to use command line tool nnictl](Nnictl.md)
-* [How to write a trial](../TrialExample/Trials.md)
-* [How to run an experiment on local (with multiple GPUs)?](../TrainingService/LocalMode.md)
-* [How to run an experiment on multiple machines?](../TrainingService/RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [尝试不同的 Tuner](../Tuner/BuiltinTuner.md)
+* [尝试不同的 Assessor](../Assessor/BuiltinAssessor.md)
+* [使用命令行工具 nnictl](Nnictl.md)
+* [如何实现 Trial 代码](../TrialExample/Trials.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](../TrainingService/LocalMode.md)
+* [如何在多机上运行 Experiment？](../TrainingService/RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](../TrainingService/PaiMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](../TrainingService/KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](../TrainingService/FrameworkControllerMode.md)
