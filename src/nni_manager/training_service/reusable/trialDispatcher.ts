@@ -165,7 +165,7 @@ class TrialDispatcher implements TrainingService {
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
         // for AML channel, other channels can ignore this.
-        this.commandChannel.config("MetricEmitter", this.metricsEmitter);
+        await this.commandChannel.config("MetricEmitter", this.metricsEmitter);
 
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
@@ -173,7 +173,7 @@ class TrialDispatcher implements TrainingService {
                 this.log.error(`TrialDispatcher: error on handle env ${command.environment.id} command: ${command.command}, data: ${command.data}, error: ${err}`);
             })
         });
-        this.commandChannel.start();
+        await this.commandChannel.start();
         this.log.info(`TrialDispatcher: started channel: ${this.commandChannel.constructor.name}`);
 
         if (this.trialConfig === undefined) {
@@ -274,7 +274,7 @@ class TrialDispatcher implements TrainingService {
         }
 
         this.commandEmitter.off("command", this.handleCommand);
-        this.commandChannel.stop();
+        await this.commandChannel.stop();
     }
 
     private async environmentMaintenanceLoop(): Promise<void> {
