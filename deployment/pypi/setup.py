@@ -64,7 +64,8 @@ setuptools.setup(
         'coverage',
         'colorama',
         'scikit-learn>=0.20,<0.22',
-        'pkginfo'
+        'pkginfo',
+        'websockets'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',

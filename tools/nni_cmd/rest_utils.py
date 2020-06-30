@@ -51,7 +51,7 @@ def rest_delete(url, timeout, show_error=False):
 
 def check_rest_server(rest_port):
     '''Check if restful server is ready'''
-    retry_count = 5
+    retry_count = 20
     for _ in range(retry_count):
         response = rest_get(check_status_url(rest_port), REST_TIME_OUT)
         if response:
@@ -60,7 +60,7 @@ def check_rest_server(rest_port):
             else:
                 return False, response
         else:
-            time.sleep(3)
+            time.sleep(1)
     return  False, response
 
 def check_rest_server_quick(rest_port):

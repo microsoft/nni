@@ -29,7 +29,8 @@
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.4",
     "typescript-string-operations": "^1.3.1",
-    "webhdfs": "^1.2.0"
+    "webhdfs": "^1.2.0",
+    "ws": "^7.3.0"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",
@@ -46,6 +47,7 @@
     "@types/stream-buffers": "^3.0.2",
     "@types/tar": "^4.0.3",
     "@types/tmp": "^0.0.33",
+    "@types/ws": "^7.2.5",
     "@typescript-eslint/eslint-plugin": "^2.10.0",
     "@typescript-eslint/parser": "^2.10.0",
     "chai": "^4.1.2",
