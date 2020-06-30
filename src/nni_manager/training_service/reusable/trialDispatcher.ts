@@ -459,7 +459,7 @@ class TrialDispatcher implements TrainingService {
             environment.workingFolder = storageService.joinPath("envs", envId);
             await storageService.createDirectory(environment.workingFolder);
         } else {
-            environment.command = `mkdir envs/${envId} && cd envs/${envId} && sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
+            environment.command = `mkdir envs/${envId} && cd envs/${envId} && ${environment.command}`;
         }
 
         await environmentService.startEnvironment(environment);
