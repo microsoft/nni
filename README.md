@@ -29,7 +29,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **NNI capabilities in a glance**
 
-NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in stat-of-the-art AutoML algorithms and out of box support for popular training platforms.
+NNI provides CommandLine Tool as well as an user friendly WebUI to manage training experiments. With the extensible API, you can customize your own AutoML algorithms and training services. To make it easy for new users, NNI also provides a set of build-in state-of-the-art AutoML algorithms and out of box support for popular training platforms.
 
 Within the following table, we summarized the current NNI capabilities, we are gradually adding new capabilities and we'd love to have your contribution.
 
@@ -90,6 +90,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
            <li><a href="docs/en_US/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/en_US/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
            <li><a href="docs/en_US/TrialExample/EfficientNet.md">EfficientNet</a></li>
+           <li><a href="docs/en_US/TrialExample/OpEvoExamples.md">Kernel Tunning</li></a>
               <a href="docs/en_US/SupportedFramework_Library.md">More...</a><br/>
           </ul>
         </ul>
@@ -170,7 +171,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">FrameworkController on K8S (AKS etc.)</a></li>
             </ul>
-            <ul><li><a href="docs/en_US/TrainingService/DLTSMode.md">DLWorkspace (aka. DLTS)</a></li>        
+            <ul><li><a href="docs/en_US/TrainingService/DLTSMode.md">DLWorkspace (aka. DLTS)</a></li>
       </ul>
       </td>
     </tr>
@@ -197,7 +198,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/TrainingService/SupportTrainingService.md">Support TrainingService</li>
+        <li><a href="docs/en_US/TrainingService/Overview.md">Support TrainingService</li>
         <li><a href="docs/en_US/TrainingService/HowToImplementTrainingService.md">Implement TrainingService</a></li>
       </ul>
       </td>

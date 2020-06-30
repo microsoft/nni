@@ -11,5 +11,6 @@ Examples
     EvolutionSQuAD<./TrialExample/SquadEvolutionExamples>
     GBDT<./TrialExample/GbdtExample>
     RocksDB <./TrialExample/RocksdbExamples>
+    OpEvo <./TrialExample/OpEvoExamples>
     KDExample <./TrialExample/KDExample>
     EfficientNet <./TrialExample/EfficientNet>

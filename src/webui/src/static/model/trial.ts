@@ -160,6 +160,11 @@ class Trial implements TableObj {
         return undefined;
     }
 
+    public finalKeys(): string[] {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return Object.keys(this.acc!);
+    }
+
     /* table obj end */
 
     public initialized(): boolean {
