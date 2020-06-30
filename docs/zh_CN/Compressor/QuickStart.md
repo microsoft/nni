@@ -59,7 +59,7 @@ apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 
 将压缩应用到模型的示例代码如下：
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import LevelPruner
@@ -68,7 +68,7 @@ pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
-Tensorflow code
+TensorFlow 代码
 
 ```python
 from nni.compression.tensorflow import LevelPruner
@@ -78,29 +78,29 @@ pruner.compress()
 ```
 
 
-You can use other compression algorithms in the package of `nni.compression`. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under `nni.compression.torch` and `nni.compression.tensorflow` respectively. You can refer to [Pruner](./Pruner.md) and [Quantizer](./Quantizer.md) for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to [KDExample](../TrialExample/KDExample.md)
+可使用 `nni.compression` 中的其它压缩算法。 此算法分别在 `nni.compression.torch` 和 `nni.compression.tensorflow` 中实现，支持 PyTorch 和 TensorFlow（部分支持）。 参考 [Pruner](./Pruner.md) 和 [Quantizer](./Quantizer.md) 进一步了解支持的算法。 此外，如果要使用知识蒸馏算法，可参考 [KD 示例](../TrialExample/KDExample.md)
 
-A compression algorithm is first instantiated with a `config_list` passed in. The specification of this `config_list` will be described later.
+压缩算法首先通过传入 `config_list` 来实例化。 `config_list` 会稍后介绍。
 
-The function call `pruner.compress()` modifies user defined model (in Tensorflow the model can be obtained with `tf.get_default_graph()`, while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
+函数调用 `pruner.compress()` 来修改用户定义的模型（在 Tensorflow 中，通过 `tf.get_default_graph()` 来获得模型，而 PyTorch 中 model 是定义的模型类），并修改模型来插入 mask。 然后运行模型时，这些掩码即会生效。 掩码可在运行时通过算法来调整。
 
-*Note that, `pruner.compress` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after `pruner.compress`.*
+*注意，`pruner.compress` 只会在模型权重上直接增加掩码，不包括调优的逻辑。 如果要想调优压缩后的模型，需要在 `pruner.compress` 后增加调优的逻辑。*
 
 ### `config_list` 说明
 
-Users can specify the configuration (i.e., `config_list`) for a compression algorithm. For example,when compressing a model, users may want to specify the sparsity ratio, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object.
+用户可为压缩算法指定配置 (即, `config_list`)。 例如，压缩模型时，用户可能希望指定稀疏率，为不同类型的操作指定不同的稀疏比例，排除某些类型的操作，或仅压缩某类操作。 配置规范可用于表达此类需求。 可将其视为一个 Python 的 `list` 对象，其中每个元素都是一个 `dict` 对象。
 
-The `dict`s in the `list` are applied one by one, that is, the configurations in latter `dict` will overwrite the configurations in former ones on the operations that are within the scope of both of them.
+`list` 中的 `dict` 会依次被应用，也就是说，如果一个操作出现在两个配置里，后面的 `dict` 会覆盖前面的配置。
 
-There are different keys in a `dict`. Some of them are common keys supported by all the compression algorithms:
+`dict` 中有不同的键值。 以下是所有压缩算法都支持的：
 
-* __op_types__: This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
-* __op_names__: This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
-* __exclude__: Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
+* __op_types__：指定要压缩的操作类型。 'default' 表示使用算法的默认设置。
+* __op_names__：指定需要压缩的操作的名称。 如果没有设置此字段，操作符不会通过名称筛选。
+* __exclude__：默认为 False。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。
 
-Some other keys are often specific to a certain algorithms, users can refer to [pruning algorithms](./Pruner.md) and [quantization algorithms](./Quantizer.md) for the keys allowed by each algorithm.
+其它算法的键值，可参考[剪枝算法](./Pruner.md)和[量化算法](./Quantizer.md)，查看每个算法的键值。
 
-A simple example of configuration is shown below:
+配置的简单示例如下：
 
 ```python
 [
@@ -119,19 +119,19 @@ A simple example of configuration is shown below:
 ]
 ```
 
-It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and do not compress `op_name3`.
+其表示压缩操作的默认稀疏度为 0.8，但`op_name1` 和 `op_name2` 会使用 0.6，且不压缩 `op_name3`。
 
 #### 其它量化算法字段
 
-**If you use quantization algorithms, you need to specify more keys. If you use pruning algorithms, you can safely skip these keys**
+**如果使用量化算法，则需要设置更多键值。 如果使用剪枝算法，则可以忽略这些键值**
 
-* __quant_types__ : list of string.
+* __quant_types__ : 字符串列表。
 
-Type of quantization you want to apply, currently support 'weight', 'input', 'output'. 'weight' means applying quantization operation to the weight parameter of modules. 'input' means applying quantization operation to the input of module forward method. 'output' means applying quantization operation to the output of module forward method, which is often called as 'activation' in some papers.
+要应用量化的类型，当前支持 'weight', 'input', 'output'。 'weight' 是指将量化操作应用到 module 的权重参数上。 'input' 是指对 module 的 forward 方法的输入应用量化操作。 'output' 是指将量化运法应用于模块 forward 方法的输出，有些论文中将其称为 '激活（activation）'。
 
-* __quant_bits__ : int or dict of {str : int}
+* __quant_bits__ : int 或 dict {str : int}
 
-bits length of quantization, key is the quantization type, value is the quantization bits length, eg.
+量化的位宽，键是量化类型，值是量化位宽度，例如：
 ```
 {
     quant_bits: {
@@ -140,14 +140,14 @@ bits length of quantization, key is the quantization type, value is the quantiza
         },
 }
 ```
-when the value is int type, all quantization types share same bits length. eg.
+当值为 int 类型时，所有量化类型使用相同的位宽。 例如：
 ```
 {
-    quant_bits: 8, # weight or output quantization are all 8 bits
+    quant_bits: 8, # 权重和输出的位宽都为 8 bits
 }
 ```
 
-### APIs for Updating Fine Tuning Status
+### 更新优化状态的 API
 
 Some compression algorithms use epochs to control the progress of compression (e.g. [AGP](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#agp-pruner)), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: `pruner.update_epoch(epoch)` and `pruner.step()`.
 
