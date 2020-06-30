@@ -379,7 +379,7 @@ nnictl 支持的命令：
 
 <a name="experiment"></a>
 
-### Manage experiment information
+### 管理 Experiment 信息
 
 * **nnictl experiment show**
   
@@ -544,7 +544,7 @@ nnictl 支持的命令：
 
 <a name="platform"></a>
 
-### Manage platform information
+### 管理平台信息
 
 * **nnictl platform clean**
   
@@ -584,7 +584,7 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-### Manage log
+### 管理日志
 
 * **nnictl log stdout**
   
@@ -657,13 +657,13 @@ nnictl 支持的命令：
 
 <a name="webui"></a>
 
-### Manage webui
+### 管理 Web 界面
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
 
-### Manage tensorboard
+### 管理 TensorBoard
 
 * **nnictl tensorboard start**
   
@@ -713,7 +713,7 @@ nnictl 支持的命令：
 
 <a name="package"></a>
 
-### Manage package
+### 管理安装包
 
 * **nnictl package install**
   
@@ -821,7 +821,7 @@ nnictl 支持的命令：
 
 <a name="ss_gen"></a>
 
-### Generate search space
+### 生成搜索空间
 
 * **nnictl ss_gen**
   
@@ -853,7 +853,7 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-### Check NNI version
+### NNI 版本校验
 
 * **nnictl --version**
   
