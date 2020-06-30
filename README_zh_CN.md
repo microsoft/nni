@@ -191,7 +191,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/en_US/TrainingService/Overview.md">支持训练平台</li>
+        <li><a href="docs/zh_CN/TrainingService/Overview.md">支持训练平台</li>
         <li><a href="docs/zh_CN/TrainingService/HowToImplementTrainingService.md">实现训练平台</a></li>
       </ul>
       </td>
