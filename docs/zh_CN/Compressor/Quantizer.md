@@ -19,14 +19,14 @@ model = nni.compression.torch.NaiveQuantizer(model).compress()
 ***
 
 ## QAT Quantizer
-In [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf), authors Benoit Jacob and Skirmantas Kligys provide an algorithm to quantize the model with training.
+在 [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf) 中，作者 Benoit Jacob 和 Skirmantas Kligys 提出了一种算法在训练中量化模型。
 > 我们提出了一种方法，在训练的前向过程中模拟量化效果。 此方法不影响反向传播，所有权重和偏差都使用了浮点数保存，因此能很容易的进行量化。 然后，前向传播通过实现浮点算法的舍入操作，来在推理引擎中模拟量化的推理。 * 权重在与输入卷积操作前进行量化。 如果在层中使用了批量归一化（参考 [17]），批量归一化参数会被在量化前被“折叠”到权重中。 * 激活操作在推理时会被量化，例如，在激活函数被应用到卷积或全连接层输出之后，或在增加旁路连接，或连接多个层的输出之后（如：ResNet）。 Activations are quantized at points where they would be during inference, e.g. after the activation function is applied to a convolutional or fully connected layer’s output, or after a bypass connection adds or concatenates the outputs of several layers together such as in ResNets.
 
 
 ### 用法
-You can quantize your model to 8 bits with the code below before your training code.
+可在训练代码前将模型量化为 8 位。
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import QAT_Quantizer
 model = Mnist()
@@ -47,33 +47,33 @@ quantizer = QAT_Quantizer(model, config_list)
 quantizer.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
 #### QAT Quantizer 的用户配置
 
-common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
+压缩算法的公共配置可在 [`config_list` 说明](./QuickStart.md)中找到。
 
-configuration needed by this algorithm :
+此算法所需的配置：
 
 * **quant_start_step:** int
 
-disable quantization until model are run by certain number of steps, this allows the network to enter a more stable state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
+在运行到某步骤前，对模型禁用量化。这让网络在进入更稳定的 状态后再激活量化，这样不会配除掉一些分数显著的值，默认为 0
 
 ### 注意
 
-batch normalization folding is currently not supported.
+当前不支持批处理规范化折叠。
 
 ***
 
 ## DoReFa Quantizer
 
-In [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160), authors Shuchang Zhou and Yuxin Wu provide an algorithm named DoReFa to quantize the weight, activation and gradients with training.
+在 [DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients](https://arxiv.org/abs/1606.06160) 中，作者 Shuchang Zhou 和 Yuxin Wu 提出了 DoReFa 算法在训练时量化权重，激活函数和梯度。
 
 ### 用法
 
-To implement DoReFa Quantizer, you can add code below before your training code
+要实现 DoReFa Quantizer，在训练代码前加入以下代码。
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import DoReFaQuantizer
 config_list = [{ 
@@ -85,25 +85,25 @@ quantizer = DoReFaQuantizer(model, config_list)
 quantizer.compress()
 ```
 
-You can view example for more information
+查看示例进一步了解
 
 #### DoReFa Quantizer 的用户配置
 
-common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
+压缩算法的公共配置可在 [`config_list` 说明](./QuickStart.md)中找到。
 
-configuration needed by this algorithm :
+此算法所需的配置：
 
 ***
 
 ## BNN Quantizer
 
-In [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830),
+在 [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830) 中，
 > 引入了一种训练二进制神经网络（BNN）的方法 - 神经网络在运行时使用二进制权重。 在训练时，二进制权重和激活用于计算参数梯度。 在 forward 过程中，BNN 会大大减少内存大小和访问，并将大多数算术运算替换为按位计算，可显著提高能源效率。
 
 
 ### 用法
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import BNNQuantizer
 model = VGG_Cifar10(num_classes=10)
@@ -124,21 +124,21 @@ quantizer = BNNQuantizer(model, configure_list)
 model = quantizer.compress()
 ```
 
-You can view example [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) for more information.
+可以查看示例 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 了解更多信息。
 
 #### BNN Quantizer 的用户配置
 
-common configuration needed by compression algorithms can be found at [Specification of `config_list`](./QuickStart.md).
+压缩算法的公共配置可在 [`config_list` 说明](./QuickStart.md)中找到。
 
-configuration needed by this algorithm :
+此算法所需的配置：
 
 ### 实验
 
-We implemented one of the experiments in [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830), we quantized the **VGGNet** for CIFAR-10 in the paper. Our experiments results are as follows:
+我们实现了 [Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1](https://arxiv.org/abs/1602.02830) 中的一个实验，对 CIFAR-10 上的 **VGGNet** 进行了量化操作。 实验结果如下：
 
 | 模型     | 精度     |
 | ------ | ------ |
 | VGGNet | 86.93% |
 
 
-The experiments code can be found at [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 
+实验代码可在 [examples/model_compress/BNN_quantizer_cifar10.py](https://github.com/microsoft/nni/tree/master/examples/model_compress/BNN_quantizer_cifar10.py) 
