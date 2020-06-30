@@ -62,9 +62,6 @@ export class EnvironmentInformation {
     public runnerWorkingFolder: string = "";
     public command: string = "";
     public nodeCount: number = 1;
-    // aml related resource, need to refactor
-    public environmentLocalTempFolder: string = "";
-    public environmentClient: any = "";
 
     // it's used to aggregate node status for multiple node trial
     public nodes: Map<string, NodeInfomation>;

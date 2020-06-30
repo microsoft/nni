@@ -66,10 +66,6 @@ export class AMLEnvironmentService extends EnvironmentService {
 
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
-
             case TrialConfigMetadataKey.AML_CLUSTER_CONFIG:
                 this.amlClusterConfig = <AMLClusterConfig>JSON.parse(value);
                 break;
@@ -84,16 +80,8 @@ export class AMLEnvironmentService extends EnvironmentService {
                 await validateCodeDir(this.amlTrialConfig.codeDir);
                 break;
             }
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                this.nniVersion = this.versionCheck ? await getVersion() : '';
-                break;
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                this.isMultiPhase = (value === 'true' || value === 'True');
-                break;
             default:
-                //Reject for unknown keys
-                this.log.error(`Uknown key: ${key}`);
+                this.log.debug(`AML not proccessed metadata key: '${key}', value: '${value}'`);
         }
     }
 
@@ -108,18 +96,18 @@ export class AMLEnvironmentService extends EnvironmentService {
                 case 'WAITING':
                 case 'RUNNING':
                 case 'QUEUED':
+                    // RUNNING status is set by runner, and ignore waiting status
                     break;
                 case 'COMPLETED':
-                    environment.status = 'SUCCEEDED';
                 case 'SUCCEEDED':
-                    environment.status = 'SUCCEEDED';
+                    environment.setFinalStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
-                    environment.status = 'FAILED';
+                    environment.setFinalStatus('FAILED');
                     break;
                 case 'STOPPED':
                 case 'STOPPING':
-                    environment.status = 'USER_CANCELED';
+                    environment.setFinalStatus('USER_CANCELED');
                     break;
                 default:
                     environment.status = 'UNKNOWN';
