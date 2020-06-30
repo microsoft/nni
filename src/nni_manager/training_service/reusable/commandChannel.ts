@@ -4,10 +4,10 @@
 'use strict';
 
 import { EventEmitter } from "events";
+import { getLogger, Logger } from "../../common/log";
 import { TRIAL_COMMANDS } from "../../core/commands";
 import { encodeCommand } from "../../core/ipcInterface";
-import { EnvironmentInformation, Channel } from "./environment";
-import { Logger, getLogger } from "../../common/log";
+import { Channel, EnvironmentInformation } from "./environment";
 
 const acceptedCommands: Set<string> = new Set<string>(TRIAL_COMMANDS);
 
@@ -96,14 +96,18 @@ export abstract class CommandChannel {
             if (undefined !== matches.groups) {
                 const commandType = matches.groups["type"];
                 const dataLength = parseInt(matches.groups["length"]);
-                let data: any = matches.groups["data"];
+                const data: any = matches.groups["data"];
                 if (dataLength !== data.length) {
                     throw new Error(`dataLength ${dataLength} not equal to actual length ${data.length}: ${data}`);
                 }
-                // to handle encode('utf8') of Python
-                data = JSON.parse('"' + data.split('"').join('\\"') + '"');
-                const finalData = JSON.parse(data);
-                commands.push([commandType, finalData]);
+                try {
+                    const finalData = JSON.parse(data);
+                    // to handle encode('utf8') of Python
+                    commands.push([commandType, finalData]);
+                } catch (error) {
+                    this.log.error(`CommandChannel: error on parseCommands ${error}, original: ${matches.groups["data"]}`);
+                    throw error;
+                }
             }
             matches = this.commandPattern.exec(content);
         }
@@ -119,7 +123,7 @@ export abstract class CommandChannel {
             const data = parsedResult[1];
             const command = new Command(environment, commandType, data);
             this.commandEmitter.emit("command", command);
-            this.log.trace(`CommandChannel: env ${environment.id} emit command: ${commandType}, ${data}`);
+            this.log.trace(`CommandChannel: env ${environment.id} emit command: ${commandType}, ${data}.`);
         }
     }
 }

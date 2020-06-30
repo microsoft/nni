@@ -19,6 +19,7 @@ from queue import Queue
 from .constants import NNI_PLATFORM
 from .rest_utils import rest_post
 from .url_utils import gen_send_stdout_url
+from .commands import CommandType
 
 
 @unique
@@ -44,16 +45,16 @@ def nni_log(log_type, log_message):
 
 
 class NNIRestLogHanlder(StreamHandler):
-    def __init__(self, host, port, tag, trial_id, std_output_type=StdOutputType.Stdout, command_channel=None):
+    def __init__(self, host, port, tag, trial_id, channel, std_output_type=StdOutputType.Stdout):
         StreamHandler.__init__(self)
         self.host = host
         self.port = port
         self.tag = tag
         self.std_output_type = std_output_type
         self.trial_id = trial_id
+        self.channel = channel
         self.orig_stdout = sys.__stdout__
         self.orig_stderr = sys.__stderr__
-        self.command_channel = command_channel
 
     def emit(self, record):
         log_entry = {}
@@ -63,10 +64,14 @@ class NNIRestLogHanlder(StreamHandler):
         log_entry['msg'] = self.format(record)
 
         try:
-            if self.host:
+            if self.channel is None:
                 rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
-            elif NNI_PLATFORM == 'aml' and self.command_channel:
-                self.command_channel.send_metric(log_entry)
+            else:
+                if self.trial_id is not None:
+                    log_entry["trial"] = self.trial_id
+                # only send metrics information
+                if self.tag == 'trial':
+                    self.channel.send(CommandType.StdOut, log_entry)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()
@@ -77,7 +82,7 @@ class RemoteLogger(object):
     NNI remote logger
     """
 
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, trial_id=None, log_level=logging.INFO, command_channel=None):
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, trial_id=None, channel=None, log_level=logging.INFO):
         '''
         constructor
         '''
@@ -85,7 +90,7 @@ class RemoteLogger(object):
         self.log_level = log_level
         self.logger.setLevel(self.log_level)
         self.pipeReader = None
-        self.handler = NNIRestLogHanlder(syslog_host, syslog_port, tag, trial_id, StdOutputType.Stdout, command_channel)
+        self.handler = NNIRestLogHanlder(syslog_host, syslog_port, tag, trial_id, channel)
         self.logger.addHandler(self.handler)
         if std_output_type == StdOutputType.Stdout:
             self.orig_stdout = sys.__stdout__

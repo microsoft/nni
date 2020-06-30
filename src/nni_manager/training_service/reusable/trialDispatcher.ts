@@ -6,12 +6,14 @@
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Writable } from 'stream';
+import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
-import { getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
+import { getExperimentId, getPlatform, getBasePort } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getLogLevel, getVersion, uniqueString, getExperimentRootDir } from '../../common/utils';
-import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END } from '../../core/commands';
+import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
+import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
@@ -21,9 +23,9 @@ import { WebCommandChannel } from './channels/webCommandChannel';
 import { AMLCommandChannel } from './channels/amlCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
-import { JobRestServer } from './jobRestServer';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
+
 
 /**
  * It uses to manage jobs on training platforms 
@@ -32,15 +34,16 @@ import { TrialDetail } from './trial';
 @component.Singleton
 class TrialDispatcher implements TrainingService {
 
+    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     private readonly log: Logger;
     private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
 
-    private jobRestServer: JobRestServer;
     private readonly metricsEmitter: EventEmitter;
-    private versionCheck: boolean = true;
     private readonly experimentId: string;
     private readonly experimentRootDir: string;
+
+    private enableVersionCheck: boolean = true;
 
     private trialConfig: TrialConfig | undefined;
     private runnerSettings: RunnerSettings;
@@ -56,7 +59,6 @@ class TrialDispatcher implements TrainingService {
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();
         this.metricsEmitter = new EventEmitter();
-        this.jobRestServer = new JobRestServer(this.metricsEmitter);
         this.experimentId = getExperimentId();
         this.experimentRootDir = getExperimentRootDir();
 
@@ -162,19 +164,12 @@ class TrialDispatcher implements TrainingService {
         this.commandEmitter = new EventEmitter();
         this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
 
-
-        if (this.runnerSettings.platform !== 'aml') {
-            await this.jobRestServer.start();
-            this.log.info(`TrialDispatcher: rest server listening on: ${this.jobRestServer.endPoint}`);
-        }
-        this.jobRestServer.setEnableVersionCheck = this.versionCheck;
-        this.runnerSettings.nniManagerPort = this.jobRestServer.clusterRestServerPort;
+        // TODO it's a hard code of web channel, it needs to be improved.
+        this.runnerSettings.nniManagerPort = getBasePort() + 1;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
         // for AML channel, other channels can ignore this.
         this.commandChannel.config("MetricEmitter", this.metricsEmitter);
-        // for restful api, other channel can ignore this.
-        this.commandChannel.config("RestServer", this.jobRestServer.Server);
 
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
@@ -248,8 +243,8 @@ class TrialDispatcher implements TrainingService {
                 this.runnerSettings.nniManagerIP = (<NNIManagerIpConfig>JSON.parse(value)).nniManagerIp;
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                this.runnerSettings.nniManagerVersion = this.versionCheck ? await getVersion() : '';
+                this.enableVersionCheck = (value === 'true' || value === 'True');
+                this.runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.runnerSettings.logCollection = value;
@@ -290,13 +285,6 @@ class TrialDispatcher implements TrainingService {
                 await this.commandChannel.close(environment);
                 this.log.info(`stopped environment ${environment.id}.`);
             }
-        }
-
-        try {
-            await this.jobRestServer.stop();
-            this.log.info('Rest server stopped successfully.');
-        } catch (error) {
-            this.log.error(`Rest server stopped failed, error: ${error.message}`);
         }
 
         this.commandEmitter.off("command", this.handleCommand);
@@ -529,14 +517,67 @@ class TrialDispatcher implements TrainingService {
         trial.environment = undefined;
     }
 
+    private async handleMetricData(trialId: string, data: any): Promise<void> {
+        if (Array.isArray(data)) {
+            for (const subItem of data) {
+                this.metricsEmitter.emit('metric', {
+                    id: trialId,
+                    data: subItem
+                });
+            }
+        } else {
+            this.metricsEmitter.emit('metric', {
+                id: trialId,
+                data: data
+            });
+        }
+    }
+
+    private async handleStdout(commandData: any): Promise<void> {
+        const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', commandData["trial"]);
+        mkDirPSync(trialLogDir);
+        const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
+        try {
+            let skipLogging: boolean = false;
+            if (commandData["tag"] === 'trial' && commandData["msg"] !== undefined) {
+                const message = commandData["msg"];
+                const metricsContent: any = message.match(this.NNI_METRICS_PATTERN);
+                if (metricsContent && metricsContent.groups) {
+                    const key: string = 'metrics';
+                    const data = metricsContent.groups[key];
+                    const metricData = JSON.parse('"' + data.split('"').join('\\"') + '"');
+                    await this.handleMetricData(commandData["trial"], metricData);
+                    skipLogging = true;
+                }
+            }
+
+            if (!skipLogging) {
+                // Construct write stream to write remote trial's log into local file
+                const writeStream: Writable = fs.createWriteStream(trialLogPath, {
+                    flags: 'a+',
+                    encoding: 'utf8',
+                    autoClose: true
+                });
+
+                writeStream.write(String.Format('{0}\n', commandData["msg"]));
+                writeStream.end();
+            }
+        } catch (err) {
+            this.log.error(`TrialDispatcher: handleStdout error: ${err}`);
+        }
+    }
+
     private async handleCommand(command: Command): Promise<void> {
         this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}, data: ${command.data}`);
         const environment = command.environment;
         const data = command.data;
         const nodeId = data["node"];
         switch (command.command) {
-            case GPU_INFO:
-                environment.gpuSummary.set(nodeId, <GPUSummary>(data));
+            case REPORT_METRIC_DATA:
+                this.log.error(`TrialDispatcher: TODO: not implement to handle direct REPORT_METRIC_DATA command yet.`);
+                break;
+            case STDOUT:
+                await this.handleStdout(data);
                 break;
             case INITIALIZED:
                 {
@@ -572,6 +613,22 @@ class TrialDispatcher implements TrainingService {
                         this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
                     }
                 }
+                break;
+            case VERSION_CHECK:
+                {
+                    if (this.enableVersionCheck) {
+                        const checkResultSuccess: boolean = data["tag"] === 'VCSuccess' ? true : false;
+                        if (checkResultSuccess) {
+                            this.log.info(`TrialDispatcher: Version check in trialKeeper success!`);
+                        } else {
+                            const errorMessage = `TrialDispatcher: Version check error, ${data["msg"]}!`;
+                            this.log.error(errorMessage);
+                        }
+                    }
+                }
+                break;
+            case GPU_INFO:
+                environment.gpuSummary.set(nodeId, <GPUSummary>(data));
                 break;
             case TRIAL_END:
                 {

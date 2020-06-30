@@ -26,6 +26,7 @@ import { EnvironmentInformation, Channel } from "../environment";
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EventEmitter } from 'events';
 import { AMLEnvironmentService } from "../environments/amlEnvironmentService";
+import { STDOUT } from "../../../core/commands";
 
 class AMLRunnerConnection extends RunnerConnection {
 }
@@ -86,9 +87,12 @@ export class AMLCommandChannel extends CommandChannel {
                     const environment = item[0];
                     const message = item[1];
                     const amlClient = (environment as AMLEnvironmentInformation).amlClient;
-                    if (amlClient) {
-                        amlClient.sendCommand(message);
+                    if (!amlClient) {
+                        throw new Error('aml client not initialized!');
                     }
+                    console.log('--------sending message-------')
+                    console.log(message)
+                    amlClient.sendCommand(message);
                 }
             }
 
@@ -118,26 +122,12 @@ export class AMLCommandChannel extends CommandChannel {
                     if (messages) {
                         if (messages instanceof Object && this.currentMessageIndex < messages.length - 1) {
                             for (let index = this.currentMessageIndex + 1; index < messages.length; index ++) {
-                                this.handleCommand(runnerConnection.environment, messages[index].toString());
+                                this.handleTrialMessage(runnerConnection.environment, messages[index].toString());
                             }
                             this.currentMessageIndex = messages.length - 1;
                         } else if (this.currentMessageIndex === -1){
-                            this.handleCommand(runnerConnection.environment, messages.toString());
+                            this.handleTrialMessage(runnerConnection.environment, messages.toString());
                             this.currentMessageIndex += 1;
-                        }
-                    }
-                } 
-                if (command && command.hasOwnProperty('trial_runner_sdk')) {
-                    let messages = command['trial_runner_sdk'];
-                    if (messages) {
-                        if (messages instanceof Object && this.currentMetricIndex < messages.length - 1) {
-                            for (let index = this.currentMetricIndex + 1; index < messages.length; index ++) {
-                                this.handleTrialMetrics(messages[index].toString());
-                            }
-                            this.currentMetricIndex = messages.length - 1;
-                        } else if (this.currentMetricIndex === -1){
-                            this.handleTrialMetrics(messages.toString());
-                            this.currentMetricIndex += 1;
                         }
                     }
                 }
@@ -151,21 +141,39 @@ export class AMLCommandChannel extends CommandChannel {
         }
     }
 
+    private handleTrialMessage(environment: EnvironmentInformation, message: string) {
+        console.log('---------handling message-------')
+        console.log(message)
+        const commands = this.parseCommands(message);
+        if (commands.length > 0) {
+            console.log(commands)
+            const commandType = commands[0][0];
+            if (commandType === STDOUT) {
+                this.handleTrialMetrics(message);
+            } else {
+                this.handleCommand(environment, commands[0][1]);
+            }
+        }
+    }
+
     private handleTrialMetrics(message: string): void {
         let messageObj = JSON.parse(message);
         let trialId = messageObj['trialId'];
         let msg = messageObj['msg'];
-        const metricsContent: any = msg.match(this.NNI_METRICS_PATTERN);
-        if (metricsContent && metricsContent.groups) {
-            const key: string = 'metrics';
-            const metric = metricsContent.groups[key];
-            if (!this.metricEmitter) {
-                throw Error('metricEmitter not initialized');
+        let tag = messageObj['tag'];
+        if (tag === 'trial') {
+            const metricsContent: any = msg.match(this.NNI_METRICS_PATTERN);
+            if (metricsContent && metricsContent.groups) {
+                const key: string = 'metrics';
+                const metric = metricsContent.groups[key];
+                if (!this.metricEmitter) {
+                    throw Error('metricEmitter not initialized');
+                }
+                this.metricEmitter.emit('metric', {
+                    id: trialId,
+                    data: metric
+                });
             }
-            this.metricEmitter.emit('metric', {
-                id: trialId,
-                data: metric
-            });
         }
     }
 }

@@ -3,9 +3,8 @@
 
 'use strict';
 
-import { Server as HttpServer } from 'http';
 import { Server as SocketServer } from "ws";
-import { getExperimentId } from "../../../common/experimentStartupInfo";
+import { getBasePort, getExperimentId } from "../../../common/experimentStartupInfo";
 import { INITIALIZED } from '../../../core/commands';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
@@ -31,7 +30,6 @@ class WebRunnerConnection extends RunnerConnection {
 export class WebCommandChannel extends CommandChannel {
     private readonly expId: string = getExperimentId();
 
-    private httpServer: HttpServer | undefined;
     private webSocketServer: SocketServer | undefined;
     private clients: Map<WebSocket, WebRunnerConnection | undefined> = new Map<WebSocket, WebRunnerConnection | undefined>();
 
@@ -39,29 +37,26 @@ export class WebCommandChannel extends CommandChannel {
         return "web";
     }
 
-    public async config(key: string, value: any): Promise<void> {
-        switch (key) {
-            case "RestServer":
-                this.httpServer = value as HttpServer;
-                break;
-        }
+    public async config(_key: string, _value: any): Promise<void> {
+        // do nothing
     }
 
     public async start(): Promise<void> {
-        if (this.httpServer === undefined) {
-            throw new Error(`http server is not initialized!`);
-        }
-
-        const server = this.httpServer;
-        this.webSocketServer = new SocketServer({ server });
+        const port = getBasePort() + 1;
+        this.webSocketServer = new SocketServer({ port });
 
         this.webSocketServer.on('connection', (client: WebSocket) => {
             this.log.debug(`WebCommandChannel: received connection`);
+            client.onerror = (event): void => {
+                this.log.error(`error on client ${JSON.stringify(event)}`);
+            }
 
             this.clients.set(client, undefined);
             client.onmessage = (message): void => {
                 this.receivedWebSocketMessage(client, message);
             };
+        }).on('error', (error) => {
+            this.log.error(`error on websocket server ${error}`);
         });
     }
 

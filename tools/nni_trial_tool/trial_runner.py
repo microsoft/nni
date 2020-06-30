@@ -7,7 +7,6 @@ import os
 import random
 import re
 import sys
-import threading
 import time
 import traceback
 import logging
@@ -31,6 +30,7 @@ def main_loop(args):
     try:
         trials = dict()
 
+        command_channel = args.command_channel
         # command loop
         while True:
             command_type, command_data = args.command_channel.receive()
@@ -110,6 +110,7 @@ def check_version(args):
         nni_log(LogType.Warning, 'Skipping version check!')
     else:
         try:
+            command_channel = args.command_channel
             trial_runner_version = regular.search(trial_runner_version).group('version')
             nni_log(LogType.Info, '{0}: runner_version is {1}'.format(args.node_id, trial_runner_version))
             nni_manager_version = regular.search(args.nni_manager_version).group('version')
@@ -121,38 +122,16 @@ def check_version(args):
                     args.node_id, nni_manager_version, trial_runner_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
-                          False)
+                command_channel.send(CommandType.VersionCheck, log_entry)
+                while not command_channel.sent():
+                    time.sleep(1)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, '{0}: Version match!'.format(args.node_id))
                 log_entry['tag'] = 'VCSuccess'
-                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port, args.runner_name), json.dumps(log_entry), 10,
-                          False)
+                command_channel.send(CommandType.VersionCheck, log_entry)
         except AttributeError as err:
             nni_log(LogType.Error, '{0}: {1}'.format(args.node_id, err))
-
-
-def fetch_parameter_file(args):
-    class FetchThread(threading.Thread):
-        def __init__(self, args):
-            super(FetchThread, self).__init__()
-            self.args = args
-
-        def run(self):
-            uri = gen_parameter_meta_url(self.args.nnimanager_ip, self.args.nnimanager_port)
-            nni_log(LogType.Info, uri)
-
-            while True:
-                res = rest_get(uri, 10)
-                nni_log(LogType.Debug, 'status code: {}'.format(res.status_code))
-                if res.status_code != 200:
-                    nni_log(LogType.Warning, 'rest response: {}'.format(str(res)))
-                time.sleep(2)
-
-    fetch_file_thread = FetchThread(args)
-    fetch_file_thread.start()
-
 
 if __name__ == '__main__':
 
@@ -207,13 +186,11 @@ if __name__ == '__main__':
     os.environ['NNI_TRIAL_JOB_ID'] = "runner"
 
     from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
-    from .rest_utils import rest_get, rest_post
-    from .url_utils import gen_parameter_meta_url, gen_send_version_url
     from .trial import Trial
     from .file_channel import FileChannel
     from .web_channel import WebChannel
     from .aml_channel import AMLChannel
-    from .base_channel import CommandType
+    from .commands import CommandType
 
     is_multi_node = args.node_count > 1
 
@@ -245,8 +222,7 @@ if __name__ == '__main__':
     args.command_channel = command_channel
 
     trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
-                                          StdOutputType.Stdout, args.log_collection, args.runner_name,
-                                          logging.INFO, args.command_channel)
+                                          StdOutputType.Stdout, args.log_collection, args.runner_name, command_channel)
     sys.stdout = sys.stderr = trial_runner_syslogger
     nni_log(LogType.Info, "{}: merged args is {}".format(args.node_id, args))
 
@@ -258,6 +234,12 @@ if __name__ == '__main__':
         main_loop(args)
     except SystemExit as se:
         nni_log(LogType.Info, '{}: NNI trial runner exit with code {}'.format(args.node_id, se.code))
+
+        # try best to send latest errors to server
+        timeout = 10
+        while not command_channel.sent() and timeout > 0:
+            timeout -= 1
+            time.sleep(1)
         os._exit(se.code)
     finally:
         if trial_runner_syslogger is not None:

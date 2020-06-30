@@ -13,7 +13,7 @@ from subprocess import Popen
 import psutil
 
 from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
-from .base_channel import CommandType
+from .commands import CommandType
 
 trial_output_path_name = ".nni"
 
@@ -43,7 +43,7 @@ class Trial:
     def run(self):
         # redirect trial's stdout and stderr to syslog
         self.trial_syslogger_stdout = RemoteLogger(self.args.nnimanager_ip, self.args.nnimanager_port, 'trial', StdOutputType.Stdout,
-                                                   self.args.log_collection, self.id, logging.INFO, self.command_channel)
+                                                   self.args.log_collection, self.id, self.command_channel)
 
         nni_log(LogType.Info, "%s: start to run trial" % self.name)
         trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
