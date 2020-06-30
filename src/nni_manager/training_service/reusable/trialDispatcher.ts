@@ -219,6 +219,7 @@ class TrialDispatcher implements TrainingService {
         await Promise.all([
             this.environmentMaintenanceLoop(),
             this.trialManagementLoop(),
+            this.commandChannel.run(),
         ]);
     }
 

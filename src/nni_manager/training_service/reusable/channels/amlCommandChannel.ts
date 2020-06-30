@@ -3,14 +3,11 @@
 
 'use strict';
 
-import * as component from "../../../common/component";
-import { delay } from "../../../common/utils";
-import { CommandChannel, RunnerConnection } from "../commandChannel";
-import { EnvironmentInformation, Channel } from "../environment";
-import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EventEmitter } from 'events';
-import { AMLEnvironmentService } from "../environments/amlEnvironmentService";
-import { STDOUT } from "../../../core/commands";
+import { delay } from "../../../common/utils";
+import { AMLEnvironmentInformation } from '../aml/amlConfig';
+import { CommandChannel, RunnerConnection } from "../commandChannel";
+import { Channel, EnvironmentInformation } from "../environment";
 
 class AMLRunnerConnection extends RunnerConnection {
 }
@@ -19,7 +16,6 @@ export class AMLCommandChannel extends CommandChannel {
     private stopping: boolean = false;
     private currentMessageIndex: number = -1;
     private sendQueues: [EnvironmentInformation, string][] = [];
-    private metricEmitter: EventEmitter | undefined;
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     
     public constructor(commandEmitter: EventEmitter) {
@@ -30,21 +26,23 @@ export class AMLCommandChannel extends CommandChannel {
     }
 
     public async config(_key: string, _value: any): Promise<void> {
-        switch (_key) {
-            case "MetricEmitter":
-                this.metricEmitter = _value as EventEmitter;
-                break;
-        }
+        // do nothing
     }
 
     public async start(): Promise<void> {
-        // start command loops
-        this.receiveLoop();
-        this.sendLoop();
+        // do nothing
     }
 
     public async stop(): Promise<void> {
         this.stopping = true;
+    }
+
+    public async run(): Promise<void> {
+        // start command loops
+        await Promise.all([
+            this.receiveLoop(),
+            this.sendLoop()
+        ]);
     }
 
     protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
