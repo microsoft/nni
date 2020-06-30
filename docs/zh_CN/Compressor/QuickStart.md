@@ -1,18 +1,18 @@
-# Tutorial for Model Compression
+# 模型压缩教程
 
 ```eval_rst
 .. contents::
 ```
 
-In this tutorial, we use the [first section](#quick-start-to-compress-a-model) to quickly go through the usage of model compression on NNI. Then use the [second section](#detailed-usage-guide) to explain more details of the usage.
+本教程中，[第一部分](#模型压缩快速入门)会简单介绍 NNI 上模型压缩的用法。 然后在[第二部分](#使用指南)中进行详细介绍。
 
-## Quick Start to Compress a Model
+## 模型压缩快速入门
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use [slim pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#slim-pruner) as an example to show the usage.
+NNI 为模型压缩提供了非常简单的 API。 压缩包括剪枝和量化算法。 算法的用法相同，这里以 [slim Pruner](https://nni.readthedocs.io/zh/latest/Compressor/Pruner.html#slim-pruner) 为例来介绍。
 
-### Write configuration
+### 编写配置
 
-Write a configuration to specify the layers that you want to prune. The following configuration means pruning all the `BatchNorm2d`s to sparsity 0.7 while keeping other layers unpruned.
+编写配置来指定要剪枝的层。 以下配置表示剪枝所有的 `BatchNorm2d`，稀疏度设为 0.7，其它层保持不变。
 
 ```python
 configure_list = [{
@@ -21,20 +21,20 @@ configure_list = [{
 }]
 ```
 
-The specification of configuration can be found [here](#specification-of-config-list). Note that different pruners may have their own defined fields in configuration, for exmaple `start_epoch` in AGP pruner. Please refer to each pruner's [usage](./Pruner.md) for details, and adjust the configuration accordingly.
+配置说明在[这里](#config-list-说明)。 注意，不同的 Pruner 可能有自定义的配置字段，例如，AGP Pruner 有 `start_epoch`。 详情参考每个 Pruner 的[使用](./Pruner.md)，来调整相应的配置。
 
-### Choose a compression algorithm
+### 选择压缩算法
 
-Choose a pruner to prune your model. First instantiate the chosen pruner with your model and configuration as arguments, then invoke `compress()` to compress your model.
+选择 Pruner 来修剪模型。 首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 `compress()` 来压缩模型。
 
 ```python
 pruner = SlimPruner(model, configure_list)
 model = pruner.compress()
 ```
 
-Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。 Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
-### Export compression result
+### 导出压缩结果
 
 After training, you get accuracy of the pruned model. You can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
 
@@ -44,7 +44,7 @@ pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19
 
 The complete code of model compression examples can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py).
 
-### Speed up the model
+### 加速模型
 
 Masks do not provide real speedup of your model. The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
 
@@ -55,7 +55,7 @@ apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 
 Please refer to [here](ModelSpeedup.md) for detailed description.
 
-## Detailed Usage Guide
+## 使用指南
 
 The example code for users to apply model compression on a user model can be found below:
 
@@ -86,7 +86,7 @@ The function call `pruner.compress()` modifies user defined model (in Tensorflow
 
 *Note that, `pruner.compress` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after `pruner.compress`.*
 
-### Specification of `config_list`
+### `config_list` 说明
 
 Users can specify the configuration (i.e., `config_list`) for a compression algorithm. For example,when compressing a model, users may want to specify the sparsity ratio, to specify different ratios for different types of operations, to exclude certain types of operations, or to compress only a certain types of operations. For users to express these kinds of requirements, we define a configuration specification. It can be seen as a python `list` object, where each element is a `dict` object.
 
@@ -121,7 +121,7 @@ A simple example of configuration is shown below:
 
 It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for `op_name1` and `op_name2` use sparsity 0.6, and do not compress `op_name3`.
 
-#### Quantization specific keys
+#### 其它量化算法字段
 
 **If you use quantization algorithms, you need to specify more keys. If you use pruning algorithms, you can safely skip these keys**
 
@@ -153,7 +153,7 @@ Some compression algorithms use epochs to control the progress of compression (e
 
 `update_epoch` should be invoked in every epoch, while `step` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 
-### Export Compressed Model
+### 导出压缩模型
 
 You can easily export the compressed model using the following API if you are pruning your model, `state_dict` of the sparse model weights will be stored in `model.pth`, which can be loaded by `torch.load('model.pth')`. In this exported `model.pth`, the masked weights are zero.
 
