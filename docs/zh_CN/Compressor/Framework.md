@@ -12,12 +12,12 @@ NNI 模型压缩框架中主要有三个组件/类：`Compressor`, `Pruner` 和 
 
 ## Compressor
 
-Compressor is the base class for pruner and quntizer, it provides a unified interface for pruner and quantizer for end users, so that pruner and quantizer can be used in the same way. For example, to use a pruner:
+Compressor 是 Pruner 和 Quantizer 的基类，提供了统一的接口，可用同样的方式使用它们。 例如，使用 Pruner：
 
 ```python
 from nni.compression.torch import LevelPruner
 
-# load a pretrained model or train a model before using a pruner
+# 读取预训练的模型，或在使用 Pruner 前进行训练。
 
 configure_list = [{
     'sparsity': 0.7,
@@ -28,11 +28,11 @@ optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_d
 pruner = LevelPruner(model, configure_list, optimizer)
 model = pruner.compress()
 
-# model is ready for pruning, now start finetune the model,
-# the model will be pruned during training automatically
+# 剪枝已准备好，开始调优模型，
+# 模型会在训练过程中自动剪枝
 ```
 
-To use a quantizer:
+使用 Quantizer：
 ```python
 from nni.compression.torch import DoReFaQuantizer
 
