@@ -9,17 +9,17 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 
 **Filter Pruning**
 * [Slim Pruner](#slim-pruner)
-* [Filter Pruners with Weight Rank](#weightrankfilterpruner)
+* [具有权重等级的 Filter Pruners](#weightrankfilterpruner)
     * [FPGM Pruner](#fpgm-pruner)
     * [L1Filter Pruner](#l1filter-pruner)
     * [L2Filter Pruner](#l2filter-pruner)
-* [Filter Pruners with Activation Rank](#activationrankfilterpruner)
+* [具有激活等级的 Filter Pruners](#activationrankfilterpruner)
     * [APoZ Rank Pruner](#activationapozrankfilterpruner)
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
-* [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
+* [具有梯度等级的 Filter Pruners](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
 
-**Pruning Schedule**
+**剪枝计划**
 * [AGP Pruner](#agp-pruner)
 
 ## Level Pruner
