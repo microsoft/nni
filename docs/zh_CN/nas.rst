@@ -23,5 +23,5 @@
     One-Shot NAS <NAS/one_shot_nas>
     自定义 NAS 算法 <NAS/Advanced>
     NAS 可视化 <NAS/Visualization>
-    NAS Benchmarks <NAS/Benchmarks>
+    NAS 基准测试 <NAS/Benchmarks>
     API 参考 <NAS/NasReference>
