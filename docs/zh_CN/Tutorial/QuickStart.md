@@ -4,7 +4,7 @@
 
 目前支持 Linux、macOS 和 Windows。 Ubuntu 16.04 或更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-### Linux and macOS
+### Linux 和 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -17,22 +17,22 @@ python -m pip install --upgrade nni
 ```
 
 ```eval_rst
-.. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory; this does not require any special privileges.
+.. Note:: 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 ``--user``；这不需要特殊权限。
 ```
 
 ```eval_rst
-.. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
+.. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>`。
 ```
 
 ```eval_rst
-.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
+.. Note:: NNI 的系统需求，参考 :doc:`Linux 和 Mac <InstallationLinux>` 或 :doc:`Windows <InstallationWin>` 的安装教程。
 ```
 
 ## MNIST 上的 "Hello World"
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
+NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
 
-Here is an example script to train a CNN on the MNIST dataset **without NNI**:
+这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
 
 ```python
 def run_trial(params):
