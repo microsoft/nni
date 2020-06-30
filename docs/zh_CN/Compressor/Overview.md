@@ -60,15 +60,15 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
 
 ## 压缩工具
 
-Compression utilities include some useful tools for users to understand and analyze the model they want to compress. For example, users could check sensitivity of each layer to pruning. Users could easily calculate the FLOPs and parameter size of a model. Please refer to [here](./CompressionUtils.md) for a complete list of compression utilities.
+压缩工具包括了一些有用的工具，能帮助用户理解并分析要压缩的模型。 例如，可检查每层对剪枝的敏感度。 可很容易的计算模型的 FLOPs 和参数数量。 [点击这里](./CompressionUtils.md)，查看压缩工具的完整列表。
 
-## Customize Your Own Compression Algorithms
+## 自定义压缩算法
 
-NNI model compression leaves simple interface for users to customize a new compression algorithm. The design philosophy of the interface is making users focus on the compression logic while hiding framework specific implementation details from users. The detailed tutorial for customizing a new compression algorithm (pruning algorithm or quantization algorithm) can be found [here](./Framework.md).
+NNI 模型压缩提供了简洁的接口，用于自定义新的压缩算法。 接口的设计理念是，将框架相关的实现细节包装起来，让用户能聚焦于压缩逻辑。 点击[这里](./Framework.md)，查看自定义新压缩算法（包括剪枝和量化算法）的详细教程。
 
-## Reference and Feedback
-* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
-* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Feature Engineering with NNI](../FeatureEngineering/Overview.md);
-* To know more about [NAS with NNI](../NAS/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](../Tuner/BuiltinTuner.md);
+## 参考和反馈
+* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
+* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)；
+* 了解更多关于 [NNI 中的特征工程](../FeatureEngineering/Overview.md)；
+* 了解更多关于 [NNI 中的 NAS](../NAS/Overview.md)；
+* 了解更多关于 [NNI 中的超参调优](../Tuner/BuiltinTuner.md)；
