@@ -46,11 +46,26 @@ class SimulatedAnnealingPruner(Pruner):
         evaluator : function
             function to evaluate the pruned model.
             This function should include `model` as the only parameter, and returns a scalar value.
+            Example::
+            >>> def evaluator(model):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     val_loader = ...
+            >>>     model.eval()
+            >>>     correct = 0
+            >>>     with torch.no_grad():
+            >>>         for data, target in val_loader:
+            >>>             data, target = data.to(device), target.to(device)
+            >>>             output = model(data)
+            >>>             # get the index of the max log-probability
+            >>>             pred = output.argmax(dim=1, keepdim=True)
+            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
+            >>>     accuracy = correct / len(val_loader.dataset)
+            >>>     return accuracy
         optimize_mode : str
             optimize mode, `maximize` or `minimize`, by default `maximize`.
         base_algo : str
-            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-            Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float

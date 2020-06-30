@@ -40,6 +40,23 @@ class ADMMPruner(OneshotPruner):
             Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
             The logic of `callback` is implemented inside the Pruner,
             users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+            Example::
+            ```
+            >>> def trainer(model, criterion, optimizer, epoch, callback):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     train_loader = ...
+            >>>     model.train()
+            >>>     for batch_idx, (data, target) in enumerate(train_loader):
+            >>>         data, target = data.to(device), target.to(device)
+            >>>         optimizer.zero_grad()
+            >>>         output = model(data)
+            >>>         loss = criterion(output, target)
+            >>>         loss.backward()
+            >>>         # callback should be inserted between loss.backward() and optimizer.step()
+            >>>         if callback:
+            >>>             callback()
+            >>>         optimizer.step()
+            ```
         num_iterations : int
             Total number of iterations.
         training_epochs : int
@@ -47,8 +64,8 @@ class ADMMPruner(OneshotPruner):
         row : float
             Penalty parameters for ADMM training.
         base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-            Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         """
         self._base_algo = base_algo
 

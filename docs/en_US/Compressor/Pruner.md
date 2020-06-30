@@ -383,10 +383,46 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **short_term_fine_tuner:** Function to short-term fine tune the masked model.
 This function should include `model` as the only parameter, and fine tune the model for a short term after each pruning iteration.
+
+Example:
+```python
+>>> def short_term_fine_tuner(model, epoch=3):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     train_loader = ...
+>>>     criterion = torch.nn.CrossEntropyLoss()
+>>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+>>>     model.train()
+>>>     for _ in range(epoch):
+>>>         for batch_idx, (data, target) in enumerate(train_loader):
+>>>             data, target = data.to(device), target.to(device)
+>>>             optimizer.zero_grad()
+>>>             output = model(data)
+>>>             loss = criterion(output, target)
+>>>             loss.backward()
+>>>             optimizer.step()
+```
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
+
+Example::
+```python
+>>> def evaluator(model):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     val_loader = ...
+>>>     model.eval()
+>>>     correct = 0
+>>>     with torch.no_grad():
+>>>         for data, target in val_loader:
+>>>             data, target = data.to(device), target.to(device)
+>>>             output = model(data)
+>>>             # get the index of the max log-probability
+>>>             pred = output.argmax(dim=1, keepdim=True)
+>>>             correct += pred.eq(target.view_as(pred)).sum().item()
+>>>     accuracy = correct / len(val_loader.dataset)
+>>>     return accuracy
+```
 - **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
 - **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
 - **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
 - **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
 
@@ -426,9 +462,26 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **sparsity:** The target overall sparsity.
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
+Example::
+```python
+>>> def evaluator(model):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     val_loader = ...
+>>>     model.eval()
+>>>     correct = 0
+>>>     with torch.no_grad():
+>>>         for data, target in val_loader:
+>>>             data, target = data.to(device), target.to(device)
+>>>             output = model(data)
+>>>             # get the index of the max log-probability
+>>>             pred = output.argmax(dim=1, keepdim=True)
+>>>             correct += pred.eq(target.view_as(pred)).sum().item()
+>>>     accuracy = correct / len(val_loader.dataset)
+>>>     return accuracy
+```
 - **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
 - **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
@@ -471,12 +524,46 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
 Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
 The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+Example:
+```python
+>>> def trainer(model, criterion, optimizer, epoch, callback):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     train_loader = ...
+>>>     model.train()
+>>>     for batch_idx, (data, target) in enumerate(train_loader):
+>>>         data, target = data.to(device), target.to(device)
+>>>         optimizer.zero_grad()
+>>>         output = model(data)
+>>>         loss = criterion(output, target)
+>>>         loss.backward()
+>>>         # callback should be inserted between loss.backward() and optimizer.step()
+>>>         if callback:
+>>>             callback()
+>>>         optimizer.step()
+```
 - **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
+Example::
+```python
+>>> def evaluator(model):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     val_loader = ...
+>>>     model.eval()
+>>>     correct = 0
+>>>     with torch.no_grad():
+>>>         for data, target in val_loader:
+>>>             data, target = data.to(device), target.to(device)
+>>>             output = model(data)
+>>>             # get the index of the max log-probability
+>>>             pred = output.argmax(dim=1, keepdim=True)
+>>>             correct += pred.eq(target.view_as(pred)).sum().item()
+>>>     accuracy = correct / len(val_loader.dataset)
+>>>     return accuracy
+```
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
 - **iterations:** The number of overall iterations.
 - **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
 - **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
@@ -488,7 +575,11 @@ Given the sparsity distrution among the ops, the assigned `base_algo` is used to
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
-by decomposing the original nonconvex problem into two subproblems that can be solved iteratively. In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. This solution framework applies both to non-structured and different variations of structured pruning schemes.
+by decomposing the original nonconvex problem into two subproblems that can be solved iteratively. In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
+
+During the process of solving these two subproblems, the weights of the original model will be changed. An one-shot pruner will then be applied to prune the model according to the config list given.
+
+This solution framework applies both to non-structured and different variations of structured pruning schemes.
 
 For more details, please refer to [A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers](https://arxiv.org/abs/1804.03294).
 
@@ -517,15 +608,33 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 - **sparsity:** This is to specify the sparsity operations to be compressed to.
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem.
+- **trainer:** Function used for the first subproblem in ADMM optimization, attention, this is not used for fine-tuning.
 Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
 Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
 The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+
+Example: 
+```python
+>>> def trainer(model, criterion, optimizer, epoch, callback):
+>>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+>>>     train_loader = ...
+>>>     model.train()
+>>>     for batch_idx, (data, target) in enumerate(train_loader):
+>>>         data, target = data.to(device), target.to(device)
+>>>         optimizer.zero_grad()
+>>>         output = model(data)
+>>>         loss = criterion(output, target)
+>>>         loss.backward()
+>>>         # callback should be inserted between loss.backward() and optimizer.step()
+>>>         if callback:
+>>>             callback()
+>>>         optimizer.step()
+```
 - **num_iterations:** Total number of iterations.
 - **training_epochs:** Training epochs of the first subproblem.
 - **row:** Penalty parameters for ADMM training.
 - **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
 
 
 ## Lottery Ticket Hypothesis
