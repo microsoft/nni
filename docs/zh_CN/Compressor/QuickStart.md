@@ -32,32 +32,32 @@ pruner = SlimPruner(model, configure_list)
 model = pruner.compress()
 ```
 
-然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。 Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。 一些 Pruner 只在最开始剪枝一次，接下来的训练可被看作是微调优化。 有些 Pruner 会迭代的对模型剪枝，在训练过程中逐步修改掩码。
 
 ### 导出压缩结果
 
-After training, you get accuracy of the pruned model. You can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
+训练完成后，可获得剪枝后模型的精度。 可将模型权重到处到文件，同时将生成的掩码也导出到文件。 也支持导出 ONNX 模型。
 
 ```python
 pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 ```
 
-The complete code of model compression examples can be found [here](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py).
+模型的完整示例代码在[这里](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py)
 
 ### 加速模型
 
-Masks do not provide real speedup of your model. The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
+掩码实际上并不能加速模型。 要基于导出的掩码，来对模型加速，因此，NNI 提供了 API 来加速模型。 在模型上调用 `apply_compression_results` 后，模型会变得更小，推理延迟也会减小。
 
 ```python
 from nni.compression.torch import apply_compression_results
 apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 ```
 
-Please refer to [here](ModelSpeedup.md) for detailed description.
+参考[这里](ModelSpeedup.md)，了解详情。
 
 ## 使用指南
 
-The example code for users to apply model compression on a user model can be found below:
+将压缩应用到模型的示例代码如下：
 
 PyTorch code
 
