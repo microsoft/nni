@@ -1,40 +1,40 @@
 # **在 OpenPAI 上运行 Experiment**
 
-NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai), called pai mode. 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI 账户，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。
+NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) 上运行 Experiment，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI 账户，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。
 
 ## 设置环境
 
 步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
-步骤 2. Get token.
+步骤 2. 获得令牌（token）。
 
-Open web portal of OpenPAI, and click `My profile` button in the top-right side. ![](../../img/pai_profile.jpg)
+打开 OpenPAI 的 Web 界面，并点击右上方的 `My profile` 按钮。 ![](../../img/pai_profile.jpg)
 
-Click `copy` button in the page to copy a jwt token. ![](../../img/pai_token.jpg)
+点击页面中的 `copy` 按钮来复制 jwt 令牌。 ![](../../img/pai_token.jpg)
 
-Step 3. Mount NFS storage to local machine.
+步骤 3. 将 NFS 存储挂在到本地计算机。
 
-Click `Submit job` button in web portal. ![](../../img/pai_job_submission_page.jpg)
+点击 Web 界面中的 `Submit job` 按钮。 ![](../../img/pai_job_submission_page.jpg)
 
-Find the data management region in job submission page. ![](../../img/pai_data_management_page.jpg)
+找到作业提交页面中的数据管理部分。 ![](../../img/pai_data_management_page.jpg)
 
-The `Preview container paths` is the NFS host and path that OpenPAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the OpenPAI's NFS storage.  
-For example, use the following command:
+`Preview container paths` 是 API 提供的 NFS 主机和路径，需要将对应的位置挂载到本机，然后 NNI 才能使用 NFS 存储。  
+例如，使用下列命令：
 
 ```bash
 sudo mount -t nfs4 gcr-openpai-infra02:/pai/data /local/mnt
 ```
 
-Then the `/data` folder in container will be mounted to `/local/mnt` folder in your local machine.  
-You could use the following configuration in your NNI's config file:
+然后容器中的 `/data` 路径会被挂载到本机的 `/local/mnt` 文件夹  
+然后在 NNI 的配置文件中如下配置：
 
 ```yaml
 nniManagerNFSMountPath: /local/mnt
 ```
 
-Step 4. Get OpenPAI's storage config name and nniManagerMountPath
+步骤 4. 获得 OpenPAI 存储的配置名称和 nniManagerMountPath
 
-The `Team share storage` field is storage configuration used to specify storage value in OpenPAI. You can get `paiStorageConfigName` and `containerNFSMountPath` field in `Team share storage`, for example:
+`Team share storage` 字段是在 OpenPAI 中指定存储配置的值。 可以在 `Team share storage` 中找到 `paiStorageConfigName` 和 `containerNFSMountPath` 字段，如：
 
 ```yaml
 paiStorageConfigName: confignfs-data
@@ -43,22 +43,22 @@ containerNFSMountPath: /mnt/confignfs-data
 
 ## 运行 Experiment
 
-Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
+以 `examples/trials/mnist-annotation` 为例。 NNI 的 YAML 配置文件如下：
 
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# how many trials could be concurrently running
+# 并发运行的 Trial 数量
 trialConcurrency: 2
-# maximum experiment running duration
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
-# empty means never stop
+# 空表示一直运行
 maxTrialNum: 100
-# choice: local, remote, pai
+# 可选项: local, remote, pai
 trainingServicePlatform: pai
-# search space file
+# 搜索空间文件
 searchSpacePath: search_space.json
-# choice: true, false
+# 可选项: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -75,16 +75,16 @@ trial:
   nniManagerNFSMountPath: /home/user/mnt
   containerNFSMountPath: /mnt/data/user
   paiStorageConfigName: confignfs-data
-# Configuration to access OpenPAI Cluster
+# 配置要访问的 OpenPAI 集群
 paiConfig:
   userName: your_pai_nni_user
   token: your_pai_token
   host: 10.1.1.1
-  # optional, experimental feature.
+  # 可选，测试版功能。
   reuse: true
 ```
 
-Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
+注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。
 
 ### Trial configurations
 
