@@ -1,13 +1,13 @@
-# NAS Benchmarks (experimental)
+# NAS 基准测试（测试版）
 
 ```eval_rst
 ..  toctree::
     :hidden:
 
-    Example Usages <BenchmarksExample>
+    用法示例 <BenchmarksExample>
 ```
 
-## Prerequisites
+## 先决条件
 
 * Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
 * Please install `peewee` via `pip install peewee`, which NNI uses to connect to database.
@@ -90,7 +90,7 @@ Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from inp
 
 NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges as operators. The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` and `AVG_POOL_3X3`). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
 
-### API Documentation
+### API 文档
 
 
 ```eval_rst
