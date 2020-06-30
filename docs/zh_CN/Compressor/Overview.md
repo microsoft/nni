@@ -52,11 +52,11 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
 
 ## 自动模型压缩
 
-Given targeted compression ratio, it is pretty hard to obtain the best compressed ratio in a one shot manner. An automatic model compression algorithm usually need to explore the compression space by compressing different layers with different sparsities. NNI provides such algorithms to free users from specifying sparsity of each layer in a model. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Detailed document can be found [here](./AutoCompression.md).
+有时，给定的目标压缩率很难通过一次压缩就得到最好的结果。 自动模型压缩算法，通常需要通过对不同层采用不同的稀疏度来探索可压缩的空间。 NNI 提供了这样的算法，来帮助用户在模型中为每一层指定压缩度。 此外，还可利用 NNI 的自动调参功能来自动的压缩模型。 详细文档参考[这里](./AutoCompression.md)。
 
 ## 模型加速
 
-The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Model Speedup can be found [here](./ModelSpeedup.md).
+模型压缩的目的是减少推理延迟和模型大小。 但现有的模型压缩算法主要通过模拟的方法来检查压缩模型性能（如精度）。例如，剪枝算法中使用掩码，而量化算法中量化值仍然是以 32 位浮点数来存储。 只要给出这些算法产生的掩码和量化位，NNI 可真正的加速模型。 模型加速的详细文档参考[这里](./ModelSpeedup.md)。
 
 ## 压缩工具
 
