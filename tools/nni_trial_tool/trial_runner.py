@@ -188,8 +188,9 @@ if __name__ == '__main__':
     from .trial import Trial
     from .file_channel import FileChannel
     from .web_channel import WebChannel
-    from .aml_channel import AMLChannel
     from .commands import CommandType
+    if args.platform == 'aml':
+        from .aml_channel import AMLChannel
 
     is_multi_node = args.node_count > 1
 
