@@ -39,9 +39,8 @@ export class AMLCommandChannel extends CommandChannel {
 
     public async start(): Promise<void> {
         // start command loops
-        await Promise.all([
-            this.receiveLoop(),
-            this.sendLoop()]);
+        this.receiveLoop();
+        this.sendLoop();
     }
 
     public async stop(): Promise<void> {
