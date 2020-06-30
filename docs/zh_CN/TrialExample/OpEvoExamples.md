@@ -1,8 +1,8 @@
-# Tuning Tensor Operators on NNI
+# NNI 上调优张量算子
 
-## Overview
+## 概述
 
-Abundant applications raise the demands of training and inference deep neural networks (DNNs) efficiently on diverse hardware platforms ranging from cloud servers to embedded devices. Moreover, computational graph-level optimization of deep neural network, like tensor operator fusion, may introduce new tensor operators. Thus, manually optimized tensor operators provided by hardware-specific libraries have limitations in terms of supporting new hardware platforms or supporting new operators, so automatically optimizing tensor operators on diverse hardware platforms is essential for large-scale deployment and application of deep learning technologies in the real-world problems.
+深度神经网络（DNN）的大量应用，催生了对从云服务器到嵌入式设备等不同硬件平台上的训练和推理的需求。 此外，还有深度神经网络上的计算图优化问题，如张量算子融合会引入新的张量算子。 Thus, manually optimized tensor operators provided by hardware-specific libraries have limitations in terms of supporting new hardware platforms or supporting new operators, so automatically optimizing tensor operators on diverse hardware platforms is essential for large-scale deployment and application of deep learning technologies in the real-world problems.
 
 Tensor operator optimization is substantially a combinatorial optimization problem. The objective function is the performance of a tensor operator on specific hardware platform, which should be maximized with respect to the hyper-parameters of corresponding device code, such as how to tile a matrix or whether to unroll a loop. This example illustrates how to automatically tune tensor operators with NNI. Three tuning algorithms, OpEvo, G-BFS and N-A2C are provided. Please refer to [OpEvo: An Evolutionary Method for Tensor Operator Optimization](https://arxiv.org/abs/2006.05664) for detailed explanation about these algorithms.
 
@@ -23,30 +23,30 @@ Three representative kinds of tensor operators, **matrix multiplication**, **bat
 
 For tuning the operators of matrix multiplication, please run below commands from `/root`:
 ```bash
-# (N, K) x (K, M) represents a matrix of shape (N, K) multiplies a matrix of shape (K, M)
+# (N, K) x (K, M) 表示形状为 (N, K) 的矩阵乘以形状为 (K, M) 的矩阵
 
 # (512, 1024) x (1024, 1024)
-# tuning with opevo
+# 用 opevo 调优
 nnictl create --config experiments/mm/N512K1024M1024/config_opevo.yml
-# tuning with g-bfs
+# 用 g-bfs 调优
 nnictl create --config experiments/mm/N512K1024M1024/config_gbfs.yml
-# tuning with n-a2c
+# 用 n-a2c 调优
 nnictl create --config experiments/mm/N512K1024M1024/config_na2c.yml
 
 # (512, 1024) x (1024, 4096)
-# tuning with opevo
+# 用 opevo 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_opevo.yml
-# tuning with g-bfs
+# 用 g-bfs 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_gbfs.yml
-# tuning with n-a2c
+# 用 n-a2c 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_na2c.yml
 
 # (512, 4096) x (4096, 1024)
-# tuning with opevo
+# 用 opevo 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_opevo.yml
-# tuning with g-bfs
+# 用 g-bfs 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_gbfs.yml
-# tuning with n-a2c
+# 用 n-a2c 调优
 nnictl create --config experiments/mm/N512K1024M4096/config_na2c.yml
 ```
 
