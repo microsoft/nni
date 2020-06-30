@@ -1,9 +1,9 @@
 # NNI 支持的剪枝算法
 
-NNI 提供了一些支持细粒度权重剪枝和结构化过滤剪枝算法。 **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **过滤剪枝**通过删除整个过滤器来实现加速。  NNI 还提供了算法来进行**剪枝规划**。
+NNI 提供了一些支持细粒度权重剪枝和结构化过滤剪枝算法。 **细粒度的剪枝**通常会导致非结构化的模型，这需要特定的硬件或软件来加速这样的稀疏网络。 **过滤剪枝**通过删除整个过滤器来实现加速。  NNI 还提供了算法来进行**剪枝规划**。
 
 
-**Fine-grained Pruning**
+**细粒度剪枝**
 * [Level Pruner](#level-pruner)
 
 **过滤剪枝**
@@ -18,18 +18,18 @@ NNI 提供了一些支持细粒度权重剪枝和结构化过滤剪枝算法。 
 **剪枝计划**
 * [AGP Pruner](#agp-pruner)
 
-**Others**
-* [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
+**其它**
+* [Lottery Ticket 假设](#lottery-ticket-hypothesis)
 
 ## Level Pruner
 
-This is one basic one-shot pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%).
+这是个基本的一次性 Pruner：可设置目标稀疏度（以分数表示，0.6 表示会剪除 60%）。
 
-We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
+首先按照绝对值对指定层的权重排序。 然后按照所需的稀疏度，将值最小的权重屏蔽为 0。
 
 ### 用法
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
@@ -37,7 +37,7 @@ pruner = LevelPruner(model_graph, config_list)
 pruner.compress()
 ```
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
@@ -46,17 +46,17 @@ pruner.compress()
 ```
 
 #### Level Pruner 的用户配置
-* **sparsity:** This is to specify the sparsity operations to be compressed to
+* **sparsity:**，指定压缩的稀疏度。
 
 ***
 
 ## Slim Pruner
 
-This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+这是一次性的 Pruner，在 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
 
 ![](../../img/slim_pruner.png)
 
-> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+> Slim Pruner **会遮盖卷据层通道之后 BN 层对应的缩放因子**，训练时在缩放因子上的 L1 正规化应在批量正规化 (BN) 层之后来做。BN 层的缩放因子在修剪时，是**全局排序的**，因此稀疏模型能自动找到给定的稀疏度。
 
 ### 用法
 
@@ -69,36 +69,36 @@ pruner = SlimPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for Slim Pruner
+#### Slim Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
 
-### Reproduced Experiment
+### 重现实验
 
-We implemented one of the experiments in ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+我们实现了 ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf) 中的一项实验。根据论文，对 CIFAR-10 上的 **VGGNet** 剪除了 $70\%$ 的通道，即约 $88.5\%$ 的参数。 实验结果如下：
 
 | 模型            | 错误率(论文/我们的) | 参数量    | 剪除率   |
 | ------------- | ----------- | ------ | ----- |
 | VGGNet        | 6.34/6.40   | 20.04M |       |
 | Pruned-VGGNet | 6.20/6.26   | 2.03M  | 88.5% |
 
-The experiments code can be found at [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+实验代码在 [examples/model_compress](https://github.com/microsoft/nni/tree/master/examples/model_compress/)
 
 ***
 
 ## FPGM Pruner
 
-This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 
-FPGMPruner prune filters with the smallest geometric median
+具有最小几何中位数的 FPGMPruner 修剪过滤器
 
  ![](../../img/fpgm_fig1.png)
-> Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
-### Usage
+### 用法
 
-Tensorflow code
+TensorFlow 代码
 ```python
 from nni.compression.tensorflow import FPGMPruner
 config_list = [{
@@ -108,7 +108,7 @@ config_list = [{
 pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
 config_list = [{
@@ -119,8 +119,8 @@ pruner = FPGMPruner(model, config_list)
 pruner.compress()
 ```
 
-#### User configuration for FPGM Pruner
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
+#### FPGM Pruner 的用户配置
+- **sparsity:** 卷积过滤器要修剪的百分比。
 - **op_types:** Only Conv2d is supported in L1Filter Pruner
 
 ***
