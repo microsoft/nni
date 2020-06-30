@@ -1,11 +1,10 @@
 # Supported Pruning Algorithms on NNI
 
-We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Weight pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
 
 
-**Weight Pruning**
+**Fine-grained Pruning**
 * [Level Pruner](#level-pruner)
-* [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
   
 **Filter Pruning**
 * [Slim Pruner](#slim-pruner)
@@ -18,14 +17,16 @@ We provide several pruning algorithms that support fine-grained weight pruning a
     * [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
 * [Filter Pruners with Gradient Rank](#gradientrankfilterpruner)
     * [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
-* [ADMM Pruner](#admm-pruner)
-
   
 **Pruning Schedule**
 * [AGP Pruner](#agp-pruner)
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+
+**Others**
+* [ADMM Pruner](#admm-pruner)
+* [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
 
 ## Level Pruner
 
@@ -56,6 +57,244 @@ pruner.compress()
 
 ***
 
+## Slim Pruner
+
+This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
+
+![](../../img/slim_pruner.png)
+
+> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SlimPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+pruner = SlimPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for Slim Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+
+### Reproduced Experiment
+
+We implemented one of the experiments in ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+
+| Model         | Error(paper/ours) | Parameters | Pruned    |
+| ------------- | ----------------- | ---------- | --------- |
+| VGGNet        | 6.34/6.40     | 20.04M   |           |
+| Pruned-VGGNet | 6.20/6.26     | 2.03M    | 88.5% |
+
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+
+***
+
+## FPGM Pruner
+
+This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
+
+FPGMPruner prune filters with the smallest geometric median
+
+ ![](../../img/fpgm_fig1.png)
+
+>Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+
+### Usage
+
+Tensorflow code
+```python
+from nni.compression.tensorflow import FPGMPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2D']
+}]
+pruner = FPGMPruner(model, config_list)
+pruner.compress()
+```
+PyTorch code
+```python
+from nni.compression.torch import FPGMPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = FPGMPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for FPGM Pruner
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Only Conv2d is supported in L1Filter Pruner
+
+***
+
+## L1Filter Pruner
+
+This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+
+![](../../img/l1filter_pruner.png)
+
+> L1Filter Pruner prunes filters in the **convolution layers**
+>
+> The procedure of pruning m filters from the ith convolutional layer is as follows:
+>
+> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
+> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
+> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The
+>      kernels in the next convolutional layer corresponding to the pruned feature maps are also
+>        removed.
+> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
+>      weights are copied to the new model.
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import L1FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = L1FilterPruner(model, config_list)
+pruner.compress()
+```
+
+#### User configuration for L1Filter Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only Conv2d is supported in L1Filter Pruner
+
+### Reproduced Experiment
+
+We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) with **L1FilterPruner**, we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+
+| Model           | Error(paper/ours) | Parameters      | Pruned   |
+| --------------- | ----------------- | --------------- | -------- |
+| VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
+| VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
+
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+
+***
+
+## L2Filter Pruner
+
+This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import L2FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+pruner = L2FilterPruner(model, config_list)
+pruner.compress()
+```
+
+### User configuration for L2Filter Pruner
+
+- **sparsity:** This is to specify the sparsity operations to be compressed to
+- **op_types:** Only Conv2d is supported in L2Filter Pruner
+
+***
+
+## ActivationAPoZRankFilterPruner
+
+ActivationAPoZRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
+
+The APoZ is defined as:
+
+![](../../img/apoz.png)
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import ActivationAPoZRankFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
+pruner.compress()
+```
+
+Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+
+You can view example for more information
+
+### User configuration for ActivationAPoZRankFilterPruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
+
+***
+
+## ActivationMeanRankFilterPruner
+
+ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import ActivationMeanRankFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1)
+pruner.compress()
+```
+
+Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
+
+You can view example for more information
+
+### User configuration for ActivationMeanRankFilterPruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
+
+***
+
+## TaylorFOWeightFilterPruner
+
+TaylorFOWeightFilterPruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+
+> 
+
+![](../../img/importance_estimation_sum.png)
+
+### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import TaylorFOWeightFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
+pruner.compress()
+```
+
+You can view example for more information
+
+### User configuration for TaylorFOWeightFilterPruner
+
+- **sparsity:** How much percentage of convolutional filters are to be pruned.
+- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+
+***
+
 ## AGP Pruner
 This is an iterative pruner, In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
@@ -66,20 +305,6 @@ This is an iterative pruner, In [To prune, or not to prune: exploring the effica
 ### Usage
 You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
 
-Tensorflow code
-```python
-from nni.compression.tensorflow import AGP_Pruner
-config_list = [{
-    'initial_sparsity': 0,
-    'final_sparsity': 0.8,
-    'start_epoch': 0,
-    'end_epoch': 10,
-    'frequency': 1,
-    'op_types': 'default'
-}]
-pruner = AGP_Pruner(tf.get_default_graph(), config_list)
-pruner.compress()
-```
 PyTorch code
 ```python
 from nni.compression.torch import AGP_Pruner
@@ -91,7 +316,16 @@ config_list = [{
     'frequency': 1,
     'op_types': ['default']
 }]
-pruner = AGP_Pruner(model, config_list, pruning_algorithm='level')
+
+# load a pretrained model or train a model before using a pruner
+# model = MyModel()
+# model.load_state_dict(torch.load('mycheckpoint.pth'))
+
+# AGP pruner prunes model while fine tuning the model by adding a hook on
+# optimizer.step(), so an optimizer is required to prune the model.
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+
+pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm='level')
 pruner.compress()
 ```
 
@@ -107,10 +341,6 @@ AGP pruner uses `LevelPruner` algorithms to prune the weight by default, however
 
 You should add code below to update epoch number when you finish one epoch in your training code.
 
-Tensorflow code 
-```python
-pruner.update_epoch(epoch, sess)
-```
 PyTorch code
 ```python
 pruner.update_epoch(epoch)
@@ -173,266 +403,6 @@ We try to reproduce the experiment result of the fully connected network on MNIS
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
-
-***
-
-## Slim Pruner
-
-This is an one-shot pruner, In ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
-
-![](../../img/slim_pruner.png)
-
-> Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**, L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are **globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
-
-### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import SlimPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-pruner = SlimPruner(model, config_list)
-pruner.compress()
-```
-
-#### User configuration for Slim Pruner
-
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner
-
-### Reproduced Experiment
-
-We implemented one of the experiments in ['Learning Efficient Convolutional Networks through Network Slimming'](https://arxiv.org/pdf/1708.06519.pdf), we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
-
-| Model         | Error(paper/ours) | Parameters | Pruned    |
-| ------------- | ----------------- | ---------- | --------- |
-| VGGNet        | 6.34/6.40     | 20.04M   |           |
-| Pruned-VGGNet | 6.20/6.26     | 2.03M    | 88.5% |
-
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
-
-***
-
-## WeightRankFilterPruner
-WeightRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the weights in convolution layers to achieve a preset level of network sparsity
-
-### FPGM Pruner
-
-This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
-
-FPGMPruner prune filters with the smallest geometric median
-
- ![](../../img/fpgm_fig1.png)
-
->Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
-
-#### Usage
-
-Tensorflow code
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
-PyTorch code
-```python
-from nni.compression.torch import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
-Note: FPGM Pruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
-
-You should add code below to update epoch number at beginning of each epoch.
-
-Tensorflow code
-```python
-pruner.update_epoch(epoch, sess)
-```
-PyTorch code
-```python
-pruner.update_epoch(epoch)
-```
-You can view example for more information
-
-#### User configuration for FPGM Pruner
-* **sparsity:** How much percentage of convolutional filters are to be pruned.
-
-***
-
-### L1Filter Pruner
-
-This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
-
-![](../../img/l1filter_pruner.png)
-
-> L1Filter Pruner prunes filters in the **convolution layers**
->
-> The procedure of pruning m filters from the ith convolutional layer is as follows:
->
-> 1. For each filter ![](http://latex.codecogs.com/gif.latex?F_{i,j}), calculate the sum of its absolute kernel weights![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
-> 2. Sort the filters by ![](http://latex.codecogs.com/gif.latex?s_j).
-> 3. Prune ![](http://latex.codecogs.com/gif.latex?m) filters with the smallest sum values and their corresponding feature maps. The
->      kernels in the next convolutional layer corresponding to the pruned feature maps are also
->        removed.
-> 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
->      weights are copied to the new model.
-
-#### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import L1FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-pruner = L1FilterPruner(model, config_list)
-pruner.compress()
-```
-
-#### User configuration for L1Filter Pruner
-
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv1d and Conv2d is supported in L1Filter Pruner
-
-#### Reproduced Experiment
-
-We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710) with **L1FilterPruner**, we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
-
-| Model           | Error(paper/ours) | Parameters      | Pruned   |
-| --------------- | ----------------- | --------------- | -------- |
-| VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
-| VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
-
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
-
-***
-
-### L2Filter Pruner
-
-This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
-
-#### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import L2FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-pruner = L2FilterPruner(model, config_list)
-pruner.compress()
-```
-
-#### User configuration for L2Filter Pruner
-
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv1d and Conv2d is supported in L2Filter Pruner
-
-***
-
-## ActivationRankFilterPruner
-ActivationRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the output activations of convolution layers to achieve a preset level of network sparsity.
-
-### ActivationAPoZRankFilterPruner
-
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `APoZ` which is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250). Iterative pruning based on `APoZ` will be supported in future release.
-
-The APoZ is defined as:
-
-![](../../img/apoz.png)
-
-#### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import ActivationAPoZRankFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
-pruner.compress()
-```
-
-Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
-
-You can view example for more information
-
-#### User configuration for ActivationAPoZRankFilterPruner
-
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
-
-***
-
-### ActivationMeanRankFilterPruner
-
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the criterion `mean activation` which is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
-
-#### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import ActivationMeanRankFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-pruner = ActivationMeanRankFilterPruner(model, config_list)
-pruner.compress()
-```
-
-Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
-
-You can view example for more information
-
-#### User configuration for ActivationMeanRankFilterPruner
-
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
-
-***
-
-## GradientRankFilterPruner
-
-GradientRankFilterPruner is a series of pruners which prune the filters with the smallest importance criterion calculated from the gradients of convolution layers to achieve a preset level of network sparsity.
-
-### TaylorFOWeightFilterPruner
-
-We implemented it as a one-shot pruner, it prunes convolutional layers based on the first order taylor expansion on weights. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
-
-> 
-
-![](../../img/importance_estimation_sum.png)
-
-#### Usage
-
-PyTorch code
-
-```python
-from nni.compression.torch import TaylorFOWeightFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer)
-pruner.compress()
-```
-
-You can view example for more information
-
-#### User configuration for GradientWeightSumFilterPruner
-
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
 
 
 ## NetAdapt Pruner
