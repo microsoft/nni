@@ -84,6 +84,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/zh_CN/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
            <li><a href="docs/zh_CN/TrialExample/EfficientNet.md">EfficientNet</a></li>
+           <li><a href="docs/en_US/TrialExample/OpEvoExamples.md">Kernel Tunning</li></a>
               <a href="docs/zh_CN/SupportedFramework_Library.md">更多...</a><br/>
           </ul>
         </ul>
@@ -164,7 +165,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
             </ul>
-            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>        
+            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>
       </ul>
       </td>
     </tr>
