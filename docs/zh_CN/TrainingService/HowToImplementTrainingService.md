@@ -1,4 +1,4 @@
-# How to Implement Training Service in NNI
+# NNI 中如何实现训练平台
 
 ## 概述
 
