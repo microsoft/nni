@@ -28,7 +28,7 @@ class NetAdaptPruner(Pruner):
         1. Con = Res_i - delta_Res
         2. for every layer:
             Choose Num Filters to prune
-            Choose which filter to prunee
+            Choose which filter to prune
             Short-term fine tune the pruned model
         3. Pick the best layer to prune
     Long-term fine tune
@@ -58,6 +58,7 @@ class NetAdaptPruner(Pruner):
             optimize mode, `maximize` or `minimize`, by default `maximize`.
         base_algo : str
             base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+            Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         sparsity_per_iteration : float
             sparsity to prune in each iteration
         experiment_data_dir : str

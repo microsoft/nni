@@ -45,9 +45,10 @@ class ADMMPruner(OneshotPruner):
         training_epochs : int
             Training epochs of the first subproblem.
         row : float
-            Penalty parameters for ADMM training
+            Penalty parameters for ADMM training.
         base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`
+            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+            Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         """
         self._base_algo = base_algo
 

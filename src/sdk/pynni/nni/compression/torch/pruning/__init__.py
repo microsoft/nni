@@ -7,7 +7,6 @@ from .apply_compression import apply_compression_results
 from .one_shot import *
 from .agp import *
 from .lottery_ticket import LotteryTicketPruner
-
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
 from .net_adapt_pruner import NetAdaptPruner
 from .admm_pruner import ADMMPruner

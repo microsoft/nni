@@ -64,7 +64,8 @@ class AutoCompressPruner(Pruner):
         optimize_mode : str
             optimize mode, `maximize` or `minimize`, by default `maximize`
         base_algo : str
-            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`
+            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+            Given the sparsity distrution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
         start_temperature : float
             Simualated Annealing related parameter
         stop_temperature : float
