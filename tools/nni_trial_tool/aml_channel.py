@@ -29,7 +29,6 @@ class AMLChannel(BaseChannel):
 
     def _inner_receive(self):
         messages = []
-        # receive message is string, to get consistent result, encode it here.
         message_dict = self.run.get_metrics()
         if 'nni_manager' not in message_dict:
             return []
@@ -45,5 +44,6 @@ class AMLChannel(BaseChannel):
             self.current_message_index += 1
         newMessage = []
         for message in messages:
+            # receive message is string, to get consistent result, encode it here.
             newMessage.append(message.encode('utf8'))
         return newMessage
