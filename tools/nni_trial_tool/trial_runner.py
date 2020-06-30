@@ -10,6 +10,7 @@ import sys
 import threading
 import time
 import traceback
+import logging
 from datetime import datetime, timedelta
 
 import pkg_resources
@@ -30,22 +31,9 @@ def main_loop(args):
     try:
         trials = dict()
 
-        # init command channel
-        command_channel = None
-        if args.command_channel == "file":
-            command_channel = FileChannel(args)
-        elif args.command_channel == 'aml':
-            command_channel = AMLChannel(args)
-        else:
-            command_channel = WebChannel(args)
-        command_channel.open()
-
-        nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
-        args.command_channel = command_channel
-
         # command loop
         while True:
-            command_type, command_data = command_channel.receive()
+            command_type, command_data = args.command_channel.receive()
             if command_type == CommandType.NewTrialJob:
                 trial_id = command_data["trialId"]
                 if trial_id in trials.keys():
@@ -85,7 +73,7 @@ def main_loop(args):
             if args.enable_gpu_collect and (datetime.now() - gpu_refresh_last_time).seconds > gpu_refressh_interval_seconds:
                 # collect gpu information
                 gpu_info = collect_gpu_usage(args.node_id)
-                command_channel.send(CommandType.ReportGpuInfo, gpu_info)
+                args.command_channel.send(CommandType.ReportGpuInfo, gpu_info)
                 gpu_refresh_last_time = datetime.now()
             time.sleep(0.5)
     except Exception as ex:
@@ -100,10 +88,10 @@ def main_loop(args):
             del trials[trial.id]
         # wait to send commands
         for _ in range(10):
-            if command_channel.sent():
+            if args.command_channel.sent():
                 break
             time.sleep(1)
-        command_channel.close()
+        args.command_channel.close()
 
 
 def trial_runner_help_info(*args):
@@ -242,9 +230,23 @@ if __name__ == '__main__':
     else:
         # node id is unique in the runner
         args.node_id = None
+    
+    # init command channel
+    command_channel = None
+    if args.command_channel == "file":
+        command_channel = FileChannel(args)
+    elif args.command_channel == 'aml':
+        command_channel = AMLChannel(args)
+    else:
+        command_channel = WebChannel(args)
+    command_channel.open()
+
+    nni_log(LogType.Info, "command channel is {}, actual type is {}".format(args.command_channel, type(command_channel)))
+    args.command_channel = command_channel
 
     trial_runner_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'runner',
-                                          StdOutputType.Stdout, args.log_collection, args.runner_name)
+                                          StdOutputType.Stdout, args.log_collection, args.runner_name,
+                                          logging.INFO, args.command_channel)
     sys.stdout = sys.stderr = trial_runner_syslogger
     nni_log(LogType.Info, "{}: merged args is {}".format(args.node_id, args))
 

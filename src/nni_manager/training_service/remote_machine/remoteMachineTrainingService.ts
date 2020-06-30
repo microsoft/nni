@@ -406,10 +406,8 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async setupConnections(machineList: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
-        const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-        let connectedRMNum: number = 0;
 
         const connectionPromises = [];
         for (const rmMeta of rmMetaList) {
@@ -422,13 +420,9 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.debug(`initializing ${executor.name}`);
             connectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
             this.log.info(`connected to ${executor.name}`);
-            if (++connectedRMNum === rmMetaList.length) {
-                deferred.resolve();
-            }
         }
-        Promise.all(connectionPromises);
 
-        return deferred.promise;
+        await Promise.all(connectionPromises);
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {

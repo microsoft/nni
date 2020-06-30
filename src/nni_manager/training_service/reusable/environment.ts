@@ -1,27 +1,14 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
 import { GPUSummary } from "training_service/common/gpuData";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
+import { EventEmitter } from "events";
+import { WebCommandChannel } from "./channels/webCommandChannel";
+import { CommandChannel } from "./commandChannel";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -35,6 +22,14 @@ export abstract class EnvironmentService {
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+
+    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+        return new WebCommandChannel(commandEmitter);
+    }
+
+    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+        return new EnvironmentInformation(envId, envName);
+    }
 }
 
 export class NodeInfomation {
@@ -85,9 +80,6 @@ export class EnvironmentInformation {
     public runnerWorkingFolder: string = "";
     public command: string = "";
     public nodeCount: number = 1;
-    // aml related resource, need to refactor
-    public environmentLocalTempFolder: string = "";
-    public environmentClient: any = "";
 
     // it's used to aggregate node status for multiple node trial
     public nodes: Map<string, NodeInfomation>;

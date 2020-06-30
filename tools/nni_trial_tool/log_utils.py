@@ -10,7 +10,6 @@ import time
 import threading
 import re
 
-from azureml.core.run import Run
 from datetime import datetime
 from enum import Enum, unique
 from logging import StreamHandler
@@ -45,7 +44,7 @@ def nni_log(log_type, log_message):
 
 
 class NNIRestLogHanlder(StreamHandler):
-    def __init__(self, host, port, tag, trial_id, std_output_type=StdOutputType.Stdout):
+    def __init__(self, host, port, tag, trial_id, std_output_type=StdOutputType.Stdout, command_channel=None):
         StreamHandler.__init__(self)
         self.host = host
         self.port = port
@@ -54,8 +53,7 @@ class NNIRestLogHanlder(StreamHandler):
         self.trial_id = trial_id
         self.orig_stdout = sys.__stdout__
         self.orig_stderr = sys.__stderr__
-        if NNI_PLATFORM == 'aml':
-            self.run = Run.get_context()
+        self.command_channel = command_channel
 
     def emit(self, record):
         log_entry = {}
@@ -67,8 +65,8 @@ class NNIRestLogHanlder(StreamHandler):
         try:
             if self.host:
                 rest_post(gen_send_stdout_url(self.host, self.port, self.trial_id), json.dumps(log_entry), 10, True)
-            elif NNI_PLATFORM == 'aml' and self.tag == 'trial':
-                self.run.log('trial_runner_sdk', json.dumps(log_entry))
+            elif NNI_PLATFORM == 'aml' and self.command_channel:
+                self.command_channel.send_metric(log_entry)
         except Exception as e:
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()
@@ -79,7 +77,7 @@ class RemoteLogger(object):
     NNI remote logger
     """
 
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, trial_id=None, log_level=logging.INFO):
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, trial_id=None, log_level=logging.INFO, command_channel=None):
         '''
         constructor
         '''
@@ -87,7 +85,7 @@ class RemoteLogger(object):
         self.log_level = log_level
         self.logger.setLevel(self.log_level)
         self.pipeReader = None
-        self.handler = NNIRestLogHanlder(syslog_host, syslog_port, tag, trial_id)
+        self.handler = NNIRestLogHanlder(syslog_host, syslog_port, tag, trial_id, StdOutputType.Stdout, command_channel)
         self.logger.addHandler(self.handler)
         if std_output_type == StdOutputType.Stdout:
             self.orig_stdout = sys.__stdout__

@@ -28,6 +28,7 @@ import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { AMLClusterConfig, AMLTrialConfig, AMLTrialJobDetail } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { AMLClient } from '../aml/amlClient';
 import {
     NNIManagerIpConfig, TrainingService,
@@ -38,12 +39,16 @@ import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
     getVersion, uniqueString
 } from '../../../common/utils';
+import { AMLCommandChannel } from '../channels/amlCommandChannel';
+import { CommandChannel } from "../commandChannel";
+import { EventEmitter } from "events";
+
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
 @component.Singleton
-export class AMLEnvironmentService implements EnvironmentService {
+export class AMLEnvironmentService extends EnvironmentService {
     
     private readonly log: Logger = getLogger();
     public amlClusterConfig: AMLClusterConfig | undefined;
@@ -58,12 +63,21 @@ export class AMLEnvironmentService implements EnvironmentService {
     private experimentRootDir: string;
 
     constructor() {
+        super();
         this.experimentId = getExperimentId();
         this.experimentRootDir = getExperimentRootDir();
     }
 
     public get hasStorageService(): boolean {
         return false;
+    }
+
+    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+        return new AMLCommandChannel(commandEmitter);
+    }
+
+    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+        return new AMLEnvironmentInformation(envId, envName);
     }
 
     public async config(key: string, value: string): Promise<void> {
@@ -102,20 +116,24 @@ export class AMLEnvironmentService implements EnvironmentService {
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         environments.forEach(async (environment) => {
-            let amlClient = environment.environmentClient;
+            let amlClient = (environment as AMLEnvironmentInformation).amlClient;
+                    if (!amlClient) {
+            throw new Error('AML client not initialized!');
+            }
             let status = await amlClient.updateStatus(environment.status);
             switch (status.toUpperCase()) {
+                case 'WAITING':
+                case 'RUNNING':
                 case 'QUEUED':
-                    environment.status = 'WAITING';
                     break;
                 case 'COMPLETED':
                     environment.status = 'SUCCEEDED';
                     break;
-                case 'WAITING':
-                case 'RUNNING':
                 case 'SUCCEEDED':
+                    environment.status = 'SUCCEEDED';
+                    break;
                 case 'FAILED':
-                    environment.status = status.toUpperCase();
+                    environment.status = 'FAILED';
                     break;
                 case 'STOPPED':
                 case 'STOPPING':
@@ -136,7 +154,10 @@ export class AMLEnvironmentService implements EnvironmentService {
         if (this.amlTrialConfig === undefined) {
             throw new Error('AML trial config is not initialized');
         }
-        await fs.promises.writeFile(path.join(environment.environmentLocalTempFolder, 'nni_script.py'), environment.command ,{ encoding: 'utf8' });
+        let amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
+        let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+        environment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command ,{ encoding: 'utf8' });
         let amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,
             this.amlClusterConfig.resourceGroup,
@@ -146,15 +167,19 @@ export class AMLEnvironmentService implements EnvironmentService {
             this.amlTrialConfig.nodeCount,
             this.amlTrialConfig.image,
             'nni_script.py',
-            environment.environmentLocalTempFolder
+            environmentLocalTempFolder
         );
-        environment.id = await amlClient.submit();
-        environment.trackingUrl = await amlClient.getTrackingUrl();
-        environment.environmentClient = amlClient;
+        amlEnvironment.id = await amlClient.submit();
+        amlEnvironment.trackingUrl = await amlClient.getTrackingUrl();
+        amlEnvironment.amlClient = amlClient;
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
-        let amlClient = environment.environmentClient;
+        let amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
+        let amlClient = amlEnvironment.amlClient;
+        if (!amlClient) {
+            throw new Error('AML client not initialized!');
+        }
         amlClient.stop();
     }
 }

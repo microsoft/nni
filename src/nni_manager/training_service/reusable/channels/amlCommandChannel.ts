@@ -23,10 +23,11 @@ import * as component from "../../../common/component";
 import { delay } from "../../../common/utils";
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { EnvironmentInformation, Channel } from "../environment";
+import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EventEmitter } from 'events';
+import { AMLEnvironmentService } from "../environments/amlEnvironmentService";
 
 class AMLRunnerConnection extends RunnerConnection {
-    
 }
 
 export class AMLCommandChannel extends CommandChannel {
@@ -35,19 +36,23 @@ export class AMLCommandChannel extends CommandChannel {
     private currentMetricIndex: number = -1;
     // make sure no concurrent issue when sending commands.
     private sendQueues: [EnvironmentInformation, string][] = [];
-    private readonly metricEmitter: EventEmitter;
+    private metricEmitter: EventEmitter | undefined;
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     
-    public constructor(commandEmitter: EventEmitter, metricsEmitter: EventEmitter) {
+    public constructor(commandEmitter: EventEmitter) {
         super(commandEmitter);
-        this.metricEmitter = metricsEmitter;
     }
     public get channelName(): Channel {
         return "aml";
     }
 
     public async config(_key: string, _value: any): Promise<void> {
-        // do nothing
+        switch (_key) {
+            case "MetricEmitter":
+                console.log('------init metric emitter---------')
+                this.metricEmitter = _value as EventEmitter;
+                break;
+        }
     }
 
     public async start(): Promise<void> {
@@ -72,7 +77,6 @@ export class AMLCommandChannel extends CommandChannel {
         const intervalSeconds = 0.5;
         while (!this.stopping) {
             const start = new Date();
-            let sendCount = 0;
             if (this.sendQueues.length > 0) {
                 while (this.sendQueues.length > 0) {
                     const item = this.sendQueues.shift();
@@ -81,10 +85,10 @@ export class AMLCommandChannel extends CommandChannel {
                     }
                     const environment = item[0];
                     const message = item[1];
-                    const amlClient = environment.environmentClient;
-                    amlClient.sendCommand(message);
-                    // send command
-                    sendCount += 1;
+                    const amlClient = (environment as AMLEnvironmentInformation).amlClient;
+                    if (amlClient) {
+                        amlClient.sendCommand(message);
+                    }
                 }
             }
 
@@ -104,7 +108,10 @@ export class AMLCommandChannel extends CommandChannel {
             const runnerConnections = [...this.runnerConnections.values()] as AMLRunnerConnection[];
             for (const runnerConnection of runnerConnections) {
                 // to loop all commands
-                const amlClient = runnerConnection.environment.environmentClient;
+                const amlClient = (runnerConnection.environment as AMLEnvironmentInformation).amlClient;
+                if (!amlClient) {
+                    throw new Error('AML client not initialized!');
+                }
                 let command = await amlClient.receiveCommand();
                 if (command && command.hasOwnProperty('trial_runner')) {
                     let messages = command['trial_runner'];
@@ -145,7 +152,6 @@ export class AMLCommandChannel extends CommandChannel {
     }
 
     private handleTrialMetrics(message: string): void {
-        console.log('-------handle trial metric------' + message)
         let messageObj = JSON.parse(message);
         let trialId = messageObj['trialId'];
         let msg = messageObj['msg'];
@@ -153,7 +159,9 @@ export class AMLCommandChannel extends CommandChannel {
         if (metricsContent && metricsContent.groups) {
             const key: string = 'metrics';
             const metric = metricsContent.groups[key];
-            console.log(`-----get ${metric} for trial ${trialId}------`);
+            if (!this.metricEmitter) {
+                throw Error('metricEmitter not initialized');
+            }
             this.metricEmitter.emit('metric', {
                 id: trialId,
                 data: metric

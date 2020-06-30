@@ -3,6 +3,7 @@
 
 import ctypes
 import os
+import logging
 import shlex
 import tarfile
 import time
@@ -42,13 +43,10 @@ class Trial:
     def run(self):
         # redirect trial's stdout and stderr to syslog
         self.trial_syslogger_stdout = RemoteLogger(self.args.nnimanager_ip, self.args.nnimanager_port, 'trial', StdOutputType.Stdout,
-                                                   self.args.log_collection, self.id)
+                                                   self.args.log_collection, self.id, logging.INFO, self.command_channel)
 
         nni_log(LogType.Info, "%s: start to run trial" % self.name)
-        if self.args.platform == 'aml':
-            trial_working_dir = os.path.realpath(os.path.join(os.curdir, "trials", self.id))
-        else:
-            trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
+        trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
         self.trial_output_dir = os.path.join(trial_working_dir, trial_output_path_name)
         trial_code_dir = os.path.join(trial_working_dir, "code")
         trial_nnioutput_dir = os.path.join(trial_working_dir, "nnioutput")

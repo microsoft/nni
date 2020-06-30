@@ -32,8 +32,9 @@ class WebChannel(BaseChannel):
 
     def _inner_close(self):
         if self.client is not None:
-            self._event_loop.run_until_complete(self.client.close())
-            self._event_loop.close()
+            self.client.close()
+            if self._event_loop.is_running():
+                self._event_loop.close()
             self.client = None
             self._event_loop = None
 

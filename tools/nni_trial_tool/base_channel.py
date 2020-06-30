@@ -78,6 +78,12 @@ class BaseChannel(ABC):
     def close(self):
         self.is_running = False
         self._inner_close()
+    
+    def send_metric(self, log_entry):
+        """
+        send metric to Training Service.
+        """
+        self._inner_send(log_entry)
 
     def send(self, command, data):
         """Send command to Training Service.

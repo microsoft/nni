@@ -1,0 +1,18 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: local
+#please use `nnictl ss_gen` to generate search space file first
+searchSpacePath: nni_auto_gen_search_space.json
+useAnnotation: False
+tuner:
+  codeDir: ../../tuners/random_nas_tuner
+  classFileName: random_nas_tuner.py
+  className: RandomNASTuner
+trial:
+  command: python3 train.py
+  codeDir: .
+  gpuNum: 0

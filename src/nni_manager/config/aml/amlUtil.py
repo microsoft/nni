@@ -17,21 +17,24 @@ if __name__ == "__main__":
     parser.add_argument('--computer_target', help='the computer cluster name of aml')
     parser.add_argument('--docker_image', help='the docker image of job')
     parser.add_argument('--experiment_name', help='the experiment name')
-    parser.add_argument('--code_dir', help='code directory')
-    parser.add_argument('--script', help='script name')
-    parser.add_argument('--node_count', help='the nodeCount of a run in aml')
+    parser.add_argument('--script_dir', help='script directory')
+    parser.add_argument('--script_name', help='script name')
+    parser.add_argument('--node_count', help='node count of run')
     args = parser.parse_args()
 
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
     compute_target = ComputeTarget(workspace=ws, name=args.computer_target)
     experiment = Experiment(ws, args.experiment_name)
-
     run_config = RunConfiguration()
+    dependencies = CondaDependencies()
+    dependencies.add_pip_package("azureml-sdk")
+    dependencies.add_pip_package("azureml")
+    run_config.environment.python.conda_dependencies = dependencies
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image
     run_config.target = compute_target
     run_config.node_count = args.node_count
-    config = ScriptRunConfig(source_directory=args.code_dir, script=args.script, run_config=run_config)
+    config = ScriptRunConfig(source_directory=args.script_dir, script=args.script_name, run_config=run_config)
     run = experiment.submit(config)
     print(run.get_details()["runId"])
     while True:

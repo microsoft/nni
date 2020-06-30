@@ -19,6 +19,7 @@ import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentParams, Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
+import { logLevelNameMap } from './log';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
@@ -184,7 +185,12 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest');
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
+        console.log(`FATAL: invalid log_level: ${logLevel}`);
+    }
+
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');

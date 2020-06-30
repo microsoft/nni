@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import websockets
-
+import json
 from azureml.core.run import Run
 from .base_channel import BaseChannel
 from .log_utils import LogType, nni_log
@@ -23,17 +23,20 @@ class AMLChannel(BaseChannel):
 
     def _inner_send(self, message):
         try:
-            if type(message) is bytes:
-                self.run.log('trial_runner', message.decode('utf8'))
+            if isinstance(message, dict):
+                if 'tag' in message and message['tag'] == 'trial':
+                    self.run.log('trial_runner_sdk', json.dumps(message))
             else:
-                self.run.log('trial_runner', message)
+                self.run.log('trial_runner', message.decode('utf8'))
         except Exception as exception:
-             nni_log(LogType.Error, 'meet unhandled exception when send message: %s' % exception)
+            nni_log(LogType.Error, 'meet unhandled exception when send message: %s' % exception)
 
     def _inner_receive(self):
         messages = []
         # receive message is string, to get consistent result, encode it here.
         message_dict = self.run.get_metrics()
+        if 'nni_manager' not in message_dict:
+            return []
         message_list = message_dict['nni_manager']
         if not message_list:
             return messages

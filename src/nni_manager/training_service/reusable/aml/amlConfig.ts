@@ -4,7 +4,9 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../../common/trainingService';
-import {TrialConfig} from '../../common/trialConfig';
+import { TrialConfig } from '../../common/trialConfig';
+import { EnvironmentInformation } from '../environment';
+import { AMLClient } from '../aml/amlClient';
 
 export class AMLClusterConfig {
     public readonly subscriptionId: string;
@@ -63,4 +65,8 @@ export class AMLTrialJobDetail implements TrialJobDetail {
         this.tags = [];
         this.logPath = logPath;
     }
+}
+
+export class AMLEnvironmentInformation extends EnvironmentInformation {
+        public amlClient?: AMLClient;
 }

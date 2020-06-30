@@ -36,7 +36,6 @@ export class AMLClient {
     public codeDir: string;
     public nodeCount: number;
     public computerTarget: string;
-    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 
     constructor(
         subscriptionId: string,
@@ -72,8 +71,8 @@ export class AMLClient {
                 '--computer_target', this.computerTarget,
                 '--docker_image', this.image,
                 '--experiment_name', `nni_exp_${this.experimentId}`,
-                '--code_dir', this.codeDir,
-                '--script', this.scriptName,
+                '--script_dir', this.codeDir,
+                '--script_name', this.scriptName,
                 '--node_count', this.nodeCount.toString()
               ]
         });
