@@ -19,14 +19,14 @@ export class AMLClient {
     public pythonShellClient: undefined | PythonShell;
     public codeDir: string;
     public nodeCount: number;
-    public computerTarget: string;
+    public computeTarget: string;
 
     constructor(
         subscriptionId: string,
         resourceGroup: string,
         workspaceName: string,
         experimentId: string,
-        computerTarget: string,
+        computeTarget: string,
         nodeCount: number,
         image: string,
         scriptName: string,
@@ -40,7 +40,7 @@ export class AMLClient {
         this.nodeCount = nodeCount;
         this.scriptName = scriptName;
         this.codeDir = codeDir;
-        this.computerTarget = computerTarget;
+        this.computeTarget = computeTarget;
     }
 
     public async submit(): Promise<string> {
@@ -52,7 +52,7 @@ export class AMLClient {
                 '--subscription_id', this.subscriptionId,
                 '--resource_group', this.resourceGroup,
                 '--workspace_name', this.workspaceName,
-                '--computer_target', this.computerTarget,
+                '--computer_target', this.computeTarget,
                 '--docker_image', this.image,
                 '--experiment_name', `nni_exp_${this.experimentId}`,
                 '--script_dir', this.codeDir,

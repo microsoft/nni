@@ -39,7 +39,7 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computerTarget: ussc40rscl
+  computeTarget: ussc40rscl
   nodeCount: 1
 amlConfig:
   subscriptionId: ${replace_to_your_subscriptionId}
@@ -51,10 +51,10 @@ amlConfig:
 Note: You should set `trainingServicePlatform: aml` in NNI config YAML file if you want to start experiment in aml mode.
 
 Compared with [LocalMode](LocalMode.md) trial configuration in aml mode have these additional keys:
-* computerTarget
+* computeTarget
     * required key. The computer cluster name you want to use in your AML workspace.
 * nodeCount
-    * required key. The node count each run in your experiment.
+    * required key. The number of nodes to use for one run. [refer](https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.runconfiguration?view=azure-ml-py#variables)
 
 amlConfig:
 * subscriptionId

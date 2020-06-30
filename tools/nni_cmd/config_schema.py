@@ -239,7 +239,7 @@ aml_trial_schema = {
         'codeDir': setPathCheck('codeDir'),
         'command': setType('command', str),
         'image': setType('image', str),
-        'computerTarget': setType('computerTarget', str),
+        'computeTarget': setType('computeTarget', str),
         'nodeCount': setType('nodeCount', int)
     }
 }

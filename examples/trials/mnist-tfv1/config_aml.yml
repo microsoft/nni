@@ -17,7 +17,7 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computerTarget: ussc40rscl
+  computeTarget: ussc40rscl
   nodeCount: 1
 amlConfig:
   subscriptionId: ${replace_to_your_subscriptionId}

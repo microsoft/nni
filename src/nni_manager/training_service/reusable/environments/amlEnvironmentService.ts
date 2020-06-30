@@ -146,7 +146,7 @@ export class AMLEnvironmentService extends EnvironmentService {
             this.amlClusterConfig.resourceGroup,
             this.amlClusterConfig.workspaceName,
             this.experimentId,
-            this.amlTrialConfig.computerTarget,
+            this.amlTrialConfig.computeTarget,
             this.amlTrialConfig.nodeCount,
             this.amlTrialConfig.image,
             'nni_script.py',

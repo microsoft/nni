@@ -25,15 +25,15 @@ export class AMLTrialConfig extends TrialConfig {
     public readonly command: string;
     public readonly codeDir: string;
     public readonly nodeCount: number;
-    public readonly computerTarget: string;
+    public readonly computeTarget: string;
 
-    constructor(codeDir: string, command: string, image: string, nodeCount: number, computerTarget: string) {
+    constructor(codeDir: string, command: string, image: string, nodeCount: number, computeTarget: string) {
         super("", codeDir, 0);
         this.codeDir = codeDir;
         this.command = command;
         this.image = image;
         this.nodeCount = nodeCount;
-        this.computerTarget = computerTarget;
+        this.computeTarget = computeTarget;
     }
 }
 
