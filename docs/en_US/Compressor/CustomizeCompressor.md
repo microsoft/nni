@@ -1,12 +1,12 @@
-# Customize A New Compression Algorithm
+# Customize New Compression Algorithm
 
 ```eval_rst
 .. contents::
 ```
 
-To simplify writing a new compression algorithm, we design programming interfaces which are simple but flexible enough. There are interfaces for pruning and quantization respectively. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
+In order to simplify the process of writing new compression algorithms, we have designed simple and flexible programming interface, which covers pruning and quantization. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
 
-To better demonstrate how to customize a new pruning/quantization algorithm, it is necessary for users to first understand the framework for supporting various pruning algorithms in NNI. Reference [Framework overview of model compression](https://nni.readthedocs.io/en/latest/Compressor/Framework.html)
+**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference [Framework overview of model compression](https://nni.readthedocs.io/en/latest/Compressor/Framework.html)
 
 
 ## Customize a new pruning algorithm
