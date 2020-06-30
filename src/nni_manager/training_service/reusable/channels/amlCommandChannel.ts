@@ -18,7 +18,6 @@ class AMLRunnerConnection extends RunnerConnection {
 export class AMLCommandChannel extends CommandChannel {
     private stopping: boolean = false;
     private currentMessageIndex: number = -1;
-    // make sure no concurrent issue when sending commands.
     private sendQueues: [EnvironmentInformation, string][] = [];
     private metricEmitter: EventEmitter | undefined;
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
@@ -40,8 +39,9 @@ export class AMLCommandChannel extends CommandChannel {
 
     public async start(): Promise<void> {
         // start command loops
-        this.receiveLoop();
-        this.sendLoop();
+        await Promise.all([
+            this.receiveLoop(),
+            this.sendLoop()]);
     }
 
     public async stop(): Promise<void> {

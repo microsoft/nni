@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument('--subscription_id', help='the subscription id of aml')
     parser.add_argument('--resource_group', help='the resource group of aml')
     parser.add_argument('--workspace_name', help='the workspace name of aml')
-    parser.add_argument('--computer_target', help='the computer cluster name of aml')
+    parser.add_argument('--compute_target', help='the compute cluster name of aml')
     parser.add_argument('--docker_image', help='the docker image of job')
     parser.add_argument('--experiment_name', help='the experiment name')
     parser.add_argument('--script_dir', help='script directory')
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     ws = Workspace(args.subscription_id, args.resource_group, args.workspace_name)
-    compute_target = ComputeTarget(workspace=ws, name=args.computer_target)
+    compute_target = ComputeTarget(workspace=ws, name=args.compute_target)
     experiment = Experiment(ws, args.experiment_name)
     run_config = RunConfiguration()
     dependencies = CondaDependencies()

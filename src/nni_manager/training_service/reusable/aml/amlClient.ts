@@ -43,7 +43,7 @@ export class AMLClient {
         this.computeTarget = computeTarget;
     }
 
-    public async submit(): Promise<string> {
+    public submit(): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
         this.pythonShellClient = new PythonShell('amlUtil.py', {
             scriptPath: './config/aml',
@@ -52,7 +52,7 @@ export class AMLClient {
                 '--subscription_id', this.subscriptionId,
                 '--resource_group', this.resourceGroup,
                 '--workspace_name', this.workspaceName,
-                '--computer_target', this.computeTarget,
+                '--compute_target', this.computeTarget,
                 '--docker_image', this.image,
                 '--experiment_name', `nni_exp_${this.experimentId}`,
                 '--script_dir', this.codeDir,
@@ -67,7 +67,7 @@ export class AMLClient {
         return deferred.promise;
     }
 
-    public stop() {
+    public stop(): void {
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }
