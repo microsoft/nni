@@ -341,6 +341,7 @@ class TrialDispatcher implements TrainingService {
                     toRefreshedTrials.push(trial);
                 }
             }
+
             if (toRefreshedTrials.length == 0) {
                 continue;
             }
@@ -447,10 +448,6 @@ class TrialDispatcher implements TrainingService {
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = environmentService.createEnviornmentInfomation(envId, envName);
 
-        if (this.trialConfig === undefined) {
-            throw new Error(`trial config shouldn't be undefined in run()`);
-        }
-
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
@@ -462,7 +459,7 @@ class TrialDispatcher implements TrainingService {
             environment.workingFolder = storageService.joinPath("envs", envId);
             await storageService.createDirectory(environment.workingFolder);
         } else {
-            environment.command = `cd envs && sh install_nni.sh && mkdir ${envId} && cd ${envId} && python3 -m nni_trial_tool.trial_runner`;
+            environment.command = `mkdir envs/${envId} && cd envs/${envId} && sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
         }
 
         await environmentService.startEnvironment(environment);

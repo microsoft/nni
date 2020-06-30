@@ -102,11 +102,11 @@ export class AMLCommandChannel extends CommandChannel {
                     if (messages) {
                         if (messages instanceof Object && this.currentMessageIndex < messages.length - 1) {
                             for (let index = this.currentMessageIndex + 1; index < messages.length; index ++) {
-                                this.handleTrialMessage(runnerConnection.environment, messages[index].toString());
+                                this.handleCommand(runnerConnection.environment, messages[index]);
                             }
                             this.currentMessageIndex = messages.length - 1;
                         } else if (this.currentMessageIndex === -1){
-                            this.handleTrialMessage(runnerConnection.environment, messages.toString());
+                            this.handleCommand(runnerConnection.environment, messages);
                             this.currentMessageIndex += 1;
                         }
                     }
@@ -117,38 +117,6 @@ export class AMLCommandChannel extends CommandChannel {
             const delayMs = intervalSeconds * 1000 - (end.valueOf() - start.valueOf());
             if (delayMs > 0) {
                 await delay(delayMs);
-            }
-        }
-    }
-
-    private handleTrialMessage(environment: EnvironmentInformation, message: string): void {
-        const commands = this.parseCommands(message);
-        if (commands.length > 0) {
-            const commandType = commands[0][0];
-            if (commandType === STDOUT) {
-                this.handleTrialMetrics(commands[0][1]);
-            } else {
-                this.handleCommand(environment, message);
-            }
-        }
-    }
-
-    private handleTrialMetrics(message: any): void {
-        let trialId = message['trialId'];
-        let msg = message['msg'];
-        let tag = message['tag'];
-        if (tag === 'trial') {
-            const metricsContent: any = msg.match(this.NNI_METRICS_PATTERN);
-            if (metricsContent && metricsContent.groups) {
-                const key: string = 'metrics';
-                const metric = metricsContent.groups[key];
-                if (!this.metricEmitter) {
-                    throw Error('metricEmitter not initialized');
-                }
-                this.metricEmitter.emit('metric', {
-                    id: trialId,
-                    data: metric
-                });
             }
         }
     }
