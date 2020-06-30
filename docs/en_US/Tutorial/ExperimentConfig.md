@@ -70,6 +70,7 @@ This document describes the rules to write the config file, and provides some ex
       - [password](#password)
       - [token](#token)
       - [host](#host)
+      - [reuse](#reuse)
   * [Examples](#examples)
     + [Local mode](#local-mode)
     + [Remote mode](#remote-mode)
@@ -655,6 +656,12 @@ Personal access token that can be retrieved from PAI portal.
 Required. String.
 
 The hostname of IP address of PAI.
+
+#### reuse
+
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
 
 ## Examples
 

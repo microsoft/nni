@@ -12,11 +12,29 @@ const TRIAL_END = 'EN';
 const TERMINATE = 'TE';
 const PING = 'PI';
 
+const GPU_INFO = 'GI';
+const STDOUT = 'SO';
+const VERSION_CHECK = 'VC';
+
 const INITIALIZED = 'ID';
 const NEW_TRIAL_JOB = 'TR';
 const SEND_TRIAL_JOB_PARAMETER = 'SP';
 const NO_MORE_TRIAL_JOBS = 'NO';
 const KILL_TRIAL_JOB = 'KI';
+
+const TRIAL_COMMANDS: Set<string> = new Set([
+    // from ctl to node
+    NEW_TRIAL_JOB,
+    SEND_TRIAL_JOB_PARAMETER,
+    KILL_TRIAL_JOB,
+
+    // from node to ctl
+    INITIALIZED,
+    TRIAL_END,
+    GPU_INFO,
+    STDOUT,
+    VERSION_CHECK,
+]);
 
 const TUNER_COMMANDS: Set<string> = new Set([
     INITIALIZE,
@@ -53,11 +71,15 @@ export {
     TRIAL_END,
     TERMINATE,
     PING,
+    GPU_INFO,
+    STDOUT,
+    VERSION_CHECK,
     INITIALIZED,
     NEW_TRIAL_JOB,
     NO_MORE_TRIAL_JOBS,
     KILL_TRIAL_JOB,
     TUNER_COMMANDS,
     ASSESSOR_COMMANDS,
+    TRIAL_COMMANDS,
     SEND_TRIAL_JOB_PARAMETER
 };
