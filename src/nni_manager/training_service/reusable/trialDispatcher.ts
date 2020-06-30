@@ -9,7 +9,7 @@ import * as path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
-import { getExperimentId, getPlatform, getBasePort } from '../../common/experimentStartupInfo';
+import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
@@ -18,14 +18,12 @@ import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir, execMkdir, execCopydir, tarAdd } from '../common/util';
-import { WebCommandChannel } from './channels/webCommandChannel';
-import { AMLCommandChannel } from './channels/amlCommandChannel';
+import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
+import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
-import { MountedStorageService } from './storages/mountedStorageService';
 
 
 /**
@@ -193,7 +191,7 @@ class TrialDispatcher implements TrainingService {
         } else {
             this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
             storageService = new MountedStorageService();
-            let environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+            const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
             storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
         }
 

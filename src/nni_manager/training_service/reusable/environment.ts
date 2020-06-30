@@ -14,24 +14,6 @@ import { CommandChannel } from "./commandChannel";
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 export type Channel = "web" | "file" | "aml" | "ut";
 
-export abstract class EnvironmentService {
-
-    public abstract get hasStorageService(): boolean;
-
-    public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
-    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
-    public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
-
-    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new WebCommandChannel(commandEmitter);
-    }
-
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
-        return new EnvironmentInformation(envId, envName);
-    }
-}
-
 export class NodeInfomation {
     public id: string;
     public status: TrialJobStatus = "UNKNOWN";
@@ -108,5 +90,23 @@ export class EnvironmentInformation {
                 this.log.error(`Environment: job ${this.jobId} set an invalid final state ${status}.`);
                 break;
         }
+    }
+}
+
+export abstract class EnvironmentService {
+
+    public abstract get hasStorageService(): boolean;
+
+    public abstract config(key: string, value: string): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
+    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+
+    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+        return new WebCommandChannel(commandEmitter);
+    }
+
+    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+        return new EnvironmentInformation(envId, envName);
     }
 }
