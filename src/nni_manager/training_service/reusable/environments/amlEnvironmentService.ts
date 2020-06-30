@@ -10,7 +10,7 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { AMLClusterConfig, AMLTrialConfig, AMLTrialJobDetail } from '../aml/amlConfig';
+import { AMLClusterConfig, AMLTrialConfig } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { AMLClient } from '../aml/amlClient';

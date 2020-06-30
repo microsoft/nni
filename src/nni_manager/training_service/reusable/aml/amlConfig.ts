@@ -37,36 +37,6 @@ export class AMLTrialConfig extends TrialConfig {
     }
 }
 
-/**
- * AML trial job detail
- */
-export class AMLTrialJobDetail implements TrialJobDetail {
-    public id: string;
-    public status: TrialJobStatus;
-    public amlJobName: string;
-    public submitTime: number;
-    public startTime?: number;
-    public endTime?: number;
-    public tags?: string[];
-    public url?: string;
-    public workingDirectory: string;
-    public form: TrialJobApplicationForm;
-    public logPath: string;
-    public isEarlyStopped?: boolean;
-
-    constructor(id: string, status: TrialJobStatus, amlJobName: string,
-                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, logPath: string) {
-        this.id = id;
-        this.status = status;
-        this.amlJobName = amlJobName;
-        this.submitTime = submitTime;
-        this.workingDirectory = workingDirectory;
-        this.form = form;
-        this.tags = [];
-        this.logPath = logPath;
-    }
-}
-
 export class AMLEnvironmentInformation extends EnvironmentInformation {
         public amlClient?: AMLClient;
 }
