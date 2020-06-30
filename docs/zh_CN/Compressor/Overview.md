@@ -6,9 +6,9 @@
 
 随着更多层和节点大型神经网络的使用，降低其存储和计算成本变得至关重要，尤其是对于某些实时应用程序。 模型压缩可用于解决此问题。
 
-NNI provides a model compression toolkit to help user compress and speed up their model with state-of-the-art compression algorithms and strategies. There are several core features supported by NNI model compression:
+NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略，帮助压缩并加速模型。 NNI 模型压缩支持的主要功能有：
 
-* Support many popular pruning and quantization algorithms.
+* 支持多种流行的剪枝和量化算法。
 * Automate model pruning and quantization process with state-of-the-art strategies and NNI's auto tuning power.
 * Speed up a compressed model to make it have lower inference latency and also make it become smaller.
 * Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
