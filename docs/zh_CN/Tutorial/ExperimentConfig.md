@@ -661,15 +661,15 @@ OpenPAI 的 IP 地址。
 
 #### reuse
 
-Optional. Bool. default: `false`. It's an experimental feature.
+可选。 布尔。 默认值：`false`。 这是试用中的功能。
 
-If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
+如果为 true，NNI 会重用 OpenPAI 作业，在其中运行尽可能多的 Trial。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。
 
 ## 示例
 
 ### 本机模式
 
-If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
 
     authorName: test
     experimentName: test_experiment
@@ -692,7 +692,7 @@ If users want to run trial jobs in local machine, and use annotation to generate
       gpuNum: 0
     
 
-You can add assessor configuration.
+增加 Assessor 配置。
 
     authorName: test
     experimentName: test_experiment
@@ -722,7 +722,7 @@ You can add assessor configuration.
       gpuNum: 0
     
 
-Or you could specify your own tuner and assessor file as following,
+或者可以指定自定义的 Tuner 和 Assessor：
 
     authorName: test
     experimentName: test_experiment
@@ -756,7 +756,7 @@ Or you could specify your own tuner and assessor file as following,
 
 ### 远程模式
 
-If run trial jobs in remote machine, users could specify the remote machine information as following format:
+如果要在远程服务器上运行 Trial 任务，需要增加服务器信息：
 
     authorName: test
     experimentName: test_experiment
