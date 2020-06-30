@@ -6,20 +6,22 @@ import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
 
+
 _logger = logging.getLogger(__name__)
 
 try:
     from thop import profile
 except ImportError:
     _logger.warning('Please install thop using command: pip install thop')
-    
+
+
 def count_flops_params(model: nn.Module, input_size, verbose=True):
     """
-    Count FLOPs and Params of the given model. 
-    This function would identify the mask on the module 
-    and take the pruned shape into consideration. 
-    Note that, for sturctured pruning, we only identify 
-    the remained filters according to its mask, which 
+    Count FLOPs and Params of the given model.
+    This function would identify the mask on the module
+    and take the pruned shape into consideration.
+    Note that, for sturctured pruning, we only identify
+    the remained filters according to its mask, which
     not taking the pruned input channels into consideration,
     so the calculated FLOPs will be larger than real number.
 
@@ -78,7 +80,7 @@ def count_convNd_mask(m, x, y):
         output data
     """
     output_channel = y.size()[1]
-    output_size =  torch.zeros(y.size()[2:]).numel()
+    output_size = torch.zeros(y.size()[2:]).numel()
     kernel_size = torch.zeros(m.weight.size()[2:]).numel()
 
     bias_flops = 1 if m.bias is not None else 0
@@ -105,7 +107,7 @@ def count_linear_mask(m, x, y):
         output data
     """
     output_channel = y.size()[1]
-    output_size =  torch.zeros(y.size()[2:]).numel()
+    output_size = torch.zeros(y.size()[2:]).numel()
 
     bias_flops = 1 if m.bias is not None else 0
 
