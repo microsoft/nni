@@ -138,6 +138,10 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#netadapt-pruner">NetAdapt Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#admm-pruner">ADMM Pruner</a></li>
+              <li><a href="docs/en_US/Compressor/Pruner.md#autocompress-pruner">AutoCompress Pruner</a></li>
             </ul>
             <b>量化</b>
             <ul>
