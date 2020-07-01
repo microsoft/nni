@@ -1,0 +1,21 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 10m
+maxTrialNum: 1
+trialConcurrency: 1
+searchSpacePath: nni-nas-search-space.json
+
+tuner:
+  builtinTunerName: PPOTuner
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py --epochs 1
+  codeDir: ../../../examples/nas/classic_nas
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

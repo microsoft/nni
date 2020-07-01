@@ -19,7 +19,7 @@ NNI 提供了先进的评估算法，使用上也很简单。 下面是内置 As
 
 <a name="MedianStop"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
+### Median Stop Assessor
 
 > 名称：**Medianstop**
 
@@ -47,13 +47,13 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
+### Curve Fitting Assessor
 
 > 名称：**Curvefitting**
 
 **建议场景**
 
-适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
 
 **注意**，根据原始论文，仅支持递增函数。 因此，此 Assessor 仅可用于最大化优化指标的场景。 例如，它可用于准确度，但不能用于损失值。
 

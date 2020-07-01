@@ -93,7 +93,7 @@ channel_depen.export('dependency.csv')
 ```
 
 #### Output Example
-下列代码是 由 ChannelDependency 导出的 torchvision.models.resnet18 示例。 每行上，有相互依赖的输出通道。 例如，layer1.1.conv2, conv1 和 layer1.0.conv2 相互间有输出依赖。这表示这三个层的输出通道（过滤器）数量需要一致，否则模型会产生形状冲突。
+下列代码是 由 ChannelDependency 导出的 torchvision.models.resnet18 示例。 每行上，有相互依赖的输出通道。 例如，layer1.1.conv2, conv1 和 layer1.0.conv2 相互间有输出依赖。这表示这三个层的输出通道（滤波器）数量需要一致，否则模型会产生形状冲突。
 ```
 Dependency Set,Convolutional Layers
 Set 1,layer1.1.conv2,layer1.0.conv2,conv1
@@ -116,4 +116,16 @@ Set 12,layer4.1.conv1
 ```
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
+```
+
+### 模型 FLOPs 和参数计数器
+NNI 提供了模型计数器，用于计算模型的 FLOPs 和参数。 此计数器支持计算没有掩码模型的 FLOPs、参数，也可以计算有掩码模型的 FLOPs、参数，这有助于在模型压缩过程中检查模型的复杂度。 注意，对于结构化的剪枝，仅根据掩码来标识保留的滤波器，不会考虑剪枝的输入通道，因此，计算出的 FLOPs 会比实际数值要大（即，模型加速后的计算值）。
+
+### 用法
+```
+from nni.compression.torch.utils.counter import count_flops_params
+
+# 给定输入大小 (1, 1, 28, 28)
+flops, params = count_flops_params(model, (1, 1, 28, 28))
+print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
 ```

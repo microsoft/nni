@@ -91,6 +91,7 @@ export default class Chart extends React.Component<ChartProps> {
   expandSet: Set<string> = new Set<string>();
   elemWeight: Map<string, number> = new Map<string, number>();
   graphEl: any[] = [];
+  private firstUpdate = true;
 
   componentDidMount() {
     this.cyInstance = cytoscape({
@@ -149,7 +150,8 @@ export default class Chart extends React.Component<ChartProps> {
       }
     } else {
       // re-calculate collapse
-      this.renderGraph(true);
+      this.renderGraph(true, this.firstUpdate);
+      this.firstUpdate = false;
     }
   }
 
@@ -245,7 +247,7 @@ export default class Chart extends React.Component<ChartProps> {
     setTimeout(_render, 100);
   }
 
-  private renderGraph(graphChanged: boolean) {
+  private renderGraph(graphChanged: boolean, fit: boolean = false) {
     const { graph } = this.props;
     if (graph === undefined)
       return;
@@ -269,7 +271,9 @@ export default class Chart extends React.Component<ChartProps> {
           this.cyInstance!.json({
             elements: graphEl
           });
-          layout.fit = false;
+          if (!fit) {
+            layout.fit = false;
+          }
           eles.layout(layout).run();
         }
       } else {

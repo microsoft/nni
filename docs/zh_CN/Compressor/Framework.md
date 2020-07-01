@@ -1,8 +1,18 @@
-# 设计文档
+# 模型压缩框架概述
 
-## 概述
+```eval_rst
+.. contents::
+```
 
-下列示例展示了如何使用 Pruner：
+下图展示了模型压缩框架的组件概览。
+
+![](../../img/compressor_framework.jpg)
+
+NNI 模型压缩框架中主要有三个组件/类：`Compressor`, `Pruner` 和 `Quantizer`。 下面会逐个详细介绍：
+
+## Compressor
+
+Compressor 是 Pruner 和 Quantizer 的基类，提供了统一的接口，可用同样的方式使用它们。 例如，使用 Pruner：
 
 ```python
 from nni.compression.torch import LevelPruner
@@ -22,81 +32,25 @@ model = pruner.compress()
 # 模型会在训练过程中自动剪枝
 ```
 
-Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 通过往 `optimizer.step()` 上增加回调，在训练过程中根据 `config_list` 来对模型剪枝。
-
-从实现上来看，Pruner 由 `权重掩码`实例和若干个 `module 包装`实例组成。
-
-### 权重掩码
-
-`权重掩码`是剪枝算法的实现，可将由 `module 包装`所包装起来的一层根据稀疏度进行修建。
-
-### module 的包装
-
-`module 的包装` 包含：
-
-1. 原始的 module
-2. `calc_mask` 使用的一些缓存
-3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
-
-使用 `module 包装`的原因：
-
-1. 计算掩码所需要的 `calc_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
-2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
-
-### Pruner
-
-`Pruner` 用于：
-
-1. 管理、验证 config_list.
-2. 使用 `module 包装`来包装模型层，并在 `optimizer.step` 上添加回调
-3. 使用`权重掩码`在剪枝时计算层的掩码。
-4. 导出剪枝后模型的权重和掩码。
-
-## 实现新的剪枝算法
-
-要实现新的剪枝算法，需要实现`权重掩码`类，它是 `WeightMasker` 的子类，以及`Pruner` 类，它是 `Pruner` 的子类。
-
-`权重掩码`的实现如下：
-
+使用 Quantizer：
 ```python
-class MyMasker(WeightMasker):
-    def __init__(self, model, pruner):
-        super().__init__(model, pruner)
-        # 此处可初始化，如为算法收集计算权重所需要的统计信息。
+from nni.compression.torch import DoReFaQuantizer
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-        # 根据 wrapper.weight, 和 sparsity, 
-        # 及其它信息来计算掩码
-        # mask = ...
-        return {'weight_mask': mask}
-```
-
-参考 NNI 提供的[权重掩码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py)来实现自己的。
-
-基本的 Pruner 如下所示：
-
-```python
-class MyPruner(Pruner):
-    def __init__(self, model, config_list, optimizer):
-        super().__init__(model, config_list, optimizer)
-        self.set_wrappers_attribute("if_calculated", False)
-        # 创建权重掩码实例
-        self.masker = MyMasker(model, self)
-
-    def calc_mask(self, wrapper, wrapper_idx=None):
-        sparsity = wrapper.config['sparsity']
-        if wrapper.if_calculated:
-            # 如果是一次性剪枝算法，不需要再次剪枝
-            return None
-        else:
-            # 调用掩码函数来实际计算当前层的掩码
-            masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
-            wrapper.if_calculated = True
-            return masks
+configure_list = [{
+    'quant_types': ['weight'],
+    'quant_bits': {
+        'weight': 8,
+    },
+    'op_types':['Conv2d', 'Linear']
+}]
+optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+quantizer = DoReFaQuantizer(model, configure_list, optimizer)
+quantizer.compress()
 
 ```
+查看[示例代码](https://github.com/microsoft/nni/tree/master/examples/model_compress)了解更多信息。
 
-参考 NNI 提供的[Pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) 来实现自己的。
+`Compressor` 类提供了一些工具函数：
 
 ### 设置包装的属性
 
@@ -134,6 +88,103 @@ collector_id = self.pruner.add_activation_collector(collector)
 self.pruner.remove_activation_collector(collector_id)
 ```
 
-### 多 GPU 支持
+***
+
+## Pruner
+
+Pruner 接收 `model`, `config_list` 以及 `optimizer` 参数。 通过往 `optimizer.step()` 上增加回调，在训练过程中根据 `config_list` 来对模型剪枝。
+
+Pruner 类是 Compressor 的子类，因此它包含了 Compressor 的所有功能，并添加了剪枝所需要的组件，包括：
+
+### 权重掩码
+
+`权重掩码`是剪枝算法的实现，可将由 `module 包装`所包装起来的一层根据稀疏度进行修建。
+
+### 剪枝模块包装
+
+`剪枝 module 的包装` 包含：
+
+1. 原始的 module
+2. `calc_mask` 使用的一些缓存
+3. 新的 forward 方法，用于在运行原始的 forward 方法前应用掩码。
+
+使用 `module 包装`的原因：
+
+1. 计算掩码所需要的 `calc_mask` 方法需要一些缓存，这些缓存需要注册在 `module 包装`里，这样就不需要修改原始的 module。
+2. 新的 `forward` 方法用来在原始 `forward` 调用前，将掩码应用到权重上。
+
+### 剪枝回调
+
+当 Pruner 构造时会添加剪枝的回调，用来在 `optimizer.step()` 被调用时，调用 Pruner 的 calc_mask。
+
+
+***
+
+## Quantizer
+
+Quantizer 也是 `Compressor` 的子类，用来通过减少权重或激活值的位宽来压缩模型，这样可以减少模型推理时的计算时间。 它包含：
+
+### 量化 module 包装
+
+模型中每个要量化的模块和层，都需要量化包装，它通过提供 `forward` 方法来量化原始模型的权重、输入和输出。
+
+### 量化回调
+
+量化回调会在调用 `optimizer.step()` 时设置。
+
+### 量化相关函数
+
+`Quantizer` 类为子类提供一下方法来实现量化算法：
+
+```python
+class Quantizer(Compressor):
+    """
+    PyTorch 的量化基类
+    """
+    def quantize_weight(self, weight, wrapper, **kwargs):
+        """
+        重载此方法实现权重的量化。
+        此方法挂载于模型的 :meth:`forward`。
+        Parameters
+        ----------
+        weight : Tensor
+            需要量化的权重
+        wrapper : QuantizerModuleWrapper
+            原始 module 的包装
+        """
+        raise NotImplementedError('Quantizer must overload quantize_weight()')
+
+    def quantize_output(self, output, wrapper, **kwargs):
+        """
+        重载此方法实现输出的量化。
+        此方法挂载于模型的 :meth:`forward`。
+        Parameters
+        ----------
+        output : Tensor
+            需要量化的输出
+        wrapper : QuantizerModuleWrapper
+            原始 module 的包装
+        """
+        raise NotImplementedError('Quantizer must overload quantize_output()')
+
+    def quantize_input(self, *inputs, wrapper, **kwargs):
+        """
+        重载此方法实现输入的量化。
+        此方法挂载于模型的 :meth:`forward`。
+        Parameters
+        ----------
+        inputs : Tensor
+            需要量化的输入
+        wrapper : QuantizerModuleWrapper
+            原始 module 的包装
+        """
+        raise NotImplementedError('Quantizer must overload quantize_input()')
+
+```
+
+***
+
+## 多 GPU 支持
 
 在多 GPU 训练中，缓存和参数会在每次 `forward` 方法被调用时，复制到多个 GPU 上。 如果缓存和参数要在 `forward` 更新，就需要通过`原地`更新来提高效率。 因为 `calc_mask` 会在 `optimizer.step` 方法中的调用，会在 `forward` 方法后才被调用，且只会发生在单 GPU 上，因此它天然的就支持多 GPU 的情况。
+

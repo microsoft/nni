@@ -68,6 +68,7 @@
       - [password](#password)
       - [token](#token)
       - [host](#host)
+      - [reuse](#reuse)
   - [示例](#examples) 
     - [本机模式](#local-mode)
     - [远程模式](#remote-mode)
@@ -228,7 +229,7 @@ machineList:
 
 ### versionCheck
 
-可选。 布尔。 默认值：false。
+可选。 布尔。 默认值：true。
 
 NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，versionCheck 应设置为 false。
 
@@ -658,6 +659,12 @@ OpenPAI 帐户的密码。
 
 OpenPAI 的 IP 地址。
 
+#### reuse
+
+可选。 布尔。 默认值：`false`。 这是试用中的功能。
+
+如果为 true，NNI 会重用 OpenPAI 作业，在其中运行尽可能多的 Trial。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。
+
 ## 示例
 
 ### 本机模式
@@ -685,7 +692,7 @@ OpenPAI 的 IP 地址。
       gpuNum: 0
     
 
-增加 Assessor 配置
+增加 Assessor 配置。
 
     authorName: test
     experimentName: test_experiment

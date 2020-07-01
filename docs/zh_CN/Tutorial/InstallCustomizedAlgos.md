@@ -3,7 +3,7 @@
 
 ## 概述
 
-NNI 提供了大量可用于超参优化的[内置 Tuner](../Tuner/BuiltinTuner.md), [Advisor](../Tuner/BuiltinTuner.md#Hyperband) 以及 [Assessor](../Assessor/BuiltinAssessor.md)，其它算法可在 NNI 安装后，通过 `nnictl package install --name <name>` 安装。 可通过 `nnictl package list` 命令查看其它算法。
+NNI 提供了大量可用于超参优化的[内置 Tuner](../Tuner/BuiltinTuner.md), [Advisor](../Tuner/HyperbandAdvisor.md) 以及 [Assessor](../Assessor/BuiltinAssessor.md)，其它算法可在 NNI 安装后，通过 `nnictl package install --name <name>` 安装。 可通过 `nnictl package list` 命令查看其它算法。
 
 NNI 中，还可以创建自定义的 Tuner，Advisor 和 Assessor。 并根据 Experiment 配置文件的说明来使用这些自定义的算法，可参考 [自定义 Tuner](../Tuner/CustomizeTuner.md)/[Advisor](../Tuner/CustomizeAdvisor.md)/[Assessor](../Assessor/CustomizeAssessor.md)。
 

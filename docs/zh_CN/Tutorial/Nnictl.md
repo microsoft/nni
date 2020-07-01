@@ -28,7 +28,8 @@ nnictl 支持的命令：
 ### 管理 Experiment
 
 <a name="create"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
+
+### nnictl create
 
 * 说明
   
@@ -79,7 +80,7 @@ nnictl 支持的命令：
 
 <a name="resume"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
+### nnictl resume
 
 * 说明
   
@@ -110,7 +111,7 @@ nnictl 支持的命令：
 
 <a name="view"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+### nnictl view
 
 * 说明
   
@@ -138,7 +139,8 @@ nnictl 支持的命令：
   ```
 
 <a name="stop"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
+
+### nnictl stop
 
 * 说明
   
@@ -195,7 +197,7 @@ nnictl 支持的命令：
 
 <a name="update"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
+### nnictl update
 
 * **nnictl update searchspace**
   
@@ -306,7 +308,8 @@ nnictl 支持的命令：
     ```
 
 <a name="trial"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
+
+### nnictl trial
 
 * **nnictl trial ls**
   
@@ -355,7 +358,7 @@ nnictl 支持的命令：
 
 <a name="top"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
+### nnictl top
 
 * 说明
   
@@ -375,7 +378,8 @@ nnictl 支持的命令：
   | --time, -t | False |     | 刷新 Experiment 状态的时间间隔，单位为秒，默认值为 3 秒。 |
 
 <a name="experiment"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 Experiment 的信息`
+
+### 管理 Experiment 信息
 
 * **nnictl experiment show**
   
@@ -539,7 +543,8 @@ nnictl 支持的命令：
     ```
 
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理平台的信息`
+
+### 管理平台信息
 
 * **nnictl platform clean**
   
@@ -564,7 +569,8 @@ nnictl 支持的命令：
   | --config | True |     | 创建 Experiment 时的 YAML 配置文件路径。 |
 
 <a name="config"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
+
+### nnictl config show
 
 * 说明
   
@@ -578,7 +584,7 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
+### 管理日志
 
 * **nnictl log stdout**
   
@@ -650,12 +656,14 @@ nnictl 支持的命令：
   | --trial_id, -T | False |     | 所需要找日志路径的 Trial 的 ID，当 id 不为空时，此值也为必需。 |
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 Web 界面`
+
+### 管理 Web 界面
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 TensorBoard`
+
+### 管理 TensorBoard
 
 * **nnictl tensorboard start**
   
@@ -705,7 +713,7 @@ nnictl 支持的命令：
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理包`
+### 管理安装包
 
 * **nnictl package install**
   
@@ -813,7 +821,7 @@ nnictl 支持的命令：
 
 <a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `生成搜索空间`
+### 生成搜索空间
 
 * **nnictl ss_gen**
   
@@ -845,7 +853,7 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
+### NNI 版本校验
 
 * **nnictl --version**
   
