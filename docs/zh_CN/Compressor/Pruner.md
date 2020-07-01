@@ -507,7 +507,7 @@ pruner.compress()
 
 - **sparsity:** 整体的稀疏度目标。
 - **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
-- **trainer:** 用于第一个子问题的函数。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`. Example:
+- **trainer:** 用于第一个子问题的函数。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 `callback` 的逻辑在 Pruner 中实现，用户只需要在 `loss.backward()` 和 `optimizer.step()` 之间插入 `callback()` 即可。 示例：
     ```python
     >>> def trainer(model, criterion, optimizer, epoch, callback):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -519,12 +519,12 @@ pruner.compress()
     >>>         output = model(data)
     >>>         loss = criterion(output, target)
     >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
+    >>>         # 在 loss.backward() 和 optimizer.step() 中插入 callback
     >>>         if callback:
     >>>             callback()
     >>>         optimizer.step()
     ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value. Example::
+- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。 示例::
     ```python
     >>> def evaluator(model):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -535,27 +535,27 @@ pruner.compress()
     >>>         for data, target in val_loader:
     >>>             data, target = data.to(device), target.to(device)
     >>>             output = model(data)
-    >>>             # get the index of the max log-probability
+    >>>             # 获得最大 log 概率分布的索引
     >>>             pred = output.argmax(dim=1, keepdim=True)
     >>>             correct += pred.eq(target.view_as(pred)).sum().item()
     >>>     accuracy = correct / len(val_loader.dataset)
     >>>     return accuracy
     ```
-- **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
-- **iterations:** The number of overall iterations.
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **admm_num_iterations:** Number of iterations of ADMM Pruner.
-- **admm_training_epochs:** Training epochs of the first optimization subproblem of ADMMPruner.
-- **experiment_data_dir:** PATH to store temporary experiment data.
+- **dummy_input:** 用于模型加速的模拟输入，在传入前应该复制到正确的设备上。
+- **iterations:** 总共的迭代次数。
+- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
+- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
+- **start_temperature:** 模拟退火算法相关参数。
+- **stop_temperature:** 模拟退火算法相关参数。
+- **cool_down_rate:** 模拟退火算法相关参数。
+- **perturbation_magnitude:** 初始化对稀疏度的扰动幅度。 幅度会随着当前温度变小。
+- **admm_num_iterations:** ADMM Pruner 的迭代次数。
+- **admm_training_epochs:** ADMMPruner 的第一个优化子问题训练的 Epoch 数量。
+- **experiment_data_dir:** 存储临时实验数据的目录。
 
 
 ## ADMM Pruner
-Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique, by decomposing the original nonconvex problem into two subproblems that can be solved iteratively. In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
+Alternating Direction Method of Multipliers (ADMM) 是一种数学优化技术，它将原始的非凸问题分解为两个可以迭代解决的子问题。 In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
 
 During the process of solving these two subproblems, the weights of the original model will be changed. An one-shot pruner will then be applied to prune the model according to the config list given.
 
