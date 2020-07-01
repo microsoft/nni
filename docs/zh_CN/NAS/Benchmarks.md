@@ -119,7 +119,7 @@ NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符
 
 _On Network Design Spaces for Visual Recognition_ 发布了来自多个模型系列，超过 100,000 个配置（模型加超参组合）的统计，包括 vanilla (受 VGG 启发的松散前馈网络), ResNet 和 ResNeXt (残差基本模块和残差瓶颈模块) 以及 NAS 单元格 (遵循 NASNet, Ameoba, PNAS, ENAS 和 DARTS 的设计)。 大部分配置只采用固定的随机种子训练一次，但少部分会训练两到三次。
 
-NNI 会将不同配置的结果存到单个数据库中，而不是单独的文件中，以便从各个维度进行比较。 Specifically, we use `model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
+NNI 会将不同配置的结果存到单个数据库中，而不是单独的文件中，以便从各个维度进行比较。 在实现上，`model_family` 用来保存模型类型，`model_spec` 用来保存构建模型所需的参数，在使用 NAS 时，`cell_spec` 保存运算符和连接的详细信息，`generator` 表示配置生成的采样策略。 详情可参考 API 文档。
 
 ## 可用的运算符
 
