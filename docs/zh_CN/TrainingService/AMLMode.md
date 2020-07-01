@@ -1,6 +1,6 @@
 **在 Azure Machine Learning 上运行 Experiment**
 ===
-NNI 支持在 [AML](https://azure.microsoft.com/en-us/services/machine-learning/) 上运行 Experiment，称为 aml 模式。
+NNI 支持在 [AML](https://azure.microsoft.com/zh-cn/services/machine-learning/) 上运行 Experiment，称为 aml 模式。
 
 ## 设置环境
 步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
