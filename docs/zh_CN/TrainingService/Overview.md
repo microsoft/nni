@@ -2,11 +2,11 @@
 
 ## 什么是训练平台？
 
-NNI training service is designed to allow users to focus on AutoML itself, agnostic to the underlying computing infrastructure where the trials are actually run. When migrating from one cluster to another (e.g., local machine to Kubeflow), users only need to tweak several configurations, and the experiment can be easily scaled.
+NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际运行的计算基础架构平台。 当从一个集群迁移到另一个集群时 (如，从本机迁移到 Kubeflow)，用户只需要调整几项配置，能很容易的扩展计算资源。
 
-Users can use training service provided by NNI, to run trial jobs on [local machine](./LocalMode.md), [remote machines](./RemoteMachineMode.md), and on clusters like [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md) and [FrameworkController](./FrameworkControllerMode.md). These are called *built-in training services*.
+NNI 提供的训练平台包括：[本机](./LocalMode.md), [远程计算机](./RemoteMachineMode.md), 以及集群类的 [OpenPAI](./PaiMode.md)，[Kubeflow](./KubeflowMode.md) 和 [FrameworkController](./FrameworkControllerMode.md)。 这些都是*内置的训练平台*。
 
-If the computing resource customers try to use is not listed above, NNI provides interface that allows users to build their own training service easily. Please refer to "[how to implement training service](./HowToImplementTrainingService)" for details.
+如果需要在计算资源上使用 NNI，可以根据相关接口，轻松构建对其它训练平台的支持。 参考 "[如何实现训练平台](./HowToImplementTrainingService)" 了解详情。
 
 ## How to use Training Service?
 
