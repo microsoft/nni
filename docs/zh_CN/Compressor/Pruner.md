@@ -346,13 +346,13 @@ pruner.update_epoch(epoch)
 ***
 
 ## NetAdapt Pruner
-NetAdapt 在满足资源预算的情况下，自动简化预训练的网络。 Given the overall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
+NetAdapt 在满足资源预算的情况下，自动简化预训练的网络。 给定整体稀疏度，NetAdapt 可通过迭代剪枝自动为不同层生成不同的稀疏分布。
 
-For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
+参考 [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230) 了解详细信息。
 
 ![](../../img/algo_NetAdapt.png)
 
-#### Usage
+#### 用法
 
 PyTorch 代码
 
@@ -366,15 +366,15 @@ pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fin
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py)了解更多信息。
 
-#### User configuration for NetAdapt Pruner
+#### NetAdapt Pruner 的用户配置
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **short_term_fine_tuner:** Function to short-term fine tune the masked model. This function should include `model` as the only parameter, and fine tune the model for a short term after each pruning iteration.
+- **sparsity:** 整体的稀疏度目标。
+- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
+- **short_term_fine_tuner:** 用于快速微调掩码模型。 此函数只有 `model` 参数，在每次剪枝迭代后，对模型进行快速微调。
 
-    Example:
+    示例：
     ```python
     >>> def short_term_fine_tuner(model, epoch=3):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -391,9 +391,9 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
     >>>             loss.backward()
     >>>             optimizer.step()
     ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
+- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。
 
-    Example::
+    示例::
     ```python
     >>> def evaluator(model):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -410,8 +410,8 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
     >>>     accuracy = correct / len(val_loader.dataset)
     >>>     return accuracy
     ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
+- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
 - **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
 - **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
 
