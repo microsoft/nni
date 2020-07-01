@@ -412,7 +412,7 @@ pruner.compress()
     ```
 - **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
 - **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
+- **sparsity_per_iteration:** 每次迭代要剪枝的稀疏度。 NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
 - **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
 
 
