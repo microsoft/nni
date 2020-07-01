@@ -528,14 +528,13 @@ class TorchModuleGraph(TorchGraph):
             # the nodes that start with 'aten' are key function
             # nodes
             return True
-        if node_cpp.kind() in [LIST_CONSTRUCT_KIND, LIST_UNPACK_KIND, \
-                               TUPLE_CONSTRUCT_KIND, TUPLE_UNPACK_KIND]:
+        if node_cpp.kind() in [LIST_UNPACK_KIND, TUPLE_UNPACK_KIND]:
             # We cannot merge the List/Tuple
             # Construct/Unpack func into other nodes, else it
             # may lead to a graph construction error.
             return True
         return False
-    
+
     def unpack_manually(self):
         """
         Unpack the tensor tuple or tensor list manually,
@@ -543,31 +542,32 @@ class TorchModuleGraph(TorchGraph):
         the graph. Note: this function will change the
         graph structure.
         """
-        if hasattr(self, 'unpacked') and self.unpacked:
+        if hasattr(self, 'unpacked'):
             # if already unpacked the tuple/list manually
             return
         for node in self.nodes_py.nodes_op:
             if node.op_type in [TUPLE_UNPACK_KIND, LIST_UNPACK_KIND]:
-                predecessor_nodes = self.find_predecessors(node.unique_name)
-                # Unpack node should only has one predecessor who constructs
-                # this List/Tuple
-                assert len(predecessor_nodes) == 1
-                predecessor_node = self.name_to_node[predecessor_nodes[0]]
-                if predecessor_node.op_type in [TUPLE_CONSTRUCT_KIND, LIST_CONSTRUCT_KIND]:
-                    # unpack the tuple and list manually
-                    construct_cpp = predecessor_node.key_node
-                    unpack_cpp = node.key_node
-                    _logger.debug('Construct Node: ', construct_cpp)
-                    _logger.debug('Unpack Node:', unpack_cpp)
-                    # check if the length is the same
-                    assert len(list(unpack_cpp.outputs())) == len(list(construct_cpp.inputs()))
-                    for _input, _output in zip(construct_cpp.inputs(), unpack_cpp.outputs()):
+                unpack_cpp = node.key_node
+                last_cpp = list(unpack_cpp.inputs())[0].node()
+                if last_cpp.kind() in [TUPLE_CONSTRUCT_KIND, LIST_CONSTRUCT_KIND]:
+                    # we need check if the tensor tuple or tensor list is produced
+                    # by a list/tuple construct node. If so, we can unpack the tuple
+                    # or list manunally.
+                    _logger.debug('List/Tuple Construct Node(cpp) %s', str(last_cpp))
+                    _logger.debug('List/Tuple Unpack Node(cpp) %s', str(unpack_cpp))
+                    assert len(list(unpack_cpp.outputs())) == len(list(last_cpp.inputs()))
+                    for _input, _output in zip(last_cpp.inputs(), unpack_cpp.outputs()):
                         _debug_input = _input.debugName()
                         _debug_output = _output.debugName()
                         if _debug_input in self.input_to_node and _debug_output in self.input_to_node:
                             # input_to_node[_debug_input] is a list of NodePyGroup, because
                             # one tensor can be used as input for multiple nodes at the same time.
-                            self.input_to_node[_debug_input].remove(predecessor_node) # remove the construct node 
+
+                            # note that, in this case, the construct cpp node and unpack cpp node
+                            # will be merged into the same NodePyGroup, so we remove the `node` from
+                            # input_to_node[_debug_input] and directly connect this tensor to the
+                            # input_to_node[_debug_output]
+                            self.input_to_node[_debug_input].remove(node)
                             # add the following nodes of _output into the input_to_node[_debug_input]
                             self.input_to_node[_debug_input].extend(self.input_to_node[_debug_output])
                         if _debug_input in self.output_to_node and _debug_output in self.output_to_node:
