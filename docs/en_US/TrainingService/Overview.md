@@ -4,7 +4,7 @@
 
 NNI training service is designed to allow users to focus on AutoML itself, agnostic to the underlying computing infrastructure where the trials are actually run. When migrating from one cluster to another (e.g., local machine to Kubeflow), users only need to tweak several configurations, and the experiment can be easily scaled.
 
-Users can use training service provided by NNI, to run trial jobs on [local machine](./LocalMode.md), [remote machines](./RemoteMachineMode.md), and on clusters like [AML](./AMLMode.md), [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md) and [FrameworkController](./FrameworkControllerMode.md). These are called *built-in training services*.
+Users can use training service provided by NNI, to run trial jobs on [local machine](./LocalMode.md), [remote machines](./RemoteMachineMode.md), and on clusters like [PAI](./PaiMode.md), [Kubeflow](./KubeflowMode.md), [FrameworkController](./FrameworkControllerMode.md), [DLTS](./DLTSMode.md) and [AML](./AMLMode.md). These are called *built-in training services*.
 
 If the computing resource customers try to use is not listed above, NNI provides interface that allows users to build their own training service easily. Please refer to "[how to implement training service](./HowToImplementTrainingService)" for details.
 
