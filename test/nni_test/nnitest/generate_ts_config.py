@@ -35,6 +35,8 @@ def update_training_service_config(args):
             config[args.ts]['paiConfig']['host'] = args.pai_host
         if args.pai_token is not None:
             config[args.ts]['paiConfig']['token'] = args.pai_token
+        if args.pai_reuse is not None:
+            config[args.ts]['paiConfig']['reuse'] = args.pai_reuse
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.nni_manager_nfs_mount_path is not None:
