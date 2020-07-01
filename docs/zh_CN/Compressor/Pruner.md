@@ -23,7 +23,7 @@ NNI 提供了一些支持细粒度权重剪枝和结构化过滤剪枝算法。 
 
 **其它**
 * [ADMM Pruner](#admm-pruner)
-* [Lottery Ticket Hypothesis](#lottery-ticket-hypothesis)
+* [Lottery Ticket 假设](#lottery-ticket-hypothesis)
 
 ## Level Pruner
 
@@ -346,7 +346,7 @@ pruner.update_epoch(epoch)
 ***
 
 ## NetAdapt Pruner
-NetAdapt allows a user to automatically simplify a pretrained network to meet the resource budget. Given the overall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
+NetAdapt 在满足资源预算的情况下，自动简化预训练的网络。 Given the overall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
 
 For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications](https://arxiv.org/abs/1804.03230).
 
