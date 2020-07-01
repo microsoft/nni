@@ -52,11 +52,11 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni pytho
 
 [论文](https://arxiv.org/abs/1902.09635) &nbsp; &nbsp; [代码](https://github.com/google-research/nasbench)
 
-NAS-Bench-101 contains 423,624 unique neural networks, combined with 4 variations in number of epochs (4, 12, 36, 108), each of which is trained 3 times. It is a cell-wise search space, which constructs and stacks a cell by enumerating DAGs with at most 7 operators, and no more than 9 connections. All operators can be chosen from `CONV3X3_BN_RELU`, `CONV1X1_BN_RELU` and `MAXPOOL3X3`, except the first operator (always `INPUT`) and last operator (always `OUTPUT`).
+NAS-Bench-101 包含 423,624 个独立的神经网络，再加上 4 个 Epoch (4, 12, 36, 108) 时的变化，以及每个都要训练 3 次。 这是基于 Cell 的搜索空间，通过枚举最多 7 个有向图的运算符来构造并堆叠 Cell，连接数量不超过 9 个。 除了第一个 (必须为 `INPUT`) 和最后一个运算符 (必须为 `OUTPUT`)，可选的运算符有 `CONV3X3_BN_RELU`, `CONV1X1_BN_RELU` 和 `MAXPOOL3X3`。
 
-Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from input to output, or there is redundant computation). Furthermore, isomorphic cells are de-duplicated, i.e., all the remaining cells are computationally unique.
+注意，NAS-Bench-101 消除了非法的 Cell（如，从输入到输出没有路径，或存在冗余的计算）。 此外，同构的 Cell 会被去掉，即，所有的 Cell 从计算上看是一致的。
 
-### API Documentation
+### API 文档
 
 ```eval_rst
 .. autofunction:: nni.nas.benchmarks.nasbench101.query_nb101_trial_stats
@@ -86,9 +86,9 @@ Notably, NAS-Bench-101 eliminates invalid cells (e.g., there is no path from inp
 
 ## NAS-Bench-201
 
-[Paper link](https://arxiv.org/abs/2001.00326) &nbsp; &nbsp; [Open-source API](https://github.com/D-X-Y/NAS-Bench-201) &nbsp; &nbsp;[Implementations](https://github.com/D-X-Y/AutoDL-Projects)
+[论文](https://arxiv.org/abs/2001.00326) &nbsp; &nbsp; [API](https://github.com/D-X-Y/NAS-Bench-201) &nbsp; &nbsp;[实现](https://github.com/D-X-Y/AutoDL-Projects)
 
-NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges as operators. The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` and `AVG_POOL_3X3`). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
+NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符当作边。 The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` and `AVG_POOL_3X3`). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
 
 ### API 文档
 
@@ -115,15 +115,15 @@ NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges 
 
 ## NDS
 
-[Paper link](https://arxiv.org/abs/1905.13214) &nbsp; &nbsp; [Open-source](https://github.com/facebookresearch/nds)
+[论文](https://arxiv.org/abs/1905.13214) &nbsp; &nbsp; [代码](https://github.com/facebookresearch/nds)
 
 _On Network Design Spaces for Visual Recognition_ released trial statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
 
 Instead of storing results obtained with different configurations in separate files, we dump them into one single database to enable comparison in multiple dimensions. Specifically, we use `model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
 
-## Available Operators
+## 可用的运算符
 
-Here is a list of available operators used in NDS.
+NDS 中可用的运算符列表。
 
 ```eval_rst
 .. autoattribute:: nni.nas.benchmarks.nds.constants.NONE
@@ -159,7 +159,7 @@ Here is a list of available operators used in NDS.
 .. autoattribute:: nni.nas.benchmarks.nds.constants.DIL_SEP_CONV_3X3
 ```
 
-### API Documentation
+### API 文档
 
 ```eval_rst
 .. autofunction:: nni.nas.benchmarks.nds.query_nds_trial_stats
