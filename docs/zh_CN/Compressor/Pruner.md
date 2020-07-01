@@ -472,21 +472,21 @@ pruner.compress()
 - **stop_temperature:** 模拟退火算法相关参数。
 - **cool_down_rate:** 模拟退火算法相关参数。
 - **perturbation_magnitude:** 初始化对稀疏度的扰动幅度。 幅度会随着当前温度变小。
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
+- **experiment_data_dir:** 保存实验数据的路径，包括为基本剪枝算法生成的 config_list，剪枝后模型的性能，以及剪枝历史。
 
 
 ## AutoCompress Pruner
-For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
+每一轮中，AutoCompressPruner 会用相同的稀疏度对模型进行剪枝，从而达到总体的稀疏度：
 
-        1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result for the next round.
-           Here we use `speedup` to perform real pruning.
+        1. 使用 SimualtedAnnealingPruner 生成稀疏度分布
+        2. 执行基于 ADMM 的结构化剪枝，为下一轮生成剪枝结果。
+           这里会使用 `speedup` 来执行真正的剪枝。
 
-For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
+更多详细信息，参考 [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141)。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import ADMMPruner
@@ -501,13 +501,13 @@ pruner = AutoCompressPruner(
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py)了解更多信息。
 
-#### User configuration for AutoCompress Pruner
+#### AutoCompress Pruner 的用户配置
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem. Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments. Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper. The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`. Example:
+- **sparsity:** 整体的稀疏度目标。
+- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
+- **trainer:** 用于第一个子问题的函数。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`. Example:
     ```python
     >>> def trainer(model, criterion, optimizer, epoch, callback):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
