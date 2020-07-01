@@ -126,9 +126,9 @@ Quantizer 也是 `Compressor` 的子类，用来通过减少权重或激活值�
 
 ### 量化 module 包装
 
-Each module/layer of the model to be quantized is wrapped by a quantization module wrapper, it provides a new `forward` method to quantize the original module's weight, input and output.
+模型中每个要量化的模块和层，都需要量化包装，它通过提供 `forward` 方法来量化原始模型的权重、输入和输出。
 
-### Quantization hook
+### 量化回调
 
 A quantization hook is installed on a quntizer when it is constructed, it is call at `optimizer.step()`.
 
