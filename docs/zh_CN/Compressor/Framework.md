@@ -130,53 +130,53 @@ Quantizer 也是 `Compressor` 的子类，用来通过减少权重或激活值�
 
 ### 量化回调
 
-A quantization hook is installed on a quntizer when it is constructed, it is call at `optimizer.step()`.
+量化回调会在调用 `optimizer.step()` 时设置。
 
-### Quantization methods
+### 量化相关函数
 
-`Quantizer` class provides following methods for subclass to implement quantization algorithms:
+`Quantizer` 类为子类提供一下方法来实现量化算法：
 
 ```python
 class Quantizer(Compressor):
     """
-    Base quantizer for pytorch quantizer
+    PyTorch 的量化基类
     """
     def quantize_weight(self, weight, wrapper, **kwargs):
         """
-        quantize should overload this method to quantize weight.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法实现权重的量化。
+        此方法挂载于模型的 :meth:`forward`。
         Parameters
         ----------
         weight : Tensor
-            weight that needs to be quantized
+            需要量化的权重
         wrapper : QuantizerModuleWrapper
-            the wrapper for origin module
+            原始 module 的包装
         """
         raise NotImplementedError('Quantizer must overload quantize_weight()')
 
     def quantize_output(self, output, wrapper, **kwargs):
         """
-        quantize should overload this method to quantize output.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法实现输出的量化。
+        此方法挂载于模型的 :meth:`forward`。
         Parameters
         ----------
         output : Tensor
-            output that needs to be quantized
+            需要量化的输出
         wrapper : QuantizerModuleWrapper
-            the wrapper for origin module
+            原始 module 的包装
         """
         raise NotImplementedError('Quantizer must overload quantize_output()')
 
     def quantize_input(self, *inputs, wrapper, **kwargs):
         """
-        quantize should overload this method to quantize input.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法实现输入的量化。
+        此方法挂载于模型的 :meth:`forward`。
         Parameters
         ----------
         inputs : Tensor
-            inputs that needs to be quantized
+            需要量化的输入
         wrapper : QuantizerModuleWrapper
-            the wrapper for origin module
+            原始 module 的包装
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
