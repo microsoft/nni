@@ -66,6 +66,10 @@ export class WebCommandChannel extends CommandChannel {
         }
     }
 
+    public async run(): Promise<void>{
+        // do nothing
+    }
+
     protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
         if (this.webSocketServer === undefined) {
             throw new Error(`WebCommandChannel: uninitialized!`)

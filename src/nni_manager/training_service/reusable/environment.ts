@@ -14,7 +14,6 @@ import { CommandChannel } from "./commandChannel";
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 export type Channel = "web" | "file" | "aml" | "ut";
 
-
 export class EnvironmentInformation {
     private log: Logger;
 
@@ -65,6 +64,7 @@ export class EnvironmentInformation {
         }
     }
 }
+
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
