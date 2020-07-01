@@ -8,11 +8,11 @@ NNI 提供的训练平台包括：[本机](./LocalMode.md), [远程计算机](./
 
 如果需要在计算资源上使用 NNI，可以根据相关接口，轻松构建对其它训练平台的支持。 参考 "[如何实现训练平台](./HowToImplementTrainingService)" 了解详情。
 
-## How to use Training Service?
+## 如何使用训练平台？
 
-Training service needs to be chosen and configured properly in experiment configuration YAML file. Users could refer to the document of each training service for how to write the configuration. Also, [reference](../Tutorial/ExperimentConfig) provides more details on the specification of the experiment configuration file.
+在 Experiment 的 YAML 配置文件中选择并配置好训练平台。 参考相应训练平台的文档来了解如何配置。 同时，[Experiment 文档](../Tutorial/ExperimentConfig)提供了更多详细信息。
 
-Next, users should prepare code directory, which is specified as `codeDir` in config file. Please note that in non-local mode, the code directory will be uploaded to remote or cluster before the experiment. Therefore, we limit the number of files to 2000 and total size to 300MB. If the code directory contains too many files, users can choose which files and subfolders should be excluded by adding a `.nniignore` file that works like a `.gitignore` file. For more details on how to write this file, see the [git documentation](https://git-scm.com/docs/gitignore#_pattern_format).
+然后，需要准备代码目录，将路径填入配置文件的 `codeDir` 字段。 注意，非本机模式下，代码目录会在 Experiment 运行前上传到远程或集群中。 因此，NNI 将文件数量限制到 2000，总大小限制为 300 MB。 If the code directory contains too many files, users can choose which files and subfolders should be excluded by adding a `.nniignore` file that works like a `.gitignore` file. For more details on how to write this file, see the [git documentation](https://git-scm.com/docs/gitignore#_pattern_format).
 
 In case users intend to use large files in their experiment (like large-scaled datasets) and they are not using local mode, they can either: 1) download the data before each trial launches by putting it into trial command; or 2) use a shared storage that is accessible to worker nodes. Usually, training platforms are equipped with shared storage, and NNI allows users to easily use them. Refer to docs of each built-in training service for details.
 
