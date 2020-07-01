@@ -32,7 +32,7 @@
 
 ```
 
-## Model FLOPs/Parameters Counter
+## 模型 FLOPs 和参数计数器
 
 ```eval_rst
 ..  autofunction:: nni.compression.torch.utils.counter.count_flops_params
