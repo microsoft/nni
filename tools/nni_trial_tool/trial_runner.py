@@ -189,8 +189,6 @@ if __name__ == '__main__':
     from .file_channel import FileChannel
     from .web_channel import WebChannel
     from .commands import CommandType
-    if args.platform == 'aml':
-        from .aml_channel import AMLChannel
 
     is_multi_node = args.node_count > 1
 
@@ -213,6 +211,7 @@ if __name__ == '__main__':
     if args.command_channel == "file":
         command_channel = FileChannel(args)
     elif args.command_channel == 'aml':
+        from .aml_channel import AMLChannel
         command_channel = AMLChannel(args)
     else:
         command_channel = WebChannel(args)
