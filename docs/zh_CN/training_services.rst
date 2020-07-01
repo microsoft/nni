@@ -10,3 +10,4 @@ NNI 支持的训练平台介绍
     Kubeflow<./TrainingService/KubeflowMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
+    AML<./TrainingService/AMLMode>
