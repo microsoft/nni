@@ -49,17 +49,17 @@ amlConfig:
 
 注意：如果用 aml 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: aml`。
 
-Compared with [LocalMode](LocalMode.md) trial configuration in aml mode have these additional keys:
+与[本机模式](LocalMode.md)的 Trial 配置相比，aml 模式下的键值还有：
 * computeTarget
-    * required key. The computer cluster name you want to use in your AML workspace.
+    * 必填。 要在 AML 工作区中使用的计算机集群名称。
 * image
-    * required key. The docker image name used in job.
+    * 必填。 作业中使用的 Docker 映像名称。
 
 amlConfig:
 * subscriptionId
-    * the subscriptionId of your account
+    * Azure 订阅的 Id
 * resourceGroup
-    * the resourceGroup of your account
+    * 账户的资源组
 * workspaceName
-    * the workspaceName of your account
+    * 账户的工作区名称
   
