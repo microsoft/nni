@@ -170,13 +170,13 @@ Within the following table, we summarized the current NNI capabilities, we are g
       <ul>
         <li><a href="docs/en_US/TrainingService/LocalMode.md">Local Machine</a></li>
         <li><a href="docs/en_US/TrainingService/RemoteMachineMode.md">Remote Servers</a></li>
+        <li><a href="docs/en_US/TrainingService/AMLMode.md">AML(Azure Machine Learning)</a></li>
         <li><b>Kubernetes based services</b></li>
             <ul><li><a href="docs/en_US/TrainingService/PaiMode.md">OpenPAI</a></li>
             <li><a href="docs/en_US/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/en_US/TrainingService/FrameworkControllerMode.md">FrameworkController on K8S (AKS etc.)</a></li>
             </ul>
             <ul><li><a href="docs/en_US/TrainingService/DLTSMode.md">DLWorkspace (aka. DLTS)</a></li>
-            <li><a href="docs/en_US/TrainingService/AMLMode.md">AML(Azure Machine Learning)</a></li>
       </ul>
       </td>
     </tr>
