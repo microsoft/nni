@@ -9,48 +9,48 @@
 
 ## 先决条件
 
-* Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
-* Please install `peewee` via `pip install peewee`, which NNI uses to connect to database.
+* 准备目录来保存基准测试的数据库。 默认情况下，目录为 `${HOME}/.nni/nasbenchmark`。 可将其设置为任何位置，并在 import nni 前，通过 `NASBENCHMARK_DIR` 指定。
+* 通过 `pip install peewee` 命令安装 `peewee`，NNI 用其连接数据库。
 
-## Data Preparation
+## 准备数据
 
-To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. Please follow the following steps.
+为了避免存储和法规问题，NNI 不提供数据库。 强烈建议通过 Docker 来运行生成的脚本，减少安装依赖项的时间。 步骤：
 
-**Step 1.** Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
+**步骤 1.** 克隆 NNI 存储库。 将 `${NNI_VERSION}` 替换为发布的版本或分支名称，例如：`v1.6`。
 
 ```bash
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 ```
 
-**Step 2.** Run docker.
+**步骤 2.** 运行 Docker。
 
-For NAS-Bench-101,
+对于 NAS-Bench-101,
 
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
 ```
 
-For NAS-Bench-201,
+对于 NAS-Bench-201,
 
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
 ```
 
-For NDS,
+对于 NDS,
 
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
 ```
 
-Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
+确保至少有 10GB 的可用磁盘空间，运行过程可能需要几个小时。
 
-## Example Usages
+## 示例用法
 
-Please refer to [examples usages of Benchmarks API](./BenchmarksExample).
+参考[基准测试 API 的用法](./BenchmarksExample)。
 
 ## NAS-Bench-101
 
-[Paper link](https://arxiv.org/abs/1902.09635) &nbsp; &nbsp; [Open-source](https://github.com/google-research/nasbench)
+[论文](https://arxiv.org/abs/1902.09635) &nbsp; &nbsp; [代码](https://github.com/google-research/nasbench)
 
 NAS-Bench-101 contains 423,624 unique neural networks, combined with 4 variations in number of epochs (4, 12, 36, 108), each of which is trained 3 times. It is a cell-wise search space, which constructs and stacks a cell by enumerating DAGs with at most 7 operators, and no more than 9 connections. All operators can be chosen from `CONV3X3_BN_RELU`, `CONV1X1_BN_RELU` and `MAXPOOL3X3`, except the first operator (always `INPUT`) and last operator (always `OUTPUT`).
 
