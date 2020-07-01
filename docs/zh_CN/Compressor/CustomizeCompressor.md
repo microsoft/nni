@@ -1,67 +1,66 @@
-# Customize New Compression Algorithm
+# 自定义压缩算法
 
 ```eval_rst
 .. contents::
 ```
 
-In order to simplify the process of writing new compression algorithms, we have designed simple and flexible programming interface, which covers pruning and quantization. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
+为了简化实现新压缩算法的过程，NNI 设计了简单灵活，同时支持剪枝和量化的接口。 首先会介绍如何自定义新的剪枝算法，然后介绍如何自定义新的量化算法。
 
-**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference [Framework overview of model compression](https://nni.readthedocs.io/en/latest/Compressor/Framework.html)
+**重要说明**，为了更好的理解如何定制新的剪枝、量化算法，应先了解 NNI 中支持各种剪枝算法的框架。 参考[模型压缩框架](https://nni.readthedocs.io/en/latest/Compressor/Framework.html)
 
 
-## Customize a new pruning algorithm
+## 自定义剪枝算法
 
-Implementing a new pruning algorithm requires implementing a `weight masker` class which shoud be a subclass of `WeightMasker`, and a `pruner` class, which should be a subclass `Pruner`.
+要实现新的剪枝算法，需要实现`权重掩码`类，它是 `WeightMasker` 的子类，以及`Pruner` 类，它是 `Pruner` 的子类。
 
-An implementation of `weight masker` may look like this:
+`权重掩码`的实现如下：
 
 ```python
 class MyMasker(WeightMasker):
     def __init__(self, model, pruner):
         super().__init__(model, pruner)
-        # You can do some initialization here, such as collecting some statistics data
-        # if it is necessary for your algorithms to calculate the masks.
+        # 此处可初始化，如为算法收集计算权重所需要的统计信息。
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-        # calculate the masks based on the wrapper.weight, and sparsity, 
-        # and anything else
+        # 根据 wrapper.weight, 和 sparsity, 
+        # 及其它信息来计算掩码
         # mask = ...
         return {'weight_mask': mask}
 ```
 
-You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py) implementations to implement your own weight masker.
+参考 NNI 提供的[权重掩码](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py)来实现自己的。
 
-A basic `pruner` looks likes this:
+基础的 `Pruner` 如下：
 
 ```python
 class MyPruner(Pruner):
     def __init__(self, model, config_list, optimizer):
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
-        # construct a weight masker instance
+        # 创建权重掩码实例
         self.masker = MyMasker(model, self)
 
     def calc_mask(self, wrapper, wrapper_idx=None):
         sparsity = wrapper.config['sparsity']
         if wrapper.if_calculated:
-            # Already pruned, do not prune again as a one-shot pruner
+            # 如果是一次性剪枝算法，不需要再次剪枝
             return None
         else:
-            # call your masker to actually calcuate the mask for this layer
+            # 调用掩码函数来实际计算当前层的掩码
             masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
             wrapper.if_calculated = True
             return masks
 
 ```
 
-Reference nni provided [pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) implementations to implement your own pruner class.
+参考 NNI 提供的[Pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) 来实现自己的。
 
 
 ***
 
-## Customize a new quantization algorithm
+## 自定义量化算法
 
-To write a new quantization algorithm, you can write a class that inherits `nni.compression.torch.Quantizer`. Then, override the member functions with the logic of your algorithm. The member function to override is `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+要实现新的量化算法，需要继承 `nni.compression.torch.Quantizer`。 然后，根据算法逻辑来重写成员函数。 需要重载的成员函数是 `quantize_weight`。 `quantize_weight` 直接返回量化后的权重，而不是 mask。这是因为对于量化算法，量化后的权重不能通过应用 mask 来获得。
 
 ```python
 from nni.compression.torch import Quantizer
@@ -69,58 +68,58 @@ from nni.compression.torch import Quantizer
 class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         """
-        Suggest you to use the NNI defined spec for config
+        建议使用 NNI 定义的规范来配置
         """
         super().__init__(model, config_list)
 
     def quantize_weight(self, weight, config, **kwargs):
         """
-        quantize should overload this method to quantize weight tensors.
-        This method is effectively hooked to :meth:`forward` of the model.
+        quantize 需要重载此方法来为权重提供掩码
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         weight : Tensor
-            weight that needs to be quantized
+            要被量化的权重
         config : dict
-            the configuration for weight quantization
+            权重量化的配置
         """
 
-        # Put your code to generate `new_weight` here
+        # 此处逻辑生成 `new_weight`
 
         return new_weight
 
     def quantize_output(self, output, config, **kwargs):
         """
-        quantize should overload this method to quantize output.
-        This method is effectively hooked to `:meth:`forward` of the model.
+        重载此方法输出量化
+        此方法挂载于模型的 `:meth:`forward`。
 
         Parameters
         ----------
         output : Tensor
-            output that needs to be quantized
+            需要被量化的输出
         config : dict
-            the configuration for output quantization
+            输出量化的配置
         """
 
-        # Put your code to generate `new_output` here
+        # 实现生成 `new_output`
 
         return new_output
 
     def quantize_input(self, *inputs, config, **kwargs):
         """
-        quantize should overload this method to quantize input.
-        This method is effectively hooked to :meth:`forward` of the model.
+        重载此方法量化输入
+        此方法挂载于模型的 :meth:`forward`。
 
         Parameters
         ----------
         inputs : Tensor
-            inputs that needs to be quantized
+            需要被量化的张量
         config : dict
-            the configuration for inputs quantization
+            输入量化的配置
         """
 
-        # Put your code to generate `new_input` here
+        # 生成 `new_input` 的代码
 
         return new_input
 
@@ -129,15 +128,14 @@ class YourQuantizer(Quantizer):
 
     def step(self):
         """
-        Can do some processing based on the model or weights binded
-        in the func bind_model
+        根据 bind_model 函数传入的模型或权重进行一些处理
         """
         pass
 ```
 
-### Customize backward function
+### 定制 backward 函数
 
-Sometimes it's necessary for a quantization operation to have a customized backward function, such as [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste), user can customize a backward function as follow:
+有时，量化操作必须自定义 backward 函数，例如 [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste)，可如下定制 backward 函数：
 
 ```python
 from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
@@ -146,24 +144,24 @@ class ClipGrad(QuantGrad):
     @staticmethod
     def quant_backward(tensor, grad_output, quant_type):
         """
-        This method should be overrided by subclass to provide customized backward function,
-        default implementation is Straight-Through Estimator
+        此方法应被子类重载来提供定制的 backward 函数，
+        默认实现是 Straight-Through Estimator
         Parameters
         ----------
         tensor : Tensor
-            input of quantization operation
+            量化操作的输入
         grad_output : Tensor
-            gradient of the output of quantization operation
+            量化操作输出的梯度
         quant_type : QuantType
-            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
-            you can define different behavior for different types.
+            量化类型，可为 `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+            可为不同的类型定义不同的行为。
         Returns
         -------
         tensor
-            gradient of the input of quantization operation
+            量化输入的梯度
         """
 
-        # for quant_output function, set grad to zero if the absolute value of tensor is larger than 1
+        # 对于 quant_output 函数，如果张量的绝对值大于 1，则将梯度设置为 0
         if quant_type == QuantType.QUANT_OUTPUT: 
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output
@@ -172,9 +170,9 @@ class ClipGrad(QuantGrad):
 class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
         super().__init__(model, config_list)
-        # set your customized backward function to overwrite default backward function
+        # 定制 backward 函数来重载默认的 backward 函数
         self.quant_grad = ClipGrad
 
 ```
 
-If you do not customize `QuantGrad`, the default backward is Straight-Through Estimator. _Coming Soon_ ...
+如果不定制 `QuantGrad`，默认的 backward 为 Straight-Through Estimator。 _即将推出_...
