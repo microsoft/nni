@@ -25,26 +25,26 @@ NNI 提供的训练平台包括：[本机](./LocalMode.md), [远程计算机](./
 | [__OpenPAI__](./PaiMode.html)                             | NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) 上运行 Experiment，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。                                                                                                                                                                                                                                                                |
 | [__Kubeflow__](./KubeflowMode.html)                       | NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/zh-cn/services/kubernetes-service/)，并需要一台配置好 [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览[这里](https://kubernetes.io/docs/tutorials/kubernetes-basics/)。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。 |
 | [__FrameworkController__](./FrameworkControllerMode.html) | NNI 支持使用 [FrameworkController](https://github.com/Microsoft/frameworkcontroller)，来运行 Experiment，称之为 frameworkcontroller 模式。 FrameworkController 构建于 Kubernetes 上，用于编排各种应用。这样，可以不用为某个深度学习框架安装 Kubeflow 的 tf-operator 或 pytorch-operator 等。 而直接用 FrameworkController 作为 NNI Experiment 的训练平台。                                                                                                                                                                                                                                            |
-| [__DLTS__](./DLTSMode.html)                               | NNI supports running experiment using [DLTS](https://github.com/microsoft/DLWorkspace.git), which is an open source toolkit, developed by Microsoft, that allows AI scientists to spin up an AI cluster in turn-key fashion.                                                                                                                                                                                                                                                                                                           |
+| [__DLTS__](./DLTSMode.html)                               | NNI 支持在 [DLTS](https://github.com/microsoft/DLWorkspace.git) 上运行 Experiment，这是一个由微软开源的工具包。                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-## What does Training Service do?
+## 训练平台做了什么？
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
 </p>
 
-According to the architecture shown in [Overview](../Overview), training service (platform) is actually responsible for two events: 1) initiating a new trial; 2) collecting metrics and communicating with NNI core (NNI manager); 3) monitoring trial job status. To demonstrated in detail how training service works, we show the workflow of training service from the very beginning to the moment when first trial succeeds.
+根据[概述](../Overview)中展示的架构，训练平台会做三件事：1) 启动 Trial; 2) 收集指标，并与 NNI 核心（NNI 管理器）通信；3) 监控 Trial 任务状态。 为了展示训练平台的详细工作原理，下面介绍了训练平台从最开始到第一个 Trial 运行成功的过程。
 
-Step 1. **Validate config and prepare the training platform.** Training service will first check whether the training platform user specifies is valid (e.g., is there anything wrong with authentication). After that, training service will start to prepare for the experiment by making the code directory (`codeDir`) accessible to training platform.
+步骤 1. **验证配置，并准备训练平台。** 训练平台会首先检查用户配置是否正确（例如，身份验证是否有错）。 然后，训练平台会为 Experiment 做准备，创建训练平台可访问的代码目录（`codeDir`）。
 
 ```eval_rst
-.. Note:: Different training services have different ways to handle ``codeDir``. For example, local training service directly runs trials in ``codeDir``. Remote training service packs ``codeDir`` into a zip and uploads it to each machine. K8S-based training services copy ``codeDir`` onto a shared storage, which is either provided by training platform itself, or configured by users in config file.
+.. Note:: 不同的训练平台会有不同的方法来处理 ``codeDir``。 例如，本机训练平台会直接在 ``codeDir`` 中运行 Trial。 远程训练平台会将 ``codeDir`` 打包成 zip 文件，并上传到每台机器中。 基于 Kubernetes 的训练平台会将 ``codeDir`` 复制到共享存储上，此存储可以由训练平台提供，或者用户在配置文件中指定。
 ```
 
-Step 2. **Submit the first trial.** To initiate a trial, usually (in non-reuse mode), NNI copies another few files (including parameters, launch script and etc.) onto training platform. After that, NNI launches the trial through subprocess, SSH, RESTful API, and etc.
+步骤 2. **提交第一个 Trial。** 要初始化 Trial，通常（在不重用环境的情况下），NNI 会复制一些文件（包括参数配置，启动脚本等）到训练平台中。 然后，NNI 会通过子进程、SSH、RESTful API 等方式启动 Trial。
 
 ```eval_rst
-.. Warning:: The working directory of trial command has exactly the same content as ``codeDir``, but can have a differen path (even on differen machines) Local mode is the only training service that shares one ``codeDir`` across all trials. Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
+.. Warning:: Trial 当前目录的内容与 ``codeDir`` 会完全一样，但可能是完全不同的路径（甚至不同的计算机）。本机模式是唯一一个所有 Trial 都使用同一个 ``codeDir`` 的训练平台。 Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
 ```
 
 Step 3. **Collect metrics.**  NNI then monitors the status of trial, updates the status (e.g., from `WAITING` to `RUNNING`, `RUNNING` to `SUCCEEDED`) recorded, and also collects the metrics. Currently, most training services are implemented in an "active" way, i.e., training service will call the RESTful API on NNI manager to update the metrics. Note that this usually requires the machine that runs NNI manager to be at least accessible to the worker node.
