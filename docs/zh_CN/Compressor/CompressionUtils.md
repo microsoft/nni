@@ -118,14 +118,14 @@ from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
 ```
 
-### Model FLOPs/Parameters Counter
-We provide a model counter for calculating the model FLOPs and parameters. This counter supports calculating FLOPs/parameters of a normal model without masks, it can also calculates FLOPs/parameters of a model with mask wrappers, which helps users easily check model complexity during model compression on NNI. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number (i.e., the number calculated after Model Speedup).
+### 模型 FLOPs 和参数计数器
+NNI 提供了模型计数器，用于计算模型的 FLOPs 和参数。 此计数器支持计算没有掩码模型的 FLOPs、参数，也可以计算有掩码模型的 FLOPs、参数，这有助于在模型压缩过程中检查模型的复杂度。 注意，对于结构化的剪枝，仅根据掩码来标识保留的过滤器，不会考虑剪枝的输入通道，因此，计算出的 FLOPs 会比实际数值要大（即，模型加速后的计算值）。
 
-### Usage
+### 用法
 ```
 from nni.compression.torch.utils.counter import count_flops_params
 
-# Given input size (1, 1, 28, 28)
+# 给定输入大小 (1, 1, 28, 28)
 flops, params = count_flops_params(model, (1, 1, 28, 28))
 print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
 ```
