@@ -1,4 +1,4 @@
-# **实现 NNI TrainingService**
+# NNI 中如何实现训练平台
 
 ## 概述
 
