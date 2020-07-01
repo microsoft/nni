@@ -88,7 +88,7 @@ NAS-Bench-101 包含 423,624 个独立的神经网络，再加上 4 个 Epoch (4
 
 [论文](https://arxiv.org/abs/2001.00326) &nbsp; &nbsp; [API](https://github.com/D-X-Y/NAS-Bench-201) &nbsp; &nbsp;[实现](https://github.com/D-X-Y/AutoDL-Projects)
 
-NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符当作边。 The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` and `AVG_POOL_3X3`). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
+NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符当作边。 搜索空间包含了 4 个节点所有密集连接的有向图，共有 15,625 个候选项。 每个运算符（即：边）从预定义的运算符集中选择 (`NONE`, `SKIP_CONNECT`, `CONV_1X1`, `CONV_3X3` 和 `AVG_POOL_3X3`)。 训练方法根据数据集 (CIFAR-10, CIFAR-100, ImageNet) 和 Epoch 数量 (12 和 200)，而有所不同。 每个架构和训练方法的组合会随机重复 1 到 3 次。
 
 ### API 文档
 
@@ -117,9 +117,9 @@ NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符
 
 [论文](https://arxiv.org/abs/1905.13214) &nbsp; &nbsp; [代码](https://github.com/facebookresearch/nds)
 
-_On Network Design Spaces for Visual Recognition_ released trial statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
+_On Network Design Spaces for Visual Recognition_ 发布了来自多个模型系列，超过 100,000 个配置（模型加超参组合）的统计，包括 vanilla (受 VGG 启发的松散前馈网络), ResNet 和 ResNeXt (残差基本模块和残差瓶颈模块) 以及 NAS 单元格 (遵循 NASNet, Ameoba, PNAS, ENAS 和 DARTS 的设计)。 大部分配置只采用固定的随机种子训练一次，但少部分会训练两到三次。
 
-Instead of storing results obtained with different configurations in separate files, we dump them into one single database to enable comparison in multiple dimensions. Specifically, we use `model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
+NNI 会将不同配置的结果存到单个数据库中，而不是单独的文件中，以便从各个维度进行比较。 Specifically, we use `model_family` to distinguish model types, `model_spec` for all hyper-parameters needed to build this model, `cell_spec` for detailed information on operators and connections if it is a NAS cell, `generator` to denote the sampling policy through which this configuration is generated. Refer to API documentation for details.
 
 ## 可用的运算符
 
