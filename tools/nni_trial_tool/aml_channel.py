@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import websockets
-import json
-from azureml.core.run import Run
+from azureml.core.run import Run # pylint: disable=import-error
 from .base_channel import BaseChannel
 from .log_utils import LogType, nni_log
 
@@ -40,7 +38,7 @@ class AMLChannel(BaseChannel):
                 messages = message_list[self.current_message_index + 1 : len(message_list)]
                 self.current_message_index = len(message_list) - 1
         elif self.current_message_index == -1:
-            messages = [message_list] 
+            messages = [message_list]
             self.current_message_index += 1
         newMessage = []
         for message in messages:
