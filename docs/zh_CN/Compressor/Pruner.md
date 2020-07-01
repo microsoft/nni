@@ -404,7 +404,7 @@ pruner.compress()
     >>>         for data, target in val_loader:
     >>>             data, target = data.to(device), target.to(device)
     >>>             output = model(data)
-    >>>             # get the index of the max log-probability
+    >>>             # 获得最大 log 概率分布的索引
     >>>             pred = output.argmax(dim=1, keepdim=True)
     >>>             correct += pred.eq(target.view_as(pred)).sum().item()
     >>>     accuracy = correct / len(val_loader.dataset)
@@ -412,26 +412,26 @@ pruner.compress()
     ```
 - **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
 - **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **sparsity_per_iteration:** 每次迭代要剪枝的稀疏度。 NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
+- **sparsity_per_iteration:** 每次迭代要剪枝的稀疏度。 NetAdapt Pruner 在每次迭代时，按相同水平对模型进行剪枝，以便逐步满足计算资源预算。
+- **experiment_data_dir:** 保存实验数据的路径，包括为基本剪枝算法生成的 config_list，以及剪枝后模型的性能。
 
 
 ## SimulatedAnnealing Pruner
 
-We implement a guided heuristic search method, Simulated Annealing (SA) algorithm, with enhancement on guided search based on prior experience. The enhanced SA technique is based on the observation that a DNN layer with more number of weights often has a higher degree of model compression with less impact on overall accuracy.
+此 Pruner 基于先验经验，实现了引导式的启发搜索方法，模拟退火（SA）算法。 增强的模拟退火算法基于以下发现：具有更多权重的深度神经网络层通常具有较高的可压缩度，对整体精度的影响更小。
 
-- Randomly initialize a pruning rate distribution (sparsities).
-- While current_temperature < stop_temperature:
-    1. generate a perturbation to current distribution
-    2. Perform fast evaluation on the perturbated distribution
-    3. accept the perturbation according to the performance and probability, if not accepted, return to step 1
-    4. cool down, current_temperature <- current_temperature * cool_down_rate
+- 随机初始化剪枝率的分布（稀疏度）。
+- 当 current_temperature < stop_temperature 时：
+    1. 对当前分布生成扰动
+    2. 对扰动的分布进行快速评估
+    3. 根据性能和概率来决定是否接受扰动，如果不接受，返回步骤 1
+    4. 冷却，current_temperature = current_temperature * cool_down_rate
 
-For more details, please refer to [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141).
+更多详细信息，参考 [AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates](https://arxiv.org/abs/1907.03141)。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import SimulatedAnnealingPruner
@@ -443,13 +443,13 @@ pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py)了解更多信息。
 
-#### User configuration for SimulatedAnnealing Pruner
+#### SimulatedAnnealing Pruner 的用户配置
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value. Example::
+- **sparsity:** 整体的稀疏度目标。
+- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
+- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。 示例::
     ```python
     >>> def evaluator(model):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -460,18 +460,18 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
     >>>         for data, target in val_loader:
     >>>             data, target = data.to(device), target.to(device)
     >>>             output = model(data)
-    >>>             # get the index of the max log-probability
+    >>>             # 获得最大 log 概率分布的索引
     >>>             pred = output.argmax(dim=1, keepdim=True)
     >>>             correct += pred.eq(target.view_as(pred)).sum().item()
     >>>     accuracy = correct / len(val_loader.dataset)
     >>>     return accuracy
     ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
+- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
+- **start_temperature:** 模拟退火算法相关参数。
+- **stop_temperature:** 模拟退火算法相关参数。
+- **cool_down_rate:** 模拟退火算法相关参数。
+- **perturbation_magnitude:** 初始化对稀疏度的扰动幅度。 幅度会随着当前温度变小。
 - **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
 
 
