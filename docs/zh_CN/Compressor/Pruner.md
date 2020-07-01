@@ -1,12 +1,12 @@
 # NNI 支持的剪枝算法
 
-NNI 提供了一些支持细粒度权重剪枝和结构化过滤剪枝算法。 **细粒度的剪枝**通常会导致非结构化的模型，这需要特定的硬件或软件来加速这样的稀疏网络。 **过滤剪枝**通过删除整个过滤器来实现加速。  NNI 还提供了算法来进行**剪枝规划**。
+NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度的剪枝**通常会导致非结构化的模型，这需要特定的硬件或软件来加速这样的稀疏网络。 **滤波器剪枝**通过删除整个滤波器来实现加速。  NNI 还提供了算法来进行**剪枝规划**。
 
 
 **细粒度剪枝**
 * [Level Pruner](#level-pruner)
 
-**过滤剪枝**
+**滤波器剪枝**
 * [Slim Pruner](#slim-pruner)
 * [FPGM Pruner](#fpgm-pruner)
 * [L1Filter Pruner](#l1filter-pruner)
@@ -95,10 +95,10 @@ pruner.compress()
 
 这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 
-具有最小几何中位数的 FPGMPruner 修剪过滤器
+具有最小几何中位数的 FPGMPruner 修剪滤波器
 
  ![](../../img/fpgm_fig1.png)
-> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
+> 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 滤波器的规范偏差应该较大；(2) 滤波器的最小规范化值应该很小。 为了解决此问题，提出了新的滤波器修剪方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
 ### 用法
 
@@ -124,7 +124,7 @@ pruner.compress()
 ```
 
 #### FPGM Pruner 的用户配置
-- **sparsity:** 卷积过滤器要修剪的百分比。
+- **sparsity:** 卷积滤波器要修剪的百分比。
 - **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
 
 ***
@@ -135,13 +135,13 @@ pruner.compress()
 
 ![](../../img/l1filter_pruner.png)
 
-> L1Filter Pruner 修剪**卷积层**中的过滤器
+> L1Filter Pruner 修剪**卷积层**中的滤波器
 > 
-> 从第 i 个卷积层修剪 m 个过滤器的过程如下：
+> 从第 i 个卷积层修剪 m 个滤波器的过程如下：
 > 
-> 1. 对于每个过滤器 ![](http://latex.codecogs.com/gif.latex?F_{i,j})，计算其绝对内核权重之和![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
-> 2. 将过滤器按 ![](http://latex.codecogs.com/gif.latex?s_j) 排序。
-> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的筛选器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
+> 1. 对于每个滤波器 ![](http://latex.codecogs.com/gif.latex?F_{i,j})，计算其绝对内核权重之和![](http://latex.codecogs.com/gif.latex?s_j=\sum_{l=1}^{n_i}\sum|K_l|)
+> 2. 将滤波器按 ![](http://latex.codecogs.com/gif.latex?s_j) 排序。
+> 3. 修剪 ![](http://latex.codecogs.com/gif.latex?m) 具有最小求和值及其相应特征图的滤波器。 在 下一个卷积层中，被剪除的特征图所对应的内核也被移除。
 > 4. 为第 ![](http://latex.codecogs.com/gif.latex?i) 和 ![](http://latex.codecogs.com/gif.latex?i+1) 层创建新的内核举证，并保留剩余的内核 权重，并复制到新模型中。
 
 ### 用法
@@ -175,7 +175,7 @@ pruner.compress()
 
 ## L2Filter Pruner
 
-这是一种结构化剪枝算法，用于修剪权重的最小 L2 规范筛选器。 它被实现为一次性修剪器。
+这是一种结构化剪枝算法，用于修剪权重的最小 L2 规范滤波器。 它被实现为一次性修剪器。
 
 ### 用法
 
@@ -197,7 +197,7 @@ pruner.compress()
 
 ## ActivationAPoZRankFilterPruner
 
-ActivationAPoZRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 `APoZ` 修剪过滤器，来达到预设的网络稀疏度。 剪枝标准 `APoZ` 的解释在论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250) 中。
+ActivationAPoZRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 `APoZ` 修剪滤波器，来达到预设的网络稀疏度。 剪枝标准 `APoZ` 的解释在论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250) 中。
 
 APoZ 定义为：
 
@@ -223,14 +223,14 @@ pruner.compress()
 
 ### ActivationAPoZRankFilterPruner 的用户配置
 
-- **sparsity:** 卷积过滤器要修剪的百分比。
+- **sparsity:** 卷积滤波器要修剪的百分比。
 - **op_types:** 在 ActivationAPoZRankFilterPruner 中仅支持 Conv2d。
 
 ***
 
 ## ActivationMeanRankFilterPruner
 
-ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准`平均激活`来修剪过滤器，来达到预设的网络稀疏度。 剪枝标准`平均激活`，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
+ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准`平均激活`来修剪滤波器，来达到预设的网络稀疏度。 剪枝标准`平均激活`，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
 
 ### 用法
 
@@ -252,14 +252,14 @@ pruner.compress()
 
 ### ActivationMeanRankFilterPruner 的用户配置
 
-- **sparsity:** 卷积过滤器要修剪的百分比。
+- **sparsity:** 卷积滤波器要修剪的百分比。
 - **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
 
 ***
 
 ## TaylorFOWeightFilterPruner
 
-TaylorFOWeightFilterPruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 过滤器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
+TaylorFOWeightFilterPruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 滤波器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
 >
 
 ![](../../img/importance_estimation_sum.png)
@@ -282,7 +282,7 @@ pruner.compress()
 
 ### TaylorFOWeightFilterPruner 的用户配置
 
-- **sparsity:** 卷积过滤器要修剪的百分比。
+- **sparsity:** 卷积滤波器要修剪的百分比。
 - **op_types:** 当前 TaylorFOWeightFilterPruner 中仅支持 Conv2d。
 
 ***
@@ -467,7 +467,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
     >>>     return accuracy
     ```
 - **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
@@ -544,7 +544,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
 - **iterations:** The number of overall iterations.
 - **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
 - **start_temperature:** Simualated Annealing related parameter.
 - **stop_temperature:** Simualated Annealing related parameter.
 - **cool_down_rate:** Simualated Annealing related parameter.
@@ -610,7 +610,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 - **num_iterations:** Total number of iterations.
 - **training_epochs:** Training epochs of the first subproblem.
 - **row:** Penalty parameters for ADMM training.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
 
 
 ## Lottery Ticket Hypothesis
