@@ -413,7 +413,7 @@ class TrialDispatcher implements TrainingService {
             this.environments.forEach((environment) => {
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
-                    if (environment.status === "RUNNING" && environment.isIdle) {
+                    if (environment.status === "RUNNING" && environment.isRunnerReady && environment.isIdle) {
                         idleEnvironments.push(environment);
                     }
                 }
@@ -597,8 +597,8 @@ class TrialDispatcher implements TrainingService {
                     }
 
                     // single node is always ready to set env status
-                    if (isAllReady && oldStatus === "UNKNOWN") {
-                        environment.status = "RUNNING";
+                    if (isAllReady) {
+                        environment.isRunnerReady = true;
                         this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
                     }
                 }

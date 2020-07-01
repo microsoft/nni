@@ -29,6 +29,8 @@ export class EnvironmentInformation {
     public isIdle: boolean = false;
     // true: environment is running, waiting, or unknown.
     public isAlive: boolean = true;
+    // true: Runner is initialized, and can receive trials.
+    public isRunnerReady: boolean = false;
     // don't set status in environment directly, use setFinalState function to set a final state.
     public status: EnvironmentStatus = "UNKNOWN";
 
@@ -50,18 +52,8 @@ export class EnvironmentInformation {
         this.nodes = new Map<string, NodeInfomation>();
     }
 
-    public setFinalStatus(status: EnvironmentStatus): void {
-        switch (status) {
-            case 'WAITING':
-            case 'SUCCEEDED':
-            case 'FAILED':
-            case 'USER_CANCELED':
-                this.status = status;
-                break;
-            default:
-                this.log.error(`Environment: job ${this.jobId} set an invalid final state ${status}.`);
-                break;
-        }
+    public setStatus(status: EnvironmentStatus): void {
+        this.status = status;
     }
 }
 
