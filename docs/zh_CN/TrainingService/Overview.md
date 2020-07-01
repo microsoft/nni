@@ -44,7 +44,7 @@ NNI 提供的训练平台包括：[本机](./LocalMode.md), [远程计算机](./
 步骤 2. **提交第一个 Trial。** 要初始化 Trial，通常（在不重用环境的情况下），NNI 会复制一些文件（包括参数配置，启动脚本等）到训练平台中。 然后，NNI 会通过子进程、SSH、RESTful API 等方式启动 Trial。
 
 ```eval_rst
-.. Warning:: Trial 当前目录的内容与 ``codeDir`` 会完全一样，但可能是完全不同的路径（甚至不同的计算机）。本机模式是唯一一个所有 Trial 都使用同一个 ``codeDir`` 的训练平台。 Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
+.. Warning:: Trial 当前目录的内容与 ``codeDir`` 会完全一样，但可能是完全不同的路径（甚至不同的计算机）。本机模式是唯一一个所有 Trial 都使用同一个 ``codeDir`` 的训练平台。 其它训练平台，会将步骤 1 中准备好的 ``codeDir``，从共享目录复制到每个 Trial 自己独立的工作目录下。 强烈建议不要依赖于本机模式下的共享行为，这会让 Experiment 很难扩展到其它训练平台上。
 ```
 
-Step 3. **Collect metrics.**  NNI then monitors the status of trial, updates the status (e.g., from `WAITING` to `RUNNING`, `RUNNING` to `SUCCEEDED`) recorded, and also collects the metrics. Currently, most training services are implemented in an "active" way, i.e., training service will call the RESTful API on NNI manager to update the metrics. Note that this usually requires the machine that runs NNI manager to be at least accessible to the worker node.
+步骤 3. **收集指标。**  NNI 会监控 Trial 的状态，更新状态（如，从 `WAITING` 到 `RUNNING`，`RUNNING` 到 `SUCCEEDED`，并收集指标。 当前，大部分训练平台都实现为 "主动" 模式，即，训练平台会调用 NNI 管理器上的 RESTful API 来更新指标。 注意，这也需要运行 NNI 管理器的计算机能被工作节点访问到。
