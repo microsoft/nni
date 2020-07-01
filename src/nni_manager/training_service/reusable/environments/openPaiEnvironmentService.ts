@@ -167,8 +167,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         // Step 1. Prepare PAI job configuration
-        environment.runnerWorkingFolder = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/envs/${environment.id}`;
-        environment.command = `cd ${environment.runnerWorkingFolder} && ${environment.command}`
+        const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+        environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
+        environment.command = `cd ${environmentRoot} && ${environment.command}`
         environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.jobId}`
 
         // Step 2. Generate Job Configuration in yaml format

@@ -19,6 +19,7 @@ export enum TrialConfigMetadataKey {
     NNI_MANAGER_IP = 'nni_manager_ip',
     FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
     DLTS_CLUSTER_CONFIG = 'dlts_config',
+    AML_CLUSTER_CONFIG = 'aml_config',
     VERSION_CHECK = 'version_check',
     LOG_COLLECTION = 'log_collection'
 }
