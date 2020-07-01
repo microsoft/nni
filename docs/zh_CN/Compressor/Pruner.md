@@ -555,17 +555,17 @@ pruner.compress()
 
 
 ## ADMM Pruner
-Alternating Direction Method of Multipliers (ADMM) 是一种数学优化技术，它将原始的非凸问题分解为两个可以迭代解决的子问题。 In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
+Alternating Direction Method of Multipliers (ADMM) 是一种数学优化技术，它将原始的非凸问题分解为两个可以迭代解决的子问题。 在权重修剪问题中，这两个子问题分别通过 1) 梯度下降算法和 2) 欧几里得投影来解决。
 
-During the process of solving these two subproblems, the weights of the original model will be changed. An one-shot pruner will then be applied to prune the model according to the config list given.
+在解决这两个子问题的过程中，原始模型的权重会被改变。 One-Shot Pruner 会根据给定的配置对模型剪枝。
 
-This solution framework applies both to non-structured and different variations of structured pruning schemes.
+此解决方案框架既适用于非结构化剪枝也适用于结构化剪枝的变体。
 
-For more details, please refer to [A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers](https://arxiv.org/abs/1804.03294).
+更多详细信息，参考 [A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers](https://arxiv.org/abs/1804.03294)。
 
-#### Usage
+#### 用法
 
-PyTorch code
+PyTorch 代码
 
 ```python
 from nni.compression.torch import ADMMPruner
@@ -582,15 +582,15 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epoc
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py)了解更多信息。
 
-#### User configuration for ADMM Pruner
+#### ADMM Pruner 的用户配置
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem in ADMM optimization, attention, this is not used for fine-tuning. Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments. Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper. The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+- **sparsity:**，指定压缩的稀疏度。
+- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
+- **trainer:** 用于 ADMM 优化中第一个子问题的函数。注意，微调中不会使用它。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 `callback` 的逻辑在 Pruner 中实现，用户只需要在 `loss.backward()` 和 `optimizer.step()` 之间插入 `callback()` 即可。
 
-    Example:
+    示例：
     ```python
     >>> def trainer(model, criterion, optimizer, epoch, callback):
     >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -602,32 +602,32 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
     >>>         output = model(data)
     >>>         loss = criterion(output, target)
     >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
+    >>>         # 在 loss.backward() 和 optimizer.step() 中插入 callback
     >>>         if callback:
     >>>             callback()
     >>>         optimizer.step()
     ```
-- **num_iterations:** Total number of iterations.
-- **training_epochs:** Training epochs of the first subproblem.
-- **row:** Penalty parameters for ADMM training.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
+- **num_iterations:** 迭代次数。
+- **training_epochs:** 第一个子问题训练的 Epoch 数量。
+- **row:** ADMM 训练的惩罚参数。
+- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
 
 
-## Lottery Ticket Hypothesis
-[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis, and articulate the *lottery ticket hypothesis*: dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*) that -- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+## Lottery Ticket 假设
+[The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
 
-In this paper, the authors use the following process to prune a model, called *iterative prunning*:
+本文中，作者使用叫做*迭代剪枝*的方法：
 > 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
 > 2. 将网络训练 j 次，得出参数 theta_j。
 > 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
 > 4. 将其余参数重置为 theta_0 的值，创建获胜彩票 f(x;m*theta_0)。
 > 5. 重复步骤 2、3 和 4。
 
-If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning, each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+如果配置的最终稀疏度为 P (e.g., 0.8) 并且有 n 次修建迭代，每次迭代修剪前一轮中剩余权重的 1-(1-P)^(1/n)。
 
 ### 用法
 
-PyTorch code
+PyTorch 代码
 ```python
 from nni.compression.torch import LotteryTicketPruner
 config_list = [{
@@ -643,19 +643,19 @@ for _ in pruner.get_prune_iterations():
         ...
 ```
 
-The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs `model` and `optimizer` (**Note that should add `lr_scheduler` if used**) to reset their states every time a new prune iteration starts. Please use `get_prune_iterations` to get the pruning iterations, and invoke `prune_iteration_start` at the beginning of each iteration. `epoch_num` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round.
+上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 `model` 和 `optimizer` (**注意，如果使用 `lr_scheduler`，也需要添加**) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 `get_prune_iterations` 来获取修建迭代，并在每次迭代开始时调用 `prune_iteration_start`。 为了模型能较好收敛，`epoch_num` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。
 
 
-*Tensorflow version will be supported later.*
+*稍后支持 TensorFlow 版本。*
 
-#### User configuration for LotteryTicketPruner
+#### LotteryTicketPruner 的用户配置
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+* **prune_iterations:** 迭代修剪的次数。
+* **sparsity:** 压缩完成后的最终稀疏度。
 
 ### 重现实验
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+在重现时，在 MNIST 使用了与论文相同的配置。 [此处](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py)为实现代码。 在此实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
 
 ![](../../img/lottery_ticket_mnist_fc.png)
 
