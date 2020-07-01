@@ -6,7 +6,7 @@
 import * as component from "../../../common/component";
 import { delay } from "../../../common/utils";
 import { CommandChannel, RunnerConnection } from "../commandChannel";
-import { EnvironmentInformation, Channel } from "../environment";
+import { Channel, EnvironmentInformation } from "../environment";
 import { StorageService } from "../storageService";
 
 class FileHandler {
@@ -38,13 +38,19 @@ export class FileCommandChannel extends CommandChannel {
     }
 
     public async start(): Promise<void> {
-        // start command loops
-        this.receiveLoop();
-        this.sendLoop();
+        // do nothing
     }
 
     public async stop(): Promise<void> {
         this.stopping = true;
+    }
+
+    public async run(): Promise<void> {
+        // start command loops
+        await Promise.all([
+            this.receiveLoop(),
+            this.sendLoop()
+        ]);
     }
 
     protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {

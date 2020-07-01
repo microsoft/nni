@@ -9,7 +9,7 @@ import * as path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
-import { getExperimentId, getPlatform, getBasePort } from '../../common/experimentStartupInfo';
+import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
@@ -19,9 +19,9 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
-import { WebCommandChannel } from './channels/webCommandChannel';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
+import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
 
@@ -40,6 +40,7 @@ class TrialDispatcher implements TrainingService {
 
     private readonly metricsEmitter: EventEmitter;
     private readonly experimentId: string;
+    private readonly experimentRootDir: string;
 
     private enableVersionCheck: boolean = true;
 
@@ -58,6 +59,8 @@ class TrialDispatcher implements TrainingService {
         this.environments = new Map<string, EnvironmentInformation>();
         this.metricsEmitter = new EventEmitter();
         this.experimentId = getExperimentId();
+        this.experimentRootDir = getExperimentRootDir();
+
         this.runnerSettings = new RunnerSettings();
         this.runnerSettings.experimentId = this.experimentId;
         this.runnerSettings.platform = getPlatform();
@@ -158,14 +161,14 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
 
         this.commandEmitter = new EventEmitter();
-        this.commandChannel = new WebCommandChannel(this.commandEmitter);
+        this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
 
         // TODO it's a hard code of web channel, it needs to be improved.
         this.runnerSettings.nniManagerPort = getBasePort() + 1;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
         // for AML channel, other channels can ignore this.
-        this.commandChannel.config("MetricEmitter", this.metricsEmitter);
+        await this.commandChannel.config("MetricEmitter", this.metricsEmitter);
 
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
@@ -173,41 +176,50 @@ class TrialDispatcher implements TrainingService {
                 this.log.error(`TrialDispatcher: error on handle env ${command.environment.id} command: ${command.command}, data: ${command.data}, error: ${err}`);
             })
         });
-        this.commandChannel.start();
+        await this.commandChannel.start();
         this.log.info(`TrialDispatcher: started channel: ${this.commandChannel.constructor.name}`);
 
         if (this.trialConfig === undefined) {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
 
+        this.log.info(`TrialDispatcher: copying code and settings.`);
+        let storageService: StorageService;
         if (environmentService.hasStorageService) {
-            this.log.info(`TrialDispatcher: copying code and settings.`);
-            const storageService = component.get<StorageService>(StorageService);
-            // Copy the compressed file to remoteDirectory and delete it
-            const codeDir = path.resolve(this.trialConfig.codeDir);
-            const envDir = storageService.joinPath("envs");
-            const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
-            storageService.rename(codeFileName, "nni-code.tar.gz");
+            this.log.debug(`TrialDispatcher: use existing storage service.`);
+            storageService = component.get<StorageService>(StorageService);
+        } else {
+            this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
+            storageService = new MountedStorageService();
+            const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+            storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
+        }
 
-            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
-            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+        // Copy the compressed file to remoteDirectory and delete it
+        const codeDir = path.resolve(this.trialConfig.codeDir);
+        const envDir = storageService.joinPath("envs");
+        const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
+        storageService.rename(codeFileName, "nni-code.tar.gz");
 
-            const runnerSettings = storageService.joinPath(envDir, "settings.json");
-            await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+        const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+        await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
 
-            if (this.isDeveloping) {
-                let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
-                if (false === fs.existsSync(trialToolsPath)) {
-                    trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
-                }
-                await storageService.copyDirectory(trialToolsPath, envDir, true);
+        const runnerSettings = storageService.joinPath(envDir, "settings.json");
+        await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
+
+        if (this.isDeveloping) {
+            let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
+            if (false === fs.existsSync(trialToolsPath)) {
+                trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
             }
+            await storageService.copyDirectory(trialToolsPath, envDir, true);
         }
 
         this.log.info(`TrialDispatcher: run loop started.`);
         await Promise.all([
             this.environmentMaintenanceLoop(),
             this.trialManagementLoop(),
+            this.commandChannel.run(),
         ]);
     }
 
@@ -274,7 +286,7 @@ class TrialDispatcher implements TrainingService {
         }
 
         this.commandEmitter.off("command", this.handleCommand);
-        this.commandChannel.stop();
+        await this.commandChannel.stop();
     }
 
     private async environmentMaintenanceLoop(): Promise<void> {
@@ -396,7 +408,6 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
             }
-
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
             this.environments.forEach((environment) => {
@@ -407,7 +418,6 @@ class TrialDispatcher implements TrainingService {
                     }
                 }
             });
-
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
                 const trial = waitingTrials.shift();
                 const idleEnvironment = idleEnvironments.shift();
@@ -442,14 +452,10 @@ class TrialDispatcher implements TrainingService {
             environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
         }
 
-        if (environmentService.hasStorageService) {
-            const storageService = component.get<StorageService>(StorageService);
-            environment.workingFolder = storageService.joinPath("envs", envId);
-            await storageService.createDirectory(environment.workingFolder);
-        }
+        environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
 
-        this.environments.set(environment.id, environment);
         await environmentService.startEnvironment(environment);
+        this.environments.set(environment.id, environment);
 
         if (environment.status === "FAILED") {
             environment.isIdle = false;

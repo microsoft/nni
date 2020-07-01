@@ -210,6 +210,9 @@ if __name__ == '__main__':
     command_channel = None
     if args.command_channel == "file":
         command_channel = FileChannel(args)
+    elif args.command_channel == 'aml':
+        from .aml_channel import AMLChannel
+        command_channel = AMLChannel(args)
     else:
         command_channel = WebChannel(args)
     command_channel.open()
