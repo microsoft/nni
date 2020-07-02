@@ -33,7 +33,6 @@ import { TrialDetail } from './trial';
 @component.Singleton
 class TrialDispatcher implements TrainingService {
 
-    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     private readonly log: Logger;
     private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
@@ -523,19 +522,20 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleStdout(commandData: any): Promise<void> {
+        const metricPattern: RegExp = /NNISDK_MEb'(?<metrics>.*a?)'$/gm;
         const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', commandData["trial"]);
         mkDirPSync(trialLogDir);
         const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
         try {
             let skipLogging: boolean = false;
             if (commandData["tag"] === 'trial' && commandData["msg"] !== undefined) {
-                const message = commandData["msg"];
-                const metricsContent: any = message.match(this.NNI_METRICS_PATTERN);
-                if (metricsContent && metricsContent.groups) {
+                const message: string = commandData["msg"];
+                let metricsContent = metricPattern.exec(message);
+                while (metricsContent && metricsContent.groups) {
                     const key: string = 'metrics';
                     const data = metricsContent.groups[key];
-                    const metricData = JSON.parse('"' + data.split('"').join('\\"') + '"');
-                    await this.handleMetricData(commandData["trial"], metricData);
+                    await this.handleMetricData(commandData["trial"], data);
+                    metricsContent = metricPattern.exec(message);
                     skipLogging = true;
                 }
             }
@@ -570,7 +570,6 @@ class TrialDispatcher implements TrainingService {
                 break;
             case INITIALIZED:
                 {
-                    const oldStatus = environment.status;
                     let isAllReady = true;
 
                     if (environment.nodeCount > 1) {
@@ -599,7 +598,7 @@ class TrialDispatcher implements TrainingService {
                     // single node is always ready to set env status
                     if (isAllReady) {
                         environment.isRunnerReady = true;
-                        this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                        this.log.info(`TrialDispatcher: env ${environment.id} received initialized message and runner is ready, env status: ${environment.status}.`);
                     }
                 }
                 break;
