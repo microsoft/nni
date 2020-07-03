@@ -81,4 +81,4 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 如图，每个 Trial 都有日志路径，可以从中找到 Trial 的日志和 stderr。
 
-除了 Experiment 级调试之外，NNI 还提供调试单个 Trial 的功能，而无需启动整个 Experiment。 有关调试单个 Trial 代码的更多信息，请参考[独立运行模式](../TrialExample/Trials.md#用于调试的独立模式)。
+除了 Experiment 级调试之外，NNI 还提供调试单个 Trial 的功能，而无需启动整个 Experiment。 有关调试单个 Trial 代码的更多信息，请参考[独立运行模式](../TrialExample/Trials#用于调试的独立模式)。
