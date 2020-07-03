@@ -11,6 +11,12 @@
     }
 }
 
+.ellipsis{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 #succeTable, #tableList{
     .commonTableStyle .leftTitle div{
         text-align: left;

@@ -26,6 +26,12 @@ echo ""
 echo "===========================Testing: nni_manager==========================="
 npm run test
 
+# -------------For NASUI unittest-------------
+cd ${CWD}/../src/nasui
+echo ""
+echo "===========================Testing: nasui==========================="
+CI=true npm test
+
 ## ------Run nnictl unit test------
 echo ""
 echo "===========================Testing: nnictl==========================="

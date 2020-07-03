@@ -117,7 +117,7 @@ def main_loop(args):
                     nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
                     raise e
 
-            ## Exit as the retCode of subprocess(trial)
+            # Exit as the retCode of subprocess(trial)
             exit(retCode)
             break
 

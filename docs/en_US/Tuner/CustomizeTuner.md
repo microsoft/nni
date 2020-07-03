@@ -7,7 +7,7 @@ NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports t
 If you want to implement your own tuning algorithm, you can implement a customized Tuner, there are three things to do:
 
 1. Inherit the base Tuner class
-1. Implement receive_trial_result and generate_parameter function
+1. Implement receive_trial_result, generate_parameter and update_search_space function
 1. Configure your customized tuner in experiment YAML config file
 
 Here is an example:
@@ -22,7 +22,7 @@ class CustomizedTuner(Tuner):
         ...
 ```
 
-**2. Implement receive_trial_result and generate_parameter function**
+**2. Implement receive_trial_result, generate_parameter and update_search_space function**
 
 ```python
 from nni.tuner import Tuner
@@ -32,22 +32,32 @@ class CustomizedTuner(Tuner):
         ...
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-    '''
-    Receive trial's final result.
-    parameter_id: int
-    parameters: object created by 'generate_parameters()'
-    value: final metrics of the trial, including default metric
-    '''
-    # your code implements here.
+        '''
+        Receive trial's final result.
+        parameter_id: int
+        parameters: object created by 'generate_parameters()'
+        value: final metrics of the trial, including default metric
+        '''
+        # your code implements here.
     ...
 
     def generate_parameters(self, parameter_id, **kwargs):
-    '''
-    Returns a set of trial (hyper-)parameters, as a serializable object
-    parameter_id: int
-    '''
-    # your code implements here.
-    return your_parameters
+        '''
+        Returns a set of trial (hyper-)parameters, as a serializable object
+        parameter_id: int
+        '''
+        # your code implements here.
+        return your_parameters
+    ...
+    
+    def update_search_space(self, search_space):
+        '''
+        Tuners are advised to support updating search space at run-time.
+        If a tuner can only set search space once before generating first hyper-parameters,
+        it should explicitly document this behaviour.
+        search_space: JSON object created by experiment owner
+        '''
+        # your code implements here.
     ...
 ```
 

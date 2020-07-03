@@ -4,23 +4,29 @@
 
 We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
-**Linux and macOS**
+### Linux and macOS
 
 ```bash
-    python3 -m pip install --upgrade nni
+python3 -m pip install --upgrade nni
 ```
 
-**Windows**
+### Windows
 
 ```bash
-    python -m pip install --upgrade nni
+python -m pip install --upgrade nni
 ```
 
-Note:
+```eval_rst
+.. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory; this does not require any special privileges.
+```
 
-* For Linux and macOS, `--user` can be added if you want to install NNI in your home directory; this does not require any special privileges.
-* If there is an error like `Segmentation fault`, please refer to the [FAQ](FAQ.md).
-* For the `system requirements` of NNI, please refer to [Install NNI on Linux&Mac](InstallationLinux.md) or [Windows](InstallationWin.md).
+```eval_rst
+.. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
+```
+
+```eval_rst
+.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
+```
 
 ## "Hello World" example on MNIST
 
@@ -33,7 +39,12 @@ def run_trial(params):
     # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
     # Build network
-    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
+                                 channel_2_num=params['channel_2_num'],
+                                 conv_size=params['conv_size'],
+                                 hidden_size=params['hidden_size'],
+                                 pool_size=params['pool_size'],
+                                 learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
@@ -44,11 +55,20 @@ def run_trial(params):
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
-    params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
+    params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
+              'dropout_rate': 0.5,
+              'channel_1_num': 32,
+              'channel_2_num': 64,
+              'conv_size': 5,
+              'pool_size': 2,
+              'hidden_size': 1024,
+              'learning_rate': 1e-4,
+              'batch_num': 2000,
+              'batch_size': 32}
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
+If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
 
 The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
@@ -69,9 +89,9 @@ output: one optimal hyperparameter configuration
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
 
-**Three steps to start an experiment**
+### Three steps to start an experiment
 
-**Step 1**: Give a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
+**Step 1**: Write a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -85,7 +105,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*Example: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
 **Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -110,7 +130,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*Example: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
 **Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
@@ -133,31 +153,37 @@ trial:
   gpuNum: 0
 ```
 
-Note, **for Windows, you need to change the trial command from `python3` to `python`**.
+```eval_rst
+.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`_.
+```
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
+*Example: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
 
-All the cod above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
+All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
-**Linux and macOS**
+#### Linux and macOS
 
 Run the **config.yml** file from your command line to start an MNIST experiment.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-**Windows**
+#### Windows
 
 Run the **config_windows.yml** file from your command line to start an MNIST experiment.
 
-Note: if you're using NNI on Windows, you need to change `python3` to `python` in the config.yml file or use the config_windows.yml file to start the experiment.
-
 ```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
-Note: `nnictl` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
+```eval_rst
+.. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
+```
+
+```eval_rst
+.. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <Nnictl>` for more usage of ``nnictl``.
+```
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
 
