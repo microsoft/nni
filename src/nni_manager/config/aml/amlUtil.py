@@ -29,8 +29,8 @@ if __name__ == "__main__":
     experiment = Experiment(ws, args.experiment_name)
     run_config = RunConfiguration()
     dependencies = CondaDependencies()
-    dependencies.add_pip_package("azureml-sdk")	
-    dependencies.add_pip_package("azureml")	
+    dependencies.add_pip_package("azureml-sdk")
+    dependencies.add_pip_package("azureml")
     run_config.environment.python.conda_dependencies = dependencies
     run_config.environment.docker.enabled = True
     run_config.environment.docker.base_image = args.docker_image

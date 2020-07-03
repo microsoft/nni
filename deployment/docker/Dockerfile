@@ -69,7 +69,6 @@ RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
 #
 RUN python3 -m pip --no-cache-dir install nni
 
-
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 
 WORKDIR /root
