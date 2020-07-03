@@ -79,10 +79,16 @@ export class AMLEnvironmentService extends EnvironmentService {
             const newStatus = await amlClient.updateStatus(environment.status);
             switch (newStatus.toUpperCase()) {
                 case 'WAITING':
-                case 'RUNNING':
                 case 'QUEUED':
+                    environment.setStatus('WAITING');
+                    break;
+                case 'RUNNING':
+                    environment.setStatus('RUNNING');
+                    break;
                 case 'COMPLETED':
                 case 'SUCCEEDED':
+                    environment.setStatus('SUCCEEDED');
+                    break;
                 case 'FAILED':
                     environment.setStatus(newStatus.toUpperCase() as EnvironmentStatus);
                     break;
