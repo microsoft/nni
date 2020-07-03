@@ -33,9 +33,9 @@ class WebChannel(BaseChannel):
     def _inner_close(self):
         if self.client is not None:
             self.client.close()
-            if self._event_loop.is_running():
-                self._event_loop.close()
             self.client = None
+            if self._event_loop.is_running():
+                self._event_loop.stop()
             self._event_loop = None
 
     def _inner_send(self, message):

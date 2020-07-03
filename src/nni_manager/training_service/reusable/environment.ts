@@ -53,7 +53,10 @@ export class EnvironmentInformation {
     }
 
     public setStatus(status: EnvironmentStatus): void {
-        this.status = status;
+        if (this.status !== status) {
+            this.log.info(`Enviornment: ${this.jobId} change status from ${this.status} to ${status}.`)
+            this.status = status;
+        }
     }
 }
 
