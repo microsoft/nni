@@ -1,0 +1,30 @@
+{% extends "!layout.html" %}
+{% block sidebartitle %}
+
+      {% if logo and theme_logo_only %}
+        <a href="{{ pathto('index') }}">
+      {% else %}
+        <a href="{{ pathto('index') }}" class="icon icon-home"> {{ project }}
+      {% endif %}
+
+      {% if logo %}
+        {# Not strictly valid HTML, but it's the only way to display/scale it properly, without weird scripting or heaps of work #}
+        <img src="{{ pathto('_static/' + logo, 1) }}" class="logo" />
+      {% endif %}
+      </a>
+
+      {% if theme_display_version %}
+        {%- set nav_version = version %}
+        {% if READTHEDOCS and current_version %}
+          {%- set nav_version = current_version %}
+        {% endif %}
+        {% if nav_version %}
+          <div class="version">
+            {{ nav_version }}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      {% include "searchbox.html" %}
+
+{% endblock %}

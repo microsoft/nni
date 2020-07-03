@@ -70,6 +70,7 @@ This document describes the rules to write the config file, and provides some ex
       - [password](#password)
       - [token](#token)
       - [host](#host)
+      - [reuse](#reuse)
   * [Examples](#examples)
     + [Local mode](#local-mode)
     + [Remote mode](#remote-mode)
@@ -228,7 +229,7 @@ Note: The maxExecDuration spec set the time of an experiment, not a trial job. I
 
 ### versionCheck
 
-Optional. Bool. Default: false.
+Optional. Bool. Default: true.
   
 NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set versionCheck be false.
 
@@ -528,9 +529,9 @@ Required in remote mode. A list of key-value pairs with the following keys.
 
 #### ip
 
-Required. IP address that is accessible from the current machine.
+Required. IP address or host name that is accessible from the current machine.
 
-The IP address of remote machine.
+The IP address or host name of remote machine.
 
 #### port
 
@@ -655,6 +656,12 @@ Personal access token that can be retrieved from PAI portal.
 Required. String.
 
 The hostname of IP address of PAI.
+
+#### reuse
+
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
 
 ## Examples
 

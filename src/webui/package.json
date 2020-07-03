@@ -65,7 +65,6 @@
     "@typescript-eslint/eslint-plugin": "^2.11.0",
     "@typescript-eslint/parser": "^2.11.0",
     "@uifabric/fluent-theme": "^0.16.7",
-    "npx": "^10.2.0",
     "eslint": "^5.16.0",
     "eslint-config-react-app": "^4.0.0",
     "eslint-loader": "2.1.2",
@@ -74,12 +73,13 @@
     "eslint-plugin-jsx-a11y": "6.2.1",
     "eslint-plugin-react": "7.12.4",
     "eslint-plugin-react-hooks": "^1.5.0",
+    "npx": "^10.2.0",
     "typescript": "3.4.5"
   },
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
-    "test": "node scripts/test.js",
+    "start": "node --max-old-space-size=3072 scripts/start.js",
+    "build": "node --max-old-space-size=3072 scripts/build.js",
+    "test": "node --max-old-space-size=3072 scripts/test.js",
     "eslint": "npx eslint ./ --ext .tsx,.ts"
   },
   "eslintConfig": {

@@ -5,7 +5,8 @@
 functions for sampling from hidden state
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 
 from .util import fc
 
@@ -61,7 +62,7 @@ class PdType:
 
 class CategoricalPd(Pd):
     """
-    Categorical prossibility distribution
+    Categorical probability distribution
     """
     def __init__(self, logits, mask_npinf, nsteps, size, is_act_model):
         self.logits = logits

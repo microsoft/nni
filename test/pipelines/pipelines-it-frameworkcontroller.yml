@@ -10,6 +10,7 @@ jobs:
     displayName: 'Install python tools'
 
   - script: |
+      set -e
       cd deployment/pypi
       if [ -d ./dist ]
       then
@@ -26,6 +27,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
 
   - script: |
+      set -e
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB

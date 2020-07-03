@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
 import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
 import { Trial } from './trial';
@@ -90,6 +89,15 @@ class TrialManager {
 
     public succeededTrials(): Trial[] {
         return this.filter(trial => trial.status === 'SUCCEEDED');
+    }
+
+    public finalKeys(): string[] {
+        const succeedTrialsList = this.filter(trial => trial.status === 'SUCCEEDED');
+        if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
+            return succeedTrialsList[0].finalKeys();
+        } else {
+            return ["default"];
+        }
     }
 
     public sort(): Trial[] {
@@ -231,7 +239,7 @@ class TrialManager {
                 updated = true;
             });
 
-            return updated;
+        return updated;
     }
 
     private async updateMetrics(lastTime?: boolean): Promise<boolean> {

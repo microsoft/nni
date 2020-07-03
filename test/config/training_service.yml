@@ -78,18 +78,22 @@ paiYarn:
 pai:
   nniManagerIp:
   maxExecDuration: 15m
+  # PAI has job submission limitation, set maxTrialNum=1 to control trial job numbers for PAI 
+  maxTrialNum: 1
+  trialConcurrency: 1
   paiConfig:
     host:
     userName:
   trainingServicePlatform: pai
   trial:
-    gpuNum: 1
+    gpuNum: 1 
     cpuNum: 1
     image:
     memoryMB: 8192
+    virtualCluster: default
     nniManagerNFSMountPath: 
     containerNFSMountPath: 
-    paiStoragePlugin: 
+    paiStorageConfigName: 
 remote:
   machineList:
   - ip:

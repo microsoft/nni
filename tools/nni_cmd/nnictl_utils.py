@@ -13,13 +13,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
 from pyhdfs import HdfsClient
+from nni.package_utils import get_nni_installation_path
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, get_nni_installation_path
+from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -227,7 +228,7 @@ def stop_experiment(args):
         experiment_config = Experiments()
         experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
-            print_normal('Stoping experiment %s' % experiment_id)
+            print_normal('Stopping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:

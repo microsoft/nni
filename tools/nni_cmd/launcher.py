@@ -10,14 +10,15 @@ import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni_annotation import expand_annotations, generate_search_space
-from nni.constants import ModuleName, AdvisorModuleName
+from nni.package_utils import get_builtin_module_class_name, get_nni_installation_path
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
-                          detect_port, get_user, get_nni_installation_path
-from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, PACKAGE_REQUIREMENTS
+                          detect_port, get_user
+
+from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER, INSTALLABLE_PACKAGE_META
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
 
@@ -52,6 +53,9 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
     print_normal('Starting restful server...')
 
     entry_dir = get_nni_installation_path()
+    if (not entry_dir) or (not os.path.exists(entry_dir)):
+        print_error('Fail to find nni under python library')
+        exit(1)
     entry_file = os.path.join(entry_dir, 'main.js')
 
     node_command = 'node'
@@ -139,7 +143,9 @@ def set_remote_config(experiment_config, port, config_file_name):
         for i in range(len(request_data['machine_list'])):
             if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
                 request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
+    # It needs to connect all remote machines, the time out of connection is 30 seconds.
+    # So timeout of this place should be longer.
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 60, True)
     err_message = ''
     if not response or not check_response(response):
         if response is not None:
@@ -266,6 +272,25 @@ def set_dlts_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_aml_config(experiment_config, port, config_file_name):
+    '''set aml configuration'''
+    aml_config_data = dict()
+    aml_config_data['aml_config'] = experiment_config['amlConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -368,6 +393,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name)
     elif platform == 'dlts':
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
+    elif platform == 'aml':
+        config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
@@ -388,10 +415,10 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
         package_name = experiment_config['tuner']['builtinTunerName']
-        module_name = ModuleName.get(package_name)
+        module_name, _ = get_builtin_module_class_name('tuners', package_name)
     elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
         package_name = experiment_config['advisor']['builtinAdvisorName']
-        module_name = AdvisorModuleName.get(package_name)
+        module_name, _ = get_builtin_module_class_name('advisors', package_name)
     if package_name and module_name:
         try:
             stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -400,7 +427,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except CalledProcessError:
             print_error('some errors happen when import package %s.' %(package_name))
             print_log_content(config_file_name)
-            if package_name in PACKAGE_REQUIREMENTS:
+            if package_name in INSTALLABLE_PACKAGE_META:
                 print_error('If %s is not installed, it should be installed through '\
                             '\'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
@@ -500,7 +527,11 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    validate_all_content(experiment_config, config_path)
+    try:
+        validate_all_content(experiment_config, config_path)
+    except Exception as e:
+        print_error(e)
+        exit(1)
 
     nni_config.set_config('experimentConfig', experiment_config)
     nni_config.set_config('restServerPort', args.port)
