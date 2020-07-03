@@ -6,13 +6,11 @@ import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
 
-
-_logger = logging.getLogger(__name__)
-
 try:
     from thop import profile
-except ImportError:
-    _logger.warning('Please install thop using command: pip install thop')
+except Exception as e:
+    print('Please install thop using command: pip install thop')
+    raise
 
 
 def count_flops_params(model: nn.Module, input_size, verbose=True):
