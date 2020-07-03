@@ -5,7 +5,7 @@
 DartsCell is extract from [CNN model](./DARTS.md) designed in this repo. [Operations](#predefined_operations) connecting within nodes which contained in the cell strucure is fixed.
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.search_space_zoo.DartsCell
+..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_cell.DartsCell
     :members:
 ```
 
