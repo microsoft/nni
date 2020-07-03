@@ -7,6 +7,7 @@ trainingServicePlatform: aml
 searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
+nniManagerIp: 10.112.37.205
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
   #SMAC (SMAC should be installed through nnictl)
@@ -17,9 +18,9 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computeTarget: ${replace_to_your_computeTarget}
-  image: msranni/nni
+  computeTarget: aml-cluster
+  image: sparksnail/nni:aml
 amlConfig:
-  subscriptionId: ${replace_to_your_subscriptionId}
-  resourceGroup: ${replace_to_your_resourceGroup}
-  workspaceName: ${replace_to_your_workspaceName}
+  subscriptionId: 536f1f5b-5a54-4fdc-a52d-05a49e21b04c
+  resourceGroup: aml-test
+  workspaceName: aml-test

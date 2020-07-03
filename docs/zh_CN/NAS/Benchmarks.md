@@ -7,6 +7,9 @@
     用法示例 <BenchmarksExample>
 ```
 
+## 引言
+为了提高NAS算法的可复现性，同时降低对计算资源的需求，研究者们提出了一系列NAS基准测试，例如[NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326)以及[NDS](https://arxiv.org/abs/1905.13214)等等。这些基准测试提供了在一个预定义的搜索空间下的几乎全部网络结构。通过应用这些基准测试，研究者们可以公平且方便地评估他们的NAS算法。NNI提供了一个查询接口用于获取这些基准测试，仅需几行代码，研究者们就可以通过这些基准测试来公平且方便地评估他们的NAS算法。
+
 ## 先决条件
 
 * 准备目录来保存基准测试的数据库。 默认情况下，目录为 `${HOME}/.nni/nasbenchmark`。 可将其设置为任何位置，并在 import nni 前，通过 `NASBENCHMARK_DIR` 指定。
@@ -35,6 +38,7 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tenso
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
 ```
+注：该数据集将会从一个google drive链接被下载。
 
 对于 NDS,
 
@@ -46,7 +50,7 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni pytho
 
 ## 示例用法
 
-参考[基准测试 API 的用法](./BenchmarksExample)。
+参考[基准测试 API 的用法](./BenchmarksExample)，对示例用法中`arch`的定义，请参考以下API文档。
 
 ## NAS-Bench-101
 

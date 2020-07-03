@@ -6,6 +6,8 @@
 
     Example Usages <BenchmarksExample>
 ```
+## Introduction
+To imporve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as [NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326), [NDS](https://arxiv.org/abs/1905.13214), etc. These benchmarks provide almost all the architecture performance under a pre-defined search space. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of codes, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
 
 ## Prerequisites
 
@@ -14,7 +16,7 @@
 
 ## Data Preparation
 
-To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. Please follow the following steps.
+To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. See this [link]() to learn more about docker. Please follow the following steps.
 
 **Step 1.** Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
 
@@ -35,6 +37,7 @@ For NAS-Bench-201,
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
 ```
+Note that this dataset will be download from a google drive link.
 
 For NDS,
 
@@ -46,7 +49,7 @@ Please make sure there is at least 10GB free disk space and note that the conver
 
 ## Example Usages
 
-Please refer to [examples usages of Benchmarks API](./BenchmarksExample).
+Please refer to [examples usages of Benchmarks API](./BenchmarksExample). For the detailed definition of `arch` in the examples, refer to the API documentation below.
 
 ## NAS-Bench-101
 
