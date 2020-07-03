@@ -37,7 +37,7 @@ For NAS-Bench-201,
 ```bash
 docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
 ```
-Note that this dataset will be download from a google drive link.
+Note that this dataset will be downloaded from a google drive link.
 
 For NDS,
 
