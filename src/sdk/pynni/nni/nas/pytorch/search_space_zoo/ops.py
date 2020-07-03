@@ -30,7 +30,19 @@ class DropPath(nn.Module):
 
 class PoolBN(nn.Module):
     """
-    AvgPool or MaxPool with BN. `pool_type` must be `max` or `avg`.
+    AvgPool or MaxPool with BN. ``pool_type`` must be ``max`` or ``avg``.
+
+    Parameters
+    ---
+    pool_type: str
+        choose operation
+    C: int
+        number of channels
+    kernal_size: int
+    stride: int
+    padding: int
+    affine: bool
+        ``affine`` value for ``nn.BatchNorm2d``
     """
 
     def __init__(self, pool_type, C, kernel_size, stride, padding, affine=True):

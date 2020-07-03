@@ -30,3 +30,4 @@ For details, please refer to the following tutorials:
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
     API Reference <NAS/NasReference>
+    Search Space Zoo <NAS/SearchSpaceZoo>

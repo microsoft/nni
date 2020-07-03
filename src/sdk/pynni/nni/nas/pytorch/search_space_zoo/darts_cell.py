@@ -15,7 +15,7 @@ class Node(nn.Module):
         """
         builtin Darts Node structure
 
-        Attributes
+        Parameters
         ---
         node_id: str
         num_prev_nodes: int
@@ -23,6 +23,7 @@ class Node(nn.Module):
         channels: int
             output channels
         num_downsample_connect: int
+            downsample the input node if this cell is reduction cell
         """
         super().__init__()
         self.ops = nn.ModuleList()
@@ -55,7 +56,7 @@ class DartsCell(nn.Module):
     """
     Builtin Darts Cell structure.
 
-    Attributes
+    Parameters
     ---
     n_nodes: int
         the number of nodes contained in this cell

@@ -42,6 +42,14 @@ One-shot NAS can be visualized with our visualization tool. Learn more details [
 .. Note:: SPOS is a two-stage algorithm, whose first stage is one-shot and the second stage is distributed, leveraging the result of the first stage as a checkpoint.	
 ```
 
+## Search Space Zoo
+
+NNI provides some predefined search space which can be easily reused. By stacking the extracted cells, user can quickly reproduce those NAS models.
+
+Search Space Zoo contains the following NAS cells:
+
+* [DartsCell](./SearchSpaceZoo.md#DartsCell)
+
 ## Using the NNI API
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
