@@ -50,7 +50,7 @@ docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni pytho
 
 ## 示例用法
 
-参考[基准测试 API 的用法](./BenchmarksExample)，对示例用法中`arch`的定义，请参考以下API文档。
+参考[基准测试 API 的用法](./BenchmarksExample)，对示例用法中`arch`的定义，请参考原论文及下面的API文档。
 
 ## NAS-Bench-101
 

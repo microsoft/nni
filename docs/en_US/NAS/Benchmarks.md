@@ -49,7 +49,7 @@ Please make sure there is at least 10GB free disk space and note that the conver
 
 ## Example Usages
 
-Please refer to [examples usages of Benchmarks API](./BenchmarksExample). For the detailed definition of `arch` in the examples, refer to the API documentation below.
+Please refer to [examples usages of Benchmarks API](./BenchmarksExample). For the detailed definition of `arch` in the examples, please refer to the original paper and the API documentation below.
 
 ## NAS-Bench-101
 
