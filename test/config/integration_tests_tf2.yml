@@ -4,6 +4,7 @@ defaultTestCaseConfig:
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
+  trainingService: all
 
 testCases:
 #######################################################################
@@ -50,6 +51,20 @@ testCases:
     trial:
       command: python3 main.py --epochs 1 --batches 1
       gpuNum: 0
+
+- name: classic-nas-gen-ss
+  configFile: test/config/examples/classic-nas-tf2.yml
+  launchCommand: nnictl ss_gen --trial_command="python3 train.py --epochs 1" --trial_dir=../examples/nas/classic_nas-tf --file=config/examples/nni-nas-search-space-tf2.json
+  stopCommand:
+  experimentStatusCheck: False
+  trainingService: local
+
+- name: classic-nas-tensorflow2
+  configFile: test/config/examples/classic-nas-tf2.yml
+  # remove search space file
+  stopCommand: nnictl stop
+  onExitCommand: python3 -c 'import os; os.remove("config/examples/nni-nas-search-space-tf2.json")'
+  trainingService: local
 
 #########################################################################
 # nni features test

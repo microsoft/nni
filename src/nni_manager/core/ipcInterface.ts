@@ -135,4 +135,4 @@ function createDispatcherInterface(process: ChildProcess): IpcInterface {
     return new IpcInterface(process, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
 }
 
-export { IpcInterface, createDispatcherInterface };
+export { IpcInterface, createDispatcherInterface, encodeCommand, decodeCommand };

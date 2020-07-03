@@ -1,5 +1,52 @@
 # 更改日志
 
+## 发布 1.6 - 5/26/2020
+
+### 主要功能
+
+#### 新功能和改进
+
+* 将 IPC 限制提高至 100W
+* 修改非本机训练平台中，将上传代码到存储的逻辑
+* SDK 版本支持 `__version__`
+* 支持 Windows 下开发模式安装
+
+#### Web 界面
+
+* 显示 Trial 的错误消息
+* 完善主页布局
+* 重构概述页面的最佳 Trial 模块
+* 从 Web 界面中去掉多阶段支持
+* 在概述页面为 Trial 并发添加工具提示。
+* 在超参图中显示最好的 Trial
+
+#### 超参优化更新
+
+* 改进 PBT 的错误处理，并支持恢复 Experiment
+
+#### NAS 更新
+
+* NAS 支持 TensorFlow 2.0 (预览版) [TF2.0 NAS 示例](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
+* LayerChoice 使用 OrderedDict
+* 优化导出格式
+* 应用固定架构后，将 LayerChoice 替换成选择的模块
+
+#### 模型压缩改进
+
+* 模型压缩支持 PyTorch 1.4
+
+#### 训练平台改进
+
+* 改进 OpenPAI YAML 的合并逻辑
+* 支持将 Windows 作为[远程模式](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/RemoteMachineMode.md#windows)中的计算节点
+
+### 修复的 Bug
+
+* 修复开发模式安装
+* 当检查点没有 state_dict 时，SPOS 示例会崩溃
+* 修复失败 Trial 造成的表格排序问题
+* 支持多 Python 环境（如 conda，pyenv 等）
+
 ## 发布 1.5 - 4/13/2020
 
 ### 新功能和文档
@@ -69,7 +116,7 @@
 
 #### 其它
 
-* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl.md#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
+* 支持[在前台运行 NNI Experiment](https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl#manage-an-experiment)，即，`nnictl create/resume/view` 的 `--foreground` 参数
 * 支持取消 UNKNOWN 状态的 Trial。
 * 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
 
@@ -83,7 +130,7 @@
 
 ### 修复的 Bug
 
-* 修复在指标数据和 JSON 格式中对 NaN 的支持
+* 修复在指标数据和 JSON 格式中对 NaN 的支持
 * 修复搜索空间 `randint` 类型的 out-of-range Bug
 * 修复模型压缩中导出 ONNX 模型时的错误张量设备的 Bug
 * 修复新 OpenPAI 模式（又称，paiK8S）下，错误处理 nnimanagerIP 的 Bug
@@ -140,7 +187,7 @@
   - NAS 算法: [ENAS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#enas), [DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#darts), [P-DARTS](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/NAS/Overview.md#p-darts) (PyTorch)
   - 经典模式下的 NAS（每次 Trial 独立运行）
 - 模型压缩 
-  - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
+  - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): lottery ticket 剪枝方法, L1Filter Pruner, Slim Pruner, FPGM Pruner
   - [新增模型量化算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): QAT Quantizer, DoReFa Quantizer
   - 支持导出压缩后模型的 API。
 - 训练平台 
@@ -177,7 +224,7 @@
 - 更多示例 
   - [EfficientNet PyTorch 示例](https://github.com/ultmaster/EfficientNet-PyTorch)
   - [Cifar10 NAS 示例](https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README_zh_CN.md)
-- [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或更多贡献
+- [模型压缩工具包 - Alpha 发布](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Compressor/Overview.md)：我们很高兴的宣布 NNI 的模型压缩工具包发布了。它还处于试验阶段，会根据使用反馈来改进。 诚挚邀请您使用、反馈，或有更多贡献。
 
 ### 修复的 Bug
 
@@ -231,7 +278,7 @@
 * (Bug 修复)自动完成脚本
 * (Bug 修复) 修复管道中仅检查脚本中最后一个命令退出代码的问题。 -PR #1417
 * (Bug 修复) Tuner 的 quniform -Issue #1377
-* (Bug fix) 'quniform' 在 GridSearch 和其它 Tuner 之间的含义不同。 -Issue #1335
+* (Bug 修复) 'quniform' 在 GridSearch 和其它 Tuner 之间的含义不同。 -Issue #1335
 * (Bug 修复)"nnictl experiment list" 将 "RUNNING" 状态的 Experiment 显示为了 "INITIALIZED" -PR #1388
 * (Bug 修复) 在 NNI dev 安装模式下无法安装 SMAC。 -Issue #1376
 * (Bug 修复) 无法点击中间结果的过滤按钮 -Issue #1263
@@ -316,7 +363,7 @@
   * NNI 可在 Windows 上使用本机模式
 * [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
   * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
-* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md) 
   * 在 Experiment 执行完后，可生成分析结果报告
   * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
 * [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
@@ -342,7 +389,7 @@
 * [版本检查](TrainingService/PaiMode.md) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/microsoft/nni/issues/776) 
-  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
 * [分离 Tuner/Assessor](https://github.com/microsoft/nni/issues/841) 
   * 增加两个管道来分离 Tuner 和 Assessor 的消息
 * 使日志集合功能可配置
@@ -401,7 +448,7 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](Assessor/CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * [权重共享的](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md)高级支持：为 NAS Tuner 提供权重共享，当前支持 NFS。
@@ -521,7 +568,7 @@
 
 ### 新示例
 
-* 公开的 NNI Docker 映像：
+* 公共的 NNI Docker 映像：
     
     ```bash
     docker pull msranni/nni:latest

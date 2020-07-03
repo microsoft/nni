@@ -116,8 +116,18 @@ Set 12,layer4.1.conv1
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
-from nni.compression.torch.utils.mask_conflict import MaskConflict
-mc = MaskConflict('./resnet18_mask', net, data)
-mc.fix_mask_conflict()
-mc.export('./resnet18_fixed_mask')
+from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
+```
+
+### Model FLOPs/Parameters Counter
+We provide a model counter for calculating the model FLOPs and parameters. This counter supports calculating FLOPs/parameters of a normal model without masks, it can also calculates FLOPs/parameters of a model with mask wrappers, which helps users easily check model complexity during model compression on NNI. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number (i.e., the number calculated after Model Speedup).
+
+### Usage
+```
+from nni.compression.torch.utils.counter import count_flops_params
+
+# Given input size (1, 1, 28, 28)
+flops, params = count_flops_params(model, (1, 1, 28, 28))
+print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
 ```

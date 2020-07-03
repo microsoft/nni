@@ -18,16 +18,11 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Overview <NAS/Overview>
-    Quick Start <NAS/QuickStart>
-    Tutorial <NAS/NasGuide>
-    ENAS <NAS/ENAS>
-    DARTS <NAS/DARTS>
-    P-DARTS <NAS/PDARTS>
-    SPOS <NAS/SPOS>
-    CDARTS <NAS/CDARTS>
-    ProxylessNAS <NAS/Proxylessnas>
-    TextNAS <NAS/TextNAS>
+    Write A Search Space <NAS/WriteSearchSpace>
+    Classic NAS <NAS/ClassicNas>
+    One-shot NAS <NAS/one_shot_nas>
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
+    NAS Benchmarks <NAS/Benchmarks>
     API Reference <NAS/NasReference>
     Search Space Zoo <NAS/SearchSpaceZoo>
