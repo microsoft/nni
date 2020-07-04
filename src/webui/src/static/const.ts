@@ -4,7 +4,7 @@ const METRIC_GROUP_UPDATE_SIZE = 20;
 
 let MANAGER_IP = `/api/v1/nni`;
 if (process.env.NODE_ENV == "development") {
-    MANAGER_IP = `//${window.location.hostname}:8282` + MANAGER_IP;
+    MANAGER_IP = `//${window.location.hostname}:8080` + MANAGER_IP;
 }
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
