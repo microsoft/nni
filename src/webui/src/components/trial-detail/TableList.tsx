@@ -422,8 +422,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 parameterStr.push(`${value} (search space)`);
             });
         }
+        // arr.splice(arr.findIndex(item => item.id === data.id), 1)
+        const originFinalList = Array.from(new Set(TRIALS.finalKeys()));
         // concat trial all final keys and remove dup "default" val, return list
-        return (COLUMNPro.concat(parameterStr)).concat(Array.from(new Set(TRIALS.finalKeys())));
+        originFinalList.splice(originFinalList.findIndex((item => item === 'default'), 1));
+        return (COLUMNPro.concat(parameterStr)).concat(originFinalList);
         
     }
 
