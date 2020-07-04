@@ -424,7 +424,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
         // concat trial all final keys and remove dup "default" val, return list
         const finalKeysList = TRIALS.finalKeys().filter(item => item !== 'default');
-        return (COLUMNPro.concat(parameterStr)).concat(finalKeysList);         
+        return (COLUMNPro.concat(parameterStr)).concat(finalKeysList);  
     }
 
     // get IColumn[]
