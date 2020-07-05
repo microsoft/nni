@@ -16,7 +16,7 @@ Neural Network Intelligence
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
     References <reference>
-    Community Sharings <CommunitySharings/community_sharings>
+    Use Cases and Solutions <CommunitySharings/community_sharings>
     FAQ <Tutorial/FAQ>
     How to Contribution <contribution>
     Changelog <Release>
