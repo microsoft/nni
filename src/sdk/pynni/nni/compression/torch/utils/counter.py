@@ -61,6 +61,12 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
 
     for m in hook_module_list:
         m._buffers.pop("weight_mask")
+    
+    for m in model.modules():
+        if 'total_ops' in m._buffers:
+            m._buffers.pop("total_ops")
+        if 'total_params' in m._buffers:
+            m._buffers.pop("total_params")
 
     return flops, params
 
