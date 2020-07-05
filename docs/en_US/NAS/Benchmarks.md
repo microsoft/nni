@@ -11,7 +11,7 @@ To imporve the reproducibility of NAS algorithms as well as reducing computing r
 
 ## Prerequisites
 
-* Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
+* Please prepare a folder to household all the benchmark databases. By default, the databases will be stored in `${HOME}/.nni/nasbenchmark`. Users can specific this directory to any directory they want. In this case, the environment variable `NASBENCHMARK_DIR` should be specificed to that directory before importing NNI.
 * Please install `peewee` via `pip install peewee`, which NNI uses to connect to database.
 
 ## Data Preparation
