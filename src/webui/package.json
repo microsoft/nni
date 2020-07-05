@@ -77,9 +77,9 @@
     "typescript": "3.4.5"
   },
   "scripts": {
-    "start": "node --max-old-space-size=4096 scripts/start.js",
-    "build": "node --max-old-space-size=4096 scripts/build.js",
-    "test": "node --max-old-space-size=4096 scripts/test.js",
+    "start": "node --max-old-space-size=3072 scripts/start.js",
+    "build": "node --max-old-space-size=3072 scripts/build.js",
+    "test": "node --max-old-space-size=3072 scripts/test.js",
     "eslint": "npx eslint ./ --ext .tsx,.ts"
   },
   "eslintConfig": {
