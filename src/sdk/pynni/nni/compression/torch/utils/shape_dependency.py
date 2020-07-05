@@ -378,3 +378,6 @@ class GroupDependency(Dependency):
             for name in self.dependency:
                 group = self.dependency[name]
                 csv_w.writerow([name, group])
+    @property
+    def dependency_sets(self):
+        return self.dependency
