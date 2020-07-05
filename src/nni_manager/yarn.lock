@@ -4110,11 +4110,6 @@ punycode@^2.1.0:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
 
-python-shell@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/python-shell/-/python-shell-2.0.1.tgz#314eccd523bd6f41cbcc1c399eadab70f76e6e92"
-  integrity sha512-Ys+SiCinY9JrldIJxGWd2AMQSQZLU7PFzrCWY7HTawZ73tIthFdlLLU1Y6Y40Hwdutc+TmfMe5TXNU73s07Xyg==
-
 qrcode-terminal@^0.12.0:
   version "0.12.0"
   resolved "https://registry.yarnpkg.com/qrcode-terminal/-/qrcode-terminal-0.12.0.tgz#bb5b699ef7f9f0505092a3748be4464fe71b5819"

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__version__ = '1.6-67-ge68138cb'
+__version__ = '999.0.0-developing'
 
 from .env_vars import dispatcher_env_vars
 from .utils import ClassArgsValidator

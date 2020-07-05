@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
     name = 'nni',
-    version = '1.6-67-ge68138cb',
+    version = '999.0.0-developing',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
