@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch import mutables
 
-from .ops import PoolBN, SepConv, DilConv, FactorizedReduce, DropPath, StdConv
+from .darts_ops import PoolBN, SepConv, DilConv, FactorizedReduce, DropPath, StdConv
 
 
 class Node(nn.Module):
