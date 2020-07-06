@@ -2,10 +2,10 @@
 
 ## DartsCell
 
-DartsCell is extract from [CNN model](./DARTS.md) designed in this repo. [Operations](#predefined_operations) connecting within nodes which contained in the cell strucure is fixed.
+DartsCell is extract from [CNN model](./DARTS.md) designed in this repo. [Operations](#predefined-operations) connecting with nodes which contained in the cell strucure is fixed.
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_cell.DartsCell
+..  autoclass:: nni.nas.pytorch.search_space_zoo.DartsCell
     :members:
 ```
 
@@ -18,7 +18,7 @@ cd nni/examples/nas/search_space_zoo
 python3 darts_example.py
 ```
 
-<a class="predefined_operations"></a>
+<a class="predefined-operations"></a>
 
 ### predefined operations
 
