@@ -55,7 +55,7 @@ class StructuredWeightMasker(WeightMasker):
 
         filters = weight.size(0)
         num_prune = int(filters * sparsity)
-        if filters < 2 or num_prune < 1:
+        if filters < 2 or num_prune < 1: # why filter < 2 ?
             return mask
         # weight*mask_weight: apply base mask for iterative pruning
         return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx)
@@ -82,6 +82,81 @@ class StructuredWeightMasker(WeightMasker):
         """
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
+
+class ConstrainedStructuredWeightMasker(WeightMasker):
+    def calc_mask(self, sparsities, wrappers, groups, wrappers_idx=None):
+        """
+        Calculate the masks for the layers in the same dependency sets.
+        Similar to the traditional StructuredWeightMasker, ConstrainedStructuredWeightMasker
+        will prune the target layers based on the L1/L2 norm of the weights.
+        However, StructuredWeightMasker prunes the filter completely based on the
+        L1/L2 norm of each filter. In contrast, ConstrainedStructuredWeightMasker
+        will try to satisfy the channel/group dependency(see nni.compression.torch.
+        utils.shape_dependency for details). Specifically, ConstrainedStructuredWeightMasker
+        will try to prune the same channels for the layers that have channel dependency.
+        In addition, this mask calculator will also ensure that the number of filters
+        pruned in each group is the same(meet the group dependency).
+
+        Parameters
+        ----------
+        sparsities : list
+            List of float that specify the sparsity for each conv layer.
+        wrappers : list
+            List of wrappers
+        wrappers_idx : list
+            The indexes of the wrappers
+        groups : list
+            The number of the filter groups of each layer.
+        """
+        # check the type of the input wrappers
+        for _w in wrappers:
+            msg = 'module type {} is not supported!'.format(_w.type)
+            assert _w.type == 'Conv2d', msg
+        # Among the dependent layers, the layer with smallest
+        # sparsity determines the final benefit of the speedup
+        # module. To better harvest the speed benefit, we need
+        # to ensure that these dependent layers have at least
+        # `min_sparsity` pruned channel are the same.
+        min_sparsity = min(sparsities)
+        # find the max number of the filter groups of the dependent
+        # layers. The group constraint of this dependency set is decided
+        # by the layer with the max groups.
+        max_group = max(groups)
+        channel_count = wrappers[0].module.weight.data.size(0)
+        channel_sum = torch.zeros(channel_count)
+        for _w in wrappers:
+            # calculate the L1/L2 sum for all channels
+            c_sum = self._get_channel_sum(_w)
+            channel_sum += c_sum
+        # prune the same `min_sparsity` channels based on channel_sum
+        # for all the layers in the channel sparsity
+        target_pruned = int(channel_count * min_sparsity)
+        pruned_per_group = int(target_pruned / max_group)
+        group_step = int(channel_count / max_group)
+        channel_masks = []
+        for gid in range(max_group):
+            _start = gid * group_step
+            _end = (gid + 1) * group_step
+            threshold = torch.topk(channel_sum[_start: _end], pruned_per_group, largest=False)[0].max()
+            group_mask = torch.gt(channel_sum[_start:_ed], threshold)
+            channel_masks.append(group_mask)
+        # calculate the mask for each layer based on channel_masks, first
+        # every layer will prune the same channels masked in channel_masks.
+        # If the sparsity of a layers is larger than min_sparsity, then it
+        # will continue prune sparsity - min_sparsity channels to meet the sparsity
+        # config.
+        masks = {}
+        for _w in wrappers:
+            name = _w.name
+            masks[name] = self.get_mask(_w, channel_masks)
+        return masks
+
+    def get_mask(self, wrapper, channel_masks):
+        raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
+
+    def _get_channel_sum(self, wrapper):
+        raise NotImplementedError('{} _get_channel_sum is not implemented'.format(self.__class__.__name__))
+
 class L1FilterPrunerMasker(StructuredWeightMasker):
     """
     A structured pruning algorithm that prunes the filters of smallest magnitude
@@ -101,6 +176,32 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
+
+class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
+    
+    def get_mask(self, wrapper, channel_mask):
+        filters = wrapper.module.weight.data.size(0)
+        w_abs_structured = self._get_channel_sum(wrapper)
+        # set the sum of the already pruned channel to
+        # zero, so that these channel will be pruned.
+        w_abs_structured = w_abs_structured * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
+        mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+    def _get_channel_sum(self, wrapper):
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
+        w_abs = weight.abs()
+        w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
+        return w_abs_structured
+
 class L2FilterPrunerMasker(StructuredWeightMasker):
     """
     A structured pruning algorithm that prunes the filters with the
@@ -116,6 +217,30 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
+class L2ConstrainedFilterPrunerMasker(StructuredWeightMasker):
+
+    def get_mask(self, wrapper, channel_mask):
+        filters = wrapper.module.weight.data.size(0)
+        w_l2_norm = self._get_channel_sum(wrapper)
+        # set the sum of the already pruned channel to
+        # zero, so that these channel will be pruned.
+        w_l2_norm = w_l2_norm * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
+        mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+    def _get_channel_sum(self, wrapper):
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
+        w = weight.view(filters, -1)
+        w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
+        return w_l2_norm
 
 class FPGMPrunerMasker(StructuredWeightMasker):
     """

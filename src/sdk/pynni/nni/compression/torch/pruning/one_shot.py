@@ -157,7 +157,7 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         # Note that, this number may be different from its
         # original number of groups of filters.
         groups = [self.group_depen[_w.name] for _w in wrappers]
-        masks = self.masker.calc_mask(sparsities=sparsities, wrappers=wrappers, wrappers_idx=wrappers_idx, groups=groups)
+        masks = self.masker.calc_mask(sparsities, wrappers, groups, wrappers_idx=wrappers_idx)
         for _w in wrappers:
             _w.if_calculated = True
         return masks
