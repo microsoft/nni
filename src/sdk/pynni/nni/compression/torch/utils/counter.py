@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
 import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
