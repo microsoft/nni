@@ -222,17 +222,16 @@ function getIPV4Address(): string {
         return cachedipv4Address;
     }
 
-    const networkInterfaces = os.networkInterfaces()
-
+    const networkInterfaces = os.networkInterfaces();
     if (networkInterfaces.eth0) {
-        for (const item of os.networkInterfaces().eth0) {
+        for (const item of networkInterfaces.eth0) {
             if (item.family === 'IPv4') {
                 cachedipv4Address = item.address;
                 return cachedipv4Address;
             }
         }
     } else {
-        throw Error(`getIPV4Address() failed because os.networkInterfaces().eth0 is undefined. available interfaces: ${JSON.stringify(networkInterfaces)}`);
+        throw Error(`getIPV4Address() failed because os.networkInterfaces().eth0 is undefined. Please specify NNI manager IP in config.`);
     }
 
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
