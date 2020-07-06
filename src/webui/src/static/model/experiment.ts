@@ -120,12 +120,12 @@ class Experiment {
 
     get searchSpace(): object {
         const result = JSON.parse(this.profile.params.searchSpace);
-        Object.keys(result).map(item => {
+        for (let item in result) {
             if (result[item]._value && typeof result[item]._value[0] === 'object') {
                 this.isNestedExperiment = true;
-                return;
+                break;
             }
-        });
+        }
         return result;
     }
 
