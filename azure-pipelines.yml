@@ -59,6 +59,7 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
       python3 -m pip install coverage --user
+      python3 -m pip install thop --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
