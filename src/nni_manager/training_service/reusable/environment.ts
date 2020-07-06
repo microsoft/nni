@@ -69,7 +69,20 @@ export abstract class EnvironmentService {
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
 
-    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+    // It depends on environment pressure and settings
+    // for example, OpenPAI relies on API calls, and there is an limitation for frequence, so it need to be bigger.
+    public get environmentMaintenceLoopInterval(): number {
+        return 5000;
+    }
+
+    // it's needed in two scenario
+    // 1. remote machine has fixed number, so it can return false, when all environment are assigned.
+    // 2. If there are consistent error on requested environments, for example, authentication failure on platform.
+    public get hasMoreEnvironments(): boolean {
+        return true;
+    }
+
+    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
         return new WebCommandChannel(commandEmitter);
     }
 

@@ -40,6 +40,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.experimentId = getExperimentId();
     }
 
+    public get environmentMaintenceLoopInterval(): number {
+        return 5000;
+    }
+
     public get hasStorageService(): boolean {
         return true;
     }

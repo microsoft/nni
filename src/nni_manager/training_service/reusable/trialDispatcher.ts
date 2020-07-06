@@ -32,7 +32,6 @@ import { TrialDetail } from './trial';
 **/
 @component.Singleton
 class TrialDispatcher implements TrainingService {
-
     private readonly log: Logger;
     private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
@@ -51,6 +50,11 @@ class TrialDispatcher implements TrainingService {
 
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
+
+    // this flag uses to reduce log count.
+    private noMoreEnvironment: boolean = false;
+    // this flag uses to accelerate trial manager loop
+    private shouldUpdateTrials: boolean = true;
 
     constructor() {
         this.log = getLogger();
@@ -160,10 +164,10 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
 
         this.commandEmitter = new EventEmitter();
-        this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
+        this.commandChannel = environmentService.createCommandChannel(this.commandEmitter);
 
         // TODO it's a hard code of web channel, it needs to be improved.
-        if (this.runnerSettings.nniManagerIP === "" || this.runnerSettings.nniManagerIP === null){
+        if (this.runnerSettings.nniManagerIP === "" || this.runnerSettings.nniManagerIP === null) {
             this.runnerSettings.nniManagerIP = getIPV4Address();
         }
         this.runnerSettings.nniManagerPort = getBasePort() + 1;
@@ -323,7 +327,8 @@ class TrialDispatcher implements TrainingService {
                     this.log.debug(`set environment ${environment.id} isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
                 }
             });
-            await delay(5000);
+            this.shouldUpdateTrials = true;
+            await delay(environmentService.environmentMaintenceLoopInterval);
         }
     }
 
@@ -331,9 +336,18 @@ class TrialDispatcher implements TrainingService {
         if (this.commandChannel === undefined) {
             throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in trialManagementLoop.`);
         }
+        const interval = 1;
 
         while (!this.stopping) {
-            await delay(2000);
+            let totalInterval = 1000;
+            while (totalInterval > 0) {
+                if (this.shouldUpdateTrials) {
+                    this.shouldUpdateTrials = false;
+                    break;
+                }
+                totalInterval -= interval;
+                await delay(interval);
+            }
 
             const toRefreshedTrials: TrialDetail[] = [];
             for (const trial of this.trials.values()) {
@@ -429,11 +443,22 @@ class TrialDispatcher implements TrainingService {
             }
 
             if (liveEnvironmentsCount < liveTrialsCount) {
-                this.log.info(`request new environment, since live trials ${liveTrialsCount} ` +
-                    `is more than live environments ${liveEnvironmentsCount}`);
+                const environmentService = component.get<EnvironmentService>(EnvironmentService);
+                let requestedCount = 0;
                 for (let index = 0; index < liveTrialsCount - liveEnvironmentsCount; index++) {
-                    await this.requestEnvironment();
+                    if (environmentService.hasMoreEnvironments) {
+                        await this.requestEnvironment();
+                        requestedCount++;
+                        this.noMoreEnvironment = false;
+                    } else {
+                        if (this.noMoreEnvironment === false) {
+                            this.noMoreEnvironment = true;
+                            this.log.info(`no more environment so far, so skip to request environment.`)
+                        }
+                    }
                 }
+                this.log.info(`request new environment, since live trials ${liveTrialsCount} ` +
+                    `is more than live environments ${liveEnvironmentsCount}, requested ${requestedCount}`);
             }
         }
     }
@@ -645,6 +670,7 @@ class TrialDispatcher implements TrainingService {
                 }
                 break;
         }
+        this.shouldUpdateTrials = true;
     }
 }
 

@@ -101,25 +101,25 @@ describe('Unit Test for MountedStorageService', () => {
         chai.assert.isTrue(fs.existsSync(localNewName));
     })
 
-    // it('FileContentTest', async () => {
-    //     const savedFileName = "savedfile.txt";
-    //     await service.save("01234", savedFileName);
-    //     chai.expect(fs.existsSync(savedFileName));
+    it('FileContentTest', async () => {
+        const savedFileName = "savedfile.txt";
+        await service.save("01234", savedFileName);
+        chai.expect(fs.existsSync(savedFileName));
 
-    //     let content = await service.readFileContent(savedFileName, 0, -1);
-    //     chai.assert.equal(content, "01234");
+        let content = await service.readFileContent(savedFileName, 0, -1);
+        chai.assert.equal(content, "01234");
 
-    //     await service.save("56789", savedFileName, true);
-    //     content = await service.readFileContent(savedFileName, 0, -1);
-    //     chai.assert.equal(content, "0123456789");
+        await service.save("56789", savedFileName, true);
+        content = await service.readFileContent(savedFileName, 0, -1);
+        chai.assert.equal(content, "0123456789");
 
-    //     content = await service.readFileContent(savedFileName, -1, 1);
-    //     chai.assert.equal(content, "0");
+        content = await service.readFileContent(savedFileName, -1, 1);
+        chai.assert.equal(content, "0");
 
-    //     content = await service.readFileContent(savedFileName, 5, 1);
-    //     chai.assert.equal(content, "5");
+        content = await service.readFileContent(savedFileName, 5, 1);
+        chai.assert.equal(content, "5");
 
-    //     content = await service.readFileContent(savedFileName, 5, -1);
-    //     chai.assert.equal(content, "56789");
-    // });
+        content = await service.readFileContent(savedFileName, 5, -1);
+        chai.assert.equal(content, "56789");
+    });
 });

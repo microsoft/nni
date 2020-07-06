@@ -41,7 +41,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
         return new AMLCommandChannel(commandEmitter);
     }
 
