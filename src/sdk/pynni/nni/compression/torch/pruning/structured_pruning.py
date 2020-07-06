@@ -7,7 +7,8 @@ from .weight_masker import WeightMasker
 
 __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
     'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
-    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker']
+    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'L1ConstrainedFilterPrunerMasker', \
+    'L2ConstrainedFilterPrunerMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -123,11 +124,13 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         # by the layer with the max groups.
         max_group = max(groups)
         channel_count = wrappers[0].module.weight.data.size(0)
-        channel_sum = torch.zeros(channel_count)
+        device = wrappers[0].module.weight.device
+        channel_sum = torch.zeros(channel_count).to(device)
         for _w in wrappers:
             # calculate the L1/L2 sum for all channels
             c_sum = self._get_channel_sum(_w)
             channel_sum += c_sum
+
         # prune the same `min_sparsity` channels based on channel_sum
         # for all the layers in the channel sparsity
         target_pruned = int(channel_count * min_sparsity)
@@ -138,8 +141,9 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
             _start = gid * group_step
             _end = (gid + 1) * group_step
             threshold = torch.topk(channel_sum[_start: _end], pruned_per_group, largest=False)[0].max()
-            group_mask = torch.gt(channel_sum[_start:_ed], threshold)
+            group_mask = torch.gt(channel_sum[_start:_end], threshold)
             channel_masks.append(group_mask)
+        channel_masks = torch.cat(channel_masks, dim=0)
         # calculate the mask for each layer based on channel_masks, first
         # every layer will prune the same channels masked in channel_masks.
         # If the sparsity of a layers is larger than min_sparsity, then it
@@ -180,7 +184,8 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
 class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
     
     def get_mask(self, wrapper, channel_mask):
-        filters = wrapper.module.weight.data.size(0)
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
         w_abs_structured = self._get_channel_sum(wrapper)
         # set the sum of the already pruned channel to
         # zero, so that these channel will be pruned.

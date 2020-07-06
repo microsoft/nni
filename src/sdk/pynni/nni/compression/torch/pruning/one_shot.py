@@ -10,7 +10,8 @@ from nni._graph_utils import TorchModuleGraph
 from nni.compression.torch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 __all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', \
-    'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
+    'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', \
+    'Constrained_L1FilterPruner', 'Constrained_L2FilterPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -122,12 +123,16 @@ class _StructuredFilterPruner(OneshotPruner):
 class _Constrained_StructuredFilterPruner(OneshotPruner):
     def __init__(self, model, config_list, dummy_input, pruning_algorithm, optimizer=None, **algo_kwargs):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer, **algo_kwargs)
-        # Get the TorchModuleGraph
+        # Get the TorchModuleGraph of the target model
+        # to trace the model, we need to unwrap the wrappers
+        self._unwrap_model()
         self.graph = TorchModuleGraph(model, dummy_input)
+        self._wrap_model()
         self.channel_depen = ChannelDependency(traced_model=self.graph.trace)
         self.group_depen = GroupDependency(traced_model=self.graph.trace)
-        self.channel_depen = self.channel_depen.dependency
-        self.group_depen = self.group_depen.dependency
+        self.channel_depen = self.channel_depen.dependency_sets
+        self.channel_depen = {name : sets for sets in self.channel_depen for name in sets}
+        self.group_depen = self.group_depen.dependency_sets
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
@@ -172,12 +177,13 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         """
         name2wraper = {x.name: x for x in self.get_modules_wrapper()}
         wraper2index = {x:i for i, x in enumerate(self.get_modules_wrapper())}
-        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+        for wrapper in self.get_modules_wrapper():
             if wrapper.if_calculated:
                 continue
             # find all the conv layers that have channel dependecy with this layer
             # and prune all these layers at the same time.
-            _wrapper_names = [x.name for x in self.channel_depen[wrapper.name]]
+            _wrapper_names = [x for x in self.channel_depen[wrapper.name]]
+            logger.info('Pruning the dependent layers: %s', ','.join(_wrapper_names))
             _wrappers = [name2wraper[name] for name in _wrapper_names]
             _wrapper_idxes = [wraper2index[_w] for _w in _wrappers]
 
