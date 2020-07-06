@@ -170,7 +170,7 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         time according the sparsities and the channel/group depedencies. So we need to
         overwrite this function.
         """
-        name2wraper = {x.name: x for x in self.get_modules_wrapper}
+        name2wraper = {x.name: x for x in self.get_modules_wrapper()}
         wraper2index = {x:i for i, x in enumerate(self.get_modules_wrapper())}
         for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
             if wrapper.if_calculated:
@@ -188,6 +188,14 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
                         assert hasattr(name2wraper[layer], k), "there is no attribute '%s' in wrapper on %s" % (k, layer)
                         setattr(name2wraper[layer], k, masks[layer][k])
 
+    def compress(self):
+        """
+        TODO:
+        To avoid retraining the BatchNorm of model after the speedup progress,
+        we should also infer the mask at the end of the compress function.
+        """
+        self.update_mask()
+        return self.bound_model
 
 class L1FilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None):
