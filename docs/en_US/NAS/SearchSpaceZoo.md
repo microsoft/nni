@@ -26,7 +26,7 @@ python3 darts_example.py
 
     MaxPool / AvgPool with `kernal_size=3` and `padding=1` followed by BatchNorm2d
     ```eval_rst
-    ..  autoclass:: nni.nas.pytorch.search_space_zoo.ops.PoolBN
+    ..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_ops.PoolBN
     ```
 * Skip Connection
 
@@ -35,11 +35,11 @@ python3 darts_example.py
 
     Dilated Conv with `kernal_size=3` or `kernal_size=5` and `padding=1`
     ```eval_rst
-    ..  autoclass:: nni.nas.pytorch.search_space_zoo.ops.DilConv
+    ..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_ops.DilConv
     ```
 * SepConv3x3 / SepConv5x5
 
     Depthwise separable Conv with `kernal_size=3` or `kernal_size=5` and `padding=1`
     ```eval_rst
-    ..  autoclass:: nni.nas.pytorch.search_space_zoo.ops.SepConv
+    ..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_ops.SepConv
     ```

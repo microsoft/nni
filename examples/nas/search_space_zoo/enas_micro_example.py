@@ -12,7 +12,7 @@ from utils import accuracy, reward_accuracy
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)
 
-from enas_cell import ENASMicroLayer, ENASReductionLayer
+from nni.nas.pytorch.search_space_zoo import ENASMicroLayer, ENASReductionLayer
 
 logger = logging.getLogger('nni')
 

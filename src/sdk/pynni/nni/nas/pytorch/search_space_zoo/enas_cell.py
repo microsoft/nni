@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-from abc import ABC
 
 import torch
 import torch.nn as nn
