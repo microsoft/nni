@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch import mutables
 
-import ops
+from .ops import PoolBN, SepConv, DilConv, FactorizedReduce, DropPath, StdConv
 
 
 class Node(nn.Module):
@@ -33,16 +33,16 @@ class Node(nn.Module):
             choice_keys.append("{}_p{}".format(node_id, i))
             self.ops.append(
                 mutables.LayerChoice(OrderedDict([
-                    ("maxpool", ops.PoolBN('max', channels, 3, stride, 1, affine=False)),
-                    ("avgpool", ops.PoolBN('avg', channels, 3, stride, 1, affine=False)),
+                    ("maxpool", PoolBN('max', channels, 3, stride, 1, affine=False)),
+                    ("avgpool", PoolBN('avg', channels, 3, stride, 1, affine=False)),
                     ("skipconnect",
-                     nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False)),
-                    ("sepconv3x3", ops.SepConv(channels, channels, 3, stride, 1, affine=False)),
-                    ("sepconv5x5", ops.SepConv(channels, channels, 5, stride, 2, affine=False)),
-                    ("dilconv3x3", ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False)),
-                    ("dilconv5x5", ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False))
+                     nn.Identity() if stride == 1 else FactorizedReduce(channels, channels, affine=False)),
+                    ("sepconv3x3", SepConv(channels, channels, 3, stride, 1, affine=False)),
+                    ("sepconv5x5", SepConv(channels, channels, 5, stride, 2, affine=False)),
+                    ("dilconv3x3", DilConv(channels, channels, 3, stride, 2, 2, affine=False)),
+                    ("dilconv5x5", DilConv(channels, channels, 5, stride, 4, 2, affine=False))
                 ]), key=choice_keys[-1]))
-        self.drop_path = ops.DropPath()
+        self.drop_path = DropPath()
         self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_chosen=2, key="{}_switch".format(node_id))
 
     def forward(self, prev_nodes):
@@ -79,10 +79,10 @@ class DartsCell(nn.Module):
         # If previous cell is reduction cell, current input size does not match with
         # output size of cell[k-2]. So the output[k-2] should be reduced by preprocessing.
         if reduction_p:
-            self.preproc0 = ops.FactorizedReduce(channels_pp, channels, affine=False)
+            self.preproc0 = FactorizedReduce(channels_pp, channels, affine=False)
         else:
-            self.preproc0 = ops.StdConv(channels_pp, channels, 1, 1, 0, affine=False)
-        self.preproc1 = ops.StdConv(channels_p, channels, 1, 1, 0, affine=False)
+            self.preproc0 = StdConv(channels_pp, channels, 1, 1, 0, affine=False)
+        self.preproc1 = StdConv(channels_p, channels, 1, 1, 0, affine=False)
 
         # generate dag
         self.mutable_ops = nn.ModuleList()
