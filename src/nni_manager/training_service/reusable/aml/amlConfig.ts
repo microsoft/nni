@@ -36,4 +36,5 @@ export class AMLTrialConfig extends TrialConfig {
 
 export class AMLEnvironmentInformation extends EnvironmentInformation {
     public amlClient?: AMLClient;
+    public currentMessageIndex: number = -1;
 }
