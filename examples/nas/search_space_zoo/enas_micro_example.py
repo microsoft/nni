@@ -1,7 +1,7 @@
 import torch
 import logging
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 
 from argparse import ArgumentParser
 from torchvision import transforms
