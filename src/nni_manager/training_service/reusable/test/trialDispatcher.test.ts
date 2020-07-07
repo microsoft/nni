@@ -273,12 +273,12 @@ describe('Unit Test for TrialDispatcher', () => {
         await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
 
-        const content = {
+        let content = {
             test: 2,
         }
         await trialDispatcher.updateTrialJob(trialDetail.id, createTrialForm(content));
 
-        const command = await waitResultMust<Command>(async () => {
+        let command = await waitResultMust<Command>(async () => {
             return await commandChannel.testReceiveCommandFromTrialDispatcher();
         });
 
@@ -287,6 +287,13 @@ describe('Unit Test for TrialDispatcher', () => {
         chai.assert.equal(command.data.parameters.index, 0);
         chai.assert.equal(command.data.parameters.value, JSON.stringify(content));
 
+        content = {
+            test: 3,
+        }
+        await trialDispatcher.updateTrialJob(trialDetail.id, createTrialForm(content));
+        command = await waitResultMust<Command>(async () => {
+            return await commandChannel.testReceiveCommandFromTrialDispatcher();
+        });
         chai.assert.equal(command.command, SEND_TRIAL_JOB_PARAMETER);
         chai.assert.equal(command.data["trialId"], trialDetail.id);
         chai.assert.equal(command.data.parameters.index, 0);
@@ -294,6 +301,23 @@ describe('Unit Test for TrialDispatcher', () => {
 
         await verifyTrialResult(commandChannel, trialDetail, 0);
 
+        chai.assert.equal(1, environmentService.testGetEnvironments().size, "only one trial, so one env");
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(1, trials.length, "there should be 1 stopped trial only");
+    });
+
+    it('multi node', async () => {
+        let trialDetail = await newTrial(trialDispatcher);
+
+        const environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        environment.nodeCount = 2;
+        await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        let command = await waitResultMust<Command>(async () => {
+            return await commandChannel.testReceiveCommandFromTrialDispatcher();
+        });
+        chai.assert.equal(command.command, KILL_TRIAL_JOB);
         chai.assert.equal(1, environmentService.testGetEnvironments().size, "only one trial, so one env");
         const trials = await trialDispatcher.listTrialJobs();
         chai.assert.equal(1, trials.length, "there should be 1 stopped trial only");
