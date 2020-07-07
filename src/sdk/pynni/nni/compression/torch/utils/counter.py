@@ -58,8 +58,11 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
 
     flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=verbose)
 
+
     for m in hook_module_list:
         m._buffers.pop("weight_mask")
+    # Remove registerd buffer on the model, and fixed following issue:
+    # https://github.com/Lyken17/pytorch-OpCounter/issues/96
     for m in model.modules():
         if 'total_ops' in m._buffers:
             m._buffers.pop("total_ops")
