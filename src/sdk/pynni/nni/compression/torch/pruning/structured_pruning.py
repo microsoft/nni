@@ -140,12 +140,14 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         for _w, _w_idx in zip(wrappers, wrappers_idx):
             # calculate the L1/L2 sum for all channels
             c_sum = self._get_channel_sum(_w, _w_idx)
-            print('channelsum', channel_sum[:10])
-            print('c_sum', c_sum[:10])
+
             if c_sum is None:
                 # if the channel sum cannot be calculated
                 # now, return None
+                print('c_sum is None')
                 return None
+            print('channelsum', channel_sum[:10])
+            print('c_sum', c_sum[:10])
             channel_sum += c_sum
             print(channel_sum[:10])
         # prune the same `min_sparsity` channels based on channel_sum
@@ -238,7 +240,7 @@ class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
                 w_abs_structured.view(-1), num_prune, largest=False)[0].max()
             c_mask = torch.gt(w_abs_structured, threshold)
         else:
-            c_mask = torch.ones(filters)
+            c_mask = torch.ones(filters).to(weight.device)
         mask_weight = c_mask[:, None, None, None].expand_as(
             weight).type_as(weight)
         mask_bias = None
@@ -288,7 +290,7 @@ class L2ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
                 w_l2_norm.view(-1), num_prune, largest=False)[0].max()
             c_mask = torch.gt(w_l2_norm, threshold)
         else:
-            c_mask = torch.ones(filters)
+            c_mask = torch.ones(filters).to(weight.device)
         mask_weight = c_mask[:, None, None, None].expand_as(
             weight).type_as(weight)
         mask_bias = None
@@ -586,9 +588,9 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
             c_mask = torch.gt(mean_activation, threshold)
             print('c_mask size:', c_mask.size(), 'channels', filters)
         else:
-            c_mask = torch.ones(filters)
-
-        if len(activations) >= self.statistics_batch_num and self.pruner.hook_id in self.pruner._fwd_hook_handles:
+            c_mask = torch.ones(filters).to(weight.device)
+        # remove the forward hook for the pruner
+        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
             self.pruner.remove_activation_collector(self.pruner.hook_id)
         mask_weight = c_mask[:, None, None, None].expand_as(
             weight).type_as(weight)
@@ -621,7 +623,7 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
         activations = self.pruner.collected_activation[wrapper_idx]
         if len(activations) < self.statistics_batch_num:
             return None
-        return self._cal_mean_activation(activations)
+        return self._cal_mean_activation(activations).to(wrapper.module.weight.device)
 
 
 class SlimPrunerMasker(WeightMasker):
