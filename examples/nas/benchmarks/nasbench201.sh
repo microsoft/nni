@@ -1,19 +1,19 @@
+#!/bin/bash
 set -e
-mkdir -p /outputs /tmp
 
-echo "Installing dependencies..."
-apt update && apt install -y wget
-pip uninstall -y enum34  # https://github.com/iterative/dvc/issues/1995
-pip install --no-cache-dir gdown tqdm peewee
-
-echo "Installing NNI..."
-cd /nni && echo "y" | source install.sh
-
-cd /tmp
+if [ -z "${NASBENCHMARK_DIR}" ]; then
+    NASBENCHMARK_DIR=~/.nni/nasbenchmark
+fi
 
 echo "Downloading NAS-Bench-201..."
-gdown https://drive.google.com/uc\?id\=1OOfVPpt-lA4u2HJrXbgrRd42IbfvJMyE -O a.pth
+if [ -f "a.pth" ]; then
+    echo "a.pth found. Skip download."
+else
+    gdown https://drive.google.com/uc\?id\=1OOfVPpt-lA4u2HJrXbgrRd42IbfvJMyE -O a.pth
+fi
 
 echo "Generating database..."
-rm -f /outputs/nasbench201.db /outputs/nasbench201.db-journal
-NASBENCHMARK_DIR=/outputs python -m nni.nas.benchmarks.nasbench201.db_gen a.pth
+rm -f ${NASBENCHMARK_DIR}/nasbench201.db ${NASBENCHMARK_DIR}/nasbench201.db-journal
+mkdir -p ${NASBENCHMARK_DIR}
+python -m nni.nas.benchmarks.nasbench201.db_gen a.pth
+rm -f a.pth
