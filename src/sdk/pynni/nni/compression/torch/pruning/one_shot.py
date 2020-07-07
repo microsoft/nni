@@ -11,7 +11,7 @@ from nni.compression.torch.utils.shape_dependency import ChannelDependency, Grou
 
 __all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', \
     'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', \
-    'Constrained_L1FilterPruner', 'Constrained_L2FilterPruner']
+    'Constrained_L1FilterPruner', 'Constrained_L2FilterPruner', 'ConstrainedActivationMeanRankFilterPruner']
 
 logger = logging.getLogger('torch pruner')
 
@@ -162,8 +162,13 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         # original number of groups of filters.
         groups = [self.group_depen[_w.name] for _w in wrappers]
         masks = self.masker.calc_mask(wrappers, channel_dsets, groups, wrappers_idx=wrappers_idx)
-        for _w in wrappers:
-            _w.if_calculated = True
+        if masks is not None:
+            # if masks is None, then the mask calculation fails.
+            # for example, in activation related maskers, we should
+            # pass enough batches of data to the model, so that the
+            # masks can be calculated successfully.
+            for _w in wrappers:
+                _w.if_calculated = True
         return masks
 
     def update_mask(self):
@@ -270,4 +275,9 @@ class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
 class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, \
+            activation=activation, statistics_batch_num=statistics_batch_num)
+
+class ConstrainedActivationMeanRankFilterPruner(_Constrained_StructuredFilterPruner):
+    def __init__(self, model, config_list, dummy_input, optimizer=None, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, dummy_input, pruning_algorithm='mean_activation_constrained', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)

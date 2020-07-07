@@ -5,7 +5,8 @@
 from ..pruning import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, \
     L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
     ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker, \
-    L1ConstrainedFilterPrunerMasker, L2ConstrainedFilterPrunerMasker
+    L1ConstrainedFilterPrunerMasker, L2ConstrainedFilterPrunerMasker, \
+    ConstrainedActivationMeanRankFilterPrunerMasker
 
 MASKER_DICT = {
     'level': LevelPrunerMasker,
@@ -17,5 +18,6 @@ MASKER_DICT = {
     'fpgm': FPGMPrunerMasker,
     'taylorfo': TaylorFOWeightFilterPrunerMasker,
     'apoz': ActivationAPoZRankFilterPrunerMasker,
-    'mean_activation': ActivationMeanRankFilterPrunerMasker
+    'mean_activation': ActivationMeanRankFilterPrunerMasker,
+    'mean_activation_constrained': ConstrainedActivationMeanRankFilterPrunerMasker
 }
