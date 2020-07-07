@@ -14,11 +14,33 @@
 
 ## Data Preparation
 
-To avoid storage and legal issues, we do not provide any prepared databases. Please follow the following steps.
+To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. Please follow the following steps.
 
-1. Enter `examples/nas/benchmarks`.
-2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201` or `nds`.
-3. Generate the database via `./xxx.sh`. The directory that stores the benchmark file can be configured with `NASBENCHMARK_DIR` environment variable, which defaults to `~/.nni/nasbenchmark`.
+**Step 1.** Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
+
+```bash
+git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
+```
+
+**Step 2.** Run docker.
+
+For NAS-Bench-101,
+
+```bash
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
+```
+
+For NAS-Bench-201,
+
+```bash
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
+```
+
+For NDS,
+
+```bash
+docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
+```
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
 
