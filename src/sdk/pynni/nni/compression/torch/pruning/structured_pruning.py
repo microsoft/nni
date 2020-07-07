@@ -107,10 +107,10 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
             List of float that specify the sparsity for each conv layer.
         wrappers : list
             List of wrappers
-        wrappers_idx : list
-            The indexes of the wrappers
         groups : list
             The number of the filter groups of each layer.
+        wrappers_idx : list
+            The indexes of the wrappers
         """
         # sparsity configs for each wrapper
         sparsities = [_w.config['sparsity'] for _w in wrappers]
@@ -196,10 +196,47 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         return masks
 
     def get_mask(self, wrapper, wrapper_idx, channel_masks):
+        """
+        Calculate the mask for a given layer. The channel_masks indicates
+        the topology-constrained channels that should be pruned. Basically,
+        the channel_masks represents the channels that all the layers in the
+        same dependency set should prune.
+
+        Parameters
+        ----------
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
+        channel_masks: tensor
+            the topology-constrained channels that should be pruned.
+
+        Returns
+        -------
+        mask: dict
+            the mask of the weight and bias for this layer.
+        """
         raise NotImplementedError(
             '{} get_mask is not implemented'.format(self.__class__.__name__))
 
     def _get_channel_sum(self, wrapper, wrapper_idx):
+        """
+        This function returns the channel-wise weight for the channel
+        pruning. Different pruning algorithm has different ways to
+        calculate the channel-wise weights for pruning. For example,
+        L1 norm pruner will return the L1 sum of each channel.
+
+        Parameters
+        ----------
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
+
+        Returns
+        -------
+        tensor
+        """
         raise NotImplementedError(
             '{} _get_channel_sum is not implemented'.format(self.__class__.__name__))
 
@@ -623,6 +660,9 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
         activations = self.pruner.collected_activation[wrapper_idx]
         if len(activations) < self.statistics_batch_num:
             return None
+        # the memory overhead here is acceptable, because only
+        # the mean_activation tensor returned by _cal_mean_activation
+        # is transfer to gpu.
         return self._cal_mean_activation(activations).to(wrapper.module.weight.device)
 
 
