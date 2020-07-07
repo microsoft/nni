@@ -85,7 +85,7 @@ class StructuredWeightMasker(WeightMasker):
 
 
 class ConstrainedStructuredWeightMasker(WeightMasker):
-    def calc_mask(self, sparsities, wrappers, groups, wrappers_idx=None):
+    def calc_mask(self, wrappers, channel_dsets, groups, wrappers_idx=None):
         """
         Calculate the masks for the layers in the same dependency sets.
         Similar to the traditional StructuredWeightMasker, ConstrainedStructuredWeightMasker
@@ -109,6 +109,8 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         groups : list
             The number of the filter groups of each layer.
         """
+        # sparsity configs for each wrapper
+        sparsities = [_w.config['sparsity'] for _w in wrappers]
         # check the type of the input wrappers
         for _w in wrappers:
             msg = 'module type {} is not supported!'.format(_w.type)
@@ -118,7 +120,13 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         # module. To better harvest the speed benefit, we need
         # to ensure that these dependent layers have at least
         # `min_sparsity` pruned channel are the same.
-        min_sparsity = min(sparsities)
+        if len(channel_dsets) == len(wrappers):
+            # all the layers in the dependency sets are pruned
+            min_sparsity = min(sparsities)
+        else:
+            # not all the layers in the dependency set
+            # are pruned
+            min_sparsity = 0
         # find the max number of the filter groups of the dependent
         # layers. The group constraint of this dependency set is decided
         # by the layer with the max groups.
@@ -129,21 +137,36 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
         for _w in wrappers:
             # calculate the L1/L2 sum for all channels
             c_sum = self._get_channel_sum(_w)
+            print('channelsum',channel_sum[:10])
+            print('c_sum',c_sum[:10])
             channel_sum += c_sum
-
+            print(channel_sum[:10])
         # prune the same `min_sparsity` channels based on channel_sum
         # for all the layers in the channel sparsity
         target_pruned = int(channel_count * min_sparsity)
+        # pruned_per_group may be zero, for example dw conv
         pruned_per_group = int(target_pruned / max_group)
         group_step = int(channel_count / max_group)
+        print('channel count', channel_count)
+        print('min_sparsity', min_sparsity)
+        print('target_pruned', target_pruned)
+        print('pruned_per_group', pruned_per_group)
+        print('group_step', group_step)
+        print('max_group', max_group)
         channel_masks = []
         for gid in range(max_group):
             _start = gid * group_step
             _end = (gid + 1) * group_step
-            threshold = torch.topk(channel_sum[_start: _end], pruned_per_group, largest=False)[0].max()
-            group_mask = torch.gt(channel_sum[_start:_end], threshold)
+            if pruned_per_group > 0:
+                threshold = torch.topk(channel_sum[_start: _end], pruned_per_group, largest=False)[0].max()
+                group_mask = torch.gt(channel_sum[_start:_end], threshold)
+            else:
+                group_mask = torch.ones(group_step).to(device)
             channel_masks.append(group_mask)
         channel_masks = torch.cat(channel_masks, dim=0)
+        pruned_channel_index = (channel_masks == False).nonzero().squeeze(1).tolist()
+        logger.info('Prune the %s channels for all dependent', ','.join([str(x) for x in pruned_channel_index]))
+        print('Prune the %s channels for all dependent', ','.join([str(x) for x in pruned_channel_index]))
         # calculate the mask for each layer based on channel_masks, first
         # every layer will prune the same channels masked in channel_masks.
         # If the sparsity of a layers is larger than min_sparsity, then it
@@ -192,11 +215,15 @@ class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
         w_abs_structured = w_abs_structured * channel_mask
         sparsity = wrapper.config['sparsity']
         num_prune = int(filters * sparsity)
-        threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
-        mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        if num_prune > 0:
+            threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
+            channel_mask = torch.gt(w_abs_structured, threshold)
+        else:
+            channel_mask = torch.ones(filters) 
+        mask_weight = channel_mask[:, None, None, None].expand_as(weight).type_as(weight)
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach()
+            mask_bias = channel_mask.type_as(weight).detach()
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
@@ -232,11 +259,15 @@ class L2ConstrainedFilterPrunerMasker(StructuredWeightMasker):
         w_l2_norm = w_l2_norm * channel_mask
         sparsity = wrapper.config['sparsity']
         num_prune = int(filters * sparsity)
-        threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
-        mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
+        if num_prune > 0:
+            threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
+            channel_mask = torch.gt(w_l2_norm, threshold)
+        else:
+            channel_mask = torch.ones(filters) 
+        mask_weight = channel_mask[:, None, None, None].expand_as(weight).type_as(weight)
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight).detach()
+            mask_bias = channel_mask.type_as(weight).detach()
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 

@@ -143,7 +143,7 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
 
         schema.validate(config_list)
 
-    def calc_mask(self, wrappers, wrappers_idx=None):
+    def calc_mask(self, wrappers, channel_dsets, wrappers_idx=None):
         """
         calculate the masks for the conv layers in the same
         channel dependecy set. All the layers passed in have
@@ -157,12 +157,11 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         wrappers_idx : list
             The list of the indexes of wrapppers.
         """
-        sparsities = [_w.config['sparsity'] for _w in wrappers]
         # The number of the groups for each conv layers
         # Note that, this number may be different from its
         # original number of groups of filters.
         groups = [self.group_depen[_w.name] for _w in wrappers]
-        masks = self.masker.calc_mask(sparsities, wrappers, groups, wrappers_idx=wrappers_idx)
+        masks = self.masker.calc_mask(wrappers, channel_dsets, groups, wrappers_idx=wrappers_idx)
         for _w in wrappers:
             _w.if_calculated = True
         return masks
@@ -182,12 +181,13 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
                 continue
             # find all the conv layers that have channel dependecy with this layer
             # and prune all these layers at the same time.
-            _wrapper_names = [x for x in self.channel_depen[wrapper.name]]
-            logger.info('Pruning the dependent layers: %s', ','.join(_wrapper_names))
-            _wrappers = [name2wraper[name] for name in _wrapper_names]
+            _names = [x for x in self.channel_depen[wrapper.name]]
+            logger.info('Pruning the dependent layers: %s', ','.join(_names))
+            print('Pruning the dependent layers: %s', ','.join(_names))
+            _wrappers = [name2wraper[name] for name in _names if name in name2wraper]
             _wrapper_idxes = [wraper2index[_w] for _w in _wrappers]
 
-            masks = self.calc_mask(_wrappers, wrappers_idx=_wrapper_idxes)
+            masks = self.calc_mask(_wrappers, _names, wrappers_idx=_wrapper_idxes)
             if masks is not None:
                 for layer in masks:
                     for k in masks[layer]:
