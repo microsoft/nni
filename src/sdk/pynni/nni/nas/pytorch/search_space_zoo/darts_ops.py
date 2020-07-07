@@ -39,8 +39,11 @@ class PoolBN(nn.Module):
     C: int
         number of channels
     kernal_size: int
+	size of the convolving kernel
     stride: int
+	stride of the convolution
     padding: int
+	zero-padding added to both sides of the input
     affine: bool
         ``affine`` value for ``nn.BatchNorm2d``
     """

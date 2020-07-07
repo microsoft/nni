@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.nas.pytorch import mutables
-from enas_ops import FactorizedReduce, StdConv, SepConvBN, Pool
+from .enas_ops import FactorizedReduce, StdConv, SepConvBN, Pool
 
 
 class AuxiliaryHead(nn.Module):
