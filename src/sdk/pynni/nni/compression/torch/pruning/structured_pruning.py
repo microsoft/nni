@@ -263,10 +263,11 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
             base_mask['weight_mask'][idx] = 0.
             if base_mask['bias_mask'] is not None:
                 base_mask['bias_mask'][idx] = 0.
-        return base_mask
 
         if len(activations) >= self.statistics_batch_num and self.pruner.hook_id in self.pruner._fwd_hook_handles:
             self.pruner.remove_activation_collector(self.pruner.hook_id)
+
+        return base_mask
 
     def _calc_apoz(self, activations):
         """
