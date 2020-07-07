@@ -54,9 +54,9 @@ class Node(nn.Module):
 
 class DartsCell(nn.Module):
     """
-    Builtin Darts Cell structure. One cell contains ``n_nodes`` nodes and uses operations to connect 
+    Builtin Darts Cell structure. One cell contains ``n_nodes`` nodes and uses operations to connect
     all nodes in a mutable way. By adjusting the weight of connection between two nodes, the operation
-    with the greatest probility is chosen to be part of the final structure. A CNN model is got through 
+    with the greatest probility is chosen to be part of the final structure. A CNN model is got through
     stacking these cell together. Note that, all cells in the model share the same structure.
 
     Parameters
