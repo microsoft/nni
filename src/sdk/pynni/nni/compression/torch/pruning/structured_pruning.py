@@ -205,7 +205,7 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
 
 
 class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
-    
+
     def get_mask(self, wrapper, channel_mask):
         weight = wrapper.module.weight.data
         filters = weight.shape[0]
@@ -219,7 +219,7 @@ class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
             threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
             channel_mask = torch.gt(w_abs_structured, threshold)
         else:
-            channel_mask = torch.ones(filters) 
+            channel_mask = torch.ones(filters)
         mask_weight = channel_mask[:, None, None, None].expand_as(weight).type_as(weight)
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -252,7 +252,8 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
 class L2ConstrainedFilterPrunerMasker(StructuredWeightMasker):
 
     def get_mask(self, wrapper, channel_mask):
-        filters = wrapper.module.weight.data.size(0)
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
         w_l2_norm = self._get_channel_sum(wrapper)
         # set the sum of the already pruned channel to
         # zero, so that these channel will be pruned.
@@ -263,7 +264,7 @@ class L2ConstrainedFilterPrunerMasker(StructuredWeightMasker):
             threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
             channel_mask = torch.gt(w_l2_norm, threshold)
         else:
-            channel_mask = torch.ones(filters) 
+            channel_mask = torch.ones(filters)
         mask_weight = channel_mask[:, None, None, None].expand_as(weight).type_as(weight)
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
