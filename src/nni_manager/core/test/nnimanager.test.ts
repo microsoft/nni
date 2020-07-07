@@ -49,12 +49,10 @@ describe('Unit test for nnimanager', function () {
                 optimize_mode: 'maximize'
             },
             checkpointDir: '',
-            gpuNum: 0
         },
         assessor: {
             builtinAssessorName: 'Medianstop',
             checkpointDir: '',
-            gpuNum: 1
         }
     }
 
