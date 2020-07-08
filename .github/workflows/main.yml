@@ -7,8 +7,12 @@ name: CI
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    paths:
+      - '**.md'
+      - '**.rst'
+      - '/docs/en_US/**'
+  schedule:
+    - cron:  '*/30 * * * *'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -57,7 +61,7 @@ jobs:
         # Option to specify a path to the configuration file
         config: crowdin.yml # optional
         # Option to preview the list of managed files
-        dryrun_action: true # optional, default is false
+        dryrun_action: false # optional, default is false
         # Numerical ID of the project
         project_id: 304950 # optional
         # Personal access token required for authentication
