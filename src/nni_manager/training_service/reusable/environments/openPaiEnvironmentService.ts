@@ -4,6 +4,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
@@ -15,7 +16,6 @@ import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { StorageService } from '../storageService';
 
-const yaml = require('js-yaml');
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
