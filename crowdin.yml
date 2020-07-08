@@ -1,4 +1,4 @@
-files:
+files1:
   - source: '/**/*.[mM][dD]'
     ignore:
       - '*_%locale_with_underscore%.md'
