@@ -6,7 +6,7 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [ l10n_master ]
   pull_request:
     branches: [ master ]
 
@@ -59,7 +59,7 @@ jobs:
         # Option to preview the list of managed files
         dryrun_action: true # optional, default is false
         # Numerical ID of the project
-        project_id: vs-ai # optional
+        project_id: 304950 # optional
         # Personal access token required for authentication
         token: bee5648cdb4e715e65712dbe7bd2e22de76547d569fed3aa394dfb8e0316b69bfce2daad0536e472 # optional
         # Base URL of Crowdin server for API requests execution
