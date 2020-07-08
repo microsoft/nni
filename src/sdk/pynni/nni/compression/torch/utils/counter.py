@@ -1,18 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
 import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
 
-
-_logger = logging.getLogger(__name__)
-
 try:
     from thop import profile
-except ImportError:
-    _logger.warning('Please install thop using command: pip install thop')
+except Exception as e:
+    print('thop is not found, please install the python package: thop')
+    raise
 
 
 def count_flops_params(model: nn.Module, input_size, verbose=True):
@@ -61,8 +58,16 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
 
     flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=verbose)
 
+
     for m in hook_module_list:
         m._buffers.pop("weight_mask")
+    # Remove registerd buffer on the model, and fixed following issue:
+    # https://github.com/Lyken17/pytorch-OpCounter/issues/96
+    for m in model.modules():
+        if 'total_ops' in m._buffers:
+            m._buffers.pop("total_ops")
+        if 'total_params' in m._buffers:
+            m._buffers.pop("total_params")
 
     return flops, params
 
