@@ -6,7 +6,7 @@ files:
       - '/**/*_%locale_with_underscore%.md'
       - /docs
       - /%locale_with_underscore%
-      - '/**/ISSUE_TEMPLATE/**'
+      - .github
     translation: /%original_path%/%file_name%_%locale_with_underscore%.md
   - source: /docs/en_US/**/*[.]*
     ignore:
