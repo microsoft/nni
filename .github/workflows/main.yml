@@ -14,7 +14,7 @@ on:
       - '.github/worklflows/**'
       - '/crowdin.yml'
   pull_request:
-    branches: ['squirrelsc-patch-1']
+    branches: [squirrelsc-patch-1]
   schedule:
     - cron:  '*/30 * * * *'
     
