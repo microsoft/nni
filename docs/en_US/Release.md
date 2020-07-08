@@ -139,7 +139,7 @@
 * [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
 #### Training Service
 * NFS Support for PAI
-    
+
     Instead of using HDFS as default storage, since OpenPAI v0.11, OpenPAI can have NFS or AzureBlob or other storage as default storage. In this release, NNI extended the support for this recent change made by OpenPAI, and could integrate with OpenPAI v0.11 or later version with various default storage.
 
 * Kubeflow update adoption
@@ -273,11 +273,11 @@
 ### Major Features
 * General NAS programming interface
     * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
-* [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md) 
+* [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md)
 
 * (deprecated) Multiphase experiment supports
     * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
-    * Added multiphase capability for the following builtin tuners: 
+    * Added multiphase capability for the following builtin tuners:
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
 
 * Web Portal
@@ -326,8 +326,8 @@
 * Fix bug of table entries
 * Nested search space refinement
 * Refine 'randint' type and support lower bound
-* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparision.md)
-* [Comparison of NAS algorithm](CommunitySharings/NasComparision.md)
+* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparison.md)
+* [Comparison of NAS algorithm](CommunitySharings/NasComparison.md)
 * [NNI practice on Recommenders](CommunitySharings/RecommendersSvd.md)
 
 ## Release 0.7 - 4/29/2018
