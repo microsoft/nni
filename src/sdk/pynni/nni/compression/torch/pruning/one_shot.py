@@ -188,7 +188,6 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
             # and prune all these layers at the same time.
             _names = [x for x in self.channel_depen[wrapper.name]]
             logger.info('Pruning the dependent layers: %s', ','.join(_names))
-            print('Pruning the dependent layers: %s', ','.join(_names))
             _wrappers = [name2wraper[name] for name in _names if name in name2wraper]
             _wrapper_idxes = [wraper2index[_w] for _w in _wrappers]
 

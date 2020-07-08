@@ -316,7 +316,6 @@ class Pruner(Compressor):
     def update_mask(self):
         for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
             masks = self.calc_mask(wrapper, wrapper_idx=wrapper_idx)
-            print('masks', masks)
             if masks is not None:
                 for k in masks:
                     assert hasattr(wrapper, k), "there is no attribute '%s' in wrapper" % k

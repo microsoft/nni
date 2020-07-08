@@ -144,24 +144,16 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
             if c_sum is None:
                 # if the channel sum cannot be calculated
                 # now, return None
-                print('c_sum is None')
                 return None
-            print('channelsum', channel_sum[:10])
-            print('c_sum', c_sum[:10])
             channel_sum += c_sum
-            print(channel_sum[:10])
+
         # prune the same `min_sparsity` channels based on channel_sum
         # for all the layers in the channel sparsity
         target_pruned = int(channel_count * min_sparsity)
         # pruned_per_group may be zero, for example dw conv
         pruned_per_group = int(target_pruned / max_group)
         group_step = int(channel_count / max_group)
-        print('channel count', channel_count)
-        print('min_sparsity', min_sparsity)
-        print('target_pruned', target_pruned)
-        print('pruned_per_group', pruned_per_group)
-        print('group_step', group_step)
-        print('max_group', max_group)
+
         channel_masks = []
         for gid in range(max_group):
             _start = gid * group_step
@@ -178,8 +170,7 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
             channel_masks == False).nonzero().squeeze(1).tolist()
         logger.info('Prune the %s channels for all dependent',
                     ','.join([str(x) for x in pruned_channel_index]))
-        print('Prune the %s channels for all dependent',
-              ','.join([str(x) for x in pruned_channel_index]))
+
         # calculate the mask for each layer based on channel_masks, first
         # every layer will prune the same channels masked in channel_masks.
         # If the sparsity of a layers is larger than min_sparsity, then it
@@ -623,7 +614,6 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
             threshold = torch.topk(
                 mean_activation.view(-1), num_prune, largest=False)[0].max()
             c_mask = torch.gt(mean_activation, threshold)
-            print('c_mask size:', c_mask.size(), 'channels', filters)
         else:
             c_mask = torch.ones(filters).to(weight.device)
         # remove the forward hook for the pruner
