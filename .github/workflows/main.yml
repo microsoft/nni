@@ -61,7 +61,7 @@ jobs:
         # Numerical ID of the project
         project_id: 304950 # optional
         # Personal access token required for authentication
-        token: $ # optional
+        token: ${{ secrets.GITHUB_TOKEN }} # optional
         # Base URL of Crowdin server for API requests execution
         # base_url: # optional
         # Path to your project directory on a local machine
@@ -70,8 +70,7 @@ jobs:
         # source: # optional
         # Path to the translation files
         # translation: # optional
-
       env:
-        GITHUB_TOKEN: $
-        CROWDIN_PROJECT_ID: $
-        CROWDIN_PERSONAL_TOKEN: $
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CROWDIN_PROJECT_ID: 304950
+        CROWDIN_PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
