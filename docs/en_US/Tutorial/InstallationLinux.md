@@ -19,7 +19,7 @@ Installation on Linux and macOS follow the same instructions, given below.
   Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
 
   ```bash
-  git clone -b v1.6 https://github.com/Microsoft/nni.git
+  git clone -b v1.7 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -35,7 +35,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via cloning the source code.
 
   ```bash
-  git clone -b v1.6 https://github.com/Microsoft/nni.git
+  git clone -b v1.7 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
