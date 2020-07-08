@@ -70,3 +70,8 @@ jobs:
         # source: # optional
         # Path to the translation files
         # translation: # optional
+
+      env:
+        GITHUB_TOKEN: $
+        CROWDIN_PROJECT_ID: $
+        CROWDIN_PERSONAL_TOKEN: $
