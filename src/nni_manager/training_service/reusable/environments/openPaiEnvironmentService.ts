@@ -76,6 +76,16 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 if (this.paiTrialConfig.paiConfigPath) {
                     this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 }
+
+                if (this.paiClusterConfig.gpuNum === undefined) {
+                    this.paiClusterConfig.gpuNum = this.paiTrialConfig.gpuNum;
+                }
+                if (this.paiClusterConfig.cpuNum === undefined) {
+                    this.paiClusterConfig.cpuNum = this.paiTrialConfig.cpuNum;
+                }
+                if (this.paiClusterConfig.memoryMB === undefined) {
+                    this.paiClusterConfig.memoryMB = this.paiTrialConfig.memoryMB;
+                }
                 break;
             }
             default:
@@ -300,6 +310,19 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             }
 
         } else {
+            if (this.paiClusterConfig === undefined) {
+                throw new Error('PAI Cluster config is not initialized');
+            }
+            if (this.paiClusterConfig.gpuNum === undefined) {
+                throw new Error('PAI Cluster gpuNum is not initialized');
+            }
+            if (this.paiClusterConfig.cpuNum === undefined) {
+                throw new Error('PAI Cluster cpuNum is not initialized');
+            }
+            if (this.paiClusterConfig.memoryMB === undefined) {
+                throw new Error('PAI Cluster memoryMB is not initialized');
+            }
+
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,
@@ -322,9 +345,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.paiTrialConfig.gpuNum,
-                            cpu: this.paiTrialConfig.cpuNum,
-                            memoryMB: this.paiTrialConfig.memoryMB
+                            gpu: this.paiClusterConfig.gpuNum,
+                            cpu: this.paiClusterConfig.cpuNum,
+                            memoryMB: this.paiClusterConfig.memoryMB
                         },
                         commands: [
                             environment.command
