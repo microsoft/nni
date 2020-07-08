@@ -79,6 +79,18 @@ class Calibration(nn.Module):
 
 
 class ENASReductionLayer(nn.Module):
+    """
+    builtin EnasReductionLayer.
+
+    Parameters
+    ---
+    in_channels_pp: int
+        the number of previous previous layer's output channels
+    in_channels_p: int
+        the number of previous layer's output channels
+    out_channels: int
+        output channels of this layer
+    """
     def __init__(self, in_channels_pp, in_channels_p, out_channels):
         super().__init__()
         self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
@@ -89,6 +101,22 @@ class ENASReductionLayer(nn.Module):
 
 
 class ENASMicroLayer(nn.Module):
+    """
+    builin EnasMicroLayer. 
+
+    Parameters
+    ---
+    num_nodes: int
+        the number of nodes contained in this layer
+    in_channles_pp: int
+        the number of previous previous layer's output channels
+    in_channels_p: int
+        the number of previous layer's output channels
+    out_channels: int
+        output channels of this layer
+    reduction: bool
+        is previous layer a reduction layer
+    """
     def __init__(self, num_nodes, in_channels_pp, in_channels_p, out_channels, reduction):
         super().__init__()
         self.preproc0 = Calibration(in_channels_pp, out_channels)

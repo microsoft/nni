@@ -39,13 +39,13 @@ class PoolBN(nn.Module):
     C: int
         number of channels
     kernal_size: int
-	size of the convolving kernel
+	    size of the convolving kernel
     stride: int
-	stride of the convolution
+	    stride of the convolution
     padding: int
-	zero-padding added to both sides of the input
+	    zero-padding added to both sides of the input
     affine: bool
-        ``affine`` value for ``nn.BatchNorm2d``
+        is using affine in BatchNorm
     """
 
     def __init__(self, pool_type, C, kernel_size, stride, padding, affine=True):
@@ -68,6 +68,19 @@ class PoolBN(nn.Module):
 class StdConv(nn.Sequential):
     """
     Standard conv: ReLU - Conv - BN
+
+    Parameters
+    ---
+    C_in: int
+        the number of input channels
+    C_out: int
+        the number of output channels
+    kernal_size:
+        size of the convolving kernel
+    padding:
+        zero-padding added to both sides of the input
+    affine: bool
+        is using affine in BatchNorm
     """
 
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
@@ -101,6 +114,21 @@ class DilConv(nn.Module):
     (Dilated) depthwise separable conv.
     ReLU - (Dilated) depthwise separable - Pointwise - BN.
     If dilation == 2, 3x3 conv => 5x5 receptive field, 5x5 conv => 9x9 receptive field.
+
+    Parameters
+    ---
+    C_in: int
+        the number of input channels
+    C_out: int
+        the number of output channels
+    kernal_size:
+        size of the convolving kernel
+    padding:
+        zero-padding added to both sides of the input
+    dilation: int
+        spacing between kernel elements.
+    affine: bool
+        is using affine in BatchNorm
     """
 
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):

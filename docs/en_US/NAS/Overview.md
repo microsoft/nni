@@ -62,6 +62,7 @@ NNI provides some predefined search space which can be easily reused. By stackin
 Search Space Zoo contains the following NAS cells:
 
 * [DartsCell](./SearchSpaceZoo.md#DartsCell)
+* [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
 
 ## Using NNI API to Write Your Search Space
 

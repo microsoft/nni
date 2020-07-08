@@ -79,6 +79,20 @@ class FactorizedReduce(nn.Module):
 
 
 class Pool(nn.Module):
+    """
+    Pooling structure
+
+    Parameters
+    ---
+    pool_type: str
+        only accept ``max`` for MaxPool and ``avg`` for AvgPool
+    kernal_size: int
+        size of the convolving kernel
+    stride: int
+	    stride of the convolution
+    padding: int
+	    zero-padding added to both sides of the input
+    """
     def __init__(self, pool_type, kernel_size, stride, padding):
         super().__init__()
         if pool_type.lower() == 'max':
@@ -93,6 +107,20 @@ class Pool(nn.Module):
 
 
 class SepConvBN(nn.Module):
+    """
+    Implement SepConv followed by BatchNorm. The structure is ReLU ==> SepConv ==> BN.
+
+    Parameters
+    ---
+    C_in: int
+        the number of imput channels
+    C_out: int
+        the number of output channels
+    kernal_size: int
+        size of the convolving kernel
+    padding: int
+        zero-padding added to both sides of the input
+    """
     def __init__(self, C_in, C_out, kernel_size, padding):
         super().__init__()
         self.relu = nn.ReLU()
