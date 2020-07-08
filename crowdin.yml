@@ -6,9 +6,9 @@ files:
       - '/**/*_%locale_with_underscore%.md'
       - /docs
       - /%locale_with_underscore%
-      - .github
+      - /.github
     translation: /%original_path%/%file_name%_%locale_with_underscore%.md
-  - source: /docs/en_US/**/*[.]*
+  - source: /docs/en_US/**/*.*
     ignore:
       - /docs/%locale_with_underscore%/**/*.*
     translation: /docs/%locale_with_underscore%/**/%original_file_name%
