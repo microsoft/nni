@@ -597,7 +597,7 @@ class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
 class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilterPrunerMasker):
     """
     Similar to ActivationMeanRankFilterPrunerMasker, prune
-    the model base on the activation of the layers. 
+    the model base on the activation of the layers.
     """
 
     def get_mask(self, wrapper, wrapper_idx, channel_mask):

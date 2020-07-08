@@ -3,11 +3,12 @@
 
 import logging
 from schema import And, Optional
+from nni._graph_utils import TorchModuleGraph
+from nni.compression.torch.utils.shape_dependency import ChannelDependency, GroupDependency
 from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
-from nni._graph_utils import TorchModuleGraph
-from nni.compression.torch.utils.shape_dependency import ChannelDependency, GroupDependency
+
 
 __all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', \
     'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', \
@@ -148,7 +149,7 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
         calculate the masks for the conv layers in the same
         channel dependecy set. All the layers passed in have
         the same number of channels.
-        
+
         Parameters
         ----------
         wrappers : list
@@ -243,7 +244,7 @@ class Constrained_L2FilterPruner(_Constrained_StructuredFilterPruner):
         and the channel-dependency/group-dependency of the model. Because
         this is a topology constraint aware pruner, so the speedup module
         can better harvest the speed benefit from the pruned model.
-        
+
         Paramters
         ---------
         model : torch.nn.Module
