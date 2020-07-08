@@ -6,7 +6,7 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ l10n_master ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -61,7 +61,7 @@ jobs:
         # Numerical ID of the project
         project_id: 304950 # optional
         # Personal access token required for authentication
-        # token: $ # optional
+        token: $ # optional
         # Base URL of Crowdin server for API requests execution
         # base_url: # optional
         # Path to your project directory on a local machine
