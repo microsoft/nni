@@ -102,7 +102,7 @@ class ENASReductionLayer(nn.Module):
 
 class ENASMicroLayer(nn.Module):
     """
-    builin EnasMicroLayer. 
+    builin EnasMicroLayer.
 
     Parameters
     ---
