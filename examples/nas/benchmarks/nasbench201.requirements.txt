@@ -1,3 +1,4 @@
+torch
 gdown
 tqdm
 peewee
