@@ -1,9 +1,9 @@
 project_id_env: CROWDIN_PROJECT_ID
 api_token_env: CROWDIN_PERSONAL_TOKEN
 files:
-  - source: /docs/en_US/**/*.*
+  - source: /docs/en_US/**/*
     ignore:
-      - /docs/%locale_with_underscore%/**/*.*
+      - /docs/zh_CN/**/*
     translation: /docs/%locale_with_underscore%/**/%original_file_name%
   - source: '/**/*.[mM][dD]'
     ignore:
