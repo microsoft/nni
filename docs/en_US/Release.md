@@ -48,9 +48,9 @@
 
 * Improve [documentation for model compression](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md)
 * Improve [documentation](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md)
-and [examples](https://github.com/microsoft/nni/tree/v1.7/docs/en_US/NAS) for NAS benchmarks
+and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/BenchmarksExample.ipynb) for NAS benchmarks.
 * Improve [documentation for AzureML training service](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/AMLMode.md)
-* Homepage migration to readthedoc
+* Homepage migration to readthedoc.
 
 ## Bug Fixes
 
