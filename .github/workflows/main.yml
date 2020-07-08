@@ -55,7 +55,7 @@ jobs:
         # Option to specify a path to user-specific credentials
         # identity: # optional
         # Option to specify a path to the configuration file
-        config: /crowdin.yml # optional
+        config: crowdin.yml # optional
         # Option to preview the list of managed files
         dryrun_action: true # optional, default is false
         # Numerical ID of the project
