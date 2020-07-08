@@ -11,6 +11,8 @@ on:
       - '**.md'
       - '**.rst'
       - '/docs/en_US/**'
+      - '.github/worklflows/**'
+      - '/crowdin.yml'
   schedule:
     - cron:  '*/30 * * * *'
     
