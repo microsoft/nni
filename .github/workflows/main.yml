@@ -6,15 +6,13 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master,squirrelsc-patch-1 ]
+    branches: [ master ]
     paths:
       - '**.md'
       - '**.rst'
       - '/docs/en_US/**'
       - '.github/worklflows/**'
       - '/crowdin.yml'
-  pull_request:
-    branches: [master, squirrelsc-patch-1]
   schedule:
     - cron:  '*/30 * * * *'
     
