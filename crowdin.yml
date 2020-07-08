@@ -3,10 +3,10 @@ api_token_env: CROWDIN_PERSONAL_TOKEN
 files:
   - source: '/**/*.[mM][dD]'
     ignore:
-      - '*_%locale_with_underscore%.md'
+      - '/**/*_%locale_with_underscore%.md'
       - /docs
       - /%locale_with_underscore%
-      - '**/ISSUE_TEMPLATE/**'
+      - '/**/ISSUE_TEMPLATE/**'
     translation: /%original_path%/%file_name%_%locale_with_underscore%.md
   - source: /docs/en_US/**/*
     ignore:
