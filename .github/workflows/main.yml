@@ -55,13 +55,13 @@ jobs:
         # Option to specify a path to user-specific credentials
         # identity: # optional
         # Option to specify a path to the configuration file
-        config: crowdin.yml # optional
+        config: /crowdin.yml # optional
         # Option to preview the list of managed files
         dryrun_action: true # optional, default is false
         # Numerical ID of the project
         project_id: 304950 # optional
         # Personal access token required for authentication
-        token: bee5648cdb4e715e65712dbe7bd2e22de76547d569fed3aa394dfb8e0316b69bfce2daad0536e472 # optional
+        # token: $ # optional
         # Base URL of Crowdin server for API requests execution
         # base_url: # optional
         # Path to your project directory on a local machine
