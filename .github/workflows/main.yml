@@ -6,7 +6,7 @@ name: CI
 # events but only for the master branch
 on:
   push:
-    branches: [ master,squirrelsc-patch-1 ]
+    branches: [ master,'squirrelsc-patch-1' ]
     paths:
       - '**.md'
       - '**.rst'
