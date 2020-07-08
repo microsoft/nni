@@ -51,7 +51,7 @@ jobs:
         # Create pull request after pushing to branch
         create_pull_request: false # optional, default is true
         # Option to upload or download files to the specified version branch in your Crowdin project
-        crowdin_branch_name: master # optional
+        crowdin_branch_name: l10n_master # optional
         # Option to specify a path to user-specific credentials
         # identity: # optional
         # Option to specify a path to the configuration file
