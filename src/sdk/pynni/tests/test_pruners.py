@@ -9,7 +9,8 @@ import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
-    TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner
+    TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner, \
+    Constrained_L1FilterPruner, Constrained_L2FilterPruner, ConstrainedActivationMeanRankFilterPruner
 
 
 def validate_sparsity(wrapper, sparsity, bias=False):
@@ -157,7 +158,40 @@ prune_config = {
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
         'validators': []
-    }
+    },
+    'l1_constrained': {
+        'pruner_class': Constrained_L1FilterPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': [
+            lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
+        ]
+    },
+    'l2_constrained': {
+        'pruner_class': Constrained_L2FilterPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': [
+            lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
+        ]
+    },
+    'mean_activation_constrained': {
+        'pruner_class': ConstrainedActivationMeanRankFilterPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': [
+            lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
+        ]
+    },
 }
 
 
@@ -174,7 +208,10 @@ class Model(nn.Module):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
 
-def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt', 'simulatedannealing', 'admm', 'autocompress'], bias=True):
+def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1',
+                               'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt',
+                               'simulatedannealing', 'admm', 'autocompress', 'l1_constrained',
+                               'l2_constrained', 'mean_activation_constrained'], bias=True):
     for pruner_name in pruner_names:
         print('testing {}...'.format(pruner_name))
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -202,6 +239,11 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         elif pruner_name == 'autocompress':
             pruner = prune_config[pruner_name]['pruner_class'](
                 model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
+
+        elif pruner_name in ['l1_constrained', 'l2_constrained', 'mean_activation_constrained']:
+            pruner = prune_config[pruner_name]['pruner_class'](
+                model, config_list, prune_config[pruner_name]['dummy_input'].to(device), optimizer
+            )
         else:
             pruner = prune_config[pruner_name]['pruner_class'](
                 model, config_list, optimizer)
