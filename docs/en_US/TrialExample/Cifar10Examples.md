@@ -39,7 +39,7 @@ As we stated in the target, we target to find out the best `optimizer` for train
 }
 ```
 
-*code directory: [search_space.json][8]*
+*Implemented code directory: [search_space.json][8]*
 
 **Trial**
 
