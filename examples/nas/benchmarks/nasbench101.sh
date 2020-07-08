@@ -1,22 +1,19 @@
+#!/bin/bash
 set -e
-mkdir -p /outputs /tmp
 
-echo "Installing dependencies..."
-apt update && apt install -y wget git
-pip install --no-cache-dir tqdm peewee
-
-echo "Installing NNI..."
-cd /nni && echo "y" | source install.sh
-
-cd /tmp
-
-echo "Installing NASBench..."
-git clone https://github.com/google-research/nasbench
-cd nasbench && pip install -e . && cd ..
+if [ -z "${NASBENCHMARK_DIR}" ]; then
+    NASBENCHMARK_DIR=~/.nni/nasbenchmark
+fi
 
 echo "Downloading NAS-Bench-101..."
-wget https://storage.googleapis.com/nasbench/nasbench_full.tfrecord
+if [ -f "nasbench_full.tfrecord" ]; then
+    echo "nasbench_full.tfrecord found. Skip download."
+else
+    wget https://storage.googleapis.com/nasbench/nasbench_full.tfrecord
+fi
 
 echo "Generating database..."
-rm -f /outputs/nasbench101.db /outputs/nasbench101.db-journal
-NASBENCHMARK_DIR=/outputs python -m nni.nas.benchmarks.nasbench101.db_gen nasbench_full.tfrecord
+rm -f ${NASBENCHMARK_DIR}/nasbench101.db ${NASBENCHMARK_DIR}/nasbench101.db-journal
+mkdir -p ${NASBENCHMARK_DIR}
+python -m nni.nas.benchmarks.nasbench101.db_gen nasbench_full.tfrecord
+rm -f nasbench_full.tfrecord
