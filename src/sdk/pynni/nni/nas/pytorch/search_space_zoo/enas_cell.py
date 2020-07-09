@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from nni.nas.pytorch import mutables
-from .enas_ops import FactorizedReduce, StdConv, SepConvBN, Pool
+from .enas_ops import FactorizedReduce, StdConv, SepConvBN, Pool, ConvBranch, PoolBranch
 
 
 class AuxiliaryHead(nn.Module):
@@ -102,7 +102,7 @@ class ENASReductionLayer(nn.Module):
 
 class ENASMicroLayer(nn.Module):
     """
-    builin EnasMicroLayer.
+    builin EnasMicroLayer. Micro search designs only one building block whose architecture is repeated throughout the final architecture.
 
     Parameters
     ---
@@ -153,3 +153,46 @@ class ENASMicroLayer(nn.Module):
         conv_weight = conv_weight.view(conv_weight.size(0), -1, 1, 1)
         out = F.conv2d(unused_nodes, conv_weight)
         return prev, self.bn(out)
+
+
+class ENASMacroLayer(mutables.MutableScope):
+    """
+    builtin ENAS Marco Layer. With search space changing to layer level, controller decides what operation is employed and the previous layer to connect to for skip connections.
+    The model is made up by the same layes but the choice of each layer may be different.
+
+    Parameters
+    ---
+    key: str
+        the name of this layer
+    prev_labels: str
+        names of all previous layers
+    in_filters: int
+        the number of input channels
+    out_filters:
+        the number of output channels
+    """
+    def __init__(self, key, prev_labels, in_filters, out_filters):
+        super().__init__(key)
+        self.in_filters = in_filters
+        self.out_filters = out_filters
+        self.mutable = mutables.LayerChoice([
+            ConvBranch(in_filters, out_filters, 3, 1, 1, separable=False),
+            ConvBranch(in_filters, out_filters, 3, 1, 1, separable=True),
+            ConvBranch(in_filters, out_filters, 5, 1, 2, separable=False),
+            ConvBranch(in_filters, out_filters, 5, 1, 2, separable=True),
+            PoolBranch('avg', in_filters, out_filters, 3, 1, 1),
+            PoolBranch('max', in_filters, out_filters, 3, 1, 1)
+        ])
+        if len(prev_labels) > 0:
+            self.skipconnect = mutables.InputChoice(choose_from=prev_labels, n_chosen=None)
+        else:
+            self.skipconnect = None
+        self.batch_norm = nn.BatchNorm2d(out_filters, affine=False)
+
+    def forward(self, prev_layers):
+        out = self.mutable(prev_layers[-1])
+        if self.skipconnect is not None:
+            connection = self.skipconnect(prev_layers[:-1])
+            if connection is not None:
+                out += connection
+        return self.batch_norm(out)

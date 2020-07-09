@@ -11,7 +11,7 @@ The predefined operations are shown as follows:
 * Skip Connect: There is no operation between two nodes. Call `torch.nn.Identity` to forward what it gets to the output.
 * SepConv3x3: Composed of two DilConvs with fixed `kernal_size=3` sequentially.
 * SepConv5x5: Do the same operation as the previous one but it has different kernal size, which is set to 5.
-* <a name="DilConv"></a>DilConv3x3:  (Dilated) depthwise separable conv. It first calls `torch.nn.Conv2d` with fixed `kernal_size=3` to partition the feature map into `C_in` groups then applies 1x1 Convolution to get `C_out` output channels. It makes extracting features on every channel seperately possible and reduces the number of parameters.
+* <a name="DilConv"></a>DilConv3x3:  (Dilated) depthwise separable Conv. It first calls `torch.nn.Conv2d` with fixed `kernal_size=3` to partition the feature map into `C_in` groups then applies 1x1 Convolution to get `C_out` output channels. It makes extracting features on every channel separately possible and reduces the number of parameters.
 * DilConv5x5: Do the same operation as the previous one but it has different kernal size, which is set to 5.
 
 ```eval_rst
@@ -58,16 +58,14 @@ python3 darts_example.py
 
 ## ENASMicroLayer
 
-This layer is exctracted from model designed [here](./ENAS.md). A model contains several blocks whose architecture keeps the same. A block is made up by some `ENAMicroLayer` 
+This layer is extracted from model designed [here](./ENAS.md). A model contains several blocks whose architecture keeps the same. A block is made up of some `ENAMicroLayer` 
 and one `ENASReduceLayer`. The only difference between the two layers is that `ENASReduceLayer` applies all operations with `stride=2`.
 
-A `ENASMicroLayer` contains `num_nodes` nodes and searchs the topology among them. The first two nodes in a layer stand for the ouputs from prevous previous layer and 
-previous layer respectively. The following nodes choose two previous nodes as input and applies two operations from [predefined ones](#enas-predefined-opeations) then add 
-them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively. So the output of 
-Node 4 is `MaxPool(Node 1)+AvgPool(Node 3)`. Nodes which are not served as input for other nodes are viewed as the output of the layer. If there are multiple output nodes, 
-model will concat them in channels as the layer output.
+An `ENASMicroLayer` contains `num_nodes` nodes and searches the topology among them. The first two nodes in a layer stand for the outputs from previous previous layer and previous layer respectively. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then apply `MaxPool` and `AvgPool` on the inputs respectively. So the output of 
+Node 4 is `MaxPool(Node 1)+AvgPool(Node 3)`. Nodes that are not served as input for other nodes are viewed as the output of the layer. If there are multiple output nodes, 
+the model will concat them in channels as the layer output.
 
-The predefined operations are listed as follows. Details can be seen [here](#enas-predefined-opeations).
+The predefined operations are listed as follows. Details can be seen [here](#predefined-operations-enas).
 
 * MaxPool: call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
 * AvgPool: call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
@@ -99,9 +97,9 @@ cd nni/examples/nas/search_space_zoo
 python3 enas_micro_example.py
 ```
 
-<a class="predefined-opeations-enas"></a>
+<a name="predefined-operations-enas"></a>
 
-### ENAS predefined operations
+### ENAS Micro predefined operations
 
 * MaxPool / AvgPool
 
@@ -122,3 +120,41 @@ python3 enas_micro_example.py
     There is no connection between the two nodes.
 
 ## ENASMacroLayer
+
+In Marco search, the controller makes two decisions for each layer:L i) the [operation](#marco-operations) to perform on the previous layer, ii) the previous layer to connect to for skip connections. NNI privides [predefined operations](#macro-operations) for Marco search, which are listed as following:
+
+* Conv3x3(separable and non-separable): Conv parameters are fixed `kernal_size=3`, `padding=1` and `stride=1`. If `separable=True`, Conv is replaced with [DilConv](#DilConv).
+* Conv5x5(separable and non-separable): Do the same operation as the previous one but it has different kernal size, which is set to 5.
+* AvgPool: call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
+* MaxPool: call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
+
+```eval_rst
+..  autoclass:: nni.nas.pytorch.search_space_zoo.ENASMacroLayer
+    :members:
+```
+
+### example code
+
+[example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/enas_macro_example.py)
+
+```bash
+git clone https://github.com/Microsoft/nni.git
+cd nni/examples/nas/search_space_zoo
+# search the best cell structure
+python3 enas_macro_example.py
+```
+
+<a name="macro-operations"></a>
+
+### ENAS Macro predefined operations
+
+* ConvBranch
+
+    ```eval_rst
+    ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.ConvBranch
+    ```
+* PoolBranch
+
+    ```eval_rst
+    ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.PoolBranch
+    ```

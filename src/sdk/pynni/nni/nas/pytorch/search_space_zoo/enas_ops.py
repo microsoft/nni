@@ -19,6 +19,24 @@ class StdConv(nn.Module):
 
 
 class PoolBranch(nn.Module):
+    """
+    pooling structure for Macro search. First pass through a 1x1 Conv, then pooling operation followed by BatchNorm.
+
+    Parameters
+    ---
+    pool_type: str
+        only accept ``max`` for MaxPool and ``avg`` for AvgPool
+    C_in: int
+        the number of input channels
+    C_out: int
+        the number of output channels
+    kernal_size: int
+        size of the convolving kernel
+    stride: int
+	    stride of the convolution
+    padding: int
+	    zero-padding added to both sides of the input
+    """
     def __init__(self, pool_type, C_in, C_out, kernel_size, stride, padding, affine=False):
         super().__init__()
         self.preproc = StdConv(C_in, C_out)
@@ -46,6 +64,24 @@ class SeparableConv(nn.Module):
 
 
 class ConvBranch(nn.Module):
+    """
+    Conv structure for Macro seach. First pass through a 1x1 Conv, then Conv operation with kernal_size equals 3 or 5 followed by BatchNorm and ReLU.
+
+    Parameters
+    ---
+    C_in: int
+        the number of input channels
+    C_out: int
+        the number of output channels
+    kernal_size: int
+        size of the convolving kernel
+    stride: int
+	    stride of the convolution
+    padding: int
+	    zero-padding added to both sides of the input
+    separable: True
+        is separable Conv is used
+    """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, separable):
         super(ConvBranch, self).__init__()
         self.preproc = StdConv(C_in, C_out)
