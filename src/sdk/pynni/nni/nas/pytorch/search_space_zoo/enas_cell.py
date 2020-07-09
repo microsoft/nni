@@ -157,7 +157,8 @@ class ENASMicroLayer(nn.Module):
 
 class ENASMacroLayer(mutables.MutableScope):
     """
-    builtin ENAS Marco Layer. With search space changing to layer level, controller decides what operation is employed and the previous layer to connect to for skip connections.
+    builtin ENAS Marco Layer. With search space changing to layer level, 
+    controller decides what operation is employed and the previous layer to connect to for skip connections.
     The model is made up by the same layes but the choice of each layer may be different.
 
     Parameters
@@ -183,7 +184,7 @@ class ENASMacroLayer(mutables.MutableScope):
             PoolBranch('avg', in_filters, out_filters, 3, 1, 1),
             PoolBranch('max', in_filters, out_filters, 3, 1, 1)
         ])
-        if len(prev_labels) > 0:
+        if prev_labels > 0:
             self.skipconnect = mutables.InputChoice(choose_from=prev_labels, n_chosen=None)
         else:
             self.skipconnect = None
