@@ -4,7 +4,7 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
-import { GPUInfo, GPUSummary } from '../common/gpuData';
+import { GPUInfo, GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
 
 /**
@@ -23,18 +23,6 @@ export class RemoteMachineMeta {
     //TODO: initialize varialbe in constructor
     public occupiedGpuIndexMap?: Map<number, number>;
     public readonly useActiveGpu?: boolean = false;
-}
-
-export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
-    if (gpuIndices !== undefined) {
-        const indices: number[] = gpuIndices.split(',')
-            .map((x: string) => parseInt(x, 10));
-        if (indices.length > 0) {
-            return new Set(indices);
-        } else {
-            throw new Error('gpuIndices can not be empty if specified.');
-        }
-    }
 }
 
 /**
@@ -168,14 +156,3 @@ export class ExecutorManager {
 export type RemoteMachineScheduleResult = { scheduleInfo: RemoteMachineScheduleInfo | undefined; resultType: ScheduleResultType };
 
 export type RemoteMachineScheduleInfo = { rmMeta: RemoteMachineMeta; cudaVisibleDevice: string };
-
-export enum ScheduleResultType {
-    // Schedule succeeded
-    SUCCEED,
-
-    // Temporarily, no enough available GPU right now
-    TMP_NO_AVAILABLE_GPU,
-
-    // Cannot match requirement even if all GPU are a
-    REQUIRE_EXCEED_TOTAL
-}

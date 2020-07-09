@@ -25,7 +25,7 @@ export class TrialDetail implements TrialJobDetail {
     // it's used to aggregate node status for multiple node trial
     public nodes: Map<string, NodeInfomation>;
     // assigned GPUs for multi-trial scheduled.
-    public assignedGpus: GPUInfo[] = [];
+    public assignedGpus: GPUInfo[] | undefined = [];
 
     public readonly TRIAL_METADATA_DIR = ".nni";
 

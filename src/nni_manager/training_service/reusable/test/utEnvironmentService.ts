@@ -9,10 +9,10 @@ import { UtCommandChannel } from "./utCommandChannel";
 export class UtEnvironmentService extends EnvironmentService {
     private commandChannel: UtCommandChannel | undefined;
     private allEnvironments = new Map<string, EnvironmentInformation>();
+    private hasMoreEnvironmentsInternal = true;
 
     constructor() {
         super();
-
     }
 
     public get hasStorageService(): boolean {
@@ -40,6 +40,14 @@ export class UtEnvironmentService extends EnvironmentService {
             throw new Error(`command channel shouldn't be undefined.`);
         }
         return this.commandChannel;
+    }
+
+    public testSetNoMoreEnvironment(hasMore: boolean): void {
+        this.hasMoreEnvironmentsInternal = hasMore;
+    }
+
+    public get hasMoreEnvironments(): boolean {
+        return this.hasMoreEnvironmentsInternal;
     }
 
     public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {

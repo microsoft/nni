@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { GPUSummary } from "training_service/common/gpuData";
+import { EventEmitter } from "events";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
-import { EventEmitter } from "events";
+import { GPUInfo } from "../../training_service/common/gpuData";
 import { WebCommandChannel } from "./channels/webCommandChannel";
 import { CommandChannel } from "./commandChannel";
 
@@ -14,19 +14,30 @@ import { CommandChannel } from "./commandChannel";
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
 export type Channel = "web" | "file" | "aml" | "ut";
 
+
+export class TrialGpuSummary {
+    // GPU count on the machine
+    public gpuCount: number;
+    // The timestamp when GPU summary data queried
+    public timestamp: string;
+    // The array of GPU information for each GPU card
+    public gpuInfos: GPUInfo[];
+    // GPU assigned status
+    occupiedGpuIndexMap: Map<number, number> = new Map<number, number>();
+
+    constructor(gpuCount: number, timestamp: string, gpuInfos: GPUInfo[]) {
+        this.gpuCount = gpuCount;
+        this.timestamp = timestamp;
+        this.gpuInfos = gpuInfos;
+    }
+}
+
 export class EnvironmentInformation {
+    // node id is 5 chars, so won't conflict.
+    private readonly defaultNodeId = "default";
     private log: Logger;
 
-    // NNI environment ID
-    public id: string;
-    // training platform unique job ID.
-    public jobId: string;
-    // training platform job friendly name, in case it's different with job ID.
-    public jobName: string;
-
     // key states
-    // true: environment is ready to run trial.
-    public isIdle: boolean = false;
     // true: environment is running, waiting, or unknown.
     public isAlive: boolean = true;
     // true: Runner is initialized, and can receive trials.
@@ -34,10 +45,18 @@ export class EnvironmentInformation {
     // don't set status in environment directly, use setFinalState function to set a final state.
     public status: EnvironmentStatus = "UNKNOWN";
 
+    // true: environment is ready to run trial.
+    public runningTrialCount: number = 0;
     // uses to count how many trial runs on this environment.
     // it can be used in many scenarios, but for now, it uses for reusable.
-    public assignedTrialNumber: number = 0;
+    public assignedTrialCount: number = 0;
 
+    // NNI environment ID
+    public id: string;
+    // training platform unique job ID.
+    public envId: string;
+    // training platform job friendly name, in case it's different with job ID.
+    public name: string;
     public trackingUrl: string = "";
     public workingFolder: string = "";
     public runnerWorkingFolder: string = "";
@@ -46,21 +65,53 @@ export class EnvironmentInformation {
 
     // it's used to aggregate node status for multiple node trial
     public nodes: Map<string, NodeInfomation>;
-    public gpuSummary: Map<string, GPUSummary> = new Map<string, GPUSummary>();
+    public gpuSummaries: Map<string, TrialGpuSummary> = new Map<string, TrialGpuSummary>();
 
-    constructor(id: string, jobName: string, jobId?: string) {
+    // use can specify which gpus can be used by NNI.
+    // it's usable for sharable environment like remote machine.
+    public usableGpus?: number[];
+    // user can specify how to use GPU resource for an environment, like local and remote.
+    public maxTrialNumberPerGpu?: number;
+    public useActiveGpu?: boolean;
+
+    constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
         this.id = id;
-        this.jobName = jobName;
-        this.jobId = jobId ? jobId : jobName;
+        this.name = name;
+        this.envId = envId ? envId : name;
         this.nodes = new Map<string, NodeInfomation>();
     }
 
     public setStatus(status: EnvironmentStatus): void {
         if (this.status !== status) {
-            this.log.info(`Enviornment: ${this.jobId} change status from ${this.status} to ${status}.`)
+            this.log.info(`EnvironmentInformation: ${this.envId} change status from ${this.status} to ${status}.`)
             this.status = status;
         }
+    }
+
+    public setGpuSummary(nodeId: string, newGpuSummary: TrialGpuSummary): void {
+        if (nodeId === null) {
+            nodeId = this.defaultNodeId;
+        }
+
+        const originalGpuSummary = this.gpuSummaries.get(nodeId);
+        if (undefined === originalGpuSummary) {
+            newGpuSummary.occupiedGpuIndexMap = new Map<number, number>();
+            this.gpuSummaries.set(nodeId, newGpuSummary);
+        } else {
+            originalGpuSummary.gpuCount = newGpuSummary.gpuCount;
+            originalGpuSummary.timestamp = newGpuSummary.timestamp;
+            originalGpuSummary.gpuInfos = newGpuSummary.gpuInfos;
+        }
+    }
+
+    public get defaultGpuSummary(): TrialGpuSummary {
+        const gpuSummary = this.gpuSummaries.get(this.defaultNodeId);
+        if (gpuSummary === undefined) {
+            this.log.info(`EnvironmentInformation: current gpu info ${JSON.stringify(this.gpuSummaries)}`);
+            throw new Error(`EnvironmentInformation: ${this.envId} no default gpu information found.`);
+        }
+        return gpuSummary;
     }
 }
 
@@ -112,7 +163,7 @@ export class RunnerSettings {
     public nniManagerVersion: string = "";
     public logCollection: string = "none";
     public command: string = "";
-    public enableGpuCollector: boolean = false;
+    public enableGpuCollector: boolean = true;
 
     // specify which communication channel is used by runner.
     // supported channel includes: rest, storage, aml

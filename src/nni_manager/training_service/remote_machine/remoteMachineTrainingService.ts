@@ -7,6 +7,7 @@ import * as assert from 'assert';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
+import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames } from '../../common/errors';
@@ -22,18 +23,16 @@ import {
     getVersion, uniqueString
 } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { GPUSummary } from '../common/gpuData';
+import { GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
-    RemoteMachineMeta,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail,
-    ScheduleResultType, ExecutorManager
+    ExecutorManager, RemoteMachineMeta,
+    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
-import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 
 /**
  * Training Service implementation for Remote Machine (Linux)

@@ -2,22 +2,21 @@
 // Licensed under the MIT license.
 
 import * as chai from 'chai';
-import * as fs from 'fs';
 import * as path from 'path';
 import { Scope } from "typescript-ioc";
 import * as component from '../../../common/component';
 import { getLogger, Logger } from "../../../common/log";
 import { TrialJobApplicationForm, TrialJobStatus } from '../../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest } from '../../../common/utils';
+import { INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END } from '../../../core/commands';
 import { TrialConfigMetadataKey } from '../../../training_service/common/trialConfigMetadataKey';
+import { Command } from '../commandChannel';
 import { EnvironmentInformation, EnvironmentService } from "../environment";
+import { TrialDetail } from '../trial';
 import { TrialDispatcher } from "../trialDispatcher";
+import { UtCommandChannel } from './utCommandChannel';
 import { UtEnvironmentService } from "./utEnvironmentService";
 import chaiAsPromised = require("chai-as-promised");
-import { UtCommandChannel } from './utCommandChannel';
-import { Command } from '../commandChannel';
-import { INITIALIZED, NEW_TRIAL_JOB, TRIAL_END, KILL_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, REQUEST_TRIAL_JOBS } from '../../../core/commands';
-import { TrialDetail } from '../trial';
 
 function createTrialForm(content: any = undefined): TrialJobApplicationForm {
     if (content === undefined) {
@@ -35,7 +34,7 @@ function createTrialForm(content: any = undefined): TrialJobApplicationForm {
     return trialForm;
 }
 
-async function waitResult<TResult>(callback: () => Promise<TResult | undefined>, waitMs: number = 1000, interval: number = 1): Promise<TResult | undefined> {
+async function waitResult<TResult>(callback: () => Promise<TResult | undefined>, waitMs: number = 1000, interval: number = 1, throwError: boolean = false): Promise<TResult | undefined> {
     while (waitMs > 0) {
         const result = await callback();
         if (result !== undefined) {
@@ -45,13 +44,18 @@ async function waitResult<TResult>(callback: () => Promise<TResult | undefined>,
         waitMs -= interval;
     };
 
+    if (throwError) {
+        throw new Error(`wait result timeout!\n${callback.toString()}`);
+    }
+
     return undefined;
 }
 
 async function waitResultMust<TResult>(callback: () => Promise<TResult | undefined>, waitMs: number = 1000, interval: number = 1): Promise<TResult> {
-    const result = await waitResult(callback, waitMs, interval);
+    const result = await waitResult(callback, waitMs, interval, true);
+    // this error should be thrown in waitResult already.
     if (result === undefined) {
-        throw new Error(`result shouldn't be undefined!`);
+        throw new Error(`wait result timeout!`);
     }
     return result;
 }
@@ -86,9 +90,9 @@ async function verifyTrialResult(commandChannel: UtCommandChannel, trialDetail: 
         return trialDetail.status !== 'RUNNING' ? true : undefined;
     });
     if (returnCode === 0) {
-        chai.assert.equal<TrialJobStatus>('SUCCEEDED', trialDetail.status, "trial should be succeeded");
+        chai.assert.equal<TrialJobStatus>(trialDetail.status, 'SUCCEEDED', "trial should be succeeded");
     } else {
-        chai.assert.equal<TrialJobStatus>('FAILED', trialDetail.status, "trial should be failed");
+        chai.assert.equal<TrialJobStatus>(trialDetail.status, 'FAILED', "trial should be failed");
     }
 }
 
@@ -121,6 +125,7 @@ async function waitEnvironment(waitCount: number, previousEnvironments: Map<stri
 
 describe('Unit Test for TrialDispatcher', () => {
 
+    let trialRunPromise: Promise<void>;
     let trialDispatcher: TrialDispatcher;
     let commandChannel: UtCommandChannel;
     let environmentService: UtEnvironmentService;
@@ -153,7 +158,7 @@ describe('Unit Test for TrialDispatcher', () => {
 
         await trialDispatcher.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, JSON.stringify(trialConfig));
         await trialDispatcher.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, JSON.stringify(nniManagerIpConfig));
-        trialDispatcher.run();
+        trialRunPromise = trialDispatcher.run();
 
         environmentService = component.get(EnvironmentService) as UtEnvironmentService;
         commandChannel = environmentService.testGetCommandChannel();
@@ -163,6 +168,7 @@ describe('Unit Test for TrialDispatcher', () => {
         previousEnvironments.clear();
         await trialDispatcher.cleanUp();
         environmentService.testReset();
+        await trialRunPromise;
     });
 
     it('reuse env', async () => {
@@ -177,10 +183,65 @@ describe('Unit Test for TrialDispatcher', () => {
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, -1);
 
-        chai.assert.equal(1, environmentService.testGetEnvironments().size, "as env reused, so only 1 env should be here.");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1, "as env reused, so only 1 env should be here.");
         const trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(2, trials.length, "there should be 2 trials");
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
     });
+
+    it('not reusable env', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: path.dirname(__filename),
+            }));
+        // submit first trial
+        let trialDetail = await newTrial(trialDispatcher);
+        // wait env started
+        let environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+        await waitResultMust<true>(async () => {
+            return environment.status === 'USER_CANCELED' ? true : undefined;
+        });
+
+        trialDetail = await newTrial(trialDispatcher);
+        // wait env started
+        await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
+        await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, -1);
+        await waitResultMust<true>(async () => {
+            return environment.status === 'USER_CANCELED' ? true : undefined;
+        });
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2, "as env not reused, so only 2 envs should be here.");
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
+    });
+
+    it('no more env', async () => {
+        // submit first trial
+        const trialDetail1 = await newTrial(trialDispatcher);
+        // wait env started
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+
+        // set to no more environment
+        environmentService.testSetNoMoreEnvironment(false);
+
+        const trialDetail2 = await newTrial(trialDispatcher);
+
+        await verifyTrialRunning(commandChannel, trialDetail1);
+        await verifyTrialResult(commandChannel, trialDetail1, 0);
+
+        // wait env started
+        await verifyTrialRunning(commandChannel, trialDetail2);
+        await verifyTrialResult(commandChannel, trialDetail2, -1);
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1, "as env not reused, so only 1 envs should be here.");
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
+    });
+
 
     it('2trial2env', async () => {
         // submit first trial
@@ -194,9 +255,9 @@ describe('Unit Test for TrialDispatcher', () => {
         await verifyTrialRunning(commandChannel, trialDetail2);
         await verifyTrialResult(commandChannel, trialDetail2, 0);
 
-        chai.assert.equal(2, environmentService.testGetEnvironments().size, "2 envs should be here.");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2, "2 envs should be here.");
         const trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(2, trials.length, "there should be 2 trials");
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
     });
 
     it('3trial2env', async () => {
@@ -211,18 +272,18 @@ describe('Unit Test for TrialDispatcher', () => {
         await verifyTrialRunning(commandChannel, trialDetail2);
         await verifyTrialResult(commandChannel, trialDetail2, 0);
 
-        chai.assert.equal(2, environmentService.testGetEnvironments().size, "2 envs should be here.");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2, "2 envs should be here.");
         let trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(2, trials.length, "there should be 2 trials");
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
 
 
         let trialDetail3 = await newTrial(trialDispatcher);
         await verifyTrialRunning(commandChannel, trialDetail3);
         await verifyTrialResult(commandChannel, trialDetail3, 0);
 
-        chai.assert.equal(2, environmentService.testGetEnvironments().size, "2 envs should be here.");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2, "2 envs should be here.");
         trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(3, trials.length, "there should be 2 trials");
+        chai.assert.equal(trials.length, 3, "there should be 2 trials");
     });
 
     it('stop trial', async () => {
@@ -257,14 +318,14 @@ describe('Unit Test for TrialDispatcher', () => {
             return trialDetail2.status !== 'RUNNING' ? true : undefined;
         });
 
-        chai.assert.equal(1, environmentService.testGetEnvironments().size, "only one trial, so one env");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1, "only one trial, so one env");
         const trials = await trialDispatcher.listTrialJobs();
 
-        chai.assert.equal(2, trials.length, "there should be 1 stopped trial only");
+        chai.assert.equal(trials.length, 2, "there should be 1 stopped trial only");
         let trial = await trialDispatcher.getTrialJob(trialDetail1.id);
-        chai.assert.equal<TrialJobStatus>('USER_CANCELED', trial.status, `trial is killed.`);
+        chai.assert.equal<TrialJobStatus>(trial.status, 'USER_CANCELED', `trial is canceled.`);
         trial = await trialDispatcher.getTrialJob(trialDetail2.id);
-        chai.assert.equal<TrialJobStatus>('EARLY_STOPPED', trial.status, `trial is killed.`);
+        chai.assert.equal<TrialJobStatus>(trial.status, 'EARLY_STOPPED', `trial is earlier stopped.`);
     });
 
     it('multi phase', async () => {
@@ -301,9 +362,9 @@ describe('Unit Test for TrialDispatcher', () => {
 
         await verifyTrialResult(commandChannel, trialDetail, 0);
 
-        chai.assert.equal(1, environmentService.testGetEnvironments().size, "only one trial, so one env");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1, "only one trial, so one env");
         const trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(1, trials.length, "there should be 1 stopped trial only");
+        chai.assert.equal(trials.length, 1, "there should be 1 stopped trial only");
     });
 
     it('multi node', async () => {
@@ -318,9 +379,9 @@ describe('Unit Test for TrialDispatcher', () => {
             return await commandChannel.testReceiveCommandFromTrialDispatcher();
         });
         chai.assert.equal(command.command, KILL_TRIAL_JOB);
-        chai.assert.equal(1, environmentService.testGetEnvironments().size, "only one trial, so one env");
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1, "only one trial, so one env");
         const trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(1, trials.length, "there should be 1 stopped trial only");
+        chai.assert.equal(trials.length, 1, "there should be 1 stopped trial only");
     });
 
     it('env timeout', async () => {
@@ -340,9 +401,9 @@ describe('Unit Test for TrialDispatcher', () => {
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
 
-        chai.assert.equal(2, previousEnvironments.size, "as an env timeout, so 2 envs should be here.");
+        chai.assert.equal(previousEnvironments.size, 2, "as an env timeout, so 2 envs should be here.");
         const trials = await trialDispatcher.listTrialJobs();
-        chai.assert.equal(2, trials.length, "there should be 2 trials");
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
     });
 
     it('env failed with trial', async () => {
@@ -359,6 +420,38 @@ describe('Unit Test for TrialDispatcher', () => {
             return trialDetail.status === 'FAILED' ? true : undefined;
         });
 
-        chai.assert.equal<TrialJobStatus>('FAILED', trialDetail.status, "env failed, so trial also failed.");
+        chai.assert.equal<TrialJobStatus>(trialDetail.status, 'FAILED', "env failed, so trial also failed.");
+    });
+
+    it('GPUScheduler disabled no gpu info', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler disabled multi node', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled 2 gpus 2 trial', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled use active gpus', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled TMP_NO_AVAILABLE_GPU, but with waiting env', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled TMP_NO_AVAILABLE_GPU, need env', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled REQUIRE_EXCEED_TOTAL, need fail', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler enabled 2 trials on same gpu, 4 trials, 2 gpus', async () => {
+        chai.assert.fail(`not implemented.`)
     });
 });
