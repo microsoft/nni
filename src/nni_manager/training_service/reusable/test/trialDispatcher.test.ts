@@ -423,7 +423,11 @@ describe('Unit Test for TrialDispatcher', () => {
         chai.assert.equal<TrialJobStatus>(trialDetail.status, 'FAILED', "env failed, so trial also failed.");
     });
 
-    it('GPUScheduler disabled no gpu info', async () => {
+    it('GPUScheduler disabled gpuNum === undefined', async () => {
+        chai.assert.fail(`not implemented.`)
+    });
+
+    it('GPUScheduler disabled gpuNum === 0', async () => {
         chai.assert.fail(`not implemented.`)
     });
 

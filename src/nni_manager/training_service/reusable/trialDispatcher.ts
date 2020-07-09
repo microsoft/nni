@@ -269,8 +269,10 @@ class TrialDispatcher implements TrainingService {
                     this.reuseEnvironment = this.trialConfig.reuseEnvironment;
                 }
                 if (this.trialConfig.gpuNum !== undefined && this.trialConfig.gpuNum > 0) {
+                    this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
                     this.enableGpuScheduler = true;
                 }
+                this.runnerSettings.enableGpuCollector = this.enableGpuScheduler;
 
                 this.runnerSettings.command = this.trialConfig.command;
                 // Validate to make sure codeDir doesn't have too many files
@@ -587,7 +589,10 @@ class TrialDispatcher implements TrainingService {
 
     private async allocateEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
         if (this.commandChannel === undefined) {
-            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in assignEnvironment.`);
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in allocateEnvironment.`);
+        }
+        if (this.trialConfig === undefined) {
+            throw new Error(`TrialDispatcher: trialConfig shouldn't be undefined in allocateEnvironment.`);
         }
 
         if (trial.environment) {
@@ -601,11 +606,13 @@ class TrialDispatcher implements TrainingService {
         // convert assigned gpus to string for nvidia visible settings
         // undefined means no constraint, [] means no gpu visible.
         let gpuIndices: string | undefined = undefined;
-        if (undefined !== trial.assignedGpus) {
+        if (undefined !== this.trialConfig.gpuNum) {
             const gpuArray: number[] = [];
-            trial.assignedGpus.map((value) => {
-                gpuArray.push(value.index);
-            });
+            if (undefined !== trial.assignedGpus) {
+                trial.assignedGpus.map((value) => {
+                    gpuArray.push(value.index);
+                });
+            }
             gpuIndices = gpuArray.join(',');
         }
 
@@ -630,7 +637,7 @@ class TrialDispatcher implements TrainingService {
         if (trial.environment.runningTrialCount <= 0) {
             throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
         }
-        if (true === this.enableGpuScheduler){
+        if (true === this.enableGpuScheduler) {
             this.gpuScheduler.removeGpuReservation(trial);
         }
         trial.environment.runningTrialCount--;

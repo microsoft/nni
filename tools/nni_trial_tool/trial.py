@@ -88,8 +88,9 @@ class Trial:
 
         trial_command = self.args.trial_command
 
-        if (self.data["gpuIndices"] is not None):
-            trial_command = 'CUDA_VISIBLE_DEVICES="%s " %s' % (self.data["gpuIndices"], trial_command)
+        gpuIndices = self.data.get('gpuIndices')
+        if (gpuIndices is not None):
+            trial_command = 'CUDA_VISIBLE_DEVICES="%s " %s' % (gpuIndices, trial_command)
 
         self.log_pipe_stdout = self.trial_syslogger_stdout.get_pipelog_reader()
         self.process = Popen(trial_command, shell=True, stdout=self.log_pipe_stdout,
