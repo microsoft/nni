@@ -65,7 +65,7 @@ class SeparableConv(nn.Module):
 
 class ConvBranch(nn.Module):
     """
-    Conv structure for Macro seach. First pass through a 1x1 Conv, 
+    Conv structure for Macro seach. First pass through a 1x1 Conv,
     then Conv operation with kernal_size equals 3 or 5 followed by BatchNorm and ReLU.
 
     Parameters

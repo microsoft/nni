@@ -157,7 +157,7 @@ class ENASMicroLayer(nn.Module):
 
 class ENASMacroLayer(mutables.MutableScope):
     """
-    builtin ENAS Marco Layer. With search space changing to layer level, 
+    builtin ENAS Marco Layer. With search space changing to layer level,
     controller decides what operation is employed and the previous layer to connect to for skip connections.
     The model is made up by the same layes but the choice of each layer may be different.
 
