@@ -6,6 +6,11 @@ import Overview from './components/Overview';
 import TrialsDetail from './components/TrialsDetail';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
+import { makeServer } from './server';
+
+if (process.env.NODE_ENV === 'development') {
+  makeServer('development');
+}
 
 ReactDOM.render(
   (

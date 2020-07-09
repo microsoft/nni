@@ -23,6 +23,7 @@
     "is-wsl": "^1.1.0",
     "json5": "^2.1.1",
     "mini-css-extract-plugin": "0.5.0",
+    "miragejs": "^0.1.40",
     "monaco-editor": "^0.19.0",
     "monaco-editor-webpack-plugin": "^1.8.1",
     "node-sass": "^4.13.0",
