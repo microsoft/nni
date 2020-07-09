@@ -86,7 +86,7 @@ and `stride=2`, and they perform alternate sampling on the input so as to reduce
     :members:
 ```
 
-### example code
+### Example Code
 
 [example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/enas_micro_example.py)
 
@@ -121,7 +121,7 @@ python3 enas_micro_example.py
 
 ## ENASMacroLayer
 
-In Marco search, the controller makes two decisions for each layer:L i) the [operation](#marco-operations) to perform on the previous layer, ii) the previous layer to connect to for skip connections. NNI privides [predefined operations](#macro-operations) for Marco search, which are listed as following:
+In Macro search, the controller makes two decisions for each layer:L i) the [operation](#macro-operations) to perform on the previous layer, ii) the previous layer to connect to for skip connections. NNI privides [predefined operations](#macro-operations) for macro search, which are listed as following:
 
 * Conv3x3(separable and non-separable): Conv parameters are fixed `kernal_size=3`, `padding=1` and `stride=1`. If `separable=True`, Conv is replaced with [DilConv](#DilConv).
 * Conv5x5(separable and non-separable): Do the same operation as the previous one but it has different kernal size, which is set to 5.
@@ -133,7 +133,7 @@ In Marco search, the controller makes two decisions for each layer:L i) the [ope
     :members:
 ```
 
-### example code
+### Example Code
 
 [example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/enas_macro_example.py)
 
