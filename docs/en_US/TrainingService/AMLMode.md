@@ -78,10 +78,11 @@ The required information of amlConfig could be found in the downloaded `config.j
 
 Run the following commands to start the example experiment:
 ```
-git clone https://github.com/microsoft/nni.git
+git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 cd nni/examples/trials/mnist-tfv1
 
 # modify config_aml.yml ...
 
 nnictl create --config config_aml.yml
 ```
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.7`.
