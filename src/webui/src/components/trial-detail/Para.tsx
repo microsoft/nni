@@ -443,7 +443,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         // dataObj [[y1], [y2]... [default metric]]
         const { max, min, metricType } = this.state;
         const parallelAxis = dataObj.parallelAxis;
-        const paralleData = dataObj.data;
+        const parallelData = dataObj.data;
         let visualMapObj = {};
         if (max === min) {
             visualMapObj = {
@@ -496,7 +496,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 lineStyle: {
                     width: 2
                 },
-                data: paralleData
+                data: parallelData
             }
         };
         // please wait the data
@@ -504,7 +504,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             option: optionown,
             paraNodata: '',
             succeedRenderCount: lengthofTrials,
-            sutrialCount: paralleData.length
+            sutrialCount: parallelData.length
         });
     }
 
