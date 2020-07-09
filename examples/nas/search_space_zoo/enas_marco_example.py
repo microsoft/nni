@@ -17,6 +17,19 @@ from nni.nas.pytorch.search_space_zoo import ENASMacroLayer
 logger = logging.getLogger('nni')
 
 
+class FactorizedReduce(nn.Module):
+    def __init__(self, C_in, C_out, affine=False):
+        super().__init__()
+        self.conv1 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.bn = nn.BatchNorm2d(C_out, affine=affine)
+
+    def forward(self, x):
+        out = torch.cat([self.conv1(x), self.conv2(x[:, :, 1:, 1:])], dim=1)
+        out = self.bn(out)
+        return out
+
+
 class GeneralNetwork(nn.Module):
     def __init__(self, num_layers=12, out_filters=24, in_channels=3, num_classes=10,
                  dropout_rate=0.0):
@@ -42,7 +55,7 @@ class GeneralNetwork(nn.Module):
             labels.append("layer_{}".format(layer_id))
             if layer_id in self.pool_layers_idx:
                 self.pool_layers.append(FactorizedReduce(self.out_filters, self.out_filters))
-            self.layers.append(ENASLayer(labels[-1], labels[:-1], self.out_filters, self.out_filters))
+            self.layers.append(ENASMacroLayer(labels[-1], labels[:-1], self.out_filters, self.out_filters))
 
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.dense = nn.Linear(self.out_filters, self.num_classes)
@@ -76,7 +89,7 @@ if __name__ == "__main__":
     parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
 
-    dataset_train, dataset_valid = datasets.get_dataset("cifar10")
+    dataset_train, dataset_valid = get_dataset("cifar10")
     model = GeneralNetwork()
     num_epochs = args.epochs or 310
     mutator = None
