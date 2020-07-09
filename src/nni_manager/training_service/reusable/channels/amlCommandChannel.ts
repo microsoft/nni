@@ -13,7 +13,6 @@ class AMLRunnerConnection extends RunnerConnection {
 
 export class AMLCommandChannel extends CommandChannel {
     private stopping: boolean = false;
-    private currentMessageIndex: number = -1;
     private sendQueues: [EnvironmentInformation, string][] = [];
 
     public get channelName(): Channel {
@@ -84,7 +83,9 @@ export class AMLCommandChannel extends CommandChannel {
             const runnerConnections = [...this.runnerConnections.values()] as AMLRunnerConnection[];
             for (const runnerConnection of runnerConnections) {
                 // to loop all commands
-                const amlClient = (runnerConnection.environment as AMLEnvironmentInformation).amlClient;
+                const amlEnvironmentInformation: AMLEnvironmentInformation = runnerConnection.environment as AMLEnvironmentInformation;
+                const amlClient = amlEnvironmentInformation.amlClient;
+                let currentMessageIndex = amlEnvironmentInformation.currentMessageIndex;
                 if (!amlClient) {
                     throw new Error('AML client not initialized!');
                 }
@@ -92,15 +93,16 @@ export class AMLCommandChannel extends CommandChannel {
                 if (command && Object.prototype.hasOwnProperty.call(command, "trial_runner")) {
                     const messages = command['trial_runner'];
                     if (messages) {
-                        if (messages instanceof Object && this.currentMessageIndex < messages.length - 1) {
-                            for (let index = this.currentMessageIndex + 1; index < messages.length; index++) {
+                        if (messages instanceof Object && currentMessageIndex < messages.length - 1) {
+                            for (let index = currentMessageIndex + 1; index < messages.length; index++) {
                                 this.handleCommand(runnerConnection.environment, messages[index]);
                             }
-                            this.currentMessageIndex = messages.length - 1;
-                        } else if (this.currentMessageIndex === -1) {
+                            currentMessageIndex = messages.length - 1;
+                        } else if (currentMessageIndex === -1) {
                             this.handleCommand(runnerConnection.environment, messages);
-                            this.currentMessageIndex += 1;
+                            currentMessageIndex += 1;
                         }
+                        amlEnvironmentInformation.currentMessageIndex = currentMessageIndex;
                     }
                 }
             }

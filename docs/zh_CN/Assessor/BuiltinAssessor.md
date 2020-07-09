@@ -19,7 +19,7 @@ NNI 提供了先进的评估算法，使用上也很简单。 下面是内置 As
 
 <a name="MedianStop"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
+### Median Stop Assessor
 
 > 名称：**Medianstop**
 
@@ -47,20 +47,21 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
+### Curve Fitting Assessor
 
 > 名称：**Curvefitting**
 
 **建议场景**
 
-适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
+
+**注意**，根据原始论文，仅支持递增函数。 因此，此 Assessor 仅可用于最大化优化指标的场景。 例如，它可用于准确度，但不能用于损失值。
 
 **classArgs 要求：**
 
 * **epoch_num** (*int, **必需***) - epoch 的总数。 需要此数据来决定需要预测点的总数。
-* **optimize_mode** (*maximize 或 minimize, 可选, 默认值为 maximize*) - 如果为 'maximize', Assessor 会在结果小于期望值时**终止** Trial。 如果为 'minimize'，Assessor 会在结果大于期望值时**终止** Trial。
 * **start_step** (*int, 可选, 默认值为 6*) - 只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
-* **threshold** (*float, 可选, 默认值为 0.95*) - 用来确定提前终止较差结果的阈值。 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
+* **threshold** (*float, 可选, 默认值为 0.95*) - 用来确定提前终止较差结果的阈值。 例如，如果 threshold = 0.95，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
 * **gap** (*int, 可选, 默认值为 1*) - Assessor 两次评估之间的间隔次数。 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
 
 **使用示例：**
@@ -71,7 +72,6 @@ assessor:
     builtinAssessorName: Curvefitting
     classArgs:
       epoch_num: 20
-      optimize_mode: maximize
       start_step: 6
       threshold: 0.95
       gap: 1
