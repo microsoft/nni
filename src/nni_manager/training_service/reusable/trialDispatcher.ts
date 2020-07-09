@@ -51,10 +51,17 @@ class TrialDispatcher implements TrainingService {
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
 
-    // this flag uses to reduce log count.
+    // uses to reduce log count.
     private noMoreEnvironment: boolean = false;
-    // this flag uses to accelerate trial manager loop
+    // uses to accelerate trial manager loop
+    // true means there is updates, and trial loop should run a cycle immediately.
     private shouldUpdateTrials: boolean = true;
+    // uses to decide environment assign strategy.
+    // true means use gpu scheduler to decide if there is free resource for new trial.
+    // false means one env run one trial in same time.
+    private enableGpuScheduler: boolean = false;
+    // uses to save if user like to reuse environment
+    private reuseEnvironment: boolean = true;
 
     constructor() {
         this.log = getLogger();
@@ -254,9 +261,11 @@ class TrialDispatcher implements TrainingService {
                 this.runnerSettings.logCollection = value;
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                // TODO to support more storage types by better parameters.
                 this.trialConfig = <TrialConfig>JSON.parse(value);
 
+                if (this.trialConfig.reuseEnvironment !== undefined){
+                    this.reuseEnvironment = this.trialConfig.reuseEnvironment;
+                }
                 this.runnerSettings.command = this.trialConfig.command;
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.trialConfig.codeDir);
@@ -424,16 +433,24 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
             }
+
             let liveEnvironmentsCount = 0;
             const idleEnvironments: EnvironmentInformation[] = [];
-            this.environments.forEach((environment) => {
+            for (const environment of this.environments.values()) {
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isRunnerReady && environment.isIdle) {
+                        if (false === this.reuseEnvironment && environment.assignedTrialNumber > 0) {
+                            // if environment is not reusable and used, stop and not count as idle;
+                            const environmentService = component.get<EnvironmentService>(EnvironmentService);
+                            await environmentService.stopEnvironment(environment);
+                            continue;
+                        }
                         idleEnvironments.push(environment);
                     }
                 }
-            });
+            }
+
             while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
                 const trial = waitingTrials.shift();
                 const idleEnvironment = idleEnvironments.shift();
@@ -511,6 +528,7 @@ class TrialDispatcher implements TrainingService {
         this.log.info(`assigning environment ${environment.id} to trial ${trial.id}.`);
 
         environment.isIdle = false;
+        environment.assignedTrialNumber += 1;
         trial.environment = environment;
         trial.settings = {
             trialId: trial.id,
@@ -585,7 +603,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleCommand(command: Command): Promise<void> {
-        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}, data: ${command.data}`);
+        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}.`);
         const environment = command.environment;
         const data = command.data;
         const nodeId = data["node"];

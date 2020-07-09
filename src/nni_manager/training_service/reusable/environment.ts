@@ -34,6 +34,10 @@ export class EnvironmentInformation {
     // don't set status in environment directly, use setFinalState function to set a final state.
     public status: EnvironmentStatus = "UNKNOWN";
 
+    // uses to count how many trial runs on this environment.
+    // it can be used in many scenarios, but for now, it uses for reusable.
+    public assignedTrialNumber: number = 0;
+
     public trackingUrl: string = "";
     public workingFolder: string = "";
     public runnerWorkingFolder: string = "";
@@ -63,7 +67,6 @@ export class EnvironmentInformation {
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
-
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
