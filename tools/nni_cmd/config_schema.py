@@ -208,12 +208,14 @@ pai_trial_schema = {
 pai_config_schema = {
     'paiConfig': {
         'userName': setType('userName', str),
+        Or('passWord', 'token', only_one=True): str,
         'host': setType('host', str),
         Optional('reuse'): setType('reuse', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
         Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
         Optional('memoryMB'): setType('memoryMB', int),
-        Or('passWord', 'token', only_one=True): str
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool),
     }
 }
 

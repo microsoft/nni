@@ -181,8 +181,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         // Step 1. Prepare PAI job configuration
         const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
         environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
-        environment.command = `cd ${environmentRoot} && ${environment.command}`
-        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`
+        environment.command = `cd ${environmentRoot} && ${environment.command}`;
+        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
+        environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
+        environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;
 
         // Step 2. Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(environment);

@@ -16,6 +16,9 @@ export class PAIClusterConfig {
     public memoryMB?: number;
     public gpuNum?: number;
 
+    public useActiveGpu?: boolean;
+    public maxTrialNumPerGpu?: number;
+
     /**
      * Constructor
      * @param userName User name of PAI Cluster

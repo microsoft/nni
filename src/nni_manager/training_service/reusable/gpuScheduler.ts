@@ -31,7 +31,7 @@ export class GpuScheduler {
     // private readonly machineExecutorMap: Set<TrialDetail>;
     private readonly log: Logger = getLogger();
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
-    private readonly defaultSetting: GpuSchedulerSetting;
+    private defaultSetting: GpuSchedulerSetting;
     private roundRobinIndex: number = 0;
 
     /**
@@ -42,6 +42,10 @@ export class GpuScheduler {
         if (undefined === gpuSchedulerSetting) {
             gpuSchedulerSetting = new GpuSchedulerSetting();
         }
+        this.defaultSetting = gpuSchedulerSetting;
+    }
+
+    public setSettings(gpuSchedulerSetting: GpuSchedulerSetting): void {
         this.defaultSetting = gpuSchedulerSetting;
     }
 
