@@ -12,6 +12,7 @@
     "case-sensitive-paths-webpack-plugin": "2.2.0",
     "copy-to-clipboard": "^3.0.8",
     "css-loader": "2.1.1",
+    "d3": "^5.16.0",
     "dotenv": "6.2.0",
     "dotenv-expand": "4.2.0",
     "echarts": "^4.5.0",
@@ -29,6 +30,7 @@
     "node-sass": "^4.13.0",
     "office-ui-fabric-react": "^7.78.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
+    "parcoord-es": "^2.2.10",
     "pnp-webpack-plugin": "1.2.1",
     "postcss-flexbugs-fixes": "4.1.0",
     "postcss-loader": "3.0.0",
@@ -57,6 +59,7 @@
   "devDependencies": {
     "@babel/core": "7.4.3",
     "@svgr/webpack": "4.1.0",
+    "@types/d3": "^5.7.2",
     "@types/jest": "24.0.12",
     "@types/json5": "^0.0.30",
     "@types/node": "^10.13.0",

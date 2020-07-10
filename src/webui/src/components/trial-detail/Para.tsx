@@ -1,15 +1,22 @@
+import { Dropdown, IDropdownOption, PrimaryButton, Stack } from 'office-ui-fabric-react';
+import ParCoords from 'parcoord-es';
+import 'parcoord-es/dist/parcoords.css';
 import * as React from 'react';
-import ReactEcharts from 'echarts-for-react';
+import { TRIALS } from '../../static/datamodel';
 import { filterByStatus } from '../../static/function';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { Stack, PrimaryButton, Dropdown, IDropdownOption } from 'office-ui-fabric-react';
-import { ParaObj, Dimobj, TableObj } from '../../static/interface';
-import 'echarts/lib/chart/parallel';
-import 'echarts/lib/component/tooltip';
-import 'echarts/lib/component/title';
-import 'echarts/lib/component/visualMap';
-import '../../static/style/para.scss';
+import { ParaObj, TableObj } from '../../static/interface';
 import '../../static/style/button.scss';
+import '../../static/style/para.scss';
+
+function isSearchSpaceNested(searchSpace): boolean {
+    for (const item of Object.values(searchSpace)) {
+        const value = (item as any)._value;
+        if (value && typeof value[0] === 'object') {
+            return true;
+        }
+    }
+    return false;
+}
 
 interface ParaState {
     // paraSource: Array<TableObj>;
@@ -29,7 +36,7 @@ interface ParaState {
     selectedItem?: { key: string | number | undefined }; // percent Selector
     swapyAxis?: string[]; // yAxis Selector
     paraYdataNested: number[][];
-    isNested: false;
+    isNested: boolean;
     showFinalMetricKey: string;
     metricType: string;
 }
@@ -41,6 +48,9 @@ interface ParaProps {
 }
 
 class Para extends React.Component<ParaProps, ParaState> {
+
+    private paraRef = React.createRef<HTMLDivElement>();
+    private pcs: any;
 
     private chartMulineStyle = {
         width: '100%',
@@ -80,349 +90,37 @@ class Para extends React.Component<ParaProps, ParaState> {
         };
     }
 
-    getParallelAxis =
-        (
-            dimName: string[], parallelAxis: Array<Dimobj>,
-            accPara: number[], eachTrialParams: string[],
-            lengthofTrials: number
-        ): void => {
-            // get data for every lines. if dim is choice type, number -> toString()
-            let paraYdata: number[][] = [];
-            const { isNested } = this.state;
-            if (isNested === false) {
-                for (const item of eachTrialParams) {
-                    const temp: number[] = [];
-                    for (let i = 0; i < dimName.length; i++) {
-                        if ('type' in parallelAxis[i]) {
-                            temp.push(item[dimName[i]].toString());
-                        } else {
-                            // default metric
-                            temp.push(item[dimName[i]]);
-                        }
-                    }
-                    paraYdata.push(temp);
-                }
-            } else {
-                paraYdata = this.state.paraYdataNested;
-            }
-            // add metric value
-            Object.keys(paraYdata).map(item => {
-                paraYdata[item].push(accPara[item]);
-            });
-
-            // according acc to sort ydata // sort to find top percent dataset
-            if (paraYdata.length !== 0) {
-                const len = paraYdata[0].length - 1;
-                // show top trials
-                if (EXPERIMENT.optimizeMode === 'minimize') {
-                    paraYdata.sort((a, b) => a[len] - b[len]);
-                }
-                if (EXPERIMENT.optimizeMode === 'maximize') {
-                    paraYdata.sort((a, b) => b[len] - a[len]);
-                }
-            }
-            const paraData = {
-                parallelAxis: parallelAxis,
-                data: paraYdata
-            };
-            const { percent, swapAxisArr } = this.state;
-            // need to cut down the data
-            if (percent !== 0) {
-                const linesNum = paraData.data.length;
-                // Math.ceil rather than Math.floor to avoid lost lines
-                const len = Math.ceil(linesNum * percent);
-                paraData.data.length = len;
-            }
-            // need to swap the yAxis
-            if (swapAxisArr.length >= 2) {
-                this.swapGraph(paraData, swapAxisArr);
-            }
-            this.getOption(paraData, lengthofTrials);
-            this.setState({ paraBack: paraData });
-        }
-
     hyperParaPic = (source: Array<TableObj>, searchSpace: string): void => {
         // filter succeed trials [{}, {}, {}]
         const dataSource = source.filter(filterByStatus);
-        const lenOfDataSource: number = dataSource.length;
         const accPara: number[] = [];
         // specific value array
         const eachTrialParams: Array<any> = [];
         // experiment interface search space obj
         const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
         // nest search space
-        let isNested: boolean = false;
-        Object.keys(searchRange).map(item => {
-            if (searchRange[item]._value && typeof searchRange[item]._value[0] === 'object') {
-                isNested = true;
-                return;
-            }
-        });
-        let dimName: string[] = [];
-        const parallelAxis: Array<Dimobj> = [];
-        // search space range and specific value [only number]
-        let i = 0;
-        const yAxisOrderList = new Map();
+        const isNested: boolean = isSearchSpaceNested(searchSpace);
         this.setState({ isNested: isNested });
-        if (isNested === false) {
-            dimName = Object.keys(searchRange);
-            this.setState({ dimName: dimName });
-            for (i; i < dimName.length; i++) {
-                const data: string[] = [];
-                const searchKey = searchRange[dimName[i]];
-                switch (searchKey._type) {
-                    case 'uniform':
-                    case 'quniform':
-                        parallelAxis.push({
-                            dim: i,
-                            name: dimName[i],
-                            max: searchKey._value[1],
-                            min: searchKey._value[0]
-                        });
-                        break;
-                    case 'randint':
-                        parallelAxis.push({
-                            dim: i,
-                            name: dimName[i],
-                            min: searchKey._value[0],
-                            max: searchKey._value[1],
-                        });
-                        break;
-                    case 'choice':
-                        for (let j = 0; j < searchKey._value.length; j++) {
-                            data.push(searchKey._value[j].toString());
-                        }
-                        parallelAxis.push({
-                            dim: i,
-                            name: dimName[i],
-                            type: 'category',
-                            data: data,
-                            boundaryGap: true,
-                            axisLine: {
-                                lineStyle: {
-                                    type: 'dotted', // axis type,solid，dashed，dotted
-                                    width: 1
-                                }
-                            },
-                            axisTick: {
-                                show: true,
-                                interval: 0,
-                                alignWithLabel: true,
-                            },
-                            axisLabel: {
-                                show: true,
-                                interval: 0,
-                                // rotate: 30
-                            },
-                        });
-                        break;
-                    // support log distribute
-                    case 'loguniform':
-                        if (lenOfDataSource > 1) {
-                            parallelAxis.push({
-                                dim: i,
-                                name: dimName[i],
-                                type: 'log',
-                            });
-                        } else {
-                            parallelAxis.push({
-                                dim: i,
-                                name: dimName[i]
-                            });
-                        }
-                        break;
-                    default:
-                        parallelAxis.push({
-                            dim: i,
-                            name: dimName[i]
-                        });
-                }
-            }
-        } else {
-            for (const parallelAxisName in searchRange) {
-                const data: any[] = [];
-                dimName.push(parallelAxisName);
 
-                for (const choiceItem in searchRange[parallelAxisName]) {
-                    if (choiceItem === '_value') {
-                        for (const item in searchRange[parallelAxisName][choiceItem]) {
-                            data.push(searchRange[parallelAxisName][choiceItem][item]._name);
-                        }
-                        yAxisOrderList.set(parallelAxisName, JSON.parse(JSON.stringify(data)));
-                        parallelAxis.push({
-                            dim: i,
-                            data: data,
-                            name: parallelAxisName,
-                            type: 'category',
-                            boundaryGap: true,
-                            axisLine: {
-                                lineStyle: {
-                                    type: 'dotted', // axis type,solid，dashed，dotted
-                                    width: 1
-                                }
-                            },
-                            axisTick: {
-                                show: true,
-                                interval: 0,
-                                alignWithLabel: true,
-                            },
-                            axisLabel: {
-                                show: true,
-                                interval: 0,
-                                // rotate: 30
-                            }
-                        });
-                        i++;
-                        for (const item in searchRange[parallelAxisName][choiceItem]) {
-                            for (const key in searchRange[parallelAxisName][choiceItem][item]) {
-                                if (key !== '_name') {
-                                    dimName.push(key);
-                                    parallelAxis.push({
-                                        dim: i,
-                                        data: searchRange[parallelAxisName][choiceItem][item][key]._value.concat('null'),
-                                        name: `${searchRange[parallelAxisName][choiceItem][item]._name}_${key}`,
-                                        type: 'category',
-                                        boundaryGap: true,
-                                        axisLine: {
-                                            lineStyle: {
-                                                type: 'dotted', // axis type,solid，dashed，dotted
-                                                width: 1
-                                            }
-                                        },
-                                        axisTick: {
-                                            show: true,
-                                            interval: 0,
-                                            alignWithLabel: true,
-                                        },
-                                        axisLabel: {
-                                            show: true,
-                                            interval: 0,
-                                            // rotate: 30
-                                        }
-                                    });
-                                    i++;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            this.setState({ dimName: dimName });
-        }
-        // metric yAxis
-        const { showFinalMetricKey } = this.state;
-        parallelAxis.push({
-            dim: i,
-            name: showFinalMetricKey,
-            scale: true,
-            nameTextStyle: {
-                fontWeight: 700
-            }
+        // eslint-disable-next-line no-console
+        console.log(dataSource);
+        // eslint-disable-next-line no-console
+        console.log(searchSpace);
+        const convertedDataSource = dataSource.map((s) => {
+            const ret = { ...(s.description.parameters), ...(s.acc) } as any;
+            delete ret.pretrained;
+            return ret;
         });
-        if (lenOfDataSource === 0) {
-            const optionOfNull = {
-                parallelAxis,
-                tooltip: {
-                    trigger: 'item'
-                },
 
-                parallel: {
-                    parallelAxisDefault: {
-                        tooltip: {
-                            show: true
-                        },
-                        axisLabel: {
-                            formatter: function (value?: string): string | null {
-                                if (value !== undefined) {
-                                    const length = value.length;
-                                    if (length > 16) {
-                                        const temp = value.split('');
-                                        for (let m = 16; m < temp.length; m += 17) {
-                                            temp[m] += '\n';
-                                        }
-                                        return temp.join('');
-                                    } else {
-                                        return value;
-                                    }
-                                } else {
-                                    return null;
-                                }
-                            }
-                        },
-                    }
-                },
-                visualMap: {
-                    type: 'continuous',
-                    min: 0,
-                    max: 1,
-                    color: ['#CA0000', '#FFC400', '#90EE90']
-                }
-            };
-            this.setState({
-                paraNodata: 'No data',
-                option: optionOfNull,
-                sutrialCount: 0,
-                succeedRenderCount: 0
-            });
-        } else {
-            Object.keys(dataSource).map(item => {
-                const trial = dataSource[item];
-                eachTrialParams.push(trial.description.parameters);
-                // may be a succeed trial hasn't final result
-                // all detail page may be break down if havn't if
-                // metric yAxis data
-                if (trial.acc !== undefined) {
-                    const val = trial.acc[showFinalMetricKey];
-                    if (val !== undefined) {
-                        const typeOfVal = typeof val;
-                        if(typeOfVal === 'number'){
-                            this.setState(() => ({metricType: 'numberType'}));
-                        } else {
-                            // string type
-                            parallelAxis[parallelAxis.length - 1].type = 'category';
-                            parallelAxis[parallelAxis.length - 1].data = [val];
-                            this.setState(() => ({metricType: 'stringType'}));
-                        }
-                        accPara.push(val);
-                    }
-                }
-            });
-            // nested search space, fill all yAxis data
-            if (isNested !== false) {
-                const renderDataSource: Array<any> = [];
-                for (const i in eachTrialParams) {
-                    const eachTrialData: Array<any> = [];
-                    for (const m in eachTrialParams[i]) {
-                        const eachTrialParamsObj = eachTrialParams[i][m];
-                        for (const n in yAxisOrderList.get(m)) {
-                            if (yAxisOrderList.get(m)[n] === eachTrialParamsObj._name) {
-                                for (const index in eachTrialParamsObj) {
-                                    if (index !== '_name') {
-                                        eachTrialData.push(eachTrialParamsObj[index].toString());
-                                    }
-                                    if (eachTrialParamsObj[index] === 'Empty') {
-                                        eachTrialData.push('Empty');
-                                    }
-                                }
-                            } else {
-                                if (yAxisOrderList.get(m)[n] === 'Empty') {
-                                    eachTrialData.push(eachTrialParamsObj._name.toString());
-                                } else {
-                                    eachTrialData.push('null');
-                                }
-                            }
-                        }
-                    }
-                    renderDataSource.push(eachTrialData);
-                }
-                this.setState({ paraYdataNested: renderDataSource });
-            }
-            
-            const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
-            const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
-            this.setState({ max: maxVal, min: minVal }, () => {
-                this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
-            });
+        if (this.pcs === undefined) {
+            this.pcs = ParCoords()(this.paraRef.current)
+                .data(convertedDataSource)
+                // .smoothness(0.15)
+                .showControlPoints(false)
+                .render()
+                .brushMode("1D-axes")
+                .reorderable()
+                .interactive();
         }
     }
 
@@ -437,213 +135,9 @@ class Para extends React.Component<ParaProps, ParaState> {
             });
         }
     }
-
-    // deal with response data into pic data
-    getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
-        // dataObj [[y1], [y2]... [default metric]]
-        const { max, min, metricType } = this.state;
-        const parallelAxis = dataObj.parallelAxis;
-        const parallelData = dataObj.data;
-        let visualMapObj = {};
-        if (max === min) {
-            visualMapObj = {
-                type: 'continuous',
-                precision: 3,
-                min: 0,
-                max: max,
-                color: ['#CA0000', '#FFC400', '#90EE90']
-            };
-        } else {
-            visualMapObj = {
-                bottom: '20px',
-                type: 'continuous',
-                precision: 3,
-                min: min,
-                max: max,
-                color: ['#CA0000', '#FFC400', '#90EE90']
-            };
-        }
-        const optionown = {
-            parallelAxis,
-            tooltip: {
-                trigger: 'item'
-            },
-            parallel: {
-                parallelAxisDefault: {
-                    tooltip: {
-                        show: true
-                    },
-                    axisLabel: {
-                        formatter: function (value: string): string {
-                            const length = value.length;
-                            if (length > 16) {
-                                const temp = value.split('');
-                                for (let i = 16; i < temp.length; i += 17) {
-                                    temp[i] += '\n';
-                                }
-                                return temp.join('');
-                            } else {
-                                return value;
-                            }
-                        }
-                    },
-                }
-            },
-            visualMap: metricType === 'numberType' ? visualMapObj : null,
-            series: {
-                type: 'parallel',
-                smooth: true,
-                lineStyle: {
-                    width: 2
-                },
-                data: parallelData
-            }
-        };
-        // please wait the data
-        this.setState({
-            option: optionown,
-            paraNodata: '',
-            succeedRenderCount: lengthofTrials,
-            sutrialCount: parallelData.length
-        });
-    }
-
-    // get swap parallel axis
-    getSwapArr = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
-        const newSelectedItems = [...this.state.swapyAxis];
-        if (item !== undefined) {
-            if (item.selected) {
-                // add the option if it's checked
-                newSelectedItems.push(item.key as string);
-            } else {
-                // remove the option if it's unchecked
-                const currIndex = newSelectedItems.indexOf(item.key as string);
-                if (currIndex > -1) {
-                    newSelectedItems.splice(currIndex, 1);
-                }
-            }
-            this.setState({
-                swapAxisArr: newSelectedItems,
-                swapyAxis: newSelectedItems
-            });
-        }
-    }
-
     reInit = (): void => {
         const { dataSource, expSearchSpace } = this.props;
         this.hyperParaPic(dataSource, expSearchSpace);
-    }
-
-    swapReInit = (): void => {
-        const { clickCounts, succeedRenderCount } = this.state;
-        const val = clickCounts + 1;
-        this.setState({ isLoadConfirm: true, clickCounts: val, });
-        const { paraBack, swapAxisArr } = this.state;
-        const paralDim = paraBack.parallelAxis;
-        const paraData = paraBack.data;
-        let temp: number;
-        let dim1: number;
-        let dim2: number;
-        let bool1: boolean = false;
-        let bool2: boolean = false;
-        let bool3: boolean = false;
-        Object.keys(paralDim).map(item => {
-            const paral = paralDim[item];
-            switch (paral.name) {
-                case swapAxisArr[0]:
-                    dim1 = paral.dim;
-                    bool1 = true;
-                    break;
-
-                case swapAxisArr[1]:
-                    dim2 = paral.dim;
-                    bool2 = true;
-                    break;
-
-                default:
-            }
-            if (bool1 && bool2) {
-                bool3 = true;
-            }
-        });
-        // swap dim's number
-        Object.keys(paralDim).map(item => {
-            if (bool3) {
-                if (paralDim[item].name === swapAxisArr[0]) {
-                    paralDim[item].dim = dim2;
-                }
-                if (paralDim[item].name === swapAxisArr[1]) {
-                    paralDim[item].dim = dim1;
-                }
-            }
-        });
-        paralDim.sort(this.sortDimY);
-        // swap data array
-        Object.keys(paraData).map(paraItem => {
-
-            temp = paraData[paraItem][dim1];
-            paraData[paraItem][dim1] = paraData[paraItem][dim2];
-            paraData[paraItem][dim2] = temp;
-        });
-        this.getOption(paraBack, succeedRenderCount);
-        // please wait the data
-        this.setState({
-            isLoadConfirm: false
-        });
-    }
-
-    sortDimY = (a: Dimobj, b: Dimobj): number => {
-        return a.dim - b.dim;
-    }
-
-    // deal with after swap data into pic
-    swapGraph = (paraBack: ParaObj, swapAxisArr: string[]): void => {
-        const paralDim = paraBack.parallelAxis;
-        const paraData = paraBack.data;
-        let temp: number;
-        let dim1: number;
-        let dim2: number;
-        let bool1: boolean = false;
-        let bool2: boolean = false;
-        let bool3: boolean = false;
-        Object.keys(paralDim).map(item => {
-            const paral = paralDim[item];
-            switch (paral.name) {
-                case swapAxisArr[0]:
-                    dim1 = paral.dim;
-                    bool1 = true;
-                    break;
-
-                case swapAxisArr[1]:
-                    dim2 = paral.dim;
-                    bool2 = true;
-                    break;
-
-                default:
-            }
-            if (bool1 && bool2) {
-                bool3 = true;
-            }
-        });
-        // swap dim's number
-        Object.keys(paralDim).map(item => {
-            if (bool3) {
-                if (paralDim[item].name === swapAxisArr[0]) {
-                    paralDim[item].dim = dim2;
-                }
-                if (paralDim[item].name === swapAxisArr[1]) {
-                    paralDim[item].dim = dim1;
-                }
-            }
-        });
-        paralDim.sort(this.sortDimY);
-        // swap data array
-        Object.keys(paraData).map(paraItem => {
-
-            temp = paraData[paraItem][dim1];
-            paraData[paraItem][dim1] = paraData[paraItem][dim2];
-            paraData[paraItem][dim2] = temp;
-        });
     }
 
     // select all final keys
@@ -688,35 +182,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                         className="para-filter-percent"
                     />
                     {this.finalKeysDropdown()}
-                    <Dropdown
-                        placeholder="Select options"
-                        selectedKeys={swapyAxis}
-                        onChange={this.getSwapArr}
-                        multiSelect
-                        options={
-                            dimName.map((key, item) => {
-                                return {
-                                    key: key, text: dimName[item]
-                                };
-                            })
-                        }
-                        styles={{ dropdown: { width: 240 } }}
-                    />
                     <PrimaryButton
                         text="Confirm"
-                        onClick={this.swapReInit}
                         disabled={isLoadConfirm}
                     />
                 </Stack>
-                <div className="searcHyper">
-                    <ReactEcharts
-                        option={option}
-                        style={this.chartMulineStyle}
-                        // lazyUpdate={true}
-                        notMerge={true} // update now
-                    />
-                    <div className="noneData">{paraNodata}</div>
-                </div>
+                <div className="parcoords" style={this.chartMulineStyle} ref={this.paraRef} />
             </div>
         );
     }
@@ -745,7 +216,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                 </div>
             );
         }
-
     };
 
 }

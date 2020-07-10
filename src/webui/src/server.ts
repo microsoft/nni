@@ -1,21 +1,16 @@
 import { Server, Model } from 'miragejs';
-import * as mnistTfv1RunningCheckStatus from './mock/mnist-tfv1-running.json';
 
-export function makeServer(environment = 'test', data = 'mnist-tfv1-running') {
-    let fullData;
-    if (data === 'mnist-tfv1-running') {
-        fullData = (mnistTfv1RunningCheckStatus as any).default;
-    }
+export function makeServer(data, environment = 'test') {
     return new Server({
         environment,
 
         routes() {
             this.namespace = '/api/v1/nni';
-            this.get('/check-status', fullData.checkStatus);
-            this.get('/experiment', fullData.experiment);
-            this.get('/metric-data', fullData.metricData);
-            this.get('/trial-jobs', fullData.trialJobs);
-            this.get('/version', 'v999.0' as any);
+            this.get('/check-status', data.checkStatus);
+            this.get('/experiment', data.experiment);
+            this.get('/metric-data', data.metricData);
+            this.get('/trial-jobs', data.trialJobs);
+            this.get('/version', () => { return 'v999.0' as any; });
         },
     })
 }

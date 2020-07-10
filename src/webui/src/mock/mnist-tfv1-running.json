@@ -7,7 +7,7 @@
         "id": "GD5MnU8G",
         "revision": 22,
         "execDuration": 172,
-        "logDir": "/home/v-yugzh/nni/experiments/GD5MnU8G",
+        "logDir": "/home/user/nni/experiments/GD5MnU8G",
         "nextSequenceId": 3,
         "params": {
             "authorName": "default",
@@ -22,13 +22,13 @@
                 "classArgs": {
                     "optimize_mode": "maximize"
                 },
-                "checkpointDir": "/home/v-yugzh/nni/experiments/GD5MnU8G/checkpoint"
+                "checkpointDir": "/home/user/nni/experiments/GD5MnU8G/checkpoint"
             },
             "versionCheck": true,
             "clusterMetaData": [
                 {
                     "key": "codeDir",
-                    "value": "/home/v-yugzh/nnidev/examples/trials/mnist-tfv1/."
+                    "value": "/home/user/nnidev/examples/trials/mnist-tfv1/."
                 },
                 {
                     "key": "command",
@@ -503,7 +503,7 @@
             "hyperParameters": [
                 "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.5263711332698766,\"conv_size\":7,\"hidden_size\":1024,\"batch_size\":1,\"learning_rate\":0.001},\"parameter_index\":0}"
             ],
-            "logPath": "file://localhost:/home/v-yugzh/nni/experiments/GD5MnU8G/trials/rIW79",
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/rIW79",
             "startTime": 1594299823975,
             "sequenceId": 0,
             "endTime": 1594299874953,
@@ -524,7 +524,7 @@
             "hyperParameters": [
                 "{\"parameter_id\":1,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.6442863649016913,\"conv_size\":2,\"hidden_size\":124,\"batch_size\":8,\"learning_rate\":0.0001},\"parameter_index\":0}"
             ],
-            "logPath": "file://localhost:/home/v-yugzh/nni/experiments/GD5MnU8G/trials/vNWGk",
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/vNWGk",
             "startTime": 1594299889024,
             "sequenceId": 1,
             "endTime": 1594299908983,
@@ -545,7 +545,7 @@
             "hyperParameters": [
                 "{\"parameter_id\":2,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8254386039941805,\"conv_size\":7,\"hidden_size\":1024,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
             ],
-            "logPath": "file://localhost:/home/v-yugzh/nni/experiments/GD5MnU8G/trials/IqYms",
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/IqYms",
             "startTime": 1594299919039,
             "sequenceId": 2
         }
