@@ -23,7 +23,7 @@ export class TrialGpuSummary {
     // The array of GPU information for each GPU card
     public gpuInfos: GPUInfo[];
     // GPU assigned status
-    occupiedGpuIndexMap: Map<number, number> = new Map<number, number>();
+    public assignedGpuIndexMap: Map<number, number> = new Map<number, number>();
 
     constructor(gpuCount: number, timestamp: string, gpuInfos: GPUInfo[]) {
         this.gpuCount = gpuCount;
@@ -97,7 +97,7 @@ export class EnvironmentInformation {
 
         const originalGpuSummary = this.gpuSummaries.get(nodeId);
         if (undefined === originalGpuSummary) {
-            newGpuSummary.occupiedGpuIndexMap = new Map<number, number>();
+            newGpuSummary.assignedGpuIndexMap = new Map<number, number>();
             this.gpuSummaries.set(nodeId, newGpuSummary);
         } else {
             originalGpuSummary.gpuCount = newGpuSummary.gpuCount;

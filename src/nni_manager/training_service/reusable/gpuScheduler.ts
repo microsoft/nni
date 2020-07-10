@@ -103,12 +103,12 @@ export class GpuScheduler {
             trial.assignedGpus.length > 0) {
             for (const gpuInfo of trial.assignedGpus) {
                 const defaultGpuSummary = trial.environment.defaultGpuSummary;
-                const num: number | undefined = defaultGpuSummary.occupiedGpuIndexMap.get(gpuInfo.index);
+                const num: number | undefined = defaultGpuSummary.assignedGpuIndexMap.get(gpuInfo.index);
                 if (num !== undefined) {
                     if (num === 1) {
-                        defaultGpuSummary.occupiedGpuIndexMap.delete(gpuInfo.index);
+                        defaultGpuSummary.assignedGpuIndexMap.delete(gpuInfo.index);
                     } else {
-                        defaultGpuSummary.occupiedGpuIndexMap.set(gpuInfo.index, num - 1);
+                        defaultGpuSummary.assignedGpuIndexMap.set(gpuInfo.index, num - 1);
                     }
                 }
             }
@@ -162,8 +162,8 @@ export class GpuScheduler {
                         // We should NOT allocate this GPU
                         // if users set useActiveGpu, use the gpu whether there is another activeProcess
                         if (designatedGpuIndices.size === 0 || designatedGpuIndices.has(gpuInfo.index)) {
-                            if (defaultGpuSummary.occupiedGpuIndexMap !== undefined) {
-                                const num: number | undefined = defaultGpuSummary.occupiedGpuIndexMap.get(gpuInfo.index);
+                            if (defaultGpuSummary.assignedGpuIndexMap !== undefined) {
+                                const num: number | undefined = defaultGpuSummary.assignedGpuIndexMap.get(gpuInfo.index);
                                 const maxTrialNumberPerGpu: number = environment.maxTrialNumberPerGpu ? environment.maxTrialNumberPerGpu : this.defaultSetting.maxTrialNumberPerGpu;
                                 const useActiveGpu: boolean = environment.useActiveGpu ? environment.useActiveGpu : this.defaultSetting.useActiveGpu;
                                 if ((num === undefined && (!useActiveGpu && gpuInfo.activeProcessNum === 0 || useActiveGpu)) ||
@@ -218,11 +218,11 @@ export class GpuScheduler {
         }
 
         allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
-            let num: number | undefined = defaultGpuSummary.occupiedGpuIndexMap.get(gpuInfo.index);
+            let num: number | undefined = defaultGpuSummary.assignedGpuIndexMap.get(gpuInfo.index);
             if (num === undefined) {
                 num = 0;
             }
-            defaultGpuSummary.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
+            defaultGpuSummary.assignedGpuIndexMap.set(gpuInfo.index, num + 1);
         });
         trialDetails.assignedGpus = allocatedGPUs;
 

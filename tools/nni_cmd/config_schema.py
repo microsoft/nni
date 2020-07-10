@@ -497,7 +497,8 @@ class NNIConfigSchema:
                                     or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
                 pai_resource_fields_required_list = ['gpuNum', 'cpuNum', 'memoryMB']
                 for required_field in pai_resource_fields_required_list:
-                    if experiment_config['trial'].get(required_field) is None and experiment_config['paiConfig'].get(required_field) is None:
+                    if experiment_config['trial'].get(required_field) is None and \
+                            experiment_config['paiConfig'].get(required_field) is None:
                         raise SchemaError('Please set {0} in trial or paiConfig configuration,\
                                     or set additional pai configuration file path in paiConfigPath!'.format(required_field))
 
