@@ -259,7 +259,9 @@ class ChannelMaskConflict(MaskFix):
                 _logger.debug('Layer: %s ', name)
                 _logger.debug('Original pruned filters: %s', str(all_zeros))
             # Update the masks for the layers in the dependency set
-            if fine_grained:
+            if fine_grained or out_channels is None:
+                # if use the fine-grained pruner or all the layers in
+                # this dependency set are not pruned
                 continue
             if not all_pruned:
                 # if some layer are not pruned at all

@@ -9,8 +9,8 @@ In addtion to the official tutorilas and examples, we encourage community contri
 
     NNI in Recommenders <RecommendersSvd>
     Automatically tuning SPTAG with NNI <SptagAutoTune>
-    Neural Architecture Search Comparison <NasComparision>
-    Hyper-parameter Tuning Algorithm Comparsion <HpoComparision>
+    Neural Architecture Search Comparison <NasComparison>
+    Hyper-parameter Tuning Algorithm Comparison <HpoComparison>
     Parallelizing Optimization for TPE <ParallelizingTpeSearch>
     Automatically tune systems with NNI <TuningSystems>
     NNI review article from Zhihu: - By Garvin Li <NNI_AutoFeatureEng>
