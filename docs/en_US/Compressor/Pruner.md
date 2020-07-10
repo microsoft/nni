@@ -379,52 +379,11 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for NetAdapt Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **short_term_fine_tuner:** Function to short-term fine tune the masked model.
-This function should include `model` as the only parameter, and fine tune the model for a short term after each pruning iteration.
+##### PyTorch
 
-    Example:
-    ```python
-    >>> def short_term_fine_tuner(model, epoch=3):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     criterion = torch.nn.CrossEntropyLoss()
-    >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    >>>     model.train()
-    >>>     for _ in range(epoch):
-    >>>         for batch_idx, (data, target) in enumerate(train_loader):
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             optimizer.zero_grad()
-    >>>             output = model(data)
-    >>>             loss = criterion(output, target)
-    >>>             loss.backward()
-    >>>             optimizer.step()
-    ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
+```eval_rst
+..  autoclass:: nni.compression.torch.NetAdaptPruner
+```
 
 
 ## SimulatedAnnealing Pruner
@@ -459,36 +418,13 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for SimulatedAnnealing Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
-            
+##### PyTorch
 
+```eval_rst
+..  autoclass:: nni.compression.torch.SimulatedAnnealingPruner
+```
+
+            
 ## AutoCompress Pruner
 For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
         1. Generate sparsities distribution using SimualtedAnnealingPruner
@@ -517,6 +453,12 @@ pruner.compress()
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for AutoCompress Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AutoCompressPruner
+```
 
 - **sparsity:** The target overall sparsity.
 - **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
