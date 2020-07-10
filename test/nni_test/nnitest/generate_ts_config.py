@@ -36,7 +36,7 @@ def update_training_service_config(args):
         if args.pai_token is not None:
             config[args.ts]['paiConfig']['token'] = args.pai_token
         if args.pai_reuse is not None:
-            config[args.ts]['paiConfig']['reuse'] = args.pai_reuse
+            config[args.ts]['paiConfig']['reuse'] = args.pai_reuse.lower() == 'true'
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.nni_manager_nfs_mount_path is not None:
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
     parser.add_argument("--pai_token", type=str)
-    parser.add_argument("--pai_reuse", type=bool)
+    parser.add_argument("--pai_reuse", type=str)
     parser.add_argument("--pai_storage_config_name", type=str)
     parser.add_argument("--nni_manager_nfs_mount_path", type=str)
     parser.add_argument("--container_nfs_mount_path", type=str)
