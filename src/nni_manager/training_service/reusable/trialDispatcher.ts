@@ -12,7 +12,7 @@ import * as component from '../../common/component';
 import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
+import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString, getIPV4Address } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
@@ -164,6 +164,9 @@ class TrialDispatcher implements TrainingService {
         this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
 
         // TODO it's a hard code of web channel, it needs to be improved.
+        if (this.runnerSettings.nniManagerIP === "" || this.runnerSettings.nniManagerIP === null) {
+            this.runnerSettings.nniManagerIP = getIPV4Address();
+        }
         this.runnerSettings.nniManagerPort = getBasePort() + 1;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
 
