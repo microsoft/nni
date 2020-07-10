@@ -105,8 +105,10 @@ export async function execCopydir(source: string, destination: string): Promise<
     for (const relPath of listDirWithIgnoredFiles(source, '', [])) {
         const sourcePath = path.join(source, relPath);
         const destPath = path.join(destination, relPath);
-        if (fs.statSync(sourcePath).isDirectory() && !fs.existsSync(sourcePath)) {
-            await fs.promises.mkdir(destPath);
+        if (fs.statSync(sourcePath).isDirectory()) {
+            if (!fs.existsSync(destPath)) {
+                await fs.promises.mkdir(destPath);
+            }
         } else {
             await fs.promises.copyFile(sourcePath, destPath);
         }
