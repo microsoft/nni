@@ -19,7 +19,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * 想要更容易**实现或试验新的自动机器学习算法**的研究员或数据科学家，包括：超参调优算法，神经网络搜索算法以及模型压缩算法。
 * 在机器学习平台中**支持自动机器学习**。
 
-### **[NNI v1.5 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
+### **[NNI v1.6 已发布！](https://github.com/microsoft/nni/releases) &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)**
 
 ## **NNI 功能一览**
 
@@ -84,6 +84,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
            <li><a href="docs/zh_CN/TrialExample/SklearnExamples.md">Scikit-learn</a></li>
            <li><a href="docs/zh_CN/TrialExample/EfficientNet.md">EfficientNet</a></li>
+           <li><a href="docs/zh_CN/TrialExample/OpEvoExamples.md">GPU Kernel 调优</li></a>
               <a href="docs/zh_CN/SupportedFramework_Library.md">更多...</a><br/>
           </ul>
         </ul>
@@ -137,6 +138,10 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
               <li><a href="docs/zh_CN/Compressor/Pruner.md#agp-pruner">AGP Pruner</a></li>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#slim-pruner">Slim Pruner</a></li>
               <li><a href="docs/zh_CN/Compressor/Pruner.md#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="docs/zh_CN/Compressor/Pruner.md#netadapt-pruner">NetAdapt Pruner</a></li>
+              <li><a href="docs/zh_CN/Compressor/Pruner.md#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+              <li><a href="docs/zh_CN/Compressor/Pruner.md#admm-pruner">ADMM Pruner</a></li>
+              <li><a href="docs/zh_CN/Compressor/Pruner.md#autocompress-pruner">AutoCompress Pruner</a></li>
             </ul>
             <b>量化</b>
             <ul>
@@ -164,7 +169,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
             <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
             </ul>
-            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>        
+            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>
       </ul>
       </td>
     </tr>
@@ -186,11 +191,12 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       <ul>
         <li><a href="docs/zh_CN/Tuner/CustomizeTuner.md">自定义 Tuner</a></li>
         <li><a href="docs/zh_CN/Assessor/CustomizeAssessor.md">自定义 Assessor</a></li>
+        <li><a href="docs/zh_CN/Tutorial/InstallCustomizedAlgos.md">安装自定义的 Tuner，Assessor，Advisor</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/zh_CN/TrainingService/SupportTrainingService.md">支持训练平台</li>
+        <li><a href="docs/zh_CN/TrainingService/Overview.md">支持训练平台</li>
         <li><a href="docs/zh_CN/TrainingService/HowToImplementTrainingService.md">实现训练平台</a></li>
       </ul>
       </td>
@@ -223,7 +229,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 注意：
 
 * 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
-* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda [在 Windows 上安装 NNI](docs/zh_CN/Tutorial/InstallationWin.md)。
 * 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/InstallationWin.md#faq)。
 
 ### **验证安装**
@@ -233,7 +239,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
    
    ```bash
-   git clone -b v1.5 https://github.com/Microsoft/nni.git
+   git clone -b v1.6 https://github.com/Microsoft/nni.git
    ```
 
 * 运行 MNIST 示例。
@@ -316,8 +322,7 @@ You can use these commands to get more information about the experiment
 经作者许可的一些 NNI 用法示例和相关文档。
 
 * ### **外部代码库** ### 
-   * 在 NNI 中运行 [ENAS](examples/tuners/enas_nni/README_zh_CN.md)
-   * 在 NNI 中运行 [神经网络架构结构搜索](examples/trials/nas_cifar10/README_zh_CN.md)
+   * 在 NNI 中运行 [ENAS](examples/nas/enas/README_zh_CN.md)
    * [NNI 中的自动特征工程](examples/feature_engineering/auto-feature-engineering/README_zh_CN.md)
    * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
@@ -333,9 +338,15 @@ You can use these commands to get more information about the experiment
 
 ## **反馈**
 
-* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
 * 在 [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true) 上使用 nni 标签提问。
+* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
+
+加入聊天组： 
+
+| Gitter                                                                                                      |   | 微信                                                                      |
+| ----------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------- |
+| ![图片](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png) |
 
 ## 相关项目
 

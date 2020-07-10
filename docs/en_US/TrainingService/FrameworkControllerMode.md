@@ -26,7 +26,7 @@ NNI supports running experiment using [FrameworkController](https://github.com/M
 
 ## Setup FrameworkController
 
-Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode.
+Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. [refer](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset)
 
 ## Design
 
@@ -83,6 +83,7 @@ If you use Azure Kubernetes Service, you should  set `frameworkcontrollerConfig`
 ```yaml
 frameworkcontrollerConfig:
   storage: azureStorage
+  serviceAccountName: {your_frameworkcontroller_service_account_name}
   keyVault:
     vaultName: {your_vault_name}
     name: {your_secert_name}

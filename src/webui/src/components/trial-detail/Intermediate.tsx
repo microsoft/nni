@@ -212,21 +212,23 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         this.drawIntermediate(source);
     }
 
-    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState): void {
-        const { isFilter, filterSource } = nextState;
-        const { whichGraph, source } = nextProps;
+    componentDidUpdate(prevProps: IntermediateProps, prevState: any): void {
+        if (this.props.source !== prevProps.source || this.state.isFilter !== prevState.isFilter) {
+            const { isFilter, filterSource } = this.state;
+            const { whichGraph, source } = this.props;
 
-        if (whichGraph === '4') {
-            if (isFilter === true) {
-                const pointVal = this.pointInput !== null ? this.pointInput.value : '';
-                const minVal = this.minValInput !== null ? this.minValInput.value : '';
-                if (pointVal === '' && minVal === '') {
-                    this.drawIntermediate(source);
+            if (whichGraph === 'Intermediate result') {
+                if (isFilter === true) {
+                    const pointVal = this.pointInput !== null ? this.pointInput.value : '';
+                    const minVal = this.minValInput !== null ? this.minValInput.value : '';
+                    if (pointVal === '' && minVal === '') {
+                        this.drawIntermediate(source);
+                    } else {
+                        this.drawIntermediate(filterSource);
+                    }
                 } else {
-                    this.drawIntermediate(filterSource);
+                    this.drawIntermediate(source);
                 }
-            } else {
-                this.drawIntermediate(source);
             }
         }
     }

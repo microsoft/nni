@@ -28,8 +28,8 @@ python3 model_prune_torch.py --pruner_name agp --pretrain_epochs 1 --prune_epoch
 echo 'testing mean_activation pruning'
 python3 model_prune_torch.py --pruner_name mean_activation --pretrain_epochs 1 --prune_epochs 1
 
-#echo "testing lottery ticket pruning..."
-#python3 lottery_torch_mnist_fc.py
+echo "testing lottery ticket pruning..."
+python3 lottery_torch_mnist_fc.py --train_epochs 1
 
 echo ""
 echo "===========================Testing: quantizers==========================="

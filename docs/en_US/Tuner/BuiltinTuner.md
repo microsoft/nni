@@ -31,7 +31,7 @@ Note: Please follow the format when you write your `config.yml` file. Some built
 
 <a name="TPE"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `TPE`
+### TPE
 
 > Built-in Tuner Name: **TPE**
 
@@ -60,17 +60,13 @@ tuner:
 
 <a name="Random"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
+### Random Search
 
 > Built-in Tuner Name: **Random**
 
 **Suggested scenario**
 
 Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. [Detailed Description](./HyperoptTuner.md)
-
-**classArgs Requirements:**
-
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
 
 **Example Configuration:**
 
@@ -84,7 +80,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
+### Anneal
 
 > Built-in Tuner Name: **Anneal**
 
@@ -111,7 +107,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Naïve Evolution`
+### Naïve Evolution
 
 > Built-in Tuner Name: **Evolution**
 
@@ -140,7 +136,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
+### SMAC
 
 > Built-in Tuner Name: **SMAC**
 
@@ -177,7 +173,7 @@ tuner:
 
 <a name="Batch"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
+### Batch Tuner
 
 > Built-in Tuner Name: BatchTuner
 
@@ -216,7 +212,7 @@ The search space file should include the high-level key `combine_params`. The ty
 
 <a name="GridSearch"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
+### Grid Search
 
 > Built-in Tuner Name: **Grid Search**
 
@@ -238,7 +234,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
+### Hyperband
 
 > Built-in Advisor Name: **Hyperband**
 
@@ -268,7 +264,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
+### Network Morphism
 
 > Built-in Tuner Name: **NetworkMorphism**
 
@@ -306,7 +302,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
+### Metis Tuner
 
 > Built-in Tuner Name: **MetisTuner**
 
@@ -334,7 +330,7 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
+### BOHB Advisor
 
 > Built-in Tuner Name: **BOHB**
 
@@ -379,7 +375,7 @@ advisor:
 
 <a name="GPTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `GP Tuner`
+### GP Tuner
 
 > Built-in Tuner Name: **GPTuner**
 
@@ -421,11 +417,11 @@ tuner:
 
 <a name="PPOTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
+### PPO Tuner
 
 > Built-in Tuner Name: **PPOTuner**
 
-Note that the only acceptable types within the search space is `mutable_layer`. `optional_input_size` can only be 0, 1, or [0, 1].
+Note that the only acceptable types within the search space are `layer_choice` and `input_choice`. For `input_choice`, `n_chosen` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command [`nnictl ss_gen`](../Tutorial/Nnictl.md).
 
 **Suggested scenario**
 
@@ -457,7 +453,7 @@ tuner:
 
 <a name="PBTTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
+### PBT Tuner
 
 > Built-in Tuner Name: **PBTTuner**
 

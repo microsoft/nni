@@ -31,7 +31,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 <a name="TPE"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `TPE`
+### TPE
 
 > 名称：**TPE**
 
@@ -59,17 +59,13 @@ tuner:
 
 <a name="Random"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
+### Random Search（随机搜索）
 
 > 名称：**Random**
 
 **建议场景**
 
 随机搜索，可用于每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 如果要均衡的探索搜索空间，它也很有用。 随机搜索可作为搜索算法的基准线。 [详细说明](./HyperoptTuner.md)
-
-**classArgs 要求：**
-
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 **配置示例：**
 
@@ -83,7 +79,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
+### Anneal（退火算法）
 
 > 名称：**Anneal**
 
@@ -109,13 +105,13 @@ tuner:
 
 <a name="Evolution"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Naïve Evolution`
+### Naïve Evolution（朴素进化）
 
 > 名称：**Evolution**
 
 **建议场景**
 
-其计算资源要求相对较高。 特别是，它需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
+其计算资源要求相对较高。 特别是，它需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或使用了 Assessor，就非常合适。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。 [详细说明](./EvolutionTuner.md)
 
 **classArgs 要求：**
 
@@ -138,7 +134,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
+### SMAC
 
 > 名称：**SMAC**
 
@@ -175,7 +171,7 @@ tuner:
 
 <a name="Batch"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
+### Batch Tuner（批处理 Tuner）
 
 > 名称：BatchTuner
 
@@ -214,7 +210,7 @@ tuner:
 
 <a name="GridSearch"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
+### Grid Search（遍历搜索）
 
 > 名称：**Grid Search**
 
@@ -236,7 +232,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
+### Hyperband
 
 > 名称：**Hyperband**
 
@@ -266,7 +262,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
+### Network Morphism
 
 > 名称：**NetworkMorphism**
 
@@ -304,7 +300,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
+### Metis Tuner
 
 > 名称：**MetisTuner**
 
@@ -332,7 +328,7 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
+### BOHB Advisor
 
 > 名称：**BOHB**
 
@@ -377,7 +373,7 @@ advisor:
 
 <a name="GPTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `GP Tuner`
+### GP Tuner
 
 > 名称：**GPTuner**
 
@@ -419,11 +415,11 @@ tuner:
 
 <a name="PPOTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `PPO Tuner`
+### PPO Tuner
 
 > 内置 Tuner 名称：**PPOTuner**
 
-搜索空间类型仅支持 `mutable_layer`。 `optional_input_size` 只能是 0, 1, 或 [0, 1]。
+注意，搜索空间仅接受 `layer_choice` 和 `input_choice` 类型。 `input_choice`, `n_chosen` 只能是 0, 1, 或 [0, 1]。 注意，NAS 的搜索空间文件通常通过 [`nnictl ss_gen`](../Tutorial/Nnictl.md) 命令自动生成。
 
 **建议场景**
 
@@ -455,7 +451,7 @@ tuner:
 
 <a name="PBTTuner"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `PBT Tuner`
+### PBT Tuner
 
 > 内置 Tuner 名称：**PBTTuner**
 
@@ -466,7 +462,7 @@ Population Based Training (PBT，基于种群的训练)，将并扩展并行搜�
 **classArgs 要求：**
 
 * **optimize_mode** (*'maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **all_checkpoint_dir** (*str, 可选, 默认为 None*) - Trial 保存读取检查点的目录，如果不指定，其为 "~/nni/checkpoint/<exp-id>"。 注意，如果 Experiment 不是本机模式，用户需要提供能被所有 Trial 所访问的共享存储。
+* **all_checkpoint_dir** (*str, 可选, 默认为 None*) - Trial 保存读取检查点的目录，如果不指定，其为 "~/nni/checkpoint/<exp-id>". 注意，如果 Experiment 不是本机模式，用户需要提供能被所有 Trial 所访问的共享存储。
 * **population_size** (*int, 可选, 默认为 10*) - 种群的 Trial 数量。 每个步骤有此数量的 Trial。 在 NNI 的实现中，一步表示每个 Trial 运行一定次数 Epoch，此 Epoch 的数量由用户来指定。
 * **factors** (*tuple, 可选, 默认为 (1.2, 0.8)*) - 超参变动量的因子。
 * **fraction** (*float, 可选, 默认为 0.2*) - 选择的最低和最高 Trial 的比例。

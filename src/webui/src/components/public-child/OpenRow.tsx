@@ -3,7 +3,6 @@ import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
 import { Trial } from '../../static/model/trial';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { MANAGER_IP } from '../../static/const';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
@@ -60,31 +59,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
-        const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
-        const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
             <Stack className="openRow">
                 <Stack className="openRowContent">
                     <Pivot>
                         <PivotItem headerText="Parameters" key="1" itemIcon="TestParameter">
-                            {
-                                EXPERIMENT.multiPhase
-                                    ?
-                                    <Stack className="link">
-                                        {
-                                            `
-                                        Trails for multiphase experiment will return a set of parameters,
-                                        we are listing the latest parameter in webportal.
-                                        For the entire parameter set, please refer to the following "
-                                        `
-                                        }
-                                        <a href={trialLink} rel="noopener noreferrer" target="_blank">{trialLink}</a>{`".`}
-                                        <div>Current Phase: {multiProgress}.</div>
-                                    </Stack>
-                                    :
-                                    null
-                            }
                             {
                                 trial.info.hyperParameters !== undefined
                                     ?

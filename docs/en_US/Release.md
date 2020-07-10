@@ -1,5 +1,46 @@
 # ChangeLog
 
+## Release 1.6 - 5/26/2020
+
+### Major Features
+
+#### New Features and improvement
+* Improve IPC limitation to 100W
+* improve code storage upload logic among trials in non-local platform
+* support `__version__` for SDK version
+* support windows dev intall
+
+#### Web UI
+* Show trial error message
+* finalize homepage layout
+* Refactor overview's best trials module
+* Remove multiphase from webui
+* add tooltip for trial concurrency in the overview page
+* Show top trials for hyper-parameter graph
+
+#### HPO Updates
+* Improve PBT on failure handling and support experiment resume for PBT
+
+#### NAS Updates
+* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
+* Use OrderedDict for LayerChoice
+* Prettify the format of export
+* Replace layer choice with selected module after applied fixed architecture
+
+#### Model Compression Updates
+* Model compression PyTorch 1.4 support
+
+#### Training Service Updates
+* update pai yaml merge logic
+* support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
+
+### Bug Fix
+* fix dev install
+* SPOS example crash when the checkpoints do not have state_dict
+* Fix table sort issue when experiment had failed trial
+* Support multi python env (conda, pyenv etc)
+
+
 ## Release 1.5 - 4/13/2020
 
 ### New Features and Documentation
@@ -64,7 +105,7 @@
 * WebUI refactor: adopt fabric framework
 
 #### Others
-* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
 * Support canceling the trials in UNKNOWN state
 * Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
 
@@ -206,7 +247,7 @@
 
 * Documentation
     - Update the docs structure  -Issue #1231
-    - [Multi phase document improvement](AdvancedFeature/MultiPhase.md)   -Issue #1233  -PR #1242
+    - (deprecated) Multi phase document improvement   -Issue #1233  -PR #1242
          + Add configuration example
     - [WebUI description improvement](Tutorial/WebUI.md)  -PR #1419
 
@@ -234,12 +275,10 @@
     * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
 * [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md) 
 
-* Multiphase experiment supports
+* (deprecated) Multiphase experiment supports
     * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
     * Added multiphase capability for the following builtin tuners: 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
-    
-    For details, please refer to [Write a tuner that leverages multi-phase](AdvancedFeature/MultiPhase.md)
 
 * Web Portal
     * Enable trial comparation in Web Portal. For details, refer to [View trials status](Tutorial/WebUI.md)
@@ -299,7 +338,7 @@
   * NNI running on windows for local mode
 * [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment)
+* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md)
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
 * [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig)
@@ -549,4 +588,3 @@ Initial release of Neural Network Intelligence (NNI).
   * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu
 * Others
   * Support simple GPU job scheduling
-

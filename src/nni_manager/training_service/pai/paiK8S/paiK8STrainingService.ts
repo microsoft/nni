@@ -1,21 +1,5 @@
-/**
- * Copyright (c) Microsoft Corporation
- * All rights reserved.
- *
- * MIT License
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
- * to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
- * BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
 
 'use strict';
 
@@ -53,7 +37,8 @@ const yaml = require('js-yaml');
 @component.Singleton
 class PAIK8STrainingService extends PAITrainingService {
     protected paiTrialConfig: NNIPAIK8STrialConfig | undefined;
-    private paiJobConfig: undefined;
+    private copyExpCodeDirPromise?: Promise<void>;
+    private paiJobConfig: any;
     private nniVersion: string | undefined;
     constructor() {
         super();
@@ -78,7 +63,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 }
                 break;
 
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 if (this.paiClusterConfig === undefined) {
                     this.log.error('pai cluster config is not initialized');
                     break;
@@ -86,10 +71,15 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.paiTrialConfig.codeDir);
+                const nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
+                await execMkdir(nniManagerNFSExpCodeDir);
+                //Copy codeDir files to local working folder
+                this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, nniManagerNFSExpCodeDir);
                 if (this.paiTrialConfig.paiConfigPath) {
                     this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 }
                 break;
+            }
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 this.nniVersion = this.versionCheck ? await getVersion() : '';
@@ -152,6 +142,7 @@ class PAIK8STrainingService extends PAITrainingService {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
+        const containerNFSExpCodeDir = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/nni-code`;
         const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobDetail.id}`;
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const nniPaiTrialCommand: string = String.Format(
@@ -162,6 +153,7 @@ class PAIK8STrainingService extends PAITrainingService {
             this.experimentId,
             trialJobDetail.form.sequenceId,
             this.isMultiPhase,
+            containerNFSExpCodeDir,
             command,
             nniManagerIp,
             this.paiRestServerPort,
@@ -182,7 +174,7 @@ class PAIK8STrainingService extends PAITrainingService {
 
         let nniJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
-            nniJobConfig = this.paiJobConfig;
+            nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             // Each taskRole will generate new command in NNI's command format
             // Each command will be formatted to NNI style
@@ -225,9 +217,9 @@ class PAIK8STrainingService extends PAITrainingService {
                     }
                 },
                 extras: {
-                    'com.microsoft.pai.runtimeplugin': [
+                    'storages': [
                         {
-                            plugin: this.paiTrialConfig.paiStoragePlugin
+                            name: this.paiTrialConfig.paiStorageConfigName
                         }
                     ],
                     submitFrom: 'submit-job-v2'
@@ -264,27 +256,28 @@ class PAIK8STrainingService extends PAITrainingService {
             throw new Error('paiJobRestServer is not initialized');
         }
 
+        // Make sure experiment code files is copied from local to NFS
+        if (this.copyExpCodeDirPromise !== undefined) {
+            await this.copyExpCodeDirPromise;
+        }
+
         this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
 
         // Step 1. Prepare PAI job configuration
         //create trial local working folder locally.
         await execMkdir(trialJobDetail.logPath);
-
-        const runScriptContent: string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local files
-        await fs.promises.writeFile(path.join(trialJobDetail.logPath, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialJobDetail.logPath, 'install_nni.sh'), CONTAINER_INSTALL_NNI_SHELL_FORMAT, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local working folders
         if (trialJobDetail.form !== undefined) {
             await this.writeParameterFile(trialJobDetail.logPath, trialJobDetail.form.hyperParameters);
         }
 
-        //Copy codeDir files to local working folder
-        await execCopydir(this.paiTrialConfig.codeDir, trialJobDetail.logPath);
         //Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
         this.log.debug(paiJobConfig);
-        // Step 3. Submit PAI job via Rest call
+        // Step 2. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,

@@ -4,7 +4,7 @@ import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } f
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
-    private intermediates: (MetricDataRecord | undefined)[] = [ ];
+    private intermediates: (MetricDataRecord | undefined)[] = [];
     public final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 
@@ -29,7 +29,7 @@ class Trial implements TableObj {
     }
 
     get intermediateMetrics(): MetricDataRecord[] {
-        const ret: MetricDataRecord[] = [ ];
+        const ret: MetricDataRecord[] = [];
         for (let i = 0; i < this.intermediates.length; i++) {
             if (this.intermediates[i]) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -80,6 +80,8 @@ class Trial implements TableObj {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
+            jobId: this.info.jobId,
+            parameterId: this.info.parameterId,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             startTime: this.info.startTime!,
             endTime: this.info.endTime,
@@ -122,8 +124,8 @@ class Trial implements TableObj {
 
     get description(): Parameters {
         const ret: Parameters = {
-            parameters: { },
-            intermediate: [ ],
+            parameters: {},
+            intermediate: [],
             multiProgress: 1
         };
         const tempHyper = this.info.hyperParameters;
@@ -142,7 +144,7 @@ class Trial implements TableObj {
             ret.logPath = this.info.logPath;
         }
 
-        const mediate: number[] = [ ];
+        const mediate: number[] = [];
         for (const items of this.intermediateMetrics) {
             if (typeof parseMetrics(items.data) === 'object') {
                 mediate.push(parseMetrics(items.data).default);
@@ -156,6 +158,11 @@ class Trial implements TableObj {
 
     get color(): string | undefined {
         return undefined;
+    }
+
+    public finalKeys(): string[] {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return Object.keys(this.acc!);
     }
 
     /* table obj end */

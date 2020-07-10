@@ -7,6 +7,7 @@ import {
 import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
 import '../../static/style/logDrawer.scss';
+import { TrialManager } from '../../static/model/trialmanager';
 
 interface ExpDrawerProps {
     isVisble: boolean;
@@ -37,27 +38,27 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                 axios.get(`${MANAGER_IP}/trial-jobs`),
                 axios.get(`${MANAGER_IP}/metric-data`)
             ])
-            .then(axios.spread((res, res1, res2) => {
-                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
-                    if (res.data.params.searchSpace) {
-                        res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
+            .then(axios.spread((resExperiment, resTrialJobs, resMetricData) => {
+                if (resExperiment.status === 200 && resTrialJobs.status === 200 && resMetricData.status === 200) {
+                    if (resExperiment.data.params.searchSpace) {
+                        resExperiment.data.params.searchSpace = JSON.parse(resExperiment.data.params.searchSpace);
                     }
-                    const trialMessagesArr = res1.data;
-                    const interResultList = res2.data;
+                    const trialMessagesArr = TrialManager.expandJobsToTrials(resTrialJobs.data);
+                    const interResultList = resMetricData.data;
                     Object.keys(trialMessagesArr).map(item => {
                         // not deal with trial's hyperParameters
                         const trialId = trialMessagesArr[item].id;
                         // add intermediate result message
                         trialMessagesArr[item].intermediate = [];
                         Object.keys(interResultList).map(key => {
-                            const interId = interResultList[key].trialJobId;
+                            const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
                             if (trialId === interId) {
                                 trialMessagesArr[item].intermediate.push(interResultList[key]);
                             }
                         });
                     });
                     const result = {
-                        experimentParameters: res.data,
+                        experimentParameters: resExperiment.data,
                         trialMessage: trialMessagesArr
                     };
                     if (this._isCompareMount === true) {

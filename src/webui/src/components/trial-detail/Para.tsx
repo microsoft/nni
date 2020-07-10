@@ -1,8 +1,9 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { filterByStatus } from '../../static/function';
-import { Stack, PrimaryButton, Dropdown, IDropdownOption, } from 'office-ui-fabric-react'; // eslint-disable-line no-unused-vars
-import { ParaObj, Dimobj, TableObj } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { Stack, PrimaryButton, Dropdown, IDropdownOption } from 'office-ui-fabric-react';
+import { ParaObj, Dimobj, TableObj } from '../../static/interface';
 import 'echarts/lib/chart/parallel';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -27,6 +28,10 @@ interface ParaState {
     // office-fabric-ui
     selectedItem?: { key: string | number | undefined }; // percent Selector
     swapyAxis?: string[]; // yAxis Selector
+    paraYdataNested: number[][];
+    isNested: false;
+    showFinalMetricKey: string;
+    metricType: string;
 }
 
 interface ParaProps {
@@ -67,7 +72,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             succeedRenderCount: 10000000,
             clickCounts: 1,
             isLoadConfirm: false,
-            swapyAxis: []
+            swapyAxis: [],
+            paraYdataNested: [],
+            isNested: false,
+            showFinalMetricKey: "default",
+            metricType: 'numberType'
         };
     }
 
@@ -78,27 +87,39 @@ class Para extends React.Component<ParaProps, ParaState> {
             lengthofTrials: number
         ): void => {
             // get data for every lines. if dim is choice type, number -> toString()
-            const paraYdata: number[][] = [];
-            Object.keys(eachTrialParams).map(item => {
-                const temp: number[] = [];
-                for (let i = 0; i < dimName.length; i++) {
-                    if ('type' in parallelAxis[i]) {
-                        temp.push(eachTrialParams[item][dimName[i]].toString());
-                    } else {
-                        // default metric
-                        temp.push(eachTrialParams[item][dimName[i]]);
+            let paraYdata: number[][] = [];
+            const { isNested } = this.state;
+            if (isNested === false) {
+                for (const item of eachTrialParams) {
+                    const temp: number[] = [];
+                    for (let i = 0; i < dimName.length; i++) {
+                        if ('type' in parallelAxis[i]) {
+                            temp.push(item[dimName[i]].toString());
+                        } else {
+                            // default metric
+                            temp.push(item[dimName[i]]);
+                        }
                     }
+                    paraYdata.push(temp);
                 }
-                paraYdata.push(temp);
-            });
-            // add acc
+            } else {
+                paraYdata = this.state.paraYdataNested;
+            }
+            // add metric value
             Object.keys(paraYdata).map(item => {
                 paraYdata[item].push(accPara[item]);
             });
+
             // according acc to sort ydata // sort to find top percent dataset
             if (paraYdata.length !== 0) {
                 const len = paraYdata[0].length - 1;
-                paraYdata.sort((a, b) => b[len] - a[len]);
+                // show top trials
+                if (EXPERIMENT.optimizeMode === 'minimize') {
+                    paraYdata.sort((a, b) => a[len] - b[len]);
+                }
+                if (EXPERIMENT.optimizeMode === 'maximize') {
+                    paraYdata.sort((a, b) => b[len] - a[len]);
+                }
             }
             const paraData = {
                 parallelAxis: parallelAxis,
@@ -126,7 +147,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         const lenOfDataSource: number = dataSource.length;
         const accPara: number[] = [];
         // specific value array
-        const eachTrialParams: string[] = [];
+        const eachTrialParams: Array<any> = [];
         // experiment interface search space obj
         const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
         // nest search space
@@ -137,13 +158,15 @@ class Para extends React.Component<ParaProps, ParaState> {
                 return;
             }
         });
-        const dimName = Object.keys(searchRange);
-        this.setState({ dimName: dimName });
-
+        let dimName: string[] = [];
         const parallelAxis: Array<Dimobj> = [];
         // search space range and specific value [only number]
         let i = 0;
+        const yAxisOrderList = new Map();
+        this.setState({ isNested: isNested });
         if (isNested === false) {
+            dimName = Object.keys(searchRange);
+            this.setState({ dimName: dimName });
             for (i; i < dimName.length; i++) {
                 const data: string[] = [];
                 const searchKey = searchRange[dimName[i]];
@@ -216,37 +239,25 @@ class Para extends React.Component<ParaProps, ParaState> {
                 }
             }
         } else {
-            for (i; i < dimName.length; i++) {
-                const searchKey = searchRange[dimName[i]];
-                const data: string[] = [];
-                let j = 0;
-                switch (searchKey._type) {
-                    case 'choice':
-                        for (j; j < searchKey._value.length; j++) {
-                            const item = searchKey._value[j];
-                            Object.keys(item).map(key => {
-                                if (key !== '_name' && key !== '_type') {
-                                    Object.keys(item[key]).map(index => {
-                                        if (index !== '_type') {
-                                            const realChoice = item[key][index];
-                                            Object.keys(realChoice).map(m => {
-                                                data.push(`${item._name}_${realChoice[m]}`);
-                                            });
-                                        }
-                                    });
-                                }
-                            });
+            for (const parallelAxisName in searchRange) {
+                const data: any[] = [];
+                dimName.push(parallelAxisName);
+
+                for (const choiceItem in searchRange[parallelAxisName]) {
+                    if (choiceItem === '_value') {
+                        for (const item in searchRange[parallelAxisName][choiceItem]) {
+                            data.push(searchRange[parallelAxisName][choiceItem][item]._name);
                         }
-                        data.push('null');
+                        yAxisOrderList.set(parallelAxisName, JSON.parse(JSON.stringify(data)));
                         parallelAxis.push({
                             dim: i,
-                            name: dimName[i],
-                            type: 'category',
                             data: data,
+                            name: parallelAxisName,
+                            type: 'category',
                             boundaryGap: true,
                             axisLine: {
                                 lineStyle: {
-                                    type: 'dotted', // axis type,solid dashed dotted
+                                    type: 'dotted', // axis type,solid，dashed，dotted
                                     width: 1
                                 }
                             },
@@ -259,20 +270,50 @@ class Para extends React.Component<ParaProps, ParaState> {
                                 show: true,
                                 interval: 0,
                                 // rotate: 30
-                            },
+                            }
                         });
-                        break;
-                    default:
-                        parallelAxis.push({
-                            dim: i,
-                            name: dimName[i]
-                        });
+                        i++;
+                        for (const item in searchRange[parallelAxisName][choiceItem]) {
+                            for (const key in searchRange[parallelAxisName][choiceItem][item]) {
+                                if (key !== '_name') {
+                                    dimName.push(key);
+                                    parallelAxis.push({
+                                        dim: i,
+                                        data: searchRange[parallelAxisName][choiceItem][item][key]._value.concat('null'),
+                                        name: `${searchRange[parallelAxisName][choiceItem][item]._name}_${key}`,
+                                        type: 'category',
+                                        boundaryGap: true,
+                                        axisLine: {
+                                            lineStyle: {
+                                                type: 'dotted', // axis type,solid，dashed，dotted
+                                                width: 1
+                                            }
+                                        },
+                                        axisTick: {
+                                            show: true,
+                                            interval: 0,
+                                            alignWithLabel: true,
+                                        },
+                                        axisLabel: {
+                                            show: true,
+                                            interval: 0,
+                                            // rotate: 30
+                                        }
+                                    });
+                                    i++;
+                                }
+                            }
+                        }
+                    }
                 }
             }
+            this.setState({ dimName: dimName });
         }
+        // metric yAxis
+        const { showFinalMetricKey } = this.state;
         parallelAxis.push({
             dim: i,
-            name: 'default metric',
+            name: showFinalMetricKey,
             scale: true,
             nameTextStyle: {
                 fontWeight: 700
@@ -284,6 +325,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 tooltip: {
                     trigger: 'item'
                 },
+
                 parallel: {
                     parallelAxisDefault: {
                         tooltip: {
@@ -325,33 +367,57 @@ class Para extends React.Component<ParaProps, ParaState> {
         } else {
             Object.keys(dataSource).map(item => {
                 const trial = dataSource[item];
-                eachTrialParams.push(trial.description.parameters || '');
+                eachTrialParams.push(trial.description.parameters);
                 // may be a succeed trial hasn't final result
                 // all detail page may be break down if havn't if
+                // metric yAxis data
                 if (trial.acc !== undefined) {
-                    if (trial.acc.default !== undefined) {
-                        accPara.push(JSON.parse(trial.acc.default));
+                    const val = trial.acc[showFinalMetricKey];
+                    if (val !== undefined) {
+                        const typeOfVal = typeof val;
+                        if(typeOfVal === 'number'){
+                            this.setState(() => ({metricType: 'numberType'}));
+                        } else {
+                            // string type
+                            parallelAxis[parallelAxis.length - 1].type = 'category';
+                            parallelAxis[parallelAxis.length - 1].data = [val];
+                            this.setState(() => ({metricType: 'stringType'}));
+                        }
+                        accPara.push(val);
                     }
                 }
             });
-            // nested search space, deal data
+            // nested search space, fill all yAxis data
             if (isNested !== false) {
-                eachTrialParams.forEach(element => {
-                    Object.keys(element).forEach(key => {
-                        const item = element[key];
-                        if (typeof item === 'object') {
-                            Object.keys(item).forEach(index => {
-                                if (index !== '_name') {
-                                    element[key] = `${item._name}_${item[index]}`;
-                                } else {
-                                    element[key] = 'null';
+                const renderDataSource: Array<any> = [];
+                for (const i in eachTrialParams) {
+                    const eachTrialData: Array<any> = [];
+                    for (const m in eachTrialParams[i]) {
+                        const eachTrialParamsObj = eachTrialParams[i][m];
+                        for (const n in yAxisOrderList.get(m)) {
+                            if (yAxisOrderList.get(m)[n] === eachTrialParamsObj._name) {
+                                for (const index in eachTrialParamsObj) {
+                                    if (index !== '_name') {
+                                        eachTrialData.push(eachTrialParamsObj[index].toString());
+                                    }
+                                    if (eachTrialParamsObj[index] === 'Empty') {
+                                        eachTrialData.push('Empty');
+                                    }
                                 }
-                            });
+                            } else {
+                                if (yAxisOrderList.get(m)[n] === 'Empty') {
+                                    eachTrialData.push(eachTrialParamsObj._name.toString());
+                                } else {
+                                    eachTrialData.push('null');
+                                }
+                            }
                         }
-                    });
-                });
+                    }
+                    renderDataSource.push(eachTrialData);
+                }
+                this.setState({ paraYdataNested: renderDataSource });
             }
-            // if not return final result
+            
             const maxVal = accPara.length === 0 ? 1 : Math.max(...accPara);
             const minVal = accPara.length === 0 ? 1 : Math.min(...accPara);
             this.setState({ max: maxVal, min: minVal }, () => {
@@ -375,7 +441,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     // deal with response data into pic data
     getOption = (dataObj: ParaObj, lengthofTrials: number): void => {
         // dataObj [[y1], [y2]... [default metric]]
-        const { max, min } = this.state;
+        const { max, min, metricType } = this.state;
         const parallelAxis = dataObj.parallelAxis;
         const paralleData = dataObj.data;
         let visualMapObj = {};
@@ -423,7 +489,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     },
                 }
             },
-            visualMap: visualMapObj,
+            visualMap: metricType === 'numberType' ? visualMapObj : null,
             series: {
                 type: 'parallel',
                 smooth: true,
@@ -580,19 +646,29 @@ class Para extends React.Component<ParaProps, ParaState> {
         });
     }
 
+    // select all final keys
+    updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
+        if (item !== undefined) {
+            this.setState({ showFinalMetricKey: item.key }, () => { this.reInit() });
+        }
+    }
+
     componentDidMount(): void {
         this.reInit();
     }
 
-    componentWillReceiveProps(nextProps: ParaProps): void {
-        const { dataSource, expSearchSpace, whichGraph } = nextProps;
-        if (whichGraph === '2') {
-            this.hyperParaPic(dataSource, expSearchSpace);
+    componentDidUpdate(prevProps: ParaProps): void {
+        if (this.props.dataSource !== prevProps.dataSource) {
+            const { dataSource, expSearchSpace, whichGraph } = this.props;
+            if (whichGraph === 'Hyper-parameter') {
+                this.hyperParaPic(dataSource, expSearchSpace);
+            }
         }
     }
 
     render(): React.ReactNode {
         const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
+
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
@@ -608,9 +684,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.8', text: '80%' },
                             { key: '1', text: '100%' },
                         ]}
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 120 } }}
                         className="para-filter-percent"
                     />
+                    {this.finalKeysDropdown()}
                     <Dropdown
                         placeholder="Select options"
                         selectedKeys={swapyAxis}
@@ -623,7 +700,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                                 };
                             })
                         }
-                        styles={{ dropdown: { width: 300 } }}
+                        styles={{ dropdown: { width: 240 } }}
                     />
                     <PrimaryButton
                         text="Confirm"
@@ -643,6 +720,34 @@ class Para extends React.Component<ParaProps, ParaState> {
             </div>
         );
     }
+
+    private finalKeysDropdown = (): any => {
+        const { showFinalMetricKey } = this.state;
+        if (TRIALS.finalKeys().length === 1) {
+            return null;
+        } else {
+            const finalKeysDropdown: any = [];
+            TRIALS.finalKeys().forEach(item => {
+                finalKeysDropdown.push({
+                    key: item, text: item
+                });
+            });
+            return (
+                <div>
+                    <span className="para-filter-text para-filter-middle">Metrics</span>
+                    <Dropdown
+                        selectedKey={showFinalMetricKey}
+                        options={finalKeysDropdown}
+                        onChange={this.updateEntries}
+                        styles={{ root: { width: 150, display: 'inline-block' } }}
+                        className="para-filter-percent"
+                    />
+                </div>
+            );
+        }
+
+    };
+
 }
 
 export default Para;

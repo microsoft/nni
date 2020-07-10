@@ -59,11 +59,6 @@ def tf2(func):
 
     return test_tf2_func
 
-
-# for fpgm filter pruner test
-w = np.array([[[[i + 1] * 3] * 3] * 5 for i in range(10)])
-
-
 class CompressorTestCase(TestCase):
     def test_torch_quantizer_modules_detection(self):
         # test if modules can be detected
@@ -125,11 +120,12 @@ class CompressorTestCase(TestCase):
         https://arxiv.org/pdf/1811.00250.pdf
 
         So if sparsity is 0.2, the expected masks should mask out w[4] and w[5], this can be verified through:
-        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))`
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 125., 125., 125., 125.]))`
 
         If sparsity is 0.6, the expected masks should mask out w[2] - w[7], this can be verified through:
-        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))`
+        `all(torch.sum(masks, (1, 2, 3)).numpy() == np.array([125., 125., 0., 0., 0., 0., 0., 0., 125., 125.]))`
         """
+        w = np.array([np.ones((5, 5, 5)) * (i+1) for i in range(10)]).astype(np.float32)
 
         model = TorchModel()
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
@@ -137,16 +133,17 @@ class CompressorTestCase(TestCase):
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(model.conv2)
-        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
+        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 125., 125., 125., 125.]))
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         model.conv2.if_calculated = False
         model.conv2.config = config_list[0]
         masks = pruner.calc_mask(model.conv2)
-        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([45., 45., 0., 0., 0., 0., 0., 0., 45., 45.]))
+        assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 0., 0., 0., 0., 0., 0., 125., 125.]))
 
     @tf2
     def test_tf_fpgm_pruner(self):
+        w = np.array([np.ones((5, 3, 3)) * (i+1) for i in range(10)]).astype(np.float32)
         model = get_tf_model()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}]
 
@@ -167,25 +164,26 @@ class CompressorTestCase(TestCase):
         PRUNING FILTERS FOR EFFICIENT CONVNETS,
         https://arxiv.org/abs/1608.08710
 
-        So if sparsity is 0.2, the expected masks should mask out filter 0, this can be verified through:
-        `all(torch.sum(mask1, (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))`
+        So if sparsity is 0.2 for conv1, the expected masks should mask out filter 0, this can be verified through:
+        `all(torch.sum(mask1, (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))`
 
-        If sparsity is 0.6, the expected masks should mask out filter 0,1,2, this can be verified through:
-        `all(torch.sum(mask2, (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))`
+        If sparsity is 0.6 for conv2, the expected masks should mask out filter 0,1,2, this can be verified through:
+        `all(torch.sum(mask2, (1, 2, 3)).numpy() == np.array([0., 0., 0., 0., 0., 0., 125., 125., 125., 125.]))`
         """
-        w = np.array([np.zeros((3, 3, 3)), np.ones((3, 3, 3)), np.ones((3, 3, 3)) * 2,
-                      np.ones((3, 3, 3)) * 3, np.ones((3, 3, 3)) * 4])
+        w1 = np.array([np.ones((1, 5, 5))*i for i in range(5)]).astype(np.float32)
+        w2 = np.array([np.ones((5, 5, 5))*i for i in range(10)]).astype(np.float32)
+
         model = TorchModel()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
                        {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
         pruner = torch_compressor.L1FilterPruner(model, config_list)
 
-        model.conv1.module.weight.data = torch.tensor(w).float()
-        model.conv2.module.weight.data = torch.tensor(w).float()
+        model.conv1.module.weight.data = torch.tensor(w1).float()
+        model.conv2.module.weight.data = torch.tensor(w2).float()
         mask1 = pruner.calc_mask(model.conv1)
         mask2 = pruner.calc_mask(model.conv2)
-        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 27., 27., 27., 27.]))
-        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 27., 27.]))
+        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))
+        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0., 0., 0., 0., 125., 125., 125., 125.]))
 
     def test_torch_slim_pruner(self):
         """

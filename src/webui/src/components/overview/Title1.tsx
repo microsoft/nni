@@ -4,7 +4,7 @@ import '../../static/style/overviewTitle.scss';
 interface Title1Props {
     text: string;
     icon?: string;
-    bgcolor?: string;
+    fontColor?: string;
 }
 
 class Title1 extends React.Component<Title1Props, {}> {
@@ -14,11 +14,11 @@ class Title1 extends React.Component<Title1Props, {}> {
     }
 
     render(): React.ReactNode {
-        const { text, icon, bgcolor } = this.props;
+        const { text, icon, fontColor } = this.props;
         return (
-            <Stack horizontal className="panelTitle" style={{ backgroundColor: bgcolor }}>
+            <Stack horizontal className="panelTitle">
                 <img src={require(`../../static/img/icon/${icon}`)} alt="icon" />
-                <span>{text}</span>
+                <span style={{ color: fontColor }}>{text}</span>
             </Stack>
         );
     }
