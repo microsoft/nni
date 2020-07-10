@@ -58,7 +58,6 @@ export class GpuScheduler {
             requiredGPUNum = 0;
         }
         assert(requiredGPUNum >= 0);
-
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
         const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
             environment.defaultGpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && environment.defaultGpuSummary.gpuCount >= requiredGPUNum));
@@ -86,7 +85,6 @@ export class GpuScheduler {
 
             return this.allocateHost(requiredGPUNum, allocatedRm, [], trialDetail);
         }
-        this.log.debug(`GPUScheduler: trialJob id ${trialDetail.id}, no machine can be scheduled, return TMP_NO_AVAILABLE_GPU `);
 
         return {
             resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
@@ -155,6 +153,7 @@ export class GpuScheduler {
                         }
                     }
                 }
+
                 if (undefined !== defaultGpuSummary.gpuInfos) {
                     defaultGpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                         // if the GPU has active process, OR be reserved by a job,
@@ -214,16 +213,16 @@ export class GpuScheduler {
         assert(gpuInfos.length >= requiredGPUNum);
         const allocatedGPUs: GPUInfo[] = this.selectGPUsForTrial(gpuInfos, requiredGPUNum);
         const defaultGpuSummary = environment.defaultGpuSummary;
+        if (undefined === defaultGpuSummary) {
+            throw new Error(`Environment ${environment.id} defaultGpuSummary shouldn't be undefined!`);
+        }
+
         allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
-            if (defaultGpuSummary.occupiedGpuIndexMap !== undefined) {
-                let num: number | undefined = defaultGpuSummary.occupiedGpuIndexMap.get(gpuInfo.index);
-                if (num === undefined) {
-                    num = 0;
-                }
-                defaultGpuSummary.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
-            } else {
-                throw new Error(`Environment ${environment.id} occupiedGpuIndexMap initialize error!`);
+            let num: number | undefined = defaultGpuSummary.occupiedGpuIndexMap.get(gpuInfo.index);
+            if (num === undefined) {
+                num = 0;
             }
+            defaultGpuSummary.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
         });
         trialDetails.assignedGpus = allocatedGPUs;
 

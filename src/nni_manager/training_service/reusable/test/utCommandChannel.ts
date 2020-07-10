@@ -18,6 +18,7 @@ export class UtCommandChannel extends CommandChannel {
 
     public async testSendCommandToTrialDispatcher(environment: EnvironmentInformation, commandType: string, commandData: any) {
         const content = encodeCommand(commandType, JSON.stringify(commandData));
+        this.log.debug(`UtCommandChannel: env ${environment.id} send test command ${content}`);
         this.handleCommand(environment, content.toString("utf8"));
     }
 

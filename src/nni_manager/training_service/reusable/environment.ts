@@ -36,6 +36,7 @@ export class EnvironmentInformation {
     // node id is 5 chars, so won't conflict.
     private readonly defaultNodeId = "default";
     private log: Logger;
+    private isNoGpuWarned: boolean = false;
 
     // key states
     // true: environment is running, waiting, or unknown.
@@ -90,7 +91,7 @@ export class EnvironmentInformation {
     }
 
     public setGpuSummary(nodeId: string, newGpuSummary: TrialGpuSummary): void {
-        if (nodeId === null) {
+        if (nodeId === null || nodeId === undefined) {
             nodeId = this.defaultNodeId;
         }
 
@@ -105,11 +106,15 @@ export class EnvironmentInformation {
         }
     }
 
-    public get defaultGpuSummary(): TrialGpuSummary {
+    public get defaultGpuSummary(): TrialGpuSummary | undefined {
         const gpuSummary = this.gpuSummaries.get(this.defaultNodeId);
         if (gpuSummary === undefined) {
-            this.log.info(`EnvironmentInformation: current gpu info ${JSON.stringify(this.gpuSummaries)}`);
-            throw new Error(`EnvironmentInformation: ${this.envId} no default gpu information found.`);
+            if (false === this.isNoGpuWarned) {
+                this.log.warning(`EnvironmentInformation: ${this.envId} no default gpu found. current gpu info ${JSON.stringify(this.gpuSummaries)}`);
+                this.isNoGpuWarned = true;
+            }
+        } else {
+            this.isNoGpuWarned = false;
         }
         return gpuSummary;
     }

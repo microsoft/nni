@@ -53,8 +53,6 @@ class TrialDispatcher implements TrainingService {
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
 
-    // uses to reduce log count.
-    private noMoreEnvironment: boolean = false;
     // uses to accelerate trial manager loop
     // true means there is updates, and trial loop should run a cycle immediately.
     private shouldUpdateTrials: boolean = true;
@@ -66,6 +64,10 @@ class TrialDispatcher implements TrainingService {
     private reuseEnvironment: boolean = true;
 
     private gpuScheduler: GpuScheduler;
+
+    // uses to reduce log count.
+    private isLoggedNoMoreEnvironment: boolean = false;
+    private isLoggedNoGpuAvailable: boolean = false;
 
     constructor() {
         this.log = getLogger();
@@ -472,7 +474,13 @@ class TrialDispatcher implements TrainingService {
 
             let neededEnvironmentCount = 0;
             if (true === this.enableGpuScheduler) {
+                let noGpuAvailable: boolean = false;
                 while (waitingTrials.length > 0) {
+                    // skip following trials, if first trial doesn't find available GPU.
+                    if (true === noGpuAvailable) {
+                        // break loop to try next time.
+                        break;
+                    }
                     const trial = waitingTrials.shift();
                     if (undefined === trial) {
                         throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
@@ -486,23 +494,33 @@ class TrialDispatcher implements TrainingService {
                                     this.log.debug(`TrialDispatcher: no live environment, so request one.`);
                                     neededEnvironmentCount = 1;
                                     waitingTrials = [];
+                                    this.isLoggedNoGpuAvailable = false;
                                 } else if (reusableEnvironments.length > 0) {
-                                    const errorMessage: string = `TrialDispatcher: Required GPU number ${gpuNum} is too large, no machine can meet`;
+                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${gpuNum} is too large, no machine can meet`;
                                     this.log.error(errorMessage);
                                     throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
                                 } else {
-                                    // no usable environment yet, ignore this error.
+                                    if (false === this.isLoggedNoGpuAvailable) {
+                                        this.log.debug(`TrialDispatcher: wait GPU, live environment ${liveEnvironmentsCount}, no reusable, REQUIRE_EXCEED_TOTAL.`)
+                                        this.isLoggedNoGpuAvailable = true;
+                                    }
                                 }
                                 break;
                             }
                         case ScheduleResultType.TMP_NO_AVAILABLE_GPU:
                             {
+                                if (false === this.isLoggedNoGpuAvailable) {
+                                    this.log.debug(`TrialDispatcher: wait GPU, live environment ${liveEnvironmentsCount}, reusable ${reusableEnvironments.length}, TMP_NO_AVAILABLE_GPU.`)
+                                    this.isLoggedNoGpuAvailable = true;
+                                }
+
                                 // if some environment is alive, but not ready, no need to create more.
                                 if (liveEnvironmentsCount <= reusableEnvironments.length) {
                                     neededEnvironmentCount = 1;
-                                    this.log.info(`TrialDispatcher: ${liveEnvironmentsCount} live env, and ${reusableEnvironments.length} reusable, so request a new one.`);
-                                    break;
+                                    this.isLoggedNoGpuAvailable = false;
+                                    this.log.info(`TrialDispatcher: ${liveEnvironmentsCount} live env, and ${reusableEnvironments.length} reusable, but no GPU available so request a new one.`);
                                 }
+                                noGpuAvailable = true;
                             }
                             break
                         case ScheduleResultType.SUCCEED:
@@ -513,6 +531,7 @@ class TrialDispatcher implements TrainingService {
                                 }
                                 trial.assignedGpus = result.gpuIndices;
                                 await this.allocateEnvironment(trial, environment);
+                                this.isLoggedNoGpuAvailable = false;
                             }
                             break
                         default:
@@ -537,10 +556,10 @@ class TrialDispatcher implements TrainingService {
                     if (true === environmentService.hasMoreEnvironments) {
                         await this.requestEnvironment();
                         requestedCount++;
-                        this.noMoreEnvironment = false;
+                        this.isLoggedNoMoreEnvironment = false;
                     } else {
-                        if (this.noMoreEnvironment === false) {
-                            this.noMoreEnvironment = true;
+                        if (this.isLoggedNoMoreEnvironment === false) {
+                            this.isLoggedNoMoreEnvironment = true;
                             this.log.info(`no more environment so far, so skip to request environment.`)
                         }
                     }
@@ -710,7 +729,6 @@ class TrialDispatcher implements TrainingService {
             case INITIALIZED:
                 {
                     let isAllReady = true;
-
                     if (environment.nodeCount > 1) {
                         let node = environment.nodes.get(nodeId);
                         if (node === undefined) {

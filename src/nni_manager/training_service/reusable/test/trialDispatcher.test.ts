@@ -7,8 +7,8 @@ import { Scope } from "typescript-ioc";
 import * as component from '../../../common/component';
 import { getLogger, Logger } from "../../../common/log";
 import { TrialJobApplicationForm, TrialJobStatus } from '../../../common/trainingService';
-import { cleanupUnitTest, delay, prepareUnitTest } from '../../../common/utils';
-import { INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END } from '../../../core/commands';
+import { cleanupUnitTest, delay, prepareUnitTest, uniqueString } from '../../../common/utils';
+import { INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END, GPU_INFO } from '../../../core/commands';
 import { TrialConfigMetadataKey } from '../../../training_service/common/trialConfigMetadataKey';
 import { Command } from '../commandChannel';
 import { EnvironmentInformation, EnvironmentService } from "../environment";
@@ -17,6 +17,9 @@ import { TrialDispatcher } from "../trialDispatcher";
 import { UtCommandChannel } from './utCommandChannel';
 import { UtEnvironmentService } from "./utEnvironmentService";
 import chaiAsPromised = require("chai-as-promised");
+import { promises } from 'fs';
+import { Deferred } from 'ts-deferred';
+import { NNIErrorNames, NNIError, MethodNotImplementedError } from '../../../common/errors';
 
 function createTrialForm(content: any = undefined): TrialJobApplicationForm {
     if (content === undefined) {
@@ -66,13 +69,31 @@ async function newTrial(trialDispatcher: TrialDispatcher): Promise<TrialDetail> 
     return trialDetail;
 }
 
-async function verifyTrialRunning(commandChannel: UtCommandChannel, trialDetail: TrialDetail): Promise<void> {
+function newGpuInfo(gpuCount: Number = 2, nodeId: string | undefined = undefined): any {
+    let gpuInfos = [];
+    for (let index = 0; index < gpuCount; index++) {
+        gpuInfos.push({
+            index: index,
+            activeProcessNum: 0,
+        });
+    }
+    const gpuInfo = {
+        gpuInfos: gpuInfos,
+        gpuCount: gpuInfos.length,
+        node: nodeId
+    }
+    return gpuInfo;
+}
+
+async function verifyTrialRunning(commandChannel: UtCommandChannel, trialDetail: TrialDetail): Promise<Command> {
 
     let command = await waitResultMust<Command>(async () => {
         return await commandChannel.testReceiveCommandFromTrialDispatcher();
     });
-    chai.assert.equal(command.command, NEW_TRIAL_JOB);
-    chai.assert.equal(command.data["trialId"], trialDetail.id);
+    chai.assert.equal(command.command, NEW_TRIAL_JOB, "verifyTrialRunning command type");
+    chai.assert.equal(command.data["trialId"], trialDetail.id, "verifyTrialRunning trialDetail.id should be equal.");
+
+    return command;
 }
 
 async function verifyTrialResult(commandChannel: UtCommandChannel, trialDetail: TrialDetail, returnCode: number = 0): Promise<void> {
@@ -96,10 +117,11 @@ async function verifyTrialResult(commandChannel: UtCommandChannel, trialDetail: 
     }
 }
 
-async function waitEnvironment(waitCount: number, previousEnvironments: Map<string, EnvironmentInformation>, environmentService: UtEnvironmentService, commandChannel: UtCommandChannel): Promise<EnvironmentInformation> {
-    const initalizedMessage = {
-        nodeId: null,
-    }
+async function waitEnvironment(waitCount: number,
+    previousEnvironments: Map<string, EnvironmentInformation>,
+    environmentService: UtEnvironmentService, commandChannel: UtCommandChannel,
+    gpuCount: number = 2, nodeCount: number = 1,
+    callback: ((environment: EnvironmentInformation) => Promise<void>) | undefined = undefined): Promise<EnvironmentInformation> {
     const waitRequestEnvironment = await waitResultMust<EnvironmentInformation>(async () => {
         const environments = environmentService.testGetEnvironments();
         if (environments.size === waitCount) {
@@ -116,10 +138,36 @@ async function waitEnvironment(waitCount: number, previousEnvironments: Map<stri
     if (waitRequestEnvironment === undefined) {
         throw new Error(`waitRequestEnvironment is not defined.`);
     }
+
+    const nodeIds = [];
+    waitRequestEnvironment.nodeCount = nodeCount;
+    if (nodeCount > 1) {
+        for (let index = 0; index < nodeCount; index++) {
+            nodeIds.push(uniqueString(5));
+        }
+    } else {
+        nodeIds.push(undefined);
+    }
+    for (const nodeId of nodeIds) {
+        // set runner is ready.
+        await commandChannel.testSendCommandToTrialDispatcher(waitRequestEnvironment, INITIALIZED, { node: nodeId });
+
+        if (gpuCount > 0) {
+            await commandChannel.testSendCommandToTrialDispatcher(waitRequestEnvironment, GPU_INFO, newGpuInfo(gpuCount, nodeId));
+        }
+    }
+
+    if (callback) {
+        await callback(waitRequestEnvironment);
+    }
+
     // set env to running
     environmentService.testSetEnvironmentStatus(waitRequestEnvironment, 'RUNNING');
-    // set runner is ready.
-    await commandChannel.testSendCommandToTrialDispatcher(waitRequestEnvironment, INITIALIZED, initalizedMessage);
+
+    await waitResultMust<boolean>(async () => {
+        return waitRequestEnvironment.isRunnerReady ? true : undefined;
+    });
+
     return waitRequestEnvironment;
 }
 
@@ -131,6 +179,7 @@ describe('Unit Test for TrialDispatcher', () => {
     let environmentService: UtEnvironmentService;
     let log: Logger;
     let previousEnvironments: Map<string, EnvironmentInformation> = new Map<string, EnvironmentInformation>();
+    const currentDir = path.dirname(__filename);
 
     before(() => {
         chai.should();
@@ -144,9 +193,9 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     beforeEach(async () => {
-        const currentDir = path.dirname(__filename);
         const trialConfig = {
             codeDir: currentDir,
+            command: "echo",
         }
         const nniManagerIpConfig = {
             nniManagerIp: "127.0.0.1",
@@ -172,9 +221,8 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('reuse env', async () => {
-        // submit first trial
+
         let trialDetail = await newTrial(trialDispatcher);
-        // wait env started
         await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
@@ -193,11 +241,11 @@ describe('Unit Test for TrialDispatcher', () => {
             TrialConfigMetadataKey.TRIAL_CONFIG,
             JSON.stringify({
                 reuseEnvironment: false,
-                codeDir: path.dirname(__filename),
+                codeDir: currentDir,
             }));
-        // submit first trial
+
         let trialDetail = await newTrial(trialDispatcher);
-        // wait env started
+
         let environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
@@ -206,7 +254,7 @@ describe('Unit Test for TrialDispatcher', () => {
         });
 
         trialDetail = await newTrial(trialDispatcher);
-        // wait env started
+
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, -1);
@@ -220,9 +268,8 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('no more env', async () => {
-        // submit first trial
+
         const trialDetail1 = await newTrial(trialDispatcher);
-        // wait env started
         await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
 
         // set to no more environment
@@ -233,7 +280,6 @@ describe('Unit Test for TrialDispatcher', () => {
         await verifyTrialRunning(commandChannel, trialDetail1);
         await verifyTrialResult(commandChannel, trialDetail1, 0);
 
-        // wait env started
         await verifyTrialRunning(commandChannel, trialDetail2);
         await verifyTrialResult(commandChannel, trialDetail2, -1);
 
@@ -244,11 +290,10 @@ describe('Unit Test for TrialDispatcher', () => {
 
 
     it('2trial2env', async () => {
-        // submit first trial
+
         let trialDetail1 = await newTrial(trialDispatcher);
         let trialDetail2 = await newTrial(trialDispatcher);
 
-        // wait env started
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail1);
         await verifyTrialResult(commandChannel, trialDetail1, 0);
@@ -261,11 +306,10 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('3trial2env', async () => {
-        // submit first trial
+
         let trialDetail1 = await newTrial(trialDispatcher);
         let trialDetail2 = await newTrial(trialDispatcher);
 
-        // wait env started
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail1);
         await verifyTrialResult(commandChannel, trialDetail1, 0);
@@ -287,9 +331,8 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('stop trial', async () => {
-        // submit first trial
+
         let trialDetail1 = await newTrial(trialDispatcher);
-        // wait env started
         await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail1);
         await trialDispatcher.cancelTrialJob(trialDetail1.id, false);
@@ -370,11 +413,12 @@ describe('Unit Test for TrialDispatcher', () => {
     it('multi node', async () => {
         let trialDetail = await newTrial(trialDispatcher);
 
-        const environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
-        environment.nodeCount = 2;
+        const environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel, 2, 2);
+        log.debug(`environment ${JSON.stringify(environment)}`);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
 
+        chai.assert.equal(environment.nodes.size, 2);
         let command = await waitResultMust<Command>(async () => {
             return await commandChannel.testReceiveCommandFromTrialDispatcher();
         });
@@ -396,7 +440,6 @@ describe('Unit Test for TrialDispatcher', () => {
         });
 
         trialDetail = await newTrial(trialDispatcher);
-        // wait env started
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
@@ -424,38 +467,246 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('GPUScheduler disabled gpuNum === undefined', async () => {
-        chai.assert.fail(`not implemented.`)
+
+        let trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        const command = await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(command.data["gpuIndices"], undefined);
     });
 
     it('GPUScheduler disabled gpuNum === 0', async () => {
-        chai.assert.fail(`not implemented.`)
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 0,
+            }));
+
+        let trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        const command = await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(command.data["gpuIndices"], "");
     });
 
-    it('GPUScheduler disabled multi node', async () => {
-        chai.assert.fail(`not implemented.`)
+    it('GPUScheduler enable no cluster gpu config', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 1,
+            }));
+
+        let trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        const command = await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(command.data["gpuIndices"], "0");
+    });
+
+    it('GPUScheduler skipped no GPU info', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+            }));
+
+        let trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        const command = await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(command.data["gpuIndices"], undefined);
+    });
+
+    it('GPUScheduler disabled multi-node', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 0,
+            }));
+
+        let trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        const command = await verifyTrialRunning(commandChannel, trialDetail);
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(command.data["gpuIndices"], "");
     });
 
     it('GPUScheduler enabled 2 gpus 2 trial', async () => {
-        chai.assert.fail(`not implemented.`)
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 1,
+            }));
+
+        const trialDetail1 = await newTrial(trialDispatcher);
+        const trialDetail2 = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        let command = await verifyTrialRunning(commandChannel, trialDetail1);
+        chai.assert.equal(command.data["gpuIndices"], "0");
+        command = await verifyTrialRunning(commandChannel, trialDetail2);
+        chai.assert.equal(command.data["gpuIndices"], "1");
+
+        await verifyTrialResult(commandChannel, trialDetail1, 0);
+        await verifyTrialResult(commandChannel, trialDetail2, 0);
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1);
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
     });
 
-    it('GPUScheduler enabled use active gpus', async () => {
-        chai.assert.fail(`not implemented.`)
+    it('GPUScheduler enabled 4 gpus 2 trial(need 2 gpus)', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 2,
+            }));
+
+        const trialDetail1 = await newTrial(trialDispatcher);
+        const trialDetail2 = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel, 4);
+        let command = await verifyTrialRunning(commandChannel, trialDetail1);
+        chai.assert.equal(command.data["gpuIndices"], "0,1");
+        command = await verifyTrialRunning(commandChannel, trialDetail2);
+        chai.assert.equal(command.data["gpuIndices"], "2,3");
+
+        await verifyTrialResult(commandChannel, trialDetail1, 0);
+        await verifyTrialResult(commandChannel, trialDetail2, 0);
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1);
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 2, "there should be 2 trials");
     });
 
-    it('GPUScheduler enabled TMP_NO_AVAILABLE_GPU, but with waiting env', async () => {
-        chai.assert.fail(`not implemented.`)
+    it('GPUScheduler enabled use 4 gpus but only 1 usable(4)', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 1,
+            }));
+
+        const trialDetail = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel, 4, 1, async (environment) => {
+            environment.usableGpus = [3];
+        });
+        let command = await verifyTrialRunning(commandChannel, trialDetail);
+        chai.assert.equal(command.data["gpuIndices"], "3");
+
+        await verifyTrialResult(commandChannel, trialDetail, 0);
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 1);
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 1);
     });
 
-    it('GPUScheduler enabled TMP_NO_AVAILABLE_GPU, need env', async () => {
-        chai.assert.fail(`not implemented.`)
+    it('GPUScheduler enabled TMP_NO_AVAILABLE_GPU, request new env', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 1,
+            }));
+
+        const trialDetail1 = await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel, 1);
+        let command = await verifyTrialRunning(commandChannel, trialDetail1);
+        chai.assert.equal(command.data["gpuIndices"], "0");
+
+        const trialDetail2 = await newTrial(trialDispatcher);
+        await waitEnvironment(2, previousEnvironments, environmentService, commandChannel, 1);
+
+        await verifyTrialResult(commandChannel, trialDetail1, 0);
+
+        command = await verifyTrialRunning(commandChannel, trialDetail2);
+        await verifyTrialResult(commandChannel, trialDetail2, 0);
+        chai.assert.equal(command.data["gpuIndices"], "0");
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2, 'environments');
+        const trials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(trials.length, 2, 'trials');
     });
 
     it('GPUScheduler enabled REQUIRE_EXCEED_TOTAL, need fail', async () => {
-        chai.assert.fail(`not implemented.`)
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 8,
+            }));
+
+        await newTrial(trialDispatcher);
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
+        await chai.expect(trialRunPromise).rejectedWith(NNIError, "REQUIRE_EXCEED_TOTAL");
+        const deferred = new Deferred<void>();
+        trialRunPromise = deferred.promise;
+        deferred.resolve();
     });
 
-    it('GPUScheduler enabled 2 trials on same gpu, 4 trials, 2 gpus', async () => {
-        chai.assert.fail(`not implemented.`)
+    it('GPUScheduler enabled maxTrialNumberPerGpu=2, 4 trials, 2 gpus', async () => {
+        trialDispatcher.setClusterMetadata(
+            TrialConfigMetadataKey.TRIAL_CONFIG,
+            JSON.stringify({
+                reuseEnvironment: false,
+                codeDir: currentDir,
+                gpuNum: 1,
+            }));
+        const trials = [];
+
+        // last two trials shouldn't be in first environment.
+        for (let index = 0; index < 6; index++) {
+            const trial = await newTrial(trialDispatcher);
+            trials.push(trial);
+        }
+        await waitEnvironment(1, previousEnvironments, environmentService, commandChannel, 2, 1, async (environment) => {
+            environment.maxTrialNumberPerGpu = 2;
+        });
+        await waitEnvironment(2, previousEnvironments, environmentService, commandChannel, 2, 1, async (environment) => {
+            environment.maxTrialNumberPerGpu = 2;
+        });
+        const gpuIndexMap = new Map<string, number>();
+        for (let index = 0; index < 6; index++) {
+            const trial = trials[index];
+            let command = await verifyTrialRunning(commandChannel, trial);
+            const gpuIndex = command.data["gpuIndices"];
+            const trialNumbers = gpuIndexMap.get(gpuIndex);
+            if (index < 4) {
+                if (undefined === trialNumbers) {
+                    gpuIndexMap.set(gpuIndex, 1);
+                } else {
+                    gpuIndexMap.set(gpuIndex, trialNumbers + 1);
+                }
+            }
+        }
+        chai.assert.equal(gpuIndexMap.size, 2);
+        chai.assert.equal(gpuIndexMap.get("0"), 2);
+        chai.assert.equal(gpuIndexMap.get("1"), 2);
+
+        for (let index = 0; index < 6; index++) {
+            const trial = trials[index];
+            await verifyTrialResult(commandChannel, trial, 0);
+        }
+
+        chai.assert.equal(environmentService.testGetEnvironments().size, 2);
+        const listedTrials = await trialDispatcher.listTrialJobs();
+        chai.assert.equal(listedTrials.length, 6);
     });
 });
