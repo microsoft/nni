@@ -29,7 +29,7 @@ If you want to contribute to NNI, refer to [setup development environment](Setup
 * From source code
 
     ```bat
-    git clone -b v1.6 https://github.com/Microsoft/nni.git
+    git clone -b v1.7 https://github.com/Microsoft/nni.git
     cd nni
     powershell -ExecutionPolicy Bypass -file install.ps1
     ```
@@ -41,7 +41,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Clone examples within source code.
 
     ```bat
-    git clone -b v1.6 https://github.com/Microsoft/nni.git
+    git clone -b v1.7 https://github.com/Microsoft/nni.git
     ```
 
 * Run the MNIST example.

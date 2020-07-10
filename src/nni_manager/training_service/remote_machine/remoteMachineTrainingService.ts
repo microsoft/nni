@@ -406,12 +406,11 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async setupConnections(machineList: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
-        const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-        let connectedRMNum: number = 0;
 
-        rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
+        const connectionPromises = [];
+        for (const rmMeta of rmMetaList) {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
             this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
@@ -419,14 +418,11 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.debug(`reached ${executor.name}`);
             this.machineExecutorManagerMap.set(rmMeta, executorManager);
             this.log.debug(`initializing ${executor.name}`);
-            await this.initRemoteMachineOnConnected(rmMeta, executor);
+            connectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
             this.log.info(`connected to ${executor.name}`);
-            if (++connectedRMNum === rmMetaList.length) {
-                deferred.resolve();
-            }
-        });
+        }
 
-        return deferred.promise;
+        await Promise.all(connectionPromises);
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {
@@ -460,7 +456,7 @@ class RemoteMachineTrainingService implements TrainingService {
                             this.timer.unsubscribe(disposable);
                         }
                     }
-                    if (this.stopping){
+                    if (this.stopping) {
                         this.timer.unsubscribe(disposable);
                         this.log.debug(`Stopped GPU collector on ${rmMeta.ip}, since experiment is exiting.`);
                     }

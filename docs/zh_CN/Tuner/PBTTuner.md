@@ -11,7 +11,7 @@ PBTTuner 使用多个 Trial 来初始化种群 (即，`population_size`)。 上�
 
 ### 提供检查点目录
 
-为了让 Trial 读取其它 Trial 的检查点，需要提供能够被所有 Trial 访问到的目录 (即， `all_checkpoint_dir`)。 本机模式下非常容易，直接使用默认目录，或指定本机的任意目录均可。 对于其他训练平台，需要根据[训练平台文档](../TrainingService/SupportTrainingService.md)来提供能共享的目录，如 NFS, Azure 存储。
+为了让 Trial 读取其它 Trial 的检查点，需要提供能够被所有 Trial 访问到的目录 (即， `all_checkpoint_dir`)。 本机模式下非常容易，直接使用默认目录，或指定本机的任意目录均可。 对于其他训练平台，需要根据[训练平台文档](../TrainingService/Overview.md)来提供能共享的目录，如 NFS, Azure 存储。
 
 ### 修改 Trial 代码
 
@@ -46,7 +46,3 @@ tuner:
     all_checkpoint_dir: /the/path/to/store/checkpoints
     population_size: 10
 ```
-
-### 局限性
-
-尚未支持导入数据。

@@ -4,23 +4,29 @@
 
 目前支持 Linux、macOS 和 Windows。 Ubuntu 16.04 或更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-**Linux 和 macOS**
+### Linux 和 macOS
 
 ```bash
-    python3 -m pip install --upgrade nni
+python3 -m pip install --upgrade nni
 ```
 
-**Windows**
+### Windows
 
 ```bash
-    python -m pip install --upgrade nni
+python -m pip install --upgrade nni
 ```
 
-注意：
+```eval_rst
+.. Note:: 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 ``--user``；这不需要特殊权限。
+```
 
-* 在 Linux 和 macOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
-* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
-* 有关 NNI 的`系统要求`，参考[在 Linux 和 macOS 上安装](InstallationLinux.md) 或 [Windows](InstallationWin.md)。
+```eval_rst
+.. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>`。
+```
+
+```eval_rst
+.. Note:: NNI 的系统需求，参考 :doc:`Linux 和 Mac <InstallationLinux>` 或 :doc:`Windows <InstallationWin>` 的安装教程。
+```
 
 ## MNIST 上的 "Hello World"
 
@@ -33,7 +39,12 @@ def run_trial(params):
     # 输入数据
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
     # 构建网络
-    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
+                                 channel_2_num=params['channel_2_num'],
+                                 conv_size=params['conv_size'],
+                                 hidden_size=params['hidden_size'],
+                                 pool_size=params['pool_size'],
+                                 learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
@@ -44,11 +55,20 @@ def run_trial(params):
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
-    params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
+    params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
+              'dropout_rate': 0.5,
+              'channel_1_num': 32,
+              'channel_2_num': 64,
+              'conv_size': 5,
+              'pool_size': 2,
+              'hidden_size': 1024,
+              'learning_rate': 1e-4,
+              'batch_num': 2000,
+              'batch_size': 32}
     run_trial(params)
 ```
 
-注意：完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
+完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
 
 上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
@@ -56,7 +76,7 @@ NNI 用来帮助超参调优。它的流程如下：
 
 ```text
 输入: 搜索空间, Trial 代码, 配置文件
-输出: 一组最佳的超参配置
+输出: 一组最优的参数配置
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
 2:      hyperparameter = 从搜索空间选择一组参数
@@ -64,14 +84,14 @@ NNI 用来帮助超参调优。它的流程如下：
 4:      返回最终结果给 NNI
 5:      If 时间达到上限,
 6:          停止实验
-7: return 最好的实验结果
+7: 返回最好的实验结果
 ```
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
 
-**启动 Experiment 的三个步骤**
+### 启动 Experiment 的三个步骤
 
-**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
+**第一步**：编写 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -85,7 +105,7 @@ NNI 用来帮助超参调优。它的流程如下：
 + }
 ```
 
-*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*示例：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
 **第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
@@ -112,7 +132,7 @@ NNI 用来帮助超参调优。它的流程如下：
       run_trial(params)
 ```
 
-*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*示例：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
 **第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`。 它还提供其他信息，例如调整算法，最大 Trial 运行次数和最大持续时间的参数。
 
@@ -135,31 +155,37 @@ trial:
   gpuNum: 0
 ```
 
-注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**。
+```eval_rst
+.. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>` ，了解更多如何编写此文件的详细信息 _。
+```
 
-*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml)*
+*示例: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
 
-**Linux 和 macOS**
+#### Linux 和 macOS
 
 从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
-**Windows**
+#### Windows
 
 从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
-注意：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
-
 ```bash
-    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
-注意：`nnictl` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
+```eval_rst
+.. Note:: 如果使用 Windows，则需要在 config.yml 文件中，将 ``python3`` 改为 ``python``，或者使用 config_windows.yml 来开始 Experiment。
+```
+
+```eval_rst
+.. Note:: ``nnictl`` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 点击 :doc:`这里 <Nnictl>` 查看 ``nnictl`` 的更多用法。
+```
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 

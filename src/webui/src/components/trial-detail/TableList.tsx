@@ -414,36 +414,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         // parameter as table column
         const parameterStr: string[] = [];
-        if (tableSource.length > 0) {
-            const trialMess = TRIALS.getTrial(tableSource[0].id);
-            const trial = trialMess.description.parameters;
-            const parameterColumn: string[] = Object.keys(trial);
-            parameterColumn.forEach(value => {
-                parameterStr.push(`${value} (search space)`);
-            });
-        }
-        let allColumnList = COLUMNPro.concat(parameterStr);
-
-        // only succeed trials have final keys
-        if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
-            if (temp !== undefined && typeof temp === 'object') {
-                // concat default column and finalkeys
-                const item = Object.keys(temp);
-                // item: ['default', 'other-keys', 'maybe loss']
-                if (item.length > 1) {
-                    const want: string[] = [];
-                    item.forEach(value => {
-                        if (value !== 'default') {
-                            want.push(value);
-                        }
-                    });
-                    allColumnList = allColumnList.concat(want);
-                }
+        if (!EXPERIMENT.isNestedExp()) {
+            if (tableSource.length > 0) {
+                const trialMess = TRIALS.getTrial(tableSource[0].id);
+                const trial = trialMess.description.parameters;
+                const parameterColumn: string[] = Object.keys(trial);
+                parameterColumn.forEach(value => {
+                    parameterStr.push(`${value} (search space)`);
+                });
             }
         }
-
-        return allColumnList;
+        // concat trial all final keys and remove dup "default" val, return list
+        const finalKeysList = TRIALS.finalKeys().filter(item => item !== 'default');
+        return (COLUMNPro.concat(parameterStr)).concat(finalKeysList);
     }
 
     // get IColumn[]
