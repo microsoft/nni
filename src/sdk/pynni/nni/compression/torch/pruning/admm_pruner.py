@@ -15,58 +15,50 @@ _logger = logging.getLogger(__name__)
 
 class ADMMPruner(OneshotPruner):
     """
-    This is a Pytorch implementation of ADMM Pruner algorithm.
+    A Pytorch implementation of ADMM Pruner algorithm.
 
-    Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
-    by decomposing the original nonconvex problem into two subproblems that can be solved iteratively.
-    In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively.
-    This solution framework applies both to non-structured and different variations of structured pruning schemes.
+    Parameters
+    ----------
+    model : torch.nn.module
+        Model to be pruned.
+    config_list : list
+        List on pruning configs.
+    trainer : function
+        Function used for the first subproblem.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch, callback` as function arguments.
+        Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
+        The logic of `callback` is implemented inside the Pruner,
+        users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+        Example::
 
-    For more details, please refer to the paper: https://arxiv.org/abs/1804.03294.
+            def trainer(model, criterion, optimizer, epoch, callback):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                train_loader = ...
+                model.train()
+                for batch_idx, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    # callback should be inserted between loss.backward() and optimizer.step()
+                    if callback:
+                        callback()
+                    optimizer.step()
+    num_iterations : int
+        Total number of iterations.
+    training_epochs : int
+        Training epochs of the first subproblem.
+    row : float
+        Penalty parameters for ADMM training.
+    base_algo : str
+        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+
     """
 
     def __init__(self, model, config_list, trainer, num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
-        """
-        Parameters
-        ----------
-        model : torch.nn.module
-            Model to be pruned
-        config_list : list
-            List on pruning configs
-        trainer : function
-            Function used for the first subproblem.
-            Users should write this function as a normal function to train the Pytorch model
-            and include `model, optimizer, criterion, epoch, callback` as function arguments.
-            Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-            The logic of `callback` is implemented inside the Pruner,
-            users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
-            Example::
-            ```
-            >>> def trainer(model, criterion, optimizer, epoch, callback):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     train_loader = ...
-            >>>     model.train()
-            >>>     for batch_idx, (data, target) in enumerate(train_loader):
-            >>>         data, target = data.to(device), target.to(device)
-            >>>         optimizer.zero_grad()
-            >>>         output = model(data)
-            >>>         loss = criterion(output, target)
-            >>>         loss.backward()
-            >>>         # callback should be inserted between loss.backward() and optimizer.step()
-            >>>         if callback:
-            >>>             callback()
-            >>>         optimizer.step()
-            ```
-        num_iterations : int
-            Total number of iterations.
-        training_epochs : int
-            Training epochs of the first subproblem.
-        row : float
-            Penalty parameters for ADMM training.
-        base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
-            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-        """
         self._base_algo = base_algo
 
         super().__init__(model, config_list)

@@ -22,7 +22,7 @@ _logger = logging.getLogger(__name__)
 
 class SimulatedAnnealingPruner(Pruner):
     """
-    This is a Pytorch implementation of Simulated Annealing compression algorithm.
+    A Pytorch implementation of Simulated Annealing compression algorithm.
 
     Parameters
     ----------

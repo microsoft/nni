@@ -460,60 +460,6 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem.
-Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
-Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
-    Example:
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
-- **iterations:** The number of overall iterations.
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **admm_num_iterations:** Number of iterations of ADMM Pruner.
-- **admm_training_epochs:** Training epochs of the first optimization subproblem of ADMMPruner.
-- **experiment_data_dir:** PATH to store temporary experiment data.
-
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -548,35 +494,11 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for ADMM Pruner
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem in ADMM optimization, attention, this is not used for fine-tuning.
-Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
-Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+##### PyTorch
 
-    Example: 
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **num_iterations:** Total number of iterations.
-- **training_epochs:** Training epochs of the first subproblem.
-- **row:** Penalty parameters for ADMM training.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+```eval_rst
+..  autoclass:: nni.compression.torch.ADMMPruner
+```
 
 
 ## Lottery Ticket Hypothesis

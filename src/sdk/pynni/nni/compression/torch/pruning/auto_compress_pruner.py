@@ -21,14 +21,83 @@ _logger = logging.getLogger(__name__)
 
 class AutoCompressPruner(Pruner):
     """
-    This is a Pytorch implementation of AutoCompress pruning algorithm.
+    A Pytorch implementation of AutoCompress pruning algorithm.
 
-    For each round, AutoCompressPruner prune the model for the same sparsity to achive the ovrall sparsity:
-        1. Generate sparsities distribution using SimualtedAnnealingPruner
-        2. Perform ADMM-based structured pruning to generate pruning result for the next round.
-           Here we use 'speedup' to perform real pruning.
+    Parameters
+    ----------
+    model : pytorch model
+        The model to be pruned.
+    config_list : list
+        Supported keys:
+            - sparsity : The target overall sparsity.
+            - op_types : The operation type to prune.
+    trainer : function
+        Function used for the first subproblem of ADMM Pruner.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch, callback` as function arguments.
+        Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
+        The logic of `callback` is implemented inside the Pruner,
+        users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+        Example::
 
-    For more details, please refer to the paper: https://arxiv.org/abs/1907.03141.
+            def trainer(model, criterion, optimizer, epoch, callback):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                train_loader = ...
+                model.train()
+                for batch_idx, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    # callback should be inserted between loss.backward() and optimizer.step()
+                    if callback:
+                        callback()
+                    optimizer.step()
+    evaluator : function
+        function to evaluate the pruned model.
+        This function should include `model` as the only parameter, and returns a scalar value.
+        Example::
+
+            def evaluator(model):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                val_loader = ...
+                model.eval()
+                correct = 0
+                with torch.no_grad():
+                    for data, target in val_loader:
+                        data, target = data.to(device), target.to(device)
+                        output = model(data)
+                        # get the index of the max log-probability
+                        pred = output.argmax(dim=1, keepdim=True)
+                        correct += pred.eq(target.view_as(pred)).sum().item()
+                accuracy = correct / len(val_loader.dataset)
+                return accuracy
+    dummy_input : pytorch tensor
+        The dummy input for ```jit.trace```, users should put it on right device before pass in.
+    num_iterations : int
+        Number of overall iterations.
+    optimize_mode : str
+        optimize mode, `maximize` or `minimize`, by default `maximize`.
+    base_algo : str
+        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+    start_temperature : float
+        Simualated Annealing related parameter.
+    stop_temperature : float
+        Simualated Annealing related parameter.
+    cool_down_rate : float
+        Simualated Annealing related parameter.
+    perturbation_magnitude : float
+        Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+    admm_num_iterations : int
+        Number of iterations of ADMM Pruner.
+    admm_training_epochs : int
+        Training epochs of the first optimization subproblem of ADMMPruner.
+    row : float
+        Penalty parameters for ADMM training.
+    experiment_data_dir : string
+        PATH to store temporary experiment data.
     """
 
     def __init__(self, model, config_list, trainer, evaluator, dummy_input,
@@ -38,83 +107,6 @@ class AutoCompressPruner(Pruner):
                  # ADMM related
                  admm_num_iterations=30, admm_training_epochs=5, row=1e-4,
                  experiment_data_dir='./'):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model to be pruned
-        config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
-        trainer : function
-            Function used for the first subproblem of ADMM Pruner.
-            Users should write this function as a normal function to train the Pytorch model
-            and include `model, optimizer, criterion, epoch, callback` as function arguments.
-            Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-            The logic of `callback` is implemented inside the Pruner,
-            users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
-            Example::
-            ```
-            >>> def trainer(model, criterion, optimizer, epoch, callback):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     train_loader = ...
-            >>>     model.train()
-            >>>     for batch_idx, (data, target) in enumerate(train_loader):
-            >>>         data, target = data.to(device), target.to(device)
-            >>>         optimizer.zero_grad()
-            >>>         output = model(data)
-            >>>         loss = criterion(output, target)
-            >>>         loss.backward()
-            >>>         # callback should be inserted between loss.backward() and optimizer.step()
-            >>>         if callback:
-            >>>             callback()
-            >>>         optimizer.step()
-            ```
-        evaluator : function
-            function to evaluate the pruned model.
-            This function should include `model` as the only parameter, and returns a scalar value.
-            Example::
-            >>> def evaluator(model):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     val_loader = ...
-            >>>     model.eval()
-            >>>     correct = 0
-            >>>     with torch.no_grad():
-            >>>         for data, target in val_loader:
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             output = model(data)
-            >>>             # get the index of the max log-probability
-            >>>             pred = output.argmax(dim=1, keepdim=True)
-            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-            >>>     accuracy = correct / len(val_loader.dataset)
-            >>>     return accuracy
-        dummy_input : pytorch tensor
-            The dummy input for ```jit.trace```, users should put it on right device before pass in
-        num_iterations : int
-            Number of overall iterations
-        optimize_mode : str
-            optimize mode, `maximize` or `minimize`, by default `maximize`
-        base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
-            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-        start_temperature : float
-            Simualated Annealing related parameter
-        stop_temperature : float
-            Simualated Annealing related parameter
-        cool_down_rate : float
-            Simualated Annealing related parameter
-        perturbation_magnitude : float
-            Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
-        admm_num_iterations : int
-            Number of iterations of ADMM Pruner
-        admm_training_epochs : int
-            Training epochs of the first optimization subproblem of ADMMPruner
-        row : float
-            Penalty parameters for ADMM training
-        experiment_data_dir : string
-            PATH to store temporary experiment data
-        """
         # original model
         self._model_to_prune = model
         self._base_algo = base_algo
