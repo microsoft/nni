@@ -240,7 +240,8 @@ infer_from_inshape = {
     'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
-    'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
