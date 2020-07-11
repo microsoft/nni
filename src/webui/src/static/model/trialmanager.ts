@@ -297,9 +297,8 @@ class TrialManager {
     private doUpdateMetrics(allMetrics: MetricDataRecord[], latestOnly: boolean): boolean {
         let updated = false;
         for (const [trialId, metrics] of groupMetricsByTrial(allMetrics).entries()) {
-            if (this.trials.has(trialId)) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const trial = this.trials.get(trialId)!;
+            const trial = this.trials.get(trialId);
+            if (trial !== undefined) {
                 updated = (latestOnly ? trial.updateLatestMetrics(metrics) : trial.updateMetrics(metrics)) || updated;
             } else {
                 this.trials.set(trialId, new Trial(undefined, metrics));
