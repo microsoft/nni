@@ -9,31 +9,6 @@ from nni.nas.pytorch import mutables
 from .enas_ops import FactorizedReduce, StdConv, SepConvBN, Pool, ConvBranch, PoolBranch
 
 
-class AuxiliaryHead(nn.Module):
-    def __init__(self, in_channels, num_classes):
-        super().__init__()
-        self.in_channels = in_channels
-        self.num_classes = num_classes
-        self.pooling = nn.Sequential(
-            nn.ReLU(),
-            nn.AvgPool2d(5, 3, 2)
-        )
-        self.proj = nn.Sequential(
-            StdConv(in_channels, 128),
-            StdConv(128, 768)
-        )
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Linear(768, 10, bias=False)
-
-    def forward(self, x):
-        bs = x.size(0)
-        x = self.pooling(x)
-        x = self.proj(x)
-        x = self.avg_pool(x).view(bs, -1)
-        x = self.fc(x)
-        return x
-
-
 class Cell(nn.Module):
     def __init__(self, cell_name, prev_labels, channels):
         super().__init__()
@@ -80,7 +55,7 @@ class Calibration(nn.Module):
 
 class ENASReductionLayer(nn.Module):
     """
-    builtin EnasReductionLayer.
+    builtin EnasReductionLayer. 
 
     Parameters
     ---
@@ -102,7 +77,14 @@ class ENASReductionLayer(nn.Module):
 
 class ENASMicroLayer(nn.Module):
     """
-    builin EnasMicroLayer. Micro search designs only one building block whose architecture is repeated throughout the final architecture.
+    Builtin EnasMicroLayer. Micro search designs only one building block whose architecture is repeated
+    throughout the final architecture. A cell has ``num_nodes`` nodes and searches the topology and
+    operations among them in RL way. The first two nodes in a layer stand for the outputs from previous
+    previous layer and previous layer respectively. For the following nodes, the controller chooses
+    two previous nodes and applies two operations respectively for each node. Nodes that are not served
+    as input for any other node are viewed as the output of the layer. If there are multiple output nodes,
+    the model will calculate the average of these nodes as the layer output. Every node's output has ``out_channels``
+    channels so the result of the layer has the same number of channels as each node.
 
     Parameters
     ---
@@ -157,9 +139,9 @@ class ENASMicroLayer(nn.Module):
 
 class ENASMacroLayer(mutables.MutableScope):
     """
-    builtin ENAS Marco Layer. With search space changing to layer level,
-    controller decides what operation is employed and the previous layer to connect to for skip connections.
-    The model is made up by the same layes but the choice of each layer may be different.
+    Builtin ENAS Marco Layer. With search space changing to layer level, controller decides
+    what operation is employed and the previous layer to connect to for skip connections.
+    The model is made up by the same layers but the choice of each layer may be different.
 
     Parameters
     ---

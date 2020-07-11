@@ -42,10 +42,9 @@ def get_dataset(cls):
 
 class MicroNetwork(nn.Module):
     def __init__(self, num_layers=2, num_nodes=5, out_channels=24, in_channels=3, num_classes=10,
-                 dropout_rate=0.0, use_aux_heads=False):
+                 dropout_rate=0.0):
         super().__init__()
         self.num_layers = num_layers
-        self.use_aux_heads = use_aux_heads
 
         self.stem = nn.Sequential(
             nn.Conv2d(in_channels, out_channels * 3, 3, 1, 1, bias=False),
@@ -106,7 +105,7 @@ if __name__ == "__main__":
 
     dataset_train, dataset_valid = get_dataset("cifar10")
 
-    model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1, use_aux_heads=True)
+    model = MicroNetwork(num_layers=6, out_channels=20, num_nodes=5, dropout_rate=0.1)
     num_epochs = args.epochs or 150
     mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
 
