@@ -20,7 +20,7 @@ class StdConv(nn.Module):
 
 class PoolBranch(nn.Module):
     """
-    pooling structure for Macro search. First pass through a 1x1 Conv, then pooling operation followed by BatchNorm.
+    Pooling structure for Macro search. First pass through a 1x1 Conv, then pooling operation followed by BatchNorm2d.
 
     Parameters
     ---
@@ -65,7 +65,7 @@ class SeparableConv(nn.Module):
 
 class ConvBranch(nn.Module):
     """
-    Conv structure for Macro seach. First pass through a 1x1 Conv,
+    Conv structure for Macro search. First pass through a 1x1 Conv,
     then Conv operation with kernal_size equals 3 or 5 followed by BatchNorm and ReLU.
 
     Parameters
