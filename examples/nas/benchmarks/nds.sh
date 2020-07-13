@@ -1,19 +1,20 @@
+#!/bin/bash
 set -e
-mkdir -p /outputs /tmp
 
-echo "Installing dependencies..."
-apt update && apt install -y wget zip
-pip install --no-cache-dir tqdm peewee
-
-echo "Installing NNI..."
-cd /nni && echo "y" | source install.sh
-
-cd /tmp
+if [ -z "${NASBENCHMARK_DIR}" ]; then
+    NASBENCHMARK_DIR=~/.nni/nasbenchmark
+fi
 
 echo "Downloading NDS..."
-wget https://dl.fbaipublicfiles.com/nds/data.zip -O data.zip
+if [ -f "data.zip" ]; then
+    echo "data.zip found. Skip download."
+else
+    wget https://dl.fbaipublicfiles.com/nds/data.zip -O data.zip
+fi
 unzip data.zip
 
 echo "Generating database..."
-rm -f /outputs/nds.db /outputs/nds.db-journal
-NASBENCHMARK_DIR=/outputs python -m nni.nas.benchmarks.nds.db_gen nds_data
+rm -f ${NASBENCHMARK_DIR}/nds.db ${NASBENCHMARK_DIR}/nds.db-journal
+mkdir -p ${NASBENCHMARK_DIR}
+python -m nni.nas.benchmarks.nds.db_gen nds_data
+rm -rf data.zip nds_data

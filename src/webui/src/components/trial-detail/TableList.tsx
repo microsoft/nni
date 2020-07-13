@@ -414,17 +414,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         // parameter as table column
         const parameterStr: string[] = [];
-        if (tableSource.length > 0) {
-            const trialMess = TRIALS.getTrial(tableSource[0].id);
-            const trial = trialMess.description.parameters;
-            const parameterColumn: string[] = Object.keys(trial);
-            parameterColumn.forEach(value => {
-                parameterStr.push(`${value} (search space)`);
-            });
+        if (!EXPERIMENT.isNestedExp()) {
+            if (tableSource.length > 0) {
+                const trialMess = TRIALS.getTrial(tableSource[0].id);
+                const trial = trialMess.description.parameters;
+                const parameterColumn: string[] = Object.keys(trial);
+                parameterColumn.forEach(value => {
+                    parameterStr.push(`${value} (search space)`);
+                });
+            }
         }
         // concat trial all final keys and remove dup "default" val, return list
-        return (COLUMNPro.concat(parameterStr)).concat(Array.from(new Set(TRIALS.finalKeys())));
-        
+        const finalKeysList = TRIALS.finalKeys().filter(item => item !== 'default');
+        return (COLUMNPro.concat(parameterStr)).concat(finalKeysList);
     }
 
     // get IColumn[]
