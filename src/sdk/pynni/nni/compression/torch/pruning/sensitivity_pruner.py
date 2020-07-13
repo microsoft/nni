@@ -16,9 +16,21 @@ from ..utils.sensitivity_analysis import SensitivityAnalysis
 
 
 MAX_PRUNE_RATIO_PER_ITER = 0.95
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+# root.addHandler(handler)
+
+# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 _logger = logging.getLogger('Sensitivity_Pruner')
-_logger.setLevel(logging.INFO)
+_logger.addHandler(handler)
+# _logger.setLevel(logging.INFO)
 # logger.setLevel(logging.DEBUG)
 
 
@@ -362,18 +374,18 @@ class SensitivityPruner(Pruner):
             _logger.info('Currently remained weights: %f', cur_ratio)
 
             if self.checkpoint_dir is not None:
-                checkpoint_name = 'Iter_%d_finetune_acc_%.3f_sparsity_%.2f' % (
+                checkpoint_name = 'Iter_%d_finetune_acc_%.5f_sparsity_%.4f' % (
                     iteration_count, finetune_acc, cur_ratio)
                 checkpoint_path = os.path.join(
                     self.checkpoint_dir, '%s.pth' % checkpoint_name)
                 cfg_path = os.path.join(
                     self.checkpoint_dir, '%s_pruner.json' % checkpoint_name)
                 sensitivity_path = os.path.join(
-                    self.checkpoint_dir, '%s_sensitivity.json' % checkpoint_name)
+                    self.checkpoint_dir, '%s_sensitivity.csv' % checkpoint_name)
                 torch.save(self.model.state_dict(), checkpoint_path)
                 with open(cfg_path, 'w') as jf:
                     json.dump(cfg_list, jf)
-                self.analyzer.export(os.path.join(self.checkpoint_dir, '%s_sen.csv'))
+                self.analyzer.export(sensitivity_path)
             if cur_ratio > target_ratio:
                 # If this is the last prune iteration, skip the time-consuming
                 # sensitivity analysis
