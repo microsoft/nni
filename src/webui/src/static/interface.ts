@@ -10,6 +10,7 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
+    parameters: () => object; 
 }
 
 interface TableRecord {
@@ -188,9 +189,28 @@ interface EventMap {
     [key: string]: () => void;
 }
 
+/**
+ * Definition of single dimension in search space.
+ */
+interface SingleAxis {
+    type: string;
+    scale: 'log' | 'linear' | 'ordinal';
+    domain: any;
+}
+
+/**
+ * Definition of combination of multiple dimensions.
+ * The decision in multiple dimensions will be combined together.
+ * Typically, it is a search space or a sub search space.
+ */
+interface MultipleAxes {
+    axes: Map<string, SingleAxis>;
+    getAllAxes: () => Map<string, SingleAxis>;
+}
+
 export {
     TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
     AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
     Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap
+    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
 };

@@ -5,7 +5,14 @@ const app = express();
 const argv = require('minimist')(process.argv.slice(2));
 const port = argv.port || 12138;
 const expAlias = argv.experiment || process.env.EXPERIMENT || 'mnist-tfv1-running';
-const expData = JSON.parse(fs.readFileSync(path.join(__dirname, `../mock/${expAlias}.json`)).toString());
+let expFile = path.join(__dirname, `../mock/${expAlias}`);
+if (!fs.existsSync(expFile)) {
+    expFile += '.json';
+}
+if (!fs.existsSync(expFile)) {
+    throw new Error(`Experiment file '${expFile}' not found. Please recheck.`);
+}
+const expData = JSON.parse(fs.readFileSync(expFile).toString());
 
 app.get('/api/v1/nni/version', (req, res) => {
     res.send('v999.0');

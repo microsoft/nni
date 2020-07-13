@@ -1,10 +1,12 @@
+import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, PrimaryButton, Stack } from 'office-ui-fabric-react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
 import * as React from 'react';
-import { TRIALS } from '../../static/datamodel';
+import { TRIALS, EXPERIMENT } from '../../static/datamodel';
+import { SearchSpace } from '../../static/model/searchspace';
 import { filterByStatus } from '../../static/function';
-import { ParaObj, TableObj } from '../../static/interface';
+import { ParaObj, TableObj, SingleAxis } from '../../static/interface';
 import '../../static/style/button.scss';
 import '../../static/style/para.scss';
 
@@ -42,9 +44,9 @@ interface ParaState {
 }
 
 interface ParaProps {
-    dataSource: Array<TableObj>;
-    expSearchSpace: string;
-    whichGraph: string;
+    trials: Array<TableObj>;
+    searchSpace: string;
+    whichChart: string;
 }
 
 class Para extends React.Component<ParaProps, ParaState> {
@@ -55,8 +57,13 @@ class Para extends React.Component<ParaProps, ParaState> {
     private chartMulineStyle = {
         width: '100%',
         height: 392,
-        margin: '0 auto',
-        padding: '0 15 10 15'
+        margin: '0 auto'
+    };
+    private innerChartMargins = {
+        top: 24,
+        right: 12,
+        bottom: 20,
+        left: 12
     };
 
     constructor(props: ParaProps) {
@@ -90,40 +97,6 @@ class Para extends React.Component<ParaProps, ParaState> {
         };
     }
 
-    hyperParaPic = (source: Array<TableObj>, searchSpace: string): void => {
-        // filter succeed trials [{}, {}, {}]
-        const dataSource = source.filter(filterByStatus);
-        const accPara: number[] = [];
-        // specific value array
-        const eachTrialParams: Array<any> = [];
-        // experiment interface search space obj
-        const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
-        // nest search space
-        const isNested: boolean = isSearchSpaceNested(searchSpace);
-        this.setState({ isNested: isNested });
-
-        // eslint-disable-next-line no-console
-        console.log(dataSource);
-        // eslint-disable-next-line no-console
-        console.log(searchSpace);
-        const convertedDataSource = dataSource.map((s) => {
-            const ret = { ...(s.description.parameters), ...(s.acc) } as any;
-            delete ret.pretrained;
-            return ret;
-        });
-
-        if (this.pcs === undefined) {
-            this.pcs = ParCoords()(this.paraRef.current)
-                .data(convertedDataSource)
-                // .smoothness(0.15)
-                .showControlPoints(false)
-                .render()
-                .brushMode("1D-axes")
-                .reorderable()
-                .interactive();
-        }
-    }
-
     // get percent value number
     // percentNum = (value: string) => {
     percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
@@ -131,31 +104,29 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (item !== undefined) {
             const vals = parseFloat(item !== undefined ? item.text : '');
             this.setState({ percent: vals / 100, selectedItem: item }, () => {
-                this.reInit();
+                this.renderParallelCoordinates();
             });
         }
-    }
-    reInit = (): void => {
-        const { dataSource, expSearchSpace } = this.props;
-        this.hyperParaPic(dataSource, expSearchSpace);
     }
 
     // select all final keys
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            this.setState({ showFinalMetricKey: item.key }, () => { this.reInit() });
+            this.setState({ showFinalMetricKey: item.key }, () => {
+                this.renderParallelCoordinates();
+            });
         }
     }
 
     componentDidMount(): void {
-        this.reInit();
+        this.renderParallelCoordinates();
     }
 
     componentDidUpdate(prevProps: ParaProps): void {
-        if (this.props.dataSource !== prevProps.dataSource) {
-            const { dataSource, expSearchSpace, whichGraph } = this.props;
-            if (whichGraph === 'Hyper-parameter') {
-                this.hyperParaPic(dataSource, expSearchSpace);
+        if (this.props.trials !== prevProps.trials) {
+            const { whichChart } = this.props;
+            if (whichChart === 'Hyper-parameter') {
+                this.renderParallelCoordinates();
             }
         }
     }
@@ -217,6 +188,69 @@ class Para extends React.Component<ParaProps, ParaState> {
             );
         }
     };
+
+    /**
+     * Render the parallel coordinates. Using trial data as base and leverage
+     * information from search space at a best effort basis.
+     * @param source Array of trial data
+     * @param searchSpace Search space
+     */
+    private renderParallelCoordinates = (): void => {
+        const { trials, searchSpace } = this.props;
+        // filter succeed trials [{}, {}, {}]
+        const succeededTrials = trials.filter(filterByStatus);
+        const convertedtrials = succeededTrials.map((s) => {
+            const ret = { ...(s.parameters()), ...(s.acc) } as any;
+            delete ret.pretrained;
+            return ret;
+        });
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
+        const inferredMetricSpace = TRIALS.inferredMetricSpace();
+        const dimensions: [any, any][] = [];
+        const convertToD3Scale = (axis: SingleAxis) => {
+            if (axis.scale === 'ordinal') {
+                return d3.scalePoint().domain(axis.domain).range(this.getRange());
+            } else if (axis.scale === 'log') {
+                return d3.scaleLog().domain(axis.domain).range(this.getRange());
+            } else if (axis.scale === 'linear') {
+                return d3.scaleLinear().domain(axis.domain).range(this.getRange());
+            }
+        };
+        for (const [k, v] of inferredSearchSpace.getAllAxes()) {
+            dimensions.push([k, {
+                type: v.scale,
+                yscale: convertToD3Scale(v)
+            }]);
+        }
+        for (const [k, v] of inferredMetricSpace.getAllAxes()) {
+            // const title = `metrics/${k}`;
+            dimensions.push([k, {
+                type: v.scale,
+                yscale: convertToD3Scale(v)
+            }]);
+        }
+
+        if (this.pcs === undefined) {
+            this.pcs = ParCoords()(this.paraRef.current)
+                .data(convertedtrials)
+                // .smoothness(0.15)
+                .showControlPoints(false)
+                .margin(this.innerChartMargins)
+                .dimensions(dimensions.reduce((obj, entry) => ({...obj, [entry[0]]: entry[1]}), {}))
+                .render()
+                .brushMode("1D-axes")
+                .reorderable()
+                .interactive();
+        }
+    }
+
+    private getRange(): [number, number] {
+        // Documentation is lacking.
+        // Reference: https://github.com/syntagmatic/parallel-coordinates/issues/308
+        // const range = this.pcs.height() - this.pcs.margin().top - this.pcs.margin().bottom;
+        const range = this.chartMulineStyle.height - this.innerChartMargins.top - this.innerChartMargins.bottom;
+        return [range, 1];
+    }
 
 }
 

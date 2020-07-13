@@ -156,6 +156,38 @@ class Trial implements TableObj {
         return ret;
     }
 
+    public parameters(flattened: boolean = false): object {
+        const flatten = (source: object, prefix: string = '', ignoreName: boolean = false): object => {
+            const ret = {};
+            Object.entries(source).forEach(item => {
+                const [k, v] = item;
+                if (ignoreName && k === '_name')
+                    return;
+                if (typeof v === 'object' && (v as any)._name !== undefined) {
+                    // nested entry
+                    ret[prefix + k] = (v as any)._name;
+                    Object.assign(ret, flatten(v, prefix + k + '/', true));
+                } else {
+                    ret[prefix + k] = v;
+                }
+            });
+            return ret;
+        };
+        const tempHyper = this.info.hyperParameters;
+        if (tempHyper === undefined) {
+            return {
+                error: 'This trial\'s parameters are not available.'
+            };
+        } else {
+            const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+            if (typeof getPara === 'string') {
+                return flatten(JSON.parse(getPara) as object);
+            } else {
+                return flatten(getPara as object);
+            }
+        }
+    }
+
     get color(): string | undefined {
         return undefined;
     }
