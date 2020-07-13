@@ -189,6 +189,7 @@ The `Constrained L1Filter Pruner` will try to prune the same output channels for
 
  In a word, compared to `L1Filter`, `Constrained L1Filter Pruner` will provide a better speed gain from the model pruning.
 
+
 ### Usage
 Pytorch code
 ```python
