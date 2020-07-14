@@ -51,7 +51,7 @@ class SensitivityPruner(Pruner):
         evaluator: function
             validation function for the model. This function should return the accuracy
             of the validation dataset. The input parameters of evaluator can be specified
-            in the parameter `eval_args` and 'eval_kwargs' of the funciton compress if needed. 
+            in the parameter `eval_args` and 'eval_kwargs' of the funciton compress if needed.
         finetuner: function
             finetune function for the model. This parameter is not essential, if is not None,
             the sensitivity pruner will finetune the model after pruning in each iteration.
@@ -65,7 +65,7 @@ class SensitivityPruner(Pruner):
             proportion according to the sensitivity analysis results. Users can also customize
             this function according to their needs. The input of this function is a dict,
             for example : {'conv1' : {0.1: 0.9, 0.2 : 0.8}, 'conv2' : {0.1: 0.9, 0.2 : 0.8}},
-            in which, 'conv1' and is the name of the conv layer, and 0.1:0.9 means when the 
+            in which, 'conv1' and is the name of the conv layer, and 0.1:0.9 means when the
             sparsity of conv1 is 0.1 (10%), the model's val accuracy equals to 0.9.
         sparsity_per_iter: float
             The sparsity of the model that the pruner try to prune in each iteration.
@@ -145,21 +145,7 @@ class SensitivityPruner(Pruner):
 
         schema.validate(config_list)
 
-    def load_sensitivitis(self, filepath):
-        # TODO load from a csv file
-        """
-        Load the sensitivity analysis result from file
-        """
-        assert os.path.exists(filepath)
-        with open(filepath, 'r') as jf:
-            sensitivities = json.load(jf)
-            # convert string type to float
-            for name in sensitivities:
-                sensitivities[name] = {float(k): float(v)
-                                       for k, v in sensitivities[name].items()}
-            return sensitivities
-
-    def load_sensitivitis_csv(self, filepath):
+    def load_sensitivity(self, filepath):
         """
         load the sensitivity results exported by the sensitivity analyzer
         """
@@ -290,12 +276,12 @@ class SensitivityPruner(Pruner):
     def compress(self, eval_args=None, eval_kwargs=None,
                  finetune_args=None, finetune_kwargs=None, resume_sensitivity=None):
         """
-        This function iteratively prune the model according to the results of 
+        This function iteratively prune the model according to the results of
         the sensitivity analysis.
 
         Parameters
         ----------
-        eval_args: list 
+        eval_args: list
         eval_kwargs: list& dict
             Parameters for the val_funtion, the val_function will be called like
             evaluator(*eval_args, **eval_kwargs)
@@ -303,10 +289,7 @@ class SensitivityPruner(Pruner):
         finetune_kwargs: dict
             Parameters for the finetuner function if needed.
         resume_sensitivity:
-            resume the sensitivity results from this file. In the one shot pruning mode(in which
-            the maximum iteration is set to 1), user can avoid the repeated sensitivity analysis 
-            for the same model.
-
+            resume the sensitivity results from this file.
         """
         # pylint suggest not use the empty list and dict
         # as the default input parameter
@@ -324,7 +307,7 @@ class SensitivityPruner(Pruner):
             self.sensitivities = self.analyzer.analysis(
                 val_args=eval_args, val_kwargs=eval_kwargs)
         else:
-            self.sensitivities = self.load_sensitivitis(resume_sensitivity)
+            self.sensitivities = self.load_sensitivity(resume_sensitivity)
             self.analyzer.sensitivities = self.sensitivities
         # the final target sparsity of the model
         target_ratio = 1 - self.config_list[0]['sparsity']
@@ -393,35 +376,8 @@ class SensitivityPruner(Pruner):
                 self.sensitivities = self.analyzer.analysis(
                     val_args=eval_args, val_kwargs=eval_kwargs)
 
-        _logger.info('After Pruning: %.2f weights remains' % cur_ratio)
+        _logger.info('After Pruning: %.2f weights remains', cur_ratio)
         return self.model
 
-
-
-
-    # def resume(self, checkpoint, pruner_cfg):
-    #     """
-    #     Resume from the checkpoint and continue to prune the model.
-
-    #     Parameters
-    #     ----------
-    #         checkpoint:
-    #             checkpoint of the model
-    #         pruner_cfg:
-    #             configuration of the previous pruner.
-    #     """
-    #     assert os.path.exists(checkpoint)
-    #     assert os.path.exists(pruner_cfg)
-    #     self.ori_state_dict = torch.load(checkpoint)
-    #     # the ori_state_dict of the sensitivity analyzer also needs update
-    #     # self.analyzer.load_state_dict(self.ori_state_dict)
-    #     self.analyzer.ori_state_dict = copy.deepcopy(self.ori_state_dict)
-    #     self.model.load_state_dict(self.ori_state_dict)
-    #     with open(pruner_cfg, 'r') as jf:
-    #         cfgs = json.load(jf)
-    #         # reset the already pruned for the sensitivity analyzer
-    #         for cfg in cfgs:
-    #             for layername in cfg['op_names']:
-    #                 self.analyzer.already_pruned[layername] = float(
-    #                     cfg['sparsity'])
-    #         self.remained_ratio = 1.0 - self.current_sparsity()
+    def calc_mask(self, wrapper, **kwargs):
+        return None
