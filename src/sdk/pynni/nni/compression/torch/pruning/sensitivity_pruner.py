@@ -17,21 +17,7 @@ from ..utils.sensitivity_analysis import SensitivityAnalysis
 
 MAX_PRUNE_RATIO_PER_ITER = 0.95
 
-
-root = logging.getLogger()
-root.setLevel(logging.DEBUG)
-
-handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
-# root.addHandler(handler)
-
-# logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 _logger = logging.getLogger('Sensitivity_Pruner')
-_logger.addHandler(handler)
-# _logger.setLevel(logging.INFO)
-# logger.setLevel(logging.DEBUG)
 
 
 class SensitivityPruner(Pruner):
