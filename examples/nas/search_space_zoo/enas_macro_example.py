@@ -13,6 +13,7 @@ from utils import accuracy, reward_accuracy
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)
 from nni.nas.pytorch.search_space_zoo import ENASMacroLayer
+from nni.nas.pytorch.search_space_zoo import ENASMacroGeneralModel
 
 logger = logging.getLogger('nni')
 
@@ -53,56 +54,6 @@ class FactorizedReduce(nn.Module):
         return out
 
 
-class GeneralNetwork(nn.Module):
-    def __init__(self, num_layers=12, out_filters=24, in_channels=3, num_classes=10,
-                 dropout_rate=0.0):
-        super().__init__()
-        self.num_layers = num_layers
-        self.num_classes = num_classes
-        self.out_filters = out_filters
-
-        self.stem = nn.Sequential(
-            nn.Conv2d(in_channels, out_filters, 3, 1, 1, bias=False),
-            nn.BatchNorm2d(out_filters)
-        )
-
-        pool_distance = self.num_layers // 3
-        self.pool_layers_idx = [pool_distance - 1, 2 * pool_distance - 1]
-        self.dropout_rate = dropout_rate
-        self.dropout = nn.Dropout(self.dropout_rate)
-
-        self.layers = nn.ModuleList()
-        self.pool_layers = nn.ModuleList()
-        labels = []
-        for layer_id in range(self.num_layers):
-            labels.append("layer_{}".format(layer_id))
-            if layer_id in self.pool_layers_idx:
-                self.pool_layers.append(FactorizedReduce(self.out_filters, self.out_filters))
-            self.layers.append(ENASMacroLayer(labels[-1], labels[:-1], self.out_filters, self.out_filters))
-
-        self.gap = nn.AdaptiveAvgPool2d(1)
-        self.dense = nn.Linear(self.out_filters, self.num_classes)
-
-    def forward(self, x):
-        bs = x.size(0)
-        cur = self.stem(x)
-
-        layers = [cur]
-
-        for layer_id in range(self.num_layers):
-            cur = self.layers[layer_id](layers)
-            layers.append(cur)
-            if layer_id in self.pool_layers_idx:
-                for i, layer in enumerate(layers):
-                    layers[i] = self.pool_layers[self.pool_layers_idx.index(layer_id)](layer)
-                cur = layers[-1]
-
-        cur = self.gap(cur).view(bs, -1)
-        cur = self.dropout(cur)
-        logits = self.dense(cur)
-        return logits
-
-
 if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
@@ -113,7 +64,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     dataset_train, dataset_valid = get_dataset("cifar10")
-    model = GeneralNetwork()
+    model = ENASMacroGeneralModel()
     num_epochs = args.epochs or 310
     mutator = None
 

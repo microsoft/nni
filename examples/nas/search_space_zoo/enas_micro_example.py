@@ -12,7 +12,7 @@ from utils import accuracy, reward_accuracy
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)
 
-from nni.nas.pytorch.search_space_zoo import ENASMicroLayer, ENASReductionLayer
+from nni.nas.pytorch.search_space_zoo import ENASMicroLayer
 
 logger = logging.getLogger('nni')
 
@@ -62,9 +62,9 @@ class MicroNetwork(nn.Module):
             reduction = False
             if layer_id in pool_layers:
                 c_cur, reduction = c_p * 2, True
-                self.layers.append(ENASReductionLayer(c_pp, c_p, c_cur))
+            self.layers.append(ENASMicroLayer(self.layers, num_nodes, c_pp, c_p, c_cur, reduction))
+            if reduction:
                 c_pp = c_p = c_cur
-            self.layers.append(ENASMicroLayer(num_nodes, c_pp, c_p, c_cur, reduction))
             c_pp, c_p = c_p, c_cur
 
         self.gap = nn.AdaptiveAvgPool2d(1)

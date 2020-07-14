@@ -64,12 +64,7 @@ The predefined operations can be seen [here](#predefined-operations-enas).
     :members:
 ```
 
-The Reduction Layer is made up by two Conv operations followed by BatchNorm, each of them will output `C_out//2` channels and concat them in channels as the output. The Convolution have `kernal_size=1` and `stride=2`, and they perform alternate sampling on the input so as to reduce the resolution without loss of information.
-
-```eval_rst
-..  autoclass:: nni.nas.pytorch.search_space_zoo.ENASReductionLayer
-    :members:
-```
+The Reduction Layer is made up by two Conv operations followed by BatchNorm, each of them will output `C_out//2` channels and concat them in channels as the output. The Convolution have `kernal_size=1` and `stride=2`, and they perform alternate sampling on the input so as to reduce the resolution without loss of information. This layer is Wrapped in `ENASMicroLayer`.
 
 ### Example code
 
@@ -112,6 +107,13 @@ In Macro search, the controller makes two decisions for each layer: i) the [oper
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.search_space_zoo.ENASMacroLayer
+    :members:
+```
+
+To describe the whole search space, NNI provides a model, which is built by stacking the layers.
+
+```eval_rst
+..  autoclass:: nni.nas.pytorch.search_space_zoo.ENASMacroGeneralModel
     :members:
 ```
 
