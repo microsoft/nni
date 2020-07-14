@@ -58,6 +58,6 @@ jobs:
       echo "TEST_IMG:$TEST_IMG"
       cd test
       python3 nni_test/nnitest/generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $TEST_IMG --pai_storage_config_name $(pai_storage_config_name)\
-       --pai_token $(pai_token) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip)
+       --pai_token $(pai_token) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip) --vc $(virtual_cluster)
       PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
     displayName: 'integration test'

@@ -3,7 +3,7 @@
 
 ## Overview
 
-NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/BuiltinTuner.md#Hyperband) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
+NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/HyperbandAdvisor.md) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
 
 NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of [customized tuners](../Tuner/CustomizeTuner.md)/[advisors](../Tuner/CustomizeAdvisor.md)/[assessors](../Assessor/CustomizeAssessor.md).
 
@@ -77,7 +77,7 @@ Once you have the meta info in `setup.py`, you can build your pip installation s
 
 NNI will look for the classifier starts with `NNI Package` to retrieve the package meta information while the package being installed with `nnictl package install <source>` command.
 
-Reference [customized tuner example](https://github.com/microsoft/nni/blob/master/examples/tuners/customized_tuner/README.md) for a full example.
+Reference [customized tuner example](../Tuner/InstallCustomizedTuner.md) for a full example.
 
 ### 4. Install customized algorithms package into NNI
 

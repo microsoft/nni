@@ -1,5 +1,65 @@
 # ChangeLog
 
+# Release 1.7 - 7/8/2020
+
+## Major Features
+
+### Training Service
+
+* Support AML(Azure Machine Learning) platform as NNI training service.
+* OpenPAI job can be reusable. When a trial is completed, the OpenPAI job won't stop, and wait next trial. [refer to reuse flag in OpenPAI config](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/PaiMode.md#openpai-configurations).
+* [Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.md#how-to-use-training-service).
+
+### Neural Architecture Search (NAS)
+
+* [Provide NAS Open Benchmarks (NasBench101, NasBench201, NDS) with friendly APIs](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md).
+
+* [Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.md).
+
+### Model Compression
+
+* Improve Model Speedup: track more dependencies among layers and automatically resolve mask conflict, support the speedup of pruned resnet.
+* Added new pruners, including three auto model pruning algorithms: [NetAdapt Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#netadapt-pruner), [SimulatedAnnealing Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner), [AutoCompress Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#autocompress-pruner), and [ADMM Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#admm-pruner).
+* Added [model sensitivity analysis tool](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md) to help users find the sensitivity of each layer to the pruning.
+* [Easy flops calculation for model compression and NAS](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md#model-flops-parameters-counter).
+
+* Update lottery ticket pruner to export winning ticket.
+
+### Examples
+
+* Automatically optimize tensor operators on NNI with a new [customized tuner OpEvo](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.md).
+
+### Built-in tuners/assessors/advisors
+
+* [Allow customized tuners/assessor/advisors to be installed as built-in algorithms](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.md).
+
+### WebUI
+
+* Support visualizing nested search space more friendly.
+* Show trial's dict keys in hyper-parameter graph.
+* Enhancements to trial duration display.
+
+### Others
+
+* Provide utility function to merge parameters received from NNI
+* Support setting paiStorageConfigName in pai mode
+
+## Documentation
+
+* Improve [documentation for model compression](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md)
+* Improve [documentation](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md)
+and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/BenchmarksExample.ipynb) for NAS benchmarks.
+* Improve [documentation for AzureML training service](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/AMLMode.md)
+* Homepage migration to readthedoc.
+
+## Bug Fixes
+
+* Fix bug for model graph with shared nn.Module
+* Fix nodejs OOM when `make build`
+* Fix NASUI bugs
+* Fix duration and intermediate results pictures update issue.
+* Fix minor WebUI table style issues.
+
 ## Release 1.6 - 5/26/2020
 
 ### Major Features
@@ -105,7 +165,7 @@
 * WebUI refactor: adopt fabric framework
 
 #### Others
-* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
+* Support running [NNI experiment at foreground](https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment), i.e., `--foreground` argument in `nnictl create/resume/view`
 * Support canceling the trials in UNKNOWN state
 * Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
 
@@ -139,7 +199,7 @@
 * [BNN Quantizer](https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer)
 #### Training Service
 * NFS Support for PAI
-    
+
     Instead of using HDFS as default storage, since OpenPAI v0.11, OpenPAI can have NFS or AzureBlob or other storage as default storage. In this release, NNI extended the support for this recent change made by OpenPAI, and could integrate with OpenPAI v0.11 or later version with various default storage.
 
 * Kubeflow update adoption
@@ -273,11 +333,11 @@
 ### Major Features
 * General NAS programming interface
     * Add `enas-mode`  and `oneshot-mode` for NAS interface: [PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
-* [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md) 
+* [Gaussian Process Tuner with Matern kernel](Tuner/GPTuner.md)
 
 * (deprecated) Multiphase experiment supports
     * Added new training service support for multiphase experiment: PAI mode supports multiphase experiment since v0.9.
-    * Added multiphase capability for the following builtin tuners: 
+    * Added multiphase capability for the following builtin tuners:
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner.
 
 * Web Portal
@@ -326,8 +386,8 @@
 * Fix bug of table entries
 * Nested search space refinement
 * Refine 'randint' type and support lower bound
-* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparision.md)
-* [Comparison of NAS algorithm](CommunitySharings/NasComparision.md)
+* [Comparison of different hyper-parameter tuning algorithm](CommunitySharings/HpoComparison.md)
+* [Comparison of NAS algorithm](CommunitySharings/NasComparison.md)
 * [NNI practice on Recommenders](CommunitySharings/RecommendersSvd.md)
 
 ## Release 0.7 - 4/29/2018
@@ -338,7 +398,7 @@
   * NNI running on windows for local mode
 * [New advisor: BOHB](Tuner/BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md#experiment)
+* [Support import and export experiment data through nnictl](Tutorial/Nnictl.md)
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
 * [Designated gpu devices for NNI trial jobs](Tutorial/ExperimentConfig.md#localConfig)

@@ -42,7 +42,8 @@ setup(
         'PythonWebHDFS',
         'colorama',
         'scikit-learn>=0.20,<0.22',
-        'pkginfo'
+        'pkginfo',
+        'websockets'
     ],
 
     entry_points = {

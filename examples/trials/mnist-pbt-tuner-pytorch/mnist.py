@@ -88,7 +88,7 @@ def main(args):
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    data_dir = os.path.join(args['data_dir'], nni.get_trial_id())
+    data_dir = args['data_dir']
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(data_dir, train=True, download=True,
@@ -144,7 +144,7 @@ def get_params():
     # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
     parser.add_argument("--data_dir", type=str,
-                        default='/tmp/pytorch/mnist/input_data', help="data directory")
+                        default='./data', help="data directory")
     parser.add_argument('--batch_size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
