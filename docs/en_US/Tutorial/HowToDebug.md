@@ -25,9 +25,9 @@ You can use `nnictl log stderr` to find error information. For more options plea
 
 
 ### Experiment Root Directory
-Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
+Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni-experiments/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
 
-> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni/experiment`). Please refer to [Configuration](ExperimentConfig.md) for more details.
+> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni-experiments`). Please refer to [Configuration](ExperimentConfig.md) for more details.
 
 Under that directory, there is another directory named `log`, where `nnimanager.log` and `dispatcher.log` are placed.
 
@@ -36,7 +36,7 @@ Under that directory, there is another directory named `log`, where `nnimanager.
 Usually in webUI, you can click `+` in the left of every trial to expand it to see each trial's log path.
 
 Besides, there is another directory under experiment root directory, named `trials`, which stores all the trials.
-Every trial has a unique id as its directory name. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log. 
+Every trial has a unique id as its directory name. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log.
 
 ## Different kinds of errors
 
@@ -76,7 +76,7 @@ TypeError: __init__() missing 1 required positional arguments: 'optimize_mode'.
 
 ### **Trial** Fails
 
-In this situation, NNI can still run and create new trials. 
+In this situation, NNI can still run and create new trials.
 
 It means your trial code (which is run by NNI) fails. This kind of error is strongly related to your trial code. Please check trial's log to fix any possible errors shown there.
 
