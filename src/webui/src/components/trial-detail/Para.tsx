@@ -199,7 +199,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         const { trials, searchSpace } = this.props;
         // filter succeed trials [{}, {}, {}]
         const succeededTrials = trials.filter(filterByStatus);
-        const convertedtrials = succeededTrials.map((s) => {
+        const convertedTrials = succeededTrials.map((s) => {
             const ret = { ...(s.parameters()), ...(s.acc) } as any;
             delete ret.pretrained;
             return ret;
@@ -216,27 +216,28 @@ class Para extends React.Component<ParaProps, ParaState> {
                 return d3.scaleLinear().domain(axis.domain).range(this.getRange());
             }
         };
+        // treat all as number to fit for brush
         for (const [k, v] of inferredSearchSpace.getAllAxes()) {
             dimensions.push([k, {
-                type: v.scale,
+                type: 'number',
                 yscale: convertToD3Scale(v)
             }]);
         }
         for (const [k, v] of inferredMetricSpace.getAllAxes()) {
             // const title = `metrics/${k}`;
             dimensions.push([k, {
-                type: v.scale,
+                type: 'number',
                 yscale: convertToD3Scale(v)
             }]);
         }
 
         if (this.pcs === undefined) {
             this.pcs = ParCoords()(this.paraRef.current)
-                .data(convertedtrials)
-                // .smoothness(0.15)
+                .data(convertedTrials)
                 .showControlPoints(false)
                 .margin(this.innerChartMargins)
                 .dimensions(dimensions.reduce((obj, entry) => ({...obj, [entry[0]]: entry[1]}), {}))
+                .alphaOnBrushed(0.2)
                 .render()
                 .brushMode("1D-axes")
                 .reorderable()
