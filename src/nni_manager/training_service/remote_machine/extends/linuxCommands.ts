@@ -48,13 +48,13 @@ class LinuxCommands extends OsCommands {
     }
 
     public allowPermission(isRecursive: boolean = false, ...folders: string[]): string {
-        const folderString = folders.join("' '");
+        const folderString = folders.join(" ");
         let command;
 
         if (isRecursive) {
-            command = `chmod 777 -R '${folderString}'`;
+            command = `chmod 777 -R ${folderString}`;
         } else {
-            command = `chmod 777 '${folderString}'`;
+            command = `chmod 777 ${folderString}`;
         }
         return command;
     }
