@@ -49,8 +49,8 @@ describe('Unit Test for linuxCommands', () => {
     })
 
     it('allowPermission', async () => {
-        chai.expect(linuxCommands.allowPermission(true, "test", "test1")).to.equal("chmod 777 -R test test1");
-        chai.expect(linuxCommands.allowPermission(false, "test")).to.equal("chmod 777 test");
+        chai.expect(linuxCommands.allowPermission(true, "test", "test1")).to.equal("chmod 777 -R 'test' 'test1'");
+        chai.expect(linuxCommands.allowPermission(false, "test")).to.equal("chmod 777 'test'");
     })
 
     it('removeFolder', async () => {
