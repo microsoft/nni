@@ -2,7 +2,7 @@
 
 ## DartsCell
 
-DartsCell is extracted from [CNN model](./DARTS.md) designed in this repo. [Operations](#darts-predefined-operations) connecting with nodes which contained in the cell strucure is fixed.One cell contains `n_nodes` nodes and uses operations to connect all nodes in a mutable way. By adjusting the weight of connection between two nodes, the operation with the greatest probility is chosen to be part of the final structure. A CNN model is got by stacking these cell together. Note that, all cells in the model share the same structure.
+DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in convolutional network). Directed edges from Node 1 to Node 2 is associated with some operations that transform Node 1 and the result is stored on Node 2. The [operations](#darts-predefined-operations) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, we relax the categorical choice of a particular operation to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probility is chosen to be part of the final structure. A CNN model is formed by stacking these cells together. Note that, all cells in the model share the same structure.
 
 The predefined operations are shown in [references](#predefined-operations-darts).
 
@@ -26,6 +26,8 @@ python3 darts_example.py
 
 ### References
 
+All supported operations for Darts are listed below.
+
 * MaxPool / AvgPool
   * MaxPool: call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels. Its parameters `kernal_size=3` and `padding=1` are fixed. The pooling result will pass through a BatchNorm2d then return as the result.
   * AvgPool: call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels. Its parameters `kernal_size=3` and `padding=1` are fixed. The pooling result will pass through a BatchNorm2d then return as the result.
@@ -34,7 +36,7 @@ python3 darts_example.py
     ```eval_rst
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.darts_ops.PoolBN
     ```
-* Skip Connection
+* SkipConnect
 
     There is no operation between two nodes. Call `torch.nn.Identity` to forward what it gets to the output.
 * DilConv3x3 / DilConv5x5
@@ -52,10 +54,9 @@ python3 darts_example.py
 
 ## ENASMicroLayer
 
-This layer is extracted from model designed [here](./ENAS.md). A model contains several blocks whose architecture keeps the same. A block is made up of some `ENAMicroLayer` 
-and one `ENASReduceLayer`. The only difference between the two layers is that `ENASReduceLayer` applies all operations with `stride=2`.
+This layer is extracted from model designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/enas). A model contains several blocks which share the same architecture. A block is made up of some `ENASMicroLayer` and reduction layers. The only difference between the two layers is that reduction layers apply all operations with `stride=2`.
 
-An `ENASMicroLayer` contains `num_nodes` nodes and searches the topology among them. The first two nodes in a layer stand for the outputs from previous previous layer and previous layer respectively. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
+ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent local computations, and the edges represent the flow of information between the N nodes. One cell contains two input nodes and a single output node. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
 
 The predefined operations can be seen [here](#predefined-operations-enas).
 
@@ -81,6 +82,8 @@ python3 enas_micro_example.py
 
 ### References
 
+All supported operations for ENAS micro search are listed below.
+
 * MaxPool / AvgPool
     * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
     * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
@@ -96,13 +99,13 @@ python3 enas_micro_example.py
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.SepConvBN
     ```
 
-* SkipConnection
+* SkipConnect
 
     Call `torch.nn.Identity` to connect directly to the next cell.
 
 ## ENASMacroLayer
 
-In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the previous layer, ii) the previous layer to connect to for skip connections. NNI privides [predefined operations](#macro-operations) for macro search, which are listed in [references](#macro-operations).
+In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the result of previous layer, ii) which previous layer to connect to for SkipConnects. ENAS uses controller to design the whole model architecture instead of one of its components. The output of operations is going to cancat with the tensor of the chosen layer for SkipConnect. NNI privides [predefined operations](#macro-operations) for macro search, which are listed in [references](#macro-operations).
 
 
 ```eval_rst
@@ -131,6 +134,8 @@ python3 enas_macro_example.py
 <a name="macro-operations"></a>
 
 ### References
+
+All supported operations for ENAS macro search are listed below.
 
 * ConvBranch
     
