@@ -242,7 +242,8 @@ infer_from_inshape = {
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
-    'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -259,8 +260,14 @@ def dropout_inshape(module_masks, mask):
         return module_masks.output_mask
     # if alreay visited
     assert module_masks.input_mask <= mask
-    if module_masks.input_mask == mask:
-        return None
+    # It should be the same, we pass the masks by the reference(not the value),
+    # so they acutually are two references of the same object(mask,
+    # module_masks.input_mask). So we should continue pass the mask
+    # to the following nodes even module_masks.input_mask == mask.
+    # if pass the mask by copy.deepcopy(), then we can stop when
+    # module_masks.input_mask == mask.
+    # if module_masks.input_mask == mask:
+    #     return None
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return module_masks.output_mask
