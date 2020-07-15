@@ -414,7 +414,8 @@ def linear_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     assert mask.mask_index[0] is None
-    assert module_masks.input_mask is None
+    if module_masks.input_mask is not None:
+        assert module_masks.input_mask <= mask
     module_masks.set_input_mask(mask)
     return None
 
@@ -452,7 +453,10 @@ def view_inshape(module_masks, mask, shape):
     assert mask.mask_index[0] is None
     assert mask.mask_index[2] is None
     assert mask.mask_index[3] is None
-    assert module_masks.input_mask is None
+    # due to the cat operation, the same node may be
+    # accessed more than once
+    if module_masks.input_mask is not None:
+        assert module_masks.input_mask <= mask
     module_masks.set_input_mask(mask)
     output_cmask = CoarseMask(num_dim=2)
     index = []
@@ -536,12 +540,9 @@ def relu_inshape(module_masks, mask):
         The mask of its output tensor
     """
     assert isinstance(mask, CoarseMask)
-    # TODO: double check this assert, is it possible that a module is passed twice
     if module_masks.input_mask is not None:
         # check if has a mask conflict
-        assert module_masks.input_mask == mask
-        # No need to pass the mask again
-        return None
+        assert module_masks.input_mask <= mask
     # assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
