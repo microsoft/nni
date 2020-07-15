@@ -287,6 +287,11 @@ class Solver(nn.Module):
         else:
             pin_memory = False
 
+        if num_workers == 0:
+            timeout = 0
+        else:
+            timeout = 60
+
         self.ds_train = ChunkDataLoader(
             PreparedData,
             batch_size=self.Nminibatch,
@@ -294,7 +299,7 @@ class Solver(nn.Module):
             drop_last=True,
             num_workers=num_workers,
             pin_memory=pin_memory,
-            timeout=0)
+            timeout=timeout)
         self.f_train = LearnabilityMB(self.Nminibatch, self.D,
                                       constants.Coefficients.SLE[order],
                                       self.groups,
