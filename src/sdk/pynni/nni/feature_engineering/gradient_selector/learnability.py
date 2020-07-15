@@ -281,6 +281,7 @@ class Solver(nn.Module):
             num_workers = 0
         else:
             num_workers = 0
+
         if constants.Device.CUDA in device:
             pin_memory = False
         else:
