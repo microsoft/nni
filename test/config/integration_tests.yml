@@ -157,6 +157,7 @@ testCases:
 - name: nnictl-resume-1
   configFile: test/config/examples/sklearn-regression.yml
   setExperimentIdtoVar: $resumeExpId
+  launchCommand: mkdir ../examples/trials/sklearn/regression/subfolder && nnictl create --config $configFile --debug
 
 # Experiment resume test part 2
 - name: nnictl-resume-2
