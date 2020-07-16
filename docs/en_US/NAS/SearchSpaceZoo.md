@@ -2,7 +2,7 @@
 
 ## DartsCell
 
-DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in convolutional network). Directed edges from Node 1 to Node 2 is associated with some operations that transform Node 1 and the result is stored on Node 2. The [operations](#darts-predefined-operations) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, we relax the categorical choice of a particular operation to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probility is chosen to be part of the final structure. A CNN model is formed by stacking these cells together. Note that, all cells in the model share the same structure.
+DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in a convolutional network). Directed edges from Node 1 to Node 2 are associated with some operations that transform Node 1 and the result is stored on Node 2. The [operations](#darts-predefined-operations) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node, and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, we relax the categorical choice of a particular operation to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probability is chosen to be part of the final structure. A CNN model is formed by stacking these cells together. Note that, all cells in the model share the same structure.
 
 The predefined operations are shown in [references](#predefined-operations-darts).
 
@@ -54,9 +54,9 @@ All supported operations for Darts are listed below.
 
 ## ENASMicroLayer
 
-This layer is extracted from model designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/enas). A model contains several blocks which share the same architecture. A block is made up of some `ENASMicroLayer` and reduction layers. The only difference between the two layers is that reduction layers apply all operations with `stride=2`.
+This layer is extracted from the model designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/enas). A model contains several blocks that share the same architecture. A block is made up of some `ENASMicroLayer` and reduction layers. The only difference between the two layers is that reduction layers apply all operations with `stride=2`.
 
-ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent local computations, and the edges represent the flow of information between the N nodes. One cell contains two input nodes and a single output node. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
+ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent local computations, and the edges represent the flow of information between the N nodes. One cell contains two input nodes and a single output node. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as the output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
 
 The predefined operations can be seen [here](#predefined-operations-enas).
 
@@ -65,7 +65,7 @@ The predefined operations can be seen [here](#predefined-operations-enas).
     :members:
 ```
 
-The Reduction Layer is made up by two Conv operations followed by BatchNorm, each of them will output `C_out//2` channels and concat them in channels as the output. The Convolution have `kernal_size=1` and `stride=2`, and they perform alternate sampling on the input so as to reduce the resolution without loss of information. This layer is Wrapped in `ENASMicroLayer`.
+The Reduction Layer is made up of two Conv operations followed by BatchNorm, each of them will output `C_out//2` channels and concat them in channels as the output. The Convolution has `kernal_size=1` and `stride=2`, and they perform alternate sampling on the input to reduce the resolution without loss of information. This layer is Wrapped in `ENASMicroLayer`.
 
 ### Example code
 
@@ -93,7 +93,7 @@ All supported operations for ENAS micro search are listed below.
 
 * SepConv
     * SepConvBN3x3: ReLU followed by a [DilConv](#DilConv) and BatchNorm. Convolution parameters are `kernal_size=3`, `stride=1` and `padding=1`.
-    * SepConvBN5x5: Do the same operation as the previous one but it has different kernal size and padding, which is set to 5 and 2 respectively.
+    * SepConvBN5x5: Do the same operation as the previous one but it has different kernel sizes and paddings, which is set to 5 and 2 respectively.
     
     ```eval_rst
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.SepConvBN
@@ -105,7 +105,7 @@ All supported operations for ENAS micro search are listed below.
 
 ## ENASMacroLayer
 
-In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the result of previous layer, ii) which previous layer to connect to for SkipConnects. ENAS uses controller to design the whole model architecture instead of one of its components. The output of operations is going to cancat with the tensor of the chosen layer for SkipConnect. NNI privides [predefined operations](#macro-operations) for macro search, which are listed in [references](#macro-operations).
+In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the result of the previous layer, ii) which the previous layer to connect to for SkipConnects. ENAS uses a controller to design the whole model architecture instead of one of its components. The output of operations is going to cancat with the tensor of the chosen layer for SkipConnect. NNI provides [predefined operations](#macro-operations) for macro search, which are listed in [references](#macro-operations).
 
 
 ```eval_rst
@@ -139,7 +139,7 @@ All supported operations for ENAS macro search are listed below.
 
 * ConvBranch
     
-    All input first passes into a StdConv, which is made up by a 1x1Conv followed by BatchNorm2d and ReLU. Then the intermediate result goes through one of the operations listed below. The final result is calculated through a BatchNorm2d and ReLU as post-procedure.
+    All input first passes into a StdConv, which is made up of a 1x1Conv followed by BatchNorm2d and ReLU. Then the intermediate result goes through one of the operations listed below. The final result is calculated through a BatchNorm2d and ReLU as post-procedure.
     * Separable Conv3x3: If `separable=True`, the cell will use [SepConv](#DilConv) instead of normal Conv operation. SepConv's `kernal_size=3`, `stride=1` and `padding=1`.
     * Separable Conv5x5: SepConv's `kernal_size=5`, `stride=1` and `padding=2`.
     * Normal Conv3x3: If `separable=False`, the cell will use a normal Conv operations with `kernal_size=3`, `stride=1` and `padding=1`.
@@ -150,7 +150,7 @@ All supported operations for ENAS macro search are listed below.
     ```
 * PoolBranch
 
-    All input first passes into a StdConv, which is made up by a 1x1Conv followed by BatchNorm2d and ReLU. Then the intermediate goes through pooling operation followd by BatchNorm.
+    All input first passes into a StdConv, which is made up of a 1x1Conv followed by BatchNorm2d and ReLU. Then the intermediate goes through pooling operation followed by BatchNorm.
     * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
     * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels. Its parameters are fixed to `kernal_size=3`, `stride=1` and `padding=1`.
 

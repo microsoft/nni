@@ -75,8 +75,8 @@ class StdConv(nn.Sequential):
         the number of input channels
     C_out: int
         the number of output channels
-    kernal_size:
-        size of the convolving kernel
+    kernel_size: int
+        size of the convolution kernel
     padding:
         zero-padding added to both sides of the input
     affine: bool

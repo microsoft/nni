@@ -53,28 +53,6 @@ class Calibration(nn.Module):
         return self.process(x)
 
 
-class ENASReductionLayer(nn.Module):
-    """
-    builtin EnasReductionLayer.
-
-    Parameters
-    ---
-    in_channels_pp: int
-        the number of previous previous layer's output channels
-    in_channels_p: int
-        the number of previous layer's output channels
-    out_channels: int
-        output channels of this layer
-    """
-    def __init__(self, in_channels_pp, in_channels_p, out_channels):
-        super().__init__()
-        self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
-        self.reduce1 = FactorizedReduce(in_channels_p, out_channels, affine=False)
-
-    def forward(self, pprev, prev):
-        return self.reduce0(pprev), self.reduce1(prev)
-
-
 class ENASMicroLayer(nn.Module):
     """
     Builtin EnasMicroLayer. Micro search designs only one building block whose architecture is repeated
@@ -88,8 +66,6 @@ class ENASMicroLayer(nn.Module):
 
     Parameters
     ---
-    cells_list: list
-        the list contains all cells in model
     num_nodes: int
         the number of nodes contained in this layer
     in_channles_pp: int
@@ -99,13 +75,16 @@ class ENASMicroLayer(nn.Module):
     out_channels: int
         output channels of this layer
     reduction: bool
-        is previous layer a reduction layer
+        is reduction operation empolyed before this layer
     """
-    def __init__(self, cells_list, num_nodes, in_channels_pp, in_channels_p, out_channels, reduction):
+    def __init__(self, num_nodes, in_channels_pp, in_channels_p, out_channels, reduction):
         super().__init__()
         print(in_channels_pp, in_channels_p, out_channels, reduction)
-        if reduction:
-            cells_list.append(ENASReductionLayer(in_channels_pp, in_channels_p, out_channels))
+        self.reduction = reduction
+        if self.reduction:
+            self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
+            self.reduce1 = FactorizedReduce(in_channels_p, out_channels, affine=False)
+            # cells_list.append(ENASReductionLayer(in_channels_pp, in_channels_p, out_channels))
             in_channels_pp = in_channels_p = out_channels
         self.preproc0 = Calibration(in_channels_pp, out_channels)
         self.preproc1 = Calibration(in_channels_p, out_channels)
@@ -126,6 +105,8 @@ class ENASMicroLayer(nn.Module):
         nn.init.kaiming_normal_(self.final_conv_w)
 
     def forward(self, pprev, prev):
+        if self.reduction:
+            pprev, prev = self.reduce0(pprev), self.reduce1(prev)
         pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)
 
         prev_nodes_out = [pprev_, prev_]
@@ -145,9 +126,9 @@ class ENASMicroLayer(nn.Module):
 
 class ENASMacroLayer(mutables.MutableScope):
     """
-    Builtin ENAS Marco Layer. With search space changing to layer level, controller decides
-    what operation is employed and the previous layer to connect to for skip connections.
-    The model is made up by the same layers but the choice of each layer may be different.
+    Builtin ENAS Marco Layer. With search space changing to layer level, the controller decides
+    what operation is employed and the previous layer to connect to for skip connections. The model
+    is made up of the same layers but the choice of each layer may be different.
 
     Parameters
     ---
@@ -190,7 +171,7 @@ class ENASMacroLayer(mutables.MutableScope):
 class ENASMacroGeneralModel(nn.Module):
     """
     The network is made up by stacking ENASMacroLayer. The Macro search space contains these layers.
-    Each layer chooses a operation from predefined ones and SkipConnect then form a network.
+    Each layer chooses an operation from predefined ones and SkipConnect then forms a network.
 
     Parameters
     ---
