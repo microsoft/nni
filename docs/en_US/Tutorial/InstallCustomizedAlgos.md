@@ -77,7 +77,7 @@ Once you have the meta info in `setup.py`, you can build your pip installation s
 
 NNI will look for the classifier starts with `NNI Package` to retrieve the package meta information while the package being installed with `nnictl package install <source>` command.
 
-Reference [customized tuner example](https://github.com/microsoft/nni/blob/master/examples/tuners/customized_tuner/README.md) for a full example.
+Reference [customized tuner example](../Tuner/InstallCustomizedTuner.md) for a full example.
 
 ### 4. Install customized algorithms package into NNI
 

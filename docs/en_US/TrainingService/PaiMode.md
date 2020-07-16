@@ -28,7 +28,6 @@ For example, use the following command:
 ```bash
 sudo mount -t nfs4 gcr-openpai-infra02:/pai/data /local/mnt
 ```
-
 Then the `/data` folder in container will be mounted to `/local/mnt` folder in your local machine.  
 You could use the following configuration in your NNI's config file:
 
@@ -87,7 +86,7 @@ paiConfig:
   reuse: true
 ```
 
-Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
+Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocol in NNI is `http`, if your PAI's cluster enabled https, please use the uri in `https://10.10.5.1` format.
 
 ### Trial configurations
 
