@@ -1,4 +1,4 @@
-# Automatically tuning SVD on NNI
+# Automatically tuning SVD (NNI in Recommenders)
 
 In this tutorial, we first introduce a github repo [Recommenders](https://github.com/Microsoft/Recommenders). It is a repository that provides examples and best practices for building recommendation systems, provided as Jupyter notebooks. It has various models that are popular and widely deployed in recommendation systems. To provide a complete end-to-end experience, they present each example in five key tasks, as shown below:
 
