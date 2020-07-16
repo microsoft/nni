@@ -7,6 +7,9 @@
     Example Usages <BenchmarksExample>
 ```
 
+## Introduction
+To imporve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as [NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326), [NDS](https://arxiv.org/abs/1905.13214), etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
+
 ## Prerequisites
 
 * Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
@@ -14,33 +17,17 @@
 
 ## Data Preparation
 
-To avoid storage and legal issues, we do not provide any prepared databases. We strongly recommend users to use docker to run the generation scripts, to ease the burden of installing multiple dependencies. Please follow the following steps.
+To avoid storage and legality issues, we do not provide any prepared databases. Please follow the following steps.
 
-**Step 1.** Clone NNI repo. Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.6`.
-
-```bash
+1. Clone NNI to your machine and enter `examples/nas/benchmarks` directory.
+```
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
+cd nni/examples/nas/benchmarks
 ```
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.7`.
 
-**Step 2.** Run docker.
-
-For NAS-Bench-101,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
-```
-
-For NAS-Bench-201,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
-```
-
-For NDS,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
-```
+2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201` or `nds`.
+3. Generate the database via `./xxx.sh`. The directory that stores the benchmark file can be configured with `NASBENCHMARK_DIR` environment variable, which defaults to `~/.nni/nasbenchmark`. Note that the NAS-Bench-201 dataset will be downloaded from a google drive.
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
 

@@ -2,7 +2,7 @@
 
 NNI provides state-of-the-art tuning algorithms as part of our built-in tuners and makes them easy to use. Below is the brief summary of NNI's current built-in tuners:
 
-Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an [article](../CommunitySharings/HpoComparision.md) comparing different Tuners on several problems.
+Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an [article](../CommunitySharings/HpoComparison.md) comparing different Tuners on several problems.
 
 Currently, we support the following algorithms:
 
@@ -218,7 +218,7 @@ The search space file should include the high-level key `combine_params`. The ty
 
 **Suggested scenario**
 
-Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`. 
+Note that the only acceptable types within the search space are `choice`, `quniform`, and `randint`.
 
 This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. [Detailed Description](./GridsearchTuner.md)
 
@@ -388,7 +388,7 @@ As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, 
 **classArgs Requirements:**
 
 * **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The utility function (acquisition function). 'ei', 'ucb', and 'poi' correspond to 'Expected Improvement', 'Upper Confidence Bound', and 'Probability of Improvement', respectively. 
+* **utility** (*'ei', 'ucb' or 'poi', optional, default = 'ei'*) - The utility function (acquisition function). 'ei', 'ucb', and 'poi' correspond to 'Expected Improvement', 'Upper Confidence Bound', and 'Probability of Improvement', respectively.
 * **kappa** (*float, optional, default = 5*) - Used by the 'ucb' utility function. The bigger `kappa` is, the more exploratory the tuner will be.
 * **xi** (*float, optional, default = 0*) - Used by the 'ei' and 'poi' utility functions. The bigger `xi` is, the more exploratory the tuner will be.
 * **nu** (*float, optional, default = 2.5*) - Used to specify the Matern kernel. The smaller nu, the less smooth the approximated function is.

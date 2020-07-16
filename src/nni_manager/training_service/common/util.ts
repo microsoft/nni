@@ -106,7 +106,9 @@ export async function execCopydir(source: string, destination: string): Promise<
         const sourcePath = path.join(source, relPath);
         const destPath = path.join(destination, relPath);
         if (fs.statSync(sourcePath).isDirectory()) {
-            await fs.promises.mkdir(destPath);
+            if (!fs.existsSync(destPath)) {
+                await fs.promises.mkdir(destPath);
+            }
         } else {
             await fs.promises.copyFile(sourcePath, destPath);
         }
