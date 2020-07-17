@@ -67,8 +67,8 @@ def _copy_source(s, graph, op_map, handle_captures, inverse_captures, base_graph
     elif s.op.type == "PlaceholderWithDefault" and _constant_inputs(s):
         default_value = s.op.inputs[0]
         unavailable_inputs, unavailable_control_inputs = _copy_non_source(
-                op=default_value.op, graph=graph, op_map=op_map,
-                base_graph=base_graph)
+            op=default_value.op, graph=graph, op_map=op_map,
+            base_graph=base_graph)
         if unavailable_inputs or unavailable_control_inputs:
             raise AssertionError("Could not copy source node {} because it has inputs.".format(default_value))
 
@@ -94,7 +94,7 @@ def lift_to_graph(tensors, graph, sources=None, op_map=None):
             variable_init_tensors.append(tensor)
         else:
             init_tensors.append(tensor)
-    base_graph = base_graph or init_tensors[0].graph
+    base_graph = init_tensors[0].graph
     op_map = op_map or object_identity.ObjectIdentityDictionary()
 
     sources = object_identity.ObjectIdentitySet(sources or [])
@@ -105,16 +105,15 @@ def lift_to_graph(tensors, graph, sources=None, op_map=None):
         sources.update(op_selector.map_subgraph(
             init_tensor=init_tensor,
             sources=sources,
-            disallowed_placeholders=disallowed_placeholders,
+            disallowed_placeholders=None,
             visited_ops=visited_ops,
             op_outputs=op_outputs,
-            add_sources=add_sources
+            add_sources=False
         ))
 
     ops_to_copy = []
     marked_ops = set([])
-    ops_to_visit = [_as_operation(t) for t in init_tensors
-                                    if not op_outputs[_as_operation(t)]]
+    ops_to_visit = [_as_operation(t) for t in init_tensors if not op_outputs[_as_operation(t)]]
     unvisited_ops = set(ops_to_visit)
     while unvisited_ops:
         while ops_to_visit:
@@ -154,7 +153,7 @@ def lift_to_graph(tensors, graph, sources=None, op_map=None):
                     s=s,
                     graph=graph,
                     op_map=op_map,
-                    handle_captures=handle_captures,
+                    handle_captures=False,
                     inverse_captures=inverse_captures,
                     base_graph=base_graph
                 )
@@ -164,7 +163,7 @@ def lift_to_graph(tensors, graph, sources=None, op_map=None):
                 s=s,
                 graph=graph,
                 op_map=op_map,
-                handle_captures=handle_captures,
+                handle_captures=False,
                 inverse_captures=inverse_captures,
                 base_graph=base_graph
             )

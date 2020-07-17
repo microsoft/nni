@@ -1,6 +1,7 @@
 import functools
 import weakref
 
+import tensorflow as tf
 from tensorflow.python.eager import function as function_lib
 from tensorflow.python.framework import func_graph, ops
 from tensorflow.python.ops import array_ops, control_flow_ops, math_ops, resource_variable_ops
@@ -20,6 +21,10 @@ class Function:
         self._name = name
         self._input_signature = input_signature
         self._call_counter = _CallCounter(10)
+
+        self._lifted_initializer_graph = None
+        self._graph_deleter = None
+        self._concrete_stateful_fn = None
 
 
     def _defun_with_scope(self, scope):
@@ -79,11 +84,11 @@ class Function:
     def __call__(self, *args, **kwargs):
         tracing_count = self._get_tracing_count()
         result = self._call(*args, **kwargs)
-  
+
         if tracing_count == self._get_tracing_count():
             self._call_counter.called_without_tracing()
             return result
-    
+
         self._call_counter.called_with_tracing()
         recent_tracing_count = self._call_counter.get_tracing_count()
         if recent_tracing_count >= 5:
@@ -140,7 +145,7 @@ class Function:
 
     def _initialize_uninitialized_variables(self, initializers):
         if not initializers:
-            return
+            return None
 
         @function_lib.defun(autograph=False)
         def initialize_variables():
@@ -183,6 +188,7 @@ class Function:
             if self._created_variables:
                 raise ValueError('run-time creating variable')
             return concrete
+        return None
 
 
     def get_concrete_function(self, *args, **kwargs):
@@ -231,7 +237,7 @@ class _FunctionDeleter:
     def __del__(self):
         try:
             func_graph.dismantle_func_graph(self._func)
-        except:
+        except Exception:
             pass
 
 
