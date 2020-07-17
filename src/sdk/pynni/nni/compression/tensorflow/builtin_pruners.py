@@ -41,23 +41,21 @@ class LevelPruner(Pruner):
 
 
 class AGP_Pruner(Pruner):
-    """An automated gradual pruning algorithm that prunes the smallest magnitude
-    weights to achieve a preset level of network sparsity.
-    Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
-    efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
-    Learning of Phones and other Consumer Devices,
-    https://arxiv.org/pdf/1710.01878.pdf
+    """
+    Parameters
+    ----------
+    model : torch.nn.module
+        Model to be pruned.
+    config_list : listlist
+        Supported keys:
+            - initial_sparsity: This is to specify the sparsity when compressor starts to compress.
+            - final_sparsity: This is to specify the sparsity when compressor finishes to compress.
+            - start_epoch: This is to specify the epoch number when compressor starts to compress, default start from epoch 0.
+            - end_epoch: This is to specify the epoch number when compressor finishes to compress.
+            - frequency: This is to specify every *frequency* number epochs compressor compress once, default frequency=1.
     """
 
     def __init__(self, model, config_list):
-        """
-        config_list: supported keys:
-            - initial_sparsity
-            - final_sparsity: you should make sure initial_sparsity <= final_sparsity
-            - start_epoch: start epoch numer begin update mask
-            - end_epoch: end epoch number stop update mask
-            - frequency: if you want update every 2 epoch, you can set it 2
-        """
         super().__init__(model, config_list)
         self.mask_list = {}
         self.if_init_list = {}

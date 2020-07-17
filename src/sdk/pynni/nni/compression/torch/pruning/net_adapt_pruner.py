@@ -55,7 +55,7 @@ class NetAdaptPruner(Pruner):
         function to evaluate the masked model.
         This function should include `model` as the only parameter, and returns a scalar value.
         Example::
-        
+
             def evaluator(model):
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 val_loader = ...

@@ -11,9 +11,9 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [FPGM Pruner](#fpgm-pruner)
 * [L1Filter Pruner](#l1filter-pruner)
 * [L2Filter Pruner](#l2filter-pruner)
-* [APoZ Rank Pruner](#activationapozrankfilterpruner)
-* [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
-* [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+* [Activation APoZ Rank Filter Pruner](#activationAPoZRankFilter-pruner)
+* [Activation Mean Rank Filter Pruner](#activationmeanrankfilter-pruner)
+* [Taylor FO On Weight Pruner](#taylorfoweightfilter-pruner)
 
 **Pruning Schedule**
 * [AGP Pruner](#agp-pruner)
@@ -51,16 +51,16 @@ pruner.compress()
 
 #### User configuration for Level Pruner
 
-##### Tensorflow
-
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.LevelPruner
-```
-
 ##### PyTorch
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.LevelPruner
+```
+
+##### Tensorflow
+
+```eval_rst
+..  autoclass:: nni.compression.tensorflow.LevelPruner
 ```
 
 
@@ -140,17 +140,15 @@ pruner.compress()
 
 #### User configuration for FPGM Pruner
 
-##### Tensorflow
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.FPGMPruner
-```
-
 ##### PyTorch
 ```eval_rst
 ..  autoclass:: nni.compression.torch.FPGMPruner
 ```
-***
 
+##### Tensorflow
+```eval_rst
+..  autoclass:: nni.compression.tensorflow.FPGMPruner
+```
 
 ## L1Filter Pruner
 
@@ -311,7 +309,6 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
 #### User configuration for TaylorFOWeightFilterPruner
 
@@ -323,13 +320,16 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 
 ## AGP Pruner
+
 This is an iterative pruner, In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
 >We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
 ![](../../img/agp_pruner.png)
->The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation
+
+>The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation (1).
 
 ### Usage
+
 You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
 
 PyTorch code
@@ -372,7 +372,7 @@ PyTorch code
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information.
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
 #### User configuration for AGP Pruner
 
@@ -380,6 +380,12 @@ You can view example for more information.
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.AGP_Pruner
+```
+
+##### Tensorflow
+
+```eval_rst
+..  autoclass:: nni.compression.tensorflow.AGP_Pruner
 ```
 
 ***
@@ -569,8 +575,11 @@ The above configuration means that there are 5 times of iterative pruning. As th
 
 #### User configuration for LotteryTicketPruner
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.ADMMPruner
+```
 
 ### Reproduced Experiment
 
