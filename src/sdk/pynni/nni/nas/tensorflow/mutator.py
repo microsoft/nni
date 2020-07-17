@@ -6,6 +6,8 @@ import logging
 import tensorflow as tf
 
 from .base_mutator import BaseMutator
+from . import graph_utils
+from .mutable import InputChoice, LayerChoice
 
 
 _logger = logging.getLogger(__name__)
@@ -24,6 +26,27 @@ class Mutator(BaseMutator):
 
     def reset(self):
         self._cache = self.sample_search()
+
+        # TensorFlow cannot detect unused `Mutable` branches.
+        # We need to fool the graph tracer for reasonable performance.
+        for mutable in self.mutables:
+            if isinstance(mutable, LayerChoice) and mutable._built:
+                mutable._backup_call = mutable.__call__
+                mask = self._get_decision(mutable)
+                active = [(op, op_mask) for op, op_mask in zip(mutable.choices, mask) if op_mask]
+
+                def _fixed_call(*inputs):
+                    out = self._select_with_mask(lambda op: op(*inputs), active[0], active[1])
+                    return (out, mask) if mutable.return_mask else mask
+
+                # TODO: only retracing when the connection changes
+                mutable.__call__ = graph_utils.function(_fixed_call)
+
+            elif isinstance(mutable, InputChoice):
+                # Since ENAS always calculate all candidate inputs, leave this unchange for now
+                pass
+
+
 
     def export(self):
         return self.sample_final()

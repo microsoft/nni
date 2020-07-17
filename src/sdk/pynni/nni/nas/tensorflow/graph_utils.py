@@ -236,4 +236,8 @@ class _FunctionDeleter:
 
 
 def function(func):
-    return Function(func)
+    try:
+        name = func.__name__
+    except AttributeError:
+        name = 'function'
+    return Function(func, name)
