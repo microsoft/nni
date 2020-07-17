@@ -7,6 +7,7 @@ evolution_tuner.py
 
 import copy
 import random
+import logging
 
 import numpy as np
 from schema import Schema, Optional
@@ -15,6 +16,7 @@ from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
+_logger = logging.getLogger(__name__)
 
 class Individual:
     """
@@ -99,6 +101,14 @@ class EvolutionTuner(Tuner):
         self.population = None
         self.space = None
 
+    def _generate_random_individual(self):
+        is_rand = dict()
+        for item in self.space:
+            is_rand[item] = True
+
+        config = json2parameter(
+                self.searchspace_json, is_rand, self.random_state)
+        self.population.append(Individual(config=config))
 
     def update_search_space(self, search_space):
         """
@@ -115,16 +125,22 @@ class EvolutionTuner(Tuner):
 
         self.random_state = np.random.RandomState()
         self.population = []
-        is_rand = dict()
 
-        for item in self.space:
-            is_rand[item] = True
+    def trial_end(self, parameter_id, success, **kwargs):
+        """
+        To deal with trial failure. If a trial fails, generate a new candidate from search space.
+        Parameters
+        ----------
+        parameter_id : int
+            Unique identifier for hyper-parameters used by this trial.
+        success : bool
+            True if the trial successfully completed; False if failed or terminated.
+        **kwargs
+            Not used
+        """
 
-        for _ in range(self.population_size):
-            config = json2parameter(
-                self.searchspace_json, is_rand, self.random_state)
-            self.population.append(Individual(config=config))
-
+        if not success and not len(self.population):
+            self._generate_random_individual()
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
@@ -139,8 +155,9 @@ class EvolutionTuner(Tuner):
         dict
             A group of candaidte parameters that evolution tuner generated.
         """
-        if not self.population:
-            raise RuntimeError('The population is empty')
+        
+        if not len(self.population):
+            self._generate_random_individual()
 
         pos = -1
 
@@ -155,7 +172,8 @@ class EvolutionTuner(Tuner):
             total_config = indiv.config
         else:
             random.shuffle(self.population)
-            if self.population[0].result < self.population[1].result:
+            # avoid only 1 individual
+            if len(self.population) > 1 and self.population[0].result < self.population[1].result:
                 self.population[0] = self.population[1]
 
             # mutation
@@ -168,11 +186,13 @@ class EvolutionTuner(Tuner):
                 is_rand[self.space[i]] = (self.space[i] == mutation_pos)
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
-            self.population.pop(1)
-            # remove "_index" from config and save params-id
+
+            if not len(self.population)
+                self.population.pop(1)
 
             total_config = config
 
+        # remove "_index" from config and save params-id
         self.total_data[parameter_id] = total_config
         config = split_index(total_config)
 
