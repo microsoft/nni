@@ -185,7 +185,7 @@ class EvolutionTuner(Tuner):
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
 
-            if not len(self.population)
+            if not len(self.population):
                 self.population.pop(1)
 
             total_config = config
