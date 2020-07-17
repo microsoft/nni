@@ -1,4 +1,3 @@
-import * as JSON5 from 'json5';
 import axios from 'axios';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj } from './interface';
@@ -51,8 +50,9 @@ const convertDuration = (num: number): string => {
 };
 
 function parseMetrics(metricData: string): any {
-    if (metricData.includes('NaN')) {
-        return JSON5.parse(JSON5.parse(metricData));
+    if (metricData.includes('NaN') || metricData.includes('Infinity')) {
+        const dealed = metricData.replace(/Infinity|NaN/gi, '0');
+        return JSON.parse(JSON.parse(dealed));
     } else {
         return JSON.parse(JSON.parse(metricData));
     }
