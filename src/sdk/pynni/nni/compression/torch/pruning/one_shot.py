@@ -204,8 +204,8 @@ class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
             - sparsity : How much percentage of convolutional filters are to be pruned.
             - op_types : Only Conv2d is supported in ActivationAPoZRankFilterPruner.
     """
-    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
-        super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=None, \
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)
 
 class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
@@ -219,6 +219,6 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
             - sparsity : How much percentage of convolutional filters are to be pruned.
             - op_types : Only Conv2d is supported in ActivationMeanRankFilterPruner.
     """
-    def __init__(self, model, config_list, activation='relu', statistics_batch_num=1):
-        super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=None, \
+    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
+        super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)

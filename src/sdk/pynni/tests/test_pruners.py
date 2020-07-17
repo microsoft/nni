@@ -192,9 +192,9 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
         elif pruner_name == 'autocompress':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
-        elif pruner_name in ['level', 'slim', 'fpgm', 'l1', 'l2', 'mean_activation', 'apoz']:
+        elif pruner_name in ['level', 'slim', 'fpgm', 'l1', 'l2']:
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list)
-        else: # 'agp', 'taylorfo'
+        elif pruner_name in ['agp', 'taylorfo', 'mean_activation', 'apoz']:
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
         pruner.compress()
 
