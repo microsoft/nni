@@ -47,7 +47,6 @@ class Mutator(BaseMutator):
                 pass
 
 
-
     def export(self):
         return self.sample_final()
 
