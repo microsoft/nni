@@ -98,6 +98,7 @@ export class AMLEnvironmentService extends EnvironmentService {
                     environment.setFinalStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
+                    environment.setFinalStatus('FAILED');
                     return Promise.reject(`AML: job ${environment.jobId} is failed!`);
                 case 'STOPPED':
                 case 'STOPPING':

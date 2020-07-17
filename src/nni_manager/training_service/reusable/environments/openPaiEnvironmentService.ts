@@ -124,6 +124,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                                     environment.setFinalStatus(jobResponse.state);
                                     break;
                                 case 'FAILED':
+                                    environment.setFinalStatus(jobResponse.state);
                                     deferred.reject(`OpenPAI: job ${environment.jobId} is failed!`);
                                     break;
                                 case 'STOPPED':
