@@ -1,0 +1,85 @@
+To provide an initial insight on the performance of various channel pruning algorithms, 
+we conduct extensive experiments with various pruning algorithms on some benchemark models and datasets.
+We present the experiment result in this document.
+In addition, we provide friendly instrutions on the re-implementation of these experiments to facilitate further contribution to this effort.
+
+## Experiment Setting
+
+The experiments are performed with the following pruners/datasets/models:
+
+* Models: [VGG16, ResNet18, ResNet50](https://github.com/microsoft/nni/tree/master/examples/model_compress/models/cifar10)
+
+* Datasets: CIFAR-10
+
+* Pruners: 
+    - These pruners are included:
+        - Pruners with scheduling : SimulatedAnnealing, NetAdapt, AutoCompress
+        - One-shot pruners: L1Filter, L2Filter, FPGMPruner
+    - Only **channel pruning** performances are compared here. 
+
+    For the auto-pruners, `L1FilterPruner` is used as the base algorithm. That is to say, after the sparsities distribution among the layers is decided by the scheduling algorithm, `L1FilterPruner` is used to performn real pruning.
+
+    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/Overview.md).
+
+## Experiment Result
+
+For each dataset/model/pruner combination, we prune the model to different levels by set a series target sparsity for the pruner. 
+
+Here we plot both **Number of Weights - Performances** curve and **FLOPs - Performance** curve. The experiment result are shown in the following figures:
+
+CIFAR-10, VGG16:
+
+![](../../../examples/model_compress/experiment_result/img/performance_comparison_vgg16.png)
+
+CIFAR-10, ResNet18:
+
+![](../../../examples/model_compress/experiment_result/img/performance_comparison_resnet18.png)
+
+CIFAR-10, ResNet50:
+
+![](../../../examples/model_compress/experiment_result/img/performance_comparison_resnet50.png)
+
+## Analysis
+
+From the experiment result, we get the following conclusions:
+
+* Given the contraint on the number of parameters, the pruners with scheduling ( `AutoCompress` , `SimualatedAnnealing` ) performs better than the others when the constraint is strict. However, they have no such advantage in FLOPs/Performances comparison since only number of parameters constaint is considered in the optimization process; 
+* The basic algorithms `L1FilterPruner` , `L2FilterPruner` , `FPGMPruner` performs very similarly in these experiments; 
+* `NetAdaptPruner` can not achive very high compression rate. This is caused by its mechanism that it prune only one layer each pruning iteration. This leads to un-acceptable complexity if the sparsity per iteration is much lower than the overall sparisty constraint.
+
+## Experiments Reproduction
+
+### Implementation Details
+
+* The experiment result are all collected with default configuration of the pruners in nni.
+
+* Both FLOPs and number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/ModelSpeedup.md). This avoids potential issues of caluating them of masked models.
+
+* The experiments code can be found [here]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py).
+
+### Experiment Result Rendering
+
+* If you follow the practice in the [example]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py), for every single pruning experiment, the experiment result will be saved in json format as follows:
+    ``` json
+    {
+        "performance": {"original": 0.9298, "pruned": 0.1, "speedup": 0.1, "finetuned": 0.7746}, 
+        "params": {"original": 14987722.0, "speedup": 167089.0}, 
+        "flops": {"original": 314018314.0, "speedup": 38589922.0}
+    }
+    ```
+
+* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). If the result folder is properly assigned,  to plot a new figure, simply run :
+    ``` bash
+    cd examples/model_compress/experiment_data
+    python analyze.py --model your_model
+    ```
+
+## Contribution
+
+### TODO Items
+
+* Pruners constrained by FLOPS / latency
+* More pruning algorithms / datasets / models
+
+### Issues
+For algorithm implementation & experiment issues, please [create an issue](https://github.com/microsoft/nni/issues/new/).

@@ -1,0 +1,1 @@
+{"flops": {"original": 556651530.0, "speedup": 237900244.0}, "params": {"original": 11173962.0, "speedup": 3998122.0}, "performance": {"original": 0.9433, "finetuned": 0.9379, "pruned": 0.1199, "speedup": 0.3349}}
