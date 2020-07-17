@@ -1,0 +1,44 @@
+
+# Use NNI on Google Colab
+NNI can easily run on Google's colab platform. However, colab doesn't expose its public IP and ports, so by default you can not access NNI's web ui on colab. To solve this, you need a reverse proxy software like `ngrok` or `frp`. This tutorial will show you how to use ngrok to get access to NNI's web ui on colab.
+
+## How to Open NNI's WebUI on Google's Colab
+
+1. Install required packages and softwares.
+
+
+```
+! pip install nni # install nni
+! wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip # download ngrok and unzip it
+! unzip ngrok-stable-linux-amd64.zip
+! mkdir -p nni_repo
+! git clone https://github.com/microsoft/nni.git nni_repo/nni # clone NNI's offical repo to get examples
+```
+
+2. Register a ngrok account [here](https://ngrok.com/), then connect to your account using your authtoken.
+
+
+```
+! ./ngrok authtoken <your-authtoken>
+```
+
+3. Start an NNI trail example on a port greater than 1024, then start ngrok with the same port.
+
+
+```
+! nnictl create --config nni_repo/nni/examples/trials/mnist-pytorch/config.yml --port 5000 & # if you want to use gpu, make sure gpuNum >= 1 in config.yml
+get_ipython().system_raw('./ngrok http 5000 &')
+```
+
+4. Check the public url.
+
+
+```
+! curl -s http://localhost:4040/api/tunnels # don't change the port number 4040
+```
+
+You will see an url like http://xxxx.ngrok.io after step 4, open this url and you will find NNI's web ui. Have fun :)
+
+## Access WebUI with frp
+
+frp is another reverse proxy software with similar functions. However, frp doesn't provide free public urls, so you may need an server with public IP as an frp server. See [here](https://github.com/fatedier/frp) to know more about how to deploy frp.
