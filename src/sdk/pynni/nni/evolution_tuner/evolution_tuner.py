@@ -7,7 +7,6 @@ evolution_tuner.py
 
 import copy
 import random
-import logging
 
 import numpy as np
 from schema import Schema, Optional
@@ -16,7 +15,6 @@ from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
-_logger = logging.getLogger(__name__)
 
 class Individual:
     """
