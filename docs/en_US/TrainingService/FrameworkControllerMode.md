@@ -57,7 +57,6 @@ assessor:
   builtinAssessorName: Medianstop
   classArgs:
     optimize_mode: maximize
-  gpuNum: 0
 trial:
   codeDir: ~/nni/examples/trials/mnist-tfv1
   taskRoles:

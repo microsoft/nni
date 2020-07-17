@@ -7,7 +7,7 @@ NNI 在内置的 Tuner 中提供了最新的调优算法。 NNI 同时也支持�
 通过自定义 Tuner，可实现自己的调优算法。主要有三步：
 
 1. 继承 Tuner 基类
-2. 实现 receive_trial_result 和 generate_parameter 函数
+2. 实现 receive_trial_result, generate_parameter 和 update_search_space 函数
 3. 在 Experiment 的 YAML 文件中配置好自定义的 Tuner
 
 示例如下：
@@ -22,7 +22,7 @@ class CustomizedTuner(Tuner):
         ...
 ```
 
-**2. 实现 receive_trial_result 和 generate_parameter 函数**
+**2. 实现 receive_trial_result, generate_parameter 和 update_search_space 函数**
 
 ```python
 from nni.tuner import Tuner
@@ -32,22 +32,32 @@ class CustomizedTuner(Tuner):
         ...
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
-    '''
-    接收 Trial 的最终结果。
-    parameter_id: int
-    parameters: 'generate_parameters()' 所创建的对象
-    value: Trial 的最终指标结果
-    '''
-    # 实现代码
+        '''
+        接收 Trial 的最终结果。
+        parameter_id: int
+        parameters: 'generate_parameters()' 创建出的对象
+        value: Trial 的最终指标，包括 default 指标
+        '''
+        # 代码实现位置
     ...
 
     def generate_parameters(self, parameter_id, **kwargs):
-    '''
-    返回 Trial 的超参组合的序列化对象
-    parameter_id: int
-    '''
-    # 代码实现位置
-    return your_parameters
+        '''
+        返回 Trial 的超参组合的序列化对象
+        parameter_id: int
+        '''
+        # 代码实现位置
+        return your_parameters
+    ...
+
+    def update_search_space(self, search_space):
+        '''
+         在运行时，需要更新搜索空间的 Tuner 可实现此函数。
+        如果 Tuner 只在生成第一个超参前设置搜索空间，
+        需要将其行为写到文档里。
+        search_space: 定义 Experiment 时创建的 JSON 对象
+        '''
+        # 代码实现位置
     ...
 ```
 
