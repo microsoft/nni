@@ -104,8 +104,7 @@ class EvolutionTuner(Tuner):
         for item in self.space:
             is_rand[item] = True
 
-        config = json2parameter(
-                self.searchspace_json, is_rand, self.random_state)
+        config = json2parameter(self.searchspace_json, is_rand, self.random_state)
         self.population.append(Individual(config=config))
 
     def update_search_space(self, search_space):
@@ -137,7 +136,7 @@ class EvolutionTuner(Tuner):
             Not used
         """
 
-        if not success and not len(self.population):
+        if not success and not self.population:
             self._generate_random_individual()
 
     def generate_parameters(self, parameter_id, **kwargs):
@@ -154,7 +153,7 @@ class EvolutionTuner(Tuner):
             A group of candaidte parameters that evolution tuner generated.
         """
         
-        if not len(self.population):
+        if not self.population:
             self._generate_random_individual()
 
         pos = -1
@@ -185,7 +184,7 @@ class EvolutionTuner(Tuner):
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
 
-            if not len(self.population):
+            if not self.population:
                 self.population.pop(1)
 
             total_config = config
