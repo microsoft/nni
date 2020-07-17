@@ -20,7 +20,8 @@ interface CheckBoxItems {
     checked: boolean;
     onChange: () => void;
 }
-class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeColumnState> {
+
+class StructuredItemList extends React.Component<ChangeColumnProps, ChangeColumnState> {
 
     constructor(props: ChangeColumnProps) {
         super(props);
@@ -143,4 +144,4 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     }
 }
 
-export default ChangeColumnComponent;
+export default StructuredItemList;

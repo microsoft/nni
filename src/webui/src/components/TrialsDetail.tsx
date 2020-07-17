@@ -125,7 +125,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             <Stack className="graph">
                                 <Para
                                     trials={source}
-                                    searchSpace={JSON.stringify(EXPERIMENT.searchSpace)}
+                                    searchSpace={EXPERIMENT.searchSpaceNew}
                                     whichChart={whichChart}
                                 />
                             </Stack>

@@ -1,3 +1,31 @@
+interface StructuredItem {
+    name: string;
+    fullName: string;
+    parent: StructuredItem | undefined;
+    children: StructuredItem[];
+};
+
+
+/**
+ * Definition of single dimension in search space.
+ */
+interface SingleAxis {
+    type: string;
+    scale: 'log' | 'linear' | 'ordinal';
+    domain: any;
+}
+
+/**
+ * Definition of combination of multiple dimensions.
+ * The decision in multiple dimensions will be combined together.
+ * Typically, it is a search space or a sub search space.
+ */
+interface MultipleAxes {
+    axes: Map<string, SingleAxis>;
+    getAllAxes: () => Map<StructuredItem, SingleAxis>;
+    getAxesTree: () => StructuredItem[];
+}
+
 // draw accuracy graph data export interface
 interface TableObj {
     key: number;
@@ -10,7 +38,8 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
-    parameters: () => object; 
+    parameters(axes: StructuredItem[]): Map<StructuredItem, any>; 
+    metrics(): Map<StructuredItem, any>;
 }
 
 interface TableRecord {
@@ -189,28 +218,10 @@ interface EventMap {
     [key: string]: () => void;
 }
 
-/**
- * Definition of single dimension in search space.
- */
-interface SingleAxis {
-    type: string;
-    scale: 'log' | 'linear' | 'ordinal';
-    domain: any;
-}
-
-/**
- * Definition of combination of multiple dimensions.
- * The decision in multiple dimensions will be combined together.
- * Typically, it is a search space or a sub search space.
- */
-interface MultipleAxes {
-    axes: Map<string, SingleAxis>;
-    getAllAxes: () => Map<string, SingleAxis>;
-}
-
 export {
     TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
     AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
     Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
+    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes,
+    StructuredItem
 };

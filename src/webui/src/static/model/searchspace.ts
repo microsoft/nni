@@ -1,4 +1,5 @@
-import { SingleAxis, MultipleAxes, TableObj } from '../interface';
+import { SingleAxis, MultipleAxes, TableObj, StructuredItem } from '../interface';
+import { axisLeft } from 'd3';
 
 class NumericAxis implements SingleAxis {
     min: number = 0;
@@ -53,6 +54,8 @@ export class SearchSpace implements MultipleAxes {
     axes = new Map<string, SingleAxis>();
 
     constructor(searchSpaceSpec: any) {
+        if (searchSpaceSpec === undefined)
+            return;
         Object.entries(searchSpaceSpec).forEach((item) => {
             const key = item[0], spec = item[1] as any;
             if (spec._type === 'choice' || spec._type === 'layer_choice' || spec._type === 'input_choice') {
@@ -69,48 +72,73 @@ export class SearchSpace implements MultipleAxes {
         });
     }
 
-    public getAllAxes(): Map<string, SingleAxis> {
-        // this will expand all nested axes
-        const ret = new Map<string, SingleAxis>();
-        const addSearchSpace = (searchSpace: MultipleAxes, prefix: string = '') => {
-            searchSpace.axes.forEach((axis, k) => {
-                if (axis instanceof NestedOrdinalAxis) {
-                    ret.set(prefix + k, new SimpleOrdinalAxis(axis.type, axis.domain.keys()));
-                    for (const [name, subSearchSpace] of axis.domain) {
-                        addSearchSpace(subSearchSpace, prefix + name + '/');
-                    }
-                } else {
-                    ret.set(prefix + k, axis);
-                }
-            });
-        };
-        addSearchSpace(this);
-        return ret;
-    }
-
-    public updateWithTrials(trials: TableObj[]) {
-        const allAxes = this.getAllAxes();
+    static inferFromTrials(searchSpace: SearchSpace, trials: TableObj[]): SearchSpace {
+        const newSearchSpace = new SearchSpace(undefined);
+        for (const [k, v] of searchSpace.axes) {
+            newSearchSpace.axes.set(k, v);
+        }
+        // Add axis inferred from trials columns
         const addingColumns = new Map<string, any[]>();
+        const axes = newSearchSpace.getAxesTree();
         for (const trial of trials) {
-            Object.entries(trial.parameters()).forEach(item => {
-                const [k, v] = item;
-                if (allAxes.has(k))
-                    return;
-                const column = addingColumns.get(k);
+            for (const [k, v] of trial.parameters(axes)) {
+                if (k.parent !== undefined) {
+                    // axis with parent must exist, because all added columns
+                    // have undefined as their parent
+                    continue;
+                }
+                if (axes.indexOf(k) !== -1)
+                    continue;
+                const column = addingColumns.get(k.fullName);
                 if (column === undefined) {
-                    addingColumns.set(k, [v]);
+                    addingColumns.set(k.fullName, [v]);
                 } else {
                     column.push(v);
                 }
-            });
+            }
         }
         addingColumns.forEach((value, key) => {
             if (value.every(v => typeof v === 'number')) {
-                this.axes.set(key, new NumericAxis('uniform', [Math.min(...value), Math.max(...value)]));
+                newSearchSpace.axes.set(key, new NumericAxis('uniform', [Math.min(...value), Math.max(...value)]));
             } else {
-                this.axes.set(key, new SimpleOrdinalAxis('choice', new Set(value).values()));
+                newSearchSpace.axes.set(key, new SimpleOrdinalAxis('choice', new Set(value).values()));
             }
         });
+        return newSearchSpace;
+    }
+
+    public getAllAxes(): Map<StructuredItem, SingleAxis> {
+        // this will expand all nested axes
+        const ret = new Map<StructuredItem, SingleAxis>();
+        const addSearchSpace = (searchSpace: MultipleAxes, parentKey: StructuredItem | undefined, prefix: string = '') => {
+            searchSpace.axes.forEach((axis, k) => {
+                const key = { name: k, fullName: prefix + k, children: [], parent: parentKey };
+                if (parentKey !== undefined) {
+                    parentKey.children.push(key);
+                }
+                if (axis instanceof NestedOrdinalAxis) {
+                    ret.set(key, new SimpleOrdinalAxis(axis.type, axis.domain.keys()));
+                    for (const [name, subSearchSpace] of axis.domain) {
+                        addSearchSpace(subSearchSpace, key, prefix + name + '/');
+                    }
+                } else {
+                    ret.set(key, axis);
+                }
+            });
+        };
+        addSearchSpace(this, undefined);
+        return ret;
+    }
+
+    public getAxesTree(): StructuredItem[] {
+        const allAxes = this.getAllAxes();
+        const rootItems: StructuredItem[] = [];
+        for (const item of allAxes.keys()) {
+            if (item.parent === undefined) {
+                rootItems.push(item);
+            }
+        }
+        return rootItems;
     }
 }
 
@@ -143,7 +171,15 @@ export class MetricSpace implements MultipleAxes {
         });
     }
 
-    public getAllAxes(): Map<string, SingleAxis> {
-        return this.axes;
+    public getAllAxes(): Map<StructuredItem, SingleAxis> {
+        const ret = new Map<StructuredItem, SingleAxis>();
+        for (const [k, v] of this.axes) {
+            ret.set({name: k, fullName: k, parent: undefined, children: []}, v);
+        }
+        return ret;
+    }
+
+    public getAxesTree(): StructuredItem[] {
+        return Array.from(this.axes.keys()).map(s => ({name: s, fullName: s, parent: undefined, children: []}));
     }
 }

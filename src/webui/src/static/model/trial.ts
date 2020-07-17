@@ -1,5 +1,6 @@
-import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
+import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, StructuredItem, MultipleAxes } from '../interface';
 import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
+import { stringify } from 'json5';
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -156,36 +157,55 @@ class Trial implements TableObj {
         return ret;
     }
 
-    public parameters(flattened: boolean = false): object {
-        const flatten = (source: object, prefix: string = '', ignoreName: boolean = false): object => {
-            const ret = {};
+    public parameters(axes: StructuredItem[]): Map<StructuredItem, any> {
+        const ret = new Map<StructuredItem, any>();
+        const flatten = (source: object,
+                         namespace: StructuredItem[],
+                         prefix: string,
+                         ignoreName: boolean = false) => {
+            const namespaceMap = new Map<string, StructuredItem>();
+            for (const item of namespace) {
+                namespaceMap.set(item.name, item);
+            }
             Object.entries(source).forEach(item => {
                 const [k, v] = item;
+                // prefix can be a good fallback when corresponding item is not found in namespace
+                const axisKey = namespaceMap.get(k) || { name: prefix + k, fullName: prefix + k, parent: undefined, children: [] };
                 if (ignoreName && k === '_name')
                     return;
                 if (typeof v === 'object' && (v as any)._name !== undefined) {
                     // nested entry
-                    ret[prefix + k] = (v as any)._name;
-                    Object.assign(ret, flatten(v, prefix + k + '/', true));
+                    ret.set(axisKey, (v as any)._name);
+                    flatten(v, axisKey.children, prefix + k + '/', true);
                 } else {
-                    ret[prefix + k] = v;
+                    ret.set(axisKey, v);
                 }
             });
             return ret;
         };
         const tempHyper = this.info.hyperParameters;
         if (tempHyper === undefined) {
-            return {
-                error: 'This trial\'s parameters are not available.'
-            };
+            const key = { name: 'error', fullName: 'error', parent: undefined, children: [] };
+            return new Map([[key, 'This trial\'s parameters are not available.']]);
         } else {
-            const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+            let getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
             if (typeof getPara === 'string') {
-                return flatten(JSON.parse(getPara) as object);
-            } else {
-                return flatten(getPara as object);
+                getPara = JSON.parse(getPara);
             }
+            flatten(getPara as object, axes, '');
+            return ret;
         }
+    }
+
+    public metrics(): Map<StructuredItem, any> {
+        const ret = new Map<StructuredItem, any>();
+        if (this.acc === undefined) {
+            return ret;
+        }
+        for (const [k, v] of Object.entries(this.acc)) {
+            ret.set({name: k, fullName: k, parent: undefined, children: []}, v);
+        }
+        return ret;
     }
 
     get color(): string | undefined {

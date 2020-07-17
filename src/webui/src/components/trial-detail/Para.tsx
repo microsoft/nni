@@ -45,7 +45,7 @@ interface ParaState {
 
 interface ParaProps {
     trials: Array<TableObj>;
-    searchSpace: string;
+    searchSpace: SearchSpace;
     whichChart: string;
 }
 
@@ -197,16 +197,6 @@ class Para extends React.Component<ParaProps, ParaState> {
      */
     private renderParallelCoordinates = (): void => {
         const { trials, searchSpace } = this.props;
-        // filter succeed trials [{}, {}, {}]
-        const succeededTrials = trials.filter(filterByStatus);
-        const convertedTrials = succeededTrials.map((s) => {
-            const ret = { ...(s.parameters()), ...(s.acc) } as any;
-            delete ret.pretrained;
-            return ret;
-        });
-        const inferredSearchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
-        const inferredMetricSpace = TRIALS.inferredMetricSpace();
-        const dimensions: [any, any][] = [];
         const convertToD3Scale = (axis: SingleAxis) => {
             if (axis.scale === 'ordinal') {
                 return d3.scalePoint().domain(axis.domain).range(this.getRange());
@@ -216,16 +206,30 @@ class Para extends React.Component<ParaProps, ParaState> {
                 return d3.scaleLinear().domain(axis.domain).range(this.getRange());
             }
         };
+        // filter succeed trials [{}, {}, {}]
+        const succeededTrials = trials.filter(filterByStatus);
+        const convertedTrials = succeededTrials.map(s => {
+            const entries = Array.from(s.parameters(searchSpace.getAxesTree()).entries());
+            entries.push(...(Array.from(s.metrics().entries())));
+            const ret = {};
+            for (const [k, v] of entries) {
+                ret[k.fullName] = v;
+            }
+            return ret;
+        });
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
+        const inferredMetricSpace = TRIALS.inferredMetricSpace();
+        const dimensions: [any, any][] = [];
         // treat all as number to fit for brush
         for (const [k, v] of inferredSearchSpace.getAllAxes()) {
-            dimensions.push([k, {
+            dimensions.push([k.fullName, {
                 type: 'number',
                 yscale: convertToD3Scale(v)
             }]);
         }
         for (const [k, v] of inferredMetricSpace.getAllAxes()) {
             // const title = `metrics/${k}`;
-            dimensions.push([k, {
+            dimensions.push([k.fullName, {
                 type: 'number',
                 yscale: convertToD3Scale(v)
             }]);

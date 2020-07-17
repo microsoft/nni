@@ -128,8 +128,7 @@ class TrialManager {
 
     public inferredSearchSpace(expSearchSpace: SearchSpace): MultipleAxes {
         // The search space inferred from trial parameters
-        expSearchSpace.updateWithTrials([...this.trials.values()]);
-        return expSearchSpace;
+        return SearchSpace.inferFromTrials(expSearchSpace, [...this.trials.values()]);
     }
 
     public inferredMetricSpace(): MultipleAxes {
