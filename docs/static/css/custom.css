@@ -118,3 +118,21 @@ td.framework{
 .wy-plain-list-disc li, .rst-content .section ul li, .rst-content .toctree-wrapper ul li, article ul li {
     margin-bottom: 0px;
 }
+
+
+.tuner,
+.tuner td {
+    border: 1px solid #ccc;
+    vertical-align: top;
+}
+
+.tuner .title {
+    width: 100px;
+}
+
+.tuner ul {
+    display: inline-block;
+    list-style: none;
+    vertical-align: top;
+    /* ul block top*/
+}
