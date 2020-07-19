@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import ignore from 'ignore';
 import * as path from 'path';
 import * as tar from 'tar';
+import { getLogger } from '../../common/log';
 import { String } from 'typescript-string-operations';
 import { validateFileName } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
@@ -108,6 +109,7 @@ export async function execCopydir(source: string, destination: string): Promise<
         if (fs.statSync(sourcePath).isDirectory()) {
             await fs.promises.mkdir(destPath);
         } else {
+            getLogger().debug(`Copying file from ${sourcePath} to ${destPath}`);
             await fs.promises.copyFile(sourcePath, destPath);
         }
     }
