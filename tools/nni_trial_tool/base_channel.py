@@ -57,7 +57,11 @@ class BaseChannel(ABC):
 
     def close(self):
         self.is_running = False
-        self._inner_close()
+        try:
+            self._inner_close()
+        except Exception as err:
+            # ignore any error on closing
+            print("error on closing channel: %s" % err)
 
     def send(self, command, data):
         """Send command to Training Service.

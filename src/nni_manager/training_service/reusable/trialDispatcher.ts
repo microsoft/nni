@@ -526,19 +526,20 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleStdout(commandData: any): Promise<void> {
+        const metricPattern: RegExp = /NNISDK_MEb'(?<metrics>.*a?)'$/gm;
         const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', commandData["trial"]);
         mkDirPSync(trialLogDir);
         const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
         try {
             let skipLogging: boolean = false;
             if (commandData["tag"] === 'trial' && commandData["msg"] !== undefined) {
-                const message = commandData["msg"];
-                const metricsContent: any = message.match(this.NNI_METRICS_PATTERN);
-                if (metricsContent && metricsContent.groups) {
+                const message: string = commandData["msg"];
+                let metricsContent = metricPattern.exec(message);
+                while (metricsContent && metricsContent.groups) {
                     const key: string = 'metrics';
                     const data = metricsContent.groups[key];
-                    const metricData = JSON.parse('"' + data.split('"').join('\\"') + '"');
-                    await this.handleMetricData(commandData["trial"], metricData);
+                    await this.handleMetricData(commandData["trial"], data);
+                    metricsContent = metricPattern.exec(message);
                     skipLogging = true;
                 }
             }
