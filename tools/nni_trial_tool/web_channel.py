@@ -24,8 +24,11 @@ class WebChannel(BaseChannel):
     def _inner_open(self):
         url = "ws://{}:{}".format(self.args.nnimanager_ip, self.args.nnimanager_port)
         nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
-
-        connect = websockets.connect(url)
+        try:
+            connect = websockets.connect(url)
+        except Exception as ex:
+            nni_log(LogType.ERROR, 'WebChannel: create connection failed %s' % ex)
+            exit(1)
         self._event_loop = asyncio.get_event_loop()
         client = self._event_loop.run_until_complete(connect)
         self.client = client
