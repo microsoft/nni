@@ -40,7 +40,6 @@ class PAIK8STrainingService extends PAITrainingService {
     private copyExpCodeDirPromise?: Promise<void>;
     private paiJobConfig: any;
     private nniVersion: string | undefined;
-    private copyCodeDirFinished: boolean = false;
     constructor() {
         super();
 
