@@ -362,7 +362,6 @@ class TrialDispatcher implements TrainingService {
                                 liveTrialsCount++;
                                 continue;
                             }
-                            trial.url = environment.trackingUrl;
                             const environmentStatus = environment.status;
 
                             // any node exit, then make sure the whole trial stopped.
