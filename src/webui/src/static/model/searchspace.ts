@@ -5,9 +5,13 @@ class NumericAxis implements SingleAxis {
     min: number = 0;
     max: number = 0;
     type: string;
+    name: string;
+    fullName: string;
     scale: 'log' | 'linear';
 
-    constructor(type: string, value: any) {
+    constructor(name: string, fullName: string, type: string, value: any) {
+        this.name = name;
+        this.fullName = fullName;
         this.type = type;
         this.scale = type.indexOf('log') !== -1 ? 'log' : 'linear';
         if (type === 'randint') {
@@ -29,9 +33,13 @@ class NumericAxis implements SingleAxis {
 
 class SimpleOrdinalAxis implements SingleAxis {
     type: string;
+    name: string;
+    fullName: string;
     scale: 'ordinal' = 'ordinal';
     domain: any[];
-    constructor(type: string, value: any) {
+    constructor(name: string, fullName: string, type: string, value: any) {
+        this.name = name;
+        this.fullName = fullName;
         this.type = type;
         this.domain = value;
     }
@@ -39,21 +47,29 @@ class SimpleOrdinalAxis implements SingleAxis {
 
 class NestedOrdinalAxis implements SingleAxis {
     type: string;
+    name: string;
+    fullName: string;
     scale: 'ordinal' = 'ordinal';
     domain = new Map<string, MultipleAxes>();
-    constructor(type: any, value: any) {
+    constructor(name: any, fullName: string, type: any, value: any) {
+        this.name = name;
+        this.fullName = fullName;
         this.type = type;
         for (const v of value) {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            this.domain.set(v._name, new SearchSpace(v));
+            this.domain.set(v._name, new SearchSpace(v._name, fullName + '/' + v._name, v));
         }
     }
 }
 
 export class SearchSpace implements MultipleAxes {
     axes = new Map<string, SingleAxis>();
+    name: string;
+    fullName: string;
 
-    constructor(searchSpaceSpec: any) {
+    constructor(name: string, fullName: string, searchSpaceSpec: any) {
+        this.name = name;
+        this.fullName = fullName;
         if (searchSpaceSpec === undefined)
             return;
         Object.entries(searchSpaceSpec).forEach((item) => {
@@ -62,18 +78,18 @@ export class SearchSpace implements MultipleAxes {
                 // ordinal types
                 if (spec._value && typeof spec._value[0] === 'object') {
                     // nested dimension
-                    this.axes.set(key, new NestedOrdinalAxis(spec._type, spec._value));
+                    this.axes.set(key, new NestedOrdinalAxis(key, fullName + '/' + key, spec._type, spec._value));
                 } else {
-                    this.axes.set(key, new SimpleOrdinalAxis(spec._type, spec._value));
+                    this.axes.set(key, new SimpleOrdinalAxis(key, fullName + '/' + key, spec._type, spec._value));
                 }
             } else {
-                this.axes.set(key, new NumericAxis(spec._type, spec._value));
+                this.axes.set(key, new NumericAxis(key, fullName + '/' + key, spec._type, spec._value));
             }
         });
     }
 
     static inferFromTrials(searchSpace: SearchSpace, trials: TableObj[]): SearchSpace {
-        const newSearchSpace = new SearchSpace(undefined);
+        const newSearchSpace = new SearchSpace(searchSpace.name, searchSpace.fullName, undefined);
         for (const [k, v] of searchSpace.axes) {
             newSearchSpace.axes.set(k, v);
         }
@@ -99,9 +115,9 @@ export class SearchSpace implements MultipleAxes {
         }
         addingColumns.forEach((value, key) => {
             if (value.every(v => typeof v === 'number')) {
-                newSearchSpace.axes.set(key, new NumericAxis('uniform', [Math.min(...value), Math.max(...value)]));
+                newSearchSpace.axes.set(key, new NumericAxis(key, key, 'uniform', [Math.min(...value), Math.max(...value)]));
             } else {
-                newSearchSpace.axes.set(key, new SimpleOrdinalAxis('choice', new Set(value).values()));
+                newSearchSpace.axes.set(key, new SimpleOrdinalAxis(key, key, 'choice', new Set(value).values()));
             }
         });
         return newSearchSpace;
@@ -117,7 +133,7 @@ export class SearchSpace implements MultipleAxes {
                     parentKey.children.push(key);
                 }
                 if (axis instanceof NestedOrdinalAxis) {
-                    ret.set(key, new SimpleOrdinalAxis(axis.type, axis.domain.keys()));
+                    ret.set(key, new SimpleOrdinalAxis(key.name, key.fullName, axis.type, axis.domain.keys()));
                     for (const [name, subSearchSpace] of axis.domain) {
                         addSearchSpace(subSearchSpace, key, prefix + name + '/');
                     }
@@ -144,6 +160,8 @@ export class SearchSpace implements MultipleAxes {
 
 export class MetricSpace implements MultipleAxes {
     axes = new Map<string, SingleAxis>();
+    name = '';
+    fullName = '';
 
     constructor(trials: TableObj[]) {
         const columns = new Map<string, any[]>();
@@ -164,7 +182,7 @@ export class MetricSpace implements MultipleAxes {
         }
         columns.forEach((value, key) => {
             if (value.every(v => typeof v === 'number')) {
-                this.axes.set(key, new NumericAxis('uniform', [Math.min(...value), Math.max(...value)]));
+                this.axes.set(key, new NumericAxis(key, key, 'uniform', [Math.min(...value), Math.max(...value)]));
             } else {
                 // TODO: skip for now
             }

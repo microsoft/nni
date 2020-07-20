@@ -10,6 +10,8 @@ interface StructuredItem {
  * Definition of single dimension in search space.
  */
 interface SingleAxis {
+    name: string;
+    fullName: string;
     type: string;
     scale: 'log' | 'linear' | 'ordinal';
     domain: any;
