@@ -24,11 +24,7 @@ class WebChannel(BaseChannel):
     def _inner_open(self):
         url = "ws://{}:{}".format(self.args.nnimanager_ip, self.args.nnimanager_port)
         nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
-        try:
-            connect = websockets.connect(url)
-        except Exception as ex:
-            nni_log(LogType.ERROR, 'WebChannel: create connection failed %s' % ex)
-            exit(1)
+        connect = websockets.connect(url)
         self._event_loop = asyncio.get_event_loop()
         client = self._event_loop.run_until_complete(connect)
         self.client = client
@@ -43,7 +39,11 @@ class WebChannel(BaseChannel):
 
     def _inner_send(self, message):
         loop = asyncio.new_event_loop()
-        loop.run_until_complete(self.client.send(message))
+        try:
+            loop.run_until_complete(self.client.send(message))
+        except Exception as ex:
+            nni_log(LogType.ERROR, 'WebChannel: send message failed %s' % ex)
+            exit(1)
 
     def _inner_receive(self):
         messages = []
