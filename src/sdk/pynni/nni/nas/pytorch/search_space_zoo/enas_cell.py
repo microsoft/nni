@@ -84,7 +84,6 @@ class ENASMicroLayer(nn.Module):
         if self.reduction:
             self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
             self.reduce1 = FactorizedReduce(in_channels_p, out_channels, affine=False)
-            # cells_list.append(ENASReductionLayer(in_channels_pp, in_channels_p, out_channels))
             in_channels_pp = in_channels_p = out_channels
         self.preproc0 = Calibration(in_channels_pp, out_channels)
         self.preproc1 = Calibration(in_channels_p, out_channels)

@@ -54,7 +54,7 @@ class Node(nn.Module):
 
 class DartsCell(nn.Module):
     """
-    Builtin Darts Cell structure. There are six nodes in one cell, in which the first two nodes' values are
+    Builtin Darts Cell structure. There are ``n_nodes`` nodes in one cell, in which the first two nodes' values are
     fixed to the results of previous previous cell and previous cell respectively. One node will connect all
     the nodes after with predefined operations in a mutable way. The last node accepts five inputs from nodes
     before and it concats all inputs in channels as the output of the current cell, and the number of output

@@ -149,6 +149,21 @@ class SepConv(nn.Module):
     """
     Depthwise separable conv.
     DilConv(dilation=1) * 2.
+
+    Parameters
+    ---
+    C_in: int
+        the number of input channels
+    C_out: int
+        the number of output channels
+    kernal_size:
+        size of the convolving kernel
+    padding:
+        zero-padding added to both sides of the input
+    dilation: int
+        spacing between kernel elements.
+    affine: bool
+        is using affine in BatchNorm
     """
 
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
