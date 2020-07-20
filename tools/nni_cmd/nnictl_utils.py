@@ -16,7 +16,7 @@ from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
@@ -736,3 +736,64 @@ def search_space_auto_gen(args):
         print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
+
+def export_results(args):
+    '''dump all intermediate results and final results to json file
+    '''
+
+    def groupby_trial_id(intermediate_results):
+        sorted(intermediate_results, key=lambda x: x['timestamp'])
+        groupby = dict()
+        for content in intermediate_results:
+            groupby.setdefault(content['trialJobId'], []).append(content)
+        return groupby
+
+    update_experiment()
+
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
+        experiment_info = rest_get(experiment_url(rest_port), REST_TIME_OUT)
+        trial_info = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
+        trial_jobs = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
+
+        if experiment_info and check_response(experiment_info) and \
+                trial_info and check_response(trial_info) and \
+                trial_jobs and check_response(trial_jobs):
+            results = {}
+            experiment_info = json.loads(experiment_info.text)
+            results['experimentParameters'] = experiment_info
+            experiment_id = experiment_info.get('id')
+            trial_info = json.loads(trial_info.text)
+            group_trial_info = groupby_trial_id(trial_info)
+            trial_jobs = json.loads(trial_jobs.text)
+            trial_message = []
+            for trial in trial_jobs:
+                trial_id = trial['id']
+                trial['intermediate'] = group_trial_info[trial_id]
+                trial_message.append(trial)
+            results['trialMessage'] = trial_message
+        else:
+            print_error('Ops. Error occured connecting to the server.')
+            exit(1)
+    else:
+        args = vars(args)
+        experiment_config = Experiments()
+        experiment_dict = experiment_config.get_all_experiments()
+        print_error('Ops. The experiment to export isn\'t running now. Please use \n    \
+        nnictl resume {}\nto restart.'.format(args.id if args.id in experiment_dict else ''))
+        exit(1)
+    args = vars(args)
+    filename = 'exp_' + str(experiment_id) + '_' + str(time.time()) + '.json' \
+        if args.get('name') == '' else args.get('name')
+    if os.path.exists(filename):
+        print_error('File {0} has existed.'.format(filename))
+        exit(1)
+    with open(filename, 'w') as f:
+        f.write(json.dumps(results))
+    print_normal('Export expriment {0} done: {1}'.format(experiment_id, filename))
