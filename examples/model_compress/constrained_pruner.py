@@ -86,7 +86,7 @@ def parse_args():
                         help='overall target sparsity')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--finetune_epochs', type=int, default=30,
+    parser.add_argument('--finetune_epochs', type=int, default=10,
                         help='the number of finetune epochs after pruning')
     parser.add_argument('--lr', type=float, default=0.001, help='the learning rate of model')
     return parser.parse_args()
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     for epoch in range(args.finetune_epochs):
         train(args, net1, device, train_loader,
                 criterion1, optimizer1, epoch)
-        scheduler1.step()    
+        scheduler1.step()
         acc1 = test(net1, device, criterion1, val_loader)
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
 
