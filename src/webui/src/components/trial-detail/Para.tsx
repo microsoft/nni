@@ -1,13 +1,13 @@
 import * as d3 from 'd3';
-import { Dropdown, IDropdownOption, PrimaryButton, Stack } from 'office-ui-fabric-react';
+import { Dropdown, IDropdownOption, Stack } from 'office-ui-fabric-react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
 import './Para.scss';
 import * as React from 'react';
-import { TRIALS, EXPERIMENT } from '../../static/datamodel';
+import { TRIALS } from '../../static/datamodel';
 import { SearchSpace } from '../../static/model/searchspace';
 import { filterByStatus } from '../../static/function';
-import { ParaObj, TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
+import { TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
 import '../../static/style/button.scss';
 import '../../static/style/para.scss';
 
@@ -52,7 +52,6 @@ class Para extends React.Component<ParaProps, ParaState> {
     // get percent value number
     percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            const vals = parseFloat(item !== undefined ? item.text : '');
             this.setState({ selectedPercent: item.key.toString() }, () => {
                 this.renderParallelCoordinates();
             });
@@ -73,6 +72,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     componentDidUpdate(prevProps: ParaProps): void {
+        // FIXME: redundant update
         if (this.props.trials !== prevProps.trials || this.props.searchSpace !== prevProps.searchSpace) {
             const { whichChart } = this.props;
             if (whichChart === 'Hyper-parameter') {
@@ -172,8 +172,6 @@ class Para extends React.Component<ParaProps, ParaState> {
                     convertedTrials.sort((a, b) => b[k] - a[k]);
                     convertedTrials = convertedTrials.slice(0, keptTrialNum);
                     const domain = d3.extent(convertedTrials, item => item[k]);
-                    // eslint-disable-next-line no-console
-                    console.log(convertedTrials.map(item => (item as any).default));
                     scale.domain([domain[0], domain[1]]);
                     if (colorScale !== undefined) {
                         colorScale.domain(domain);
@@ -205,7 +203,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         this.pcs.render();
     }
 
-    private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes) {
+    private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] {
         const { trials } = this.props;
         const succeededTrials = trials.filter(filterByStatus);
 

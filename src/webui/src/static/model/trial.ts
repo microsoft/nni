@@ -14,14 +14,18 @@ function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: str
     for (const [k, v] of Object.entries(paramObj)) {
         // prefix can be a good fallback when corresponding item is not found in namespace
         const axisKey = space.axes.get(k);
+        if (prefix && k === '_name')
+            continue;
         if (axisKey !== undefined) {
-            if (prefix && k === '_name')
-                continue;
-            if (typeof v === 'object' && (v as any)._name !== undefined) {
+            if (typeof v === 'object' && v._name !== undefined && axisKey.nested) {
                 // nested entry
-                const [subParams, subUnexpected] = inferTrialParameters(paramObj, space, prefix + k + '/');
-                subParams.forEach((v, k) => parameters.set(k, v));
-                subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
+                parameters.set(axisKey, v._name);
+                const subSpace = axisKey.domain.get(v._name);
+                if (subSpace !== undefined) {
+                    const [subParams, subUnexpected] = inferTrialParameters(v, subSpace, prefix + k + '/');
+                    subParams.forEach((v, k) => parameters.set(k, v));
+                    subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
+                }
             } else {
                 parameters.set(axisKey, v);
             }

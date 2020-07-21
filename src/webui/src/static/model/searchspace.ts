@@ -1,7 +1,23 @@
 import { SingleAxis, MultipleAxes, TableObj } from '../interface';
 
 
-function getFullName(prefix: string, name: string): string {
+const SUPPORTED_SEARCH_SPACE_TYPE = [
+    'choice',
+    'layer_choice',
+    'input_choice',
+    'randint',
+    'uniform',
+    'quniform',
+    'loguniform',
+    'qloguniform',
+    'normal',
+    'qnormal',
+    'lognormal',
+    'qlognormal'
+];
+
+
+function fullNameJoin(prefix: string, name: string): string {
     return prefix ? (prefix + '/' + name) : name;
 }
 
@@ -69,7 +85,7 @@ class NestedOrdinalAxis implements SingleAxis {
         this.type = type;
         for (const v of value) {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            this.domain.set(v._name, new SearchSpace(v._name, fullName + v._name, v));
+            this.domain.set(v._name, new SearchSpace(v._name, fullNameJoin(fullName, v._name), v));
         }
     }
 }
@@ -86,15 +102,17 @@ export class SearchSpace implements MultipleAxes {
             return;
         Object.entries(searchSpaceSpec).forEach((item) => {
             const key = item[0], spec = item[1] as any;
-            if (spec._type === 'choice' || spec._type === 'layer_choice' || spec._type === 'input_choice') {
+            if (key === '_name') {
+                return;
+            } else if (spec._type === 'choice' || spec._type === 'layer_choice' || spec._type === 'input_choice') {
                 // ordinal types
                 if (spec._value && typeof spec._value[0] === 'object') {
                     // nested dimension
-                    this.axes.set(key, new NestedOrdinalAxis(key, getFullName(fullName, key), spec._type, spec._value));
+                    this.axes.set(key, new NestedOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value));
                 } else {
-                    this.axes.set(key, new SimpleOrdinalAxis(key, getFullName(fullName, key), spec._type, spec._value));
+                    this.axes.set(key, new SimpleOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value));
                 }
-            } else {
+            } else if (SUPPORTED_SEARCH_SPACE_TYPE.indexOf(spec._type) !== -1) {
                 this.axes.set(key, new NumericAxis(key, fullName + key, spec._type, spec._value));
             }
         });
@@ -111,6 +129,8 @@ export class SearchSpace implements MultipleAxes {
             try {
                 trial.parameters(searchSpace);
             } catch (unexpectedEntries) {
+                // eslint-disable-next-line no-console
+                console.log(unexpectedEntries);
                 for (const [k, v] of unexpectedEntries as Map<string, any>) {
                     const column = addingColumns.get(k);
                     if (column === undefined) {

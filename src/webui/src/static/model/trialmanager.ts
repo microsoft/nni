@@ -1,5 +1,5 @@
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
-import { MetricDataRecord, TableRecord, TrialJobInfo, MultipleAxes, TableObj, SingleAxis } from '../interface';
+import { MetricDataRecord, TableRecord, TrialJobInfo, MultipleAxes } from '../interface';
 import { Trial } from './trial';
 import { SearchSpace, MetricSpace } from './searchspace';
 import { requestAxios } from '../function';
