@@ -1,6 +1,6 @@
 
 # Use NNI on Google Colab
-NNI can easily run on Google's colab platform. However, colab doesn't expose its public IP and ports, so by default you can not access NNI's web ui on colab. To solve this, you need a reverse proxy software like `ngrok` or `frp`. This tutorial will show you how to use ngrok to get access to NNI's web ui on colab.
+NNI can easily run on Google's colab platform. However, colab doesn't expose its public IP and ports, so by default you can not access NNI's web ui on colab. To solve this, you need a reverse proxy software like `ngrok` or `frp`. This tutorial will show you how to use ngrok to access NNI's web ui on colab.
 
 ## How to Open NNI's WebUI on Google's Colab
 
@@ -22,7 +22,7 @@ NNI can easily run on Google's colab platform. However, colab doesn't expose its
 ! ./ngrok authtoken <your-authtoken>
 ```
 
-3. Start an NNI trail example on a port greater than 1024, then start ngrok with the same port.
+3. Start an NNI trail example on a port bigger than 1024, then start ngrok with the same port.
 
 
 ```
@@ -41,4 +41,4 @@ You will see an url like http://xxxx.ngrok.io after step 4, open this url and yo
 
 ## Access WebUI with frp
 
-frp is another reverse proxy software with similar functions. However, frp doesn't provide free public urls, so you may need an server with public IP as an frp server. See [here](https://github.com/fatedier/frp) to know more about how to deploy frp.
+frp is another reverse proxy software with similar functions. However, frp doesn't provide free public urls, so you may need an server with public IP as a frp server. See [here](https://github.com/fatedier/frp) to know more about how to deploy frp.
