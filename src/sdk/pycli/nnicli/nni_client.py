@@ -7,7 +7,7 @@ Example:
 
 import nnicli as nc
 
-nc.start_experiment('../../../../examples/trials/mnist/config.yml')
+nc.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
 
 nc.set_endpoint('http://localhost:8080')
 
@@ -57,10 +57,10 @@ EXPORT_DATA_PATH = 'export-data'
 
 API_ROOT_PATH = 'api/v1/nni'
 
-_api_endpoint = None
+_api_endpoint = 'http://localhost:8080'
 
 def set_endpoint(endpoint):
-    """set endpoint of nni rest server for nnicli, i.e., the url of Web UI.
+    """set endpoint of nni rest server for nnicli, i.e., the url of web ui.
     everytime you want to change experiment, call this function first.
     Parameters
     ----------
@@ -103,48 +103,58 @@ def _create_process(cmd):
             print(output.decode('utf-8').strip())
     return process.returncode
 
-def start_experiment(config_file, port=8080, debug=False):
+def start_experiment(config_file, port=None, debug=False):
     """start an experiment with specified configuration file
     Parameters
     ----------
     config_file: str
         path to the config file
     port: int
-        the port of restful server, greater than 1024
+        the port of restful server, bigger than 1024
     debug: boolean
         set debug mode
     """
-    cmd = 'nnictl create --config {} --port {} --debug {}'.format(config_file, port, debug).split(' ')
+    cmd = 'nnictl create --config {}'.format(config_file).split(' ')
+    if port:
+        cmd += '--port {}'.format(port).split(' ')
+    if debug:
+        cmd += ['--debug']
     if _create_process(cmd) != 0:
         raise RuntimeError('Failed to start experiment.')
 
-def resume_experiment(exp_id, port=8080, debug=False):
+def resume_experiment(exp_id, port=None, debug=False):
     """resume a stopped experiment with specified experiment id
     Parameters
     ----------
     exp_id: str
         experiment id
     port: int
-        the port of restful server, greater than 1024
+        the port of restful server, bigger than 1024
     debug: boolean
         set debug mode
     """
-    cmd = 'nnictl resume {} --port {} --debug {}'.format(exp_id, port, debug).split(' ')
+    cmd = 'nnictl resume {}'.format(exp_id).split(' ')
+    if port:
+        cmd += '--port {}'.format(port).split(' ')
+    if debug:
+        cmd += ['--debug']
     if _create_process(cmd) != 0:
         raise RuntimeError('Failed to resume experiment.')
 
-def view_experiment(exp_id, port=8080):
+def view_experiment(exp_id, port=None):
     """view a stopped experiment with specified experiment id
     Parameters
     ----------
     exp_id: str
         experiment id
     port: int
-        the port of restful server, greater than 1024
+        the port of restful server, bigger than 1024
     """
-    cmd = 'nnictl view {} --port {}'.format(exp_id, port).split(' ')
+    cmd = 'nnictl view {}'.format(exp_id).split(' ')
+    if port:
+        cmd += '--port {}'.format(port).split(' ')
     if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
+        raise RuntimeError('Failed to view experiment.')
 
 def update_searchspace(filename, exp_id=None):
     """update an experiment's search space
@@ -160,7 +170,7 @@ def update_searchspace(filename, exp_id=None):
     else:
         cmd = 'nnictl update searchspace {} --filename {}'.format(exp_id, filename).split(' ')
     if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
+        raise RuntimeError('Failed to update searchspace.')
 
 def update_concurrency(value, exp_id=None):
     """update an experiment's concurrency
@@ -176,14 +186,16 @@ def update_concurrency(value, exp_id=None):
     else:
         cmd = 'nnictl update concurrency {} --value {}'.format(exp_id, value).split(' ')
     if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
+        raise RuntimeError('Failed to update concurrency.')
 
 def update_duration(value, exp_id=None):
     """update an experiment's duration
     Parameters
     ----------
-    value: int
-        new duration value
+    value: str
+        the experiment duration will be NUMBER seconds.
+        SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.
+        e.g., '1s', '2h'
     exp_id: str
         experiment id
     """
@@ -192,7 +204,7 @@ def update_duration(value, exp_id=None):
     else:
         cmd = 'nnictl update duration {} --value {}'.format(exp_id, value).split(' ')
     if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
+        raise RuntimeError('Failed to update duration.')
 
 def update_trailnum(value, exp_id=None):
     """update an experiment's maxtrialnum
@@ -206,9 +218,9 @@ def update_trailnum(value, exp_id=None):
     if not exp_id:
         cmd = 'nnictl update trialnum --value {}'.format(value).split(' ')
     else:
-        cmd = 'nnictl update duration {} --value {}'.format(exp_id, value).split(' ')
+        cmd = 'nnictl update trialnum {} --value {}'.format(exp_id, value).split(' ')
     if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
+        raise RuntimeError('Failed to update trailnum.')
 
 def stop_experiment(exp_id=None, port=None, stop_all=False):
     """stop an experiment
@@ -220,20 +232,17 @@ def stop_experiment(exp_id=None, port=None, stop_all=False):
         the port of restful server
     stop_all: boolean
         if set to True, all the experiments will be stopped
-    note that if stop_all is set to true, exp_id and port will be ignored. other wise
+    note that if stop_all is set to true, exp_id and port will be ignored. otherwise
     exp_id and port must correspond to the same experiment if they are both set.
     """
     if stop_all:
         cmd = 'nnictl stop --all'.split(' ')
     else:
-        if exp_id and not port:
-            cmd = 'nnictl stop {}'.format(exp_id).split(' ')
-        elif not exp_id and port:
-            cmd = 'nnictl stop --port {}'.format(port).split(' ')
-        elif exp_id and port:
-            cmd = 'nnictl stop {} --port {}'.format(exp_id, port).split(' ')
-        else:
-            cmd = 'nnictl stop'.split(' ')
+        cmd = 'nnictl stop'.split(' ')
+        if exp_id:
+            cmd += [exp_id]
+        if port:
+            cmd += '--port {}'.format(port).split(' ')
     if _create_process(cmd) != 0:
         raise RuntimeError('Failed to stop experiment.')
 
@@ -268,7 +277,12 @@ def get_job_statistics():
     return _nni_rest_get(JOB_STATISTICS_PATH)
 
 def get_job_metrics(trial_job_id=None):
-    """return trial job metrics"""
+    """return trial job metrics
+    Parameters
+    ----------
+    trial_job_id: str
+        trial id. if this parameter is None, all the trails' metrics will be returned.
+    """
     api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
     return _nni_rest_get(api_path)
 

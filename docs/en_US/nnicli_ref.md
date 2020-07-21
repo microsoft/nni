@@ -5,7 +5,7 @@ NNI client is a python API of `nnictl`, which implements the most common used co
 ```
 import nnicli as nc
 
-nc.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml', port=9090) # start an experiment
+nc.start_experiment('nni/examples/trials/mnist-pytorch/config.yml', port=9090) # start an experiment
 
 nc.set_endpoint('http://localhost:9090') # set the experiment's endpoint, i.e., the url of Web UI
 
