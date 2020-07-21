@@ -16,6 +16,7 @@ class WebChannel(BaseChannel):
         self.args = args
         self.client = None
         self.in_cache = b""
+        self.timeout = 10
 
         super(WebChannel, self).__init__(args)
 
@@ -39,10 +40,11 @@ class WebChannel(BaseChannel):
 
     def _inner_send(self, message):
         loop = asyncio.new_event_loop()
+        send = asyncio.wait_for(self.client.send(message), self.timeout)
         try:
-            loop.run_until_complete(self.client.send(message))
-        except Exception as ex:
-            nni_log(LogType.ERROR, 'WebChannel: send message failed %s' % ex)
+            loop.run_until_complete(send)
+        except asyncio.exceptions.TimeoutError:
+            nni_log(LogType.ERROR, 'WebChannel: send message to %s:%s failed!' % (self.args.nnimanager_ip, self.args.nnimanager_port))
             exit(1)
 
     def _inner_receive(self):
