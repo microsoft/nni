@@ -34,10 +34,10 @@ class Para extends React.Component<ParaProps, ParaState> {
         margin: '0 auto'
     };
     private innerChartMargins = {
-        top: 24,
-        right: 12,
+        top: 32,
+        right: 20,
         bottom: 20,
-        left: 12
+        left: 28
     };
 
     constructor(props: ParaProps) {
