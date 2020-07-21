@@ -2,45 +2,19 @@ import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, PrimaryButton, Stack } from 'office-ui-fabric-react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
+import './Para.scss';
 import * as React from 'react';
 import { TRIALS, EXPERIMENT } from '../../static/datamodel';
 import { SearchSpace } from '../../static/model/searchspace';
 import { filterByStatus } from '../../static/function';
-import { ParaObj, TableObj, SingleAxis } from '../../static/interface';
+import { ParaObj, TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
 import '../../static/style/button.scss';
 import '../../static/style/para.scss';
 
-function isSearchSpaceNested(searchSpace): boolean {
-    for (const item of Object.values(searchSpace)) {
-        const value = (item as any)._value;
-        if (value && typeof value[0] === 'object') {
-            return true;
-        }
-    }
-    return false;
-}
-
 interface ParaState {
-    // paraSource: Array<TableObj>;
-    option: object;
-    paraBack: ParaObj;
     dimName: string[];
-    swapAxisArr: string[];
-    percent: number;
-    paraNodata: string;
-    max: number; // graph color bar limit
-    min: number;
-    sutrialCount: number; // succeed trial numbers for SUC
-    succeedRenderCount: number; // all succeed trials number
-    clickCounts: number;
-    isLoadConfirm: boolean;
-    // office-fabric-ui
-    selectedItem?: { key: string | number | undefined }; // percent Selector
-    swapyAxis?: string[]; // yAxis Selector
-    paraYdataNested: number[][];
-    isNested: boolean;
-    showFinalMetricKey: string;
-    metricType: string;
+    selectedPercent: string;
+    primaryMetricKey: string;
 }
 
 interface ParaProps {
@@ -69,41 +43,17 @@ class Para extends React.Component<ParaProps, ParaState> {
     constructor(props: ParaProps) {
         super(props);
         this.state = {
-            // paraSource: [],
-            // option: this.hyperParaPic,
-            option: {},
             dimName: [],
-            paraBack: {
-                parallelAxis: [{
-                    dim: 0,
-                    name: ''
-                }],
-                data: []
-            },
-            swapAxisArr: [],
-            percent: 0,
-            paraNodata: '',
-            min: 0,
-            max: 1,
-            sutrialCount: 10000000,
-            succeedRenderCount: 10000000,
-            clickCounts: 1,
-            isLoadConfirm: false,
-            swapyAxis: [],
-            paraYdataNested: [],
-            isNested: false,
-            showFinalMetricKey: "default",
-            metricType: 'numberType'
+            primaryMetricKey: 'default',
+            selectedPercent: '1',
         };
     }
 
     // get percent value number
-    // percentNum = (value: string) => {
     percentNum = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
-        // percentNum = (event: React.FormEvent<HTMLDivElement>, item?: ISelectableOption) => {
         if (item !== undefined) {
             const vals = parseFloat(item !== undefined ? item.text : '');
-            this.setState({ percent: vals / 100, selectedItem: item }, () => {
+            this.setState({ selectedPercent: item.key.toString() }, () => {
                 this.renderParallelCoordinates();
             });
         }
@@ -112,7 +62,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     // select all final keys
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            this.setState({ showFinalMetricKey: item.key }, () => {
+            this.setState({ primaryMetricKey: item.key }, () => {
                 this.renderParallelCoordinates();
             });
         }
@@ -123,7 +73,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     componentDidUpdate(prevProps: ParaProps): void {
-        if (this.props.trials !== prevProps.trials) {
+        if (this.props.trials !== prevProps.trials || this.props.searchSpace !== prevProps.searchSpace) {
             const { whichChart } = this.props;
             if (whichChart === 'Hyper-parameter') {
                 this.renderParallelCoordinates();
@@ -132,39 +82,33 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { option, paraNodata, dimName, isLoadConfirm, selectedItem, swapyAxis } = this.state;
+        const { selectedPercent } = this.state;
 
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
-                    <span className="para-filter-text">Top</span>
+                    {/* <span className="para-filter-text">Top</span> */}
                     <Dropdown
-                        selectedKey={selectedItem ? selectedItem.key : undefined}
+                        selectedKey={selectedPercent}
                         onChange={this.percentNum}
-                        placeholder="100%"
-                        defaultSelectedKeys={[0.2]}
                         options={[
-                            { key: '0.2', text: '20%' },
-                            { key: '0.5', text: '50%' },
-                            { key: '0.8', text: '80%' },
-                            { key: '1', text: '100%' },
+                            { key: '0.01', text: 'Top 1%' },
+                            { key: '0.05', text: 'Top 5%' },
+                            { key: '0.2', text: 'Top 20%' },
+                            { key: '1', text: 'Top 100%' },
                         ]}
                         styles={{ dropdown: { width: 120 } }}
                         className="para-filter-percent"
                     />
                     {this.finalKeysDropdown()}
-                    <PrimaryButton
-                        text="Confirm"
-                        disabled={isLoadConfirm}
-                    />
                 </Stack>
                 <div className="parcoords" style={this.chartMulineStyle} ref={this.paraRef} />
             </div>
         );
     }
 
-    private finalKeysDropdown = (): any => {
-        const { showFinalMetricKey } = this.state;
+    private finalKeysDropdown(): any {
+        const { primaryMetricKey } = this.state;
         if (TRIALS.finalKeys().length === 1) {
             return null;
         } else {
@@ -178,7 +122,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 <div>
                     <span className="para-filter-text para-filter-middle">Metrics</span>
                     <Dropdown
-                        selectedKey={showFinalMetricKey}
+                        selectedKey={primaryMetricKey}
                         options={finalKeysDropdown}
                         onChange={this.updateEntries}
                         styles={{ root: { width: 150, display: 'inline-block' } }}
@@ -187,7 +131,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 </div>
             );
         }
-    };
+    }
 
     /**
      * Render the parallel coordinates. Using trial data as base and leverage
@@ -195,58 +139,85 @@ class Para extends React.Component<ParaProps, ParaState> {
      * @param source Array of trial data
      * @param searchSpace Search space
      */
-    private renderParallelCoordinates = (): void => {
-        const { trials, searchSpace } = this.props;
-        const convertToD3Scale = (axis: SingleAxis) => {
-            if (axis.scale === 'ordinal') {
-                return d3.scalePoint().domain(axis.domain).range(this.getRange());
-            } else if (axis.scale === 'log') {
-                return d3.scaleLog().domain(axis.domain).range(this.getRange());
-            } else if (axis.scale === 'linear') {
-                return d3.scaleLinear().domain(axis.domain).range(this.getRange());
+    private renderParallelCoordinates(): void {
+        const { searchSpace } = this.props;
+        const percent = parseFloat(this.state.selectedPercent);
+        const { primaryMetricKey } = this.state;
+
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
+        const inferredMetricSpace = TRIALS.inferredMetricSpace();
+        let convertedTrials = this.getTrialsAsObjectList(inferredSearchSpace, inferredMetricSpace);
+
+        const dimensions: [any, any][] = [];
+        let colorDim: string | undefined = undefined, colorScale: any = undefined;
+        // treat every axis as numeric to fit for brush
+        for (const [k, v] of inferredSearchSpace.axes) {
+            dimensions.push([k, {
+                type: 'number',
+                yscale: this.convertToD3Scale(v)
+            }]);
+        }
+        for (const [k, v] of inferredMetricSpace.axes) {
+            // const title = `metrics/${k}`;
+            const scale = this.convertToD3Scale(v);
+            if (k === primaryMetricKey && scale !== undefined && scale.interpolate) {
+                // set color for primary metrics
+                colorScale = this.convertToD3Scale(v, false)
+                    .range(['green', 'red'])
+                    .interpolate(d3.interpolateHsl);
+                colorDim = k;
+                // filter top trials
+                if (percent != 1) {
+                    const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
+                    convertedTrials.sort((a, b) => b[k] - a[k]);
+                    convertedTrials = convertedTrials.slice(0, keptTrialNum);
+                    const domain = d3.extent(convertedTrials, item => item[k]);
+                    // eslint-disable-next-line no-console
+                    console.log(convertedTrials.map(item => (item as any).default));
+                    scale.domain([domain[0], domain[1]]);
+                    if (colorScale !== undefined) {
+                        colorScale.domain(domain);
+                    }
+                }
             }
-        };
-        // filter succeed trials [{}, {}, {}]
+            dimensions.push([k, {
+                type: 'number',
+                yscale: scale
+            }]);
+        }
+
+        const firstRun = this.pcs === undefined;
+        if (firstRun) {
+            this.pcs = ParCoords()(this.paraRef.current);
+        }
+        this.pcs.data(convertedTrials)
+            .dimensions(dimensions.reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {}));
+        if (firstRun) {
+            this.pcs.margin(this.innerChartMargins)
+                .alphaOnBrushed(0.2)
+                .brushMode("1D-axes")
+                .reorderable()
+                .interactive();
+        }
+        if (colorScale !== undefined) {
+            this.pcs.color(d => (colorScale as any)(d[colorDim as any]));
+        }
+        this.pcs.render();
+    }
+
+    private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes) {
+        const { trials } = this.props;
         const succeededTrials = trials.filter(filterByStatus);
-        const convertedTrials = succeededTrials.map(s => {
-            const entries = Array.from(s.parameters(searchSpace.getAxesTree()).entries());
-            entries.push(...(Array.from(s.metrics().entries())));
+
+        return succeededTrials.map(s => {
+            const entries = Array.from(s.parameters(inferredSearchSpace).entries());
+            entries.push(...(Array.from(s.metrics(inferredMetricSpace).entries())));
             const ret = {};
             for (const [k, v] of entries) {
                 ret[k.fullName] = v;
             }
             return ret;
         });
-        const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
-        const inferredMetricSpace = TRIALS.inferredMetricSpace();
-        const dimensions: [any, any][] = [];
-        // treat all as number to fit for brush
-        for (const [k, v] of inferredSearchSpace.getAllAxes()) {
-            dimensions.push([k.fullName, {
-                type: 'number',
-                yscale: convertToD3Scale(v)
-            }]);
-        }
-        for (const [k, v] of inferredMetricSpace.getAllAxes()) {
-            // const title = `metrics/${k}`;
-            dimensions.push([k.fullName, {
-                type: 'number',
-                yscale: convertToD3Scale(v)
-            }]);
-        }
-
-        if (this.pcs === undefined) {
-            this.pcs = ParCoords()(this.paraRef.current)
-                .data(convertedTrials)
-                .showControlPoints(false)
-                .margin(this.innerChartMargins)
-                .dimensions(dimensions.reduce((obj, entry) => ({...obj, [entry[0]]: entry[1]}), {}))
-                .alphaOnBrushed(0.2)
-                .render()
-                .brushMode("1D-axes")
-                .reorderable()
-                .interactive();
-        }
     }
 
     private getRange(): [number, number] {
@@ -257,6 +228,25 @@ class Para extends React.Component<ParaProps, ParaState> {
         return [range, 1];
     }
 
+    private convertToD3Scale(axis: SingleAxis, initRange: boolean = true): any {
+        let scaleInst: any = undefined;
+        if (axis.scale === 'ordinal') {
+            if (axis.nested) {
+                // TODO: handle nested entries
+                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys()));
+            } else {
+                scaleInst = d3.scalePoint().domain(axis.domain);
+            }
+        } else if (axis.scale === 'log') {
+            scaleInst = d3.scaleLog().domain(axis.domain);
+        } else if (axis.scale === 'linear') {
+            scaleInst = d3.scaleLinear().domain(axis.domain);
+        }
+        if (initRange) {
+            scaleInst = scaleInst.range(this.getRange());
+        }
+        return scaleInst;
+    }
 }
 
 export default Para;

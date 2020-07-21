@@ -1,11 +1,3 @@
-interface StructuredItem {
-    name: string;
-    fullName: string;
-    parent: StructuredItem | undefined;
-    children: StructuredItem[];
-};
-
-
 /**
  * Definition of single dimension in search space.
  */
@@ -15,6 +7,7 @@ interface SingleAxis {
     type: string;
     scale: 'log' | 'linear' | 'ordinal';
     domain: any;
+    nested: boolean;
 }
 
 /**
@@ -24,8 +17,6 @@ interface SingleAxis {
  */
 interface MultipleAxes {
     axes: Map<string, SingleAxis>;
-    getAllAxes: () => Map<StructuredItem, SingleAxis>;
-    getAxesTree: () => StructuredItem[];
 }
 
 // draw accuracy graph data export interface
@@ -40,8 +31,8 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
-    parameters(axes: StructuredItem[]): Map<StructuredItem, any>; 
-    metrics(): Map<StructuredItem, any>;
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>; 
+    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
 interface TableRecord {
@@ -224,6 +215,5 @@ export {
     TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
     AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
     Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes,
-    StructuredItem
+    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
 };

@@ -133,7 +133,7 @@ class Experiment {
     get searchSpaceNew(): SearchSpace {
         // The search space derived directly from profile
         // eventually this will replace searchSpace
-        return new SearchSpace(this.searchSpace);
+        return new SearchSpace('', '', this.searchSpace);
     }
 
     get logCollectionEnabled(): boolean {

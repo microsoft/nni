@@ -1,6 +1,36 @@
-import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, StructuredItem, MultipleAxes } from '../interface';
+import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
 import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
-import { stringify } from 'json5';
+
+/**
+ * Get a structured representation of parameters
+ * @param paramObj Parameters object
+ * @param space All axes from search space (or sub search space)
+ * @param prefix Current namespace (to make full name for unexpected entries)
+ * @returns Parsed structured parameters and unexpected entries
+ */
+function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: string = ''): [Map<SingleAxis, any>, Map<string, any>] {
+    const parameters = new Map<SingleAxis, any>();
+    const unexpectedEntries = new Map<string, any>();
+    for (const [k, v] of Object.entries(paramObj)) {
+        // prefix can be a good fallback when corresponding item is not found in namespace
+        const axisKey = space.axes.get(k);
+        if (axisKey !== undefined) {
+            if (prefix && k === '_name')
+                continue;
+            if (typeof v === 'object' && (v as any)._name !== undefined) {
+                // nested entry
+                const [subParams, subUnexpected] = inferTrialParameters(paramObj, space, prefix + k + '/');
+                subParams.forEach((v, k) => parameters.set(k, v));
+                subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
+            } else {
+                parameters.set(axisKey, v);
+            }
+        } else {
+            unexpectedEntries.set(prefix + k, v);
+        }
+    }
+    return [parameters, unexpectedEntries];
+}
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -157,53 +187,41 @@ class Trial implements TableObj {
         return ret;
     }
 
-    public parameters(axes: StructuredItem[]): Map<StructuredItem, any> {
-        const ret = new Map<StructuredItem, any>();
-        const flatten = (source: object,
-                         namespace: StructuredItem[],
-                         prefix: string,
-                         ignoreName: boolean = false) => {
-            const namespaceMap = new Map<string, StructuredItem>();
-            for (const item of namespace) {
-                namespaceMap.set(item.name, item);
-            }
-            Object.entries(source).forEach(item => {
-                const [k, v] = item;
-                // prefix can be a good fallback when corresponding item is not found in namespace
-                const axisKey = namespaceMap.get(k) || { name: prefix + k, fullName: prefix + k, parent: undefined, children: [] };
-                if (ignoreName && k === '_name')
-                    return;
-                if (typeof v === 'object' && (v as any)._name !== undefined) {
-                    // nested entry
-                    ret.set(axisKey, (v as any)._name);
-                    flatten(v, axisKey.children, prefix + k + '/', true);
-                } else {
-                    ret.set(axisKey, v);
-                }
-            });
-            return ret;
-        };
+    public parameters(axes: MultipleAxes): Map<SingleAxis, any> {
         const tempHyper = this.info.hyperParameters;
         if (tempHyper === undefined) {
-            const key = { name: 'error', fullName: 'error', parent: undefined, children: [] };
-            return new Map([[key, 'This trial\'s parameters are not available.']]);
+            throw new Map([['error', 'This trial\'s parameters are not available.']]);
         } else {
-            let getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
-            if (typeof getPara === 'string') {
-                getPara = JSON.parse(getPara);
+            let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+            if (typeof params === 'string') {
+                params = JSON.parse(params);
             }
-            flatten(getPara as object, axes, '');
-            return ret;
+            const [result, unexpectedEntries] = inferTrialParameters(params, axes);
+            if (unexpectedEntries.size) {
+                throw unexpectedEntries;
+            }
+            return result;
         }
     }
 
-    public metrics(): Map<StructuredItem, any> {
-        const ret = new Map<StructuredItem, any>();
+    public metrics(space: MultipleAxes): Map<SingleAxis, any> {
+        const ret = new Map<SingleAxis, any>();
+        const unexpectedEntries = new Map<string, any>();
         if (this.acc === undefined) {
             return ret;
         }
-        for (const [k, v] of Object.entries(this.acc)) {
-            ret.set({name: k, fullName: k, parent: undefined, children: []}, v);
+        const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;
+        Object.entries(acc).forEach(item => {
+            const [k, v] = item;
+            const column = space.axes.get(k);
+            if (column !== undefined) {
+                ret.set(column, v);
+            } else {
+                unexpectedEntries.set(k, v);
+            }
+        });
+        if (unexpectedEntries.size) {
+            throw unexpectedEntries;
         }
         return ret;
     }
