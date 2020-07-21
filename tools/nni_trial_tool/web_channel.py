@@ -16,7 +16,7 @@ class WebChannel(BaseChannel):
         self.args = args
         self.client = None
         self.in_cache = b""
-        self.timeout = 10
+        self.timeout = 5
 
         super(WebChannel, self).__init__(args)
 
@@ -24,11 +24,15 @@ class WebChannel(BaseChannel):
 
     def _inner_open(self):
         url = "ws://{}:{}".format(self.args.nnimanager_ip, self.args.nnimanager_port)
-        nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
-        connect = websockets.connect(url)
-        self._event_loop = asyncio.get_event_loop()
-        client = self._event_loop.run_until_complete(connect)
-        self.client = client
+        try:
+            connect = asyncio.wait_for(websockets.connect(url), self.timeout)
+            self._event_loop = asyncio.get_event_loop()
+            client = self._event_loop.run_until_complete(connect)
+            self.client = client
+            nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
+        except asyncio.TimeoutError:
+            nni_log(LogType.Error, 'WebChannel: connect %s failed!' % url)
+            exit(1)
 
     def _inner_close(self):
         if self.client is not None:
@@ -40,12 +44,7 @@ class WebChannel(BaseChannel):
 
     def _inner_send(self, message):
         loop = asyncio.new_event_loop()
-        send = asyncio.wait_for(self.client.send(message), self.timeout)
-        try:
-            loop.run_until_complete(send)
-        except asyncio.exceptions.TimeoutError:
-            nni_log(LogType.ERROR, 'WebChannel: send message to %s:%s failed!' % (self.args.nnimanager_ip, self.args.nnimanager_port))
-            exit(1)
+        loop.run_until_complete(self.client.send(message))
 
     def _inner_receive(self):
         messages = []
