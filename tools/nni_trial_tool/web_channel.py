@@ -16,7 +16,7 @@ class WebChannel(BaseChannel):
         self.args = args
         self.client = None
         self.in_cache = b""
-        self.timeout = 5
+        self.timeout = 10
 
         super(WebChannel, self).__init__(args)
 
