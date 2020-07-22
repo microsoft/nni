@@ -9,6 +9,7 @@ import time
 import re
 import shutil
 import subprocess
+from functools import reduce
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
@@ -681,30 +682,53 @@ def monitor_experiment(args):
     set_monitor(False, args.time)
 
 def export_trials_data(args):
-    '''export experiment metadata to csv
+    '''export experiment metadata and intermediate results to json or csv
     '''
+    def groupby_trial_id(intermediate_results):
+        sorted(intermediate_results, key=lambda x: x['timestamp'])
+        groupby = dict()
+        for content in intermediate_results:
+            groupby.setdefault(content['trialJobId'], []).append(content['data'][2:-2])
+        return groupby
+
+    def trans_intermediate_dict(record):
+        return {'intermediate': str(reduce(lambda x, y: x + y, record))}
+
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
+    print(vars(args))
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
     running, response = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(export_data_url(rest_port), 20)
+        if args.intermediate:
+            intermediate_results = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
+            if not intermediate_results or not check_response(intermediate_results):
+                print_error('Error getting intermediate results.')
+                return
+            intermediate_results = groupby_trial_id(json.loads(intermediate_results.text))
         if response is not None and check_response(response):
+            content = json.loads(response.text)
+            if args.intermediate:
+                    for record in content:
+                        record['intermediate'] = intermediate_results[record['id']]
             if args.type == 'json':
                 with open(args.path, 'w') as file:
-                    file.write(response.text)
+                    file.write(json.dumps(content))
             elif args.type == 'csv':
-                content = json.loads(response.text)
                 trial_records = []
                 for record in content:
+                    print(record)
                     record_value = json.loads(record['value'])
                     if not isinstance(record_value, (float, int)):
-                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']}}
+                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']},
+                            **trans_intermediate_dict(record['intermediate'])}
                     else:
-                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
+                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']},
+                            **trans_intermediate_dict(record['intermediate'])}
                     trial_records.append(formated_record)
                 if not trial_records:
                     print_error('No trial results collected! Please check your trial log...')

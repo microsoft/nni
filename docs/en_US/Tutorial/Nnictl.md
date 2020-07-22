@@ -466,6 +466,7 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  False| |ID of the experiment    |
   |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
+  |--intermediate, -i|False||Is intermediate results required|
 
   * Examples
 
@@ -851,26 +852,3 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl --version
     ```
-    
-
-<a name="export-results"></a>
-
-### Export experiment results
-
-* __nnictl export_results__
-  * Description
-
-    Export experiment settings. All trials' intermediate results and final results are dumped into a json file. The file's default name is `exp_{experiment id}_{timestamp}.json`. Its content and format are aligned with `Download > Experiment Summary` in webUI.
-
-  * Usage
-
-    ```bash
-    nnictl export_results [options]
-    ```
-
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |---|---|---|---|
-  |--name, -n|False|'exp_{experiment id}_{timestamp}.json'|output json file name|
-  |id|False||ID of the experiment you want to export results|

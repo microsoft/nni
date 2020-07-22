@@ -148,6 +148,7 @@ def parse_args():
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
+    parser_trial_export.add_argument('--intermediate', '-i', default=False, help='is intermediate results required')
     parser_trial_export.set_defaults(func=export_trials_data)
 
     #TODO:finish webui function
@@ -229,13 +230,6 @@ def parse_args():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
-
-    #parse export results
-    parser_export_results = subparsers.add_parser('export_results', help='dump all intermediate and final results into a json file')
-    parser_export_results.add_argument('--name', '-n', default='', type=str,
-                                       help='custom name of the dump file, default is \'exp_{Experiment ID}_{timestamp}.json\'')
-    parser_export_results.add_argument('id', nargs='?', help='the id of experiment')
-    parser_export_results.set_defaults(func=export_results)
 
     args = parser.parse_args()
     args.func(args)
