@@ -56,36 +56,6 @@
     margin-left: 24px;
 }
 
-.list, .list tr, .list td{
-    border: 1px solid #ccc;
-}
-
-.column b{
-    padding-bottom: 4px;
-    border-bottom: 2px solid blue;
-}
-.column td{
-    width: 200px;
-    text-align: center;
-    line-height: 36px;
-}
-td.framework{
-    width:300px;
-    -webkit-width: 220px;
-}
-.list .circle li{
-    list-style-type: circle;
-}
-
-.list .firstUl, .circle{
-    padding-left: 20px;
-}
-
-.list .verticalMiddle{
-    vertical-align: middle !important;
-    text-align: center;
-}
-
 .inline img, .inline h3{
     display: inline-block;
 }
@@ -96,11 +66,6 @@ td.framework{
 
 .wy-side-nav-search>div.version{
     color: #fff !important;
-}
-
-.list{
-    width: 90%;
-    margin: 0 auto;
 }
 
 .chinese{
@@ -117,4 +82,52 @@ td.framework{
 
 .wy-plain-list-disc li, .rst-content .section ul li, .rst-content .toctree-wrapper ul li, article ul li {
     margin-bottom: 0px;
+}
+
+.tuner{
+    width: 90%;
+    margin: 0 auto;
+    margin-bottom: 25px;
+}
+
+.tuner, .tuner td{
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.tuner td.references{
+    width: 25%;
+}
+
+.tuner td:not(.core-td) {
+    padding: 25px;
+}
+
+.tuner .core-td{
+    padding-bottom: 25px;
+}
+
+.tuner ul.core{
+    padding-left: 25px;
+    padding-top: 25px;
+}
+
+.tuner .title {
+    width: 100px;
+}
+
+.tuner ul {
+    display: inline-block;
+    vertical-align: top;
+}
+
+.tuner .align-td{
+    line-height: 26px;
+}
+
+.wy-nav-content .tuner li{
+    list-style-type: none;
+    line-height: 26px;
+    margin-left: 0;
+    margin-bottom: 0 !important;
 }
