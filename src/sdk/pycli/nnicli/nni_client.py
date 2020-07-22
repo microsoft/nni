@@ -247,7 +247,7 @@ def stop_experiment(exp_id=None, port=None, stop_all=False):
         the port of restful server
     stop_all: boolean
         if set to True, all the experiments will be stopped
-    
+
     Note that if stop_all is set to true, exp_id and port will be ignored. Otherwise
     exp_id and port must correspond to the same experiment if they are both set.
     """
