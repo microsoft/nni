@@ -37,7 +37,7 @@ get_ipython().system_raw('./ngrok http 5000 &')
 ! curl -s http://localhost:4040/api/tunnels # don't change the port number 4040
 ```
 
-You will see an url like http://xxxx.ngrok.io after step 4, open this url and you will find NNI's web ui. Have fun :)
+You will see an url like http://xxxx.ngrok.io after step 4, open this url and you will find NNI's Web UI. Have fun :)
 
 ## Access WebUI with frp
 
