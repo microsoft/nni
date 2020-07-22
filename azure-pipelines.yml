@@ -112,6 +112,8 @@ jobs:
   - script: |
       echo "network-timeout 600000" >> ${HOME}/.yarnrc
       echo ${HOME}
+      which python3
+      echo ${PATH}
       ls ${HOME}/Library/Python
       PATH=${HOME}/Library/Python/3.7/bin:${PATH} source install.sh
     displayName: 'Install nni toolkit via source code'
