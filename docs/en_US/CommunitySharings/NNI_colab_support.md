@@ -1,6 +1,6 @@
 
 # Use NNI on Google Colab
-NNI can easily run on Google's colab platform. However, colab doesn't expose its public IP and ports, so by default you can not access NNI's web ui on colab. To solve this, you need a reverse proxy software like `ngrok` or `frp`. This tutorial will show you how to use ngrok to access NNI's web ui on colab.
+NNI can easily run on Google Colab platform. However, colab doesn't expose its public IP and ports, so by default you can not access NNI's Web UI on colab. To solve this, you need a reverse proxy software like `ngrok` or `frp`. This tutorial will show you how to use ngrok to access NNI's Web UI on colab.
 
 ## How to Open NNI's WebUI on Google's Colab
 
@@ -22,11 +22,11 @@ NNI can easily run on Google's colab platform. However, colab doesn't expose its
 ! ./ngrok authtoken <your-authtoken>
 ```
 
-3. Start an NNI trail example on a port bigger than 1024, then start ngrok with the same port.
+3. Start an NNI example on a port bigger than 1024, then start ngrok with the same port. If you want to use gpu, make sure gpuNum >= 1 in config.yml. Use `get_ipython()` to start ngrok since it will be stuck if you use `! ngrok http 5000 &`.
 
 
 ```
-! nnictl create --config nni_repo/nni/examples/trials/mnist-pytorch/config.yml --port 5000 & # if you want to use gpu, make sure gpuNum >= 1 in config.yml
+! nnictl create --config nni_repo/nni/examples/trials/mnist-pytorch/config.yml --port 5000 &
 get_ipython().system_raw('./ngrok http 5000 &')
 ```
 
