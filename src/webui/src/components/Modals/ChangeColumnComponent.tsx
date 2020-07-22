@@ -121,7 +121,8 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                     hidden={isHideDialog} // required field!
                     dialogContentProps={{
                         type: DialogType.largeHeader,
-                        title: 'Change columns'
+                        title: 'Change table column',
+                        subText: 'You can chose which columns you want to see in the table.'
                     }}
                     modalProps={{
                         isBlocking: false,
