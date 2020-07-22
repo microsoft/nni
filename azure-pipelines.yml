@@ -106,21 +106,13 @@ jobs:
 
   steps:
   - script: |
-      python3 -m pip install --upgrade pip setuptools
       echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${PATH}"
+      python3 -V
+      python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
       echo "network-timeout 600000" >> ${HOME}/.yarnrc
-      echo ${HOME}
-      which python3
-      python3 -V
-      ls -l /usr/local/bin/python3
-      ls -l /usr/local/bin/python*
-      echo ">>>>>>>>"
-      ls -l /usr/local/Cellar/python@3.7/3.7.8_1
-      echo ${PATH}
-      ls ${HOME}/Library/Python
-      PATH=${HOME}/Library/Python/3.7/bin:${PATH} source install.sh
+      source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
