@@ -47,8 +47,8 @@ testCases:
   config:
     maxTrialNum: 2
     trialConcurrency: 2
-  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
-  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+  launchCommand: python3 -c 'import nnicli as nc; nc.start_experiment("$configFile")'
+  stopCommand: python3 -c 'import nnicli as nc; nc.stop_experiment()'
   validator:
     class: NnicliValidator
   platform: linux darwin
