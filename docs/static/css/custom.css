@@ -92,11 +92,12 @@
 
 .tuner, .tuner td{
     border: 1px solid #ccc;
+    font-size: 14px;
 }
 
-/* .tuner td ul:not(.core) {
-    padding: 25px 0 25px 25px;
-} */
+.tuner td.references{
+    width: 25%;
+}
 
 .tuner td:not(.core-td) {
     padding: 25px;
