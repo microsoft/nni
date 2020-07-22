@@ -71,7 +71,7 @@ def get_experiment_dir(experiment_url=None, experiment_id=None):
     assert any([experiment_url, experiment_id])
     if experiment_id is None:
         experiment_id = get_experiment_id(experiment_url)
-    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
+    return os.path.join(os.path.expanduser('~'), 'nni-experiments', experiment_id)
 
 def get_nni_log_dir(experiment_url=None, experiment_id=None):
     '''get nni's log directory from nni's experiment url'''

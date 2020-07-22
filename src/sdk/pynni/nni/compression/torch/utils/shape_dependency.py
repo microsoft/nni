@@ -4,8 +4,6 @@
 import csv
 import logging
 
-from nni._graph_utils import TorchModuleGraph
-
 __all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDependency']
 
 CONV_TYPE = 'aten::_convolution'
@@ -19,6 +17,8 @@ class Dependency:
         """
         Build the graph for the model.
         """
+        from nni._graph_utils import TorchModuleGraph
+
         # check if the input is legal
         if traced_model is None:
             # user should provide model & dummy_input to trace
