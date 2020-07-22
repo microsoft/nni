@@ -24,7 +24,7 @@ nnictl support commands:
 * [nnictl package](#package)
 * [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
-* [nnictl export-results](#export-results)
+* [nnictl export_results](#export-results)
 
 ### Manage an experiment
 
@@ -857,7 +857,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 ### Export experiment results
 
-* __nnictl export-results__
+* __nnictl export_results__
   * Description
 
     Export experiment settings. All trials' intermediate results and final results are dumped into a json file. The file's default name is `exp_{experiment id}_{timestamp}.json`. Its content and format are aligned with `Download > Experiment Summary` in webUI.
@@ -865,7 +865,7 @@ Debug mode will disable version check function in Trialkeeper.
   * Usage
 
     ```bash
-    nnictl export-results [options]
+    nnictl export_results [options]
     ```
 
   * Options
@@ -873,4 +873,4 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |---|---|---|---|
   |--name, -n|False|'exp_{experiment id}_{timestamp}.json'|output json file name|
-  |--id|False||ID of the experiment you want to export results|
+  |id|False||ID of the experiment you want to export results|

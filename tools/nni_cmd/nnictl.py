@@ -231,7 +231,7 @@ def parse_args():
     parser_top.set_defaults(func=monitor_experiment)
 
     #parse export results
-    parser_export_results = subparsers.add_parser('export-results', help='dump all intermediate and final results into a json file')
+    parser_export_results = subparsers.add_parser('export_results', help='dump all intermediate and final results into a json file')
     parser_export_results.add_argument('--name', '-n', default='', type=str,
                                        help='custom name of the dump file, default is \'exp_{Experiment ID}_{timestamp}.json\'')
     parser_export_results.add_argument('id', nargs='?', help='the id of experiment')
