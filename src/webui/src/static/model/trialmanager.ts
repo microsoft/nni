@@ -47,6 +47,15 @@ class TrialManager {
     private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
     private isMetricdataRangeError: boolean = false; // metric-data-range api error filed
     private metricdataRangeErrorMessage: string = ''; // metric-data-latest error message
+    private metricsList: Array<any> = [];
+    private trialJobList: Array<any> = [];
+
+    public getMetricsList(): Array<any> {
+        return this.metricsList;
+    }
+    public getTrialJobList(): Array<any> {
+        return this.trialJobList;
+    }
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -57,7 +66,8 @@ class TrialManager {
         }
     }
 
-    public async update(lastTime?: boolean): Promise<boolean> {
+    public async update(lastTime?: boolean): Promise<boolean | void> {
+        // public async update(lastTime?: boolean): Promise<boolean> {
         const [infoUpdated, metricUpdated] = await Promise.all([this.updateInfo(), this.updateMetrics(lastTime)]);
         return infoUpdated || metricUpdated;
     }
@@ -220,6 +230,7 @@ class TrialManager {
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
                 const newTrials = TrialManager.expandJobsToTrials(data as any);
+                this.trialJobList = newTrials;
                 for (const trialInfo of newTrials as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -242,7 +253,8 @@ class TrialManager {
         return updated;
     }
 
-    private async updateMetrics(lastTime?: boolean): Promise<boolean> {
+    private async updateMetrics(lastTime?: boolean): Promise<boolean | void> {
+        // private async updateMetrics(lastTime?: boolean): Promise<boolean> {
         if (this.trials.size < METRIC_GROUP_UPDATE_THRESHOLD || lastTime) {
             return await this.updateAllMetrics();
         } else {
@@ -253,9 +265,12 @@ class TrialManager {
         }
     }
 
-    private async updateAllMetrics(): Promise<boolean> {
+    private async updateAllMetrics(): Promise<boolean | void> {
         return requestAxios(`${MANAGER_IP}/metric-data`)
-            .then(data => this.doUpdateMetrics(data as any, false))
+            .then(data => {
+                this.metricsList = data;
+                this.doUpdateMetrics(data as any, false);
+            })
             .catch(error => {
                 this.isMetricdataError = true;
                 this.MetricdataErrorMessage = `${error.message}`;

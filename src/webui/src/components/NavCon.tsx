@@ -12,6 +12,7 @@ import {
     timeIcon, disableUpdates, requency, closeTimer
 } from './Buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
+import { EXPERIMENT } from '../static/datamodel';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 
@@ -97,9 +98,9 @@ class NavCon extends React.Component<NavProps, NavState> {
     openDocs = (): void => {
         window.open(WEBUIDOC);
     }
-    
+
     openGithubNNI = (): void => {
-        const {version} = this.state;
+        const { version } = this.state;
         const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
         window.open(nniLink);
     }
@@ -179,7 +180,8 @@ class NavCon extends React.Component<NavProps, NavState> {
                 </StackItem>
                 {/* the drawer for dispatcher & nnimanager log message */}
                 {isvisibleLogDrawer && <LogDrawer closeDrawer={this.closeLogDrawer} />}
-                <ExperimentDrawer isVisble={isvisibleExperimentDrawer} closeExpDrawer={this.closeExpDrawer} />
+                {isvisibleExperimentDrawer && <ExperimentDrawer closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />}
+                {/* <ExperimentDrawer isVisble={isvisibleExperimentDrawer} closeExpDrawer={this.closeExpDrawer} /> */}
             </Stack>
         );
     }
