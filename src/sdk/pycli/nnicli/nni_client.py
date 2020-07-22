@@ -60,8 +60,10 @@ API_ROOT_PATH = 'api/v1/nni'
 _api_endpoint = None
 
 def set_endpoint(endpoint):
-    """set endpoint of nni rest server for nnicli, i.e., the url of web ui.
-    everytime you want to change experiment, call this function first.
+    """
+    Set endpoint of nni rest server for nnicli, i.e., the url of Web UI.
+    Everytime you want to change experiment, call this function first.
+
     Parameters
     ----------
     endpoint: str
@@ -104,7 +106,9 @@ def _create_process(cmd):
     return process.returncode
 
 def start_experiment(config_file, port=None, debug=False):
-    """start an experiment with specified configuration file
+    """
+    Start an experiment with specified configuration file.
+
     Parameters
     ----------
     config_file: str
@@ -123,7 +127,9 @@ def start_experiment(config_file, port=None, debug=False):
         raise RuntimeError('Failed to start experiment.')
 
 def resume_experiment(exp_id, port=None, debug=False):
-    """resume a stopped experiment with specified experiment id
+    """
+    Resume a stopped experiment with specified experiment id
+
     Parameters
     ----------
     exp_id: str
@@ -142,7 +148,9 @@ def resume_experiment(exp_id, port=None, debug=False):
         raise RuntimeError('Failed to resume experiment.')
 
 def view_experiment(exp_id, port=None):
-    """view a stopped experiment with specified experiment id
+    """
+    View a stopped experiment with specified experiment id
+
     Parameters
     ----------
     exp_id: str
@@ -157,7 +165,9 @@ def view_experiment(exp_id, port=None):
         raise RuntimeError('Failed to view experiment.')
 
 def update_searchspace(filename, exp_id=None):
-    """update an experiment's search space
+    """
+    Update an experiment's search space
+
     Parameters
     ----------
     filename: str
@@ -173,7 +183,9 @@ def update_searchspace(filename, exp_id=None):
         raise RuntimeError('Failed to update searchspace.')
 
 def update_concurrency(value, exp_id=None):
-    """update an experiment's concurrency
+    """
+    Update an experiment's concurrency
+
     Parameters
     ----------
     value: int
@@ -189,13 +201,13 @@ def update_concurrency(value, exp_id=None):
         raise RuntimeError('Failed to update concurrency.')
 
 def update_duration(value, exp_id=None):
-    """update an experiment's duration
+    """
+    Update an experiment's duration
+
     Parameters
     ----------
     value: str
-        the experiment duration will be NUMBER seconds.
-        SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.
-        e.g., '1s', '2h'
+        SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. e.g., '1m', '2h'
     exp_id: str
         experiment id
     """
@@ -207,7 +219,9 @@ def update_duration(value, exp_id=None):
         raise RuntimeError('Failed to update duration.')
 
 def update_trailnum(value, exp_id=None):
-    """update an experiment's maxtrialnum
+    """
+    Update an experiment's maxtrialnum
+
     Parameters
     ----------
     value: int
@@ -223,7 +237,8 @@ def update_trailnum(value, exp_id=None):
         raise RuntimeError('Failed to update trailnum.')
 
 def stop_experiment(exp_id=None, port=None, stop_all=False):
-    """stop an experiment
+    """Stop an experiment.
+
     Parameters
     ----------
     exp_id: str
@@ -232,7 +247,8 @@ def stop_experiment(exp_id=None, port=None, stop_all=False):
         the port of restful server
     stop_all: boolean
         if set to True, all the experiments will be stopped
-    note that if stop_all is set to true, exp_id and port will be ignored. otherwise
+    
+    Note that if stop_all is set to true, exp_id and port will be ignored. Otherwise
     exp_id and port must correspond to the same experiment if they are both set.
     """
     if stop_all:
@@ -247,19 +263,27 @@ def stop_experiment(exp_id=None, port=None, stop_all=False):
         raise RuntimeError('Failed to stop experiment.')
 
 def version():
-    """return version of nni"""
+    """
+    Return version of nni.
+    """
     return _nni_rest_get(VERSION_PATH, 'text')
 
 def get_experiment_status():
-    """return experiment status as a dict"""
+    """
+    Return experiment status as a dict.
+    """
     return _nni_rest_get(STATUS_PATH)
 
 def get_experiment_profile():
-    """return experiment profile as a dict"""
+    """
+    Return experiment profile as a dict.
+    """
     return _nni_rest_get(EXPERIMENT_PATH)
 
 def get_trial_job(trial_job_id):
-    """return trial job information as a dict
+    """
+    Return trial job information as a dict.
+
     Parameters
     ----------
     trial_job_id: str
@@ -269,23 +293,31 @@ def get_trial_job(trial_job_id):
     return _nni_rest_get(os.path.join(TRIAL_JOBS_PATH, trial_job_id))
 
 def list_trial_jobs():
-    """return information for all trial jobs as a list"""
+    """
+    Return information for all trial jobs as a list.
+    """
     return _nni_rest_get(TRIAL_JOBS_PATH)
 
 def get_job_statistics():
-    """return trial job statistics information as a dict"""
+    """
+    Return trial job statistics information as a dict.
+    """
     return _nni_rest_get(JOB_STATISTICS_PATH)
 
 def get_job_metrics(trial_job_id=None):
-    """return trial job metrics
+    """
+    Return trial job metrics.
+
     Parameters
     ----------
     trial_job_id: str
-        trial id. if this parameter is None, all trails' metrics will be returned.
+        trial id. if this parameter is None, all trail jobs' metrics will be returned.
     """
     api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
     return _nni_rest_get(api_path)
 
 def export_data():
-    """return exported information for all trial jobs"""
+    """
+    Return exported information for all trial jobs.
+    """
     return _nni_rest_get(EXPORT_DATA_PATH)
