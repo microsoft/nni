@@ -725,10 +725,10 @@ def export_trials_data(args):
                     record_value = json.loads(record['value'])
                     if not isinstance(record_value, (float, int)):
                         formated_record = {**record['parameter'], **record_value, **{'id': record['id']},
-                            **trans_intermediate_dict(record['intermediate'])}
+                                           **trans_intermediate_dict(record['intermediate'])}
                     else:
                         formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']},
-                            **trans_intermediate_dict(record['intermediate'])}
+                                           **trans_intermediate_dict(record['intermediate'])}
                     trial_records.append(formated_record)
                 if not trial_records:
                     print_error('No trial results collected! Please check your trial log...')
