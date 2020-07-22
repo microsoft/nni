@@ -11,7 +11,7 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
-                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, export_results
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
 from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
