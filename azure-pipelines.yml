@@ -117,7 +117,7 @@ jobs:
       ls -l /usr/local/bin/python3
       ls -l /usr/local/bin/python*
       echo ">>>>>>>>"
-      ls -l /usr/local/Cellar/
+      ls -l /usr/local/Cellar/python@3.7
       echo ${PATH}
       ls ${HOME}/Library/Python
       PATH=${HOME}/Library/Python/3.7/bin:${PATH} source install.sh
