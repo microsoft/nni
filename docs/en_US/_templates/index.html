@@ -66,163 +66,156 @@
   <a href="#overview"><img src="_static/img/overview.svg" /></a>
 </p>
 
-<table class="list">
+<table class="tuner">
   <tbody>
-    <tr align="center" valign="bottom" class="column">
-      <td></td>
-      <td class="framework">
-        <b>Frameworks & Libraries</b>
-      </td>
-      <td>
-        <b>Algorithms</b>
-      </td>
-      <td>
-        <b>Training Services</b>
-      </td>
-    </tr>
-    </tr>
     <tr>
-      <td class="verticalMiddle"><b>Built-in</b></td>
+      <td></td>
       <td>
-        <ul class="firstUl">
-          <li><b>Supported Frameworks</b></li>
-          <ul class="circle">
-            <li>PyTorch</li>
-            <li>Keras</li>
-            <li>TensorFlow</li>
-            <li>MXNet</li>
-            <li>Caffe2</li>
-            <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
-          </ul>
-        </ul>
-        <ul class="firstUl">
-          <li><b>Supported Libraries</b></li>
-          <ul class="circle">
-            <li>Scikit-learn</li>
-            <li>XGBoost</li>
-            <li>LightGBM</li>
-            <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
-          </ul>
-        </ul>
-        <ul class="firstUl">
-          <li><b>Examples</b></li>
-          <ul class="circle">
-            <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pytorch">MNIST-pytorch</li>
-            </a>
-            <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1">MNIST-tensorflow</li>
-            </a>
-            <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-keras">MNIST-keras</li></a>
-            <li><a href="{{ pathto('TrialExample/GbdtExample') }}">Auto-gbdt</a></li>
-            <li><a href="{{ pathto('TrialExample/Cifar10Examples') }}">Cifar10-pytorch</li></a>
-            <li><a href="{{ pathto('TrialExample/SklearnExamples') }}">Scikit-learn</a></li>
-            <li><a href="{{ pathto('TrialExample/EfficientNet') }}">EfficientNet</a></li>
-            <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
-          </ul>
-        </ul>
-      </td>
-      <td align="left">
-        <a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperparameter Tuning</a>
-        <ul class="firstUl">
-          <div><b>Exhaustive search</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Random Search</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Grid Search</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Batch</a></li>
-          </ul>
-          <div><b>Heuristic search</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Naïve Evolution</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Anneal</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperband</a></li>
-          </ul>
-          <div><b>Bayesian optimization</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">BOHB</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">TPE</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">SMAC</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Metis Tuner</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">GP Tuner</a> </li>
-          </ul>
-          <div><b>RL Based</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PPO Tuner</a> </li>
-          </ul>
-        </ul>
-        <a href="{{ pathto('NAS/Overview') }}">Neural Architecture Search</a>
-        <ul class="firstUl">
-          <ul class="circle">
-            <li><a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
-            <li><a href="{{ pathto('NAS/DARTS') }}">DARTS</a></li>
-            <li><a href="{{ pathto('NAS/PDARTS') }}">P-DARTS</a></li>
-            <li><a href="{{ pathto('NAS/CDARTS') }}">CDARTS</a></li>
-            <li><a href="{{ pathto('NAS/SPOS') }}">SPOS</a></li>
-            <li><a href="{{ pathto('NAS/Proxylessnas') }}">ProxylessNAS</a></li>
-            <li><a href="{{ pathto('Tuner/NetworkmorphismTuner') }}">Network Morphism</a> </li>
-            <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
-          </ul>
-        </ul>
-        <a href="{{ pathto('Compressor/Overview') }}">Model Compression</a>
-        <ul class="firstUl">
-          <div><b>Pruning</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
-          </ul>
-          <div><b>Quantization</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
-          </ul>
-        </ul>
-        <a href="{{ pathto('FeatureEngineering/Overview') }}">Feature Engineering (Beta)</a>
-        <ul class="circle">
-          <li><a href="{{ pathto('FeatureEngineering/GradientFeatureSelector') }}">GradientFeatureSelector</a></li>
-          <li><a href="{{ pathto('FeatureEngineering/GBDTSelector') }}">GBDTSelector</a></li>
-        </ul>
-        <a href="{{ pathto('Assessor/BuiltinAssessor') }}">Early Stop Algorithms</a>
-        <ul class="circle">
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Median Stop</a></li>
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Curve Fitting</a></li>
-        </ul>
+        <b>Built-in</b>
       </td>
       <td>
-        <ul class="firstUl">
-          <li><a href="{{ pathto('TrainingService/LocalMode') }}">Local Machine</a></li>
-          <li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}">Remote Servers</a></li>
-          <li><b>Kubernetes based services</b></li>
-          <ul class="circle">
-            <li><a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a></li>
-            <li><a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a></li>
-            <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">FrameworkController on K8S
-                (AKSetc.)</a>
-            </li>
-            <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (aka. DLTS)</a></li>
-            <li><a href="{{ pathto('TrainingService/AMLMode') }}">AML (Azure Machine Learning)</a></li>
-          </ul>
-        </ul>
+        <b>references</b>
       </td>
     </tr>
-    <tr valign="top">
-      <td class="verticalMiddle"><b>References</b></td>
+    <!-- Frameworks & Libraries -->
+    <tr>
+      <td class="align-td">Frameworks & Libraries</td>
+      <td class="inline core-td">
+        <ul class="core">
+          <li><b>Supported Frameworks</b></li>
+          <li>PyTorch</li>
+          <li>Keras</li>
+          <li>TensorFlow</li>
+          <li>MXNet</li>
+          <li>Caffe2</li>
+          <li><a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br /></li>
+        </ul>
+        <ul class="core">
+          <li><b>Supported Libraries</b></li>
+          <li>Scikit-learn</li>
+          <li>XGBoost</li>
+          <li>LightGBM</li>
+          <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
+        </ul>
+        <ul class="core">
+          <li><b>Examples</b></li>
+          <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pytorch">MNIST-pytorch
+          </li>
+          </a>
+          <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1">MNIST-tensorflow
+          </li>
+          </a>
+          <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-keras">MNIST-keras
+          </li></a>
+          <li><a href="{{ pathto('TrialExample/GbdtExample') }}">Auto-gbdt</a></li>
+          <li><a href="{{ pathto('TrialExample/Cifar10Examples') }}">Cifar10-pytorch</li></a>
+          <li><a href="{{ pathto('TrialExample/SklearnExamples') }}">Scikit-learn</a></li>
+          <li><a href="{{ pathto('TrialExample/EfficientNet') }}">EfficientNet</a></li>
+          <li><a href="{{ pathto('TrialExample/OpEvoExamples') }}">Kernel Tunning</a></li>
+          <li><a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br /></li>
+        </ul>
+      </td>
       <td>
-        <ul class="firstUl">
+        <ul>
           <li><a href="https://nni.readthedocs.io/en/latest/autotune_ref.html#trial">Python API</a></li>
           <li><a href="{{ pathto('Tutorial/AnnotationSpec') }}">NNI Annotation</a></li>
           <li><a href="https://nni.readthedocs.io/en/latest/installation.html">Supported OS</a></li>
         </ul>
       </td>
-      <td>
-        <ul class="firstUl">
-          <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">CustomizeTuner</a></li>
-          <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">CustomizeAssessor</a></li>
-          <li><a href="{{ pathto('Tutorial/InstallCustomizedAlgos') }}">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
+    </tr>
+    <!-- algorithms -->
+    <tr>
+      <td class="title">Algorithms</td>
+      <td class="inline core-td">
+        <ul class="core">
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}"><b>Hyperparameter Tuning</b></a></li>
+          <li>Exhaustive search</li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Random Search</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Grid Search</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Batch</a></li>
+          <li>Heuristic search</li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Naïve Evolution</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Anneal</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperband</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PBT</a></li>
+          <li>Bayesian optimization</li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">BOHB</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">TPE</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">SMAC</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Metis Tuner</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">GP Tuner</a> </li>
+          <li>RL Based</li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PPO Tuner</a> </li>
+        </ul>
+        <ul class="core">
+          <li><a href="{{ pathto('NAS/Overview') }}"><b>Neural Architecture Search</b></a></li>
+          <li><a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
+          <li><a href="{{ pathto('NAS/DARTS') }}">DARTS</a></li>
+          <li><a href="{{ pathto('NAS/PDARTS') }}">P-DARTS</a></li>
+          <li><a href="{{ pathto('NAS/CDARTS') }}">CDARTS</a></li>
+          <li><a href="{{ pathto('NAS/SPOS') }}">SPOS</a></li>
+          <li><a href="{{ pathto('NAS/Proxylessnas') }}">ProxylessNAS</a></li>
+          <li><a href="{{ pathto('Tuner/NetworkmorphismTuner') }}">Network Morphism</a> </li>
+          <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
+        </ul>
+        <ul class="core">
+          <li><a href="{{ pathto('Compressor/Overview') }}"><b>Model Compression</b></a></li>
+          <li>Pruning</li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">NetAdapt Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">SimulatedAnnealing Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">ADMM Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">AutoCompress Pruner</a></li>
+          <li>Quantization</li>
+          <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
+          <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
+        </ul>
+        <ul class="core">
+          <li><a href="{{ pathto('FeatureEngineering/Overview') }}"><b>Feature Engineering (Beta)</b></a>
+          </li>
+          <li><a href="{{ pathto('FeatureEngineering/GradientFeatureSelector') }}">GradientFeatureSelector</a>
+          </li>
+          <li><a href="{{ pathto('FeatureEngineering/GBDTSelector') }}">GBDTSelector</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Early Stop Algorithms</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Median Stop</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
-        <ul class="firstUl">
+        <ul>
+          <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">CustomizeTuner</a></li>
+          <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">CustomizeAssessor</a></li>
+          <li><a href="{{ pathto('Tutorial/InstallCustomizedAlgos') }}">Install Customized Algorithms as
+          Builtin Tuners/Assessors/Advisors</a></li>
+        </ul>
+      </td>
+    </tr>
+    <!-- training Services -->
+    <tr>
+      <td class="align-td">Training Services</td>
+      <td class="core-td">
+        <ul class="core"><li><a href="{{ pathto('TrainingService/LocalMode') }}"><b>Local Machine</b></a></li></ul>
+        <ul class="core"><li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}"><b>Remote Servers</b></a></li></ul>
+        <ul class="core"><li><a href="{{ pathto('TrainingService/AMLMode') }}"><b>AML(Azure Machine Learning)</b></a></li></ul>
+        <ul class="core">
+          <li><b>Kubernetes based services</b></li>
+          <li><a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a></li>
+          <li><a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a></li>
+          <li>
+            <a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">FrameworkController on K8S
+              (AKSetc.)
+            </a>
+          </li>
+          <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (aka. DLTS)</a></li>
+        </ul>
+      </td>
+      <td>
+        <ul>
           <li><a href="{{ pathto('TrainingService/Overview') }}">Support TrainingService</a></li>
-          <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">Implement TrainingService</a></li>
+          <li><a href="{{ pathto('TrainingService/HowToImplementTrainingService') }}">Implement
+              TrainingService</a></li>
         </ul>
       </td>
     </tr>
