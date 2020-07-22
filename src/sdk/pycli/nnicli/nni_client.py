@@ -57,7 +57,7 @@ EXPORT_DATA_PATH = 'export-data'
 
 API_ROOT_PATH = 'api/v1/nni'
 
-_api_endpoint = 'http://localhost:8080'
+_api_endpoint = None
 
 def set_endpoint(endpoint):
     """set endpoint of nni rest server for nnicli, i.e., the url of web ui.
@@ -281,7 +281,7 @@ def get_job_metrics(trial_job_id=None):
     Parameters
     ----------
     trial_job_id: str
-        trial id. if this parameter is None, all the trails' metrics will be returned.
+        trial id. if this parameter is None, all trails' metrics will be returned.
     """
     api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
     return _nni_rest_get(api_path)
