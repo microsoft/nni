@@ -79,25 +79,25 @@
     </tr>
     <!-- Frameworks & Libraries -->
     <tr>
-      <td>Frameworks & Libraries</td>
-      <td class="inline">
-        <ul>
+      <td class="align-td">Frameworks & Libraries</td>
+      <td class="inline core-td">
+        <ul class="core">
           <li><b>Supported Frameworks</b></li>
           <li>PyTorch</li>
           <li>Keras</li>
           <li>TensorFlow</li>
           <li>MXNet</li>
           <li>Caffe2</li>
-          <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
+          <li><a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br /></li>
         </ul>
-        <ul>
+        <ul class="core">
           <li><b>Supported Libraries</b></li>
           <li>Scikit-learn</li>
           <li>XGBoost</li>
           <li>LightGBM</li>
           <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
         </ul>
-        <ul>
+        <ul class="core">
           <li><b>Examples</b></li>
           <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pytorch">MNIST-pytorch
           </li>
@@ -111,7 +111,8 @@
           <li><a href="{{ pathto('TrialExample/Cifar10Examples') }}">Cifar10-pytorch</li></a>
           <li><a href="{{ pathto('TrialExample/SklearnExamples') }}">Scikit-learn</a></li>
           <li><a href="{{ pathto('TrialExample/EfficientNet') }}">EfficientNet</a></li>
-          <a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br />
+          <li><a href="{{ pathto('TrialExample/OpEvoExamples') }}">Kernel Tunning</a></li>
+          <li><a href="{{ pathto('SupportedFramework_Library') }}">More...</a><br /></li>
         </ul>
       </td>
       <td>
@@ -125,8 +126,8 @@
     <!-- algorithms -->
     <tr>
       <td class="title">Algorithms</td>
-      <td class="inline">
-        <ul>
+      <td class="inline core-td">
+        <ul class="core">
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}"><b>Hyperparameter Tuning</b></a></li>
           <li>Exhaustive search</li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Random Search</a></li>
@@ -136,6 +137,7 @@
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Naïve Evolution</a></li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Anneal</a></li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperband</a></li>
+          <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PBT</a></li>
           <li>Bayesian optimization</li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">BOHB</a></li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">TPE</a></li>
@@ -145,7 +147,7 @@
           <li>RL Based</li>
           <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PPO Tuner</a> </li>
         </ul>
-        <ul>
+        <ul class="core">
           <li><a href="{{ pathto('NAS/Overview') }}"><b>Neural Architecture Search</b></a></li>
           <li><a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
           <li><a href="{{ pathto('NAS/DARTS') }}">DARTS</a></li>
@@ -156,17 +158,21 @@
           <li><a href="{{ pathto('Tuner/NetworkmorphismTuner') }}">Network Morphism</a> </li>
           <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
         </ul>
-        <ul>
+        <ul class="core">
           <li><a href="{{ pathto('Compressor/Overview') }}"><b>Model Compression</b></a></li>
-          <li><b>Pruning</b></li>
+          <li>Pruning</li>
           <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
           <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
           <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
-          <li><b>Quantization</b></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">NetAdapt Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">SimulatedAnnealing Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">ADMM Pruner</a></li>
+          <li><a href="{{ pathto('Compressor/Pruner') }}">AutoCompress Pruner</a></li>
+          <li>Quantization</li>
           <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
           <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
         </ul>
-        <ul>
+        <ul class="core">
           <li><a href="{{ pathto('FeatureEngineering/Overview') }}"><b>Feature Engineering (Beta)</b></a>
           </li>
           <li><a href="{{ pathto('FeatureEngineering/GradientFeatureSelector') }}">GradientFeatureSelector</a>
@@ -181,18 +187,19 @@
         <ul>
           <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">CustomizeTuner</a></li>
           <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">CustomizeAssessor</a></li>
-          <!-- <li><a href="{{ pathto('Tutorial/InstallCustomizedAlgos') }}">Install Customized Algorithms as -->
-          <!-- Builtin Tuners/Assessors/Advisors</a></li> -->
+          <li><a href="{{ pathto('Tutorial/InstallCustomizedAlgos') }}">Install Customized Algorithms as
+          Builtin Tuners/Assessors/Advisors</a></li>
         </ul>
       </td>
     </tr>
     <!-- training Services -->
     <tr>
-      <td>Training Services</td>
-      <td>
-        <ul><b>Local Machine</b></ul>
-        <ul><b>Remote Servers</b></ul>
-        <ul>
+      <td class="align-td">Training Services</td>
+      <td class="core-td">
+        <ul class="core"><li><a href="{{ pathto('TrainingService/LocalMode') }}"><b>Local Machine</b></a></li></ul>
+        <ul class="core"><li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}"><b>Remote Servers</b></a></li></ul>
+        <ul class="core"><li><a href="{{ pathto('TrainingService/AMLMode') }}"><b>AML(Azure Machine Learning)</b></a></li></ul>
+        <ul class="core">
           <li><b>Kubernetes based services</b></li>
           <li><a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a></li>
           <li><a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a></li>
@@ -255,7 +262,7 @@
     <ul>
       <li>
         <p>Download the examples via clone the source code.</p>
-        <div class="command">git clone -b v{{ release }} https://github.com/Microsoft/nni.git</div>
+        <div class="command">git clone -b {{ release }} https://github.com/Microsoft/nni.git</div>
       </li>
       <li>
         <p>Run the MNIST example.</p>
