@@ -113,6 +113,9 @@ jobs:
       echo "network-timeout 600000" >> ${HOME}/.yarnrc
       echo ${HOME}
       which python3
+      python3 -V
+      ls -l /usr/local/bin/python3
+      ls -l /usr/local/bin/python*
       echo ${PATH}
       ls ${HOME}/Library/Python
       PATH=${HOME}/Library/Python/3.7/bin:${PATH} source install.sh
