@@ -99,14 +99,22 @@ class ChannelPruningEnv:
 
     def step(self, action):
         # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
+        action = 0.6
+        print('action1:', action)
+
         if self.visited[self.cur_ind]:
             action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
             preserve_idx = self.index_buffer[self.cur_ind]
+            print('action2:', action)
+        
         else:
             action = self._action_wall(action)  # percentage to preserve
             preserve_idx = None
+            print('action3:', action)
+        
         # prune and update action
         action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
+        print('action4:', action)
         #print(action, d_prime, preserve_idx)
         #print('shared index:', self.shared_idx)
         if not self.visited[self.cur_ind]:
@@ -215,6 +223,10 @@ class ChannelPruningEnv:
             d_prime = (m.sum(1) > 0).sum().item()
             preserve_idx = np.nonzero((m.sum(1) > 0).numpy())[0]
 
+        op.weight_mask = masks['weight_mask']
+        if hasattr(op.module, 'bias') and op.module.bias is not None and 'bias_mask' in masks:
+            op.bias_mask = masks['bias_mask']
+
         action = (m == 1).sum().item() / m.numel()
         return action, d_prime, preserve_idx
 
@@ -316,14 +328,14 @@ class ChannelPruningEnv:
             flop = self.layer_info_dict[idx]['flops']
             buffer_flop = self._get_buffer_flops(idx)
 
-            if i == self.cur_ind - 1:  # TODO: add other member in the set
-                this_comp += flop * self.strategy_dict[idx][0]
-                # add buffer (but not influenced by ratio)
-                other_comp += buffer_flop * self.strategy_dict[idx][0]
-            elif i == self.cur_ind:
+            if i == self.cur_ind + 1:  # TODO: add other member in the set
                 this_comp += flop * self.strategy_dict[idx][1]
+                # add buffer (but not influenced by ratio)
+                other_comp += buffer_flop
+            elif i == self.cur_ind:
+                this_comp += flop * self.strategy_dict[idx][0]
                 # also add buffer here (influenced by ratio)
-                this_comp += buffer_flop
+                this_comp += buffer_flop * self.strategy_dict[idx][0]
             else:
                 other_comp += flop * self.strategy_dict[idx][0] * self.strategy_dict[idx][1]
                 # add buffer
@@ -333,7 +345,7 @@ class ChannelPruningEnv:
         max_preserve_ratio = (self.expected_preserve_computation - other_comp) * 1. / this_comp
 
         action = np.minimum(action, max_preserve_ratio)
-        action = np.maximum(action, self.strategy_dict[self.prunable_idx[self.cur_ind]][0])  # impossible (should be)
+        action = np.maximum(action, self.strategy_dict[self.prunable_idx[self.cur_ind]][1])  # impossible (should be)
 
         return action
 
