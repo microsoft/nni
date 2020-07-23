@@ -11,7 +11,8 @@ import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
+import { MethodNotImplementedError } from '../../common/errors'
+import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString, getIPV4Address } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { GPUSummary } from '../../training_service/common/gpuData';
@@ -92,6 +93,10 @@ class TrialDispatcher implements TrainingService {
         }
 
         return trial;
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialDetail> {
