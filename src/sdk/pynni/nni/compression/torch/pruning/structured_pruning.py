@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import math
 import torch
 from .weight_masker import WeightMasker
 
@@ -15,6 +16,25 @@ class StructuredWeightMasker(WeightMasker):
     """
     A structured pruning masker base class that prunes convolutional layer filters.
     """
+    def __init__(self, model, pruner, channel_round=1):
+        """
+        Parameters
+        ----------
+        model: nn.Module
+            model to be pruned
+        pruner: Pruner
+            A Pruner instance used to prune the model
+        channel_round: int
+            after pruning, preserve output channels round to `channel_round`, for example:
+            for a Conv2d layer, output channel is 32, sparsity is 0.2, if channel_round is
+            1 (no channel round), then there will be int(32 * 0.2) = 6 channels pruned, and
+            32 - 6 = 26 channels are preserved. If channel_round is 4, preserved channels will
+            be round up to 28 (which can be divided by 4) and only 4 channels are pruned.
+        """
+        self.model = model
+        self.pruner = pruner
+        self.channel_round = channel_round
+
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         """
         Calculate the mask of given layer.
@@ -55,6 +75,13 @@ class StructuredWeightMasker(WeightMasker):
 
         filters = weight.size(0)
         num_prune = int(filters * sparsity)
+        if self.channel_round > 1:
+            num_preserve = filters - num_prune
+            num_preserve = int(math.ceil(num_preserve * 1. / self.channel_round) * self.channel_round)
+            if num_preserve > filters:
+                num_preserve = int(math.floor(filters * 1. / self.channel_round) * self.channel_round)
+            num_prune = filters - num_preserve
+
         if filters < 2 or num_prune < 1:
             return mask
         # weight*mask_weight: apply base mask for iterative pruning

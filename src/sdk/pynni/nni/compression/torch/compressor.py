@@ -54,19 +54,33 @@ class Compressor:
         self._fwd_hook_handles = {}
         self._fwd_hook_id = 0
 
-        for layer, config in self._detect_modules_to_compress():
-            wrapper = self._wrap_modules(layer, config)
-            self.modules_wrapper.append(wrapper)
+        self.reset()
+
         if not self.modules_wrapper:
             _logger.warning('Nothing is configured to compress, please check your model and config_list')
-
-        self._wrap_model()
 
     def validate_config(self, model, config_list):
         """
         subclass can optionally implement this method to check if config_list if valid
         """
         pass
+
+    def reset(self, checkpoint=None):
+        """
+        reset model state dict and model wrapper
+        """
+        self._unwrap_model()
+        if checkpoint is not None:
+            self.bound_model.load_state_dict(checkpoint)
+
+        self.modules_to_compress = None
+        self.modules_wrapper = []
+
+        for layer, config in self._detect_modules_to_compress():
+            wrapper = self._wrap_modules(layer, config)
+            self.modules_wrapper.append(wrapper)
+
+        self._wrap_model()
 
     def _detect_modules_to_compress(self):
         """
@@ -403,6 +417,7 @@ class Pruner(Compressor):
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         self._wrap_model()
+        return mask_dict, self.bound_model.state_dict()
 
     def load_model_state_dict(self, model_state):
         """

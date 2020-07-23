@@ -10,19 +10,25 @@ torch.backends.cudnn.deterministic = True
 
 from tensorboardX import SummaryWriter
 
-from .channel_pruning_env import AMCChannelPruner
-from .channel_pruning_env_orig import ChannelPruningEnv
+from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
+from .channel_pruning_env import ChannelPruningEnv
+#from .channel_pruning_env_orig import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
-class AMCPruner(object):
-    def __init__(self, model, val_func, val_loader, args):        
+class AMCPruner(Pruner):
+    def __init__(self, model, config_list, val_func, val_loader, args):        
         if args.seed is not None:
             np.random.seed(args.seed)
             torch.manual_seed(args.seed)
             torch.cuda.manual_seed(args.seed)
+        
+        checkpoint = deepcopy(model.state_dict())
 
-        self.env = AMCChannelPruner(model, val_func, val_loader,
+        super().__init__(model, config_list, optimizer=None)
+
+
+        self.env = ChannelPruningEnv(self, val_func, val_loader, checkpoint,
                                 preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
                                 args=args, export_model=args.job == 'export', use_new_input=args.use_new_input)
 
@@ -138,7 +144,7 @@ class AMCPruner(object):
         self.text_writer.close()
 
 
-    def export_model(self):
+    def export(self):
         assert self.args.ratios is not None or self.args.channels is not None, 'Please provide a valid ratio list or pruned channels'
         assert self.args.export_path is not None, 'Please provide a valid export path'
         self.env.set_export_path(self.args.export_path)

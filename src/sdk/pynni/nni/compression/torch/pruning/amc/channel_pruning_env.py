@@ -12,6 +12,7 @@ import torch.nn as nn
 #from .lib.utils import AverageMeter, accuracy, prGreen
 from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .lib.utils import prGreen
+from .. import LevelPrunerMasker, L1FilterPrunerMasker
 
 # for pruning
 def acc_reward(net, acc, flops):
@@ -23,29 +24,23 @@ def acc_flops_reward(net, acc, flops):
     return -error * np.log(flops)
 
 
-class AMCChannelPruner(Pruner):
+class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, model, val_func, val_loader, preserve_ratio, args, export_model=False, use_new_input=False):
+    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False, use_new_input=False):
         self.prunable_layer_types = [torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear]
-
-        config_list = [{
-            'op_types': ['Conv2d', 'Linear']
-        }]
-        super().__init__(model, config_list, optimizer=None)
 
         # default setting
 
         # save options
-        self.model = model
-        #self.checkpoint = checkpoint
-        self.checkpoint = deepcopy(model.state_dict())
-        #self.n_data_worker = n_data_worker
+        self.pruner = pruner
+        self.model = pruner.bound_model
+        self.checkpoint = checkpoint
         self.batch_size = val_loader.batch_size
-        #self.data_type = data
-        #print('data:', data)
         self.preserve_ratio = preserve_ratio
+        self.channel_prune_masker = L1FilterPrunerMasker(self.model, self.pruner, args.channel_round)
+        self.fine_grained_masker = LevelPrunerMasker(self.model, self.pruner)
 
         # options from args
         self.args = args
@@ -58,7 +53,6 @@ class AMCChannelPruner(Pruner):
         self.n_points_per_layer = args.n_points_per_layer
         self.channel_round = args.channel_round
         self.acc_metric = args.acc_metric
-        #self.data_root = args.data_root
 
         self.export_model = export_model
         self.use_new_input = use_new_input
@@ -99,6 +93,7 @@ class AMCChannelPruner(Pruner):
         self.best_reward = -math.inf
         self.best_strategy = None
         self.best_d_prime_list = None
+        self.best_masks = None
 
         self.org_w_size = sum(self.wsize_list)
 
@@ -110,10 +105,10 @@ class AMCChannelPruner(Pruner):
         else:
             action = self._action_wall(action)  # percentage to preserve
             preserve_idx = None
-
         # prune and update action
         action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
-
+        #print(action, d_prime, preserve_idx)
+        print('shared index:', self.shared_idx)
         if not self.visited[self.cur_ind]:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
@@ -131,6 +126,7 @@ class AMCChannelPruner(Pruner):
 
         self.strategy_dict[self.prunable_idx[self.cur_ind]][0] = action
         if self.cur_ind > 0:
+        #if self.cur_ind == len(self.prunable_idx) - 1
             self.strategy_dict[self.prunable_idx[self.cur_ind - 1]][1] = action
 
         # all the actions are made
@@ -149,6 +145,7 @@ class AMCChannelPruner(Pruner):
                 self.best_reward = reward
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
+                self.best_masks = deepcopy(self.pruner.export_model('tmp_export.pth')[0])
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
@@ -175,7 +172,7 @@ class AMCChannelPruner(Pruner):
 
     def reset(self):
         # restore env by loading the checkpoint
-        self.model.load_state_dict(self.checkpoint)
+        self.pruner.reset(self.checkpoint)
         self.cur_ind = 0
         self.strategy = []  # pruning strategy
         self.d_prime_list = []
@@ -198,6 +195,29 @@ class AMCChannelPruner(Pruner):
         self.export_path = path
 
     def prune_kernel(self, op_idx, preserve_ratio, preserve_idx=None):
+        m_list = list(self.model.modules())
+        op = m_list[op_idx]
+        assert (0. < preserve_ratio <= 1.)
+        assert type(op) == PrunerModuleWrapper
+        if preserve_ratio == 1:  # do not prune
+            return 1., op.module.weight.size(1), None  # TODO: should be a full index
+
+        if type(op.module) == nn.Conv2d:
+            masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
+            m = masks['weight_mask']
+            d_prime = (m.sum((1, 2, 3)) > 0).sum().item()
+            preserve_idx = np.nonzero((m.sum((1, 2, 3)) > 0).numpy())[0]
+        else:
+            assert type(op.module) == nn.Linear
+            masks = self.fine_grained_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
+            m = masks['weight_mask']
+            d_prime = (m.sum(1) > 0).sum().item()
+            preserve_idx = np.nonzero((m.sum(1) > 0).numpy())[0]
+
+        action = (m == 1).sum().item() / m.numel()
+        return action, d_prime, preserve_idx
+
+    def prune_kernel_old(self, op_idx, preserve_ratio, preserve_idx=None):
         '''Return the real ratio'''
         m_list = list(self.model.modules())
         op = m_list[op_idx].module
