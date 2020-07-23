@@ -106,7 +106,7 @@ jobs:
 
   steps:
   - script: |
-      echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${PATH}"
+      echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${HOME}/Library/Python/3.7/bin:${PATH}"
       python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
