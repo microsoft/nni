@@ -12,8 +12,9 @@ import { Base64 } from 'js-base64';
 import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
@@ -96,6 +97,10 @@ abstract class KubernetesTrainingService {
         }
 
         return Promise.resolve(kubernetesTrialJob);
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {

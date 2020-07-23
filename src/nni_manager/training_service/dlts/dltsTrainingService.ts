@@ -12,9 +12,10 @@ import { EventEmitter } from 'events';
 import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
 import {
     NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
@@ -244,6 +245,10 @@ class DLTSTrainingService implements TrainingService {
             throw Error(`Trial job ${trialJobId} not found.`)
         }
         return trialJob
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {

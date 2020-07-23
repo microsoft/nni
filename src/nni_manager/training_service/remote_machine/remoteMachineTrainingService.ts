@@ -9,13 +9,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../common/component';
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
@@ -171,6 +171,15 @@ class RemoteMachineTrainingService implements TrainingService {
         } else {
             return trialJob;
         }
+    }
+
+    /**
+     * Get trial job log
+     * @param trialJobId ID of trial job
+     * @param logType 'TRIAL_LOG' | 'TRIAL_STDERR'
+     */
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     /**

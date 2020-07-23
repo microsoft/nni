@@ -10,9 +10,10 @@ import * as component from '../../../common/component';
 
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
+import { MethodNotImplementedError } from '../../../common/errors';
 import {
     HyperParameters, NNIManagerIpConfig,
-    TrialJobApplicationForm, TrialJobDetail
+    TrialJobApplicationForm, TrialJobDetail, LogType
 } from '../../../common/trainingService';
 import {
     generateParamFileName,

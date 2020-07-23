@@ -14,7 +14,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
@@ -182,6 +182,18 @@ class LocalTrainingService implements TrainingService {
         }
 
         return trialJob;
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        let logPath: string;
+        if (logType === 'TRIAL_LOG') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
+        } else if (logType === 'TRIAL_STDERR') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
+        } else {
+            throw new Error('unexpected log type');
+        }
+        return fs.promises.readFile(logPath, 'utf8');
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {

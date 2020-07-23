@@ -8,6 +8,8 @@
  */
 type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 
+type LogType = 'TRIAL_LOG' | 'TRIAL_STDERR';
+
 interface TrainingServiceMetadata {
     readonly key: string;
     readonly value: string;
@@ -79,6 +81,7 @@ abstract class TrainingService {
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract get isMultiPhaseJobSupported(): boolean;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
+    public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract cleanUp(): Promise<void>;
@@ -98,5 +101,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig
+    NNIManagerIpConfig, LogType
 };
