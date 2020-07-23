@@ -84,6 +84,9 @@ class RemoteMachineTrainingService implements TrainingService {
         restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info('Run remote machine training service.');
         while (!this.stopping) {
+            if (this.sshConnectionPromises.length) {
+                await Promise.all(this.sshConnectionPromises);
+            }
             while (this.jobQueue.length > 0) {
                 this.updateGpuReservation();
                 const trialJobId: string = this.jobQueue[0];
@@ -474,7 +477,6 @@ class RemoteMachineTrainingService implements TrainingService {
         if (this.gpuScheduler === undefined) {
             throw new Error('gpuScheduler is not initialized');
         }
-        await Promise.all(this.sshConnectionPromises);
 
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
