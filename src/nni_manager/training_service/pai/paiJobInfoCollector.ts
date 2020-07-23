@@ -52,7 +52,7 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            uri: `${protocol}://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
+            uri: `${protocol}://${paiClusterConfig.host}/rest-server/api/v2/jobs/${paiClusterConfig.userName}~${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
                headers: {
@@ -63,8 +63,11 @@ export class PAIJobInfoCollector {
 
         //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, _body: any) => {
-            if ((error !== undefined && error !== null) || response.statusCode >= 500) {
-                this.log.error(`PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!`);
+            // Status code 200 for success
+            if ((error !== undefined && error !== null) || response.statusCode !== 200) {
+                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                    `PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(_body)}`;
+                this.log.warning(`${errorMessage}`);
                 // Queried PAI job info failed, set job status to UNKNOWN
                 if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
                     paiTrialJob.status = 'UNKNOWN';

@@ -55,12 +55,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 this.paiJobRestServer = new PAIJobRestServer(component.get(PAIK8STrainingService));
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if (this.paiClusterConfig.passWord) {
-                    // Get PAI authentication token
-                    await this.updatePaiToken();
-                } else if (this.paiClusterConfig.token) {
-                    this.paiToken = this.paiClusterConfig.token;
-                }
+                this.paiToken = this.paiClusterConfig.token;
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
@@ -291,7 +286,8 @@ class PAIK8STrainingService extends PAITrainingService {
             }
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
-            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
+            // If submit success, will get status code 202. refer: https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
+            if ((error !== undefined && error !== null) || response.statusCode !== 202) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${body}`;
 
