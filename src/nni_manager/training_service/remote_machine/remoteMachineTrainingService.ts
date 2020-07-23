@@ -435,7 +435,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
         // clean up previous result.
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
-        await executor.allowPermission(false, nniRootDir, `${nniRootDir}/*`, `${nniRootDir}/scripts/*`);
+        await executor.allowPermission(true, nniRootDir);
 
         //Begin to execute gpu_metrics_collection scripts
         const script = executor.generateGpuStatsScript(getExperimentId());
