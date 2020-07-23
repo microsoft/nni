@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import asyncio
-
+import os
 import websockets
 
 from .base_channel import BaseChannel
@@ -32,7 +32,7 @@ class WebChannel(BaseChannel):
             nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
         except asyncio.TimeoutError:
             nni_log(LogType.Error, 'connect to %s timeout! Please make sure NNIManagerIP configured correclty, and accessable.' % url)
-            exit(1)
+            os._exit(1)
 
     def _inner_close(self):
         if self.client is not None:
