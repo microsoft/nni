@@ -126,8 +126,9 @@ export class AMLClient {
         this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
     }
-
-    public monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
+    
+    // Monitor error information in aml python shell client
+    private monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
         pythonShellClient.on('error', function (error: any) {
             deferred.reject(error);
         });
