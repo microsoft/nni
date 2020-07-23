@@ -108,13 +108,14 @@ class ChannelPruningEnv:
         # prune and update action
         action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
         #print(action, d_prime, preserve_idx)
-        print('shared index:', self.shared_idx)
+        #print('shared index:', self.shared_idx)
         if not self.visited[self.cur_ind]:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
                     for g_idx in group:
-                        self.strategy_dict[self.prunable_idx[g_idx]][0] = action
-                        self.strategy_dict[self.prunable_idx[g_idx - 1]][1] = action
+                        self.strategy_dict[self.prunable_idx[g_idx]][1] = action
+                        if g_idx < len(len(self.prunable_idx) - 1):
+                            self.strategy_dict[self.prunable_idx[g_idx + 1]][0] = action
                         self.visited[g_idx] = True
                         self.index_buffer[g_idx] = preserve_idx.copy()
 
@@ -124,10 +125,10 @@ class ChannelPruningEnv:
         self.strategy.append(action)  # save action to strategy
         self.d_prime_list.append(d_prime)
 
-        self.strategy_dict[self.prunable_idx[self.cur_ind]][0] = action
-        if self.cur_ind > 0:
-        #if self.cur_ind == len(self.prunable_idx) - 1
-            self.strategy_dict[self.prunable_idx[self.cur_ind - 1]][1] = action
+        self.strategy_dict[self.prunable_idx[self.cur_ind]][1] = action
+        #if self.cur_ind > 0:
+        if self.cur_ind < len(self.prunable_idx) - 1:
+            self.strategy_dict[self.prunable_idx[self.cur_ind + 1]][0] = action
 
         # all the actions are made
         if self._is_final_layer():
