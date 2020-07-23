@@ -108,8 +108,10 @@
 }
 
 .tuner ul.core{
+    width: 200px;
     padding-left: 25px;
     padding-top: 25px;
+    box-sizing: border-box;
 }
 
 .tuner .title {
