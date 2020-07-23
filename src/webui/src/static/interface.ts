@@ -2,7 +2,7 @@
  * Definition of single dimension in search space.
  */
 interface SingleAxis {
-    name: string;
+    baseName: string;
     fullName: string;
     type: string;
     scale: 'log' | 'linear' | 'ordinal';
@@ -16,6 +16,8 @@ interface SingleAxis {
  * Typically, it is a search space or a sub search space.
  */
 interface MultipleAxes {
+    baseName: string;
+    fullName: string;
     axes: Map<string, SingleAxis>;
 }
 

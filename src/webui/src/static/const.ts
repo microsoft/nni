@@ -37,9 +37,24 @@ const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', OPERATION];
 const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
     'Intermediate result', 'Default', OPERATION];
 const CONCURRENCYTOOLTIP = 'Trial concurrency is the number of trials running concurrently.';
+const SUPPORTED_SEARCH_SPACE_TYPE = [
+    'choice',
+    'layer_choice',
+    'input_choice',
+    'randint',
+    'uniform',
+    'quniform',
+    'loguniform',
+    'qloguniform',
+    'normal',
+    'qnormal',
+    'lognormal',
+    'qlognormal'
+];
 
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro, WEBUIDOC,
     CONTROLTYPE, MONACO, COLUMN, DRAWEROPTION, OPERATION,
-    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE, CONCURRENCYTOOLTIP
+    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE, CONCURRENCYTOOLTIP,
+    SUPPORTED_SEARCH_SPACE_TYPE
 };

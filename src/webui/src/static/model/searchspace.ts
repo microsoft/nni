@@ -1,21 +1,5 @@
 import { SingleAxis, MultipleAxes, TableObj } from '../interface';
-
-
-const SUPPORTED_SEARCH_SPACE_TYPE = [
-    'choice',
-    'layer_choice',
-    'input_choice',
-    'randint',
-    'uniform',
-    'quniform',
-    'loguniform',
-    'qloguniform',
-    'normal',
-    'qnormal',
-    'lognormal',
-    'qlognormal'
-];
-
+import { SUPPORTED_SEARCH_SPACE_TYPE } from '../const';
 
 function fullNameJoin(prefix: string, name: string): string {
     return prefix ? (prefix + '/' + name) : name;
@@ -25,13 +9,13 @@ class NumericAxis implements SingleAxis {
     min: number = 0;
     max: number = 0;
     type: string;
-    name: string;
+    baseName: string;
     fullName: string;
     scale: 'log' | 'linear';
     nested = false;
 
-    constructor(name: string, fullName: string, type: string, value: any) {
-        this.name = name;
+    constructor(baseName: string, fullName: string, type: string, value: any) {
+        this.baseName = baseName;
         this.fullName = fullName;
         this.type = type;
         this.scale = type.indexOf('log') !== -1 ? 'log' : 'linear';
@@ -59,13 +43,13 @@ class NumericAxis implements SingleAxis {
 
 class SimpleOrdinalAxis implements SingleAxis {
     type: string;
-    name: string;
+    baseName: string;
     fullName: string;
     scale: 'ordinal' = 'ordinal';
     domain: any[];
     nested = false;
-    constructor(name: string, fullName: string, type: string, value: any) {
-        this.name = name;
+    constructor(baseName: string, fullName: string, type: string, value: any) {
+        this.baseName = baseName;
         this.fullName = fullName;
         this.type = type;
         this.domain = value;
@@ -74,13 +58,13 @@ class SimpleOrdinalAxis implements SingleAxis {
 
 class NestedOrdinalAxis implements SingleAxis {
     type: string;
-    name: string;
+    baseName: string;
     fullName: string;
     scale: 'ordinal' = 'ordinal';
     domain = new Map<string, MultipleAxes>();
     nested = true;
-    constructor(name: any, fullName: string, type: any, value: any) {
-        this.name = name;
+    constructor(baseName: any, fullName: string, type: any, value: any) {
+        this.baseName = baseName;
         this.fullName = fullName;
         this.type = type;
         for (const v of value) {
@@ -92,19 +76,20 @@ class NestedOrdinalAxis implements SingleAxis {
 
 export class SearchSpace implements MultipleAxes {
     axes = new Map<string, SingleAxis>();
-    name: string;
+    baseName: string;
     fullName: string;
 
-    constructor(name: string, fullName: string, searchSpaceSpec: any) {
-        this.name = name;
+    constructor(baseName: string, fullName: string, searchSpaceSpec: any) {
+        this.baseName = baseName;
         this.fullName = fullName;
-        if (searchSpaceSpec === undefined)
+        if (searchSpaceSpec === undefined) {
             return;
+        }
         Object.entries(searchSpaceSpec).forEach((item) => {
             const key = item[0], spec = item[1] as any;
             if (key === '_name') {
                 return;
-            } else if (spec._type === 'choice' || spec._type === 'layer_choice' || spec._type === 'input_choice') {
+            } else if (['choice', 'layer_choice', 'input_choice'].includes(spec._type)) {
                 // ordinal types
                 if (spec._value && typeof spec._value[0] === 'object') {
                     // nested dimension
@@ -119,7 +104,7 @@ export class SearchSpace implements MultipleAxes {
     }
 
     static inferFromTrials(searchSpace: SearchSpace, trials: TableObj[]): SearchSpace {
-        const newSearchSpace = new SearchSpace(searchSpace.name, searchSpace.fullName, undefined);
+        const newSearchSpace = new SearchSpace(searchSpace.baseName, searchSpace.fullName, undefined);
         for (const [k, v] of searchSpace.axes) {
             newSearchSpace.axes.set(k, v);
         }
@@ -154,14 +139,15 @@ export class SearchSpace implements MultipleAxes {
 
 export class MetricSpace implements MultipleAxes {
     axes = new Map<string, SingleAxis>();
-    name = '';
+    baseName = '';
     fullName = '';
 
     constructor(trials: TableObj[]) {
         const columns = new Map<string, any[]>();
         for (const trial of trials) {
-            if (trial.acc === undefined)
+            if (trial.acc === undefined) {
                 continue;
+            }
             // TODO: handle more than number and object
             const acc = typeof trial.acc === 'number' ? { default: trial.acc } : trial.acc;
             Object.entries(acc).forEach(item => {
