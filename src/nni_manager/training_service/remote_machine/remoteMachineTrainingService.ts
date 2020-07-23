@@ -58,6 +58,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
     private logCollection: string;
+    private sshConnectionPromises: any[];
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.metricsEmitter = new EventEmitter();
@@ -66,6 +67,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
         this.jobQueue = [];
+        this.sshConnectionPromises = [];
         this.expRootDir = getExperimentRootDir();
         this.timer = timer;
         this.log = getLogger();
@@ -409,7 +411,6 @@ class RemoteMachineTrainingService implements TrainingService {
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
 
-        const connectionPromises = [];
         for (const rmMeta of rmMetaList) {
             rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
@@ -418,11 +419,9 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.debug(`reached ${executor.name}`);
             this.machineExecutorManagerMap.set(rmMeta, executorManager);
             this.log.debug(`initializing ${executor.name}`);
-            connectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
+            this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
             this.log.info(`connected to ${executor.name}`);
         }
-
-        await Promise.all(connectionPromises);
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {
@@ -475,6 +474,8 @@ class RemoteMachineTrainingService implements TrainingService {
         if (this.gpuScheduler === undefined) {
             throw new Error('gpuScheduler is not initialized');
         }
+        await Promise.all(this.sshConnectionPromises);
+
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, `Invalid job detail information for trial job ${trialJobId}`);
