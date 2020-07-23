@@ -31,7 +31,7 @@ class WebChannel(BaseChannel):
             self.client = client
             nni_log(LogType.Info, 'WebChannel: connected with info %s' % url)
         except asyncio.TimeoutError:
-            nni_log(LogType.Error, 'WebChannel: connect %s failed!' % url)
+            nni_log(LogType.Error, 'connect to %s timeout! Please make sure NNIManagerIP configured correclty, and accessable.' % url)
             exit(1)
 
     def _inner_close(self):
