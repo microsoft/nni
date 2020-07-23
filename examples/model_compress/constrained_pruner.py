@@ -17,6 +17,7 @@ from nni.compression.torch import L1FilterPruner, Constrained_L1FilterPruner
 from nni.compression.torch import L2FilterPruner, Constrained_L2FilterPruner
 from nni.compression.torch import ActivationMeanRankFilterPruner, ConstrainedActivationMeanRankFilterPruner
 from nni.compression.torch import ModelSpeedup
+from nni.compression.torch.utils.counter import count_flops_params 
 
 def cifar10_dataset(args):
     """
@@ -86,7 +87,7 @@ def parse_args():
                         help='overall target sparsity')
     parser.add_argument('--log-interval', type=int, default=200,
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--finetune_epochs', type=int, default=10,
+    parser.add_argument('--finetune_epochs', type=int, default=15,
                         help='the number of finetune epochs after pruning')
     parser.add_argument('--lr', type=float, default=0.001, help='the learning rate of model')
     return parser.parse_args()
@@ -163,20 +164,35 @@ if __name__ == '__main__':
     criterion2 = torch.nn.CrossEntropyLoss()
 
     cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
-    pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
-    pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+    #pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
+    #pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+
+    pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, optimizer1, statistics_batch_num=10)
+    pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), optimizer2, statistics_batch_num=10)
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data = data.to(device)
+        net1(data)
+        net2(data)
+        if batch_idx > 10:
+            # enough data to calculate the activation
+            break
+
     pruner1.compress()
     pruner2.compress()
+    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
+    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
+    pruner1._unwrap_model()
+    pruner2._unwrap_model()
+    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
+    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
+    ms1.speedup_model()
+    ms2.speedup_model()
+    print('Model speedup finished')
+
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After pruning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
-    for epoch in range(args.finetune_epochs):
-        train(args, net1, device, train_loader,
-                criterion1, optimizer1, epoch)
-        scheduler1.step()
-        acc1 = test(net1, device, criterion1, val_loader)
-        print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
-
+    
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
                 criterion2, optimizer2, epoch)
@@ -184,6 +200,20 @@ if __name__ == '__main__':
         acc2 = test(net2, device, criterion2, val_loader)
         print('Finetune Epoch %d, acc of constrained pruner %f'%(epoch, acc2))
 
+    for epoch in range(args.finetune_epochs):
+        train(args, net1, device, train_loader,
+                criterion1, optimizer1, epoch)
+        scheduler1.step()
+        acc1 = test(net1, device, criterion1, val_loader)
+        print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
+
+
+
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
+    
+    flops1, weights1 = count_flops_params(net1, dummy_input.size())
+    flops2, weights2 = count_flops_params(net2, dummy_input.size())
+    print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
+    print('Constrained L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
