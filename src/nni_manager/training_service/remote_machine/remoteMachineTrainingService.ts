@@ -477,7 +477,6 @@ class RemoteMachineTrainingService implements TrainingService {
         if (this.gpuScheduler === undefined) {
             throw new Error('gpuScheduler is not initialized');
         }
-
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, `Invalid job detail information for trial job ${trialJobId}`);
