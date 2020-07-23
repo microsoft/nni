@@ -18,5 +18,5 @@ Neural Network Intelligence
     References <reference>
     Community Sharings <CommunitySharings/community_sharings>
     FAQ <Tutorial/FAQ>
-    How to Contribution <contribution>
+    How to Contribute <contribution>
     Changelog <Release>
