@@ -118,7 +118,6 @@ class PAIK8STrainingService extends PAITrainingService {
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const logPath: string = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, trialJobId);
-        const paiJobDetailUrl: string = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${paiJobName}`;
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
@@ -126,8 +125,7 @@ class PAIK8STrainingService extends PAITrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            logPath,
-            paiJobDetailUrl);
+            logPath);
 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         this.jobQueue.push(trialJobId);
