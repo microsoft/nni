@@ -86,6 +86,9 @@ class RemoteMachineTrainingService implements TrainingService {
         while (!this.stopping) {
             if (this.sshConnectionPromises.length) {
                 await Promise.all(this.sshConnectionPromises);
+                this.log.info('ssh connection initialized!');
+                // set sshConnectionPromises to [] to avoid log information duplicated
+                this.sshConnectionPromises = [];
             }
             while (this.jobQueue.length > 0) {
                 this.updateGpuReservation();
@@ -423,7 +426,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.machineExecutorManagerMap.set(rmMeta, executorManager);
             this.log.debug(`initializing ${executor.name}`);
             this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
-            this.log.info(`connected to ${executor.name}`);
+            this.log.info(`connecting to ${executor.name}`);
         }
     }
 
