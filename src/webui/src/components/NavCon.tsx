@@ -5,8 +5,8 @@ import {
     Stack, initializeIcons, StackItem, CommandBarButton,
     IContextualMenuProps, IStackTokens, IStackStyles
 } from 'office-ui-fabric-react';
-import LogDrawer from './Modals/LogDrawer';
-import ExperimentDrawer from './Modals/ExperimentDrawer';
+import LogPanel from './Modals/LogPanel';
+import ExperimentPanel from './Modals/ExperimentPanel';
 import {
     downLoadIcon, infoIconAbout,
     timeIcon, disableUpdates, requency, closeTimer
@@ -179,9 +179,8 @@ class NavCon extends React.Component<NavProps, NavState> {
                     </Stack>
                 </StackItem>
                 {/* the drawer for dispatcher & nnimanager log message */}
-                {isvisibleLogDrawer && <LogDrawer closeDrawer={this.closeLogDrawer} />}
-                {isvisibleExperimentDrawer && <ExperimentDrawer closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />}
-                {/* <ExperimentDrawer isVisble={isvisibleExperimentDrawer} closeExpDrawer={this.closeExpDrawer} /> */}
+                {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
+                {isvisibleExperimentDrawer && <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />}
             </Stack>
         );
     }

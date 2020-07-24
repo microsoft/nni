@@ -92,6 +92,8 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     isOpen={true}
                     hasCloseButton={false}
                     isFooterAtBottom={true}
+                    isLightDismiss={true}
+                    onLightDismissClick={closeDrawer}
                 >
                     <div className="log-tab-body">
                         <Pivot

@@ -9,7 +9,6 @@ import MonacoEditor from 'react-monaco-editor';
 import '../../static/style/logDrawer.scss';
 
 interface ExpDrawerProps {
-    // isVisble: boolean;
     closeExpDrawer: () => void;
     experimentProfile: object;
 }
@@ -35,11 +34,9 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
     getExperimentContent = (): void => {
             const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
-            console.info('experimentData', experimentData); // eslint-disable-line
             if (experimentData.params.searchSpace) {
                 experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
             }
-            console.info(TRIALS.getTrialJobList()); // eslint-disable-line
             const trialMessagesArr = TRIALS.getTrialJobList();
             const interResultList = TRIALS.getMetricsList();
             Object.keys(trialMessagesArr).map(item => {
@@ -70,7 +67,6 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         
     }
     
-
     downExperimentParameters = (): void => {
         const { experiment } = this.state;
         downFile(experiment, 'experiment.json');
@@ -96,13 +92,13 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     render(): React.ReactNode {
         const { closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
-        console.info('123', experiment); // eslint-disable-line
         return (
             <Stack className="logDrawer">
                 <Panel
-                    // isOpen={isVisble}
                     isOpen={true}
                     hasCloseButton={false}
+                    isLightDismiss={true}
+                    onLightDismissClick={closeExpDrawer}
                     styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
                     <Pivot style={{ minHeight: 190 }} className="log-tab-body">
