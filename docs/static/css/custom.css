@@ -86,8 +86,10 @@
 
 .tuner{
     width: 90%;
+    min-width: 674px;
     margin: 0 auto;
     margin-bottom: 25px;
+    table-layout: fixed;
 }
 
 .tuner, .tuner td{
@@ -95,8 +97,8 @@
     font-size: 14px;
 }
 
-.tuner td.references{
-    width: 25%;
+.tuner .references{
+    width: 16%;
 }
 
 .tuner td:not(.core-td) {
@@ -108,10 +110,22 @@
 }
 
 .tuner ul.core{
-    width: 200px;
+    word-break: break-word;
     padding-left: 25px;
     padding-top: 25px;
     box-sizing: border-box;
+}
+
+@media screen and (min-width:1361px){
+    .tuner ul.core{
+        width: 25%;
+    }
+}
+
+@media screen and (max-width:1360px){
+    .tuner ul.core{
+        width: 32%;
+    }
 }
 
 .tuner .title {
@@ -125,6 +139,10 @@
 
 .tuner .align-td{
     line-height: 26px;
+}
+
+.tuner .algorithms{
+    word-break: break-word;
 }
 
 .wy-nav-content .tuner li{
