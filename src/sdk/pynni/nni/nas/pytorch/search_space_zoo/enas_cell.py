@@ -170,8 +170,8 @@ class ENASMacroLayer(mutables.MutableScope):
         """
         Parameters
         ---
-        prev: torch.Tensor
-            the output of the previous layer
+        prev: list
+            the list containing all outputs of previous layers
         """
         out = self.mutable(prev[-1])
         if self.skipconnect is not None:
