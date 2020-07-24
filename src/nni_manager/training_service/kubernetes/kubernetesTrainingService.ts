@@ -99,7 +99,7 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(kubernetesTrialJob);
     }
 
-    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
         throw new MethodNotImplementedError();
     }
 
