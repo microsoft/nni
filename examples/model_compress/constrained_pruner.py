@@ -8,6 +8,8 @@ import argparse
 import os
 import json
 import torch
+import torch.nn as nn
+import torch.cuda as cuda
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms, models
 
@@ -90,6 +92,8 @@ def parse_args():
     parser.add_argument('--finetune_epochs', type=int, default=15,
                         help='the number of finetune epochs after pruning')
     parser.add_argument('--lr', type=float, default=0.001, help='the learning rate of model')
+    parser.add_argument('--type', choices=['l1', 'l2', 'activation'], default='l1', help='the pruning algo type')
+    parser.add_argument('--para', action='store_true', help='if use multiple gpus')
     return parser.parse_args()
 
 
@@ -164,18 +168,22 @@ if __name__ == '__main__':
     criterion2 = torch.nn.CrossEntropyLoss()
 
     cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
-    #pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
-    #pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
-
-    pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, optimizer1, statistics_batch_num=10)
-    pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), optimizer2, statistics_batch_num=10)
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data = data.to(device)
-        net1(data)
-        net2(data)
-        if batch_idx > 10:
-            # enough data to calculate the activation
-            break
+    if args.type == 'l1':
+        pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
+        pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+    elif args.type == 'l2':
+        pruner1 = L2FilterPruner(net1, cfglist, optimizer1)
+        pruner2 = Constrained_L2FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+    elif args.type == 'activation':
+        pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, optimizer1, statistics_batch_num=10)
+        pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), optimizer2, statistics_batch_num=10)
+        for batch_idx, (data, target) in enumerate(train_loader):
+            data = data.to(device)
+            net1(data)
+            net2(data)
+            if batch_idx > 10:
+                # enough data to calculate the activation
+                break
 
     pruner1.compress()
     pruner2.compress()
@@ -188,11 +196,20 @@ if __name__ == '__main__':
     ms1.speedup_model()
     ms2.speedup_model()
     print('Model speedup finished')
-
+    
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After pruning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
+    flops1, weights1 = count_flops_params(net1, dummy_input.size())
+    flops2, weights2 = count_flops_params(net2, dummy_input.size())
+    if args.para:
+        net1 = nn.DataParallel(net1).to(device)
+        net2 = nn.DataParallel(net2).to(device)
+        # Scale the batch size, rebuild the data loader
+        args.batch_size = args.batch_size * cuda.device_count()
+        train_loader, val_loader, dummy_input = get_data(args)
     
+
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
                 criterion2, optimizer2, epoch)
@@ -208,12 +225,10 @@ if __name__ == '__main__':
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
 
 
-
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
     
-    flops1, weights1 = count_flops_params(net1, dummy_input.size())
-    flops2, weights2 = count_flops_params(net2, dummy_input.size())
+
     print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
     print('Constrained L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
