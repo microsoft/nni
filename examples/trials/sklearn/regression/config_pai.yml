@@ -23,9 +23,9 @@ trial:
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
-  nniManagerNFSMountPath: {replace_to_your_nfs_mount_path}
-  containerNFSMountPath: {replace_to_your_container_mount_path}
-  paiStorageConfigName: {replace_to_your_storage_config_name}
+  nniManagerNFSMountPath: /home/user/mnt
+  containerNFSMountPath: /mnt/data/user
+  paiStorageConfigName: confignfs-data
 paiConfig:
   #The username to login pai
   userName: username
