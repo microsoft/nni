@@ -166,16 +166,18 @@ class ENASMacroLayer(mutables.MutableScope):
             self.skipconnect = None
         self.batch_norm = nn.BatchNorm2d(out_filters, affine=False)
 
-    def forward(self, prev):
+    def forward(self, prev_list):
         """
         Parameters
         ---
-        prev: list
-            the list containing all outputs of previous layers
+        prev_list: list
+            The cell selects the last element of the list as input and apply an operation on it.
+            The cell chooses none/one/multiple tensor(s) as SkipConnect(s) from the list excluding
+            the last element.
         """
-        out = self.mutable(prev[-1])
+        out = self.mutable(prev_list[-1])
         if self.skipconnect is not None:
-            connection = self.skipconnect(prev[:-1])
+            connection = self.skipconnect(prev_list[:-1])
             if connection is not None:
                 out += connection
         return self.batch_norm(out)
