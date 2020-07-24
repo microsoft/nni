@@ -1,0 +1,54 @@
+{
+  "checkStatus": {
+    "status": "RUNNING",
+    "errors": []
+  },
+  "experiment": {
+    "id": "mw3lSbde",
+    "revision": 3,
+    "execDuration": 8,
+    "logDir": "/***/nni/experiments/mw3lSbde",
+    "nextSequenceId": 1,
+    "params": {
+      "authorName": "NNI Example",
+      "experimentName": "MNIST TF v2.x",
+      "trialConcurrency": 1,
+      "maxExecDuration": 3600,
+      "maxTrialNum": 10,
+      "searchSpace": "{\"dropout_rate\": {\"_type\": \"uniform\", \"_value\": [0.5, 0.9]}, \"conv_size\": {\"_type\": \"choice\", \"_value\": [2, 3, 5, 7]}, \"hidden_size\": {\"_type\": \"choice\", \"_value\": [124, 512, 1024]}, \"batch_size\": {\"_type\": \"choice\", \"_value\": [16, 32]}, \"learning_rate\": {\"_type\": \"choice\", \"_value\": [0.0001, 0.001, 0.01, 0.1]}}",
+      "trainingServicePlatform": "local",
+      "tuner": {
+        "builtinTunerName": "TPE",
+        "classArgs": {
+          "optimize_mode": "maximize"
+        },
+        "checkpointDir": "/***/nni/experiments/mw3lSbde/checkpoint"
+      },
+      "versionCheck": true,
+      "clusterMetaData": [
+        {
+          "key": "codeDir",
+          "value": "/***/nnidev/examples/trials/mnist-tfv2/."
+        },
+        {
+          "key": "command",
+          "value": "python3 mnist.py"
+        }
+      ]
+    },
+    "startTime": 1595497482108
+  },
+  "metricData": [],
+  "trialJobs": [
+    {
+      "id": "Fp0Hv",
+      "status": "WAITING",
+      "hyperParameters": [
+        "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8491269523482741,\"conv_size\":3,\"hidden_size\":512,\"batch_size\":16,\"learning_rate\":0.0001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/Fp0Hv",
+      "startTime": 1595497487135,
+      "sequenceId": 0
+    }
+  ]
+}

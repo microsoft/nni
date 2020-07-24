@@ -1,0 +1,553 @@
+{
+    "checkStatus": {
+        "status": "RUNNING",
+        "errors": []
+    },
+    "experiment": {
+        "id": "GD5MnU8G",
+        "revision": 22,
+        "execDuration": 172,
+        "logDir": "/home/user/nni/experiments/GD5MnU8G",
+        "nextSequenceId": 3,
+        "params": {
+            "authorName": "default",
+            "experimentName": "example_mnist",
+            "trialConcurrency": 1,
+            "maxExecDuration": 3600,
+            "maxTrialNum": 10,
+            "searchSpace": "{\"dropout_rate\": {\"_type\": \"uniform\", \"_value\": [0.5, 0.9]}, \"conv_size\": {\"_type\": \"choice\", \"_value\": [2, 3, 5, 7]}, \"hidden_size\": {\"_type\": \"choice\", \"_value\": [124, 512, 1024]}, \"batch_size\": {\"_type\": \"choice\", \"_value\": [1, 4, 8, 16, 32]}, \"learning_rate\": {\"_type\": \"choice\", \"_value\": [0.0001, 0.001, 0.01, 0.1]}}",
+            "trainingServicePlatform": "local",
+            "tuner": {
+                "builtinTunerName": "TPE",
+                "classArgs": {
+                    "optimize_mode": "maximize"
+                },
+                "checkpointDir": "/home/user/nni/experiments/GD5MnU8G/checkpoint"
+            },
+            "versionCheck": true,
+            "clusterMetaData": [
+                {
+                    "key": "codeDir",
+                    "value": "/home/user/nnidev/examples/trials/mnist-tfv1/."
+                },
+                {
+                    "key": "command",
+                    "value": "python3 mnist.py"
+                }
+            ]
+        },
+        "startTime": 1594299813929
+    },
+    "metricData": [
+        {
+            "timestamp": 1594299828333,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 0,
+            "data": "\"0.0982000008225441\""
+        },
+        {
+            "timestamp": 1594299830651,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 1,
+            "data": "\"0.3490999937057495\""
+        },
+        {
+            "timestamp": 1594299832941,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 2,
+            "data": "\"0.617900013923645\""
+        },
+        {
+            "timestamp": 1594299835245,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 3,
+            "data": "\"0.5990999937057495\""
+        },
+        {
+            "timestamp": 1594299837540,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 4,
+            "data": "\"0.7716000080108643\""
+        },
+        {
+            "timestamp": 1594299839841,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 5,
+            "data": "\"0.7502999901771545\""
+        },
+        {
+            "timestamp": 1594299842245,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 6,
+            "data": "\"0.7602999806404114\""
+        },
+        {
+            "timestamp": 1594299844530,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 7,
+            "data": "\"0.8100000023841858\""
+        },
+        {
+            "timestamp": 1594299846848,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 8,
+            "data": "\"0.7455999851226807\""
+        },
+        {
+            "timestamp": 1594299849142,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 9,
+            "data": "\"0.7925999760627747\""
+        },
+        {
+            "timestamp": 1594299851523,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 10,
+            "data": "\"0.7462999820709229\""
+        },
+        {
+            "timestamp": 1594299853830,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 11,
+            "data": "\"0.9067999720573425\""
+        },
+        {
+            "timestamp": 1594299856132,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 12,
+            "data": "\"0.9067000150680542\""
+        },
+        {
+            "timestamp": 1594299858442,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 13,
+            "data": "\"0.86080002784729\""
+        },
+        {
+            "timestamp": 1594299860720,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 14,
+            "data": "\"0.8370000123977661\""
+        },
+        {
+            "timestamp": 1594299863053,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 15,
+            "data": "\"0.8899999856948853\""
+        },
+        {
+            "timestamp": 1594299865356,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 16,
+            "data": "\"0.8859999775886536\""
+        },
+        {
+            "timestamp": 1594299867672,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 17,
+            "data": "\"0.8475000262260437\""
+        },
+        {
+            "timestamp": 1594299869969,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 18,
+            "data": "\"0.7046999931335449\""
+        },
+        {
+            "timestamp": 1594299872260,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "PERIODICAL",
+            "sequence": 19,
+            "data": "\"0.8921999931335449\""
+        },
+        {
+            "timestamp": 1594299874555,
+            "trialJobId": "rIW79",
+            "parameterId": "0",
+            "type": "FINAL",
+            "sequence": 0,
+            "data": "\"0.9096999764442444\""
+        },
+        {
+            "timestamp": 1594299892295,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 0,
+            "data": "\"0.061400000005960464\""
+        },
+        {
+            "timestamp": 1594299893119,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 1,
+            "data": "\"0.18520000576972961\""
+        },
+        {
+            "timestamp": 1594299893942,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 2,
+            "data": "\"0.3481999933719635\""
+        },
+        {
+            "timestamp": 1594299894743,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 3,
+            "data": "\"0.396699994802475\""
+        },
+        {
+            "timestamp": 1594299895570,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 4,
+            "data": "\"0.5094000101089478\""
+        },
+        {
+            "timestamp": 1594299896386,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 5,
+            "data": "\"0.5019000172615051\""
+        },
+        {
+            "timestamp": 1594299897188,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 6,
+            "data": "\"0.6049000024795532\""
+        },
+        {
+            "timestamp": 1594299897995,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 7,
+            "data": "\"0.6504999995231628\""
+        },
+        {
+            "timestamp": 1594299898796,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 8,
+            "data": "\"0.7235999703407288\""
+        },
+        {
+            "timestamp": 1594299899618,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 9,
+            "data": "\"0.7186999917030334\""
+        },
+        {
+            "timestamp": 1594299900431,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 10,
+            "data": "\"0.7455999851226807\""
+        },
+        {
+            "timestamp": 1594299901242,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 11,
+            "data": "\"0.7889000177383423\""
+        },
+        {
+            "timestamp": 1594299902095,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 12,
+            "data": "\"0.7921000123023987\""
+        },
+        {
+            "timestamp": 1594299902908,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 13,
+            "data": "\"0.802299976348877\""
+        },
+        {
+            "timestamp": 1594299903733,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 14,
+            "data": "\"0.8083000183105469\""
+        },
+        {
+            "timestamp": 1594299904554,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 15,
+            "data": "\"0.8136000037193298\""
+        },
+        {
+            "timestamp": 1594299905352,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 16,
+            "data": "\"0.8217999935150146\""
+        },
+        {
+            "timestamp": 1594299906176,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 17,
+            "data": "\"0.8299999833106995\""
+        },
+        {
+            "timestamp": 1594299906995,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 18,
+            "data": "\"0.8392999768257141\""
+        },
+        {
+            "timestamp": 1594299907795,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "PERIODICAL",
+            "sequence": 19,
+            "data": "\"0.8463000059127808\""
+        },
+        {
+            "timestamp": 1594299908598,
+            "trialJobId": "vNWGk",
+            "parameterId": "1",
+            "type": "FINAL",
+            "sequence": 0,
+            "data": "\"0.8449000120162964\""
+        },
+        {
+            "timestamp": 1594299923484,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 0,
+            "data": "\"0.10899999737739563\""
+        },
+        {
+            "timestamp": 1594299927817,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 1,
+            "data": "\"0.89410001039505\""
+        },
+        {
+            "timestamp": 1594299932184,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 2,
+            "data": "\"0.9358999729156494\""
+        },
+        {
+            "timestamp": 1594299936551,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 3,
+            "data": "\"0.9544000029563904\""
+        },
+        {
+            "timestamp": 1594299940884,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 4,
+            "data": "\"0.9591000080108643\""
+        },
+        {
+            "timestamp": 1594299945242,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 5,
+            "data": "\"0.9620000123977661\""
+        },
+        {
+            "timestamp": 1594299949587,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 6,
+            "data": "\"0.9666000008583069\""
+        },
+        {
+            "timestamp": 1594299953936,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 7,
+            "data": "\"0.9642999768257141\""
+        },
+        {
+            "timestamp": 1594299958254,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 8,
+            "data": "\"0.9679999947547913\""
+        },
+        {
+            "timestamp": 1594299962667,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 9,
+            "data": "\"0.9702000021934509\""
+        },
+        {
+            "timestamp": 1594299967026,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 10,
+            "data": "\"0.9692000150680542\""
+        },
+        {
+            "timestamp": 1594299971361,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 11,
+            "data": "\"0.9740999937057495\""
+        },
+        {
+            "timestamp": 1594299975870,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 12,
+            "data": "\"0.9760000109672546\""
+        },
+        {
+            "timestamp": 1594299980209,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 13,
+            "data": "\"0.97079998254776\""
+        },
+        {
+            "timestamp": 1594299984578,
+            "trialJobId": "IqYms",
+            "parameterId": "2",
+            "type": "PERIODICAL",
+            "sequence": 14,
+            "data": "\"0.9749000072479248\""
+        }
+    ],
+    "trialJobs": [
+        {
+            "id": "rIW79",
+            "status": "SUCCEEDED",
+            "hyperParameters": [
+                "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.5263711332698766,\"conv_size\":7,\"hidden_size\":1024,\"batch_size\":1,\"learning_rate\":0.001},\"parameter_index\":0}"
+            ],
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/rIW79",
+            "startTime": 1594299823975,
+            "sequenceId": 0,
+            "endTime": 1594299874953,
+            "finalMetricData": [
+                {
+                    "timestamp": 1594299874555,
+                    "trialJobId": "rIW79",
+                    "parameterId": "0",
+                    "type": "FINAL",
+                    "sequence": 0,
+                    "data": "\"0.9096999764442444\""
+                }
+            ]
+        },
+        {
+            "id": "vNWGk",
+            "status": "SUCCEEDED",
+            "hyperParameters": [
+                "{\"parameter_id\":1,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.6442863649016913,\"conv_size\":2,\"hidden_size\":124,\"batch_size\":8,\"learning_rate\":0.0001},\"parameter_index\":0}"
+            ],
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/vNWGk",
+            "startTime": 1594299889024,
+            "sequenceId": 1,
+            "endTime": 1594299908983,
+            "finalMetricData": [
+                {
+                    "timestamp": 1594299908598,
+                    "trialJobId": "vNWGk",
+                    "parameterId": "1",
+                    "type": "FINAL",
+                    "sequence": 0,
+                    "data": "\"0.8449000120162964\""
+                }
+            ]
+        },
+        {
+            "id": "IqYms",
+            "status": "RUNNING",
+            "hyperParameters": [
+                "{\"parameter_id\":2,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8254386039941805,\"conv_size\":7,\"hidden_size\":1024,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
+            ],
+            "logPath": "file://localhost:/home/user/nni/experiments/GD5MnU8G/trials/IqYms",
+            "startTime": 1594299919039,
+            "sequenceId": 2
+        }
+    ]
+}

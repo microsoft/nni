@@ -1,5 +1,40 @@
-import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
+import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
 import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
+
+/**
+ * Get a structured representation of parameters
+ * @param paramObj Parameters object
+ * @param space All axes from search space (or sub search space)
+ * @param prefix Current namespace (to make full name for unexpected entries)
+ * @returns Parsed structured parameters and unexpected entries
+ */
+function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: string = ''): [Map<SingleAxis, any>, Map<string, any>] {
+    const parameters = new Map<SingleAxis, any>();
+    const unexpectedEntries = new Map<string, any>();
+    for (const [k, v] of Object.entries(paramObj)) {
+        // prefix can be a good fallback when corresponding item is not found in namespace
+        const axisKey = space.axes.get(k);
+        if (prefix && k === '_name')
+            continue;
+        if (axisKey !== undefined) {
+            if (typeof v === 'object' && v._name !== undefined && axisKey.nested) {
+                // nested entry
+                parameters.set(axisKey, v._name);
+                const subSpace = axisKey.domain.get(v._name);
+                if (subSpace !== undefined) {
+                    const [subParams, subUnexpected] = inferTrialParameters(v, subSpace, prefix + k + '/');
+                    subParams.forEach((v, k) => parameters.set(k, v));
+                    subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
+                }
+            } else {
+                parameters.set(axisKey, v);
+            }
+        } else {
+            unexpectedEntries.set(prefix + k, v);
+        }
+    }
+    return [parameters, unexpectedEntries];
+}
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -153,6 +188,45 @@ class Trial implements TableObj {
             }
         }
         ret.intermediate = mediate;
+        return ret;
+    }
+
+    public parameters(axes: MultipleAxes): Map<SingleAxis, any> {
+        const tempHyper = this.info.hyperParameters;
+        if (tempHyper === undefined) {
+            throw new Map([['error', 'This trial\'s parameters are not available.']]);
+        } else {
+            let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+            if (typeof params === 'string') {
+                params = JSON.parse(params);
+            }
+            const [result, unexpectedEntries] = inferTrialParameters(params, axes);
+            if (unexpectedEntries.size) {
+                throw unexpectedEntries;
+            }
+            return result;
+        }
+    }
+
+    public metrics(space: MultipleAxes): Map<SingleAxis, any> {
+        const ret = new Map<SingleAxis, any>();
+        const unexpectedEntries = new Map<string, any>();
+        if (this.acc === undefined) {
+            return ret;
+        }
+        const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;
+        Object.entries(acc).forEach(item => {
+            const [k, v] = item;
+            const column = space.axes.get(k);
+            if (column !== undefined) {
+                ret.set(column, v);
+            } else {
+                unexpectedEntries.set(k, v);
+            }
+        });
+        if (unexpectedEntries.size) {
+            throw unexpectedEntries;
+        }
         return ret;
     }
 

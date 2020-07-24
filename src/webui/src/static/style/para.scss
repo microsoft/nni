@@ -65,3 +65,23 @@
         line-height: 32px;
     }
 }
+
+.parcoords {
+    text.label, text {
+        font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+        font-size: 12px;
+    }
+}
+
+.nodata {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666666;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    top: 45%;
+}
