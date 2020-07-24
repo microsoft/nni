@@ -1,7 +1,10 @@
 import * as React from 'react';
+// import axios from 'axios';
 import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
 import { Trial } from '../../static/model/trial';
+import { MANAGER_IP } from '../../static/const';
+// import { downFile } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
@@ -9,6 +12,7 @@ import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../Modals/MessageInfo';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
+import '../../static/style/openRow.scss';
 
 interface OpenRowProps {
     trialId: string;
@@ -53,6 +57,29 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         } else {
             this.getCopyStatus('Failed !', 'error');
         }
+    }
+
+    // downloadTrialLog = (): void => {
+    //     const { trialId } = this.props;
+    //     // download this trial's log
+    //     const trialLogPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_LOG`);
+    //     const stderrPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_STDERR`);
+    //     trialLogPromise.then(res => {
+    //         if (res.status === 200) {
+    //             // start to download
+    //             downFile(res.data, `${trialId}.log`);
+    //         }
+    //     });
+    //     stderrPromise.then(res => {
+    //         if (res.status === 200) {
+    //             // start to download
+    //             downFile(res.data, `${trialId}.stderr`);
+    //         }
+    //     });
+    // }
+
+    openTrialLog = (type: string): void => {
+        window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
     }
 
     render(): React.ReactNode {
@@ -105,7 +132,23 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         logCollection={EXPERIMENT.logCollectionEnabled}
                                     />
                                     :
-                                    <TrialLog logStr={logPathRow} id={trialId} />
+                                    <div>
+                                        <TrialLog logStr={logPathRow} id={trialId} />
+                                        {/* view each trial log in drawer*/}
+                                        <div id="trialog">
+                                            <div className="copy" style={{ marginTop: 15 }}>
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
+                                                    text="View trial log"
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_STDERR')}
+                                                    text="View stderr log"
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                             }
                         </PivotItem>
                     </Pivot>
