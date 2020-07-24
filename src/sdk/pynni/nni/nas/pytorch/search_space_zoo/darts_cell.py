@@ -94,9 +94,16 @@ class DartsCell(nn.Module):
             self.mutable_ops.append(Node("{}_n{}".format("reduce" if reduction else "normal", depth),
                                          depth, channels, 2 if reduction else 0))
 
-    def forward(self, s0, s1):
-        # s0, s1 are the outputs of previous previous cell and previous cell, respectively.
-        tensors = [self.preproc0(s0), self.preproc1(s1)]
+    def forward(self, pprev, prev):
+        """
+        Parameters
+        ---
+        pprev: torch.Tensor
+            the output of the previous previous layer
+        prev: torch.Tensor
+            the output of the previous layer
+        """
+        tensors = [self.preproc0(pprev), self.preproc1(prev)]
         for node in self.mutable_ops:
             cur_tensor = node(tensors)
             tensors.append(cur_tensor)

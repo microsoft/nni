@@ -104,6 +104,14 @@ class ENASMicroLayer(nn.Module):
         nn.init.kaiming_normal_(self.final_conv_w)
 
     def forward(self, pprev, prev):
+        """
+        Parameters
+        ---
+        pprev: torch.Tensor
+            the output of the previous previous layer
+        prev: torch.Tensor
+            the output of the previous previous layer
+        """
         if self.reduction:
             pprev, prev = self.reduce0(pprev), self.reduce1(prev)
         pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)
@@ -158,10 +166,16 @@ class ENASMacroLayer(mutables.MutableScope):
             self.skipconnect = None
         self.batch_norm = nn.BatchNorm2d(out_filters, affine=False)
 
-    def forward(self, prev_layers):
-        out = self.mutable(prev_layers[-1])
+    def forward(self, prev):
+        """
+        Parameters
+        ---
+        prev: torch.Tensor
+            the output of the previous layer
+        """
+        out = self.mutable(prev[-1])
         if self.skipconnect is not None:
-            connection = self.skipconnect(prev_layers[:-1])
+            connection = self.skipconnect(prev[:-1])
             if connection is not None:
                 out += connection
         return self.batch_norm(out)
@@ -215,6 +229,12 @@ class ENASMacroGeneralModel(nn.Module):
         self.dense = nn.Linear(self.out_filters, self.num_classes)
 
     def forward(self, x):
+        """
+        Parameters
+        ---
+        x: torch.Tensor
+            the input of the network
+        """
         bs = x.size(0)
         cur = self.stem(x)
 
