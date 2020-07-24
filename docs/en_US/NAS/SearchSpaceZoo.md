@@ -6,7 +6,7 @@ DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://gith
 
 One structure in the Darts search space is shown below. Note that, NNI merges the last one of the four intermediate nodes and the output node.
 
-![](../../img/NAS_Darts_cell.png)
+![](../../img/NAS_Darts_cell.svg)
 
 The predefined operations are shown in [references](#predefined-operations-darts).
 
@@ -67,7 +67,7 @@ ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent loc
 
 One structure in the ENAS micro search space is shown below.
 
-![](../../img/NAS_ENAS_micro.png) 
+![](../../img/NAS_ENAS_micro.svg) 
 
 The predefined operations can be seen [here](#predefined-operations-enas).
 
@@ -120,7 +120,7 @@ In Macro search, the controller makes two decisions for each layer: i) the [oper
 
 Part of one structure in the ENAS macro search space is shown below.
 
-![](../../img/NAS_ENAS_macro.png)
+![](../../img/NAS_ENAS_macro.svg)
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.search_space_zoo.ENASMacroLayer
