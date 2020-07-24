@@ -171,7 +171,7 @@ class ENASMacroLayer(mutables.MutableScope):
         Parameters
         ---
         prev_list: list
-            The cell selects the last element of the list as input and apply an operation on it.
+            The cell selects the last element of the list as input and applies an operation on it.
             The cell chooses none/one/multiple tensor(s) as SkipConnect(s) from the list excluding
             the last element.
         """
