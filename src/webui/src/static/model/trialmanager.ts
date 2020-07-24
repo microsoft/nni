@@ -1,6 +1,7 @@
 import { MANAGER_IP, METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE } from '../const';
-import { MetricDataRecord, TableRecord, TrialJobInfo } from '../interface';
+import { MetricDataRecord, TableRecord, TrialJobInfo, MultipleAxes } from '../interface';
 import { Trial } from './trial';
+import { SearchSpace, MetricSpace } from './searchspace';
 import { requestAxios } from '../function';
 
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
@@ -133,6 +134,15 @@ class TrialManager {
             }
         }
         return cnt;
+    }
+
+    public inferredSearchSpace(expSearchSpace: SearchSpace): MultipleAxes {
+        // The search space inferred from trial parameters
+        return SearchSpace.inferFromTrials(expSearchSpace, [...this.trials.values()]);
+    }
+
+    public inferredMetricSpace(): MultipleAxes {
+        return new MetricSpace([...this.trials.values()]);
     }
 
     public static expandJobsToTrials(jobs: TrialJobInfo[]): TrialJobInfo[] {
@@ -312,9 +322,8 @@ class TrialManager {
     private doUpdateMetrics(allMetrics: MetricDataRecord[], latestOnly: boolean): boolean {
         let updated = false;
         for (const [trialId, metrics] of groupMetricsByTrial(allMetrics).entries()) {
-            if (this.trials.has(trialId)) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const trial = this.trials.get(trialId)!;
+            const trial = this.trials.get(trialId);
+            if (trial !== undefined) {
                 updated = (latestOnly ? trial.updateLatestMetrics(metrics) : trial.updateMetrics(metrics)) || updated;
             } else {
                 this.trials.set(trialId, new Trial(undefined, metrics));
