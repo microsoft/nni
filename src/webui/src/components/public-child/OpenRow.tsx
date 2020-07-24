@@ -85,6 +85,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     render(): React.ReactNode {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
+        console.info(trialId); // eslint-disable-line
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
         return (
