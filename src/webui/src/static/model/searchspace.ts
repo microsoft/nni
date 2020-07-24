@@ -18,14 +18,14 @@ class NumericAxis implements SingleAxis {
         this.baseName = baseName;
         this.fullName = fullName;
         this.type = type;
-        this.scale = type.indexOf('log') !== -1 ? 'log' : 'linear';
+        this.scale = type.includes('log') ? 'log' : 'linear';
         if (type === 'randint') {
             this.min = value[0];
             this.max = value[1] - 1;
-        } else if (type.indexOf('uniform') !== -1) {
+        } else if (type.includes('uniform')) {
             this.min = value[0];
             this.max = value[1];
-        } else if (type.indexOf('normal') !== -1) {
+        } else if (type.includes('normal')) {
             const [mu, sigma] = [value[0], value[1]];
             this.min = mu - 4 * sigma;
             this.max = mu + 4 * sigma;
@@ -97,7 +97,7 @@ export class SearchSpace implements MultipleAxes {
                 } else {
                     this.axes.set(key, new SimpleOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value));
                 }
-            } else if (SUPPORTED_SEARCH_SPACE_TYPE.indexOf(spec._type) !== -1) {
+            } else if (SUPPORTED_SEARCH_SPACE_TYPE.includes(spec._type)) {
                 this.axes.set(key, new NumericAxis(key, fullName + key, spec._type, spec._value));
             }
         });

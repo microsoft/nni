@@ -2,9 +2,8 @@ import * as d3 from 'd3';
 import { Dropdown, IDropdownOption, Stack } from 'office-ui-fabric-react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
-import './Para.scss';
 import * as React from 'react';
-import { TRIALS } from '../../static/datamodel';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { SearchSpace } from '../../static/model/searchspace';
 import { filterByStatus } from '../../static/function';
 import { TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
@@ -15,6 +14,7 @@ interface ParaState {
     dimName: string[];
     selectedPercent: string;
     primaryMetricKey: string;
+    noChart: boolean;
 }
 
 interface ParaProps {
@@ -46,6 +46,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             dimName: [],
             primaryMetricKey: 'default',
             selectedPercent: '1',
+            noChart: true
         };
     }
 
@@ -82,12 +83,11 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { selectedPercent } = this.state;
+        const { selectedPercent, noChart } = this.state;
 
         return (
             <div className="parameter">
                 <Stack horizontal className="para-filter" horizontalAlign="end">
-                    {/* <span className="para-filter-text">Top</span> */}
                     <Dropdown
                         selectedKey={selectedPercent}
                         onChange={this.percentNum}
@@ -102,7 +102,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                     />
                     {this.finalKeysDropdown()}
                 </Stack>
-                <div className="parcoords" style={this.chartMulineStyle} ref={this.paraRef} />
+                <div className="parcoords" style={this.chartMulineStyle} ref={this.paraRef}/>
+                {noChart && <div className="nodata">No data</div>}
             </div>
         );
     }
@@ -158,7 +159,6 @@ class Para extends React.Component<ParaProps, ParaState> {
             }]);
         }
         for (const [k, v] of inferredMetricSpace.axes) {
-            // const title = `metrics/${k}`;
             const scale = this.convertToD3Scale(v);
             if (k === primaryMetricKey && scale !== undefined && scale.interpolate) {
                 // set color for primary metrics
@@ -169,7 +169,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
-                    convertedTrials.sort((a, b) => b[k] - a[k]);
+                    convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
                     convertedTrials = convertedTrials.slice(0, keptTrialNum);
                     const domain = d3.extent(convertedTrials, item => item[k]);
                     scale.domain([domain[0], domain[1]]);
@@ -184,6 +184,10 @@ class Para extends React.Component<ParaProps, ParaState> {
             }]);
         }
 
+        if (convertedTrials.length === 0) {
+            return;
+        }
+
         const firstRun = this.pcs === undefined;
         if (firstRun) {
             this.pcs = ParCoords()(this.paraRef.current);
@@ -193,6 +197,7 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (firstRun) {
             this.pcs.margin(this.innerChartMargins)
                 .alphaOnBrushed(0.2)
+                .smoothness(0.1)
                 .brushMode("1D-axes")
                 .reorderable()
                 .interactive();
@@ -201,6 +206,9 @@ class Para extends React.Component<ParaProps, ParaState> {
             this.pcs.color(d => (colorScale as any)(d[colorDim as any]));
         }
         this.pcs.render();
+        if (firstRun) {
+            this.setState({ noChart: false });
+        }
     }
 
     private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] {
@@ -227,18 +235,26 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     private convertToD3Scale(axis: SingleAxis, initRange: boolean = true): any {
+        const padLinear = ([x0, x1], k = 0.1): [number, number] => {
+            const dx = (x1 - x0) * k / 2;
+            return [x0 - dx, x1 + dx];
+        };
+        const padLog = ([x0, x1], k = 0.1): [number, number] => {
+            const [y0, y1] = padLinear([Math.log(x0), Math.log(x1)], k);
+            return [Math.exp(y0), Math.exp(y1)];
+        }
         let scaleInst: any = undefined;
         if (axis.scale === 'ordinal') {
             if (axis.nested) {
                 // TODO: handle nested entries
-                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys()));
+                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys())).padding(0.2);
             } else {
-                scaleInst = d3.scalePoint().domain(axis.domain);
+                scaleInst = d3.scalePoint().domain(axis.domain).padding(0.2);
             }
         } else if (axis.scale === 'log') {
-            scaleInst = d3.scaleLog().domain(axis.domain);
+            scaleInst = d3.scaleLog().domain(padLog(axis.domain));
         } else if (axis.scale === 'linear') {
-            scaleInst = d3.scaleLinear().domain(axis.domain);
+            scaleInst = d3.scaleLinear().domain(padLinear(axis.domain));
         }
         if (initRange) {
             scaleInst = scaleInst.range(this.getRange());

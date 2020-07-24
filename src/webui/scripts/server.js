@@ -5,14 +5,29 @@ const app = express();
 const argv = require('minimist')(process.argv.slice(2));
 const port = argv.port || 12138;
 const expAlias = argv.experiment || process.env.EXPERIMENT || 'mnist-tfv1-running';
-let expFile = path.join(__dirname, `../mock/${expAlias}`);
-if (!fs.existsSync(expFile)) {
-    expFile += '.json';
+// Specify multiple alias to transfer from one to another automatically
+const splittedAlias = expAlias.split(',');
+let expData = undefined;
+
+function loadExperimentWithAlias(aliasId) {
+    const alias = splittedAlias[aliasId];
+    let expFile = path.join(__dirname, `../mock/${alias}`);
+    if (!fs.existsSync(expFile)) {
+        expFile += '.json';
+    }
+    if (!fs.existsSync(expFile)) {
+        throw new Error(`Experiment file '${expFile}' not found. Please recheck.`);
+    }
+    console.log(`Loading experiment file: '${expFile}'.`);
+    expData = JSON.parse(fs.readFileSync(expFile).toString());
+    if (splittedAlias.length <= 1)
+        return;
+    // sleep longer on first one
+    setTimeout(() => loadExperimentWithAlias((aliasId + 1) % splittedAlias.length),
+        expData === undefined ? 40000 : 20000);
 }
-if (!fs.existsSync(expFile)) {
-    throw new Error(`Experiment file '${expFile}' not found. Please recheck.`);
-}
-const expData = JSON.parse(fs.readFileSync(expFile).toString());
+
+loadExperimentWithAlias(0);
 
 app.get('/api/v1/nni/version', (req, res) => {
     res.send('v999.0');
