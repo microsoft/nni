@@ -200,8 +200,7 @@ if __name__ == '__main__':
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After pruning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
-    flops1, weights1 = count_flops_params(net1, dummy_input.size())
-    flops2, weights2 = count_flops_params(net2, dummy_input.size())
+
     if args.para:
         net1 = nn.DataParallel(net1).to(device)
         net2 = nn.DataParallel(net2).to(device)
@@ -229,6 +228,7 @@ if __name__ == '__main__':
     acc2 = test(net2, device, criterion2, val_loader)
     print('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
     
-
+    flops1, weights1 = count_flops_params(net1, dummy_input.size())
+    flops2, weights2 = count_flops_params(net2, dummy_input.size())
     print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
     print('Constrained L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
