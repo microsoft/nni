@@ -24,7 +24,6 @@ nnictl support commands:
 * [nnictl package](#package)
 * [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
-* [nnictl export_results](#export-results)
 
 ### Manage an experiment
 
