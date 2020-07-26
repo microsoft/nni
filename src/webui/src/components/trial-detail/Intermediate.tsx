@@ -130,8 +130,8 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         yAxisIndex: [0],
                         filterMode: 'none',
                         start: startMediaY,
-                        end: endMediaY,
-                    },
+                        end: endMediaY
+                    }
                 ],
                 series: trialIntermediate
             };

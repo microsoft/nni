@@ -699,7 +699,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <div className={contentStyles.header}>
                         <span>Intermediate result</span>
                         <IconButton
-                            styles ={iconButtonStyles}
+                            styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
                             ariaLabel="Close popup modal"
                             onClick={this.hideIntermediateModal as any}
