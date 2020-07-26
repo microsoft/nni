@@ -65,18 +65,3 @@ def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None, include_i
             yield data
         else:
             yield model_to_dict(trial)
-
-
-if __name__ == "__main__":
-    import pprint
-    arch = {
-        '0_1': 'avg_pool_3x3',
-        '0_2': 'conv_1x1',
-        '0_3': 'conv_1x1',
-        '1_2': 'skip_connect',
-        '1_3': 'skip_connect',
-        '2_3': 'skip_connect'
-    }
-    for t in query_nb201_trial_stats(arch, 200, 'cifar100', include_intermediates=False):
-        pprint.pprint(t)
-        break
