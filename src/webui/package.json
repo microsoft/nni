@@ -38,8 +38,10 @@
     "react-app-polyfill": "^1.0.0",
     "react-dev-utils": "^9.0.0",
     "react-dom": "^16.8.6",
+    "react-js-pagination": "^3.0.3",
     "react-json-tree": "^0.11.2",
     "react-monaco-editor": "^0.32.1",
+    "react-paginate": "^6.3.2",
     "react-router": "^3.2.3",
     "react-table": "^7.0.0-rc.15",
     "resolve": "1.10.0",
@@ -74,7 +76,7 @@
     "eslint-plugin-react": "7.12.4",
     "eslint-plugin-react-hooks": "^1.5.0",
     "npx": "^10.2.0",
-    "typescript": "3.4.5"
+    "typescript": "^3.8.0"
   },
   "scripts": {
     "start": "node --max-old-space-size=3072 scripts/start.js",
