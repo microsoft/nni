@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('--suffix', default=None, type=str, help='suffix to help you remember what experiment you ran')
 
     # env
-    parser.add_argument('--model', default='mobilenet', type=str, help='model to prune')
+    parser.add_argument('--model_type', default='mobilenet', type=str, help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
     parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
     parser.add_argument('--sparsity', default=0.5, type=float, help='sparsity of the model')
@@ -55,7 +55,6 @@ def parse_args():
     parser.add_argument('--max_episode_length', default=1e9, type=int, help='')
     parser.add_argument('--output', default='./logs', type=str, help='')
     parser.add_argument('--debug', dest='debug', action='store_true')
-    parser.add_argument('--init_w', default=0.003, type=float, help='')
     parser.add_argument('--train_episode', default=800, type=int, help='train iters each timestep')
     parser.add_argument('--epsilon', default=50000, type=int, help='linear decay of exploration policy')
     parser.add_argument('--seed', default=None, type=int, help='random seed to set')
@@ -159,12 +158,11 @@ def validate(val_loader, model, verbose=False):
 if __name__ == "__main__":
     args = parse_args()
 
-    model = get_model_and_checkpoint(args.model, args.dataset, checkpoint_path=args.ckpt_path, n_gpu=args.n_gpu)
+    model = get_model_and_checkpoint(args.model_type, args.dataset, checkpoint_path=args.ckpt_path, n_gpu=args.n_gpu)
     _, val_loader = init_data(args)
 
-    print(model)
     config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
-    pruner = AMCPruner(model, config_list, validate, val_loader, args)
+    pruner = AMCPruner(model, config_list, validate, val_loader, **vars(args))
     pruner.compress()

@@ -294,7 +294,7 @@ class ChannelPruningEnv:
         self.strategy_dict[self.prunable_idx[-1]][1] = 1  # modify the output
 
         self.shared_idx = []
-        if self.args.model == 'mobilenetv2':  # TODO: to be tested! Share index for residual connection
+        if self.args.model_type == 'mobilenetv2':  # TODO: to be tested! Share index for residual connection
             connected_idx = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]  # to be partitioned
             last_ch = -1
             share_group = None

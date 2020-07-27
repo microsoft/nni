@@ -3,7 +3,7 @@
 
 import os
 from copy import deepcopy
-
+from argparse import Namespace
 import numpy as np
 import torch
 torch.backends.cudnn.deterministic = True
@@ -16,7 +16,98 @@ from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
 class AMCPruner(Pruner):
-    def __init__(self, model, config_list, val_func, val_loader, args):
+    """
+    A pytorch implementation of AMC: AutoML for Model Compression and Acceleration on Mobile Devices.
+    (https://arxiv.org/pdf/1802.03494.pdf)
+    """
+    def __init__(self, model, config_list, evaluator, val_loader, **kwargs):
+        """
+        Parameters:
+            model: nn.Module
+                The model to be pruned.
+            config_list: list
+                Configuration list to configure layer pruning.
+                Supported keys:
+                    op_types: operation type to be pruned
+                    op_names: operation name to be pruned
+            evaluator: function
+                function to evaluate the pruned model.
+                The prototype of the function:
+                    >>> def val_func(val_loader, model):
+                    >>>     ...
+                    >>>     return acc
+            val_loader: torch.utils.data.DataLoader
+                Data loader of validation dataset.
+            kwargs: dict
+                Following additional parameters:
+                job: str
+                    'train' or 'export'
+                suffix: str
+                    suffix to help you remember what experiment you ran
+                # environment
+                model_type: str
+                    model type to prune
+                sparsity: float
+                    prune ratio
+                lbound: float
+                    minimum prune ratio
+                rbound: float
+                    maximum prune ratio
+                reward: function
+                    reward function type
+                # channel pruning
+                n_calibration_batches: int
+                    number of batches to extract layer information
+                n_points_per_layer: int
+                    number of feature points per layer
+                channel_round: int
+                    round channel to multiple of channel_round
+                # ddpg
+                hidden1: int
+                    hidden num of first fully connect layer
+                hidden2: int
+                    hidden num of second fully connect layer
+                lr_c: float
+                    learning rate for critic
+                lr_a: float
+                    learning rate for actor
+                warmup: int
+                    time without training but only filling the replay memory
+                discount: float
+                bsize: int
+                    minibatch size
+                rmsize: int
+                    memory size for each layer
+                window_length: int
+                tau: float
+                    moving average for target network
+                # noise
+                init_delta: float
+                    initial variance of truncated normal distribution
+                delta_decay: float
+                    delta decay during exploration
+                # training
+                max_episode_length: int
+                    maximum episode length
+                output: str
+                    output dir
+                debug: boolean
+                    debug mode
+                train_episode: int
+                    train iters each timestep
+                epsilon: int
+                    linear decay of exploration policy
+                seed: int
+                    random seed to set
+                # export
+                ratios: list
+                    ratios for pruning
+                channels: list
+                    channels after pruning
+                export_path: str
+                    path for exporting models
+        """
+        args = Namespace(**kwargs)
         if args.seed is not None:
             np.random.seed(args.seed)
             torch.manual_seed(args.seed)
@@ -31,13 +122,13 @@ class AMCPruner(Pruner):
         args.lbound, args.rbound = 1. - args.rbound, 1. - args.lbound
 
         self.env = ChannelPruningEnv(
-            self, val_func, val_loader, checkpoint,
+            self, evaluator, val_loader, checkpoint,
             preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
             args=args, export_model=args.job == 'export')
 
         if args.job == 'train':
             # build folder and logs
-            base_folder_name = '{}_{}_r{}_search'.format(args.model, args.dataset, args.preserve_ratio)
+            base_folder_name = '{}_{}_r{}_search'.format(args.model_type, args.dataset, args.preserve_ratio)
             if args.suffix is not None:
                 base_folder_name = base_folder_name + '_' + args.suffix
             args.output = get_output_folder(args.output, base_folder_name)
@@ -57,7 +148,12 @@ class AMCPruner(Pruner):
         self.args = args
 
     def compress(self):
-        self.train(self.args.train_episode, self.agent, self.env, self.args.output)
+        if self.args.job == 'train':
+            print('train')
+            self.train(self.args.train_episode, self.agent, self.env, self.args.output)
+        else:
+            print('export')
+            self.export()
 
     def train(self, num_episode, agent, env, output):
         agent.is_training = True
