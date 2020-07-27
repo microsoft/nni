@@ -59,25 +59,6 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         }
     }
 
-    // downloadTrialLog = (): void => {
-    //     const { trialId } = this.props;
-    //     // download this trial's log
-    //     const trialLogPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_LOG`);
-    //     const stderrPromise = axios.get(`${MANAGER_IP}/trial-log/${trialId}/TRIAL_STDERR`);
-    //     trialLogPromise.then(res => {
-    //         if (res.status === 200) {
-    //             // start to download
-    //             downFile(res.data, `${trialId}.log`);
-    //         }
-    //     });
-    //     stderrPromise.then(res => {
-    //         if (res.status === 200) {
-    //             // start to download
-    //             downFile(res.data, `${trialId}.stderr`);
-    //         }
-    //     });
-    // }
-
     openTrialLog = (type: string): void => {
         window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
     }
@@ -85,7 +66,6 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     render(): React.ReactNode {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
-        console.info(trialId); // eslint-disable-line
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
         return (

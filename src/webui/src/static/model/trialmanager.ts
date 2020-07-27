@@ -137,11 +137,9 @@ class TrialManager {
                     const hpObject = JSON.parse(hyperParameters);
                     const parameterId = hpObject["parameter_id"];
                     trial = {
-                        // id: `${jobInfo.id}-${parameterId}`,
                         id: jobInfo.id,
                         jobId: jobInfo.id,
                         parameterId: parameterId,
-                        // sequenceId: parameterId,
                         sequenceId: jobInfo.sequenceId,
                         status: "SUCCEEDED",
                         startTime: jobInfo.startTime,
