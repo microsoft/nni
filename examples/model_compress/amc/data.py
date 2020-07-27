@@ -73,8 +73,7 @@ def get_dataset(dset_name, batch_size, n_worker, data_root='../../data'):
     return train_loader, val_loader, n_class
 
 
-def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../data',
-                      use_real_val=False, shuffle=True):
+def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../data', shuffle=True):
     '''
         split the train set into train / val for rl search
     '''
@@ -99,22 +98,13 @@ def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../d
             transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
         ])
         trainset = torchvision.datasets.CIFAR100(root=data_root, train=True, download=True, transform=transform_train)
-        if use_real_val:  # split the actual val set
-            valset = torchvision.datasets.CIFAR10(root=data_root, train=False, download=True, transform=transform_test)
-            n_val = len(valset)
-            assert val_size < n_val
-            indices = list(range(n_val))
-            np.random.shuffle(indices)
-            _, val_idx = indices[val_size:], indices[:val_size]
-            train_idx = list(range(len(trainset)))  # all train set for train
-        else:  # split the train set
-            valset = torchvision.datasets.CIFAR10(root=data_root, train=True, download=True, transform=transform_test)
-            n_train = len(trainset)
-            indices = list(range(n_train))
-            # now shuffle the indices
-            np.random.shuffle(indices)
-            assert val_size < n_train
-            train_idx, val_idx = indices[val_size:], indices[:val_size]
+        valset = torchvision.datasets.CIFAR10(root=data_root, train=True, download=True, transform=transform_test)
+        n_train = len(trainset)
+        indices = list(range(n_train))
+        # now shuffle the indices
+        np.random.shuffle(indices)
+        assert val_size < n_train
+        train_idx, val_idx = indices[val_size:], indices[:val_size]
 
         train_sampler = index_sampler(train_idx)
         val_sampler = index_sampler(val_idx)
@@ -124,7 +114,6 @@ def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../d
         val_loader = torch.utils.data.DataLoader(valset, batch_size=batch_size, shuffle=False, sampler=val_sampler,
                                                  num_workers=n_worker, pin_memory=True)
         n_class = 10
-        
     elif dset_name == 'imagenet':
         train_dir = os.path.join(data_root, 'train')
         val_dir = os.path.join(data_root, 'val')
@@ -145,21 +134,12 @@ def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../d
             ])
 
         trainset = datasets.ImageFolder(train_dir, train_transform)
-        if use_real_val:
-            valset = datasets.ImageFolder(val_dir, test_transform)
-            n_val = len(valset)
-            assert val_size < n_val
-            indices = list(range(n_val))
-            np.random.shuffle(indices)
-            _, val_idx = indices[val_size:], indices[:val_size]
-            train_idx = list(range(len(trainset)))  # all trainset
-        else:
-            valset = datasets.ImageFolder(train_dir, test_transform)
-            n_train = len(trainset)
-            indices = list(range(n_train))
-            np.random.shuffle(indices)
-            assert val_size < n_train
-            train_idx, val_idx = indices[val_size:], indices[:val_size]
+        valset = datasets.ImageFolder(train_dir, test_transform)
+        n_train = len(trainset)
+        indices = list(range(n_train))
+        np.random.shuffle(indices)
+        assert val_size < n_train
+        train_idx, val_idx = indices[val_size:], indices[:val_size]
 
         train_sampler = index_sampler(train_idx)
         val_sampler = index_sampler(val_idx)

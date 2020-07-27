@@ -9,7 +9,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-#from .lib.utils import AverageMeter, accuracy, prGreen
 from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .lib.utils import prGreen
 from .. import LevelPrunerMasker, L1FilterPrunerMasker
@@ -29,8 +28,6 @@ class ChannelPruningEnv:
     Env for channel pruning search
     """
     def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False, use_new_input=False):
-        self.prunable_layer_types = [torch.nn.modules.conv.Conv2d, torch.nn.modules.linear.Linear]
-
         # default setting
 
         # save options
@@ -47,8 +44,6 @@ class ChannelPruningEnv:
         self.lbound = args.lbound
         self.rbound = args.rbound
 
-        self.use_real_val = args.use_real_val
-
         self.n_calibration_batches = args.n_calibration_batches
         self.n_points_per_layer = args.n_points_per_layer
         self.channel_round = args.channel_round
@@ -62,7 +57,7 @@ class ChannelPruningEnv:
 
         # prepare data
         #self._init_data()
-        self.val_loader = val_loader
+        self._val_loader = val_loader
         self._validate = val_func
 
         # build indexs
@@ -77,7 +72,7 @@ class ChannelPruningEnv:
 
         # build reward
         self.reset()  # restore weight
-        self.org_acc = self._validate(self.val_loader, self.model)
+        self.org_acc = self._validate(self._val_loader, self.model)
         print('=> original acc: {:.3f}%'.format(self.org_acc))
         self.org_model_size = sum(self.wsize_list)
         print('=> original weight size: {:.4f} M param'.format(self.org_model_size * 1. / 1e6))
@@ -99,24 +94,15 @@ class ChannelPruningEnv:
 
     def step(self, action):
         # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
-        action = 0.6
-        print('action1:', action)
 
         if self.visited[self.cur_ind]:
             action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
             preserve_idx = self.index_buffer[self.cur_ind]
-            print('action2:', action)
-        
         else:
             action = self._action_wall(action)  # percentage to preserve
             preserve_idx = None
-            print('action3:', action)
-        
         # prune and update action
         action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
-        print('action4:', action)
-        #print(action, d_prime, preserve_idx)
-        #print('shared index:', self.shared_idx)
         if not self.visited[self.cur_ind]:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
@@ -134,7 +120,6 @@ class ChannelPruningEnv:
         self.d_prime_list.append(d_prime)
 
         self.strategy_dict[self.prunable_idx[self.cur_ind]][1] = action
-        #if self.cur_ind > 0:
         if self.cur_ind < len(self.prunable_idx) - 1:
             self.strategy_dict[self.prunable_idx[self.cur_ind + 1]][0] = action
 
@@ -143,7 +128,7 @@ class ChannelPruningEnv:
             assert len(self.strategy) == len(self.prunable_idx)
             current_flops = self._cur_flops()
             acc_t1 = time.time()
-            acc = self._validate(self.val_loader, self.model)
+            acc = self._validate(self._val_loader, self.model)
             acc_t2 = time.time()
             self.val_time = acc_t2 - acc_t1
             compress_ratio = current_flops * 1. / self.org_flops
@@ -158,7 +143,6 @@ class ChannelPruningEnv:
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
-
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
             if self.export_model:  # export state dict
@@ -230,89 +214,6 @@ class ChannelPruningEnv:
         action = (m == 1).sum().item() / m.numel()
         return action, d_prime, preserve_idx
 
-    def prune_kernel_old(self, op_idx, preserve_ratio, preserve_idx=None):
-        '''Return the real ratio'''
-        m_list = list(self.model.modules())
-        op = m_list[op_idx].module
-        assert (preserve_ratio <= 1.)
-
-        if preserve_ratio == 1:  # do not prune
-            return 1., op.weight.size(1), None  # TODO: should be a full index
-            # n, c, h, w = op.weight.size()
-            # mask = np.ones([c], dtype=bool)
-
-        def format_rank(x):
-            rank = int(np.around(x))
-            return max(rank, 1)
-
-        n, c = op.weight.size(0), op.weight.size(1)
-        d_prime = format_rank(c * preserve_ratio)
-        d_prime = int(np.ceil(d_prime * 1. / self.channel_round) * self.channel_round)
-        if d_prime > c:
-            d_prime = int(np.floor(c * 1. / self.channel_round) * self.channel_round)
-
-        extract_t1 = time.time()
-        if self.use_new_input:  # this is slow and may lead to overfitting
-            self._regenerate_input_feature()
-        X = self.layer_info_dict[op_idx]['input_feat']  # input after pruning of previous ops
-        Y = self.layer_info_dict[op_idx]['output_feat']  # fixed output from original model
-        weight = op.weight.data.cpu().numpy()
-        # conv [C_out, C_in, ksize, ksize]
-        # fc [C_out, C_in]
-        op_type = 'Conv2D'
-        if len(weight.shape) == 2:
-            op_type = 'Linear'
-            weight = weight[:, :, None, None]
-        extract_t2 = time.time()
-        self.extract_time += extract_t2 - extract_t1
-        fit_t1 = time.time()
-
-        if preserve_idx is None:  # not provided, generate new
-            importance = np.abs(weight).sum((0, 2, 3))
-            sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
-            preserve_idx = sorted_idx[:d_prime]  # to preserve index
-        assert len(preserve_idx) == d_prime
-        mask = np.zeros(weight.shape[1], bool)
-        mask[preserve_idx] = True
-
-        # reconstruct, X, Y <= [N, C]
-        masked_X = X[:, mask]
-        #print('op_idx:', op_idx, 'size:', weight.shape, 'op:', op)
-        if weight.shape[2] == 1:  # 1x1 conv or fc
-            from .lib.utils import least_square_sklearn
-            rec_weight = least_square_sklearn(X=masked_X, Y=Y)
-            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
-            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
-        else:
-            raise NotImplementedError('Current code only supports 1x1 conv now!')
-        if not self.export_model:  # pad, pseudo compress
-            rec_weight_pad = np.zeros_like(weight)
-            rec_weight_pad[:, mask, :, :] = rec_weight
-            rec_weight = rec_weight_pad
-
-        if op_type == 'Linear':
-            rec_weight = rec_weight.squeeze()
-            assert len(rec_weight.shape) == 2
-        fit_t2 = time.time()
-        self.fit_time += fit_t2 - fit_t1
-        # now assign
-        op.weight.data = torch.from_numpy(rec_weight)#.cuda()
-        action = np.sum(mask) * 1. / len(mask)  # calculate the ratio
-        if self.export_model:  # prune previous buffer ops
-            prev_idx = self.prunable_idx[self.prunable_idx.index(op_idx) - 1]
-            for idx in range(prev_idx, op_idx):
-                m = m_list[idx].module
-                if type(m) == nn.Conv2d:  # depthwise
-                    m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask, :, :, :])#.cuda()
-                    if m.groups == m.in_channels:
-                        m.groups = int(np.sum(mask))
-                elif type(m) == nn.BatchNorm2d:
-                    m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask])#.cuda()
-                    m.bias.data = torch.from_numpy(m.bias.data.cpu().numpy()[mask])#.cuda()
-                    m.running_mean.data = torch.from_numpy(m.running_mean.data.cpu().numpy()[mask])#.cuda()
-                    m.running_var.data = torch.from_numpy(m.running_var.data.cpu().numpy()[mask])#.cuda()
-        return action, d_prime, preserve_idx
-
     def _is_final_layer(self):
         return self.cur_ind == len(self.prunable_idx) - 1
 
@@ -378,7 +279,6 @@ class ChannelPruningEnv:
         self.org_channels = []
         # build index and the min strategy dict
         for i, m in enumerate(self.model.modules()):
-            #if type(m) in self.prunable_layer_types + [PrunerModuleWrapper]:
             if isinstance(m, PrunerModuleWrapper):
                 m = m.module
                 if type(m) == nn.Conv2d and m.groups == m.in_channels:  # depth-wise conv, buffer
@@ -454,7 +354,7 @@ class ChannelPruningEnv:
         # now let the image flow
         print('=> Extracting information...')
         with torch.no_grad():
-            for i_b, (input, target) in enumerate(self.val_loader):  # use image from train set
+            for i_b, (input, target) in enumerate(self._val_loader):  # use image from train set
                 if i_b == self.n_calibration_batches:
                     break
                 self.data_saver.append((input.clone(), target.clone()))

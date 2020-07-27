@@ -12,7 +12,6 @@ from tensorboardX import SummaryWriter
 
 from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .channel_pruning_env import ChannelPruningEnv
-#from .channel_pruning_env_orig import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
@@ -32,11 +31,6 @@ class AMCPruner(Pruner):
                                 preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
                                 args=args, export_model=args.job == 'export', use_new_input=args.use_new_input)
 
-        #self.env = ChannelPruningEnv(model, val_func, val_loader,
-        #                        preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
-        #                        args=args, export_model=args.job == 'export', use_new_input=args.use_new_input)
-
-
         if args.job == 'train':
             # build folder and logs
             base_folder_name = '{}_{}_r{}_search'.format(args.model, args.dataset, args.preserve_ratio)
@@ -55,7 +49,6 @@ class AMCPruner(Pruner):
             print('** Actual replay buffer size: {}'.format(args.rmsize))
 
             self.agent = DDPG(nb_states, nb_actions, args)
-            #train(args.train_episode, agent, env, args.output)
 
         self.args = args
 

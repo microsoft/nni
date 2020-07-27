@@ -16,6 +16,7 @@ def parse_args():
 
     parser.add_argument('--job', default='train', type=str, help='support option: train/export')
     parser.add_argument('--suffix', default=None, type=str, help='suffix to help you remember what experiment you ran')
+
     # env
     parser.add_argument('--model', default='mobilenet', type=str, help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
@@ -25,16 +26,13 @@ def parse_args():
     parser.add_argument('--rbound', default=1., type=float, help='maximum preserve ratio')
     parser.add_argument('--reward', default='acc_reward', type=str, help='Setting the reward')
     parser.add_argument('--acc_metric', default='acc5', type=str, help='use acc1 or acc5')
-    parser.add_argument('--use_real_val', dest='use_real_val', action='store_true')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
-    # parser.add_argument('--pruning_method', default='cp', type=str,
-    #                     help='method to prune (fg/cp for fine-grained and channel pruning)')
+
     # only for channel pruning
-    parser.add_argument('--n_calibration_batches', default=60, type=int,
-                        help='n_calibration_batches')
-    parser.add_argument('--n_points_per_layer', default=10, type=int,
-                        help='method to prune (fg/cp for fine-grained and channel pruning)')
+    parser.add_argument('--n_calibration_batches', default=60, type=int, help='number of batches to extract layer information')
+    parser.add_argument('--n_points_per_layer', default=10, type=int, help='number of feature points per layer')
     parser.add_argument('--channel_round', default=8, type=int, help='Round channel to multiple of channel_round')
+
     # ddpg
     parser.add_argument('--hidden1', default=300, type=int, help='hidden num of first fully connect layer')
     parser.add_argument('--hidden2', default=300, type=int, help='hidden num of second fully connect layer')
@@ -47,11 +45,13 @@ def parse_args():
     parser.add_argument('--rmsize', default=100, type=int, help='memory size for each layer')
     parser.add_argument('--window_length', default=1, type=int, help='')
     parser.add_argument('--tau', default=0.01, type=float, help='moving average for target network')
+
     # noise (truncated normal distribution)
     parser.add_argument('--init_delta', default=0.5, type=float,
                         help='initial variance of truncated normal distribution')
     parser.add_argument('--delta_decay', default=0.95, type=float,
                         help='delta decay during exploration')
+
     # training
     parser.add_argument('--max_episode_length', default=1e9, type=int, help='')
     parser.add_argument('--output', default='./logs', type=str, help='')
@@ -64,6 +64,7 @@ def parse_args():
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
     parser.add_argument('--data_bsize', default=50, type=int, help='number of data batch size')
     parser.add_argument('--resume', default='default', type=str, help='Resuming model path for testing')
+
     # export
     parser.add_argument('--ratios', default=None, type=str, help='ratios for pruning')
     parser.add_argument('--channels', default=None, type=str, help='channels after pruning')
@@ -85,11 +86,12 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
         net = MobileNet(n_class=10)
     else:
         raise NotImplementedError
-    #sd = torch.load(checkpoint_path)
-    #if 'state_dict' in sd:  # a checkpoint but not a state_dict
-    #    sd = sd['state_dict']
-    #sd = {k.replace('module.', ''): v for k, v in sd.items()}
-    #net.load_state_dict(sd)
+    if checkpoint_path:
+        sd = torch.load(checkpoint_path, map_location=torch.device('cpu'))
+        if 'state_dict' in sd:  # a checkpoint but not a state_dict
+            sd = sd['state_dict']
+        sd = {k.replace('module.', ''): v for k, v in sd.items()}
+        net.load_state_dict(sd)
     #net = net.cuda()
     #if n_gpu > 1:
     #    net = torch.nn.DataParallel(net, range(n_gpu))
@@ -103,13 +105,12 @@ def init_data(args):
     # for CIFAR, split 5k for val
     # for ImageNet, split 3k for val
     val_size = 5000 if 'cifar' in args.dataset else 3000
-    train_loader, val_loader, _ = get_split_dataset(args.dataset, args.data_bsize,
-                                                                    args.n_worker, val_size,
-                                                                    data_root=args.data_root,
-                                                                    use_real_val=args.use_real_val,
-                                                                    shuffle=False)  # same sampling
-    if args.use_real_val:  # use the real val set for eval, which is actually wrong
-        print('*** USE REAL VALIDATION SET!')
+    train_loader, val_loader, _ = get_split_dataset(
+        args.dataset, args.data_bsize,
+        args.n_worker, val_size,
+        data_root=args.data_root,
+        shuffle=False
+    )  # same sampling
     return train_loader, val_loader
 
 def validate(val_loader, model, verbose=False):
@@ -154,15 +155,7 @@ def validate(val_loader, model, verbose=False):
     if verbose:
         print('* Test loss: %.3f    top1: %.3f    top5: %.3f    time: %.3f' %
               (losses.avg, top1.avg, top5.avg, t2 - t1))
-    #TODO
     return top5.avg
-    #if self.acc_metric == 'acc1':
-    #    return top1.avg
-    #elif self.acc_metric == 'acc5':
-    #    return top5.avg
-    #else:
-    #    raise NotImplementedError
-
 
 
 if __name__ == "__main__":
