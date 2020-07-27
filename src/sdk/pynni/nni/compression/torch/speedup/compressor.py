@@ -3,7 +3,6 @@
 
 import logging
 import torch
-from nni._graph_utils import build_module_graph
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
@@ -51,6 +50,8 @@ class ModelSpeedup:
         map_location : str
             the device on which masks are placed, same to map_location in ```torch.load```
         """
+        from nni._graph_utils import build_module_graph
+
         self.bound_model = model
         self.masks = torch.load(masks_file, map_location)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks

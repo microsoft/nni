@@ -17,7 +17,8 @@ setuptools.setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'netifaces'
+        'netifaces',
+        'websockets'
     ],
 
     author = 'Microsoft NNI Team',

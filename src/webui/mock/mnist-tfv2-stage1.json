@@ -1,0 +1,304 @@
+{
+  "checkStatus": {
+    "status": "RUNNING",
+    "errors": []
+  },
+  "experiment": {
+    "id": "mw3lSbde",
+    "revision": 34,
+    "execDuration": 233,
+    "logDir": "/***/nni/experiments/mw3lSbde",
+    "nextSequenceId": 9,
+    "params": {
+      "authorName": "NNI Example",
+      "experimentName": "MNIST TF v2.x",
+      "trialConcurrency": 1,
+      "maxExecDuration": 3600,
+      "maxTrialNum": 10,
+      "searchSpace": "{\"dropout_rate\": {\"_type\": \"uniform\", \"_value\": [0.5, 0.9]}, \"conv_size\": {\"_type\": \"choice\", \"_value\": [2, 3, 5, 7]}, \"hidden_size\": {\"_type\": \"choice\", \"_value\": [124, 512, 1024]}, \"batch_size\": {\"_type\": \"choice\", \"_value\": [16, 32]}, \"learning_rate\": {\"_type\": \"choice\", \"_value\": [0.0001, 0.001, 0.01, 0.1]}}",
+      "trainingServicePlatform": "local",
+      "tuner": {
+        "builtinTunerName": "TPE",
+        "classArgs": {
+          "optimize_mode": "maximize"
+        },
+        "checkpointDir": "/***/nni/experiments/mw3lSbde/checkpoint"
+      },
+      "versionCheck": true,
+      "clusterMetaData": [
+        {
+          "key": "codeDir",
+          "value": "/***/nnidev/examples/trials/mnist-tfv2/."
+        },
+        {
+          "key": "command",
+          "value": "python3 mnist.py"
+        }
+      ]
+    },
+    "startTime": 1595497482108
+  },
+  "metricData": [
+    {
+      "timestamp": 1595497576901,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"0.9733999967575073\""
+    },
+    {
+      "timestamp": 1595497581844,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"0.9656999707221985\""
+    },
+    {
+      "timestamp": 1595497586923,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"0.9750000238418579\""
+    },
+    {
+      "timestamp": 1595497591860,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 3,
+      "data": "\"0.9763000011444092\""
+    },
+    {
+      "timestamp": 1595497596908,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 4,
+      "data": "\"0.9714000225067139\""
+    },
+    {
+      "timestamp": 1595497601790,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 5,
+      "data": "\"0.9714999794960022\""
+    },
+    {
+      "timestamp": 1595497606592,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 6,
+      "data": "\"0.9778000116348267\""
+    },
+    {
+      "timestamp": 1595497611480,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 7,
+      "data": "\"0.9681000113487244\""
+    },
+    {
+      "timestamp": 1595497616390,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 8,
+      "data": "\"0.9779000282287598\""
+    },
+    {
+      "timestamp": 1595497621122,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "PERIODICAL",
+      "sequence": 9,
+      "data": "\"0.9731000065803528\""
+    },
+    {
+      "timestamp": 1595497621903,
+      "trialJobId": "j4kNL",
+      "parameterId": "7",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"0.9731000065803528\""
+    },
+    {
+      "timestamp": 1595497651431,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"0.10279999673366547\""
+    },
+    {
+      "timestamp": 1595497660885,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"0.10100000351667404\""
+    },
+    {
+      "timestamp": 1595497670089,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"0.10090000182390213\""
+    },
+    {
+      "timestamp": 1595497679279,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 3,
+      "data": "\"0.10090000182390213\""
+    },
+    {
+      "timestamp": 1595497688528,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 4,
+      "data": "\"0.09740000218153\""
+    },
+    {
+      "timestamp": 1595497697932,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 5,
+      "data": "\"0.10100000351667404\""
+    },
+    {
+      "timestamp": 1595497707053,
+      "trialJobId": "lKNIw",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 6,
+      "data": "\"0.10100000351667404\""
+    }
+  ],
+  "trialJobs": [
+    {
+      "id": "Fp0Hv",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8491269523482741,\"conv_size\":3,\"hidden_size\":512,\"batch_size\":16,\"learning_rate\":0.0001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/Fp0Hv",
+      "startTime": 1595497487135,
+      "sequenceId": 0,
+      "endTime": 1595497495839,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/Fp0Hv/stderr"
+    },
+    {
+      "id": "Av8d8",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":1,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8539541491194952,\"conv_size\":2,\"hidden_size\":512,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/Av8d8",
+      "startTime": 1595497502178,
+      "sequenceId": 1,
+      "endTime": 1595497506253,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/Av8d8/stderr"
+    },
+    {
+      "id": "UBdDZ",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":2,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.5582646378949779,\"conv_size\":2,\"hidden_size\":124,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/UBdDZ",
+      "startTime": 1595497512215,
+      "sequenceId": 2,
+      "endTime": 1595497516419,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/UBdDZ/stderr"
+    },
+    {
+      "id": "JCGDm",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":3,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8554138616916818,\"conv_size\":5,\"hidden_size\":512,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/JCGDm",
+      "startTime": 1595497522257,
+      "sequenceId": 3,
+      "endTime": 1595497525974,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/JCGDm/stderr"
+    },
+    {
+      "id": "Q5P5S",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":4,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.8034070529122488,\"conv_size\":3,\"hidden_size\":512,\"batch_size\":16,\"learning_rate\":0.001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/Q5P5S",
+      "startTime": 1595497532284,
+      "sequenceId": 4,
+      "endTime": 1595497536707,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/Q5P5S/stderr"
+    },
+    {
+      "id": "SdVuE",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":5,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.7600193252661556,\"conv_size\":3,\"hidden_size\":124,\"batch_size\":16,\"learning_rate\":0.01},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/SdVuE",
+      "startTime": 1595497542331,
+      "sequenceId": 5,
+      "endTime": 1595497546968,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/SdVuE/stderr"
+    },
+    {
+      "id": "CkUem",
+      "status": "FAILED",
+      "hyperParameters": [
+        "{\"parameter_id\":6,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.7934026748060359,\"conv_size\":2,\"hidden_size\":512,\"batch_size\":32,\"learning_rate\":0.001},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/CkUem",
+      "startTime": 1595497552398,
+      "sequenceId": 6,
+      "endTime": 1595497556691,
+      "stderrPath": "file:/localhost:/***/nni/experiments/mw3lSbde/trials/CkUem/stderr"
+    },
+    {
+      "id": "j4kNL",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":7,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.6587033143176787,\"conv_size\":3,\"hidden_size\":1024,\"batch_size\":32,\"learning_rate\":0.01},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/j4kNL",
+      "startTime": 1595497562887,
+      "sequenceId": 7,
+      "endTime": 1595497623402,
+      "finalMetricData": [
+        {
+          "timestamp": 1595497621903,
+          "trialJobId": "j4kNL",
+          "parameterId": "7",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"0.9731000065803528\""
+        }
+      ]
+    },
+    {
+      "id": "lKNIw",
+      "status": "RUNNING",
+      "hyperParameters": [
+        "{\"parameter_id\":8,\"parameter_source\":\"algorithm\",\"parameters\":{\"dropout_rate\":0.5795586765663358,\"conv_size\":2,\"hidden_size\":124,\"batch_size\":16,\"learning_rate\":0.1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/mw3lSbde/trials/lKNIw",
+      "startTime": 1595497632921,
+      "sequenceId": 8
+    }
+  ]
+}

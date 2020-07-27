@@ -1,6 +1,7 @@
 import { MANAGER_IP } from '../const';
 import { ExperimentProfile, NNIManagerStatus } from '../interface';
 import { requestAxios } from '../function';
+import { SearchSpace } from './searchspace';
 
 function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProfile): boolean {
     if (!profile1 || !profile2) {
@@ -14,6 +15,7 @@ function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProf
 class Experiment {
     private profileField?: ExperimentProfile = undefined;
     private statusField?: NNIManagerStatus = undefined;
+    private isNestedExperiment: boolean = false;
     private isexperimentError: boolean = false;
     private experimentErrorMessage: string = '';
     private isStatusError: boolean = false;
@@ -29,6 +31,10 @@ class Experiment {
             }
             await this.update();
         }
+    }
+
+    public isNestedExp(): boolean {
+        return this.isNestedExperiment;
     }
 
     public experimentError(): boolean {
@@ -114,7 +120,20 @@ class Experiment {
     }
 
     get searchSpace(): object {
-        return JSON.parse(this.profile.params.searchSpace);
+        const result = JSON.parse(this.profile.params.searchSpace);
+        for (const item in result) {
+            if (result[item]._value && typeof result[item]._value[0] === 'object') {
+                this.isNestedExperiment = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    get searchSpaceNew(): SearchSpace {
+        // The search space derived directly from profile
+        // eventually this will replace searchSpace
+        return new SearchSpace('', '', this.searchSpace);
     }
 
     get logCollectionEnabled(): boolean {

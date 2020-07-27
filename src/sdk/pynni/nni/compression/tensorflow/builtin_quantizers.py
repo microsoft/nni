@@ -26,7 +26,7 @@ class NaiveQuantizer(Quantizer):
 
 
 class QAT_Quantizer(Quantizer):
-    """Quantizer using the DoReFa scheme, as defined in:
+    """Quantizer using the Quantization and Training scheme, as defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """

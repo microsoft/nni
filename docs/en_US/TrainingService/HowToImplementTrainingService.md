@@ -1,10 +1,11 @@
-**How to Implement TrainingService in NNI**
-===
+# How to Implement Training Service in NNI
 
 ## Overview
+
 TrainingService is a module related to platform management and job schedule in NNI. TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainingService, users just need to inherit the parent class and complete their own child class if they want to implement customized TrainingService.
 
 ## System architecture
+
 ![](../../img/NNIDesign.jpg)
 
 The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage trial jobs and the communication between different modules. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports [local platfrom](LocalMode.md), [remote platfrom](RemoteMachineMode.md), [PAI platfrom](PaiMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkControllerMode.md).
