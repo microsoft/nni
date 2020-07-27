@@ -68,7 +68,6 @@ export class PAIJobInfoCollector {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(_body)}`;
                 // The job refresh time could be ealier than job submission, so it might return 404 error code, need refactor
-                this.log.error(`${errorMessage}`);
                 // Queried PAI job info failed, set job status to UNKNOWN
                 if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
                     paiTrialJob.status = 'UNKNOWN';
