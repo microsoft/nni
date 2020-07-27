@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
+    L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner
 
 def validate_sparsity(wrapper, sparsity, bias=False):
@@ -33,7 +33,7 @@ prune_config = {
         ]
     },
     'agp': {
-        'pruner_class': AGP_Pruner,
+        'pruner_class': AGPPruner,
         'config_list': [{
             'initial_sparsity': 0.,
             'final_sparsity': 0.8,
@@ -227,7 +227,7 @@ def test_agp(pruning_algorithm):
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config['agp']['config_list']
 
-        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
+        pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
         pruner.compress()
 
         x = torch.randn(2, 1, 28, 28)

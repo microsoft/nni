@@ -224,7 +224,7 @@ pruner.compress()
 
 ## ActivationAPoZRankFilter Pruner
 
-ActivationAPoZRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
+ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
 
 The APoZ is defined as:
 
@@ -248,7 +248,7 @@ Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
-### User configuration for ActivationAPoZRankFilterPruner
+### User configuration for ActivationAPoZRankFilter Pruner
 
 ##### PyTorch
 ```eval_rst
@@ -289,7 +289,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ## TaylorFOWeightFilter Pruner
 
-TaylorFOWeightFilterPruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
 
 > 
 
@@ -310,7 +310,7 @@ pruner.compress()
 ```
 
 
-#### User configuration for TaylorFOWeightFilterPruner
+#### User configuration for TaylorFOWeightFilter Pruner
 
 ##### PyTorch
 ```eval_rst
@@ -334,7 +334,7 @@ You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below
 
 PyTorch code
 ```python
-from nni.compression.torch import AGP_Pruner
+from nni.compression.torch import AGPPruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
@@ -352,7 +352,7 @@ config_list = [{
 # optimizer.step(), so an optimizer is required to prune the model.
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
-pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm='level')
+pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm='level')
 pruner.compress()
 ```
 
@@ -379,13 +379,13 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.AGP_Pruner
+..  autoclass:: nni.compression.torch.AGPPruner
 ```
 
 ##### Tensorflow
 
 ```eval_rst
-..  autoclass:: nni.compression.tensorflow.AGP_Pruner
+..  autoclass:: nni.compression.tensorflow.AGPPruner
 ```
 
 ***
@@ -573,12 +573,12 @@ The above configuration means that there are 5 times of iterative pruning. As th
 
 *Tensorflow version will be supported later.*
 
-#### User configuration for LotteryTicketPruner
+#### User configuration for LotteryTicket Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.ADMMPruner
+..  autoclass:: nni.compression.torch.LotteryTicketPruner
 ```
 
 ### Reproduced Experiment

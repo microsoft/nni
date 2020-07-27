@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner']
+__all__ = ['LevelPruner', 'AGPPruner', 'FPGMPruner']
 
 _logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class LevelPruner(Pruner):
         return mask
 
 
-class AGP_Pruner(Pruner):
+class AGPPruner(Pruner):
     """
     Parameters
     ----------

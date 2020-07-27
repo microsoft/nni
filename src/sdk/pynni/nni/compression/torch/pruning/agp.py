@@ -16,11 +16,11 @@ from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
 
-__all__ = ['AGP_Pruner']
+__all__ = ['AGPPruner']
 
 logger = logging.getLogger('torch pruner')
 
-class AGP_Pruner(Pruner):
+class AGPPruner(Pruner):
     """
     Parameters
     ----------
@@ -36,7 +36,8 @@ class AGP_Pruner(Pruner):
     optimizer: torch.optim.Optimizer
         Optimizer used to train model.
     pruning_algorithm: str
-        Algorithms being used to prune model.
+        Algorithms being used to prune model,
+        choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
     """
 
     def __init__(self, model, config_list, optimizer, pruning_algorithm='level'):
