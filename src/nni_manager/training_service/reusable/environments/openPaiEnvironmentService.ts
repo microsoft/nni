@@ -223,7 +223,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             request(stopJobRequest, (error, response, _body) => {
                 try {
                     // Status code 202 for success.
-                    if ((error !== undefined && error !== null) || (response && response.statusCode !== 202)) {
+                    if ((error !== undefined && error !== null) || (response && response.statusCode >= 400)) {
                         const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                             `OpenPAI: stop job ${environment.jobId} failed, http code:${response.statusCode}, http body: ${_body}`;
                         this.log.error(`${errorMessage}`);
