@@ -93,7 +93,7 @@ class ChannelPruningEnv:
         # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
 
         if self.visited[self.cur_ind]:
-            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
+            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][1]
             preserve_idx = self.index_buffer[self.cur_ind]
         else:
             action = self._action_wall(action)  # percentage to preserve
@@ -105,7 +105,7 @@ class ChannelPruningEnv:
                 if self.cur_ind in group:  # set the shared ones
                     for g_idx in group:
                         self.strategy_dict[self.prunable_idx[g_idx]][1] = action
-                        if g_idx < len(len(self.prunable_idx) - 1):
+                        if g_idx < len(self.prunable_idx) - 1:
                             self.strategy_dict[self.prunable_idx[g_idx + 1]][0] = action
                         self.visited[g_idx] = True
                         self.index_buffer[g_idx] = preserve_idx.copy()

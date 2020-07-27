@@ -81,6 +81,9 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
     elif model == 'mobilenet' and dataset == 'cifar10':
         from mobilenet import MobileNet
         net = MobileNet(n_class=10)
+    elif model == 'mobilenetv2' and dataset == 'cifar10':
+        from mobilenet_v2 import MobileNetV2
+        net = MobileNetV2(n_class=10)
     else:
         raise NotImplementedError
     if checkpoint_path:
