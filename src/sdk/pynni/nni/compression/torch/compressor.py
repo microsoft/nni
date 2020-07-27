@@ -395,7 +395,7 @@ class Pruner(Compressor):
             if weight_mask is not None:
                 mask_sum = weight_mask.sum().item()
                 mask_num = weight_mask.numel()
-                _logger.info('Layer: %s  Sparsity: %.2f', wrapper.name, 1 - mask_sum / mask_num)
+                _logger.debug('Layer: %s  Sparsity: %.2f', wrapper.name, 1 - mask_sum / mask_num)
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
             if bias_mask is not None:
                 wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
