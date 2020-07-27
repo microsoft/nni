@@ -57,6 +57,7 @@ export class AMLClient {
             // received a message sent from the Python script (a simple "print" statement)
             deferred.resolve(envId);
         });
+        this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
     }
 
@@ -81,6 +82,7 @@ export class AMLClient {
             }
             deferred.resolve(trackingUrl);
         });
+        this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
     }
 
@@ -98,6 +100,7 @@ export class AMLClient {
             }
             deferred.resolve(newStatus);
         });
+        this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
     }
 
@@ -120,6 +123,17 @@ export class AMLClient {
                 deferred.resolve(JSON.parse(command.slice(8)))
             }
         });
+        this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
+    }
+    
+    // Monitor error information in aml python shell client
+    private monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
+        pythonShellClient.on('error', function (error: any) {
+            deferred.reject(error);
+        });
+        pythonShellClient.on('close', function (error: any) {
+            deferred.reject(error);
+        });
     }
 }

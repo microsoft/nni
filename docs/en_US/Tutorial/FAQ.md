@@ -34,7 +34,7 @@ Unable to open the WebUI may have the following reasons:
 
 * `http://127.0.0.1`, `http://172.17.0.1` and `http://10.0.0.15` are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like `http://[your_server_ip]:8080`
 * If you still can't see the WebUI after you use the server IP, you can check the proxy and the firewall of your machine. Or use the browser on the machine where you start your NNI experiment.
-* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: `~/nni/experiment/[your_experiment_id]` `/log/nnimanager.log`
+* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: `~/nni-experiments/[your_experiment_id]` `/log/nnimanager.log`
 
 ### Restful server start failed
 
