@@ -28,9 +28,6 @@ class ChannelPruningEnv:
     Env for channel pruning search
     """
     def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False):
-        # default setting
-
-        # save options
         self.pruner = pruner
         self.model = pruner.bound_model
         self.checkpoint = checkpoint
