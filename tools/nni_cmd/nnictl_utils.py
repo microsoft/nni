@@ -5,7 +5,9 @@ import csv
 import os
 import sys
 import json
+import tempfile
 import time
+import random
 import re
 import shutil
 import subprocess
@@ -736,3 +738,47 @@ def search_space_auto_gen(args):
         print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
+
+def save_experiment(args):
+    '''save experiment data to a zip file'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if args.id is None:
+        print_error('please set experiment id.')
+        exit(1)
+    if args.id not in experiment_dict:
+        print_error('Cannot find experiment {0}.'.format(args.id))
+        exit(1)
+    print_normal('SAVING...')
+    nni_config = Config(experiment_dict[args.id]['fileName'])
+    logDir = os.path.join(os.path.expanduser("~"), 'nni', 'experiments', args.id)
+    if nni_config.get_config('logDir'):
+        logDir = os.path.join(nni_config.get_config('logDir'), args.id)
+    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', random.sample(string.ascii_letters + string.digits, 8))
+    # copy logDir to temp folder
+    temp_experiment_dir = os.path.join(temp_root_dir, 'experiment')
+    os.makedirs(temp_experiment_dir, exist_ok = True)
+    shutil.copytree(logDir, temp_experiment_dir)
+    # copy nnictl metadata to temp folder
+    temp_nnictl_dir = os.path.join(temp_root_dir, 'nnictl')
+    os.makedirs(temp_nnictl_dir, exist_ok = True)
+    try:
+        with open(os.path.join(temp_nnictl_dir, '.experiment'), 'w') as file:
+            json.dump(experiment_dict[args.id], file)
+    except IOError as error:
+        print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
+        exit(1)
+    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
+    shutil.copytree(nnictl_config_dir, temp_nnictl_dir)
+    # copy code Dir
+    if args.saveCodeDir:
+        temp_code_dir = os.path.join(temp_root_dir, 'code')
+        os.makedirs(temp_code_dir, exist_ok = True)
+        shutil.copytree(nni_config.get_config('trial')['codeDir'], temp_nnictl_dir)
+    zip_package_name = 'nni_experiment_%s.zip' % args.id
+    if args.path:
+        os.makedirs(args.path, exist_ok = True)
+        os.path.join(args.path, zip_package_name)
+    shutil.make_archive(zip_package_name, 'zip', temp_root_dir)
+    shutil.rmtree(temp_root_dir)
+    print_normal('Save to %s success!' % zip_package_name)

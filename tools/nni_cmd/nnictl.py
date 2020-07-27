@@ -11,7 +11,8 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
-                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
+                          save_experiment
 from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -129,15 +130,6 @@ def parse_args():
     parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
     parser_experiment_clean.set_defaults(func=experiment_clean)
-
-    #parse experiment command
-    parser_platform = subparsers.add_parser('platform', help='get platform information')
-    #add subparsers for parser_experiment
-    parser_platform_subparsers = parser_platform.add_subparsers()
-    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the platform data')
-    parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
-    parser_platform_clean.set_defaults(func=platform_clean)
-
     #import tuning data
     parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
     parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
@@ -149,6 +141,20 @@ def parse_args():
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
     parser_trial_export.set_defaults(func=export_trials_data)
+    #save experiment data
+    parser_import_data = parser_experiment_subparsers.add_parser('save', help='save experiment data')
+    parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_import_data.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, default current working directory')
+    parser_import_data.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data of the experiment')
+    parser_import_data.set_defaults(func=save_experiment)
+
+    #parse platform command
+    parser_platform = subparsers.add_parser('platform', help='get platform information')
+    #add subparsers for parser_platform
+    parser_platform_subparsers = parser_platform.add_subparsers()
+    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the platform data')
+    parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
+    parser_platform_clean.set_defaults(func=platform_clean)
 
     #TODO:finish webui function
     #parse board command
