@@ -27,7 +27,7 @@ class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False, use_new_input=False):
+    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False):
         # default setting
 
         # save options
@@ -47,16 +47,13 @@ class ChannelPruningEnv:
         self.n_calibration_batches = args.n_calibration_batches
         self.n_points_per_layer = args.n_points_per_layer
         self.channel_round = args.channel_round
-        self.acc_metric = args.acc_metric
 
         self.export_model = export_model
-        self.use_new_input = use_new_input
 
         # sanity check
         assert self.preserve_ratio > self.lbound, 'Error! You can make achieve preserve_ratio smaller than lbound!'
 
         # prepare data
-        #self._init_data()
         self._val_loader = val_loader
         self._validate = val_func
 
@@ -404,44 +401,6 @@ class ChannelPruningEnv:
                             (self.layer_info_dict[idx]['input_feat'], f_in2save))
                         self.layer_info_dict[idx]['output_feat'] = np.vstack(
                             (self.layer_info_dict[idx]['output_feat'], f_out2save))
-
-    def _regenerate_input_feature(self):
-        # only re-generate the input feature
-        m_list = list(self.model.modules())
-
-        # delete old features
-        for k, v in self.layer_info_dict.items():
-            if 'input_feat' in v:
-                v.pop('input_feat')
-
-        # now let the image flow
-        print('=> Regenerate features...')
-
-        with torch.no_grad():
-            for i_b, (input, target) in enumerate(self.data_saver):
-                input_var = torch.autograd.Variable(input)#.cuda()
-
-                # inference and collect stats
-                _ = self.model(input_var)
-
-                for idx in self.prunable_idx:
-                    f_in_np = m_list[idx].input_feat.data.cpu().numpy()
-                    if len(f_in_np.shape) == 4:  # conv
-                        if self.prunable_idx.index(idx) == 0:  # first conv
-                            f_in2save = None
-                        else:
-                            randx = self.layer_info_dict[idx][(i_b, 'randx')]
-                            randy = self.layer_info_dict[idx][(i_b, 'randy')]
-                            f_in2save = f_in_np[:, :, randx, randy].copy().transpose(0, 2, 1)\
-                                .reshape(self.batch_size * self.n_points_per_layer, -1)
-                    else:  # fc
-                        assert len(f_in_np.shape) == 2
-                        f_in2save = f_in_np.copy()
-                    if 'input_feat' not in self.layer_info_dict[idx]:
-                        self.layer_info_dict[idx]['input_feat'] = f_in2save
-                    else:
-                        self.layer_info_dict[idx]['input_feat'] = np.vstack(
-                            (self.layer_info_dict[idx]['input_feat'], f_in2save))
 
     def _build_state_embedding(self):
         # build the static part of the state embedding

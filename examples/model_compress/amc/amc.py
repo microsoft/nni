@@ -21,11 +21,10 @@ def parse_args():
     parser.add_argument('--model', default='mobilenet', type=str, help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
     parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
-    parser.add_argument('--preserve_ratio', default=0.5, type=float, help='preserve ratio of the model')
-    parser.add_argument('--lbound', default=0.2, type=float, help='minimum preserve ratio')
-    parser.add_argument('--rbound', default=1., type=float, help='maximum preserve ratio')
+    parser.add_argument('--sparsity', default=0.5, type=float, help='sparsity of the model')
+    parser.add_argument('--lbound', default=0., type=float, help='minimum sparsity')
+    parser.add_argument('--rbound', default=0.8, type=float, help='maximum sparsity')
     parser.add_argument('--reward', default='acc_reward', type=str, help='Setting the reward')
-    parser.add_argument('--acc_metric', default='acc5', type=str, help='use acc1 or acc5')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
 
     # only for channel pruning
@@ -69,7 +68,6 @@ def parse_args():
     parser.add_argument('--ratios', default=None, type=str, help='ratios for pruning')
     parser.add_argument('--channels', default=None, type=str, help='channels after pruning')
     parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
-    parser.add_argument('--use_new_input', dest='use_new_input', action='store_true', help='use new input feature')
 
     return parser.parse_args()
 
@@ -161,8 +159,7 @@ def validate(val_loader, model, verbose=False):
 if __name__ == "__main__":
     args = parse_args()
 
-    model = get_model_and_checkpoint(args.model, args.dataset, checkpoint_path=args.ckpt_path,
-                                                 n_gpu=args.n_gpu)
+    model = get_model_and_checkpoint(args.model, args.dataset, checkpoint_path=args.ckpt_path, n_gpu=args.n_gpu)
     _, val_loader = init_data(args)
 
     print(model)

@@ -29,7 +29,7 @@ class AverageMeter(object):
             self.avg = self.sum / self.count
 
 
-def accuracy(output, target, topk=(1,)):
+def accuracy(output, target, topk=(1, 5)):
     """Computes the precision@k for the specified values of k"""
     batch_size = target.size(0)
     num = output.size(1)
@@ -51,7 +51,6 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res + appendices
-
 
 
 # Custom progress bar

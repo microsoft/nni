@@ -16,20 +16,24 @@ from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
 class AMCPruner(Pruner):
-    def __init__(self, model, config_list, val_func, val_loader, args):        
+    def __init__(self, model, config_list, val_func, val_loader, args):
         if args.seed is not None:
             np.random.seed(args.seed)
             torch.manual_seed(args.seed)
             torch.cuda.manual_seed(args.seed)
-        
+
         checkpoint = deepcopy(model.state_dict())
 
         super().__init__(model, config_list, optimizer=None)
 
+        # convert sparsity to preserve ratio
+        args.preserve_ratio = 1. - args.sparsity
+        args.lbound, args.rbound = 1. - args.rbound, 1. - args.lbound
 
-        self.env = ChannelPruningEnv(self, val_func, val_loader, checkpoint,
-                                preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
-                                args=args, export_model=args.job == 'export', use_new_input=args.use_new_input)
+        self.env = ChannelPruningEnv(
+            self, val_func, val_loader, checkpoint,
+            preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
+            args=args, export_model=args.job == 'export')
 
         if args.job == 'train':
             # build folder and logs
@@ -95,13 +99,20 @@ class AMCPruner(Pruner):
             observation = deepcopy(observation2)
 
             if done:  # end of episode
-                print('#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}'.format(episode, episode_reward,
-                                                                                    info['accuracy'],
-                                                                                    info['compress_ratio']))
+                print(
+                    '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}'.format(
+                        episode, episode_reward,
+                        info['accuracy'],
+                        info['compress_ratio']
+                    )
+                )
                 self.text_writer.write(
-                    '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}\n'.format(episode, episode_reward,
-                                                                                    info['accuracy'],
-                                                                                    info['compress_ratio']))
+                    '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}\n'.format(
+                        episode, episode_reward,
+                        info['accuracy'],
+                        info['compress_ratio']
+                    )
+                )
                 final_reward = T[-1][0]
                 # print('final_reward: {}'.format(final_reward))
                 # agent observe and update policy
