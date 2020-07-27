@@ -93,7 +93,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
         request(getJobInfoRequest, async (error: any, response: request.Response, body: any) => {
             // Status code 200 for success
-            if ((error !== undefined && error !== null) || response.statusCode !== 200) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(body)}`;
                 this.log.error(`${errorMessage}`);
@@ -173,6 +173,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
+            followAllRedirects: true,
             headers: {
                 'Content-Type': 'text/yaml',
                 Authorization: `Bearer ${this.paiToken}`
@@ -180,12 +181,13 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         };
         request(submitJobRequest, (error, response, body) => {
             // Status code 202 for success, refer https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
-            if ((error !== undefined && error !== null) || response.statusCode !== 202) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `start environment ${environment.jobId} failed, http code:${response.statusCode}, http body: ${body}`;
 
                 this.log.error(errorMessage);
                 environment.status = 'FAILED';
+                deferred.reject(errorMessage);
             }
             deferred.resolve();
         });

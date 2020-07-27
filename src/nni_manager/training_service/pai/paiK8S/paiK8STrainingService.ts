@@ -278,6 +278,7 @@ class PAIK8STrainingService extends PAITrainingService {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
+            followAllRedirects: true,
             headers: {
                 'Content-Type': 'text/yaml',
                 Authorization: `Bearer ${this.paiToken}`
@@ -285,12 +286,12 @@ class PAIK8STrainingService extends PAITrainingService {
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             // If submit success, will get status code 202. refer: https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
-            if ((error !== undefined && error !== null) || response.statusCode !== 202) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${body}`;
-
                 this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
+                deferred.reject(errorMessage);
             } else {
                 trialJobDetail.submitTime = Date.now();
             }

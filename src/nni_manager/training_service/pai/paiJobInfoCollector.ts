@@ -64,10 +64,10 @@ export class PAIJobInfoCollector {
         //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, _body: any) => {
             // Status code 200 for success
-            if ((error !== undefined && error !== null) || response.statusCode !== 200) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(_body)}`;
-                this.log.warning(`${errorMessage}`);
+                this.log.error(`${errorMessage}`);
                 // Queried PAI job info failed, set job status to UNKNOWN
                 if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
                     paiTrialJob.status = 'UNKNOWN';

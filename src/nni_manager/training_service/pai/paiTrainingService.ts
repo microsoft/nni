@@ -178,7 +178,7 @@ abstract class PAITrainingService implements TrainingService {
 
         request(stopJobRequest, (error: Error, response: request.Response, _body: any) => {
             // Status code 202 for success.
-            if ((error !== undefined && error !== null) || response.statusCode !== 202) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject((error !== undefined && error !== null) ? error.message :
                     `Stop trial failed, http code: ${response.statusCode}`);
