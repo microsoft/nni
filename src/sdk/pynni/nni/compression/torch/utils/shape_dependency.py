@@ -4,8 +4,6 @@
 import csv
 import logging
 
-from nni._graph_utils import TorchModuleGraph
-
 __all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDependency']
 
 CONV_TYPE = 'aten::_convolution'
@@ -19,6 +17,8 @@ class Dependency:
         """
         Build the graph for the model.
         """
+        from nni._graph_utils import TorchModuleGraph
+
         # check if the input is legal
         if traced_model is None:
             # user should provide model & dummy_input to trace
@@ -86,6 +86,9 @@ class ChannelDependency(Dependency):
         Build the channel dependency for the conv layers
         in the model.
         """
+        # unpack the tuple/list manually before analyze the
+        # channel dependency
+        self.graph.unpack_manually()
         for node in self.graph.nodes_py.nodes_op:
             parent_layers = []
             # find the node that contains aten::add

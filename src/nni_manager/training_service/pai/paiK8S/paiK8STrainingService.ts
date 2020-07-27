@@ -74,6 +74,7 @@ class PAIK8STrainingService extends PAITrainingService {
                 const nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
                 await execMkdir(nniManagerNFSExpCodeDir);
                 //Copy codeDir files to local working folder
+                this.log.info(`Starting copy codeDir data from ${this.paiTrialConfig.codeDir} to ${nniManagerNFSExpCodeDir}`);
                 this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, nniManagerNFSExpCodeDir);
                 if (this.paiTrialConfig.paiConfigPath) {
                     this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
@@ -261,6 +262,10 @@ class PAIK8STrainingService extends PAITrainingService {
         // Make sure experiment code files is copied from local to NFS
         if (this.copyExpCodeDirPromise !== undefined) {
             await this.copyExpCodeDirPromise;
+            this.log.info(`Copy codeDir data finished.`);
+            // All trials share same destination NFS code folder, only copy codeDir once for an experiment.
+            // After copy data finished, set copyExpCodeDirPromise be undefined to avoid log content duplicated.
+            this.copyExpCodeDirPromise = undefined;
         }
 
         this.paiRestServerPort = this.paiJobRestServer.clusterRestServerPort;
