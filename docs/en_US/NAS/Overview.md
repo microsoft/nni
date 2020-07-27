@@ -54,6 +54,17 @@ Please refer to [here](NasGuide.md) for the usage of one-shot NAS algorithms.
 One-shot NAS can be visualized with our visualization tool. Learn more details [here](./Visualization.md).
 
 
+
+## Search Space Zoo
+
+NNI provides some predefined search space which can be easily reused. By stacking the extracted cells, user can quickly reproduce those NAS models.
+
+Search Space Zoo contains the following NAS cells:
+
+* [DartsCell](./SearchSpaceZoo.md#DartsCell)
+* [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
+* [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+
 ## Using NNI API to Write Your Search Space
 
 The programming interface of designing and searching a model is often demanded in two scenarios.
