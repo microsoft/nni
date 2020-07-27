@@ -360,7 +360,7 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        _logger.info("compressing module %s.", layer.name)
+        _logger.debug("compressing module %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight

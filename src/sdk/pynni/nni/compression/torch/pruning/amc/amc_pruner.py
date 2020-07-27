@@ -149,10 +149,8 @@ class AMCPruner(Pruner):
 
     def compress(self):
         if self.args.job == 'train':
-            print('train')
             self.train(self.args.train_episode, self.agent, self.env, self.args.output)
         else:
-            print('export')
             self.export()
 
     def train(self, num_episode, agent, env, output):
