@@ -10,7 +10,7 @@ import json
 import torch
 import torch.nn as nn
 import torch.cuda as cuda
-from torch.optim.lr_scheduler import StepLR, MultiStepLR
+from torch.optim.lr_scheduler import StepLR, MultiStepLR, CosineAnnealingLR
 from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
@@ -92,6 +92,7 @@ def parse_args():
     parser.add_argument('--finetune_epochs', type=int, default=15,
                         help='the number of finetune epochs after pruning')
     parser.add_argument('--lr', type=float, default=0.001, help='the learning rate of model')
+    parser.add_argument('--lr_decay', choices=['multistep', 'cos'], default='multistep', help='lr decay scheduler type')
     parser.add_argument('--type', choices=['l1', 'l2', 'activation'], default='l1', help='the pruning algo type')
     parser.add_argument('--para', action='store_true', help='if use multiple gpus')
     return parser.parse_args()
@@ -157,14 +158,22 @@ if __name__ == '__main__':
     optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
                                 momentum=0.9,
                                 weight_decay=5e-4)
-    scheduler1 = MultiStepLR(
-        optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    scheduler1 = None
+    scheduler2 = None
+    if args.lr_decay == 'multistep':
+        scheduler1 = MultiStepLR(
+            optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler1 = CosineAnnealingLR(optimizer1, T_max=args.finetune_epochs)
     criterion1 = torch.nn.CrossEntropyLoss()
     optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
                                 momentum=0.9,
                                 weight_decay=5e-4)
-    scheduler2 = MultiStepLR(
-        optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    if args.lr_decay == 'multistep':
+        scheduler2 = MultiStepLR(
+            optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler2 = CosineAnnealingLR(optimizer2, T_max=args.finetune_epochs)
     criterion2 = torch.nn.CrossEntropyLoss()
 
     cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
@@ -212,14 +221,16 @@ if __name__ == '__main__':
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
                 criterion2, optimizer2, epoch)
-        scheduler2.step()
+        if scheduler2:
+            scheduler2.step()
         acc2 = test(net2, device, criterion2, val_loader)
         print('Finetune Epoch %d, acc of constrained pruner %f'%(epoch, acc2))
 
     for epoch in range(args.finetune_epochs):
         train(args, net1, device, train_loader,
                 criterion1, optimizer1, epoch)
-        scheduler1.step()
+        if scheduler1:
+            scheduler1.step()
         acc1 = test(net1, device, criterion1, val_loader)
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
 
