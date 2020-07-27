@@ -28,15 +28,12 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     private paiTrialConfig: NNIPAIK8STrialConfig | undefined;
     private paiJobConfig: any;
     private paiToken?: string;
-    private paiTokenUpdateTime?: number;
-    private readonly paiTokenUpdateInterval: number;
     private protocol: string = 'http';
 
     private experimentId: string;
 
     constructor() {
         super();
-        this.paiTokenUpdateInterval = 7200000; //2hours
         this.experimentId = getExperimentId();
     }
 
@@ -49,12 +46,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if (this.paiClusterConfig.passWord) {
-                    // Get PAI authentication token
-                    await this.updatePaiToken();
-                } else if (this.paiClusterConfig.token) {
-                    this.paiToken = this.paiClusterConfig.token;
-                }
+                this.paiToken = this.paiClusterConfig.token;
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
@@ -81,7 +73,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        await this.refreshPlatform();
 
         if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
@@ -101,9 +92,12 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         };
 
         request(getJobInfoRequest, async (error: any, response: request.Response, body: any) => {
+            // Status code 200 for success
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
-                this.log.error(`OpenPAI: get environment list from PAI Cluster failed!\nerror: ${error}`);
-                deferred.reject(error);
+                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(body)}`;
+                this.log.error(`${errorMessage}`);
+                deferred.reject(errorMessage);
             } else {
                 const jobInfos = new Map<string, any>();
                 body.forEach((jobInfo: any) => {
@@ -157,8 +151,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
-        await this.refreshPlatform();
-
         if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
         }
@@ -184,18 +176,21 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
+            followAllRedirects: true,
             headers: {
                 'Content-Type': 'text/yaml',
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
         request(submitJobRequest, (error, response, body) => {
+            // Status code 202 for success, refer https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
                     `start environment ${environment.jobId} failed, http code:${response.statusCode}, http body: ${body}`;
 
                 this.log.error(errorMessage);
                 environment.status = 'FAILED';
+                deferred.reject(errorMessage);
             }
             deferred.resolve();
         });
@@ -230,8 +225,11 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         try {
             request(stopJobRequest, (error, response, _body) => {
                 try {
+                    // Status code 202 for success.
                     if ((error !== undefined && error !== null) || (response && response.statusCode >= 400)) {
-                        this.log.error(`OpenPAI: stop job ${environment.jobId} failed with ${response.statusCode}\n${error}`);
+                        const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                            `OpenPAI: stop job ${environment.jobId} failed, http code:${response.statusCode}, http body: ${_body}`;
+                        this.log.error(`${errorMessage}`);
                         deferred.reject((error !== undefined && error !== null) ? error :
                             `Stop trial failed, http code: ${response.statusCode}`);
                     } else {
@@ -249,19 +247,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         return deferred.promise;
-    }
-
-    private async refreshPlatform(): Promise<void> {
-        if (this.paiClusterConfig && this.paiClusterConfig.passWord) {
-            try {
-                await this.updatePaiToken();
-            } catch (error) {
-                this.log.error(`${error}`);
-                if (this.paiToken === undefined) {
-                    throw new Error(error);
-                }
-            }
-        }
     }
 
     private generateJobConfigInYamlFormat(environment: EnvironmentInformation): any {
@@ -362,60 +347,5 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         } else {
             return host;
         }
-    }
-    /**
-     * Update pai token by the interval time or initialize the pai token
-     */
-    protected async updatePaiToken(): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
-        const currentTime: number = new Date().getTime();
-        //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-            return Promise.resolve();
-        }
-
-        if (this.paiClusterConfig === undefined) {
-            const paiClusterConfigError: string = `pai cluster config not initialized!`;
-            this.log.error(`${paiClusterConfigError}`);
-            throw Error(`${paiClusterConfigError}`);
-        }
-
-        const authenticationReq: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
-            method: 'POST',
-            json: true,
-            body: {
-                username: this.paiClusterConfig.userName,
-                password: this.paiClusterConfig.passWord
-            }
-        };
-
-        request(authenticationReq, (error: any, response: request.Response, body: any) => {
-            if (error !== undefined && error !== null) {
-                this.log.error(`Get PAI token failed: ${error.message}, authenticationReq: ${authenticationReq}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-            } else {
-                if (response.statusCode !== 200) {
-                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}, authenticationReq: ${authenticationReq}`);
-                    deferred.reject(new Error(`Get PAI token failed code: ${response.statusCode}, body: ${response.body}, authenticationReq: ${authenticationReq}, please check paiConfig username or password`));
-                } else {
-                    this.paiToken = body.token;
-                    this.paiTokenUpdateTime = new Date().getTime();
-                    deferred.resolve();
-                }
-            }
-        });
-
-        let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
-        });
-
-        return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => { clearTimeout(timeoutId); });
     }
 }
