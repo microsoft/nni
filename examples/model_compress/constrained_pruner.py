@@ -155,27 +155,6 @@ if __name__ == '__main__':
     net1 = Model(pretrained=True).to(device)
     net2 = Model(pretrained=True).to(device)
     
-    optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
-                                momentum=0.9,
-                                weight_decay=5e-4)
-    scheduler1 = None
-    scheduler2 = None
-    if args.lr_decay == 'multistep':
-        scheduler1 = MultiStepLR(
-            optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
-    elif args.lr_decay == 'cos':
-        scheduler1 = CosineAnnealingLR(optimizer1, T_max=args.finetune_epochs)
-    criterion1 = torch.nn.CrossEntropyLoss()
-    optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
-                                momentum=0.9,
-                                weight_decay=5e-4)
-    if args.lr_decay == 'multistep':
-        scheduler2 = MultiStepLR(
-            optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
-    elif args.lr_decay == 'cos':
-        scheduler2 = CosineAnnealingLR(optimizer2, T_max=args.finetune_epochs)
-    criterion2 = torch.nn.CrossEntropyLoss()
-
     cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
     if args.type == 'l1':
         pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
@@ -206,6 +185,28 @@ if __name__ == '__main__':
     ms2.speedup_model()
     print('Model speedup finished')
     
+    optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
+                                momentum=0.9,
+                                weight_decay=5e-4)
+    scheduler1 = None
+    scheduler2 = None
+    if args.lr_decay == 'multistep':
+        scheduler1 = MultiStepLR(
+            optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler1 = CosineAnnealingLR(optimizer1, T_max=args.finetune_epochs)
+    criterion1 = torch.nn.CrossEntropyLoss()
+
+    optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
+                                momentum=0.9,
+                                weight_decay=5e-4)
+    if args.lr_decay == 'multistep':
+        scheduler2 = MultiStepLR(
+            optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler2 = CosineAnnealingLR(optimizer2, T_max=args.finetune_epochs)
+    criterion2 = torch.nn.CrossEntropyLoss()
+
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After pruning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
