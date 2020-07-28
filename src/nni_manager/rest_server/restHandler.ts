@@ -272,6 +272,9 @@ class NNIRestHandler {
     private getTrialLog(router: Router): void {
         router.get('/trial-log/:id/:type', async(req: Request, res: Response) => {
             this.nniManager.getTrialLog(req.params.id, req.params.type).then((log: string) => {
+                if (log === '') {
+                    log = 'No logs available.'
+                }
                 res.send(log);
             }).catch((err: Error) => {
                 this.handleError(err, res);
