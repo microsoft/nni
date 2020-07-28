@@ -68,7 +68,6 @@ class TrialManager {
     }
 
     public async update(lastTime?: boolean): Promise<boolean | void> {
-        // public async update(lastTime?: boolean): Promise<boolean> {
         const [infoUpdated, metricUpdated] = await Promise.all([this.updateInfo(), this.updateMetrics(lastTime)]);
         return infoUpdated || metricUpdated;
     }
