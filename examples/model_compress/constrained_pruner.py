@@ -147,6 +147,7 @@ def get_data(args):
         return imagenet_dataset(args)
 
 if __name__ == '__main__':
+    print("Benchmark the constraint-aware one shot pruner.")
     args = parse_args()
     torch.manual_seed(0)
     Model = getattr(models, args.model)
@@ -246,3 +247,7 @@ if __name__ == '__main__':
     flops2, weights2 = count_flops_params(net2, dummy_input.size())
     print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
     print('Constrained L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
+    with open('result.txt', 'w') as f:
+        f.write('L1filter pruner flops:{} weight:{} \n'.format(flops1, weights1))
+        f.write('Constrained L1filter pruner flops:{} weight:{} \n'.format(flops2, weights2))
+        f.write('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f\n' % (acc1, acc2))
