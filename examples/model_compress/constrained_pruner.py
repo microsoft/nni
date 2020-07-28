@@ -158,14 +158,14 @@ if __name__ == '__main__':
     
     cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
     if args.type == 'l1':
-        pruner1 = L1FilterPruner(net1, cfglist, optimizer1)
-        pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+        pruner1 = L1FilterPruner(net1, cfglist)
+        pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device))
     elif args.type == 'l2':
-        pruner1 = L2FilterPruner(net1, cfglist, optimizer1)
-        pruner2 = Constrained_L2FilterPruner(net2, cfglist, dummy_input.to(device), optimizer2)
+        pruner1 = L2FilterPruner(net1, cfglist)
+        pruner2 = Constrained_L2FilterPruner(net2, cfglist, dummy_input.to(device))
     elif args.type == 'activation':
-        pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, optimizer1, statistics_batch_num=10)
-        pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), optimizer2, statistics_batch_num=10)
+        pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, statistics_batch_num=10)
+        pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), statistics_batch_num=10)
         for batch_idx, (data, target) in enumerate(train_loader):
             data = data.to(device)
             net1(data)
