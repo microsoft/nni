@@ -224,6 +224,7 @@ if __name__ == '__main__':
         if scheduler2:
             scheduler2.step()
         acc2 = test(net2, device, criterion2, val_loader)
+        print('Learning rate: ', scheduler2.get_last_lr())
         print('Finetune Epoch %d, acc of constrained pruner %f'%(epoch, acc2))
 
     for epoch in range(args.finetune_epochs):
@@ -232,6 +233,7 @@ if __name__ == '__main__':
         if scheduler1:
             scheduler1.step()
         acc1 = test(net1, device, criterion1, val_loader)
+        print('Learning rate: ', scheduler1.get_last_lr())
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
 
 
