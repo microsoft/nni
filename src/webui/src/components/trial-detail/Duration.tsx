@@ -1,6 +1,6 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
+import { TableObj, EventMap } from '../../static/interface';
 import { filterDuration, convertDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
@@ -13,7 +13,7 @@ interface Runtrial {
 
 interface DurationProps {
     source: Array<TableObj>;
-    whichGraph: string;
+    whichChart: string;
 }
 
 interface DurationState {
@@ -170,7 +170,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
     componentDidUpdate(prevProps: DurationProps): void {
         // add this if to prevent endless loop
         if (this.props.source !== prevProps.source) {
-            if (this.props.whichGraph === 'Duration') {
+            if (this.props.whichChart === 'Duration') {
                 this.drawDurationGraph(this.props.source);
             }
         }

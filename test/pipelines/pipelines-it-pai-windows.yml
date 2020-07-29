@@ -69,6 +69,6 @@ jobs:
       set PATH=$(ENV_PATH)
       python --version
       mount -o anon $(pai_nfs_uri) $(local_nfs_uri)
-      python nni_test/nnitest/generate_ts_config.py --ts pai --pai_token $(pai_token) --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $(docker_image) --pai_storage_plugin $(pai_storage_plugin) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip)
+      python nni_test/nnitest/generate_ts_config.py --ts pai --pai_token $(pai_token) --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $(docker_image) --pai_storage_config_name $(pai_storage_config_name) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip) --vc $(virtual_cluster)
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
     displayName: 'Examples and advanced features tests on pai'

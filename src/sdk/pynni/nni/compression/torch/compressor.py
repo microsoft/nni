@@ -360,7 +360,7 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        _logger.debug("compressing module %s.", layer.name)
+        _logger.debug("Module detected to compress : %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
@@ -395,7 +395,7 @@ class Pruner(Compressor):
             if weight_mask is not None:
                 mask_sum = weight_mask.sum().item()
                 mask_num = weight_mask.numel()
-                _logger.debug('Layer: %s  Sparsity: %.2f', wrapper.name, 1 - mask_sum / mask_num)
+                _logger.debug('Layer: %s  Sparsity: %.4f', wrapper.name, 1 - mask_sum / mask_num)
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
             if bias_mask is not None:
                 wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)

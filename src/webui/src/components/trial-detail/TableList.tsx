@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
-    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton
+    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost
 } from 'office-ui-fabric-react';
 import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
@@ -149,7 +149,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         isResizable: true,
         data: 'number',
         onColumnClick: this.onColumnClick,
-        onRender: (item): React.ReactNode => <div>{item.formattedLatestAccuracy}</div>
+        onRender: (item): React.ReactNode => <TooltipHost content={item.formattedLatestAccuracy}>
+            <div className="ellipsis">{item.formattedLatestAccuracy}</div>
+        </TooltipHost>
     };
 
     SequenceIdColumnConfig: any = {
@@ -412,36 +414,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
         // parameter as table column
         const parameterStr: string[] = [];
-        if (tableSource.length > 0) {
-            const trialMess = TRIALS.getTrial(tableSource[0].id);
-            const trial = trialMess.description.parameters;
-            const parameterColumn: string[] = Object.keys(trial);
-            parameterColumn.forEach(value => {
-                parameterStr.push(`${value} (search space)`);
-            });
-        }
-        let allColumnList = COLUMNPro.concat(parameterStr);
-
-        // only succeed trials have final keys
-        if (tableSource.filter(record => record.status === 'SUCCEEDED').length >= 1) {
-            const temp = tableSource.filter(record => record.status === 'SUCCEEDED')[0].accDictionary;
-            if (temp !== undefined && typeof temp === 'object') {
-                // concat default column and finalkeys
-                const item = Object.keys(temp);
-                // item: ['default', 'other-keys', 'maybe loss']
-                if (item.length > 1) {
-                    const want: string[] = [];
-                    item.forEach(value => {
-                        if (value !== 'default') {
-                            want.push(value);
-                        }
-                    });
-                    allColumnList = allColumnList.concat(want);
-                }
+        if (!EXPERIMENT.isNestedExp()) {
+            if (tableSource.length > 0) {
+                const trialMess = TRIALS.getTrial(tableSource[0].id);
+                const trial = trialMess.description.parameters;
+                const parameterColumn: string[] = Object.keys(trial);
+                parameterColumn.forEach(value => {
+                    parameterStr.push(`${value} (search space)`);
+                });
             }
         }
-
-        return allColumnList;
+        // concat trial all final keys and remove dup "default" val, return list
+        const finalKeysList = TRIALS.finalKeys().filter(item => item !== 'default');
+        return (COLUMNPro.concat(parameterStr)).concat(finalKeysList);
     }
 
     // get IColumn[]
@@ -556,7 +541,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 other = accDictionary[item].toString();
                             }
                             return (
-                                <div>{other}</div>
+                                <TooltipHost content={other}>
+                                    <div className="ellipsis">{other}</div>
+                                </TooltipHost>
                             );
                         }
                     });

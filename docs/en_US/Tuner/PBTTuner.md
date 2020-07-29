@@ -11,7 +11,7 @@ PBTTuner initializes a population with several trials (i.e., `population_size`).
 
 ### Provide checkpoint directory
 
-Since some trials need to load other trial's checkpoint, users should provide a directory (i.e., `all_checkpoint_dir`) which is accessible by every trial. It is easy for local mode, users could directly use the default directory or specify any directory on the local machine. For other training services, users should follow [the document of those training services](../TrainingService/SupportTrainingService.md) to provide a directory in a shared storage, such as NFS, Azure storage.
+Since some trials need to load other trial's checkpoint, users should provide a directory (i.e., `all_checkpoint_dir`) which is accessible by every trial. It is easy for local mode, users could directly use the default directory or specify any directory on the local machine. For other training services, users should follow [the document of those training services](../TrainingService/Overview.md) to provide a directory in a shared storage, such as NFS, Azure storage.
 
 ### Modify your trial code
 

@@ -30,6 +30,11 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/*
 
 #
+# generate python script
+#
+RUN cp /usr/bin/python3 /usr/bin/python
+
+#
 # update pip
 #
 RUN python3 -m pip install --upgrade pip setuptools==39.1.0
@@ -39,9 +44,9 @@ RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0
 
 #
-# Tensorflow 1.10.0
+# Tensorflow 1.15
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15
 
 #
 # Keras 2.1.6
@@ -68,6 +73,13 @@ RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
 # Install NNI
 #
 RUN python3 -m pip --no-cache-dir install nni
+
+#
+# install aml package
+#
+RUN python3 -m pip --no-cache-dir install azureml
+RUN python3 -m pip --no-cache-dir install azureml-sdk
+
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 

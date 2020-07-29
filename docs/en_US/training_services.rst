@@ -2,7 +2,7 @@ Introduction to NNI Training Services
 =====================================
 
 ..  toctree::
-    Overview <./TrainingService/SupportTrainingService>
+    Overview <./TrainingService/Overview>
     Local<./TrainingService/LocalMode>
     Remote<./TrainingService/RemoteMachineMode>
     OpenPAI<./TrainingService/PaiMode>
@@ -10,3 +10,4 @@ Introduction to NNI Training Services
     Kubeflow<./TrainingService/KubeflowMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
+    AML<./TrainingService/AMLMode>

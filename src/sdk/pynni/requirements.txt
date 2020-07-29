@@ -1,5 +1,6 @@
 # core
 json_tricks
+websockets
 
 # hyperopt tuner
 numpy
