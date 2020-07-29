@@ -1,6 +1,7 @@
 import { MANAGER_IP } from '../const';
 import { ExperimentProfile, NNIManagerStatus } from '../interface';
 import { requestAxios } from '../function';
+import { SearchSpace } from './searchspace';
 
 function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProfile): boolean {
     if (!profile1 || !profile2) {
@@ -127,6 +128,12 @@ class Experiment {
             }
         }
         return result;
+    }
+
+    get searchSpaceNew(): SearchSpace {
+        // The search space derived directly from profile
+        // eventually this will replace searchSpace
+        return new SearchSpace('', '', this.searchSpace);
     }
 
     get logCollectionEnabled(): boolean {
