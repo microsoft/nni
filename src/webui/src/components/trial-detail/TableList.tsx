@@ -5,6 +5,7 @@ import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
 } from 'office-ui-fabric-react';
+import ReactPaginate from 'react-paginate';
 import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
@@ -22,8 +23,8 @@ import '../../static/style/logPath.scss';
 import '../../static/style/table.scss';
 import '../../static/style/button.scss';
 import '../../static/style/openRow.scss';
-import '../../static/style/pagination.css';
-import ReactPaginate from 'react-paginate';
+import '../../static/style/pagination.scss';
+
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -32,6 +33,11 @@ require('echarts/lib/component/title');
 echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
+
+const horizontalGapStackTokens: IStackTokens = {
+    childrenGap: 20,
+    padding: 10,
+};
 
 interface TableListProps {
     pageSize: number;
@@ -115,9 +121,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // sort for table column
     onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
-        const { tableColumns } = this.state;
-        // const { tableSource } = this.props;
-        const dataForSort = this.state.tableSourceForSort
+        const { tableColumns, tableSourceForSort } = this.state;
         const newColumns: IColumn[] = tableColumns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
         newColumns.forEach((newCol: IColumn) => {
@@ -130,7 +134,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this.copyAndSort(dataForSort, currColumn.fieldName!, currColumn.isSortedDescending);
+        const newItems = this.copyAndSort(tableSourceForSort, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             tableColumns: newColumns,
             tableSourceForSort: newItems,
@@ -567,7 +571,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     componentDidMount(): void {
         window.addEventListener('resize', this.onWindowResize);
-        this.setState(() => this.updateData())
+        this.updateData()
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
@@ -585,17 +589,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
 
         const tableSlice = tableSource.slice(this.state.offset, this.state.offset + this.state.perPage)
-        // eslint-disable-next-line no-debugger
-        // debugger
-
+        
         this.setState({
             tableSourceForSort: tableSlice,
             pageCount: Math.ceil(tableSource.length / this.state.perPage),
         });
     }
     
-    handlePageClick = (e): void => {
-        const selectedPage = e.selected;
+    handlePageClick = (evt: any): void => {
+        const selectedPage = evt.selected;
         const offset = selectedPage * this.state.perPage;
         
         this.setState({ 
@@ -628,12 +630,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: '10', text: '10 items per page'},
             { key: '20', text: '20 items per page'},
             { key: '50', text: '50 items per page'},
-            { key: 'all', text: 'all items'},
+            { key: 'all', text: 'All items'},
         ];
-        const horizontalGapStackTokens: IStackTokens = {
-            childrenGap: 20,
-            padding: 10,
-          };
+        
 
         if (sortMessage.field !== '') {
             tableSource.sort(function (a, b): any {
@@ -674,7 +673,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         previousLabel={"<"}
                         nextLabel={">"}
                         breakLabel={"..."}
-                        breakClassName={"break-me"}
+                        breakClassName={"break"}
                         pageCount={this.state.pageCount}
                         marginPagesDisplayed={2}
                         pageRangeDisplayed={2}
