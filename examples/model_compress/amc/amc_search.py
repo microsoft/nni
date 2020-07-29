@@ -166,7 +166,7 @@ if __name__ == "__main__":
     _, val_loader = init_data(args)
 
     config_list = [{
-        'op_types': ['Conv2d'] #, 'Linear']
+        'op_types': ['Conv2d', 'Linear']
     }]
     pruner = AMCPruner(model, config_list, validate, val_loader, **vars(args))
     pruner.compress()

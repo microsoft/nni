@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .lib.utils import prGreen
-from .. import LevelPrunerMasker, AMCWeightMasker
+from .. import AMCWeightMasker
 
 # for pruning
 def acc_reward(net, acc, flops):
@@ -34,7 +34,6 @@ class ChannelPruningEnv:
         self.batch_size = val_loader.batch_size
         self.preserve_ratio = preserve_ratio
         self.channel_prune_masker = AMCWeightMasker(self.model, self.pruner, args.channel_round)
-        self.fine_grained_masker = LevelPrunerMasker(self.model, self.pruner)
 
         # options from args
         self.args = args
@@ -188,15 +187,14 @@ class ChannelPruningEnv:
             return 1., op.module.weight.size(1), None  # TODO: should be a full index
         op.input_feat = self.layer_info_dict[op_idx]['input_feat']
         op.output_feat = self.layer_info_dict[op_idx]['output_feat']
+
+        masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
+        m = masks['weight_mask'].cpu().data
         if type(op.module) == nn.Conv2d:
-            masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
-            m = masks['weight_mask'].cpu().data
             d_prime = (m.sum((0, 2, 3)) > 0).sum().item()
             preserve_idx = np.nonzero((m.sum((0, 2, 3)) > 0).numpy())[0]
         else:
             assert type(op.module) == nn.Linear
-            masks = self.fine_grained_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
-            m = masks['weight_mask'].cpu().data
             d_prime = (m.sum(1) > 0).sum().item()
             preserve_idx = np.nonzero((m.sum(1) > 0).numpy())[0]
 

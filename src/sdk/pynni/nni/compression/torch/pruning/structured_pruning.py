@@ -438,7 +438,7 @@ class AMCWeightMasker(WeightMasker):
             'bias_mask': bias mask tensor (optional)
         """
         msg = 'module type {} is not supported!'.format(wrapper.type)
-        assert wrapper.type == 'Conv2d', msg
+        assert wrapper.type in ['Conv2d', 'Linear'], msg
         weight = wrapper.module.weight.data
         bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -474,6 +474,9 @@ class AMCWeightMasker(WeightMasker):
     def get_mask(self, base_mask, weight, num_preserve, wrapper, wrapper_idx):
         d_prime = num_preserve
         w = weight.data.cpu().numpy()
+        if wrapper.type == 'Linear':
+            w = w[:, :, None, None]
+
         importance = np.abs(w).sum((0, 2, 3))
         sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
         preserve_idx = sorted_idx[:d_prime]  # to preserve index
@@ -485,7 +488,7 @@ class AMCWeightMasker(WeightMasker):
         # reconstruct, X, Y <= [N, C]
         X, Y = wrapper.input_feat, wrapper.output_feat
         masked_X = X[:, mask]
-        if weight.shape[2] == 1:  # 1x1 conv or fc
+        if w.shape[2] == 1:  # 1x1 conv or fc
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
             rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
             rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
@@ -495,11 +498,21 @@ class AMCWeightMasker(WeightMasker):
         rec_weight_pad[:, mask, :, :] = rec_weight
         rec_weight = rec_weight_pad
 
+        if wrapper.type == 'Linear':
+            rec_weight = rec_weight.squeeze()
+            assert len(rec_weight.shape) == 2
+
         # now assign
         wrapper.module.weight.data = torch.from_numpy(rec_weight).to(weight.device)
 
         mask_weight = torch.zeros_like(weight)
-        mask_weight[:, preserve_idx, :, :] = 1.
-        mask_bias = None
+        if wrapper.type == 'Linear':
+            mask_weight[:, preserve_idx] = 1.
+            if base_mask['bias_mask'] is not None and wrapper.module.bias is not None:
+                mask_bias = torch.zeros_like(wrapper.module.bias)
+                mask_bias[preserve_idx] = 1.
+        else:
+            mask_weight[:, preserve_idx, :, :] = 1.
+            mask_bias = None
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
