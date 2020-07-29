@@ -166,10 +166,10 @@ class Para extends React.Component<ParaProps, ParaState> {
                     .range(['green', 'red'])
                     .interpolate(d3.interpolateHsl);
                 colorDim = k;
+                convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
-                    convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
                     convertedTrials = convertedTrials.slice(0, keptTrialNum);
                     const domain = d3.extent(convertedTrials, item => item[k]);
                     scale.domain([domain[0], domain[1]]);
@@ -177,6 +177,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                         colorScale.domain(domain);
                     }
                 }
+                // reverse the converted trials to show the top ones upfront
+                convertedTrials.reverse();
             }
             dimensions.push([k, {
                 type: 'number',
