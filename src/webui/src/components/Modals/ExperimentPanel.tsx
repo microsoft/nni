@@ -45,7 +45,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
             // add intermediate result message
             trialMessagesArr[item].intermediate = [];
             Object.keys(interResultList).map(key => {
-                const interId = `${interResultList[key].trialJobId}-${interResultList[key].parameterId}`;
+                const interId = interResultList[key].trialJobId;
                 if (trialId === interId) {
                     trialMessagesArr[item].intermediate.push(interResultList[key]);
                 }

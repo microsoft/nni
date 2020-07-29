@@ -67,7 +67,7 @@ class TrialManager {
         }
     }
 
-    public async update(lastTime?: boolean): Promise<boolean | void> {
+    public async update(lastTime?: boolean): Promise<boolean> {
         const [infoUpdated, metricUpdated] = await Promise.all([this.updateInfo(), this.updateMetrics(lastTime)]);
         return infoUpdated || metricUpdated;
     }
@@ -262,8 +262,7 @@ class TrialManager {
         return updated;
     }
 
-    private async updateMetrics(lastTime?: boolean): Promise<boolean | void> {
-        // private async updateMetrics(lastTime?: boolean): Promise<boolean> {
+    private async updateMetrics(lastTime?: boolean): Promise<boolean> {
         if (this.trials.size < METRIC_GROUP_UPDATE_THRESHOLD || lastTime) {
             return await this.updateAllMetrics();
         } else {
@@ -274,11 +273,11 @@ class TrialManager {
         }
     }
 
-    private async updateAllMetrics(): Promise<boolean | void> {
+    private async updateAllMetrics(): Promise<boolean> {
         return requestAxios(`${MANAGER_IP}/metric-data`)
             .then(data => {
                 this.metricsList = data;
-                this.doUpdateMetrics(data as any, false);
+                return this.doUpdateMetrics(data as any, false);
             })
             .catch(error => {
                 this.isMetricdataError = true;
