@@ -11,7 +11,7 @@ import torch.nn as nn
 
 from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
 from .lib.utils import prGreen
-from .. import LevelPrunerMasker, L1FilterPrunerMasker
+from .. import LevelPrunerMasker, AMCWeightMasker
 
 # for pruning
 def acc_reward(net, acc, flops):
@@ -33,7 +33,7 @@ class ChannelPruningEnv:
         self.checkpoint = checkpoint
         self.batch_size = val_loader.batch_size
         self.preserve_ratio = preserve_ratio
-        self.channel_prune_masker = L1FilterPrunerMasker(self.model, self.pruner, args.channel_round)
+        self.channel_prune_masker = AMCWeightMasker(self.model, self.pruner, args.channel_round)
         self.fine_grained_masker = LevelPrunerMasker(self.model, self.pruner)
 
         # options from args
@@ -88,9 +88,8 @@ class ChannelPruningEnv:
 
     def step(self, action):
         # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
-
         if self.visited[self.cur_ind]:
-            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][1]
+            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
             preserve_idx = self.index_buffer[self.cur_ind]
         else:
             action = self._action_wall(action)  # percentage to preserve
@@ -101,9 +100,8 @@ class ChannelPruningEnv:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
                     for g_idx in group:
-                        self.strategy_dict[self.prunable_idx[g_idx]][1] = action
-                        if g_idx < len(self.prunable_idx) - 1:
-                            self.strategy_dict[self.prunable_idx[g_idx + 1]][0] = action
+                        self.strategy_dict[self.prunable_idx[g_idx]][0] = action
+                        self.strategy_dict[self.prunable_idx[g_idx - 1]][1] = action
                         self.visited[g_idx] = True
                         self.index_buffer[g_idx] = preserve_idx.copy()
 
@@ -113,9 +111,9 @@ class ChannelPruningEnv:
         self.strategy.append(action)  # save action to strategy
         self.d_prime_list.append(d_prime)
 
-        self.strategy_dict[self.prunable_idx[self.cur_ind]][1] = action
-        if self.cur_ind < len(self.prunable_idx) - 1:
-            self.strategy_dict[self.prunable_idx[self.cur_ind + 1]][0] = action
+        self.strategy_dict[self.prunable_idx[self.cur_ind]][0] = action
+        if self.cur_ind > 0:
+            self.strategy_dict[self.prunable_idx[self.cur_ind - 1]][1] = action
 
         # all the actions are made
         if self._is_final_layer():
@@ -188,16 +186,17 @@ class ChannelPruningEnv:
         assert type(op) == PrunerModuleWrapper
         if preserve_ratio == 1:  # do not prune
             return 1., op.module.weight.size(1), None  # TODO: should be a full index
-
+        op.input_feat = self.layer_info_dict[op_idx]['input_feat']
+        op.output_feat = self.layer_info_dict[op_idx]['output_feat']
         if type(op.module) == nn.Conv2d:
             masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
-            m = masks['weight_mask']
-            d_prime = (m.sum((1, 2, 3)) > 0).sum().item()
-            preserve_idx = np.nonzero((m.sum((1, 2, 3)) > 0).numpy())[0]
+            m = masks['weight_mask'].cpu().data
+            d_prime = (m.sum((0, 2, 3)) > 0).sum().item()
+            preserve_idx = np.nonzero((m.sum((0, 2, 3)) > 0).numpy())[0]
         else:
             assert type(op.module) == nn.Linear
             masks = self.fine_grained_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
-            m = masks['weight_mask']
+            m = masks['weight_mask'].cpu().data
             d_prime = (m.sum(1) > 0).sum().item()
             preserve_idx = np.nonzero((m.sum(1) > 0).numpy())[0]
 
@@ -223,14 +222,14 @@ class ChannelPruningEnv:
             flop = self.layer_info_dict[idx]['flops']
             buffer_flop = self._get_buffer_flops(idx)
 
-            if i == self.cur_ind + 1:  # TODO: add other member in the set
-                this_comp += flop * self.strategy_dict[idx][1]
-                # add buffer (but not influenced by ratio)
-                other_comp += buffer_flop
-            elif i == self.cur_ind:
+            if i == self.cur_ind - 1:  # TODO: add other member in the set
                 this_comp += flop * self.strategy_dict[idx][0]
+                # add buffer (but not influenced by ratio)
+                other_comp += buffer_flop * self.strategy_dict[idx][0]
+            elif i == self.cur_ind:
+                this_comp += flop * self.strategy_dict[idx][1]
                 # also add buffer here (influenced by ratio)
-                this_comp += buffer_flop * self.strategy_dict[idx][0]
+                this_comp += buffer_flop
             else:
                 other_comp += flop * self.strategy_dict[idx][0] * self.strategy_dict[idx][1]
                 # add buffer
@@ -240,7 +239,7 @@ class ChannelPruningEnv:
         max_preserve_ratio = (self.expected_preserve_computation - other_comp) * 1. / this_comp
 
         action = np.minimum(action, max_preserve_ratio)
-        action = np.maximum(action, self.strategy_dict[self.prunable_idx[self.cur_ind]][1])  # impossible (should be)
+        action = np.maximum(action, self.strategy_dict[self.prunable_idx[self.cur_ind]][0])  # impossible (should be)
 
         return action
 
@@ -352,7 +351,7 @@ class ChannelPruningEnv:
                 if i_b == self.n_calibration_batches:
                     break
                 self.data_saver.append((input.clone(), target.clone()))
-                input_var = torch.autograd.Variable(input) #.cuda()
+                input_var = torch.autograd.Variable(input).cuda()
 
                 # inference and collect stats
                 _ = self.model(input_var)

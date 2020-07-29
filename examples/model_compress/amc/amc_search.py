@@ -87,6 +87,7 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
     else:
         raise NotImplementedError
     if checkpoint_path:
+        print('loading {}...'.format(checkpoint_path))
         sd = torch.load(checkpoint_path, map_location=torch.device('cpu'))
         if 'state_dict' in sd:  # a checkpoint but not a state_dict
             sd = sd['state_dict']
@@ -126,7 +127,7 @@ def validate(val_loader, model, verbose=False):
     top1 = AverageMeter()
     top5 = AverageMeter()
 
-    criterion = nn.CrossEntropyLoss()#.cuda()
+    criterion = nn.CrossEntropyLoss().cuda()
     # switch to evaluate mode
     model.eval()
     end = time.time()
@@ -134,9 +135,9 @@ def validate(val_loader, model, verbose=False):
     t1 = time.time()
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
-            #target = target.cuda(non_blocking=True)
-            input_var = torch.autograd.Variable(input)#.cuda()
-            target_var = torch.autograd.Variable(target)#.cuda()
+            target = target.cuda(non_blocking=True)
+            input_var = torch.autograd.Variable(input).cuda()
+            target_var = torch.autograd.Variable(target).cuda()
 
             # compute output
             output = model(input_var)
@@ -165,7 +166,7 @@ if __name__ == "__main__":
     _, val_loader = init_data(args)
 
     config_list = [{
-        'op_types': ['Conv2d', 'Linear']
+        'op_types': ['Conv2d'] #, 'Linear']
     }]
     pruner = AMCPruner(model, config_list, validate, val_loader, **vars(args))
     pruner.compress()

@@ -3,12 +3,13 @@
 
 import logging
 import math
+import numpy as np
 import torch
 from .weight_masker import WeightMasker
 
 __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
     'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
-    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker']
+    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'AMCWeightMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -16,7 +17,7 @@ class StructuredWeightMasker(WeightMasker):
     """
     A structured pruning masker base class that prunes convolutional layer filters.
     """
-    def __init__(self, model, pruner, channel_round=1):
+    def __init__(self, model, pruner, preserve_round=1):
         """
         Parameters
         ----------
@@ -24,16 +25,16 @@ class StructuredWeightMasker(WeightMasker):
             model to be pruned
         pruner: Pruner
             A Pruner instance used to prune the model
-        channel_round: int
-            after pruning, preserve output channels round to `channel_round`, for example:
-            for a Conv2d layer, output channel is 32, sparsity is 0.2, if channel_round is
-            1 (no channel round), then there will be int(32 * 0.2) = 6 channels pruned, and
-            32 - 6 = 26 channels are preserved. If channel_round is 4, preserved channels will
-            be round up to 28 (which can be divided by 4) and only 4 channels are pruned.
+        preserve_round: int
+            after pruning, preserve filters/channels round to `preserve_round`, for example:
+            for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
+            1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
+            32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
+            be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
         """
         self.model = model
         self.pruner = pruner
-        self.channel_round = channel_round
+        self.preserve_round = preserve_round
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         """
@@ -73,16 +74,16 @@ class StructuredWeightMasker(WeightMasker):
             mask_bias = None
         mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
 
-        filters = weight.size(0)
-        num_prune = int(filters * sparsity)
-        if self.channel_round > 1:
-            num_preserve = filters - num_prune
-            num_preserve = int(math.ceil(num_preserve * 1. / self.channel_round) * self.channel_round)
-            if num_preserve > filters:
-                num_preserve = int(math.floor(filters * 1. / self.channel_round) * self.channel_round)
-            num_prune = filters - num_preserve
+        num_total = weight.size(0)
+        num_prune = int(num_total * sparsity)
+        if self.preserve_round > 1:
+            num_preserve = num_total - num_prune
+            num_preserve = int(math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
+            if num_preserve > num_total:
+                num_preserve = int(math.floor(num_total * 1. / self.preserve_round) * self.preserve_round)
+            num_prune = num_total - num_preserve
 
-        if filters < 2 or num_prune < 1:
+        if num_total < 2 or num_prune < 1:
             return mask
         # weight*mask_weight: apply base mask for iterative pruning
         return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx)
@@ -391,3 +392,114 @@ class SlimPrunerMasker(WeightMasker):
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
         return mask
+
+def least_square_sklearn(X, Y):
+    from sklearn.linear_model import LinearRegression
+    reg = LinearRegression(fit_intercept=False)
+    reg.fit(X, Y)
+    return reg.coef_
+
+class AMCWeightMasker(WeightMasker):
+    def __init__(self, model, pruner, preserve_round=1):
+        """
+        Parameters
+        ----------
+        model: nn.Module
+            model to be pruned
+        pruner: Pruner
+            A Pruner instance used to prune the model
+        preserve_round: int
+            after pruning, preserve filters/channels round to `preserve_round`, for example:
+            for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
+            1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
+            32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
+            be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
+        """
+        self.model = model
+        self.pruner = pruner
+        self.preserve_round = preserve_round
+
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        """
+        Calculate the mask of given layer.
+        Parameters
+        ----------
+        sparsity: float
+            pruning ratio,  preserved weight ratio is `1 - sparsity`
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
+        Returns
+        -------
+        dict
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
+        """
+        msg = 'module type {} is not supported!'.format(wrapper.type)
+        assert wrapper.type == 'Conv2d', msg
+        weight = wrapper.module.weight.data
+        bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
+
+        if wrapper.weight_mask is None:
+            mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        else:
+            mask_weight = wrapper.weight_mask.clone()
+        if bias is not None:
+            if wrapper.bias_mask is None:
+                mask_bias = torch.ones(bias.size()).type_as(bias).detach()
+            else:
+                mask_bias = wrapper.bias_mask.clone()
+        else:
+            mask_bias = None
+        mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
+        num_total = weight.size(1)
+        num_prune = int(num_total * sparsity)
+        if self.preserve_round > 1:
+            num_preserve = num_total - num_prune
+            num_preserve = int(math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
+            if num_preserve > num_total:
+                num_preserve = int(math.floor(num_total * 1. / self.preserve_round) * self.preserve_round)
+            num_prune = num_total - num_preserve
+
+        if num_total < 2 or num_prune < 1:
+            return mask
+
+        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx)
+
+    def get_mask(self, base_mask, weight, num_preserve, wrapper, wrapper_idx):
+        d_prime = num_preserve
+        w = weight.data.cpu().numpy()
+        importance = np.abs(w).sum((0, 2, 3))
+        sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
+        preserve_idx = sorted_idx[:d_prime]  # to preserve index
+
+        assert len(preserve_idx) == d_prime
+        mask = np.zeros(w.shape[1], bool)
+        mask[preserve_idx] = True
+
+        # reconstruct, X, Y <= [N, C]
+        X, Y = wrapper.input_feat, wrapper.output_feat
+        masked_X = X[:, mask]
+        if weight.shape[2] == 1:  # 1x1 conv or fc
+            rec_weight = least_square_sklearn(X=masked_X, Y=Y)
+            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
+            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
+        else:
+            raise NotImplementedError('Current code only supports 1x1 conv now!')
+        rec_weight_pad = np.zeros_like(w)
+        rec_weight_pad[:, mask, :, :] = rec_weight
+        rec_weight = rec_weight_pad
+
+        # now assign
+        wrapper.module.weight.data = torch.from_numpy(rec_weight).to(weight.device)
+
+        mask_weight = torch.zeros_like(weight)
+        mask_weight[:, preserve_idx, :, :] = 1.
+        mask_bias = None
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
