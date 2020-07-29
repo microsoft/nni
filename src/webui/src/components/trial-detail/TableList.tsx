@@ -115,7 +115,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             perPage: 20,
             currentPage: 0,
             pageCount: 0,
-            tableSourceForSort: JSON.parse(JSON.stringify(this.props.tableSource)),
+            tableSourceForSort: this.props.tableSource
         };
     }
 
@@ -659,7 +659,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
                     />
-                {
                       
                     <Stack horizontal horizontalAlign="end" verticalAlign="baseline" styles={{root:{padding:10}}} tokens={horizontalGapStackTokens}>
                         <Dropdown
@@ -684,8 +683,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         activeClassName={"active"}/>
 
                     </Stack>
-
-                }
 
                 {/* /> */}
                 </div>
