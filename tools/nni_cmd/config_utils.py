@@ -54,13 +54,13 @@ class Experiments:
         self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, expId, port, time, file_name, platform, experiment_name):
+    def add_experiment(self, expId, port, startTime, file_name, platform, experiment_name, endTime='N/A', status='INITIALIZED'):
         '''set {key:value} paris to self.experiment'''
         self.experiments[expId] = {}
         self.experiments[expId]['port'] = port
-        self.experiments[expId]['startTime'] = time
-        self.experiments[expId]['endTime'] = 'N/A'
-        self.experiments[expId]['status'] = 'INITIALIZED'
+        self.experiments[expId]['startTime'] = startTime
+        self.experiments[expId]['endTime'] = endTime
+        self.experiments[expId]['status'] = status
         self.experiments[expId]['fileName'] = file_name
         self.experiments[expId]['platform'] = platform
         self.experiments[expId]['experimentName'] = experiment_name

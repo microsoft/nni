@@ -9,6 +9,7 @@ import tempfile
 import time
 import random
 import re
+import string
 import shutil
 import subprocess
 from datetime import datetime, timezone
@@ -749,36 +750,145 @@ def save_experiment(args):
     if args.id not in experiment_dict:
         print_error('Cannot find experiment {0}.'.format(args.id))
         exit(1)
-    print_normal('SAVING...')
+    print_normal('Saving...')
     nni_config = Config(experiment_dict[args.id]['fileName'])
-    logDir = os.path.join(os.path.expanduser("~"), 'nni', 'experiments', args.id)
+    logDir = os.path.join(os.path.expanduser("~"), 'nni-experiments', args.id)
     if nni_config.get_config('logDir'):
         logDir = os.path.join(nni_config.get_config('logDir'), args.id)
-    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', random.sample(string.ascii_letters + string.digits, 8))
-    # copy logDir to temp folder
+    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
+
+    # Step1. Copy logDir to temp folder
+    if not os.path.exists(logDir):
+        print_error('logDir: %s does not exist!' % logDir)
+        exit(1)
     temp_experiment_dir = os.path.join(temp_root_dir, 'experiment')
-    os.makedirs(temp_experiment_dir, exist_ok = True)
     shutil.copytree(logDir, temp_experiment_dir)
-    # copy nnictl metadata to temp folder
+
+    # Step2. Copy nnictl metadata to temp folder
     temp_nnictl_dir = os.path.join(temp_root_dir, 'nnictl')
     os.makedirs(temp_nnictl_dir, exist_ok = True)
     try:
         with open(os.path.join(temp_nnictl_dir, '.experiment'), 'w') as file:
+            experiment_dict[args.id]['id'] = args.id
             json.dump(experiment_dict[args.id], file)
     except IOError as error:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
     nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
-    shutil.copytree(nnictl_config_dir, temp_nnictl_dir)
-    # copy code Dir
+    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, experiment_dict[args.id]['fileName']))
+
+    # Step3. Copy code dir
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
-        os.makedirs(temp_code_dir, exist_ok = True)
-        shutil.copytree(nni_config.get_config('trial')['codeDir'], temp_nnictl_dir)
-    zip_package_name = 'nni_experiment_%s.zip' % args.id
+        shutil.copytree(nni_config.get_config('trial')['codeDir'], temp_code_dir)
+    
+    # Step4. Archive folder
+    zip_package_name = 'nni_experiment_%s' % args.id
     if args.path:
         os.makedirs(args.path, exist_ok = True)
-        os.path.join(args.path, zip_package_name)
+        zip_package_name = os.path.join(args.path, zip_package_name)
     shutil.make_archive(zip_package_name, 'zip', temp_root_dir)
+    print_normal('Save to %s.zip success!' % zip_package_name)
+
+    # Step5. Cleanup temp data
     shutil.rmtree(temp_root_dir)
-    print_normal('Save to %s success!' % zip_package_name)
+
+def open_experiment(args):
+    '''open experiment data'''
+    package_path = os.path.expanduser(args.path)
+    if not os.path.exists(args.path):
+        print_error('file path %s does not exist!' % args.path)
+        exit(1)
+    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
+    shutil.unpack_archive(package_path, temp_root_dir)
+    print_normal('Opening...')
+    # Step1. Validation
+    if not os.path.exists(args.codeDir):
+        print_error('Invalid: codeDir path does not exist!')
+        exit(1)
+    if args.logDir:
+        if not os.path.exists(args.logDir):
+            print_error('Invalid: logDir path does not exist!')
+            exit(1)
+    experiment_temp_dir = os.path.join(temp_root_dir, 'experiment')
+    if not os.path.exists(os.path.join(experiment_temp_dir, 'db')):
+        print_error('Invalid archive file: db file does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    nnictl_temp_dir = os.path.join(temp_root_dir, 'nnictl')
+    if not os.path.exists(os.path.join(nnictl_temp_dir, '.experiment')):
+        print_error('Invalid archive file: nnictl metadata file does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    try:
+        with open(os.path.join(nnictl_temp_dir, '.experiment'), 'r') as file:
+            experiment_metadata = json.load(file)
+    except ValueError as err:
+        print_error('Invalid nnictl metadata file: %s' % err)
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    experiment_id = experiment_metadata.get('id')
+    if experiment_id in experiment_dict:
+        print_error('Invalid: experiment id already exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))):
+        print_error('Invalid: experiment metadata does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    
+    # Step2. Copy nnictl metadata
+    src_path = os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))
+    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_metadata.get('fileName'))
+    if os.path.exists(dest_path):
+        shutil.rmtree(dest_path)
+    shutil.copytree(src_path, dest_path)
+    
+    # Step3. Copy experiment data
+    nni_config = Config(experiment_metadata.get('fileName'))
+    if args.logDir:
+        logDir = args.logDir
+        nni_config.set_config('logDir', logDir)
+    else:
+        if nni_config.get_config('logDir'):
+            logDir = nni_config['logDir']
+        else:
+            logDir = os.path.join(os.path.expanduser("~"), 'nni-experiments')
+    os.rename(os.path.join(temp_root_dir, 'experiment'), os.path.join(temp_root_dir, experiment_id))
+    src_path = os.path.join(os.path.join(temp_root_dir, experiment_id))
+    dest_path = os.path.join(os.path.join(logDir, experiment_id))
+    if os.path.exists(dest_path):
+        shutil.rmtree(dest_path)
+    shutil.copytree(src_path, dest_path)
+
+    # Step4. Copy code dir
+    nni_config.set_config('codeDir', args.codeDir)
+    archive_code_dir = os.path.join(temp_root_dir, 'code')
+    if os.path.exists(archive_code_dir):
+        file_list = os.listdir(archive_code_dir)
+        for file_name in file_list:
+            src_path = os.path.join(archive_code_dir, file_name)
+            target_path = os.path.join(args.codeDir, file_name)
+            if os.path.exists(target_path):
+                print_error('Copy %s failed, %s exist!' % (file_name, target_path))
+                continue
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, target_path)
+            else:
+                shutil.copy(src_path, target_path)
+    
+    # Step5. Create experiment metadata
+    experiment_config.add_experiment(experiment_id,
+                                    experiment_metadata.get('port'),
+                                    experiment_metadata.get('startTime'),
+                                    experiment_metadata.get('fileName'),
+                                    experiment_metadata.get('platform'),
+                                    experiment_metadata.get('experimentName'),
+                                    experiment_metadata.get('endTime'),
+                                    experiment_metadata.get('status'))
+    print_normal('Open experiment %s succsss!' % experiment_id)
+
+    # Step6. Cleanup temp data
+    shutil.rmtree(temp_root_dir)
