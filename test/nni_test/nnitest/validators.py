@@ -76,12 +76,3 @@ class MetricsValidator(ITValidator):
                 else:
                     final_result[metric['trialJobId']] = [metric_value]
         return intermediate_result, final_result
-
-class NnicliValidator(ITValidator):
-    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
-        print(rest_endpoint)
-        nc.set_endpoint(rest_endpoint)
-        #print(nc.version())
-        print(nc.get_job_statistics())
-        print(nc.get_experiment_status())
-        print(nc.list_trial_jobs())

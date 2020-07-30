@@ -135,17 +135,6 @@ testCases:
   validator:
     class: ExportValidator 
 
-- name: nnicli
-  configFile: test/config/examples/sklearn-regression.yml
-  config:
-    maxTrialNum: 4
-    trialConcurrency: 4
-  launchCommand: python3 -c 'import nnicli as nc; nc.start_experiment("$configFile")'
-  stopCommand: python3 -c 'import nnicli as nc; nc.stop_experiment()'
-  validator:
-    class: NnicliValidator
-  platform: linux darwin
-
 - name: foreground
   configFile: test/config/examples/sklearn-regression.yml
   launchCommand: python3 nni_test/nnitest/foreground.py --config $configFile --timeout 45

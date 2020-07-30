@@ -5,80 +5,41 @@
 
 Example:
 
-import nnicli as nc
+from nnicli import NNIExperiment
 
-nc.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
+exp.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
 
-nc.set_endpoint('http://localhost:8080')
+exp.update_concurrency(3)
 
-print(nc.version())
-print(nc.get_experiment_status())
+print(exp.get_experiment_status())
+print(exp.get_job_statistics())
+print(exp.list_trial_jobs())
 
-print(nc.get_job_statistics())
-print(nc.list_trial_jobs())
-
-nc.stop_experiment()
+exp.stop_experiment()
 
 """
 
 import sys
 import os
 import subprocess
+import re
 import requests
 
 __all__ = [
-    'start_experiment',
-    'set_endpoint',
-    'stop_experiment',
-    'resume_experiment',
-    'view_experiment',
-    'update_searchspace',
-    'update_concurrency',
-    'update_duration',
-    'update_trailnum',
-    'stop_experiment',
-    'version',
-    'get_experiment_status',
-    'get_experiment_profile',
-    'get_trial_job',
-    'list_trial_jobs',
-    'get_job_statistics',
-    'get_job_metrics',
-    'export_data'
+    'NNIExperiment'
 ]
 
 EXPERIMENT_PATH = 'experiment'
-VERSION_PATH = 'version'
 STATUS_PATH = 'check-status'
 JOB_STATISTICS_PATH = 'job-statistics'
 TRIAL_JOBS_PATH = 'trial-jobs'
 METRICS_PATH = 'metric-data'
 EXPORT_DATA_PATH = 'export-data'
-
 API_ROOT_PATH = 'api/v1/nni'
 
-_api_endpoint = None
-
-def set_endpoint(endpoint):
-    """
-    Set endpoint of nni rest server for nnicli, i.e., the url of Web UI.
-    Everytime you want to change experiment, call this function first.
-
-    Parameters
-    ----------
-    endpoint: str
-        the endpoint of nni rest server for nnicli
-    """
-    global _api_endpoint
-    _api_endpoint = endpoint
-
-def _check_endpoint():
-    if _api_endpoint is None:
-        raise AssertionError("Please call set_endpoint to specify nni endpoint")
-
-def _nni_rest_get(api_path, response_type='json'):
-    _check_endpoint()
-    uri = '{}/{}/{}'.format(_api_endpoint, API_ROOT_PATH, api_path)
+def _nni_rest_get(endpoint, api_path, response_type='json'):
+    _check_endpoint(endpoint)
+    uri = '{}/{}/{}'.format(endpoint.strip('/'), API_ROOT_PATH, api_path)
     res = requests.get(uri)
     if _http_succeed(res.status_code):
         if response_type == 'json':
@@ -105,219 +66,241 @@ def _create_process(cmd):
             print(output.decode('utf-8').strip())
     return process.returncode
 
-def start_experiment(config_file, port=None, debug=False):
-    """
-    Start an experiment with specified configuration file.
+def _check_endpoint(endpoint):
+    if endpoint is None:
+        raise AssertionError("This instance hasn't been connect to an experiment.")
 
-    Parameters
-    ----------
-    config_file: str
-        path to the config file
-    port: int
-        the port of restful server, bigger than 1024
-    debug: boolean
-        set debug mode
-    """
-    cmd = 'nnictl create --config {}'.format(config_file).split(' ')
-    if port:
-        cmd += '--port {}'.format(port).split(' ')
-    if debug:
-        cmd += ['--debug']
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to start experiment.')
+class NNIExperiment:
+    def __init__(self):
+        self.endpoint = None
+        self.exp_id = None
+        self.port = None
 
-def resume_experiment(exp_id, port=None, debug=False):
-    """
-    Resume a stopped experiment with specified experiment id
+    def start_experiment(self, config_file, port=None, debug=False):
+        """
+        Start an experiment with specified configuration file and connect to it.
 
-    Parameters
-    ----------
-    exp_id: str
-        experiment id
-    port: int
-        the port of restful server, bigger than 1024
-    debug: boolean
-        set debug mode
-    """
-    cmd = 'nnictl resume {}'.format(exp_id).split(' ')
-    if port:
-        cmd += '--port {}'.format(port).split(' ')
-    if debug:
-        cmd += ['--debug']
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to resume experiment.')
-
-def view_experiment(exp_id, port=None):
-    """
-    View a stopped experiment with specified experiment id
-
-    Parameters
-    ----------
-    exp_id: str
-        experiment id
-    port: int
-        the port of restful server, bigger than 1024
-    """
-    cmd = 'nnictl view {}'.format(exp_id).split(' ')
-    if port:
-        cmd += '--port {}'.format(port).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to view experiment.')
-
-def update_searchspace(filename, exp_id=None):
-    """
-    Update an experiment's search space
-
-    Parameters
-    ----------
-    filename: str
-        path to the searchspace file
-    exp_id: str
-        experiment id
-    """
-    if not exp_id:
-        cmd = 'nnictl update searchspace --filename {}'.format(filename).split(' ')
-    else:
-        cmd = 'nnictl update searchspace {} --filename {}'.format(exp_id, filename).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to update searchspace.')
-
-def update_concurrency(value, exp_id=None):
-    """
-    Update an experiment's concurrency
-
-    Parameters
-    ----------
-    value: int
-        new concurrency value
-    exp_id: str
-        experiment id
-    """
-    if not exp_id:
-        cmd = 'nnictl update concurrency --value {}'.format(value).split(' ')
-    else:
-        cmd = 'nnictl update concurrency {} --value {}'.format(exp_id, value).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to update concurrency.')
-
-def update_duration(value, exp_id=None):
-    """
-    Update an experiment's duration
-
-    Parameters
-    ----------
-    value: str
-        SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. e.g., '1m', '2h'
-    exp_id: str
-        experiment id
-    """
-    if not exp_id:
-        cmd = 'nnictl update duration --value {}'.format(value).split(' ')
-    else:
-        cmd = 'nnictl update duration {} --value {}'.format(exp_id, value).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to update duration.')
-
-def update_trailnum(value, exp_id=None):
-    """
-    Update an experiment's maxtrialnum
-
-    Parameters
-    ----------
-    value: int
-        new trailnum value
-    exp_id: str
-        experiment id
-    """
-    if not exp_id:
-        cmd = 'nnictl update trialnum --value {}'.format(value).split(' ')
-    else:
-        cmd = 'nnictl update trialnum {} --value {}'.format(exp_id, value).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to update trailnum.')
-
-def stop_experiment(exp_id=None, port=None, stop_all=False):
-    """Stop an experiment.
-
-    Parameters
-    ----------
-    exp_id: str
-        experiment id
-    port: int
-        the port of restful server
-    stop_all: boolean
-        if set to True, all the experiments will be stopped
-
-    Note that if stop_all is set to true, exp_id and port will be ignored. Otherwise
-    exp_id and port must correspond to the same experiment if they are both set.
-    """
-    if stop_all:
-        cmd = 'nnictl stop --all'.split(' ')
-    else:
-        cmd = 'nnictl stop'.split(' ')
-        if exp_id:
-            cmd += [exp_id]
+        Parameters
+        ----------
+        config_file: str
+            path to the config file
+        port: int
+            the port of restful server, bigger than 1024
+        debug: boolean
+            set debug mode
+        """
+        if self.endpoint is not None:
+            raise RuntimeError('This instance has been connected to an experiment.')
+        cmd = 'nnictl create --config {}'.format(config_file).split(' ')
         if port:
             cmd += '--port {}'.format(port).split(' ')
-    if _create_process(cmd) != 0:
-        raise RuntimeError('Failed to stop experiment.')
+        if debug:
+            cmd += ['--debug']
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to start experiment, please check your config.')
+        else:
+            if port:
+                self.port = port
+            else:
+                self.port = 8080
+            self.endpoint = 'http://localhost:{}'.format(self.port)
+            self.exp_id = self.get_experiment_profile()['id']
 
-def version():
-    """
-    Return version of nni.
-    """
-    return _nni_rest_get(VERSION_PATH, 'text')
+    def resume_experiment(self, exp_id, port=None, debug=False):
+        """
+        Resume a stopped experiment with specified experiment id
 
-def get_experiment_status():
-    """
-    Return experiment status as a dict.
-    """
-    return _nni_rest_get(STATUS_PATH)
+        Parameters
+        ----------
+        exp_id: str
+            experiment id
+        port: int
+            the port of restful server, bigger than 1024
+        debug: boolean
+            set debug mode
+        """
+        if self.endpoint is not None:
+            raise RuntimeError('This instance has been connected to an experiment.')
+        cmd = 'nnictl resume {}'.format(exp_id).split(' ')
+        if port:
+            cmd += '--port {}'.format(port).split(' ')
+        if debug:
+            cmd += ['--debug']
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to resume experiment.')
+        else:
+            if port:
+                self.port = port
+            else:
+                self.port = 8080
+            self.endpoint = 'http://localhost:{}'.format(self.port)
+            self.exp_id = self.get_experiment_profile()['id']
 
-def get_experiment_profile():
-    """
-    Return experiment profile as a dict.
-    """
-    return _nni_rest_get(EXPERIMENT_PATH)
+    def view_experiment(self, exp_id, port=None):
+        """
+        View a stopped experiment with specified experiment id.
 
-def get_trial_job(trial_job_id):
-    """
-    Return trial job information as a dict.
+        Parameters
+        ----------
+        exp_id: str
+            experiment id
+        port: int
+            the port of restful server, bigger than 1024
+        """
+        if self.endpoint is not None:
+            raise RuntimeError('This instance has been connected to an experiment.')
+        cmd = 'nnictl view {}'.format(exp_id).split(' ')
+        if port:
+            cmd += '--port {}'.format(port).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to view experiment.')
+        else:
+            if port:
+                self.port = port
+            else:
+                self.port = 8080
+            self.endpoint = 'http://localhost:{}'.format(self.port)
+            self.exp_id = self.get_experiment_profile()['id']
 
-    Parameters
-    ----------
-    trial_job_id: str
-        trial id
-    """
-    assert trial_job_id is not None
-    return _nni_rest_get(os.path.join(TRIAL_JOBS_PATH, trial_job_id))
+    def connect_experiment(self, endpoint):
+        """
+        Connect to an existing experiment.
 
-def list_trial_jobs():
-    """
-    Return information for all trial jobs as a list.
-    """
-    return _nni_rest_get(TRIAL_JOBS_PATH)
+        Parameters
+        ----------
+        endpoint: str
+            the endpoint of nni rest server, i.e, the url of Web UI. Should be a format like `http://ip:port`
+        """
+        if self.endpoint is not None:
+            raise RuntimeError('This instance has been connected to an experiment.')
+        self.endpoint = endpoint
+        try:
+            self.exp_id = self.get_experiment_profile()['id']
+        except TypeError:
+            raise RuntimeError('Invalid experiment endpoint.')
+        self.port = int(re.search(r':[0-9]+', self.endpoint).group().replace(':', ''))   
 
-def get_job_statistics():
-    """
-    Return trial job statistics information as a dict.
-    """
-    return _nni_rest_get(JOB_STATISTICS_PATH)
+    def stop_experiment(self):
+        """Stop the experiment.
+        """
+        _check_endpoint(self.endpoint)
+        cmd = 'nnictl stop {}'.format(self.exp_id).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to stop experiment.')
 
-def get_job_metrics(trial_job_id=None):
-    """
-    Return trial job metrics.
+    def update_searchspace(self, filename):
+        """
+        Update the experiment's search space.
 
-    Parameters
-    ----------
-    trial_job_id: str
-        trial id. if this parameter is None, all trail jobs' metrics will be returned.
-    """
-    api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
-    return _nni_rest_get(api_path)
+        Parameters
+        ----------
+        filename: str
+            path to the searchspace file
+        """
+        _check_endpoint(self.endpoint)
+        cmd = 'nnictl update searchspace {} --filename {}'.format(self.exp_id, filename).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to update searchspace.')
 
-def export_data():
-    """
-    Return exported information for all trial jobs.
-    """
-    return _nni_rest_get(EXPORT_DATA_PATH)
+    def update_concurrency(self, value):
+        """
+        Update an experiment's concurrency
+
+        Parameters
+        ----------
+        value: int
+            new concurrency value
+        """
+        _check_endpoint(self.endpoint)
+        cmd = 'nnictl update concurrency {} --value {}'.format(self.exp_id, value).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to update concurrency.')
+
+    def update_duration(self, value):
+        """
+        Update an experiment's duration
+
+        Parameters
+        ----------
+        value: str
+            Strings like '1m' for one minute or '2h' for two hours. SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
+        """
+        _check_endpoint(self.endpoint)
+        cmd = 'nnictl update duration {} --value {}'.format(self.exp_id, value).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to update duration.')
+
+    def update_trailnum(self, value):
+        """
+        Update an experiment's maxtrialnum
+
+        Parameters
+        ----------
+        value: int
+            new trailnum value
+        """
+        _check_endpoint(self.endpoint)
+        cmd = 'nnictl update trialnum {} --value {}'.format(self.exp_id, value).split(' ')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to update trailnum.')
+
+    def get_experiment_status(self):
+        """
+        Return experiment status as a dict.
+        """
+        _check_endpoint(self.endpoint)
+        return _nni_rest_get(self.endpoint, STATUS_PATH)
+
+    def get_trial_job(self, trial_job_id):
+        """
+        Return trial job information as a dict.
+
+        Parameters
+        ----------
+        trial_job_id: str
+            trial id
+        """
+        _check_endpoint(self.endpoint)
+        assert trial_job_id is not None
+        return _nni_rest_get(self.endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
+
+    def list_trial_jobs(self):
+        """
+        Return information for all trial jobs as a list.
+        """
+        _check_endpoint(self.endpoint)
+        return _nni_rest_get(self.endpoint, TRIAL_JOBS_PATH)
+
+    def get_job_statistics(self):
+        """
+        Return trial job statistics information as a dict.
+        """
+        _check_endpoint(self.endpoint)
+        return _nni_rest_get(self.endpoint, JOB_STATISTICS_PATH)
+
+    def get_job_metrics(self, trial_job_id=None):
+        """
+        Return trial job metrics.
+
+        Parameters
+        ----------
+        trial_job_id: str
+            trial id. if this parameter is None, all trail jobs' metrics will be returned.
+        """
+        _check_endpoint(self.endpoint)
+        api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
+        return _nni_rest_get(self.endpoint, api_path)
+
+    def export_data(self):
+        """
+        Return exported information for all trial jobs.
+        """
+        _check_endpoint(self.endpoint)
+        return _nni_rest_get(self.endpoint, EXPORT_DATA_PATH)
+
+    def get_experiment_profile(self):
+        """
+        Return experiment profile as a dict.
+        """
+        _check_endpoint(self.endpoint)
+        return _nni_rest_get(self.endpoint, EXPERIMENT_PATH)

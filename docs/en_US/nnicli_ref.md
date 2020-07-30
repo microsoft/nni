@@ -3,39 +3,30 @@
 NNI client is a python API of `nnictl`, which implements the most commonly used commands. Users can use this API to control their experiments, collect experiment results and conduct advanced analyses based on experiment results in python code directly instead of using command line. Here is an example:
 
 ```
-import nnicli as nc
+from nnicli import NNIExperiment
 
-nc.start_experiment('nni/examples/trials/mnist-pytorch/config.yml', port=9090) # start an experiment
+# create an experiment instance
+exp = NNIExperiment() 
 
-nc.set_endpoint('http://localhost:9090') # set the experiment's endpoint, i.e., the url of Web UI
+# start an experiment, then connect the instance to this experiment
+# you can also use `resume_experiment`, `view_experiment` or `connect_experiment`
+exp.start_experiment('nni/examples/trials/mnist-pytorch/config.yml', port=9090)
 
-print(nc.version()) # check the version of nni
-print(nc.get_experiment_status()) # get the experiment's status
+# update the experiment's concurrency
+exp.update_concurrency(3)
 
-print(nc.get_job_statistics()) # get the trial job information
-print(nc.list_trial_jobs()) # get information for all trial jobs
+# get some information about the experiment
+print(exp.get_experiment_status())
+print(exp.get_job_statistics())
+print(exp.list_trial_jobs())
 
-nc.stop_nni(port=9090) # stop the experiment
+# stop the experiment, then disconnect the instance from the experiment.
+exp.stop_experiment()
 ```
 
 ## References
 
 ```eval_rst
-.. autofunction:: nnicli.start_experiment
-.. autofunction:: nnicli.set_endpoint
-.. autofunction:: nnicli.resume_experiment
-.. autofunction:: nnicli.view_experiment
-.. autofunction:: nnicli.update_searchspace
-.. autofunction:: nnicli.update_concurrency
-.. autofunction:: nnicli.update_duration
-.. autofunction:: nnicli.update_trailnum
-.. autofunction:: nnicli.stop_experiment
-.. autofunction:: nnicli.version
-.. autofunction:: nnicli.get_experiment_status
-.. autofunction:: nnicli.get_experiment_profile
-.. autofunction:: nnicli.get_trial_job
-.. autofunction:: nnicli.list_trial_jobs
-.. autofunction:: nnicli.get_job_statistics
-.. autofunction:: nnicli.get_job_metrics
-.. autofunction:: nnicli.export_data
+..  autoclass:: nni.tuner.Tuner
+    :members:
 ```

@@ -262,7 +262,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
-  |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+  |--value, -v|  True| | Strings like '1m' for one minute or '2h' for two hours. SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.|
 
   * Example
 
