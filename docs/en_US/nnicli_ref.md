@@ -27,6 +27,6 @@ exp.stop_experiment()
 ## References
 
 ```eval_rst
-..  autoclass:: nni.tuner.Tuner
+..  autoclass:: nnicli.NNIExperiment
     :members:
 ```
