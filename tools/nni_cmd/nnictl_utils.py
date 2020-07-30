@@ -16,10 +16,11 @@ from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_latest_url
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
-     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
+     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT, \
+     EXPERIMENT_RESULT_FORMAT, EXPERIMENT_RESULT_DETAIL_FORMAT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
@@ -736,3 +737,57 @@ def search_space_auto_gen(args):
         print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
+
+def experiment_head(args):
+    '''list maximal trials' id and results'''
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(metric_data_latest_url(rest_port), 20)
+        if response is not None and check_response(response):
+            content = json.loads(response.text)
+            if int(args.num) > len(content):
+                print_error('Required number is too large.')
+                return
+            content = sorted(content, key=lambda x: float(x['data'][2: -2]), reverse=True)
+            list_trial = ''
+            for idx in range(int(args.num)):
+                list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
+                                                                     content[idx]['data'][1: -2])
+            print_normal(EXPERIMENT_RESULT_FORMAT.format('Maximal', list_trial))
+        else:
+            print_error('Get latest data failed...')
+    else:
+        print_error('Restful server is not Running')
+
+def experiment_tail(args):
+    '''list maximal trials' id and results'''
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(metric_data_latest_url(rest_port), 20)
+        if response is not None and check_response(response):
+            content = json.loads(response.text)
+            if int(args.num) > len(content):
+                print_error('Required number is too large.')
+                return
+            content = sorted(content, key=lambda x: float(x['data'][2: -2]))
+            list_trial = ''
+            for idx in range(int(args.num)):
+                list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
+                                                                     content[idx]['data'][1: -2])
+            print_normal(EXPERIMENT_RESULT_FORMAT.format('Maximal', list_trial))
+        else:
+            print_error('Get latest data failed...')
+    else:
+        print_error('Restful server is not Running')

@@ -22,6 +22,11 @@ EXPORT_DATA_API = '/export-data'
 
 TENSORBOARD_API = '/tensorboard'
 
+METRIC_DATA_LATEST_API = '/metric-data-latest'
+
+def metric_data_latest_url(port):
+    '''get metric_data url'''
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, METRIC_DATA_LATEST_API)
 
 def check_status_url(port):
     '''get check_status url'''

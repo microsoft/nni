@@ -531,6 +531,43 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
+* __nnictl experiment head__
+  * Description
+
+    You can use this command to list trial results with highest metrics.
+
+  * Usage
+
+    ```bash
+    nnictl experiment head [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |---|---|---|---|
+  |id|False| |ID of the experiment|
+  |--num|False|10|the number of items to be listed|
+
+
+* __nnictl experiment tail__
+  * Description
+
+    You can use this command to list trial results with lowest metrics.
+
+  * Usage
+
+    ```bash
+    nnictl experiment tail [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |---|---|---|---|
+  |id|False| |ID of the experiment|
+  |--num|False|10|the number of items to be listed|
+
 <a name="platform"></a>
 ### Manage platform information
 
