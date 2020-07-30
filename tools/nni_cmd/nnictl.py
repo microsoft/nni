@@ -130,11 +130,13 @@ def parse_args():
     parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
     parser_experiment_clean.set_defaults(func=experiment_clean)
-    parser_experiment_head = parser_experiment_subparsers.add_parser('head', help='list the id and results of the n trials with the highest metric')
+    parser_experiment_head = parser_experiment_subparsers.add_parser('head', help='list the id and results of the' \
+                                                                                  'n trials with the highest metric')
     parser_experiment_head.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_head.add_argument('--num', default=10, help='the number of items to be listed')
     parser_experiment_head.set_defaults(func=experiment_head)
-    parser_experiment_tail = parser_experiment_subparsers.add_parser('tail', help='list the id and results of the n trials with the lowest metric')
+    parser_experiment_tail = parser_experiment_subparsers.add_parser('tail', help='list the id and results of the' \
+                                                                                  'n trials with the lowest metric')
     parser_experiment_tail.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_tail.add_argument('--num', default=10, help='the number of items to be listed')
     parser_experiment_tail.set_defaults(func=experiment_tail)
