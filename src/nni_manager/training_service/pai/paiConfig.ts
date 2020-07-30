@@ -56,9 +56,10 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public form: TrialJobApplicationForm;
     public logPath: string;
     public isEarlyStopped?: boolean;
+    public paiJobDetailUrl?: string;
 
     constructor(id: string, status: TrialJobStatus, paiJobName: string,
-        submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, logPath: string) {
+                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, logPath: string, paiJobDetailUrl?: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
@@ -67,5 +68,6 @@ export class PAITrialJobDetail implements TrialJobDetail {
         this.form = form;
         this.tags = [];
         this.logPath = logPath;
+        this.paiJobDetailUrl = paiJobDetailUrl;
     }
 }

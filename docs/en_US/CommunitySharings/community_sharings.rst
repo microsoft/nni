@@ -1,16 +1,15 @@
-######################
-Community Sharings
-######################
+#######################
+Use Cases and Solutions
+#######################
 
-In addtion to the official tutorilas and examples, we encourage community contributors to share their AutoML practices especially the NNI usage practices from their experience.
+Different from the tutorials and examples in the rest of the document which show the usage of a feature, this part mainly introduces end-to-end scenarios and use cases to help users further understand how NNI can help them. NNI can be widely adopted in various scenarios. We also encourage community contributors to share their AutoML practices especially the NNI usage practices from their experience.
 
 ..  toctree::
     :maxdepth: 2
 
-    NNI in Recommenders <RecommendersSvd>
-    Automatically tuning SPTAG with NNI <SptagAutoTune>
-    Neural Architecture Search Comparison <NasComparison>
-    Hyper-parameter Tuning Algorithm Comparison <HpoComparison>
-    Parallelizing Optimization for TPE <ParallelizingTpeSearch>
-    Automatically tune systems with NNI <TuningSystems>
-    NNI review article from Zhihu: - By Garvin Li <NNI_AutoFeatureEng>
+    Automatic Model Tuning (HPO/NAS) <automodel>
+    Automatic System Tuning (AutoSys) <autosys>
+    Model Compression <model_compression>
+    Feature Engineering <feature_engineering>
+    Performance measurement, comparison and analysis <perf_compare>
+    Use NNI on Google Colab <NNI_colab_support>
