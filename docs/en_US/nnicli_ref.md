@@ -10,6 +10,7 @@ exp = NNIExperiment()
 
 # start an experiment, then connect the instance to this experiment
 # you can also use `resume_experiment`, `view_experiment` or `connect_experiment`
+# only one of them should be called in one instance
 exp.start_experiment('nni/examples/trials/mnist-pytorch/config.yml', port=9090)
 
 # update the experiment's concurrency
