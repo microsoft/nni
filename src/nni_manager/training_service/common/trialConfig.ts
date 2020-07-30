@@ -17,6 +17,10 @@ export class TrialConfig {
     // Required GPU number for trial job. The number should be in [0,100]
     public readonly gpuNum: number;
 
+    // this flag uses for UT now.
+    // in future, all environments should be reusable, and this can be configurable by user.
+    public reuseEnvironment: boolean | undefined = true;
+
     /**
      * Constructor
      * @param command Trail command

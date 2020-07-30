@@ -82,7 +82,11 @@ class RemoteLogger(object):
         '''
         constructor
         '''
-        self.logger = logging.getLogger('nni_syslog_{}'.format(tag))
+        logger_name = 'nni_syslog_{}'.format(tag)
+        # to prevent multiple trial logged in same logger
+        if trial_id is not None:
+            logger_name = '{}_{}'.format(logger_name, trial_id)
+        self.logger = logging.getLogger(logger_name)
         self.log_level = log_level
         self.logger.setLevel(self.log_level)
         self.pipeReader = None
