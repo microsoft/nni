@@ -49,12 +49,10 @@ describe('Unit test for nnimanager', function () {
                 optimize_mode: 'maximize'
             },
             checkpointDir: '',
-            gpuNum: 0
         },
         assessor: {
             builtinAssessorName: 'Medianstop',
             checkpointDir: '',
-            gpuNum: 1
         }
     }
 
@@ -168,7 +166,7 @@ describe('Unit test for nnimanager', function () {
     it('test getExperimentProfile', () => {
         return nniManager.getExperimentProfile().then((experimentProfile) => {
             expect(experimentProfile.id).to.be.equal('unittest');
-            expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni','experiments','unittest'));
+            expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni-experiments','unittest'));
 
         }).catch((error) => {
             assert.fail(error);

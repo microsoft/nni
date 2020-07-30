@@ -22,8 +22,8 @@ Step 6. Create an AML cluster as the computeTarget.
 
 Step 7. Open a command line and install AML package environment.
 ```
-python3 -m pip install azureml --user
-python3 -m pip install azureml-sdk --user
+python3 -m pip install azureml
+python3 -m pip install azureml-sdk
 ```
 
 ## Run an experiment
