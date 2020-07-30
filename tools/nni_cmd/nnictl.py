@@ -148,7 +148,7 @@ def parse_args():
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
-    parser_trial_export.add_argument('--intermediate', '-i', default=False, help='is intermediate results required')
+    parser_trial_export.add_argument('--intermediate', '-i', default=False, help='is intermediate results included')
     parser_trial_export.set_defaults(func=export_trials_data)
 
     #TODO:finish webui function
