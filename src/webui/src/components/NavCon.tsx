@@ -190,13 +190,13 @@ class NavCon extends React.Component<NavProps, NavState> {
         items: [
             {
                 key: 'experiment',
-                text: 'Experiment Summary',
+                text: 'Experiment summary',
                 iconProps: { iconName: 'ShowResults' },
                 onClick: this.showExpcontent
             },
             {
                 key: 'logfiles',
-                text: 'Logfiles',
+                text: 'Log files',
                 iconProps: { iconName: 'FilePDB' },
                 onClick: this.showDispatcherLog
             }

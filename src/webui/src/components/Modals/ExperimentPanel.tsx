@@ -102,7 +102,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
                     <Pivot style={{ minHeight: 190 }} className="log-tab-body">
-                        <PivotItem headerText="Experiment Parameters">
+                        <PivotItem headerText="Experiment parameters">
                             <div className="just-for-log">
                                 <MonacoEditor
                                     width="100%"
