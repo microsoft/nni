@@ -74,8 +74,8 @@ trial:
   memoryMB: 8196
   image: msranni/nni:latest
   virtualCluster: default
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
+  nniManagerNFSMountPath: /local/mnt
+  containerNFSMountPath: /mnt/confignfs-data
   paiStorageConfigName: confignfs-data
 # Configuration to access OpenPAI Cluster
 paiConfig:
