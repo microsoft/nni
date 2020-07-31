@@ -16,6 +16,6 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: minimize
 trial:
-  command: python3 main.py
+  command: Python main.py
   codeDir: .
   gpuNum: 0
