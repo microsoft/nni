@@ -433,9 +433,9 @@ def hdfs_clean(host, user_name, output_dir, experiment_id=None):
     '''clean up hdfs data'''
     hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
     if experiment_id:
-        full_path = '/' + '/'.join([user_name, 'nni', 'experiments', experiment_id])
+        full_path = '/' + '/'.join([user_name, 'nni-experiments', experiment_id])
     else:
-        full_path = '/' + '/'.join([user_name, 'nni', 'experiments'])
+        full_path = '/' + '/'.join([user_name, 'nni-experiments'])
     print_normal('removing folder {0} in hdfs'.format(full_path))
     hdfs_client.delete(full_path, recursive=True)
     if output_dir:
@@ -497,7 +497,7 @@ def experiment_clean(args):
         home = str(Path.home())
         local_dir = nni_config.get_config('experimentConfig').get('logDir')
         if not local_dir:
-            local_dir = os.path.join(home, 'nni', 'experiments', experiment_id)
+            local_dir = os.path.join(home, 'nni-experiments', experiment_id)
         local_clean(local_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))

@@ -7,7 +7,7 @@
     "id": "mw3lSbde",
     "revision": 39,
     "execDuration": 265,
-    "logDir": "/***/nni/experiments/mw3lSbde",
+    "logDir": "/***/nni-experiments/mw3lSbde",
     "nextSequenceId": 11,
     "params": {
       "authorName": "NNI Example",

@@ -122,7 +122,7 @@ def _expand_file_annotations(src_path, dst_path, nas_mode):
 def _generate_specific_file(src_path, dst_path, exp_id, trial_id, module):
     with open(src_path) as src, open(dst_path, 'w') as dst:
         try:
-            with open(os.path.expanduser('~/nni/experiments/%s/trials/%s/parameter.cfg'%(exp_id, trial_id))) as fd:
+            with open(os.path.expanduser('~/nni-experiments/%s/trials/%s/parameter.cfg'%(exp_id, trial_id))) as fd:
                 para_cfg = json.load(fd)
             annotated_code = specific_code_generator.parse(src.read(), para_cfg["parameters"], module)
             if annotated_code is None:

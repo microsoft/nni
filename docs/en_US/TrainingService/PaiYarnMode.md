@@ -123,7 +123,7 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 ## data management
 If your training data is not too large, it could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the [guidance](https://github.com/microsoft/paiYarn/blob/master/docs/user/storage.md) to mount the data folder in container.
 
-If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS, the target path is `hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput`
+If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS, the target path is `hdfs://host:port/{username}/nni-experiments/{experimentId}/trials/{trialId}/nnioutput`
 
 ## version check
 NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.

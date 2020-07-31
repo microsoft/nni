@@ -261,7 +261,7 @@ class DLTSTrainingService implements TrainingService {
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(
-            '/nni/experiments', getExperimentId(),
+            '/nni-experiments', getExperimentId(),
             '/trials/', trialJobId);
         const trialJobDetail = new DLTSTrialJobDetail(
             trialJobId, // id
