@@ -75,20 +75,3 @@ sh ./experiments/scripts/test.sh
 ```
 
 The test result will be saved in `./retrain`. You can configure the `--ouput` in `./examples/nas/cream/test.sh` to specify a path for it.
-
-
-### PyTorch
-
-```eval_rst
-..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
-    :members:
-
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
-    :members:
-
-..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
-    :members:
-
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedMutatorParallel
-    :members:
-```
