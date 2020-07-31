@@ -500,7 +500,7 @@ def experiment_clean(args):
         home = str(Path.home())
         local_dir = nni_config.get_config('experimentConfig').get('logDir')
         if not local_dir:
-            local_dir = os.path.join(home, 'nni', 'experiments', experiment_id)
+            local_dir = os.path.join(home, 'nni-experiments', experiment_id)
         local_clean(local_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
@@ -780,7 +780,7 @@ def save_experiment(args):
     # Step3. Copy code dir
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
-        shutil.copytree(nni_config.get_config('trial')['codeDir'], temp_code_dir)
+        shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
     
     # Step4. Archive folder
     zip_package_name = 'nni_experiment_%s' % args.id
@@ -848,12 +848,13 @@ def open_experiment(args):
     
     # Step3. Copy experiment data
     nni_config = Config(experiment_metadata.get('fileName'))
+    nnictl_exp_config = nni_config.get_config('experimentConfig')
     if args.logDir:
         logDir = args.logDir
-        nni_config.set_config('logDir', logDir)
+        nnictl_exp_config['logDir'] = logDir
     else:
-        if nni_config.get_config('logDir'):
-            logDir = nni_config['logDir']
+        if nnictl_exp_config.get('logDir'):
+            logDir = nnictl_exp_config['logDir']
         else:
             logDir = os.path.join(os.path.expanduser("~"), 'nni-experiments')
     os.rename(os.path.join(temp_root_dir, 'experiment'), os.path.join(temp_root_dir, experiment_id))
@@ -864,13 +865,17 @@ def open_experiment(args):
     shutil.copytree(src_path, dest_path)
 
     # Step4. Copy code dir
-    nni_config.set_config('codeDir', args.codeDir)
+    codeDir = os.path.expanduser(args.codeDir)
+    if not os.path.isabs(codeDir):
+        codeDir = os.path.join(os. getcwd(), codeDir)
+        print_normal('Expand codeDir to %s' % codeDir)
+    nnictl_exp_config['trial']['codeDir'] = codeDir
     archive_code_dir = os.path.join(temp_root_dir, 'code')
     if os.path.exists(archive_code_dir):
         file_list = os.listdir(archive_code_dir)
         for file_name in file_list:
             src_path = os.path.join(archive_code_dir, file_name)
-            target_path = os.path.join(args.codeDir, file_name)
+            target_path = os.path.join(codeDir, file_name)
             if os.path.exists(target_path):
                 print_error('Copy %s failed, %s exist!' % (file_name, target_path))
                 continue
@@ -880,6 +885,7 @@ def open_experiment(args):
                 shutil.copy(src_path, target_path)
     
     # Step5. Create experiment metadata
+    nni_config.set_config('experimentConfig', nnictl_exp_config)
     experiment_config.add_experiment(experiment_id,
                                     experiment_metadata.get('port'),
                                     experiment_metadata.get('startTime'),
