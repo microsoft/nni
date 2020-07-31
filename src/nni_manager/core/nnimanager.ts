@@ -326,7 +326,11 @@ class NNIManager implements Manager {
     }
 
     public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
-        return this.trainingService.getTrialLog(trialJobId, logType);
+        try {
+            return this.trainingService.getTrialLog(trialJobId, logType);
+        } catch (error) {
+            return Promise.reject(new Error(`Error: ${this.experimentProfile.params.trainingServicePlatform} training service does not support retriving log`));
+        }
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {
