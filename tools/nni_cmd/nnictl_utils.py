@@ -688,11 +688,8 @@ def export_trials_data(args):
         sorted(intermediate_results, key=lambda x: x['timestamp'])
         groupby = dict()
         for content in intermediate_results:
-            groupby.setdefault(content['trialJobId'], []).append(content['data'][2:-2])
+            groupby.setdefault(content['trialJobId'], []).append(content['data'][2:-2].replace('\\', ''))
         return groupby
-
-    def trans_intermediate_dict(record):
-        return {'intermediate': '[' + str(reduce(lambda x, y: x + ',' + y, record)) + ']'}
 
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
@@ -724,7 +721,7 @@ def export_trials_data(args):
             for record in content:
                 formated_record = dict()
                 if args.intermediate:
-                    formated_record.update({**trans_intermediate_dict(record['intermediate'])})
+                    formated_record['intermediate'] = '[' + ';'.join(record['intermediate']) + ']'
                 record_value = json.loads(record['value'])
                 if not isinstance(record_value, (float, int)):
                     formated_record.update({**record['parameter'], **record_value, **{'id': record['id']}})
