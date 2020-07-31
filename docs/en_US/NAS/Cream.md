@@ -8,6 +8,7 @@ paths is able to boost the training of subnetworks. Since the prioritized paths 
 one from the prioritized paths as the final architecture, without using other complex search methods, such as reinforcement learning or evolution algorithms. The experiments on ImageNet verify such path distillation method can improve the
 convergence ratio and performance of the hypernetwork, as well as boosting the training of subnetworks. The discovered architectures achieve superior performance compared to the recent MobileNetV3 and EfficientNet families under aligned
 settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method.
+For more details, pls refer to the [Paper] (https://github.com/microsoft/nni).
 
 ## Reproduction Results
 Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior than 8 Gpus.
