@@ -4,6 +4,7 @@ from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
 from nni.nas.benchmarks.constants import DATABASE_DIR
+from nni.nas.benchmarks.utils import json_dumps
 
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench201.db'), autoconnect=True)
 
@@ -35,7 +36,7 @@ class Nb201TrialConfig(Model):
         for training, 6k images from validation set for validation and the other 6k for testing).
     """
 
-    arch = JSONField(index=True)
+    arch = JSONField(json_dumps=json_dumps, index=True)
     num_epochs = IntegerField(index=True)
     num_channels = IntegerField()
     num_cells = IntegerField()

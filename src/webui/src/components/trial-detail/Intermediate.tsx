@@ -128,7 +128,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         id: 'dataZoomY',
                         type: 'inside',
                         yAxisIndex: [0],
-                        filterMode: 'empty',
+                        filterMode: 'none',
                         start: startMediaY,
                         end: endMediaY
                     }
