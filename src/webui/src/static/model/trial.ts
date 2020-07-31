@@ -115,7 +115,6 @@ class Trial implements TableObj {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
-            jobId: this.info.jobId,
             parameterId: this.info.parameterId,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             startTime: this.info.startTime!,

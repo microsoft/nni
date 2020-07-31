@@ -40,11 +40,10 @@ interface TableObj {
 interface TableRecord {
     key: string;
     sequenceId: number;
+    parameterId: string;
     startTime: number;
     endTime?: number;
     id: string;
-    jobId: string;
-    parameterId: string;
     duration: number;
     status: string;
     intermediateCount: number;
@@ -126,7 +125,6 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
-    trialId: string;
     parameterId: string;
     type: string;
     sequence: number;
@@ -135,7 +133,6 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
-    jobId: string;
     parameterId: string;
     sequenceId: number;
     status: string;

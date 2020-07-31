@@ -7,13 +7,11 @@ import { requestAxios } from '../function';
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
     for (const metric of metrics) {
-        const trialId = `${metric.trialJobId}-${metric.parameterId}`;
-        metric.trialId = trialId;
-        if (ret.has(trialId)) {
+        if (ret.has(metric.trialJobId)) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ret.get(trialId)!.push(metric);
+            ret.get(metric.trialJobId)!.push(metric);
         } else {
-            ret.set(trialId, [metric]);
+            ret.set(metric.trialJobId, [ metric ]);
         }
     }
     // to compatiable with multi-trial in same job, fix offset of sequence
