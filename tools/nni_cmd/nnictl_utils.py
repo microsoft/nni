@@ -500,7 +500,7 @@ def experiment_clean(args):
         home = str(Path.home())
         local_dir = nni_config.get_config('experimentConfig').get('logDir')
         if not local_dir:
-            local_dir = os.path.join(home, 'nni-experiments', experiment_id)
+            local_dir = os.path.join(home, 'nni', 'experiments', experiment_id)
         local_clean(local_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
@@ -766,7 +766,7 @@ def save_experiment(args):
 
     # Step2. Copy nnictl metadata to temp folder
     temp_nnictl_dir = os.path.join(temp_root_dir, 'nnictl')
-    os.makedirs(temp_nnictl_dir, exist_ok = True)
+    os.makedirs(temp_nnictl_dir, exist_ok=True)
     try:
         with open(os.path.join(temp_nnictl_dir, '.experiment'), 'w') as file:
             experiment_dict[args.id]['id'] = args.id
