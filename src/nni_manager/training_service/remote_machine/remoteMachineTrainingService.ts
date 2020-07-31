@@ -83,13 +83,13 @@ class RemoteMachineTrainingService implements TrainingService {
         await restServer.start();
         restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info('Run remote machine training service.');
+        if (this.sshConnectionPromises.length > 0) {
+            await Promise.all(this.sshConnectionPromises);
+            this.log.info('ssh connection initialized!');
+            // set sshConnectionPromises to [] to avoid log information duplicated
+            this.sshConnectionPromises = [];
+        }
         while (!this.stopping) {
-            if (this.sshConnectionPromises.length) {
-                await Promise.all(this.sshConnectionPromises);
-                this.log.info('ssh connection initialized!');
-                // set sshConnectionPromises to [] to avoid log information duplicated
-                this.sshConnectionPromises = [];
-            }
             while (this.jobQueue.length > 0) {
                 this.updateGpuReservation();
                 const trialJobId: string = this.jobQueue[0];
