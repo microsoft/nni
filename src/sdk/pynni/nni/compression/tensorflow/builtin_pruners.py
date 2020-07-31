@@ -6,17 +6,23 @@ import numpy as np
 import tensorflow as tf
 from .compressor import Pruner
 
-__all__ = ['LevelPruner', 'AGP_Pruner', 'FPGMPruner']
+__all__ = ['LevelPruner', 'AGPPruner', 'FPGMPruner']
 
 _logger = logging.getLogger(__name__)
 
 
 class LevelPruner(Pruner):
+    """
+    Parameters
+    ----------
+    model : tensorflow model
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Operation types to prune.
+    """
     def __init__(self, model, config_list):
-        """
-        config_list: supported keys:
-            - sparsity
-        """
         super().__init__(model, config_list)
         self.mask_list = {}
         self.if_init_list = {}
@@ -34,24 +40,22 @@ class LevelPruner(Pruner):
         return mask
 
 
-class AGP_Pruner(Pruner):
-    """An automated gradual pruning algorithm that prunes the smallest magnitude
-    weights to achieve a preset level of network sparsity.
-    Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
-    efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
-    Learning of Phones and other Consumer Devices,
-    https://arxiv.org/pdf/1710.01878.pdf
+class AGPPruner(Pruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned.
+    config_list : listlist
+        Supported keys:
+            - initial_sparsity: This is to specify the sparsity when compressor starts to compress.
+            - final_sparsity: This is to specify the sparsity when compressor finishes to compress.
+            - start_epoch: This is to specify the epoch number when compressor starts to compress, default start from epoch 0.
+            - end_epoch: This is to specify the epoch number when compressor finishes to compress.
+            - frequency: This is to specify every *frequency* number epochs compressor compress once, default frequency=1.
     """
 
     def __init__(self, model, config_list):
-        """
-        config_list: supported keys:
-            - initial_sparsity
-            - final_sparsity: you should make sure initial_sparsity <= final_sparsity
-            - start_epoch: start epoch numer begin update mask
-            - end_epoch: end epoch number stop update mask
-            - frequency: if you want update every 2 epoch, you can set it 2
-        """
         super().__init__(model, config_list)
         self.mask_list = {}
         self.if_init_list = {}
@@ -102,23 +106,19 @@ class AGP_Pruner(Pruner):
         for k in self.if_init_list:
             self.if_init_list[k] = True
 
+
 class FPGMPruner(Pruner):
     """
-    A filter pruner via geometric median.
-    "Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration",
-    https://arxiv.org/pdf/1811.00250.pdf
+    Parameters
+    ----------
+    model : tensorflow model
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : percentage of convolutional filters to be pruned.
+            - op_types : Only Conv2d is supported in FPGM Pruner.
     """
-
     def __init__(self, model, config_list):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            the model user wants to compress
-        config_list: list
-            support key for each list item:
-                - sparsity: percentage of convolutional filters to be pruned.
-        """
         super().__init__(model, config_list)
         self.mask_dict = {}
         self.assign_handler = []

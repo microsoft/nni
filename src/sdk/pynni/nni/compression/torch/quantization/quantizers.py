@@ -153,7 +153,7 @@ class QAT_Quantizer(Quantizer):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list of dict
             List of configurations
@@ -179,7 +179,7 @@ class QAT_Quantizer(Quantizer):
         ----------
         bits : int
             quantization bits length
-        op : torch.nn.module
+        op : torch.nn.Module
             target module
         real_val : float
             real value to be quantized
@@ -271,7 +271,7 @@ class DoReFaQuantizer(Quantizer):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list of dict
             List of configurations
@@ -322,7 +322,7 @@ class BNNQuantizer(Quantizer):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list of dict
             List of configurations
