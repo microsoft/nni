@@ -136,8 +136,8 @@ def get_job_metrics(trial_job_id=None, sort=False):
     api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
     job_metrics = _nni_rest_get(api_path)
     
-    if sort == True and trial_job_id != None:
-        return sorted(metrics, key=cmp_to_key(lambda x, y: -1 if float(x['data'].replace('"', '')) < float(y['data'].replace('"', '')) else 1, reverse=True)
+    if sort == True and trial_job_id == None:
+        return sorted(job_metrics, key=cmp_to_key(lambda x, y: -1 if float(x['data'].replace('"', '')) < float(y['data'].replace('"', '')) else 1, reverse=True)
     else:  
         return job_metrics
 
