@@ -178,7 +178,7 @@ class NNIExperiment:
             self.exp_id = self.get_experiment_profile()['id']
         except TypeError:
             raise RuntimeError('Invalid experiment endpoint.')
-        self.port = int(re.search(r':[0-9]+', self.endpoint).group().replace(':', ''))   
+        self.port = int(re.search(r':[0-9]+', self.endpoint).group().replace(':', ''))
 
     def stop_experiment(self):
         """Stop the experiment.
@@ -223,7 +223,8 @@ class NNIExperiment:
         Parameters
         ----------
         value: str
-            Strings like '1m' for one minute or '2h' for two hours. SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
+            Strings like '1m' for one minute or '2h' for two hours.
+            SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
         _check_endpoint(self.endpoint)
         cmd = 'nnictl update duration {} --value {}'.format(self.exp_id, value).split(' ')
