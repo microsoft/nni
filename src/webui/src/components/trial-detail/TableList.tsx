@@ -642,6 +642,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             style={{
                                 width: 0.5 * modalIntermediateWidth,
                                 height: 0.7 * modalIntermediateHeight,
+                                maxHeight: 534,
                                 padding: 20
                             }}
                             theme="my_theme"
