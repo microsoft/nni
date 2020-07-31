@@ -23,43 +23,72 @@ class SensitivityPruner(Pruner):
     """
     This function prune the model based on the sensitivity
     for each layer.
+
+    Parameters
+    ----------
+    model: torch.nn.Module
+        model to be compressed
+    evaluator: function
+        validation function for the model. This function should return the accuracy
+        of the validation dataset. The input parameters of evaluator can be specified
+        in the parameter `eval_args` and 'eval_kwargs' of the compress function if needed.
+        Example:
+            >>> def evaluator(model):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     val_loader = ...
+            >>>     model.eval()
+            >>>     correct = 0
+            >>>     with torch.no_grad():
+            >>>         for data, target in val_loader:
+            >>>             data, target = data.to(device), target.to(device)
+            >>>             output = model(data)
+            >>>             # get the index of the max log-probability
+            >>>             pred = output.argmax(dim=1, keepdim=True)
+            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
+            >>>     accuracy = correct / len(val_loader.dataset)
+            >>>     return accuracy
+    finetuner: function
+        finetune function for the model. This parameter is not essential, if is not None,
+        the sensitivity pruner will finetune the model after pruning in each iteration.
+        The input parameters of finetuner can be specified in the parameter of compress
+        called `finetune_args` and `finetune_kwargs` if needed.
+        Example:
+            >>> def finetuner(model, epoch=3):
+            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            >>>     train_loader = ...
+            >>>     criterion = torch.nn.CrossEntropyLoss()
+            >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+            >>>     model.train()
+            >>>     for _ in range(epoch):
+            >>>         for _, (data, target) in enumerate(train_loader):
+            >>>             data, target = data.to(device), target.to(device)
+            >>>             optimizer.zero_grad()
+            >>>             output = model(data)
+            >>>             loss = criterion(output, target)
+            >>>             loss.backward()
+            >>>             optimizer.step()
+    base_algo: str
+        base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+    sparsity_proportion_calc: function
+        This function generate the sparsity proportion between the conv layers according to the
+        sensitivity analysis results. We provide a default function to quantify the sparsity
+        proportion according to the sensitivity analysis results. Users can also customize
+        this function according to their needs. The input of this function is a dict,
+        for example : {'conv1' : {0.1: 0.9, 0.2 : 0.8}, 'conv2' : {0.1: 0.9, 0.2 : 0.8}},
+        in which, 'conv1' and is the name of the conv layer, and 0.1:0.9 means when the
+        sparsity of conv1 is 0.1 (10%), the model's val accuracy equals to 0.9.
+    sparsity_per_iter: float
+        The sparsity of the model that the pruner try to prune in each iteration.
+    acc_drop_threshold : float
+        The hyperparameter used to quantifiy the sensitivity for each layer.
+    checkpoint_dir: str
+        The dir path to save the checkpoints during the pruning.
     """
 
     def __init__(self, model, config_list, evaluator,
                  finetuner=None, base_algo='l1', sparsity_proportion_calc=None,
                  sparsity_per_iter=0.1, acc_drop_threshold=0.05, checkpoint_dir=None):
-        """
-        Parameters
-        ----------
-        model: pytorch model
-            model to be compressed
-        evaluator: function
-            validation function for the model. This function should return the accuracy
-            of the validation dataset. The input parameters of evaluator can be specified
-            in the parameter `eval_args` and 'eval_kwargs' of the funciton compress if needed.
-        finetuner: function
-            finetune function for the model. This parameter is not essential, if is not None,
-            the sensitivity pruner will finetune the model after pruning in each iteration.
-            The input parameters of finetuner can be specified in the parameter `finetune_args`
-            and `finetune_kwargs` if needed.
-        base_algo: str
-            base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-        sparsity_proportion_calc: function
-            This function generate the sparsity proportion between the conv layers according to the
-            sensitivity analysis results. We provide a default function to quantify the sparsity
-            proportion according to the sensitivity analysis results. Users can also customize
-            this function according to their needs. The input of this function is a dict,
-            for example : {'conv1' : {0.1: 0.9, 0.2 : 0.8}, 'conv2' : {0.1: 0.9, 0.2 : 0.8}},
-            in which, 'conv1' and is the name of the conv layer, and 0.1:0.9 means when the
-            sparsity of conv1 is 0.1 (10%), the model's val accuracy equals to 0.9.
-        sparsity_per_iter: float
-            The sparsity of the model that the pruner try to prune in each iteration.
-        acc_drop_threshold : float
-            The hyperparameter used to quantifiy the sensitivity for each layer.
-        checkpoint_dir: str
-            The dir path to save the checkpoints during the pruning.
 
-        """
         self.base_algo = base_algo
         self.model = model
         super(SensitivityPruner, self).__init__(model, config_list)

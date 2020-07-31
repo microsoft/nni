@@ -20,6 +20,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -711,48 +712,8 @@ pruner.compress(eval_args=[model], finetune_args=[model])
 
 #### User configuration for Sensitivity Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
+##### PyTorch
 
-- **evaluator:** Function to evaluate the masked model. This function should return a scalar value(such as the accuracy). The input parameters of the evaluator can be passed by the `eval_args` and `eval_kwargs` parameter in the compress function.
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **finetuner:** Function used to finetune the model after each iteration if needed. If this parameter is not set, then SensitivityPruner will not finetune the model after each iteration. The input parameters of the finetuner can be passed by the `finetune_args` and `finetune_kwargs` in the `compression` function if needed.
-
-    Example:
-    ```python
-    >>> def finetuner(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         optimizer.step()
-    ```
-
-
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **sparsity_proportion_calc:** This function generate the sparsity proportion between the conv layers according to the sensitivity analysis results. We provide a default function to quantify the sparsity proportion according to the sensitivity analysis results. Users can also customize this function according to their needs. The input of this function is a dict, for example : {'conv1' : {0.1: 0.9, 0.2 : 0.8}, 'conv2' : {0.1: 0.9, 0.2 : 0.8}}, in which, 'conv1' and is the name of the conv layer, and 0.1:0.9 means when the sparsity of conv1 is 0.1 (10%), the model's val accuracy equals to 0.9.
-- **sparsity_per_iter:** The sparsity of the model that the pruner try to prune in each iteration..
-- **acc_drop_threshold:** The hyperparameter used to quantifiy the sensitivity for each layer.
-- **checkpoint_dir:** The dir path to save the checkpoints during the pruning.
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```
