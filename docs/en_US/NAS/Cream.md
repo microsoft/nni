@@ -10,6 +10,15 @@ convergence ratio and performance of the hypernetwork, as well as boosting the t
 settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method.
 
 ## Reproduction Results
+Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior than 8 Gpus.
+
+| Model (M Flops) | NNI (8Gpus) | Paper (16Gpus) | 
+| ---- |:-------------:| :-----:|
+| 42M | 65.8 | 66.5 |
+| 112M | 72.8 | 72.1 |
+| 470M | 78.9 | 79.2 |
+| 600M | 79.4 | 80.0 |
+
 
 ## Examples
 
