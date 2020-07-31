@@ -771,7 +771,7 @@ def save_experiment(args):
         with open(os.path.join(temp_nnictl_dir, '.experiment'), 'w') as file:
             experiment_dict[args.id]['id'] = args.id
             json.dump(experiment_dict[args.id], file)
-    except IOError as error:
+    except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
     nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
@@ -781,11 +781,11 @@ def save_experiment(args):
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
         shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
-    
+ 
     # Step4. Archive folder
     zip_package_name = 'nni_experiment_%s' % args.id
     if args.path:
-        os.makedirs(args.path, exist_ok = True)
+        os.makedirs(args.path, exist_ok=True)
         zip_package_name = os.path.join(args.path, zip_package_name)
     shutil.make_archive(zip_package_name, 'zip', temp_root_dir)
     print_normal('Save to %s.zip success!' % zip_package_name)
@@ -838,14 +838,14 @@ def open_experiment(args):
         print_error('Invalid: experiment metadata does not exist!')
         shutil.rmtree(temp_root_dir)
         exit(1)
-    
+
     # Step2. Copy nnictl metadata
     src_path = os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))
     dest_path = os.path.join(NNICTL_HOME_DIR, experiment_metadata.get('fileName'))
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
     shutil.copytree(src_path, dest_path)
-    
+
     # Step3. Copy experiment data
     nni_config = Config(experiment_metadata.get('fileName'))
     nnictl_exp_config = nni_config.get_config('experimentConfig')
@@ -883,17 +883,17 @@ def open_experiment(args):
                 shutil.copytree(src_path, target_path)
             else:
                 shutil.copy(src_path, target_path)
-    
+
     # Step5. Create experiment metadata
     nni_config.set_config('experimentConfig', nnictl_exp_config)
     experiment_config.add_experiment(experiment_id,
-                                    experiment_metadata.get('port'),
-                                    experiment_metadata.get('startTime'),
-                                    experiment_metadata.get('fileName'),
-                                    experiment_metadata.get('platform'),
-                                    experiment_metadata.get('experimentName'),
-                                    experiment_metadata.get('endTime'),
-                                    experiment_metadata.get('status'))
+                                     experiment_metadata.get('port'),
+                                     experiment_metadata.get('startTime'),
+                                     experiment_metadata.get('fileName'),
+                                     experiment_metadata.get('platform'),
+                                     experiment_metadata.get('experimentName'),
+                                     experiment_metadata.get('endTime'),
+                                     experiment_metadata.get('status'))
     print_normal('Open experiment %s succsss!' % experiment_id)
 
     # Step6. Cleanup temp data

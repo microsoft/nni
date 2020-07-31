@@ -144,8 +144,10 @@ def parse_args():
     #save experiment data
     parser_save_data = parser_experiment_subparsers.add_parser('save', help='save experiment data')
     parser_save_data.add_argument('id', nargs='?', help='the id of experiment')
-    parser_save_data.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, default current working directory')
-    parser_save_data.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data of the experiment')
+    parser_save_data.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, \
+                                   default current working directory')
+    parser_save_data.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data \
+                                   of the experiment')
     parser_save_data.set_defaults(func=save_experiment)
     #open experiment data
     parser_open_data = parser_experiment_subparsers.add_parser('open', help='open experiment data')
