@@ -14,20 +14,6 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
             ret.set(metric.trialJobId, [ metric ]);
         }
     }
-    // to compatiable with multi-trial in same job, fix offset of sequence
-    ret.forEach((trialMetrics) => {
-        let minSequenceNumber = Number.POSITIVE_INFINITY;
-        trialMetrics.map((item) => {
-            if (item.sequence < minSequenceNumber && item.type !== "FINAL") {
-                minSequenceNumber = item.sequence;
-            }
-        });
-        trialMetrics.map((item) => {
-            if (item.type !== "FINAL") {
-                item.sequence -= minSequenceNumber;
-            }
-        });
-    });
     return ret;
 }
 
@@ -137,49 +123,48 @@ class TrialManager {
         const trials: TrialJobInfo[] = [];
 
         for (const jobInfo of jobs as TrialJobInfo[]) {
-            if (jobInfo.hyperParameters) {
-                let trial: TrialJobInfo | undefined;
-                let lastTrial: TrialJobInfo | undefined;
-                for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
-                    const hyperParameters = jobInfo.hyperParameters[i]
-                    const hpObject = JSON.parse(hyperParameters);
-                    const parameterId = hpObject["parameter_id"];
-                    trial = {
-                        id: `${jobInfo.id}-${parameterId}`,
-                        jobId: jobInfo.id,
-                        parameterId: parameterId,
-                        sequenceId: parameterId,
-                        status: "SUCCEEDED",
-                        startTime: jobInfo.startTime,
-                        endTime: jobInfo.startTime,
-                        hyperParameters: [hyperParameters],
-                        logPath: jobInfo.logPath,
-                        stderrPath: jobInfo.stderrPath,
-                    };
-                    if (jobInfo.finalMetricData) {
-                        for (const metricData of jobInfo.finalMetricData) {
-                            if (metricData.parameterId == parameterId) {
-                                trial.finalMetricData = [metricData];
-                                trial.endTime = metricData.timestamp;
-                                break;
-                            }
-                        }
-                    }
-                    if (lastTrial) {
-                        trial.startTime = lastTrial.endTime;
-                    } else {
-                        trial.startTime = jobInfo.startTime;
-                    }
-                    lastTrial = trial;
-                    trials.push(trial);
-                }
-                if (lastTrial !== undefined) {
-                    lastTrial.status = jobInfo.status;
-                    lastTrial.endTime = jobInfo.endTime;
-                }
-            } else {
-                trials.push(jobInfo);
-            }
+            trials.push(jobInfo);
+            // if (jobInfo.hyperParameters) {
+            //     let trial: TrialJobInfo | undefined;
+            //     let lastTrial: TrialJobInfo | undefined;
+            //     for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
+            //         const hyperParameters = jobInfo.hyperParameters[i]
+            //         const hpObject = JSON.parse(hyperParameters);
+            //         const parameterId = hpObject["parameter_id"];
+            //         trial = {
+            //             id: `${jobInfo.id}-${parameterId}`,
+            //             sequenceId: parameterId,
+            //             status: "SUCCEEDED",
+            //             startTime: jobInfo.startTime,
+            //             endTime: jobInfo.startTime,
+            //             hyperParameters: [hyperParameters],
+            //             logPath: jobInfo.logPath,
+            //             stderrPath: jobInfo.stderrPath,
+            //         };
+            //         if (jobInfo.finalMetricData) {
+            //             for (const metricData of jobInfo.finalMetricData) {
+            //                 if (metricData.parameterId == parameterId) {
+            //                     trial.finalMetricData = [metricData];
+            //                     trial.endTime = metricData.timestamp;
+            //                     break;
+            //                 }
+            //             }
+            //         }
+            //         if (lastTrial) {
+            //             trial.startTime = lastTrial.endTime;
+            //         } else {
+            //             trial.startTime = jobInfo.startTime;
+            //         }
+            //         lastTrial = trial;
+            //         trials.push(trial);
+            //     }
+            //     if (lastTrial !== undefined) {
+            //         lastTrial.status = jobInfo.status;
+            //         lastTrial.endTime = jobInfo.endTime;
+            //     }
+            // } else {
+            //     trials.push(jobInfo);
+            // }
         }
         return trials;
     }
