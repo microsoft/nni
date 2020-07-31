@@ -147,13 +147,8 @@ class SpeedupTestCase(TestCase):
     def test_speedup_integration(self):
         for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'inception_v3']:
             Model = getattr(models, model_name)
-            if model_name == 'inception_v3':
-                # jit.trace cannot capture the aux_logits path when the net.training is False
-                net = Model(pretrained=True, progress=False, aux_logits=False).to(device)
-                speedup_model = Model(aux_logits=False).to(device)
-            else:
-                net = Model(pretrained=True, progress=False).to(device)
-                speedup_model = Model().to(device)
+            net = Model(pretrained=True, progress=False).to(device)
+            speedup_model = Model().to(device)
             net.eval() # this line is necessary
             speedup_model.eval()
             # random generate the prune config for the pruner
