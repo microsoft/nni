@@ -1,16 +1,15 @@
-######################
-社区分享
-######################
+#######################
+Use Cases and Solutions
+#######################
 
-除了官方的教程和示例之外，也支持社区贡献者分享自己的自动机器学习实践经验，特别是使用 NNI 的实践经验。
+Different from the tutorials and examples in the rest of the document which show the usage of a feature, this part mainly introduces end-to-end scenarios and use cases to help users further understand how NNI can help them. NNI can be widely adopted in various scenarios. We also encourage community contributors to share their AutoML practices especially the NNI usage practices from their experience.
 
 ..  toctree::
     :maxdepth: 2
 
-    Recommenders 中使用 NNI<RecommendersSvd>
-    使用 NNI 为 SPTAG 自动调参 <SptagAutoTune>
-    神经网络结构搜索（NAS）的对比<NasComparision>
-    超参调优算法的对比<HpoComparision>
-    TPE 的并行优化<ParallelizingTpeSearch>
-    使用 NNI 自动调优系统 <TuningSystems>
-    来自知乎的评论：作者 Garvin Li <NNI_AutoFeatureEng>
+    Automatic Model Tuning (HPO/NAS) <automodel>
+    Automatic System Tuning (AutoSys) <autosys>
+    Model Compression <model_compression>
+    Feature Engineering <feature_engineering>
+    Performance measurement, comparison and analysis <perf_compare>
+    Use NNI on Google Colab <NNI_colab_support>

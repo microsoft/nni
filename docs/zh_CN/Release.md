@@ -1,5 +1,64 @@
 # 更改日志
 
+# 发布 1.7 - 7/8/2020
+
+## Major Features
+
+### Training Service
+
+* 支持 AML (Azure Machine Learning) 作为训练平台。
+* OpenPAI 任务可被重用。 当 Trial 完成时， OpenPAI 任务不会停止， 而是等待下一个 Trial。 [参考 OpenPAI 设置中的 reuse 标志](https://github.com/microsoft/nni/blob/master/docs/zh_CN/TrainingService/PaiMode.md#openpai-configurations)。
+* [Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.md#how-to-use-training-service).
+
+### 神经网络架构搜索（NAS）
+
+* [Provide NAS Open Benchmarks (NasBench101, NasBench201, NDS) with friendly APIs](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md).
+
+* [Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.md).
+
+### Model Compression
+
+* Improve Model Speedup: track more dependencies among layers and automatically resolve mask conflict, support the speedup of pruned resnet.
+* Added new pruners, including three auto model pruning algorithms: [NetAdapt Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#netadapt-pruner), [SimulatedAnnealing Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner), [AutoCompress Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#autocompress-pruner), and [ADMM Pruner](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#admm-pruner).
+* Added [model sensitivity analysis tool](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md) to help users find the sensitivity of each layer to the pruning.
+* [Easy flops calculation for model compression and NAS](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md#model-flops-parameters-counter).
+
+* Update lottery ticket pruner to export winning ticket.
+
+### 示例
+
+* Automatically optimize tensor operators on NNI with a new [customized tuner OpEvo](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.md).
+
+### 内置 Tuner、Assessor、Advisor
+
+* [Allow customized tuners/assessor/advisors to be installed as built-in algorithms](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.md).
+
+### WebUI
+
+* Support visualizing nested search space more friendly.
+* Show trial's dict keys in hyper-parameter graph.
+* Enhancements to trial duration display.
+
+### Others
+
+* Provide utility function to merge parameters received from NNI
+* Support setting paiStorageConfigName in pai mode
+
+## 文档
+
+* Improve [documentation for model compression](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md)
+* Improve [documentation](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md) and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/BenchmarksExample.ipynb) for NAS benchmarks.
+* Improve [documentation for AzureML training service](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/AMLMode.md)
+* Homepage migration to readthedoc.
+
+## 修复的 Bug
+
+* Fix bug for model graph with shared nn.Module
+* Fix nodejs OOM when `make build`
+* Fix NASUI bugs
+* Fix duration and intermediate results pictures update issue.
+* Fix minor WebUI table style issues.
+
 ## 发布 1.6 - 5/26/2020
 
 ### 主要功能
@@ -91,7 +150,7 @@
 
 ## 发布 1.4 - 2/19/2020
 
-### 主要功能
+### Major Features
 
 #### 神经网络架构搜索
 
@@ -176,7 +235,7 @@
 
 ## 发布 1.2 - 12/02/2019
 
-### 主要功能
+### Major Features
 
 * [特征工程](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/FeatureEngineering/Overview.md) 
   - 新增特征工程接口
@@ -190,7 +249,7 @@
   - [新增模型剪枝算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): lottery ticket 剪枝方法, L1Filter Pruner, Slim Pruner, FPGM Pruner
   - [新增模型量化算法](https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md): QAT Quantizer, DoReFa Quantizer
   - 支持导出压缩后模型的 API。
-- 训练平台 
+- Training Service 
   - 支持 OpenPAI 令牌身份验证
 - 示例： 
   - [使用 NNI 自动调优 rocksdb 配置的示例](https://github.com/microsoft/nni/tree/v1.2/examples/trials/systems/rocksdb-fillrandom)。
@@ -213,7 +272,7 @@
 
 ## 发布 1.1 - 10/23/2019
 
-### 主要功能
+### Major Features
 
 * 新 Tuner: [PPO Tuner](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tuner/PPOTuner.md)
 * [查看已停止的 Experiment](https://github.com/microsoft/nni/blob/v1.1/docs/zh_CN/Tutorial/Nnictl.md#view)
@@ -233,7 +292,7 @@
 
 ## 发布1.0 - 9/2/2019
 
-### 主要功能
+### Major Features
 
 * Tuners 和 Assessors
     
@@ -243,7 +302,7 @@
         + [增加 Pakdd 示例](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
     + 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
     + 为 hyperband 支持多阶段 -PR #1257
-+ 训练平台
++ Training Service
     
     - 支持私有 Docker Registry -PR #755
         
@@ -291,7 +350,7 @@
 
 ## 发布 0.9 - 7/1/2019
 
-### 主要功能
+### Major Features
 
 * 通用 NAS 编程接口 
     * 为 NAS 接口添加 `enas-mode` 和 `oneshot-mode`：[PR #1201](https://github.com/microsoft/nni/pull/1201#issue-291094510)
@@ -322,7 +381,7 @@
 
 ## 发布 0.8 - 6/4/2019
 
-### 主要功能
+### Major Features
 
 * 在 Windows 上支持 NNI 的 OpenPAI 和远程模式 
   * NNI 可在 Windows 上使用 OpenPAI 模式
@@ -351,13 +410,13 @@
 * 修复表格的 Bug
 * 优化嵌套搜索空间
 * 优化 'randint' 类型，并支持下限
-* [比较不同超参搜索调优算法](CommunitySharings/HpoComparision.md)
-* [NAS 算法的对比](CommunitySharings/NasComparision.md)
+* [比较不同超参搜索调优算法](CommunitySharings/HpoComparison.md)
+* [NAS 算法的对比](CommunitySharings/NasComparison.md)
 * [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
 
 ## 发布 0.7 - 4/29/2018
 
-### 主要功能
+### Major Features
 
 * [支持在 Windows 上使用 NNI](Tutorial/InstallationWin.md) 
   * NNI 可在 Windows 上使用本机模式
@@ -384,7 +443,7 @@
 
 ## 发布 0.6 - 4/2/2019
 
-### 主要功能
+### Major Features
 
 * [版本检查](TrainingService/PaiMode.md) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
@@ -444,11 +503,11 @@
 
 ## 发布 0.5.0 - 01/14/2019
 
-### 主要功能
+### Major Features
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](Tuner/MetisTuner.md)。 Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](Assessor/CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * [权重共享的](https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md)高级支持：为 NAS Tuner 提供权重共享，当前支持 NFS。
@@ -469,7 +528,7 @@
 
 ## 发布 0.4.1 - 12/14/2018
 
-### 主要功能
+### Major Features
 
 #### 支持新的 Tuner
 
@@ -484,7 +543,7 @@
 
 #### 改进 NNICTL
 
-* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 可使用 **nnictl -v** 来显示安装的 NNI 版本。
+* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 You can run **nnictl -v** to show your current installed NNI version
 
 #### 改进 WEB 界面
 
@@ -510,7 +569,7 @@
 * [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
 * [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
-* Web 界面 
+* WebUI 
   * 支持 hyperband Tuner
   * 移除 tensorboard 按钮
   * 显示 Experiment 的错误消息
@@ -519,7 +578,7 @@
   * 显示 Trial 的 hdfsLogPath
   * 下载 Experiment 参数
 
-### 其它
+### Others
 
 * 异步调度
 * 更新 Docker 文件，增加 pytorch 库
@@ -546,15 +605,15 @@
 
 ### API 的新功能和更新
 
-* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的示例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新示例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
+* <span style="color:red"><strong>breaking change</strong></span>: nn.get_parameters() is refactored to nni.get_next_parameter. 所有以前版本的示例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新示例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
-* 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
+* New API **nni.get_sequence_id()**. 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
     
     ```bash
     git clone -b v0.3 https://github.com/microsoft/nni.git
     ```
 
-* **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
+* **nni.report_final_result(result)** API supports more data types for result parameter.
     
     可用类型：
     
@@ -564,7 +623,7 @@
 
 ### 支持新的 Tuner
 
-* **Batch Tuner（批处理调参器）** 会执行所有超参组合，可被用来批量提交 Trial 任务。
+* **Batch Tuner** which iterates all parameter combination, can be used to submit batch trial jobs.
 
 ### 新示例
 
@@ -578,14 +637,14 @@
 
 * 新的竞赛示例：[Kaggle Competition TGS Salt](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
-### 其它
+### Others
 
 * 界面重构，参考[网页文档](Tutorial/WebUI.md)，了解如何使用新界面。
 * 持续集成：NNI 已切换到 Azure pipelines。
 
 ## 发布 0.2.0 - 9/29/2018
 
-### 主要功能
+### Major Features
 
 * 支持 [OpenPAI](https://github.com/microsoft/pai) (又称 pai) 训练平台 (参考[这里](TrainingService/PaiMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练平台。 NNI Trial 可发送至 OpenPAI 集群上运行
@@ -593,7 +652,7 @@
 * 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Tuner/SmacTuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
-* 其它 
+* Others 
   * 更新 ga squad 示例与相关文档
   * 用户体验改善及 Bug 修复
 
@@ -601,7 +660,7 @@
 
 首次发布 Neural Network Intelligence (NNI)。
 
-### 主要功能
+### Major Features
 
 * 安装和部署 
   * 支持 pip 和源代码安装
@@ -616,5 +675,5 @@
   * 提供网页界面来查看并管理 Experiment
 * 持续集成 
   * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
-* 其它 
+* Others 
   * 支持简单的 GPU 任务调度

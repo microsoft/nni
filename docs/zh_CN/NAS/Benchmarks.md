@@ -7,6 +7,9 @@
     用法示例 <BenchmarksExample>
 ```
 
+## Introduction
+To imporve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as [NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326), [NDS](https://arxiv.org/abs/1905.13214), etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
+
 ## 先决条件
 
 * 准备目录来保存基准测试的数据库。 默认情况下，目录为 `${HOME}/.nni/nasbenchmark`。 可将其设置为任何位置，并在 import nni 前，通过 `NASBENCHMARK_DIR` 指定。
@@ -14,33 +17,17 @@
 
 ## 准备数据
 
-为了避免存储和法规问题，NNI 不提供数据库。 强烈建议通过 Docker 来运行生成的脚本，减少安装依赖项的时间。 步骤：
+To avoid storage and legality issues, we do not provide any prepared databases. 步骤：
 
-**步骤 1.** 克隆 NNI 存储库。 将 `${NNI_VERSION}` 替换为发布的版本或分支名称，例如：`v1.6`。
-
-```bash
+1. Clone NNI to your machine and enter `examples/nas/benchmarks` directory.
+```
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
+cd nni/examples/nas/benchmarks
 ```
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.7`.
 
-**步骤 2.** 运行 Docker。
-
-对于 NAS-Bench-101,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
-```
-
-对于 NAS-Bench-201,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
-```
-
-对于 NDS,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
-```
+2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201` or `nds`.
+3. Generate the database via `./xxx.sh`. The directory that stores the benchmark file can be configured with `NASBENCHMARK_DIR` environment variable, which defaults to `~/.nni/nasbenchmark`. Note that the NAS-Bench-201 dataset will be downloaded from a google drive.
 
 确保至少有 10GB 的可用磁盘空间，运行过程可能需要几个小时。
 

@@ -47,7 +47,8 @@ nnictl create --config examples/trials/mnist-tfv1/config.yml
 #### TypeScript
 
 * 如改动了 `src/nni_manager`，在此目录下运行 `yarn watch` 可持续编译改动。 它将持续的监视并编译代码。 可能需要重启 `nnictl` 来重新加载 NNI 管理器。
-* 如果改动了 `src/webui` 或 `src/nasui`，在相应目录下运行 `yarn start`。 Web 界面会在代码修改后自动刷新。
+* If `src/webui` is changed, run `yarn dev`, which will run a mock API server and a webpack dev server simultaneously. Use `EXPERIMENT` environment variable (e.g., `mnist-tfv1-running`) to specify the mock data being used. Built-in mock experiments are listed in `src/webui/mock`. An example of the full command is `EXPERIMENT=mnist-tfv1-running yarn dev`.
+* If `src/nasui` is changed, run `yarn start` under the corresponding folder. The web UI will refresh automatically if code is changed. There is also a mock API server that is useful when developing. It can be launched via `node server.js`.
 
 ### 5. 提交拉取请求
 

@@ -2,7 +2,7 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](../CommunitySharings/HpoComparision.md)对比了不同 Tuner 在几个问题下的不同效果。
+注意：点击 **Tuner 的名称**可看到 Tuner 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Tuner 建议场景的最后。 [本文](../CommunitySharings/HpoComparison.md)对比了不同 Tuner 在几个问题下的不同效果。
 
 当前支持的算法：
 
@@ -386,7 +386,7 @@ advisor:
 **classArgs 要求：**
 
 * **optimize_mode** (*'maximize' 或 'minimize', 可选项, 默认值为 'maximize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。 
+* **utility** (*'ei', 'ucb' 或 'poi', 可选, 默认值为 'ei'*) - 工具函数的类型（采集函数）。 'ei', 'ucb' 和 'poi' 分别对应 '期望的改进（Expected Improvement）', '上限置信度边界（Upper Confidence Bound）' 和 '改进概率（Probability of Improvement）'。
 * **kappa** (*float, 可选, 默认值为 5*) - 用于 'ucb' 函数。 `kappa` 越大， Tuner 的探索性越强。
 * **xi** (*float, 可选, 默认为 0*) - 用于 'ei' 和 'poi' 工具函数。 `xi` 越大， Tuner 的探索性越强。
 * **nu** (*float, 可选, 默认为 2.5*) - 用于指定 Matern 核。 nu 越小，近似函数的平滑度越低。

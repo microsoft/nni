@@ -18,7 +18,7 @@
 先决条件：`python 64-bit >=3.5`, `git`, `wget`
 
     bash
-      git clone -b v1.6 https://github.com/Microsoft/nni.git
+      git clone -b v1.7 https://github.com/Microsoft/nni.git
       cd nni
       ./install.sh
 
@@ -33,7 +33,7 @@
 * 通过克隆源代码下载示例。
     
     ```bash
-    git clone -b v1.6 https://github.com/Microsoft/nni.git
+    git clone -b v1.7 https://github.com/Microsoft/nni.git
     ```
 
 * 运行 MNIST 示例。

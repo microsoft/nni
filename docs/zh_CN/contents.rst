@@ -16,7 +16,7 @@ Neural Network Intelligence
     模型压缩<model_compression>
     特征工程<feature_engineering>
     参考<reference>
-    社区分享 <CommunitySharings/community_sharings>
+    Use Cases and Solutions <CommunitySharings/community_sharings>
     常见问题 <Tutorial/FAQ>
     如何贡献 <contribution>
     更改日志 <Release>

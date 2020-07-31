@@ -5,14 +5,23 @@ NNI 支持在 [AML](https://azure.microsoft.com/zh-cn/services/machine-learning/
 ## 设置环境
 步骤 1. 参考[指南](../Tutorial/QuickStart.md)安装 NNI。
 
-步骤 2. 按照[文档](https://docs.microsoft.com/zh-cn/azure/machine-learning/how-to-manage-workspace-cli)，创建 AML 账户。
+步骤 2. Create an Azure account/subscription using this [link](https://azure.microsoft.com/en-us/free/services/machine-learning/). If you already have an Azure account/subscription, skip this step.
 
-步骤 3. 获取账户信息。 ![](../../img/aml_account.png)
+步骤 3. Install the Azure CLI on your machine, follow the install guide [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).
 
-步骤 4. 安装 AML 包环境。
+Step 4. Authenticate to your Azure subscription from the CLI. To authenticate interactively, open a command line or terminal and use the following command:
 ```
-python3 -m pip install azureml --user
-python3 -m pip install azureml-sdk --user
+az login
+```
+
+Step 5. Log into your Azure account with a web browser and create a Machine Learning resource. You will need to choose a resource group and specific a workspace name. Then download `config.json` which will be used later. ![](../../img/aml_workspace.png)
+
+Step 6. Create an AML cluster as the computeTarget. ![](../../img/aml_cluster.png)
+
+Step 7. Open a command line and install AML package environment.
+```
+python3 -m pip install azureml
+python3 -m pip install azureml-sdk
 ```
 
 ## 运行 Experiment
@@ -51,9 +60,9 @@ amlConfig:
 
 与[本机模式](LocalMode.md)的 Trial 配置相比，aml 模式下的键值还有：
 * computeTarget
-    * 必填。 要在 AML 工作区中使用的计算机集群名称。
+    * 必填。 The compute cluster name you want to use in your AML workspace. See Step 6.
 * image
-    * 必填。 作业中使用的 Docker 映像名称。
+    * 必填。 作业中使用的 Docker 映像名称。 The image `msranni/nni` of this example only support GPU computeTargets.
 
 amlConfig:
 * subscriptionId
@@ -62,4 +71,16 @@ amlConfig:
     * 账户的资源组
 * workspaceName
     * 账户的工作区名称
-  
+
+The required information of amlConfig could be found in the downloaded `config.json` in Step 5.
+
+Run the following commands to start the example experiment:
+```
+git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
+cd nni/examples/trials/mnist-tfv1
+
+# modify config_aml.yml ...
+
+nnictl create --config config_aml.yml
+```
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.7`.

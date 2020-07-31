@@ -293,7 +293,7 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 ### logDir
 
-可选。 目录的路径。 默认值：`<user home directory>/nni/experiment`。
+可选。 目录的路径。 Default: `<user home directory>/nni-experiments`.
 
 配置目录以存储 Experiment 的日志和数据。
 

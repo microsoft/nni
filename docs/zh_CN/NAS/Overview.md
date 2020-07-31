@@ -54,20 +54,31 @@ One-shot 算法**不需要 nnictl，可单独运行**。 NNI 支持 PyTorch 和 
 One-Shot NAS 可以通过可视化工具来查看。 点击[这里](./Visualization.md)，了解详情。
 
 
-## 使用 NNI API 来编写搜索空间
 
-在两种场景下需要用于设计和搜索模型的编程接口。
+## Search Space Zoo
+
+NNI provides some predefined search space which can be easily reused. By stacking the extracted cells, user can quickly reproduce those NAS models.
+
+Search Space Zoo contains the following NAS cells:
+
+* [DartsCell](./SearchSpaceZoo.md#DartsCell)
+* [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
+* [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+
+## Using NNI API to Write Your Search Space
+
+The programming interface of designing and searching a model is often demanded in two scenarios.
 
 1. 在设计神经网络时，可能在层、子模型或连接上有多种选择，并且无法确定是其中一种或某些的组合的结果最好。 因此，需要简单的方法来表达候选的层或子模型。
 2. 在神经网络上应用 NAS 时，需要统一的方式来表达架构的搜索空间，这样不必为不同的搜索算法来更改代码。
 
-要使用 NNI NAS，建议先阅读[用 NAS API 构建搜索空间](./WriteSearchSpace.md)的教程。
+For using NNI NAS, we suggest users to first go through [the tutorial of NAS API for building search space](./WriteSearchSpace.md).
 
-## NAS 可视化
+## NAS Visualization
 
-为了帮助用户跟踪指定搜索空间下搜索模型的过程和状态，开发了此可视化工具。 它将搜索空间可视化为超网络，并显示子网络、层和操作的重要性，同时还能显示重要性是如何在搜索过程中变化的。 参考 [NAS 可视化](./Visualization.md)文档了解详情。
+To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to [the document of NAS visualization](./Visualization.md) for how to use it.
 
-## 参考和反馈
+## Reference and Feedback
 
-* 在 GitHub 中[提交此功能的 Bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md)；
-* 在 GitHub 中[提交新功能或改进请求](https://github.com/microsoft/nni/issues/new?template=enhancement.md)。
+* To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
+* To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub.

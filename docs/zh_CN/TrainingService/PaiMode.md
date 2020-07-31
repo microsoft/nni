@@ -48,17 +48,17 @@ containerNFSMountPath: /mnt/confignfs-data
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# 并发运行的 Trial 数量
+# how many trials could be concurrently running
 trialConcurrency: 2
-# Experiment 的最长持续运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
-# 空表示一直运行
+# empty means never stop
 maxTrialNum: 100
-# 可选项: local, remote, pai
+# choice: local, remote, pai
 trainingServicePlatform: pai
-# 搜索空间文件
+# search space file
 searchSpacePath: search_space.json
-# 可选项: true, false
+# choice: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -72,19 +72,19 @@ trial:
   memoryMB: 8196
   image: msranni/nni:latest
   virtualCluster: default
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
+  nniManagerNFSMountPath: /local/mnt
+  containerNFSMountPath: /mnt/confignfs-data
   paiStorageConfigName: confignfs-data
-# 配置要访问的 OpenPAI 集群
+# Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
   token: your_pai_token
   host: 10.1.1.1
-  # 可选，测试版功能。
+  # optional, experimental feature.
   reuse: true
 ```
 
-注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。
+注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。 The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocol in NNI is `http`, if your PAI's cluster enabled https, please use the uri in `https://10.10.5.1` format.
 
 ### Trial 配置
 
