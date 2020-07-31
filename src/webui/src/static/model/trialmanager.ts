@@ -119,56 +119,6 @@ class TrialManager {
         return new MetricSpace([...this.trials.values()]);
     }
 
-    public static expandJobsToTrials(jobs: TrialJobInfo[]): TrialJobInfo[] {
-        const trials: TrialJobInfo[] = [];
-
-        for (const jobInfo of jobs as TrialJobInfo[]) {
-            trials.push(jobInfo);
-            // if (jobInfo.hyperParameters) {
-            //     let trial: TrialJobInfo | undefined;
-            //     let lastTrial: TrialJobInfo | undefined;
-            //     for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
-            //         const hyperParameters = jobInfo.hyperParameters[i]
-            //         const hpObject = JSON.parse(hyperParameters);
-            //         const parameterId = hpObject["parameter_id"];
-            //         trial = {
-            //             id: `${jobInfo.id}-${parameterId}`,
-            //             sequenceId: parameterId,
-            //             status: "SUCCEEDED",
-            //             startTime: jobInfo.startTime,
-            //             endTime: jobInfo.startTime,
-            //             hyperParameters: [hyperParameters],
-            //             logPath: jobInfo.logPath,
-            //             stderrPath: jobInfo.stderrPath,
-            //         };
-            //         if (jobInfo.finalMetricData) {
-            //             for (const metricData of jobInfo.finalMetricData) {
-            //                 if (metricData.parameterId == parameterId) {
-            //                     trial.finalMetricData = [metricData];
-            //                     trial.endTime = metricData.timestamp;
-            //                     break;
-            //                 }
-            //             }
-            //         }
-            //         if (lastTrial) {
-            //             trial.startTime = lastTrial.endTime;
-            //         } else {
-            //             trial.startTime = jobInfo.startTime;
-            //         }
-            //         lastTrial = trial;
-            //         trials.push(trial);
-            //     }
-            //     if (lastTrial !== undefined) {
-            //         lastTrial.status = jobInfo.status;
-            //         lastTrial.endTime = jobInfo.endTime;
-            //     }
-            // } else {
-            //     trials.push(jobInfo);
-            // }
-        }
-        return trials;
-    }
-
     // if this.jobListError = true, show trial error message [/trial-jobs]
     public jobListError(): boolean {
         return this.isJobListError;
@@ -212,8 +162,7 @@ class TrialManager {
         let updated = false;
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
-                const newTrials = TrialManager.expandJobsToTrials(data as any);
-                for (const trialInfo of newTrials as TrialJobInfo[]) {
+                for (const trialInfo of data as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;

@@ -7,7 +7,6 @@ import {
 import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
 import '../../static/style/logDrawer.scss';
-import { TrialManager } from '../../static/model/trialmanager';
 
 interface ExpDrawerProps {
     isVisble: boolean;
@@ -43,7 +42,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     if (resExperiment.data.params.searchSpace) {
                         resExperiment.data.params.searchSpace = JSON.parse(resExperiment.data.params.searchSpace);
                     }
-                    const trialMessagesArr = TrialManager.expandJobsToTrials(resTrialJobs.data);
+                    const trialMessagesArr = resTrialJobs.data;
                     const interResultList = resMetricData.data;
                     Object.keys(trialMessagesArr).map(item => {
                         // not deal with trial's hyperParameters
