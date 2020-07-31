@@ -44,7 +44,7 @@ class AGPPruner(Pruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned.
     config_list : listlist
         Supported keys:

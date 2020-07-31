@@ -19,7 +19,7 @@ class ADMMPruner(OneshotPruner):
 
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned.
     config_list : list
         List on pruning configs.
@@ -75,7 +75,7 @@ class ADMMPruner(OneshotPruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs

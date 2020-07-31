@@ -57,13 +57,13 @@ class SimulatedAnnealingPruner(Pruner):
         Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
         the assigned `base_algo` is used to decide which filters/channels/weights to prune.
     start_temperature : float
-        Simualated Annealing related parameter.
+        Start temperature of the simulated annealing process.
     stop_temperature : float
-        Simualated Annealing related parameter.
+        Stop temperature of the simulated annealing process.
     cool_down_rate : float
-        Simualated Annealing related parameter.
+        Cool down rate of the temperature.
     perturbation_magnitude : float
-        initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+        Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
     experiment_data_dir : string
         PATH to save experiment data,
         including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
@@ -108,7 +108,7 @@ class SimulatedAnnealingPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs

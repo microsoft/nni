@@ -21,7 +21,7 @@ class OneshotPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs
@@ -41,7 +41,7 @@ class OneshotPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs
@@ -88,7 +88,7 @@ class LevelPruner(OneshotPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -102,7 +102,7 @@ class SlimPruner(OneshotPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -141,7 +141,7 @@ class L1FilterPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -155,7 +155,7 @@ class L2FilterPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -169,7 +169,7 @@ class FPGMPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -183,7 +183,7 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -197,7 +197,7 @@ class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
@@ -212,7 +212,7 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
     """
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         Model to be pruned
     config_list : list
         Supported keys:
