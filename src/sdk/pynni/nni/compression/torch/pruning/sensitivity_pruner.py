@@ -33,40 +33,40 @@ class SensitivityPruner(Pruner):
         of the validation dataset. The input parameters of evaluator can be specified
         in the parameter `eval_args` and 'eval_kwargs' of the compress function if needed.
         Example:
-            >>> def evaluator(model):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     val_loader = ...
-            >>>     model.eval()
-            >>>     correct = 0
-            >>>     with torch.no_grad():
-            >>>         for data, target in val_loader:
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             output = model(data)
-            >>>             # get the index of the max log-probability
-            >>>             pred = output.argmax(dim=1, keepdim=True)
-            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-            >>>     accuracy = correct / len(val_loader.dataset)
-            >>>     return accuracy
+        >>> def evaluator(model):
+        >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        >>>     val_loader = ...
+        >>>     model.eval()
+        >>>     correct = 0
+        >>>     with torch.no_grad():
+        >>>         for data, target in val_loader:
+        >>>             data, target = data.to(device), target.to(device)
+        >>>             output = model(data)
+        >>>             # get the index of the max log-probability
+        >>>             pred = output.argmax(dim=1, keepdim=True)
+        >>>             correct += pred.eq(target.view_as(pred)).sum().item()
+        >>>     accuracy = correct / len(val_loader.dataset)
+        >>>     return accuracy
     finetuner: function
         finetune function for the model. This parameter is not essential, if is not None,
         the sensitivity pruner will finetune the model after pruning in each iteration.
         The input parameters of finetuner can be specified in the parameter of compress
         called `finetune_args` and `finetune_kwargs` if needed.
         Example:
-            >>> def finetuner(model, epoch=3):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     train_loader = ...
-            >>>     criterion = torch.nn.CrossEntropyLoss()
-            >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-            >>>     model.train()
-            >>>     for _ in range(epoch):
-            >>>         for _, (data, target) in enumerate(train_loader):
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             optimizer.zero_grad()
-            >>>             output = model(data)
-            >>>             loss = criterion(output, target)
-            >>>             loss.backward()
-            >>>             optimizer.step()
+        >>> def finetuner(model, epoch=3):
+        >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        >>>     train_loader = ...
+        >>>     criterion = torch.nn.CrossEntropyLoss()
+        >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        >>>     model.train()
+        >>>     for _ in range(epoch):
+        >>>         for _, (data, target) in enumerate(train_loader):
+        >>>             data, target = data.to(device), target.to(device)
+        >>>             optimizer.zero_grad()
+        >>>             output = model(data)
+        >>>             loss = criterion(output, target)
+        >>>             loss.backward()
+        >>>             optimizer.step()
     base_algo: str
         base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
     sparsity_proportion_calc: function
