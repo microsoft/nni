@@ -687,7 +687,7 @@ def export_trials_data(args):
         sorted(intermediate_results, key=lambda x: x['timestamp'])
         groupby = dict()
         for content in intermediate_results:
-            groupby.setdefault(content['trialJobId'], []).append(content['data'][2:-2].replace('\\', ''))
+            groupby.setdefault(content['trialJobId'], []).append(content['data'].replace('\\', '').replace('"', ''))
         return groupby
 
     nni_config = Config(get_config_filename(args))
@@ -720,7 +720,7 @@ def export_trials_data(args):
             for record in content:
                 formated_record = dict()
                 if args.intermediate:
-                    formated_record['intermediate'] = '[' + ';'.join(record['intermediate']) + ']'
+                    formated_record['intermediate'] = '[' + ','.join(record['intermediate']) + ']'
                 record_value = json.loads(record['value'])
                 if not isinstance(record_value, (float, int)):
                     formated_record.update({**record['parameter'], **record_value, **{'id': record['id']}})
