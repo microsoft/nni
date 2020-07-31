@@ -129,15 +129,17 @@ def get_job_statistics():
     """return trial job statistics information as a dict"""
     return _nni_rest_get(JOB_STATISTICS_PATH)
 
-def get_job_metrics(trial_job_id=None, sort=False):
+def get_job_metrics(trial_job_id=None, sort=None):
     """return trial job metrics"""
     from functools import cmp_to_key
     
     api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
     job_metrics = _nni_rest_get(api_path)
     
-    if sort == True and trial_job_id == None:
+    if sort == 'max' and trial_job_id == None:
         return sorted(job_metrics, key=cmp_to_key(lambda x, y: -1 if float(x['data'].replace('"', '')) < float(y['data'].replace('"', '')) else 1, reverse=True)
+    elif sort == 'min' and trial_job_id == None:
+        return sorted(job_metrics, key=cmp_to_key(lambda x, y: -1 if float(x['data'].replace('"', '')) < float(y['data'].replace('"', '')) else 1, reverse=False)
     else:  
         return job_metrics
 
