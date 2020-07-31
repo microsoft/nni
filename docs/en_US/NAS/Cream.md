@@ -20,7 +20,6 @@ Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior t
 | 470M | 78.9 | 79.2 |
 | 600M | 79.4 | 80.0 |
 
-
 ## Examples
 
 [Example code](https://github.com/microsoft/nni/tree/master/examples/nas/cream)
@@ -29,15 +28,15 @@ Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior t
 * python >= 3.6
 * torch >= 1.2
 * torchscope
-* apex (not necessary, please make sure your nvcc CUDA version is the same with pytorch CUDA verision)
+* apex
 
 ## Data Preparation 
-You need to first download the [ImageNet-2012](http://www.image-net.org/) to the folder `./data/imagenet` and move the validation set to the subfolder `./data/imagenet/val`. To move the validation set, you cloud use the following script: <https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh> 
+You need to first download the [ImageNet-2012](http://www.image-net.org/) to the folder `./examples/nas/cream/data/imagenet` and move the validation set to the subfolder `./examples/nas/cream/data/imagenet/val`. To move the validation set, you cloud use the following script: <https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh> 
 
-Put the imagenet data in ${Root}/data. It should be like following:
+Put the imagenet data in ./examples/nas/cream/data. It should be like following:
 ```buildoutcfg
-${Root}/data/imagenet/train
-${Root}/data/imagenet/val
+./examples/nas/cream/data/imagenet/train
+./examples/nas/cream/data/imagenet/val
 ...
 ```
 
@@ -51,7 +50,7 @@ First, build environments for searching.
 pip install -r ./examples/nas/cream/requirements.txt
 ```
 
-To search for an architecture, you need to configure the parameters `flops_minimum` and `flops_maximum` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./examples/nas/cream/supernet.sh`
+To search for an architecture, you need to configure the parameters `flops_minimum` and `flops_maximum` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./examples/nas/cream/run.sh`
 ```buildoutcfg
 --flops_minimum 0 # Minimum Flops of Architecture
 --flops_maximum 600 # Maximum Flops of Architecture
@@ -59,7 +58,7 @@ To search for an architecture, you need to configure the parameters `flops_minim
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 ```buildoutcfg
-sh ./experiments/scripts/supernet.sh
+sh ./examples/nas/cream/run.sh
 
 ```
 
@@ -73,15 +72,15 @@ To test our trained of models, you need to use `model_selection` in `./examples/
 
 After specifying the flops of the model, you need to write the path to the resume model in `./examples/nas/cream/test.sh`.
 ```buildoutcfg
---resume './experiments/ckps/42.pth.tar'
---resume './experiments/ckps/470.pth.tar'
+--resume './examples/nas/cream/experiments/ckps/42.pth.tar'
+--resume './examples/nas/cream/experiments/ckps/470.pth.tar'
 ......
 ```
 
 We provide 14M/42M/114M/285M/470M/600M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
-After downloading the pretrained models and adding `--model_selection` and `--resume` in './experiments/scripts/test.sh', you need to use the following command to test the model.
+After downloading the pretrained models and adding `--model_selection` and `--resume` in './examples/nas/cream/test.sh', you need to use the following command to test the model.
 ```buildoutcfg
-sh ./experiments/scripts/test.sh
+sh ./examples/nas/cream/test.sh
 ```
 
 The test result will be saved in `./retrain`. You can configure the `--ouput` in `./examples/nas/cream/test.sh` to specify a path for it.
