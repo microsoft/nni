@@ -746,7 +746,7 @@ def trial_head(args):
             x['data'] = float(x['data'])
             return x
         end = x['data'].find(',', idx)
-        x['data'] = x['data'][idx + 9: end]
+        x['data'] = x['data'][idx + 11: end]
         return x
 
     nni_config = Config(get_config_filename(args))
@@ -765,7 +765,7 @@ def trial_head(args):
         content = sorted(map(lambda x: rec_process(x),
                              filter(lambda x: x['type'] == 'FINAL', content)),
                          key=lambda x: x['data'],
-                         reverse=args.reverse)
+                         reverse=not args.reverse)
         list_trial = ''
         for idx in range(min(int(args.num), len(content))):
             list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
