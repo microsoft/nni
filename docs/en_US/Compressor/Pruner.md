@@ -464,7 +464,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
             
 ## AutoCompress Pruner
 For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
-        1. Generate sparsities distribution using SimualtedAnnealingPruner
+        1. Generate sparsities distribution using SimulatedAnnealingPruner
         2. Perform ADMM-based structured pruning to generate pruning result for the next round.
            Here we use `speedup` to perform real pruning.
 
