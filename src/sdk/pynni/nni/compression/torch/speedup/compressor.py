@@ -147,6 +147,7 @@ class ModelSpeedup:
                 # modules which are not data dependent (e.g., do
                 # not have conditionals on data in tensors)
                 # so, if a node is not traced, we just skip it.
+                _logger.info('Warning: %s not found in the traced graph, just skip it.', module_name)
                 continue
             self.infer_module_mask(module_name, None, mask=mask)
 
