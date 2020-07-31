@@ -15,7 +15,7 @@ Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior t
 | Model (M Flops) | NNI (8Gpus) | Paper (16Gpus) | 
 | ---- |:-------------:| :-----:|
 | 42M | 65.8 | 66.5 |
-| 112M | 72.8 | 72.1 |
+| 112M | 72.1 | 72.8 |
 | 470M | 78.9 | 79.2 |
 | 600M | 79.4 | 80.0 |
 
