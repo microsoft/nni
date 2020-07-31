@@ -196,7 +196,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
 
     StartTimeColumnConfig: any = {
-        name: 'Start Time',
+        name: 'Start time',
         key: 'startTime',
         fieldName: 'startTime',
         minWidth: 150,
@@ -210,7 +210,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     };
 
     EndTimeColumnConfig: any = {
-        name: 'End Time',
+        name: 'End time',
         key: 'endTime',
         fieldName: 'endTime',
         minWidth: 200,
@@ -465,10 +465,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'ID':
                     showColumn.push(this.IdColumnConfig);
                     break;
-                case 'Start Time':
+                case 'Start time':
                     showColumn.push(this.StartTimeColumnConfig);
                     break;
-                case 'End Time':
+                case 'End time':
                     showColumn.push(this.EndTimeColumnConfig);
                     break;
                 case 'Duration':
