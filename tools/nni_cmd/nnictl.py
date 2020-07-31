@@ -12,7 +12,7 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
                           get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
-                          experiment_head, experiment_tail
+                          trial_head
 from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -112,6 +112,11 @@ def parse_args():
     parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
     parser_trial_codegen.set_defaults(func=trial_codegen)
+    parser_trial_head = parser_trial_subparsers.add_parser('head', help='list trial id and results with highest metric')
+    parser_trial_head.add_argument('--num', '-n', default=10, type=int)
+    parser_trial_head.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_head.add_argument('--reverse', '-r', action='store_true')
+    parser_trial_head.set_defaults(func=trial_head)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
@@ -130,16 +135,6 @@ def parse_args():
     parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
     parser_experiment_clean.set_defaults(func=experiment_clean)
-    parser_experiment_head = parser_experiment_subparsers.add_parser('head', help='list the id and results of the' \
-                                                                                  'n trials with the highest metric')
-    parser_experiment_head.add_argument('id', nargs='?', help='the id of experiment')
-    parser_experiment_head.add_argument('--num', default=10, help='the number of items to be listed')
-    parser_experiment_head.set_defaults(func=experiment_head)
-    parser_experiment_tail = parser_experiment_subparsers.add_parser('tail', help='list the id and results of the' \
-                                                                                  'n trials with the lowest metric')
-    parser_experiment_tail.add_argument('id', nargs='?', help='the id of experiment')
-    parser_experiment_tail.add_argument('--num', default=10, help='the number of items to be listed')
-    parser_experiment_tail.set_defaults(func=experiment_tail)
 
     #parse experiment command
     parser_platform = subparsers.add_parser('platform', help='get platform information')

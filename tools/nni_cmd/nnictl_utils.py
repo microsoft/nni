@@ -738,35 +738,17 @@ def search_space_auto_gen(args):
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
 
-def experiment_head(args):
+def trial_head(args):
     '''list maximal trials' id and results'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
-    if not detect_process(rest_pid):
-        print_error('Experiment is not running...')
-        return
-    running, response = check_rest_server_quick(rest_port)
-    if running:
-        response = rest_get(metric_data_latest_url(rest_port), 20)
-        if response is not None and check_response(response):
-            content = json.loads(response.text)
-            if int(args.num) > len(content):
-                print_error('Required number is too large.')
-                return
-            content = sorted(content, key=lambda x: float(x['data'][2: -2]), reverse=True)
-            list_trial = ''
-            for idx in range(int(args.num)):
-                list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
-                                                                     content[idx]['data'][1: -2])
-            print_normal(EXPERIMENT_RESULT_FORMAT.format('Maximal', list_trial))
-        else:
-            print_error('Get latest data failed...')
-    else:
-        print_error('Restful server is not Running')
+    def rec_process(x):
+        idx = x['data'].find('default')
+        if idx == -1:
+            x['data'] = float(x['data'])
+            return x
+        end = x['data'].find(',', idx)
+        x['data'] = x['data'][idx + 9: end]
+        return x
 
-def experiment_tail(args):
-    '''list maximal trials' id and results'''
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -774,20 +756,20 @@ def experiment_tail(args):
         print_error('Experiment is not running...')
         return
     running, response = check_rest_server_quick(rest_port)
-    if running:
-        response = rest_get(metric_data_latest_url(rest_port), 20)
-        if response is not None and check_response(response):
-            content = json.loads(response.text)
-            if int(args.num) > len(content):
-                print_error('Required number is too large.')
-                return
-            content = sorted(content, key=lambda x: float(x['data'][2: -2]))
-            list_trial = ''
-            for idx in range(int(args.num)):
-                list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
-                                                                     content[idx]['data'][1: -2])
-            print_normal(EXPERIMENT_RESULT_FORMAT.format('Maximal', list_trial))
-        else:
-            print_error('Get latest data failed...')
-    else:
+    if not running:
         print_error('Restful server is not Running')
+        return
+    response = rest_get(metric_data_latest_url(rest_port), 20)
+    if response is not None and check_response(response):
+        content = json.loads(response.text)
+        content = sorted(map(lambda x: rec_process(x),
+                             filter(lambda x: x['type'] == 'FINAL', content)),
+                         key=lambda x: x['data'],
+                         reverse=args.reverse)
+        list_trial = ''
+        for idx in range(min(int(args.num), len(content))):
+            list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
+                                                                 content[idx]['data'])
+        print_normal(EXPERIMENT_RESULT_FORMAT.format('Minimal' if args.reverse else 'Maximal', list_trial))
+    else:
+        print_error('Get latest data failed...')
