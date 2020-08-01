@@ -6,6 +6,7 @@ from copy import deepcopy
 from argparse import Namespace
 import numpy as np
 import torch
+import torch.nn as nn
 torch.backends.cudnn.deterministic = True
 
 from tensorboardX import SummaryWriter
@@ -241,8 +242,17 @@ class AMCPruner(Pruner):
                 self.text_writer.write('best policy: {}\n'.format(env.best_strategy))
         self.text_writer.close()
 
-
     def export(self):
+        wrapper_model_ckpt = 'best_wrapped_model.pth'
+        self.bound_model.load_state_dict(torch.load(wrapper_model_ckpt))
+
+        print('validate:', self.env._validate(self.env._val_loader, self.env.model))
+        self.env.export_layers()
+        self._unwrap_model()
+        print('validate exported:', self.env._validate(self.env._val_loader, self.env.model))
+
+
+    def export_old(self):
         assert self.args.ratios is not None or self.args.channels is not None, 'Please provide a valid ratio list or pruned channels'
         assert self.args.export_path is not None, 'Please provide a valid export path'
         self.env.set_export_path(self.args.export_path)

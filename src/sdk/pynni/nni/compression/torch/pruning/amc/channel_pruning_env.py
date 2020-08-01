@@ -130,15 +130,16 @@ class ChannelPruningEnv:
                 self.best_reward = reward
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
-                self.best_masks = deepcopy(self.pruner.export_model('tmp_export.pth')[0])
+                #self.best_masks = deepcopy(self.pruner.export_model('tmp_export.pth')[0])
+                torch.save(self.model.state_dict(), 'best_wrapped_model.pth')
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
             if self.export_model:  # export state dict
-                torch.save(self.model.state_dict(), self.export_path)
-                return None, None, None, None
+                #torch.save(self.model.state_dict(), self.export_path)
+                return None, None, done, None
             return obs, reward, done, info_set
 
         info_set = None
@@ -153,6 +154,13 @@ class ChannelPruningEnv:
         obs = self.layer_embedding[self.cur_ind, :].copy()
 
         return obs, reward, done, info_set
+
+    def export_layers(self):
+        while True:
+            self.export_layer(self.prunable_idx[self.cur_ind])
+            if self._is_final_layer():
+                break
+            self.cur_ind += 1
 
     def reset(self):
         # restore env by loading the checkpoint
@@ -184,11 +192,12 @@ class ChannelPruningEnv:
         assert (0. < preserve_ratio <= 1.)
         assert type(op) == PrunerModuleWrapper
         if preserve_ratio == 1:  # do not prune
-            return 1., op.module.weight.size(1), None  # TODO: should be a full index
+            if (preserve_idx is None) or (len(preserve_idx) == op.module.weight.size(1)):
+                return 1., op.module.weight.size(1), None  # should be a full index
         op.input_feat = self.layer_info_dict[op_idx]['input_feat']
         op.output_feat = self.layer_info_dict[op_idx]['output_feat']
 
-        masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op)
+        masks = self.channel_prune_masker.calc_mask(sparsity=1-preserve_ratio, wrapper=op, preserve_idx=preserve_idx)
         m = masks['weight_mask'].cpu().data
         if type(op.module) == nn.Conv2d:
             d_prime = (m.sum((0, 2, 3)) > 0).sum().item()
@@ -204,6 +213,51 @@ class ChannelPruningEnv:
 
         action = (m == 1).sum().item() / m.numel()
         return action, d_prime, preserve_idx
+
+    def export_layer(self, op_idx):
+        m_list = list(self.model.modules())
+        op = m_list[op_idx]
+        assert type(op) == PrunerModuleWrapper
+        w = op.module.weight.cpu().data
+        m = op.weight_mask.cpu().data
+        if type(op.module) == nn.Linear:
+            w = w.unsqueeze(-1).unsqueeze(-1)
+            m = m.unsqueeze(-1).unsqueeze(-1)
+
+        d_prime = (m.sum((0, 2, 3)) > 0).sum().item()
+        preserve_idx = np.nonzero((m.sum((0, 2, 3)) > 0).numpy())[0]
+        assert d_prime <= w.size(1)
+
+        if d_prime == w.size(1):
+            return
+
+        mask = np.zeros(w.size(1), bool)
+        mask[preserve_idx] = True
+        rec_weight = torch.zeros((w.size(0), d_prime, w.size(2), w.size(3)))
+        rec_weight = w[:, preserve_idx, :, :]
+        if type(op.module) == nn.Linear:
+            rec_weight = rec_weight.squeeze()
+        # no need to provide bias mask for channel pruning
+        rec_mask = torch.ones_like(rec_weight)
+
+        # assign new weight and mask
+        device = op.module.weight.device
+        op.module.weight.data = rec_weight.to(device)
+        op.weight_mask = rec_mask.to(device)
+
+        # export prev layers
+        prev_idx = self.prunable_idx[self.prunable_idx.index(op_idx) - 1]
+        for idx in range(prev_idx, op_idx):
+            m = m_list[idx]
+            if type(m) == nn.Conv2d:  # depthwise
+                m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask, :, :, :]).to(device)
+                if m.groups == m.in_channels:
+                    m.groups = int(np.sum(mask))
+            elif type(m) == nn.BatchNorm2d:
+                m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask]).to(device)
+                m.bias.data = torch.from_numpy(m.bias.data.cpu().numpy()[mask]).to(device)
+                m.running_mean.data = torch.from_numpy(m.running_mean.data.cpu().numpy()[mask]).to(device)
+                m.running_var.data = torch.from_numpy(m.running_var.data.cpu().numpy()[mask]).to(device)
 
     def _is_final_layer(self):
         return self.cur_ind == len(self.prunable_idx) - 1
@@ -300,6 +354,7 @@ class ChannelPruningEnv:
                     share_group = [c_idx]
                 else:  # same group
                     share_group.append(c_idx)
+            self.shared_idx.append(share_group)
             print('=> Conv layers to share channels: {}'.format(self.shared_idx))
 
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)

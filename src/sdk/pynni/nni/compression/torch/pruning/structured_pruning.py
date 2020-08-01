@@ -420,7 +420,7 @@ class AMCWeightMasker(WeightMasker):
         self.pruner = pruner
         self.preserve_round = preserve_round
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None, preserve_idx=None):
         """
         Calculate the mask of given layer.
         Parameters
@@ -467,20 +467,23 @@ class AMCWeightMasker(WeightMasker):
                 num_preserve = int(math.floor(num_total * 1. / self.preserve_round) * self.preserve_round)
             num_prune = num_total - num_preserve
 
-        if num_total < 2 or num_prune < 1:
+        if (num_total < 2 or num_prune < 1) and preserve_idx is None:
             return mask
 
-        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx)
+        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx, preserve_idx)
 
-    def get_mask(self, base_mask, weight, num_preserve, wrapper, wrapper_idx):
-        d_prime = num_preserve
+    def get_mask(self, base_mask, weight, num_preserve, wrapper, wrapper_idx, preserve_idx):
         w = weight.data.cpu().numpy()
         if wrapper.type == 'Linear':
             w = w[:, :, None, None]
 
-        importance = np.abs(w).sum((0, 2, 3))
-        sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
-        preserve_idx = sorted_idx[:d_prime]  # to preserve index
+        if preserve_idx is None:
+            importance = np.abs(w).sum((0, 2, 3))
+            sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
+            d_prime = num_preserve
+            preserve_idx = sorted_idx[:d_prime]  # to preserve index
+        else:
+            d_prime = len(preserve_idx)
 
         assert len(preserve_idx) == d_prime
         mask = np.zeros(w.shape[1], bool)

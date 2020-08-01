@@ -102,7 +102,7 @@ def get_split_dataset(dset_name, batch_size, n_worker, val_size, data_root='../d
         n_train = len(trainset)
         indices = list(range(n_train))
         # now shuffle the indices
-        np.random.shuffle(indices)
+        #np.random.shuffle(indices)
         assert val_size < n_train
         train_idx, val_idx = indices[val_size:], indices[:val_size]
 
