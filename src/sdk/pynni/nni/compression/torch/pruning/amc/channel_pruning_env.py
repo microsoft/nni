@@ -27,7 +27,7 @@ class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args, export_model=False):
+    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args):
         self.pruner = pruner
         self.model = pruner.bound_model
         self.checkpoint = checkpoint
@@ -43,8 +43,6 @@ class ChannelPruningEnv:
         self.n_calibration_batches = args.n_calibration_batches
         self.n_points_per_layer = args.n_points_per_layer
         self.channel_round = args.channel_round
-
-        self.export_model = export_model
 
         # sanity check
         assert self.preserve_ratio > self.lbound, 'Error! You can make achieve preserve_ratio smaller than lbound!'
@@ -104,9 +102,6 @@ class ChannelPruningEnv:
                         self.visited[g_idx] = True
                         self.index_buffer[g_idx] = preserve_idx.copy()
 
-        if self.export_model:  # export checkpoint
-            print('# Pruning {}: ratio: {}, d_prime: {}'.format(self.cur_ind, action, d_prime))
-
         self.strategy.append(action)  # save action to strategy
         self.d_prime_list.append(d_prime)
 
@@ -130,16 +125,12 @@ class ChannelPruningEnv:
                 self.best_reward = reward
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
-                #self.best_masks = deepcopy(self.pruner.export_model('tmp_export.pth')[0])
                 torch.save(self.model.state_dict(), 'best_wrapped_model.pth')
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
-            if self.export_model:  # export state dict
-                #torch.save(self.model.state_dict(), self.export_path)
-                return None, None, done, None
             return obs, reward, done, info_set
 
         info_set = None
@@ -154,13 +145,6 @@ class ChannelPruningEnv:
         obs = self.layer_embedding[self.cur_ind, :].copy()
 
         return obs, reward, done, info_set
-
-    def export_layers(self):
-        while True:
-            self.export_layer(self.prunable_idx[self.cur_ind])
-            if self._is_final_layer():
-                break
-            self.cur_ind += 1
 
     def reset(self):
         # restore env by loading the checkpoint
@@ -213,6 +197,13 @@ class ChannelPruningEnv:
 
         action = (m == 1).sum().item() / m.numel()
         return action, d_prime, preserve_idx
+
+    def export_model(self):
+        while True:
+            self.export_layer(self.prunable_idx[self.cur_ind])
+            if self._is_final_layer():
+                break
+            self.cur_ind += 1
 
     def export_layer(self, op_idx):
         m_list = list(self.model.modules())

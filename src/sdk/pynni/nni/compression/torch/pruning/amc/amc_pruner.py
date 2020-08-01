@@ -124,8 +124,7 @@ class AMCPruner(Pruner):
 
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint,
-            preserve_ratio=1. if args.job == 'export' else args.preserve_ratio,
-            args=args, export_model=args.job == 'export')
+            args.preserve_ratio, args=args)
 
         if args.job == 'train':
             # build folder and logs
@@ -246,31 +245,7 @@ class AMCPruner(Pruner):
         wrapper_model_ckpt = 'best_wrapped_model.pth'
         self.bound_model.load_state_dict(torch.load(wrapper_model_ckpt))
 
-        print('validate:', self.env._validate(self.env._val_loader, self.env.model))
-        self.env.export_layers()
+        print('validate searched model:', self.env._validate(self.env._val_loader, self.env.model))
+        self.env.export_model()
         self._unwrap_model()
-        print('validate exported:', self.env._validate(self.env._val_loader, self.env.model))
-
-
-    def export_old(self):
-        assert self.args.ratios is not None or self.args.channels is not None, 'Please provide a valid ratio list or pruned channels'
-        assert self.args.export_path is not None, 'Please provide a valid export path'
-        self.env.set_export_path(self.args.export_path)
-
-        print('=> Original model channels: {}'.format(self.env.org_channels))
-        if self.args.ratios:
-            ratios = self.args.ratios.split(',')
-            ratios = [float(r) for r in ratios]
-            assert  len(ratios) == len(self.env.org_channels)
-            channels = [int(r * c) for r, c in zip(ratios, self.env.org_channels)]
-        else:
-            channels = self.args.channels.split(',')
-            channels = [int(r) for r in channels]
-            ratios = [c2 / c1 for c2, c1 in zip(channels, self.env.org_channels)]
-        print('=> Pruning with ratios: {}'.format(ratios))
-        print('=> Channels after pruning: {}'.format(channels))
-
-        for r in ratios:
-            self.env.step(r)
-
-        return
+        print('validate exported model:', self.env._validate(self.env._val_loader, self.env.model))
