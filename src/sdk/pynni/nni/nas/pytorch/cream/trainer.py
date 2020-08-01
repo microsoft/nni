@@ -3,18 +3,18 @@
 
 import os
 import logging
-
+from copy import deepcopy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.distributed as dist
-from copy import deepcopy
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
 
-from .mutator import CreamSupernetTrainingMutator
+#from .mutator import CreamSupernetTrainingMutator
 
 logger = logging.getLogger(__name__)
+
 
 class CreamSupernetTrainer(Trainer):
     """
@@ -109,25 +109,25 @@ class CreamSupernetTrainer(Trainer):
 
     def train_one_epoch(self, epoch):
         def get_model(model):
-            try:
-                return model.module
-            except:
-                return model
+            #try:
+            return model.module
+            #except:
+            #    return model
 
         meters = AverageMeterGroup()
-        for step, (input, target) in enumerate(self.train_loader):
+        for step, (input_data, target) in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             self.mutator.reset()
 
-            input = input.cuda()
+            input_data = input_data.cuda()
             target = target.cuda()
 
             cand_flops = self.est.get_flops(self.mutator._cache)
 
             if epoch > self.meta_sta_epoch and step > 0 and step % self.update_iter == 0:
 
-                slice = self.slices
-                x = deepcopy(input[:slice].clone().detach())
+                slice_ind = self.slices
+                x = deepcopy(input_data[:slice_ind].clone().detach())
 
                 if len(self.best_children_pool) > 0:
                     if self.pick_method == 'top1':
@@ -178,9 +178,9 @@ class CreamSupernetTrainer(Trainer):
                     for weight, grad_item in zip(get_model(self.model).rand_parameters(self.mutator._cache), grad_1):
                         del weight.grad
 
-                    held_out_x = input[slice:slice * 2].clone()
+                    held_out_x = input_data[slice_ind:slice_ind * 2].clone()
                     output_2 = self.model(held_out_x)
-                    valid_loss = self.loss(output_2, target[slice:slice * 2])
+                    valid_loss = self.loss(output_2, target[slice_ind:slice_ind * 2])
                     self.optimizer.zero_grad()
 
                     grad_student_val = torch.autograd.grad(valid_loss,
@@ -189,18 +189,20 @@ class CreamSupernetTrainer(Trainer):
 
                     grad_teacher = torch.autograd.grad(students_weight[0],
                                                        get_model(self.model).rand_parameters(cand,
-                                                                                        self.pick_method == 'meta'),
+                                                                                             self.pick_method == 'meta'),
                                                        grad_outputs=grad_student_val)
 
                     # update teacher model
-                    for weight, grad_item in zip(get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
-                                                 grad_teacher):
+                    for weight, grad_item in zip(
+                            get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
+                            grad_teacher):
                         weight.grad = grad_item
                     torch.nn.utils.clip_grad_norm_(
                         get_model(self.model).rand_parameters(self.mutator._cache, self.pick_method == 'meta'), 1)
                     self.optimizer.step()
-                    for weight, grad_item in zip(get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
-                                                 grad_teacher):
+                    for weight, grad_item in zip(
+                            get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
+                            grad_teacher):
                         del weight.grad
 
                     for item in students_weight:
@@ -266,10 +268,10 @@ class CreamSupernetTrainer(Trainer):
 
             # best_children_pool = sorted(best_children_pool, reverse=True)
             if epoch > self.meta_sta_epoch and (
-                    (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1][1] + 5) or (
-                    prec1 > self.best_children_pool[-1][1] and cand_flops < self.best_children_pool[-1][2])):
+                    (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1][1] + 5) or
+                    (prec1 > self.best_children_pool[-1][1] and cand_flops < self.best_children_pool[-1][2])):
                 val_prec1 = prec1
-                training_data = deepcopy(input[:self.slices].detach())
+                training_data = deepcopy(input_data[:self.slices].detach())
                 if len(self.best_children_pool) == 0:
                     features = deepcopy(output[:self.slices].detach())
                 else:
@@ -292,7 +294,8 @@ class CreamSupernetTrainer(Trainer):
 
         if self.main_proc:
             for idx, i in enumerate(self.best_children_pool):
-                logger.info("No.{} {}".format(idx, i[:4]))
+                logger.info("No.%s %s", idx, i[:4])
+                #logger.info("No.{} {}".format(idx, i[:4]))
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
