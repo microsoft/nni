@@ -6,12 +6,11 @@ from copy import deepcopy
 from argparse import Namespace
 import numpy as np
 import torch
-import torch.nn as nn
 torch.backends.cudnn.deterministic = True
 
 from tensorboardX import SummaryWriter
 
-from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
+from nni.compression.torch.compressor import Pruner
 from .channel_pruning_env import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
@@ -20,136 +19,198 @@ class AMCPruner(Pruner):
     """
     A pytorch implementation of AMC: AutoML for Model Compression and Acceleration on Mobile Devices.
     (https://arxiv.org/pdf/1802.03494.pdf)
+
+    Parameters:
+        model: nn.Module
+            The model to be pruned.
+        config_list: list
+            Configuration list to configure layer pruning.
+            Supported keys:
+                op_types: operation type to be pruned
+                op_names: operation name to be pruned
+        evaluator: function
+            function to evaluate the pruned model.
+            The prototype of the function:
+                >>> def val_func(val_loader, model):
+                >>>     ...
+                >>>     return acc
+        val_loader: torch.utils.data.DataLoader
+            Data loader of validation dataset.
+        suffix: str
+            suffix to help you remember what experiment you ran
+        job: str
+            train: search best pruned model.
+            export: export a searched model, before exporting model, you must run this pruner
+            to search a pruned model with job=train.
+        export_path: str
+            path for exporting models
+
+        # parameters for pruning environment
+        model_type: str
+            model type to prune, currently 'mobilenet' and 'mobilenetv2' are supported.
+        sparsity: float
+            prune ratio
+        lbound: float
+            minimum prune ratio
+        rbound: float
+            maximum prune ratio
+        reward: function
+            reward function type
+
+        # parameters for channel pruning
+        n_calibration_batches: int
+            number of batches to extract layer information
+        n_points_per_layer: int
+            number of feature points per layer
+        channel_round: int
+            round channel to multiple of channel_round
+
+        # parameters for ddpg agent
+        hidden1: int
+            hidden num of first fully connect layer
+        hidden2: int
+            hidden num of second fully connect layer
+        lr_c: float
+            learning rate for critic
+        lr_a: float
+            learning rate for actor
+        warmup: int
+            time without training but only filling the replay memory
+        discount: float
+        bsize: int
+            minibatch size
+        rmsize: int
+            memory size for each layer
+        window_length: int
+        tau: float
+            moving average for target network
+        # noise
+        init_delta: float
+            initial variance of truncated normal distribution
+        delta_decay: float
+            delta decay during exploration
+
+        # parameters for training ddpg agent
+        max_episode_length: int
+            maximum episode length
+        output: str
+            output dir
+        debug: boolean
+            debug mode
+        train_episode: int
+            train iters each timestep
+        epsilon: int
+            linear decay of exploration policy
+        seed: int
+            random seed to set
     """
-    def __init__(self, model, config_list, evaluator, val_loader, **kwargs):
-        """
-        Parameters:
-            model: nn.Module
-                The model to be pruned.
-            config_list: list
-                Configuration list to configure layer pruning.
-                Supported keys:
-                    op_types: operation type to be pruned
-                    op_names: operation name to be pruned
-            evaluator: function
-                function to evaluate the pruned model.
-                The prototype of the function:
-                    >>> def val_func(val_loader, model):
-                    >>>     ...
-                    >>>     return acc
-            val_loader: torch.utils.data.DataLoader
-                Data loader of validation dataset.
-            kwargs: dict
-                Following additional parameters:
-                job: str
-                    'train' or 'export'
-                suffix: str
-                    suffix to help you remember what experiment you ran
-                # environment
-                model_type: str
-                    model type to prune
-                sparsity: float
-                    prune ratio
-                lbound: float
-                    minimum prune ratio
-                rbound: float
-                    maximum prune ratio
-                reward: function
-                    reward function type
-                # channel pruning
-                n_calibration_batches: int
-                    number of batches to extract layer information
-                n_points_per_layer: int
-                    number of feature points per layer
-                channel_round: int
-                    round channel to multiple of channel_round
-                # ddpg
-                hidden1: int
-                    hidden num of first fully connect layer
-                hidden2: int
-                    hidden num of second fully connect layer
-                lr_c: float
-                    learning rate for critic
-                lr_a: float
-                    learning rate for actor
-                warmup: int
-                    time without training but only filling the replay memory
-                discount: float
-                bsize: int
-                    minibatch size
-                rmsize: int
-                    memory size for each layer
-                window_length: int
-                tau: float
-                    moving average for target network
-                # noise
-                init_delta: float
-                    initial variance of truncated normal distribution
-                delta_decay: float
-                    delta decay during exploration
-                # training
-                max_episode_length: int
-                    maximum episode length
-                output: str
-                    output dir
-                debug: boolean
-                    debug mode
-                train_episode: int
-                    train iters each timestep
-                epsilon: int
-                    linear decay of exploration policy
-                seed: int
-                    random seed to set
-                # export
-                ratios: list
-                    ratios for pruning
-                channels: list
-                    channels after pruning
-                export_path: str
-                    path for exporting models
-        """
-        args = Namespace(**kwargs)
-        if args.seed is not None:
-            np.random.seed(args.seed)
-            torch.manual_seed(args.seed)
-            torch.cuda.manual_seed(args.seed)
+
+    def __init__(
+            self,
+            model,
+            config_list,
+            evaluator,
+            val_loader,
+            suffix=None,
+            job='train',
+            export_path=None,
+            model_type='mobilenet',
+            sparsity=0.5,
+            lbound=0.,
+            rbound=0.8,
+            reward='acc_reward',
+            n_calibration_batches=60,
+            n_points_per_layer=10,
+            channel_round=8,
+            hidden1=300,
+            hidden2=300,
+            lr_c=1e-3,
+            lr_a=1e-4,
+            warmup=100,
+            discount=1.,
+            bsize=64,
+            rmsize=100,
+            window_length=1,
+            tau=0.01,
+            init_delta=0.5,
+            delta_decay=0.95,
+            max_episode_length=1e9,
+            output='./logs',
+            debug=False,
+            train_episode=800,
+            epsilon=50000,
+            seed=None):
+
+        self.job = job
+
+        if seed is not None:
+            np.random.seed(seed)
+            torch.manual_seed(seed)
+            torch.cuda.manual_seed(seed)
 
         checkpoint = deepcopy(model.state_dict())
 
         super().__init__(model, config_list, optimizer=None)
 
         # convert sparsity to preserve ratio
-        args.preserve_ratio = 1. - args.sparsity
-        args.lbound, args.rbound = 1. - args.rbound, 1. - args.lbound
+        preserve_ratio = 1. - sparsity
+        lbound, rbound = 1. - rbound, 1. - lbound
+
+        self.env_args = Namespace(
+            model_type=model_type,
+            preserve_ratio=preserve_ratio,
+            lbound=lbound,
+            rbound=rbound,
+            reward=reward,
+            n_calibration_batches=n_calibration_batches,
+            n_points_per_layer=n_points_per_layer,
+            channel_round=channel_round
+        )
 
         self.env = ChannelPruningEnv(
-            self, evaluator, val_loader, checkpoint,
-            args.preserve_ratio, args=args)
+            self, evaluator, val_loader, checkpoint, args=self.env_args)
 
-        if args.job == 'train':
+        if self.job == 'train':
             # build folder and logs
-            base_folder_name = '{}_{}_r{}_search'.format(args.model_type, args.dataset, args.preserve_ratio)
-            if args.suffix is not None:
-                base_folder_name = base_folder_name + '_' + args.suffix
-            args.output = get_output_folder(args.output, base_folder_name)
-            print('=> Saving logs to {}'.format(args.output))
-            self.tfwriter = SummaryWriter(logdir=args.output)
-            self.text_writer = open(os.path.join(args.output, 'log.txt'), 'w')
-            print('=> Output path: {}...'.format(args.output))
+            base_folder_name = '{}_r{}_search'.format(model_type, preserve_ratio)
+            if suffix is not None:
+                base_folder_name = base_folder_name + '_' + suffix
+            self.output = get_output_folder(output, base_folder_name)
+            print('=> Saving logs to {}'.format(self.output))
+            self.tfwriter = SummaryWriter(logdir=self.output)
+            self.text_writer = open(os.path.join(self.output, 'log.txt'), 'w')
+            print('=> Output path: {}...'.format(self.output))
 
             nb_states = self.env.layer_embedding.shape[1]
             nb_actions = 1  # just 1 action here
 
-            args.rmsize = args.rmsize * len(self.env.prunable_idx)  # for each layer
-            print('** Actual replay buffer size: {}'.format(args.rmsize))
+            rmsize = rmsize * len(self.env.prunable_idx)  # for each layer
+            print('** Actual replay buffer size: {}'.format(rmsize))
 
-            self.agent = DDPG(nb_states, nb_actions, args)
+            self.ddpg_args = Namespace(
+                hidden1=hidden1,
+                hidden2=hidden2,
+                lr_c=lr_c,
+                lr_a=lr_a,
+                warmup=warmup,
+                discount=discount,
+                bsize=bsize,
+                rmsize=rmsize,
+                window_length=window_length,
+                tau=tau,
+                init_delta=init_delta,
+                delta_decay=delta_decay,
+                max_episode_length=max_episode_length,
+                debug=debug,
+                train_episode=train_episode,
+                epsilon=epsilon
+            )
+            self.agent = DDPG(nb_states, nb_actions, self.ddpg_args)
 
-        self.args = args
 
     def compress(self):
-        if self.args.job == 'train':
-            self.train(self.args.train_episode, self.agent, self.env, self.args.output)
+        if self.job == 'train':
+            self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output)
         else:
             self.export()
 
@@ -166,7 +227,7 @@ class AMCPruner(Pruner):
                 agent.reset(observation)
 
             # agent pick action ...
-            if episode <= self.args.warmup:
+            if episode <= self.ddpg_args.warmup:
                 action = agent.random_action()
                 # action = sample_from_truncated_normal_distribution(lower=0., upper=1., mu=env.preserve_ratio, sigma=0.5)
             else:
@@ -212,7 +273,7 @@ class AMCPruner(Pruner):
                 # agent observe and update policy
                 for r_t, s_t, s_t1, a_t, done in T:
                     agent.observe(final_reward, s_t, s_t1, a_t, done)
-                    if episode > self.args.warmup:
+                    if episode > self.ddpg_args.warmup:
                         agent.update_policy()
 
                 #agent.memory.append(

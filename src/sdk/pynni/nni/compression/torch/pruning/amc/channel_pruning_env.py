@@ -27,12 +27,12 @@ class ChannelPruningEnv:
     """
     Env for channel pruning search
     """
-    def __init__(self, pruner, val_func, val_loader, checkpoint, preserve_ratio, args):
+    def __init__(self, pruner, val_func, val_loader, checkpoint, args):
         self.pruner = pruner
         self.model = pruner.bound_model
         self.checkpoint = checkpoint
         self.batch_size = val_loader.batch_size
-        self.preserve_ratio = preserve_ratio
+        self.preserve_ratio = args.preserve_ratio
         self.channel_prune_masker = AMCWeightMasker(self.model, self.pruner, args.channel_round)
 
         # options from args
