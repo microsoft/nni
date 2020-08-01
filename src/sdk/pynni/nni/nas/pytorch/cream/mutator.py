@@ -3,9 +3,9 @@
 
 import logging
 
-import numpy as np
+#import numpy as np
 
-from nni.nas.pytorch.mutables import LayerChoice, InputChoice
+#from nni.nas.pytorch.mutables import LayerChoice, InputChoice
 from nni.nas.pytorch.random import RandomMutator
 
 _logger = logging.getLogger(__name__)
@@ -32,7 +32,9 @@ class CreamSupernetTrainingMutator(RandomMutator):
     flops_sample_timeout : int
         Maximum number of attempts to sample before giving up and use a random candidate.
     """
-    def __init__(self, model, how_to_prob='even', pre_prob=(0.05,0.05,0.2,0.4,0.2,0.1), CHOICE_NUM=6, sta_num=(4,4,4,4,4)):
+
+    def __init__(self, model, how_to_prob='even', pre_prob=(0.05, 0.05, 0.2, 0.4, 0.2, 0.1), CHOICE_NUM=6,
+                 sta_num=(4, 4, 4, 4, 4)):
 
         super().__init__(model)
         self.how_to_prob = how_to_prob
