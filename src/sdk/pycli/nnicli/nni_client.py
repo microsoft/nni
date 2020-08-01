@@ -21,11 +21,11 @@ nc.stop_nni()
 
 """
 
+from functools import cmp_to_key
 import sys
 import os
 import subprocess
 import requests
-from functools import cmp_to_key
 
 __all__ = [
     'start_nni',
@@ -142,7 +142,7 @@ def get_job_metrics(trial_job_id=None, sort=None):
         return sorted(job_metrics, key=cmp_to_key(lambda x, y: -1 \
                                                   if float(x['data'].replace('"', '')) < float(y['data'].replace('"', '')) \
                                                   else 1, reverse=False))
-    else:  
+    else:
         return job_metrics
 
 def export_data():
