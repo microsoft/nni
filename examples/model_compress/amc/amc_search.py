@@ -80,13 +80,6 @@ def init_data(args):
     return train_loader, val_loader
 
 def validate(val_loader, model, verbose=False):
-    '''
-    Validate the performance on validation set
-    :param val_loader:
-    :param model:
-    :param verbose:
-    :return:
-    '''
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
