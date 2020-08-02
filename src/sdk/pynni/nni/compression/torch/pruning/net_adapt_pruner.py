@@ -21,80 +21,69 @@ _logger = logging.getLogger(__name__)
 
 class NetAdaptPruner(Pruner):
     """
-    This is a Pytorch implementation of NetAdapt compression algorithm.
+    A Pytorch implementation of NetAdapt compression algorithm.
 
-    The pruning procedure can be described as follows:
-    While Res_i > Bud:
-        1. Con = Res_i - delta_Res
-        2. for every layer:
-            Choose Num Filters to prune
-            Choose which filter to prune
-            Short-term fine tune the pruned model
-        3. Pick the best layer to prune
-    Long-term fine tune
+    Parameters
+    ----------
+    model : pytorch model
+        The model to be pruned.
+    config_list : list
+        Supported keys:
+            - sparsity : The target overall sparsity.
+            - op_types : The operation type to prune.
+    short_term_fine_tuner : function
+        function to short-term fine tune the masked model.
+        This function should include `model` as the only parameter,
+        and fine tune the model for a short term after each pruning iteration.
+        Example::
 
-    For the details of this algorithm, please refer to the paper: https://arxiv.org/abs/1804.03230
+            def short_term_fine_tuner(model, epoch=3):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                train_loader = ...
+                criterion = torch.nn.CrossEntropyLoss()
+                optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+                model.train()
+                for _ in range(epoch):
+                    for batch_idx, (data, target) in enumerate(train_loader):
+                        data, target = data.to(device), target.to(device)
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        optimizer.step()
+    evaluator : function
+        function to evaluate the masked model.
+        This function should include `model` as the only parameter, and returns a scalar value.
+        Example::
+
+            def evaluator(model):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                val_loader = ...
+                model.eval()
+                correct = 0
+                with torch.no_grad():
+                    for data, target in val_loader:
+                        data, target = data.to(device), target.to(device)
+                        output = model(data)
+                        # get the index of the max log-probability
+                        pred = output.argmax(dim=1, keepdim=True)
+                        correct += pred.eq(target.view_as(pred)).sum().item()
+                accuracy = correct / len(val_loader.dataset)
+                return accuracy
+    optimize_mode : str
+        optimize mode, `maximize` or `minimize`, by default `maximize`.
+    base_algo : str
+        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+    sparsity_per_iteration : float
+        sparsity to prune in each iteration.
+    experiment_data_dir : str
+        PATH to save experiment data,
+        including the config_list generated for the base pruning algorithm and the performance of the pruned model.
     """
 
     def __init__(self, model, config_list, short_term_fine_tuner, evaluator,
                  optimize_mode='maximize', base_algo='l1', sparsity_per_iteration=0.05, experiment_data_dir='./'):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model to be pruned
-        config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
-        short_term_fine_tuner : function
-            function to short-term fine tune the masked model.
-            This function should include `model` as the only parameter,
-            and fine tune the model for a short term after each pruning iteration.
-            Example:
-            >>> def short_term_fine_tuner(model, epoch=3):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     train_loader = ...
-            >>>     criterion = torch.nn.CrossEntropyLoss()
-            >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-            >>>     model.train()
-            >>>     for _ in range(epoch):
-            >>>         for _, (data, target) in enumerate(train_loader):
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             optimizer.zero_grad()
-            >>>             output = model(data)
-            >>>             loss = criterion(output, target)
-            >>>             loss.backward()
-            >>>             optimizer.step()
-        evaluator : function
-            function to evaluate the masked model.
-            This function should include `model` as the only parameter, and returns a scalar value.
-            Example::
-            >>> def evaluator(model):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     val_loader = ...
-            >>>     model.eval()
-            >>>     correct = 0
-            >>>     with torch.no_grad():
-            >>>         for data, target in val_loader:
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             output = model(data)
-            >>>             # get the index of the max log-probability
-            >>>             pred = output.argmax(dim=1, keepdim=True)
-            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-            >>>     accuracy = correct / len(val_loader.dataset)
-            >>>     return accuracy
-        optimize_mode : str
-            optimize mode, `maximize` or `minimize`, by default `maximize`.
-        base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
-            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-        sparsity_per_iteration : float
-            sparsity to prune in each iteration
-        experiment_data_dir : str
-            PATH to save experiment data,
-            including the config_list generated for the base pruning algorithm and the performance of the pruned model.
-        """
         # models used for iterative pruning and evaluation
         self._model_to_prune = copy.deepcopy(model)
         self._base_algo = base_algo
@@ -124,7 +113,7 @@ class NetAdaptPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs

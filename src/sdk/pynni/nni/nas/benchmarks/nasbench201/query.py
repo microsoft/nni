@@ -5,7 +5,7 @@ from playhouse.shortcuts import model_to_dict
 from .model import Nb201TrialStats, Nb201TrialConfig
 
 
-def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None):
+def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None, include_intermediates=False):
     """
     Query trial stats of NAS-Bench-201 given conditions.
 
@@ -23,6 +23,8 @@ def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None):
     reduction : str or None
         If 'none' or None, all trial stats will be returned directly.
         If 'mean', fields in trial stats will be averaged given the same trial config.
+    include_intermediates : boolean
+        If true, intermediate results will be returned.
 
     Returns
     -------
@@ -53,5 +55,13 @@ def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None):
         query = query.where(functools.reduce(lambda a, b: a & b, conditions))
     if reduction is not None:
         query = query.group_by(Nb201TrialStats.config)
-    for k in query:
-        yield model_to_dict(k)
+    for trial in query:
+        if include_intermediates:
+            data = model_to_dict(trial)
+            # exclude 'trial' from intermediates as it is already available in data
+            data['intermediates'] = [
+                {k: v for k, v in model_to_dict(t).items() if k != 'trial'} for t in trial.intermediates
+            ]
+            yield data
+        else:
+            yield model_to_dict(trial)

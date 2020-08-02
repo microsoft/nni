@@ -9,7 +9,7 @@ import torch.utils.data
 import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
+    L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, \
     AutoCompressPruner, AMCPruner
 from models.pytorch_models.mobilenet import MobileNet
@@ -36,7 +36,7 @@ prune_config = {
         ]
     },
     'agp': {
-        'pruner_class': AGP_Pruner,
+        'pruner_class': AGPPruner,
         'config_list': [{
             'initial_sparsity': 0.,
             'final_sparsity': 0.8,
@@ -201,7 +201,9 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
         elif pruner_name == 'autocompress':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
-        else:
+        elif pruner_name in ['level', 'slim', 'fpgm', 'l1', 'l2']:
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list)
+        elif pruner_name in ['agp', 'taylorfo', 'mean_activation', 'apoz']:
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
         pruner.compress()
 
@@ -234,7 +236,7 @@ def test_agp(pruning_algorithm):
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config['agp']['config_list']
 
-        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
+        pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
         pruner.compress()
 
         x = torch.randn(2, 1, 28, 28)
