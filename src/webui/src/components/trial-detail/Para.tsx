@@ -162,8 +162,12 @@ class Para extends React.Component<ParaProps, ParaState> {
             const scale = this.convertToD3Scale(v);
             if (k === primaryMetricKey && scale !== undefined && scale.interpolate) {
                 // set color for primary metrics
-                colorScale = this.convertToD3Scale(v, false)
-                    .range(['green', 'red'])
+                colorScale = this.convertToD3Scale(v, false);
+                colorScale.range([0, 1]);  // fake a range to perform invert
+                const [scaleMin, scaleMax] = colorScale.domain();
+                const pivot = colorScale.invert(0.5);
+                colorScale.domain([scaleMin, pivot, scaleMax])
+                    .range(['#90EE90', '#FFC400', '#CA0000'])
                     .interpolate(d3.interpolateHsl);
                 colorDim = k;
                 convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
