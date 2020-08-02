@@ -513,8 +513,7 @@ class AMCWeightMasker(WeightMasker):
         if wrapper.type == 'Linear':
             mask_weight[:, preserve_idx] = 1.
             if base_mask['bias_mask'] is not None and wrapper.module.bias is not None:
-                mask_bias = torch.zeros_like(wrapper.module.bias)
-                mask_bias[preserve_idx] = 1.
+                mask_bias = torch.ones_like(wrapper.module.bias)
         else:
             mask_weight[:, preserve_idx, :, :] = 1.
             mask_bias = None
