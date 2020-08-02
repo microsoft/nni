@@ -244,7 +244,7 @@ class AMCPruner(Pruner):
             #     done = True
 
             # [optional] save intermideate model
-            if episode % int(num_episode / 3) == 0:
+            if num_episode / 3 <= 1 or episode % int(num_episode / 3) == 0:
                 agent.save_model(output)
 
             # update

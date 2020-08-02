@@ -11,6 +11,8 @@ from nni.compression.torch.pruning.amc.amc_pruner import AMCPruner
 from data import get_split_dataset
 from utils import AverageMeter, accuracy
 
+device = None
+
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')
 
@@ -27,6 +29,7 @@ def parse_args():
     parser.add_argument('--reward', default='acc_reward', type=str, help='Setting the reward')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
 
+    parser.add_argument('--train_episode', default=1, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
     parser.add_argument('--data_bsize', default=50, type=int, help='number of data batch size')
@@ -59,7 +62,7 @@ def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
         sd = {k.replace('module.', ''): v for k, v in sd.items()}
         net.load_state_dict(sd)
 
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and n_gpu > 0:
         net = net.cuda()
         if n_gpu > 1:
             net = torch.nn.DataParallel(net, range(n_gpu))
@@ -93,9 +96,9 @@ def validate(val_loader, model, verbose=False):
     t1 = time.time()
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
-            target = target.cuda(non_blocking=True)
-            input_var = torch.autograd.Variable(input).cuda()
-            target_var = torch.autograd.Variable(target).cuda()
+            target = target.to(device)
+            input_var = torch.autograd.Variable(input).to(device)
+            target_var = torch.autograd.Variable(target).to(device)
 
             # compute output
             output = model(input_var)
@@ -119,6 +122,7 @@ def validate(val_loader, model, verbose=False):
 
 if __name__ == "__main__":
     args = parse_args()
+    device = torch.device('cuda') if torch.cuda.is_available() and args.n_gpu > 0 else torch.device('cpu')
 
     model = get_model_and_checkpoint(args.model_type, args.dataset, checkpoint_path=args.ckpt_path, n_gpu=args.n_gpu)
     _, val_loader = init_data(args)
@@ -126,5 +130,5 @@ if __name__ == "__main__":
     config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
-    pruner = AMCPruner(model, config_list, validate, val_loader, job=args.job)
+    pruner = AMCPruner(model, config_list, validate, val_loader, job=args.job, train_episode=args.train_episode)
     pruner.compress()

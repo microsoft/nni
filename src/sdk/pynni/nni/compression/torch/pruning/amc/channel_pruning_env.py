@@ -383,10 +383,13 @@ class ChannelPruningEnv:
 
             return lambda_forward
 
+        device = None
         for idx in self.prunable_idx + self.buffer_idx:  # get all
             m = m_list[idx]
             m.old_forward = m.forward
             m.forward = new_forward(m)
+            if device is None and type(m) == PrunerModuleWrapper:
+                device = m.module.weight.device
 
         # now let the image flow
         print('=> Extracting information...')
@@ -395,7 +398,7 @@ class ChannelPruningEnv:
                 if i_b == self.n_calibration_batches:
                     break
                 self.data_saver.append((input.clone(), target.clone()))
-                input_var = torch.autograd.Variable(input).cuda()
+                input_var = torch.autograd.Variable(input).to(device)
 
                 # inference and collect stats
                 _ = self.model(input_var)
