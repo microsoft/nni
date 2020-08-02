@@ -499,6 +499,7 @@ class AMCWeightMasker(WeightMasker):
         else:
             raise NotImplementedError('Current code only supports 1x1 conv now!')
         rec_weight_pad = np.zeros_like(w)
+        # pylint: disable=all
         rec_weight_pad[:, mask, :, :] = rec_weight
         rec_weight = rec_weight_pad
 
