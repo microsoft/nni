@@ -176,14 +176,6 @@ if __name__ == '__main__':
 
     pruner1.compress()
     pruner2.compress()
-    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
-    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
-    pruner1._unwrap_model()
-    pruner2._unwrap_model()
-    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
-    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
-    ms1.speedup_model()
-    ms2.speedup_model()
     print('Model speedup finished')
     
     optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
@@ -237,6 +229,15 @@ if __name__ == '__main__':
         acc1 = test(net1, device, criterion1, val_loader)
         print('Learning rate: ', scheduler1.get_last_lr())
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
+
+    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
+    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
+    pruner1._unwrap_model()
+    pruner2._unwrap_model()
+    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
+    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
+    ms1.speedup_model()
+    ms2.speedup_model()
 
 
     acc1 = test(net1, device, criterion1, val_loader)
