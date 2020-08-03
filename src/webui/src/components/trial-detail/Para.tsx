@@ -162,14 +162,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             const scale = this.convertToD3Scale(v);
             if (k === primaryMetricKey && scale !== undefined && scale.interpolate) {
                 // set color for primary metrics
+                // `colorScale` is used to produce a color range, while `scale` is to produce a pixel range
                 colorScale = this.convertToD3Scale(v, false);
-                colorScale.range([0, 1]);  // fake a range to perform invert
-                const [scaleMin, scaleMax] = colorScale.domain();
-                const pivot = colorScale.invert(0.5);
-                colorScale.domain([scaleMin, pivot, scaleMax])
-                    .range(['#90EE90', '#FFC400', '#CA0000'])
-                    .interpolate(d3.interpolateHsl);
-                colorDim = k;
                 convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
                 // filter top trials
                 if (percent != 1) {
@@ -177,12 +171,23 @@ class Para extends React.Component<ParaProps, ParaState> {
                     convertedTrials = convertedTrials.slice(0, keptTrialNum);
                     const domain = d3.extent(convertedTrials, item => item[k]);
                     scale.domain([domain[0], domain[1]]);
+                    colorScale.domain([domain[0], domain[1]]);
                     if (colorScale !== undefined) {
                         colorScale.domain(domain);
                     }
                 }
                 // reverse the converted trials to show the top ones upfront
                 convertedTrials.reverse();
+                const assignColors = (scale: any): void => {
+                    scale.range([0, 1]);  // fake a range to perform invert
+                    const [scaleMin, scaleMax] = scale.domain();
+                    const pivot = scale.invert(0.5);
+                    scale.domain([scaleMin, pivot, scaleMax])
+                        .range(['#90EE90', '#FFC400', '#CA0000'])
+                        .interpolate(d3.interpolateHsl);
+                };
+                assignColors(colorScale);
+                colorDim = k;
             }
             dimensions.push([k, {
                 type: 'number',
