@@ -687,7 +687,7 @@ def export_trials_data(args):
         sorted(intermediate_results, key=lambda x: x['timestamp'])
         groupby = dict()
         for content in intermediate_results:
-            groupby.setdefault(content['trialJobId'], []).append(content['data'].replace('\\', '').replace('"', ''))
+            groupby.setdefault(content['trialJobId'], []).append(eval(content['data']))
         return groupby
 
     nni_config = Config(get_config_filename(args))
