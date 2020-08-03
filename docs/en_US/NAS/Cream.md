@@ -57,6 +57,7 @@ To search for an architecture, you need to configure the parameters `flops_minim
 --flops_minimum 0 # Minimum Flops of Architecture
 --flops_maximum 600 # Maximum Flops of Architecture
 ```
+For example, if you expect to search an architecture with model Flops <= 200M, pls set the `flops_minimum` and `flops_maximum` to be `0` and `200`.
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 ```buildoutcfg
