@@ -180,6 +180,11 @@ The search space of NAS Bench 201 is shown below.
 
 ![](../../img/NAS_Bench_201.svg)
 
+```eval_rst
+..  autoclass:: nni.nas.pytorch.search_space_zoo.NASBench201Cell
+    :members:
+```
+
 ### Example code
 
 <a name="nas-bench-201-reference"></a>
@@ -192,9 +197,19 @@ All supported operations for NAS Bench 201 are listed below.
   * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
   * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
 
+  ```eval_rst
+  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.Pooling
+      :members:
+  ```
+
 * Conv
   * Conv1x1: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=1`, `padding=0`, and `dilation=1`.
   * Conv3x3: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
+
+  ```eval_rst
+  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.ReLUConvBN
+      :members:
+  ```
 
 * SkipConnect
 
@@ -203,5 +218,9 @@ All supported operations for NAS Bench 201 are listed below.
 * Zeroize
 
   Generate zero tensor indicating there is no connection from the source node to the target node.
-   (TODO: Check with Yuge, why not mention zeroize operation in darts operation.)
+
+  ```eval_rst
+  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.Zero
+      :members:
+  ```
 
