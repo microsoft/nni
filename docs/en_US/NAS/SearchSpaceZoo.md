@@ -65,7 +65,7 @@ This layer is extracted from the model designed [here](https://github.com/micros
 
 ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent local computations, and the edges represent the flow of information between the N nodes. One cell contains two input nodes and a single output node. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as the output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
 
-One structure in the ENAS micro search space is shown below.
+The ENAS micro search space is shown below.
 
 ![](../../img/NAS_ENAS_micro.svg) 
 
@@ -172,4 +172,36 @@ All supported operations for ENAS macro search are listed below.
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.PoolBranch
     ```
 
-<!-- push -->
+## NAS Bench 201
+
+NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell consists of four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [reference](#nas-bench-201-reference).
+
+The search space of NAS Bench 201 is shown below.
+
+![](../../img/NAS_Bench_201.svg)
+
+### Example code
+
+<a name="nas-bench-201-reference"></a>
+
+### Reference
+
+All supported operations for NAS Bench 201 are listed below.
+
+* MaxPool / AvgPool
+  * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
+  * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
+
+* Conv
+  * Conv1x1: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=1`, `padding=0`, and `dilation=1`.
+  * Conv3x3: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
+
+* SkipConnect
+
+  Call `torch.nn.Identity` to connect directly to the next cell.
+
+* Zeroize
+
+  Generate zero tensor indicating there is no connection from the source node to the target node.
+   (TODO: Check with Yuge, why not mention zeroize operation in darts operation.)
+
