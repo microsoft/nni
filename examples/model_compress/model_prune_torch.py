@@ -7,8 +7,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-# from models.cifar10.vgg import VGG
-from examples.trials.cifar10_pytorch.models import VGG
+from models.cifar10.vgg import VGG
 import nni
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
