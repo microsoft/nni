@@ -14,7 +14,7 @@ def apply_compression_results(model, masks_file, map_location=None):
 
     Parameters
     ----------
-    model : torch.nn.module
+    model : torch.nn.Module
         The model to be compressed
     masks_file : str
         The path of the mask file
