@@ -16,9 +16,10 @@ from models.cifar10.vgg import VGG
 from models.cifar10.resnet import ResNet18, ResNet50
 from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.compression.torch import Constrained_L1FilterPruner, Constrained_L2FilterPruner
-from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
+
 from nni.compression.torch import ModelSpeedup
 from nni.compression.torch.utils.counter import count_flops_params
+
 
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
@@ -437,5 +438,18 @@ if __name__ == '__main__':
 
     if not os.path.exists(args.experiment_data_dir):
         os.makedirs(args.experiment_data_dir)
+    # hack the orignal L1FilterPruner
+    dummy_input = get_dummy_input(args, 'cuda')
+    class tmp_l1_constrained(Constrained_L1FilterPruner):
+        def __init__(self, model, config_list, dummy_input=dummy_input, optimizer=None):
+            super(tmp_l1_constrained, self).__init__(model, config_list, dummy_input, optimizer)
+
+    class tmp_l2_constrained(Constrained_L2FilterPruner):
+        def __init__(self, model, config_list, dummy_input=dummy_input, optimizer=None):
+            super(tmp_l2_constrained, self).__init__(model, config_list, dummy_input, optimizer)
+
+    setattr(nni.compression.torch, 'L1FilterPruner', tmp_l1_constrained)
+    setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
+    from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 
     main(args)
