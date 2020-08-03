@@ -1,4 +1,6 @@
-To provide an initial insight into the performance of various channel pruning algorithms, 
+# Comparison of Filter Pruning Algorithms
+
+To provide an initial insight into the performance of various filter pruning algorithms, 
 we conduct extensive experiments with various pruning algorithms on some benchmark models and datasets.
 We present the experiment result in this document.
 In addition, we provide friendly instructions on the re-implementation of these experiments to facilitate further contributions to this effort.
@@ -15,9 +17,9 @@ The experiments are performed with the following pruners/datasets/models:
     - These pruners are included:
         - Pruners with scheduling : SimulatedAnnealing, NetAdapt, AutoCompress
         - One-shot pruners: L1Filter, L2Filter, FPGMPruner
-    - Only **channel pruning** performances are compared here. 
+    - Only **filter pruning** performances are compared here. 
 
-    For the auto-pruners, `L1FilterPruner` is used as the base algorithm. That is to say, after the sparsities distribution among the layers is decided by the scheduling algorithm, `L1FilterPruner` is used to performn real pruning.
+    For the pruners with scheduling, `L1FilterPruner` is used as the base algorithm. That is to say, after the sparsities distribution among the layers is decided by the scheduling algorithm, `L1FilterPruner` is used to performn real pruning.
 
     - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/Overview.md).
 
@@ -71,11 +73,8 @@ From the experiment result, we get the following conclusions:
     }
     ```
 
-* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). If the result folder is properly assigned,  to plot a new figure, simply run :
-    ``` bash
-    cd examples/model_compress/experiment_data
-    python analyze.py --model your_model
-    ```
+* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). 
+You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data/analyze.py) to plot a new performance comparison figure.
 
 ## Contribution
 

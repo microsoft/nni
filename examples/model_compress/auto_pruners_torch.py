@@ -202,8 +202,10 @@ def get_dummy_input(args, device):
 def get_input_size(dataset):
     if dataset == 'mnist':
         input_size = (1, 1, 28, 28)
-    elif dataset in ['cifar10', 'imagenet']:
+    elif dataset == 'cifar10':
         input_size = (1, 3, 32, 32)
+    elif dataset == 'imagenet':
+        input_size = (1, 3, 256, 256)
     return input_size
 
 
