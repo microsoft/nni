@@ -22,6 +22,5 @@ For details, please refer to the following tutorials:
     Automatic Model Compression <Compressor/AutoCompression>
     Model Speedup <Compressor/ModelSpeedup>
     Compression Utilities <Compressor/CompressionUtils>
-    Compression Benchmark <Compressor/Benchmark>
     Compression Framework <Compressor/Framework>
     Customize Compression Algorithms <Compressor/CustomizeCompressor>

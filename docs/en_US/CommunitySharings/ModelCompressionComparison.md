@@ -15,11 +15,13 @@ The experiments are performed with the following pruners/datasets/models:
 
 * Pruners: 
     - These pruners are included:
-        - Pruners with scheduling : SimulatedAnnealing, NetAdapt, AutoCompress
-        - One-shot pruners: L1Filter, L2Filter, FPGMPruner
+        - Pruners with scheduling : `SimulatedAnnealing Pruner`, `NetAdapt Pruner`, `AutoCompress Pruner`.
+        Given the overal sparsity requirement, these pruners can automatically generate a sparsity distribution among different layers.
+        - One-shot pruners: `L1Filter Pruner`, `L2Filter Pruner`, `FPGM Pruner`.
+        The sparsity of each layer is set the same as the overall sparsity in this experiment.
     - Only **filter pruning** performances are compared here. 
-
-    For the pruners with scheduling, `L1FilterPruner` is used as the base algorithm. That is to say, after the sparsities distribution among the layers is decided by the scheduling algorithm, `L1FilterPruner` is used to performn real pruning.
+    
+    For the pruners with scheduling, `L1Filter Pruner` is used as the base algorithm. That is to say, after the sparsities distribution is decided by the scheduling algorithm, `L1Filter Pruner` is used to performn real pruning.
 
     - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/Overview.md).
 
@@ -48,15 +50,15 @@ CIFAR-10, ResNet50:
 
 From the experiment result, we get the following conclusions:
 
-* Given the constraint on the number of parameters, the pruners with scheduling ( `AutoCompress` , `SimualatedAnnealing` ) performs better than the others when the constraint is strict. However, they have no such advantage in FLOPs/Performances comparison since only number of parameters constraint is considered in the optimization process; 
-* The basic algorithms `L1FilterPruner` , `L2FilterPruner` , `FPGMPruner` performs very similarly in these experiments; 
-* `NetAdaptPruner` can not achieve very high compression rate. This is caused by its mechanism that it prunes only one layer each pruning iteration. This leads to un-acceptable complexity if the sparsity per iteration is much lower than the overall sparisity constraint.
+* Given the constraint on the number of parameters, the pruners with scheduling ( `AutoCompress Pruner` , `SimualatedAnnealing Pruner` ) performs better than the others when the constraint is strict. However, they have no such advantage in FLOPs/Performances comparison since only number of parameters constraint is considered in the optimization process; 
+* The basic algorithms `L1Filter Pruner` , `L2Filter Pruner` , `FPGM Pruner` performs very similarly in these experiments; 
+* `NetAdapt Pruner` can not achieve very high compression rate. This is caused by its mechanism that it prunes only one layer each pruning iteration. This leads to un-acceptable complexity if the sparsity per iteration is much lower than the overall sparisity constraint.
 
 ## Experiments Reproduction
 
 ### Implementation Details
 
-* The experiment results are all collected with the default configuration of the pruners in nni.
+* The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
 * Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/ModelSpeedup.md). This avoids potential issues of counting them of masked models.
 
@@ -74,7 +76,7 @@ From the experiment result, we get the following conclusions:
     ```
 
 * The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). 
-You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data/analyze.py) to plot a new performance comparison figure.
+You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data/analyze.py) to plot new performance comparison figures.
 
 ## Contribution
 

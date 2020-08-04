@@ -3,7 +3,7 @@ import json
 import matplotlib.pyplot as plt
 
 
-def plot_performance_comparison(args, normalize=False):
+def plot_performance_comparison(args):
     # reference data, performance of the original model and the performance declared in the AutoCompress Paper
     references = {
         'original':{
@@ -41,6 +41,8 @@ def plot_performance_comparison(args, normalize=False):
         }
     }
 
+    markers = ['v', '^', '<', '1', '2', '3', '4', '8', '*', '+', 'o']
+
     with open('cifar10/comparison_result_{}.json'.format(args.model), 'r') as jsonfile:
         result = json.load(jsonfile)
 
@@ -60,33 +62,33 @@ def plot_performance_comparison(args, normalize=False):
     fig.suptitle('Channel Pruning Comparison on {}/CIFAR10'.format(args.model))
     fig.subplots_adjust(hspace=0.5)
 
-    for pruner in pruners:
-        axs[0].scatter(params[pruner], performances[pruner], label=pruner)
-        axs[1].scatter(flops[pruner], performances[pruner], label=pruner)
+    for idx, pruner in enumerate(pruners):
+        axs[0].scatter(params[pruner], performances[pruner], marker=markers[idx], label=pruner)
+        axs[1].scatter(flops[pruner], performances[pruner], marker=markers[idx], label=pruner)
 
-    if normalize:
-        axs[0].annotate("original", (1, result['performance']['original']))
-        axs[0].set_xscale('log')
-    else:
-        params_original = references['original']['cifar10'][args.model]['params']
-        performance_original = references['original']['cifar10'][args.model]['performance']
-        axs[0].plot(params_original, performance_original, 'rx', label='original model')
-        if args.model in ['vgg16', 'resnet18']:
-            axs[0].plot(params_original/references['AutoCompressPruner']['cifar10'][args.model]['params'], references['AutoCompressPruner']['cifar10'][args.model]['performance'], 'bx', label='AutoCompress Paper')
+    # references
+    params_original = references['original']['cifar10'][args.model]['params']
+    performance_original = references['original']['cifar10'][args.model]['performance']
+    axs[0].plot(params_original, performance_original, 'rx', label='original model')
+    if args.model in ['vgg16', 'resnet18']:
+        axs[0].plot(params_original/references['AutoCompressPruner']['cifar10'][args.model]['params'],
+                    references['AutoCompressPruner']['cifar10'][args.model]['performance'],
+                    'bx', label='AutoCompress Paper')
+
     axs[0].set_title("Performance v.s. Number of Parameters")
     axs[0].set_xlabel("Number of Parameters")
     axs[0].set_ylabel('Accuracy')
     axs[0].legend()
 
-    if normalize:
-        axs[1].annotate("original", (1, result['performance']['original']))
-        axs[1].set_xscale('log')
-    else:
-        flops_original = references['original']['cifar10'][args.model]['flops']
-        performance_original = references['original']['cifar10'][args.model]['performance']
-        axs[1].plot(flops_original, performance_original, 'rx', label='original model')
-        if args.model in ['vgg16', 'resnet18']:
-            axs[1].plot(flops_original/references['AutoCompressPruner']['cifar10'][args.model]['flops'], references['AutoCompressPruner']['cifar10'][args.model]['performance'], 'bx', label='AutoCompress Paper')
+    # references
+    flops_original = references['original']['cifar10'][args.model]['flops']
+    performance_original = references['original']['cifar10'][args.model]['performance']
+    axs[1].plot(flops_original, performance_original, 'rx', label='original model')
+    if args.model in ['vgg16', 'resnet18']:
+        axs[1].plot(flops_original/references['AutoCompressPruner']['cifar10'][args.model]['flops'],
+                    references['AutoCompressPruner']['cifar10'][args.model]['performance'],
+                    'bx', label='AutoCompress Paper')
+
     axs[1].set_title("Performance v.s. FLOPs")
     axs[1].set_xlabel("FLOPs")
     axs[1].set_ylabel('Accuracy')
