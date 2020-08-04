@@ -8,6 +8,7 @@ import argparse
 import os
 import json
 import torch
+import torchvision
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
@@ -143,7 +144,10 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
     elif args.model == 'vgg16':
-        model = VGG(depth=16).to(device)
+        if args.dataset == 'cifar10':
+            model = VGG(depth=16).to(device)
+        elif args.dataset == 'imagenet':
+            model = torchvision.models.vgg16(pretrained=True)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -152,7 +156,10 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
     elif args.model == 'resnet18':
-        model = ResNet18().to(device)
+        if args.dataset == 'cifar10':
+            model = ResNet18().to(device)
+        elif args.dataset == 'imagenet':
+            model = torchvision.models.resnet18(pretrained=True)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -161,7 +168,10 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
     elif args.model == 'resnet50':
-        model = ResNet50().to(device)
+        if args.dataset == 'cifar10':
+            model = ResNet50().to(device)
+        elif args.dataset == 'imagenet':
+            model = torchvision.models.resnet50(pretrained=True)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -197,16 +207,20 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
 def get_dummy_input(args, device):
     if args.dataset == 'mnist':
         dummy_input = torch.randn([args.test_batch_size, 1, 28, 28]).to(device)
-    elif args.dataset in ['cifar10', 'imagenet']:
+    elif args.dataset == 'cifar10':
         dummy_input = torch.randn([args.test_batch_size, 3, 32, 32]).to(device)
+    elif args.dataset == 'imagenet':
+        dummy_input = torch.randn([args.test_batch_size, 3, 224, 224]).to(device)
     return dummy_input
 
 
 def get_input_size(dataset):
     if dataset == 'mnist':
         input_size = (1, 1, 28, 28)
-    elif dataset in ['cifar10', 'imagenet']:
+    elif dataset in ['cifar10']:
         input_size = (1, 3, 32, 32)
+    elif dataset == 'imagenet':
+        input_size = (1, 3, 224, 224)
     return input_size
 
 
