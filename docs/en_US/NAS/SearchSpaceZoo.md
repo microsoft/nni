@@ -228,7 +228,7 @@ All supported operations for NAS Bench 201 are listed below.
 
 * Zeroize
 
-  Generate zero tensor indicating there is no connection from the source node to the target node.
+  Generate zero tensors indicating there is no connection from the source node to the target node.
 
   ```eval_rst
   ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.Zero
