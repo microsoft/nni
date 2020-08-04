@@ -4,6 +4,7 @@ from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
 from nni.nas.benchmarks.constants import DATABASE_DIR
+from nni.nas.benchmarks.utils import json_dumps
 
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench101.db'), autoconnect=True)
 
@@ -28,7 +29,7 @@ class Nb101TrialConfig(Model):
         Number of epochs planned for this trial. Should be one of 4, 12, 36, 108 in default setup.
     """
 
-    arch = JSONField(index=True)
+    arch = JSONField(json_dumps=json_dumps, index=True)
     num_vertices = IntegerField(index=True)
     hash = CharField(max_length=64, index=True)
     num_epochs = IntegerField(index=True)
