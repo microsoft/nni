@@ -16,7 +16,7 @@ import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { CommandChannel } from "../commandChannel";
-import { EnvironmentInformation, EnvironmentService, EnvironmentStatus } from '../environment';
+import { EnvironmentInformation, EnvironmentService } from '../environment';
 
 
 /**
