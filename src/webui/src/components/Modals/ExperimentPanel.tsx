@@ -41,7 +41,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
         const interResultList = TRIALS.getMetricsList();
         Object.keys(trialMessagesArr).map(item => {
             // not deal with trial's hyperParameters
-            const trialId = trialMessagesArr[item].id;
+            const trialId = trialMessagesArr[item].jobId;
             // add intermediate result message
             trialMessagesArr[item].intermediate = [];
             Object.keys(interResultList).map(key => {
@@ -84,7 +84,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     componentWillUnmount(): void {
-        this._isExperimentMount  = false;
+        this._isExperimentMount = false;
         window.clearTimeout(this.refreshId);
         window.removeEventListener('resize', this.onWindowResize);
     }

@@ -48,13 +48,14 @@ class TrialManager {
     private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
     private isMetricdataRangeError: boolean = false; // metric-data-range api error filed
     private metricdataRangeErrorMessage: string = ''; // metric-data-latest error message
-    private metricsList: Array<any> = [];
-    private trialJobList: Array<any> = [];
+    private metricsList: Array<MetricDataRecord> = [];
+    private trialJobList: Array<TrialJobInfo> = [];
 
-    public getMetricsList(): Array<any> {
+    public getMetricsList(): Array<MetricDataRecord> {
         return this.metricsList;
     }
-    public getTrialJobList(): Array<any> {
+
+    public getTrialJobList(): Array<TrialJobInfo> {
         return this.trialJobList;
     }
 
