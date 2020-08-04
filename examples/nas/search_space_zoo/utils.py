@@ -28,23 +28,3 @@ def reward_accuracy(output, target, topk=(1,)):
     batch_size = target.size(0)
     _, predicted = torch.max(output.data, 1)
     return (predicted == target).sum().item() / batch_size
-
-
-def nas_bench_201_accuracy(output, target, topk=(1,)):
-    if topk == 1 or topk == (1,):
-        _, predict = torch.max(output.data, 1)
-        correct = predict.eq(target.data).cpu().sum().item()
-        return correct / outputs.size(0)
-
-    maxk = max(topk)
-    batch_size = target.size(0)
-
-    _, pred = output.topk(maxk, 1, True, True)
-    pred = pred.t()
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
-
-    res = []
-    for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
-        res.append(correct_k.div_(batch_size).item())
-    return res
