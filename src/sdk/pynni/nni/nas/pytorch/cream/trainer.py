@@ -266,7 +266,7 @@ class CreamSupernetTrainer(Trainer):
                     (prec1 > self.best_children_pool[-1][1] and cand_flops < self.best_children_pool[-1][2])):
                 val_prec1 = prec1
                 training_data = deepcopy(input_data[:self.slices].detach())
-                if self.best_children_pool:
+                if not self.best_children_pool:
                     features = deepcopy(output[:self.slices].detach())
                 else:
                     features = deepcopy(teacher_output[:self.slices].detach())
