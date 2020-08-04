@@ -14,6 +14,7 @@ from torchvision import datasets, transforms
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 from models.cifar10.resnet import ResNet18, ResNet50
+import nni
 from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.compression.torch import Constrained_L1FilterPruner, Constrained_L2FilterPruner
 
@@ -447,7 +448,9 @@ if __name__ == '__main__':
     class tmp_l2_constrained(Constrained_L2FilterPruner):
         def __init__(self, model, config_list, dummy_input=dummy_input, optimizer=None):
             super(tmp_l2_constrained, self).__init__(model, config_list, dummy_input, optimizer)
-
+    from nni.compression.torch.pruning.constants_pruner import PRUNER_DICT
+    PRUNER_DICT['l1'] = tmp_l1_constrained
+    PRUNER_DICT['l2'] = tmp_l2_constrained
     setattr(nni.compression.torch, 'L1FilterPruner', tmp_l1_constrained)
     setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
     from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner

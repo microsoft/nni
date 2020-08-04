@@ -130,6 +130,8 @@ class ConstrainedStructuredWeightMasker(WeightMasker):
             # not all the layers in the dependency set
             # are pruned
             min_sparsity = 0
+        # donnot prune the channels that we cannot harvest the speed from
+        sparsities = [min_sparsity] * len(sparsities)
         # find the max number of the filter groups of the dependent
         # layers. The group constraint of this dependency set is decided
         # by the layer with the max groups.
