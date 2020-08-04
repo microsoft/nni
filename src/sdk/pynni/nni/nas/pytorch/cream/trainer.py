@@ -11,8 +11,6 @@ import torch.distributed as dist
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
 
-#from .mutator import CreamSupernetTrainingMutator
-
 logger = logging.getLogger(__name__)
 
 
@@ -85,7 +83,7 @@ class CreamSupernetTrainer(Trainer):
 
     def cross_entropy_loss_with_soft_target(self, pred, soft_target):
         logsoftmax = nn.LogSoftmax()
-        return torch.mean(torch.sum(- soft_target * logsoftmax(pred), 1))
+        return torch.mean(torch.sum(-soft_target * logsoftmax(pred), 1))
 
     def reduce_tensor(self, tensor):
         rt = tensor.clone()
@@ -109,10 +107,7 @@ class CreamSupernetTrainer(Trainer):
 
     def train_one_epoch(self, epoch):
         def get_model(model):
-            #try:
             return model.module
-            #except:
-            #    return model
 
         meters = AverageMeterGroup()
         for step, (input_data, target) in enumerate(self.train_loader):
@@ -129,7 +124,7 @@ class CreamSupernetTrainer(Trainer):
                 slice_ind = self.slices
                 x = deepcopy(input_data[:slice_ind].clone().detach())
 
-                if len(self.best_children_pool) > 0:
+                if self.best_children_pool:
                     if self.pick_method == 'top1':
                         meta_value, cand = 1, sorted(self.best_children_pool, reverse=True)[0][3]
                     elif self.pick_method == 'meta':
@@ -214,7 +209,7 @@ class CreamSupernetTrainer(Trainer):
                     raise ValueError("Must 1nd or 2nd update teacher weights")
 
             # get_best_teacher
-            if len(self.best_children_pool) > 0:
+            if self.best_children_pool:
                 if self.pick_method == 'top1':
                     meta_value, cand = 0.5, sorted(self.best_children_pool, reverse=True)[0][3]
                 elif self.pick_method == 'meta':
@@ -224,7 +219,7 @@ class CreamSupernetTrainer(Trainer):
                         output = F.softmax(self.model(inputx), dim=1)
                         weight = get_model(self.model).forward_meta(output - item[4])
                         if weight > meta_value:
-                            meta_value = weight  # deepcopy(torch.nn.functional.sigmoid(weight))
+                            meta_value = weight
                             cand_idx = now_idx
                             cand = self.arch_dict[(self.best_children_pool[cand_idx][0],
                                                    self.best_children_pool[cand_idx][2])]
@@ -233,7 +228,7 @@ class CreamSupernetTrainer(Trainer):
                 else:
                     raise ValueError('Method Not supported')
 
-            if len(self.best_children_pool) == 0:
+            if not self.best_children_pool:
                 output = self.model(input)
                 loss = self.loss(output, target)
                 kd_loss = loss
@@ -266,13 +261,12 @@ class CreamSupernetTrainer(Trainer):
             metrics = self.reduce_metrics(metrics, self.distributed)
             meters.update(metrics)
 
-            # best_children_pool = sorted(best_children_pool, reverse=True)
             if epoch > self.meta_sta_epoch and (
                     (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1][1] + 5) or
                     (prec1 > self.best_children_pool[-1][1] and cand_flops < self.best_children_pool[-1][2])):
                 val_prec1 = prec1
                 training_data = deepcopy(input_data[:self.slices].detach())
-                if len(self.best_children_pool) == 0:
+                if not self.best_children_pool:
                     features = deepcopy(output[:self.slices].detach())
                 else:
                     features = deepcopy(teacher_output[:self.slices].detach())
@@ -295,7 +289,6 @@ class CreamSupernetTrainer(Trainer):
         if self.main_proc:
             for idx, i in enumerate(self.best_children_pool):
                 logger.info("No.%s %s", idx, i[:4])
-                #logger.info("No.{} {}".format(idx, i[:4]))
 
     def validate_one_epoch(self, epoch):
         self.model.eval()
