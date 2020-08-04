@@ -200,17 +200,12 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-    'paiConfig': Or({
-        'userName': setType('userName', str),
-        'passWord': setType('passWord', str),
-        'host': setType('host', str),
-        Optional('reuse'): setType('reuse', bool)
-    }, {
+    'paiConfig': {
         'userName': setType('userName', str),
         'token': setType('token', str),
         'host': setType('host', str),
         Optional('reuse'): setType('reuse', bool)
-    })
+    }
 }
 
 dlts_trial_schema = {
