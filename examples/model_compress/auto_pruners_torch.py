@@ -448,7 +448,7 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', type=str2bool, default=True,
                         help='For Saving the current Model')
-
+    parser.add_argument('--constrained', action='store_true', default=False, help='if enable the constraint-aware pruner')
     args = parser.parse_args()
 
     if not os.path.exists(args.experiment_data_dir):
@@ -463,10 +463,11 @@ if __name__ == '__main__':
         def __init__(self, model, config_list, dummy_input=dummy_input, optimizer=None):
             super(tmp_l2_constrained, self).__init__(model, config_list, dummy_input, optimizer)
     from nni.compression.torch.pruning.constants_pruner import PRUNER_DICT
-    PRUNER_DICT['l1'] = tmp_l1_constrained
-    PRUNER_DICT['l2'] = tmp_l2_constrained
-    setattr(nni.compression.torch, 'L1FilterPruner', tmp_l1_constrained)
-    setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
+    if args.constrained:
+        PRUNER_DICT['l1'] = tmp_l1_constrained
+        PRUNER_DICT['l2'] = tmp_l2_constrained
+        setattr(nni.compression.torch, 'L1FilterPruner', tmp_l1_constrained)
+        setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
     from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 
     main(args)
