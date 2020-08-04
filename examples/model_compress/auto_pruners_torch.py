@@ -185,6 +185,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
     if not args.load_pretrained_model:
         best_acc = 0
         best_epoch = 0
+        state_dict = None
         for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
@@ -193,7 +194,8 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
                 best_acc = acc
                 best_epoch = epoch
                 state_dict = model.state_dict()
-        model.load_state_dict(state_dict)
+        if state_dict:
+            model.load_state_dict(state_dict)
         print('Best acc:', best_acc)
         print('Best epoch:', best_epoch)
 
