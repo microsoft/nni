@@ -13,8 +13,6 @@ class NASBench201Cell(nn.Module):
 
     Parameters
     ---
-    configs: dict
-        # TODO: repalce this with speific parameters
     cell_id: str
         the name of this cell
     C_in: int
@@ -24,7 +22,7 @@ class NASBench201Cell(nn.Module):
     stride: int
         stride of the convolution
     """
-    def __init__(self, configs, cell_id, C_in, C_out, stride):
+    def __init__(self, configs, cell_id, C_in, C_out, stride, bn_affine=True, bn_momentum=0.1, bn_track_running_stats=True):
         super(NASBench201Cell, self).__init__()
 
         self.NUM_NODES = 4
@@ -33,10 +31,10 @@ class NASBench201Cell(nn.Module):
 
         OPS = {
             "none": lambda configs, C_in, C_out, stride: Zero(configs, C_in, C_out, stride),
-            "avg_pool_3x3": lambda configs, C_in, C_out, stride: Pooling(configs, C_in, C_out, stride, "avg"),
-            "max_pool_3x3": lambda configs, C_in, C_out, stride: Pooling(configs, C_in, C_out, stride, "max"),
-            "nor_conv_3x3": lambda configs, C_in, C_out, stride: ReLUConvBN(configs, C_in, C_out, (3, 3), (stride, stride), (1, 1), (1, 1)),
-            "nor_conv_1x1": lambda configs, C_in, C_out, stride: ReLUConvBN(configs, C_in, C_out, (1, 1), (stride, stride), (0, 0), (1, 1)),
+            "avg_pool_3x3": lambda configs, C_in, C_out, stride: Pooling(C_in, C_out, stride, "avg"),
+            "max_pool_3x3": lambda configs, C_in, C_out, stride: Pooling(C_in, C_out, stride, "max"),
+            "nor_conv_3x3": lambda configs, C_in, C_out, stride: ReLUConvBN(C_in, C_out, (3, 3), (stride, stride), (1, 1), (1, 1)),
+            "nor_conv_1x1": lambda configs, C_in, C_out, stride: ReLUConvBN(C_in, C_out, (1, 1), (stride, stride), (0, 0), (1, 1)),
             "skip_connect": lambda configs, C_in, C_out, stride: nn.Identity() if stride == 1 and C_in == C_out else FactorizedReduce(configs, C_in, C_out, stride),
         }
         PRIMITIVES = ["none", "skip_connect", "nor_conv_1x1", "nor_conv_3x3", "avg_pool_3x3"]

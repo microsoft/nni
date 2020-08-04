@@ -174,7 +174,7 @@ All supported operations for ENAS macro search are listed below.
 
 ## NAS Bench 201
 
-NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell consists of four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [reference](#nas-bench-201-reference).
+NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell contains four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [reference](#nas-bench-201-reference).
 
 The search space of NAS Bench 201 is shown below.
 
@@ -194,6 +194,8 @@ The search space of NAS Bench 201 is shown below.
 All supported operations for NAS Bench 201 are listed below.
 
 * MaxPool / AvgPool
+  
+  If the number of input channels is not equal to the number of output channels, the input will first pass through a `ReLUConvBN` layer with `kernel_size=1`, `stride=1`, `padding=0`, and `dilation=0`.
   * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
   * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
 
