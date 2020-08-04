@@ -165,6 +165,9 @@ class Trial implements TableObj {
     }
 
     get acc(): FinalType | undefined {
+        if (this.info === undefined) {
+            return undefined;
+        }
         return getFinal(this.info.finalMetricData);
     }
 
@@ -203,10 +206,10 @@ class Trial implements TableObj {
     }
 
     public parameters(axes: MultipleAxes): Map<SingleAxis, any> {
-        const tempHyper = this.info.hyperParameters;
-        if (tempHyper === undefined) {
-            throw new Map([['error', 'This trial\'s parameters are not available.']]);
+        if (this.info === undefined || this.info.hyperParameters === undefined) {
+            throw new Map();
         } else {
+            const tempHyper = this.info.hyperParameters;
             let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
             if (typeof params === 'string') {
                 params = JSON.parse(params);

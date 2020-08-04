@@ -115,7 +115,7 @@ export class SearchSpace implements MultipleAxes {
                 trial.parameters(searchSpace);
             } catch (unexpectedEntries) {
                 // eslint-disable-next-line no-console
-                console.log(unexpectedEntries);
+                console.warn(unexpectedEntries);
                 for (const [k, v] of unexpectedEntries as Map<string, any>) {
                     const column = addingColumns.get(k);
                     if (column === undefined) {
