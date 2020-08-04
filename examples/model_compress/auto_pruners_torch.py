@@ -448,7 +448,7 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status')
     parser.add_argument('--save-model', type=str2bool, default=True,
                         help='For Saving the current Model')
-    parser.add_argument('--constrained', action='store_true', default=False, help='if enable the constraint-aware pruner')
+    parser.add_argument('--constrained', type=bool, default=False, help='if enable the constraint-aware pruner')
     args = parser.parse_args()
 
     if not os.path.exists(args.experiment_data_dir):
