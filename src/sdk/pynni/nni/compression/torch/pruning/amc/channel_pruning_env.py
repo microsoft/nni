@@ -235,6 +235,11 @@ class ChannelPruningEnv:
         device = op.module.weight.device
         op.module.weight.data = rec_weight.to(device)
         op.weight_mask = rec_mask.to(device)
+        if type(op.module) == nn.Conv2d:
+            op.module.in_channels = d_prime
+        else:
+            # Linear
+            op.module.in_features = d_prime
 
         # export prev layers
         prev_idx = self.prunable_idx[self.prunable_idx.index(op_idx) - 1]
@@ -244,11 +249,13 @@ class ChannelPruningEnv:
                 m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask, :, :, :]).to(device)
                 if m.groups == m.in_channels:
                     m.groups = int(np.sum(mask))
+                m.out_channels = d_prime
             elif type(m) == nn.BatchNorm2d:
                 m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask]).to(device)
                 m.bias.data = torch.from_numpy(m.bias.data.cpu().numpy()[mask]).to(device)
                 m.running_mean.data = torch.from_numpy(m.running_mean.data.cpu().numpy()[mask]).to(device)
                 m.running_var.data = torch.from_numpy(m.running_var.data.cpu().numpy()[mask]).to(device)
+                m.num_features = d_prime
 
     def _is_final_layer(self):
         return self.cur_ind == len(self.prunable_idx) - 1

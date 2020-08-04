@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--reward', default='acc_reward', type=str, help='Setting the reward')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
 
-    parser.add_argument('--train_episode', default=1, type=int, help='number of training episode')
+    parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
     parser.add_argument('--data_bsize', default=50, type=int, help='number of data batch size')
@@ -122,6 +122,10 @@ def validate(val_loader, model, verbose=False):
 
 if __name__ == "__main__":
     args = parse_args()
+    if args.job == 'export' and args.export_path is None:
+        print('Please specify export_path')
+        exit(1)
+
     device = torch.device('cuda') if torch.cuda.is_available() and args.n_gpu > 0 else torch.device('cpu')
 
     model = get_model_and_checkpoint(args.model_type, args.dataset, checkpoint_path=args.ckpt_path, n_gpu=args.n_gpu)
@@ -130,5 +134,6 @@ if __name__ == "__main__":
     config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
-    pruner = AMCPruner(model, config_list, validate, val_loader, job=args.job, train_episode=args.train_episode)
+    pruner = AMCPruner(model, config_list, validate, val_loader, model_type=args.model_type,
+            job=args.job, train_episode=args.train_episode, export_path=args.export_path)
     pruner.compress()

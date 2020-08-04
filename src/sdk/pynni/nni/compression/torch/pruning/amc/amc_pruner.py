@@ -142,6 +142,7 @@ class AMCPruner(Pruner):
             seed=None):
 
         self.job = job
+        self.export_path = export_path
 
         if seed is not None:
             np.random.seed(seed)
@@ -310,3 +311,6 @@ class AMCPruner(Pruner):
         self.env.export_model()
         self._unwrap_model()
         print('validate exported model:', self.env._validate(self.env._val_loader, self.env.model))
+
+        torch.save(self.bound_model, self.export_path)
+        print('exported model saved to: {}'.format(self.export_path))
