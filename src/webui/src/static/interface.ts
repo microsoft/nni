@@ -48,7 +48,7 @@ interface TableRecord {
     duration: number;
     status: string;
     intermediateCount: number;
-    accuracy?: number;
+    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
     accDictionary: FinalType | undefined;

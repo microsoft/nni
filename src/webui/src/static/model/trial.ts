@@ -1,5 +1,6 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
 import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
+import JSON5 from 'json5';
 
 /**
  * Get a structured representation of parameters
@@ -110,8 +111,17 @@ class Trial implements TableObj {
         const endTime = this.info.endTime || new Date().getTime();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
+        let accuracy = 0;
+        if(this.acc !== undefined && this.acc.default !== undefined){
+            if(typeof this.acc.default === 'number'){
+                accuracy = JSON5.parse(this.acc.default);
+            }
+        } 
+        // if(typeof this.acc === 'string' && typeof JSON5.parse(this.acc) === 'number') {
+        //     accuracy = JSON.parse(this.acc);
+        // }
 
-        return {
+        const a = {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
@@ -124,11 +134,12 @@ class Trial implements TableObj {
             status: this.info.status,
             intermediateCount: this.intermediates.length,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
+            accuracy: accuracy,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
             accDictionary: this.acc
         };
+        return a;
     }
 
     get key(): number {
@@ -235,8 +246,11 @@ class Trial implements TableObj {
     }
 
     public finalKeys(): string[] {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return Object.keys(this.acc!);
+        if(this.acc !== undefined){
+            return Object.keys(this.acc);
+        } else {
+            return [];
+        }
     }
 
     /* table obj end */
