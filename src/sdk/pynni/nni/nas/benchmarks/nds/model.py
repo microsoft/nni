@@ -4,6 +4,7 @@ from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 
 from nni.nas.benchmarks.constants import DATABASE_DIR
+from nni.nas.benchmarks.utils import json_dumps
 
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nds.db'), autoconnect=True)
 
@@ -52,8 +53,8 @@ class NdsTrialConfig(Model):
         'residual_basic',
         'vanilla',
     ])
-    model_spec = JSONField(index=True)
-    cell_spec = JSONField(index=True, null=True)
+    model_spec = JSONField(json_dumps=json_dumps, index=True)
+    cell_spec = JSONField(json_dumps=json_dumps, index=True, null=True)
     dataset = CharField(max_length=15, index=True, choices=['cifar10', 'imagenet'])
     generator = CharField(max_length=15, index=True, choices=[
         'random',

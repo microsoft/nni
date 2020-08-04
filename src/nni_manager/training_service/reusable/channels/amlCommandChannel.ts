@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { EventEmitter } from 'events';
 import { delay } from "../../../common/utils";
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
@@ -15,11 +14,7 @@ class AMLRunnerConnection extends RunnerConnection {
 export class AMLCommandChannel extends CommandChannel {
     private stopping: boolean = false;
     private sendQueues: [EnvironmentInformation, string][] = [];
-    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
-    
-    public constructor(commandEmitter: EventEmitter) {
-        super(commandEmitter);
-    }
+
     public get channelName(): Channel {
         return "aml";
     }
@@ -99,11 +94,11 @@ export class AMLCommandChannel extends CommandChannel {
                     const messages = command['trial_runner'];
                     if (messages) {
                         if (messages instanceof Object && currentMessageIndex < messages.length - 1) {
-                            for (let index = currentMessageIndex + 1; index < messages.length; index ++) {
+                            for (let index = currentMessageIndex + 1; index < messages.length; index++) {
                                 this.handleCommand(runnerConnection.environment, messages[index]);
                             }
                             currentMessageIndex = messages.length - 1;
-                        } else if (currentMessageIndex === -1){
+                        } else if (currentMessageIndex === -1) {
                             this.handleCommand(runnerConnection.environment, messages);
                             currentMessageIndex += 1;
                         }

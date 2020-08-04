@@ -9,18 +9,20 @@ import * as path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getLogLevel, getVersion, mkDirPSync, uniqueString, getIPV4Address } from '../../common/utils';
+import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
-import { GPUSummary } from '../../training_service/common/gpuData';
+import { ScheduleResultType } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings } from './environment';
+import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings, TrialGpuSummary } from './environment';
+import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
@@ -32,8 +34,6 @@ import { TrialDetail } from './trial';
 **/
 @component.Singleton
 class TrialDispatcher implements TrainingService {
-
-    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     private readonly log: Logger;
     private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
@@ -53,6 +53,22 @@ class TrialDispatcher implements TrainingService {
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
 
+    // uses to accelerate trial manager loop
+    // true means there is updates, and trial loop should run a cycle immediately.
+    private shouldUpdateTrials: boolean = true;
+    // uses to decide environment assign strategy.
+    // true means use gpu scheduler to decide if there is free resource for new trial.
+    // false means one env run one trial in same time.
+    private enableGpuScheduler: boolean = false;
+    // uses to save if user like to reuse environment
+    private reuseEnvironment: boolean = true;
+
+    private gpuScheduler: GpuScheduler;
+
+    // uses to reduce log count.
+    private isLoggedNoMoreEnvironment: boolean = false;
+    private isLoggedNoGpuAvailable: boolean = false;
+
     constructor() {
         this.log = getLogger();
         this.trials = new Map<string, TrialDetail>();
@@ -71,8 +87,9 @@ class TrialDispatcher implements TrainingService {
         if (logLevel == "debug" && (fs.existsSync("../../../src/nni_manager") || __dirname.endsWith("src\\nni_manager\\dist\\training_service\\reusable"))) {
             this.log.debug("log level is debug, and exist code folder, so set to developing mode.");
             this.isDeveloping = true;
-            this.runnerSettings.enableGpuCollector = true;
         }
+
+        this.gpuScheduler = new GpuScheduler();
     }
 
     public async listTrialJobs(): Promise<TrialDetail[]> {
@@ -161,7 +178,7 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
 
         this.commandEmitter = new EventEmitter();
-        this.commandChannel = environmentService.getCommandChannel(this.commandEmitter);
+        this.commandChannel = environmentService.createCommandChannel(this.commandEmitter);
 
         // TODO it's a hard code of web channel, it needs to be improved.
         if (this.runnerSettings.nniManagerIP === "" || this.runnerSettings.nniManagerIP === null) {
@@ -169,9 +186,6 @@ class TrialDispatcher implements TrainingService {
         }
         this.runnerSettings.nniManagerPort = getBasePort() + 1;
         this.runnerSettings.commandChannel = this.commandChannel.channelName;
-
-        // for AML channel, other channels can ignore this.
-        await this.commandChannel.config("MetricEmitter", this.metricsEmitter);
 
         // start channel
         this.commandEmitter.on("command", (command: Command): void => {
@@ -251,8 +265,16 @@ class TrialDispatcher implements TrainingService {
                 this.runnerSettings.logCollection = value;
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                // TODO to support more storage types by better parameters.
                 this.trialConfig = <TrialConfig>JSON.parse(value);
+
+                if (this.trialConfig.reuseEnvironment !== undefined) {
+                    this.reuseEnvironment = this.trialConfig.reuseEnvironment;
+                }
+                if (this.trialConfig.gpuNum !== undefined && this.trialConfig.gpuNum > 0) {
+                    this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
+                    this.enableGpuScheduler = true;
+                }
+                this.runnerSettings.enableGpuCollector = this.enableGpuScheduler;
 
                 this.runnerSettings.command = this.trialConfig.command;
                 // Validate to make sure codeDir doesn't have too many files
@@ -275,6 +297,7 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`TrialDispatcher: commandEmitter shouldn't be undefined in cleanUp.`);
         }
         this.stopping = true;
+        this.shouldUpdateTrials = true;
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const environments = [...this.environments.values()];
 
@@ -324,7 +347,8 @@ class TrialDispatcher implements TrainingService {
                     this.log.debug(`set environment ${environment.id} isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
                 }
             });
-            await delay(5000);
+            this.shouldUpdateTrials = true;
+            await delay(environmentService.environmentMaintenceLoopInterval);
         }
     }
 
@@ -332,9 +356,18 @@ class TrialDispatcher implements TrainingService {
         if (this.commandChannel === undefined) {
             throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in trialManagementLoop.`);
         }
+        const interval = 1;
 
         while (!this.stopping) {
-            await delay(2000);
+            let totalInterval = 1000;
+            while (totalInterval > 0) {
+                if (this.shouldUpdateTrials) {
+                    this.shouldUpdateTrials = false;
+                    break;
+                }
+                totalInterval -= interval;
+                await delay(interval);
+            }
 
             const toRefreshedTrials: TrialDetail[] = [];
             for (const trial of this.trials.values()) {
@@ -347,7 +380,7 @@ class TrialDispatcher implements TrainingService {
                 continue;
             }
 
-            const waitingTrials: TrialDetail[] = [];
+            let waitingTrials: TrialDetail[] = [];
             let liveTrialsCount = 0;
             for (const trial of toRefreshedTrials) {
                 const currentStatus = trial.status;
@@ -362,6 +395,7 @@ class TrialDispatcher implements TrainingService {
                                 liveTrialsCount++;
                                 continue;
                             }
+                            trial.url = environment.trackingUrl;
                             const environmentStatus = environment.status;
 
                             // any node exit, then make sure the whole trial stopped.
@@ -395,7 +429,7 @@ class TrialDispatcher implements TrainingService {
                                 }
                                 this.releaseEnvironment(trial);
                             } else if (environmentStatus !== "RUNNING") {
-                                this.log.error(`found running trial ${trial.id} on '${environment.jobId}' with '${environmentStatus}', set trial to environment status.`);
+                                this.log.error(`found running trial ${trial.id} on '${environment.envId}' with '${environmentStatus}', set trial to environment status.`);
                                 this.releaseEnvironment(trial);
                                 trial.status = environmentStatus;
                             } else {
@@ -411,31 +445,133 @@ class TrialDispatcher implements TrainingService {
                         break;
                 }
             }
+
             let liveEnvironmentsCount = 0;
-            const idleEnvironments: EnvironmentInformation[] = [];
-            this.environments.forEach((environment) => {
+            const reusableEnvironments: EnvironmentInformation[] = [];
+            for (const environment of this.environments.values()) {
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
-                    if (environment.status === "RUNNING" && environment.isIdle) {
-                        idleEnvironments.push(environment);
+                    if (environment.status === "RUNNING" && environment.isRunnerReady) {
+                        // if environment is not reusable and used, stop and not count as idle;
+                        if (
+                            0 === environment.runningTrialCount &&
+                            false === this.reuseEnvironment &&
+                            environment.assignedTrialCount > 0
+                        ) {
+                            const environmentService = component.get<EnvironmentService>(EnvironmentService);
+                            await environmentService.stopEnvironment(environment);
+                            continue;
+                        }
+
+                        // if gpu scheduler is not enabled, and there is running trial, skip it.
+                        if (false === this.enableGpuScheduler && environment.runningTrialCount > 0) {
+                            continue;
+                        }
+
+                        reusableEnvironments.push(environment);
                     }
-                }
-            });
-            while (idleEnvironments.length > 0 && waitingTrials.length > 0) {
-                const trial = waitingTrials.shift();
-                const idleEnvironment = idleEnvironments.shift();
-                if (trial !== undefined && idleEnvironment != undefined) {
-                    await this.assignEnvironment(trial, idleEnvironment);
                 }
             }
 
-            if (liveEnvironmentsCount < liveTrialsCount) {
-                this.log.info(`request new environment, since live trials ${liveTrialsCount} ` +
-                    `is more than live environments ${liveEnvironmentsCount}`);
-                for (let index = 0; index < liveTrialsCount - liveEnvironmentsCount; index++) {
-                    await this.requestEnvironment();
+            let neededEnvironmentCount = 0;
+            if (true === this.enableGpuScheduler) {
+                let noGpuAvailable: boolean = false;
+                while (waitingTrials.length > 0) {
+                    // skip following trials, if first trial doesn't find available GPU.
+                    if (true === noGpuAvailable) {
+                        // break loop to try next time.
+                        break;
+                    }
+                    const trial = waitingTrials.shift();
+                    if (undefined === trial) {
+                        throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
+                    }
+                    const gpuNum = this.trialConfig ? this.trialConfig.gpuNum : undefined;
+                    const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, gpuNum, trial);
+                    switch (result.resultType) {
+                        case ScheduleResultType.REQUIRE_EXCEED_TOTAL:
+                            {
+                                if (liveEnvironmentsCount == 0) {
+                                    this.log.debug(`TrialDispatcher: no live environment, so request one.`);
+                                    neededEnvironmentCount = 1;
+                                    waitingTrials = [];
+                                    this.isLoggedNoGpuAvailable = false;
+                                } else if (reusableEnvironments.length > 0) {
+                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${gpuNum} is too large, no machine can meet`;
+                                    this.log.error(errorMessage);
+                                    throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
+                                } else {
+                                    if (false === this.isLoggedNoGpuAvailable) {
+                                        this.log.debug(`TrialDispatcher: wait GPU, live environment ${liveEnvironmentsCount}, no reusable, REQUIRE_EXCEED_TOTAL.`)
+                                        this.isLoggedNoGpuAvailable = true;
+                                    }
+                                }
+                                break;
+                            }
+                        case ScheduleResultType.TMP_NO_AVAILABLE_GPU:
+                            {
+                                if (false === this.isLoggedNoGpuAvailable) {
+                                    this.log.debug(`TrialDispatcher: wait GPU, live environment ${liveEnvironmentsCount}, reusable ${reusableEnvironments.length}, TMP_NO_AVAILABLE_GPU.`)
+                                    this.isLoggedNoGpuAvailable = true;
+                                }
+
+                                // if some environment is alive, but not ready, no need to create more.
+                                if (liveEnvironmentsCount <= reusableEnvironments.length) {
+                                    neededEnvironmentCount = 1;
+                                    this.isLoggedNoGpuAvailable = false;
+                                    this.log.info(`TrialDispatcher: ${liveEnvironmentsCount} live env, and ${reusableEnvironments.length} reusable, but no GPU available so request a new one.`);
+                                }
+                                noGpuAvailable = true;
+                            }
+                            break
+                        case ScheduleResultType.SUCCEED:
+                            {
+                                const environment = result.environment;
+                                if (undefined === environment) {
+                                    throw new Error(`TrialDispatcher: scheduled env shouldn't be undefined!`);
+                                }
+                                trial.assignedGpus = result.gpuIndices;
+                                await this.allocateEnvironment(trial, environment);
+                                this.isLoggedNoGpuAvailable = false;
+                            }
+                            break
+                        default:
+                            throw new Error(`TrialDispatcher: Unknown gpu schecduler type: ${result.resultType}`);
+                    }
+                }
+            } else {
+                while (reusableEnvironments.length > 0 && waitingTrials.length > 0) {
+                    const trial = waitingTrials.shift();
+                    const idleEnvironment = reusableEnvironments.shift();
+                    if (trial !== undefined && idleEnvironment != undefined) {
+                        await this.allocateEnvironment(trial, idleEnvironment);
+                    }
+                }
+                neededEnvironmentCount = liveTrialsCount - liveEnvironmentsCount;
+            }
+
+            if (neededEnvironmentCount > 0) {
+                const environmentService = component.get<EnvironmentService>(EnvironmentService);
+                let requestedCount = 0;
+                for (let index = 0; index < neededEnvironmentCount; index++) {
+                    if (true === environmentService.hasMoreEnvironments) {
+                        await this.requestEnvironment();
+                        requestedCount++;
+                        this.isLoggedNoMoreEnvironment = false;
+                    } else {
+                        if (this.isLoggedNoMoreEnvironment === false) {
+                            this.isLoggedNoMoreEnvironment = true;
+                            this.log.info(`no more environment so far, so skip to request environment.`)
+                        }
+                    }
+                }
+                if (environmentService.hasMoreEnvironments === true || requestedCount > 0) {
+                    this.log.info(`requested new environment, live trials: ${liveTrialsCount}, ` +
+                        `live environments: ${liveEnvironmentsCount}, neededEnvironmentCount: ${neededEnvironmentCount}, ` +
+                        `requestedCount: ${requestedCount}`);
                 }
             }
+
         }
     }
 
@@ -461,35 +597,51 @@ class TrialDispatcher implements TrainingService {
         this.environments.set(environment.id, environment);
 
         if (environment.status === "FAILED") {
-            environment.isIdle = false;
             environment.isAlive = false;
-            throw new Error(`error on request environment ${environment.jobId}, please check log for more details.`);
+            throw new Error(`error on request environment ${environment.envId}, please check log for more details.`);
         } else {
-            environment.isIdle = true;
             environment.isAlive = true;
         }
 
         await this.commandChannel.open(environment);
-        this.log.info(`requested environment ${environment.id} and job id is ${environment.jobId}.`);
+        this.log.info(`requested environment ${environment.id} and job id is ${environment.envId}.`);
     }
 
-    private async assignEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
+    private async allocateEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
         if (this.commandChannel === undefined) {
-            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in assignEnvironment.`);
+            throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in allocateEnvironment.`);
+        }
+        if (this.trialConfig === undefined) {
+            throw new Error(`TrialDispatcher: trialConfig shouldn't be undefined in allocateEnvironment.`);
         }
 
         if (trial.environment) {
-            throw new Error(`trial ${trial.id} has assigned environment ${trial.environment.id} already, not assign to ${environment.id}!`);
+            throw new Error(`TrialDispatcher: trial ${trial.id} has assigned environment ${trial.environment.id} already, not assign to ${environment.id}!`);
         }
-        if (environment.isIdle == false) {
-            throw new Error(`environment ${environment.id} is not idle, and cannot be assigned again!`);
+        if (environment.runningTrialCount > 0 && false === this.enableGpuScheduler) {
+            throw new Error(`TrialDispatcher: environment ${environment.id} has running trial, and gpu scheduler is not enabled, it cannot be assigned again!`);
         }
         this.log.info(`assigning environment ${environment.id} to trial ${trial.id}.`);
 
-        environment.isIdle = false;
+        // convert assigned gpus to string for nvidia visible settings
+        // undefined means no constraint, [] means no gpu visible.
+        let gpuIndices: string | undefined = undefined;
+        if (undefined !== this.trialConfig.gpuNum) {
+            const gpuArray: number[] = [];
+            if (undefined !== trial.assignedGpus) {
+                trial.assignedGpus.map((value) => {
+                    gpuArray.push(value.index);
+                });
+            }
+            gpuIndices = gpuArray.join(',');
+        }
+
+        environment.runningTrialCount++;
+        environment.assignedTrialCount++;
         trial.environment = environment;
         trial.settings = {
             trialId: trial.id,
+            gpuIndices: gpuIndices,
             sequenceId: trial.form.sequenceId,
             parameter: trial.form.hyperParameters,
         }
@@ -499,13 +651,16 @@ class TrialDispatcher implements TrainingService {
     }
 
     private releaseEnvironment(trial: TrialDetail): void {
-        if (!trial.environment) {
-            throw new Error(`environment is not assigned to trial ${trial.id}, and cannot be released!`);
+        if (undefined === trial.environment) {
+            throw new Error(`TrialDispatcher: environment is not assigned to trial ${trial.id}, and cannot be released!`);
         }
-        if (trial.environment.isIdle) {
-            throw new Error(`environment ${trial.environment.id} is idle already!`);
+        if (trial.environment.runningTrialCount <= 0) {
+            throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
         }
-        trial.environment.isIdle = true;
+        if (true === this.enableGpuScheduler) {
+            this.gpuScheduler.removeGpuReservation(trial);
+        }
+        trial.environment.runningTrialCount--;
         trial.environment = undefined;
     }
 
@@ -561,7 +716,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleCommand(command: Command): Promise<void> {
-        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}, data: ${command.data}`);
+        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}.`);
         const environment = command.environment;
         const data = command.data;
         const nodeId = data["node"];
@@ -574,9 +729,7 @@ class TrialDispatcher implements TrainingService {
                 break;
             case INITIALIZED:
                 {
-                    const oldStatus = environment.status;
                     let isAllReady = true;
-
                     if (environment.nodeCount > 1) {
                         let node = environment.nodes.get(nodeId);
                         if (node === undefined) {
@@ -601,9 +754,9 @@ class TrialDispatcher implements TrainingService {
                     }
 
                     // single node is always ready to set env status
-                    if (isAllReady && oldStatus === "UNKNOWN") {
-                        environment.status = "RUNNING";
-                        this.log.info(`TrialDispatcher: env ${environment.id} received initialized message, old status: ${oldStatus}, new status: ${environment.status}.`);
+                    if (isAllReady) {
+                        environment.isRunnerReady = true;
+                        this.log.info(`TrialDispatcher: env ${environment.id} received initialized message and runner is ready, env status: ${environment.status}.`);
                     }
                 }
                 break;
@@ -621,7 +774,10 @@ class TrialDispatcher implements TrainingService {
                 }
                 break;
             case GPU_INFO:
-                environment.gpuSummary.set(nodeId, <GPUSummary>(data));
+                {
+                    const gpuData = <TrialGpuSummary>(data);
+                    environment.setGpuSummary(nodeId, gpuData);
+                }
                 break;
             case TRIAL_END:
                 {
@@ -647,6 +803,7 @@ class TrialDispatcher implements TrainingService {
                 }
                 break;
         }
+        this.shouldUpdateTrials = true;
     }
 }
 

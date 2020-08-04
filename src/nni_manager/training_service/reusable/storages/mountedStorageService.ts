@@ -17,12 +17,12 @@ export class MountedStorageService extends StorageService {
             if (isRecursive) {
                 const children = await fs.promises.readdir(path);
                 for (const file of children) {
-                    const stat = await fs.promises.lstat(file);
-                    this.internalRemove(file, stat.isDirectory(), isRecursive);
+                    const filePath = this.internalJoin(path, file);
+                    const stat = await fs.promises.lstat(filePath);
+                    await this.internalRemove(filePath, stat.isDirectory(), isRecursive);
                 }
-            } else {
-                await fs.promises.rmdir(path);
             }
+            await fs.promises.rmdir(path);
         } else {
             await fs.promises.unlink(path);
         }
@@ -98,7 +98,7 @@ export class MountedStorageService extends StorageService {
             {
                 encoding: "utf8",
                 start: current,
-                end: readLength + current,
+                end: readLength + current - 1,
             }).on("data", (data) => {
                 result += data;
             }).on("end", () => {

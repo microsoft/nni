@@ -106,6 +106,11 @@ export namespace ValidationSchemas {
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
                 reuse: joi.boolean(),
+                cpuNum: joi.number().min(1),
+                memoryMB: joi.number().min(100),
+                gpuNum: joi.number().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean(),
             }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),

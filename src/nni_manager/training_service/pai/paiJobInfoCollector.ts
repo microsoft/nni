@@ -85,7 +85,7 @@ export class PAIJobInfoCollector {
                                 if (response.body.jobStatus.appTrackingUrl) {
                                     paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
                                 } else {
-                                    paiTrialJob.url = paiTrialJob.logPath;
+                                    paiTrialJob.url = paiTrialJob.paiJobDetailUrl;
                                 }
                             }
                             break;
