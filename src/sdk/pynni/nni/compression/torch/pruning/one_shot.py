@@ -210,8 +210,8 @@ class _Constrained_StructuredFilterPruner(OneshotPruner):
 
 class L1FilterPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None):
-        import sys
-        sys.exit(-1)
+        # import sys
+        # sys.exit(-1)
         super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer)
 
 class Constrained_L1FilterPruner(_Constrained_StructuredFilterPruner):
