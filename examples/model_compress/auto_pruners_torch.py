@@ -147,7 +147,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
         if args.dataset == 'cifar10':
             model = VGG(depth=16).to(device)
         elif args.dataset == 'imagenet':
-            model = torchvision.models.vgg16(pretrained=True)
+            model = torchvision.models.vgg16(pretrained=True).to(device)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -159,7 +159,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
         if args.dataset == 'cifar10':
             model = ResNet18().to(device)
         elif args.dataset == 'imagenet':
-            model = torchvision.models.resnet18(pretrained=True)
+            model = torchvision.models.resnet18(pretrained=True).to(device)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -171,7 +171,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
         if args.dataset == 'cifar10':
             model = ResNet50().to(device)
         elif args.dataset == 'imagenet':
-            model = torchvision.models.resnet50(pretrained=True)
+            model = torchvision.models.resnet50(pretrained=True).to(device)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -196,6 +196,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
                 state_dict = model.state_dict()
         if state_dict:
             model.load_state_dict(state_dict)
+    
         print('Best acc:', best_acc)
         print('Best epoch:', best_epoch)
 
