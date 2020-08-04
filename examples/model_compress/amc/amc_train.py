@@ -6,6 +6,7 @@ import time
 import argparse
 import shutil
 import math
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -17,9 +18,11 @@ from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
 
 from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar
+from mobilenet import MobileNet
+from mobilenet_v2 import MobileNetV2
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='AMC fine-tune script')
+    parser = argparse.ArgumentParser(description='AMC train / fine-tune script')
     parser.add_argument('--model_type', default='mobilenet', type=str, help='name of the model to train')
     parser.add_argument('--dataset', default='cifar10', type=str, help='name of the dataset to train')
     parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -32,24 +35,45 @@ def parse_args():
     parser.add_argument('--seed', default=None, type=int, help='random seed to set')
     parser.add_argument('--data_root', default='./data', type=str, help='dataset path')
     # resume
-    parser.add_argument('--ckpt_path', default=None, type=str, help='checkpoint path to resume from')
+    parser.add_argument('--ckpt_path', default=None, type=str, help='checkpoint path to fine tune')
     # run eval
     parser.add_argument('--eval', action='store_true', help='Simply run eval')
+    parser.add_argument('--calc_flops', action='store_true', help='Calculate flops')
 
     return parser.parse_args()
 
-def get_model():
+def get_model(args):
     print('=> Building model..')
+
     if args.dataset == 'imagenet':
         n_class = 1000
     elif args.dataset == 'cifar10':
         n_class = 10
     else:
         raise NotImplementedError
-    from mobilenet import MobileNet
-    return MobileNet(n_class=n_class).cuda()
 
-def train(epoch, train_loader):
+    if args.model_type == 'mobilenet':
+        net = MobileNet(n_class=n_class).cuda()
+    elif args.model_type == 'mobilenetv2':
+        net = MobileNetV2(n_class=n_class).cuda()
+    else:
+        raise NotImplementedError
+
+    if args.ckpt_path is not None:
+        # the checkpoint can be a saved whole model object exported by amc_search.py, or a state_dict
+        print('=> Loading checkpoint {} ..'.format(args.ckpt_path))
+        ckpt = torch.load(args.ckpt_path)
+        if type(ckpt) == dict:
+            net.load_state_dict(ckpt['state_dict'])
+        else:
+            net = ckpt
+
+    net.to(args.device)
+    if torch.cuda.is_available() and args.n_gpu:
+        net = torch.nn.DataParallel(net, list(range(args.n_gpu)))
+    return net
+
+def train(epoch, train_loader, device):
     print('\nEpoch: %d' % epoch)
     net.train()
 
@@ -60,8 +84,7 @@ def train(epoch, train_loader):
     end = time.time()
 
     for batch_idx, (inputs, targets) in enumerate(train_loader):
-        if use_cuda:
-            inputs, targets = inputs.cuda(), targets.cuda()
+        inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -84,7 +107,7 @@ def train(epoch, train_loader):
     writer.add_scalar('acc/train_top1', top1.avg, epoch)
     writer.add_scalar('acc/train_top5', top5.avg, epoch)
 
-def test(epoch, test_loader, save=True):
+def test(epoch, test_loader, device, save=True):
     global best_acc
     net.eval()
 
@@ -96,8 +119,7 @@ def test(epoch, test_loader, save=True):
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_loader):
-            if use_cuda:
-                inputs, targets = inputs.cuda(), targets.cuda()
+            inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
@@ -159,9 +181,9 @@ def save_checkpoint(state, is_best, checkpoint_dir='.'):
 if __name__ == '__main__':
     args = parse_args()
 
-    use_cuda = torch.cuda.is_available()
-    if use_cuda:
+    if torch.cuda.is_available():
         torch.backends.cudnn.benchmark = True
+    args.device = torch.device('cuda') if torch.cuda.is_available() and args.n_gpu > 0 else torch.device('cpu')
 
     best_acc = 0  # best test accuracy
     start_epoch = 0  # start from epoch 0 or last checkpoint epoch
@@ -175,21 +197,13 @@ if __name__ == '__main__':
     train_loader, val_loader, n_class = get_dataset(args.dataset, args.batch_size, args.n_worker,
                                                     data_root=args.data_root)
 
-    net = get_model()  # for measure
-    IMAGE_SIZE = 224 if args.dataset == 'imagenet' else 32
-    n_flops, n_params = measure_model(net, IMAGE_SIZE, IMAGE_SIZE)
-    print('=> Model Parameter: {:.3f} M, FLOPs: {:.3f}M'.format(n_params / 1e6, n_flops / 1e6))
+    net = get_model(args)  # for measure
 
-    del net
-    net = get_model()  # real training
-
-    if args.ckpt_path is not None:  # assigned checkpoint path to resume from
-        print('=> Resuming from checkpoint..')
-        checkpoint = torch.load(args.ckpt_path)
-        sd = checkpoint['state_dict'] if 'state_dict' in checkpoint else checkpoint
-        net.load_state_dict(sd)
-    if use_cuda and args.n_gpu > 1:
-        net = torch.nn.DataParallel(net, list(range(args.n_gpu)))
+    if args.calc_flops:
+        IMAGE_SIZE = 224 if args.dataset == 'imagenet' else 32
+        n_flops, n_params = measure_model(net, IMAGE_SIZE, IMAGE_SIZE)
+        print('=> Model Parameter: {:.3f} M, FLOPs: {:.3f}M'.format(n_params / 1e6, n_flops / 1e6))
+        exit(0)
 
     criterion = nn.CrossEntropyLoss()
     print('Using SGD...')
@@ -198,19 +212,20 @@ if __name__ == '__main__':
 
     if args.eval:  # just run eval
         print('=> Start evaluation...')
-        test(0, val_loader, save=False)
+        test(0, val_loader, args.device, save=False)
     else:  # train
         print('=> Start training...')
         print('Training {} on {}...'.format(args.model_type, args.dataset))
-        log_dir = get_output_folder('./logs', '{}_{}_finetune'.format(args.model_type, args.dataset))
+        train_type = 'train' if args.ckpt_path is None else 'finetune'
+        log_dir = get_output_folder('./logs', '{}_{}_{}'.format(args.model_type, args.dataset, train_type))
         print('=> Saving logs to {}'.format(log_dir))
         # tf writer
         writer = SummaryWriter(logdir=log_dir)
 
         for epoch in range(start_epoch, start_epoch + args.n_epoch):
             lr = adjust_learning_rate(optimizer, epoch)
-            train(epoch, train_loader)
-            test(epoch, val_loader)
+            train(epoch, train_loader, args.device)
+            test(epoch, val_loader, args.device)
 
         writer.close()
-        print('=> Model Parameter: {:.3f} M, FLOPs: {:.3f}M, best top-1 acc: {}%'.format(n_params / 1e6, n_flops / 1e6, best_acc))
+        print('=> Best top-1 acc: {}%'.format(best_acc))
