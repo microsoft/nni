@@ -21,8 +21,14 @@ class NASBench201Cell(nn.Module):
         the number of output channels
     stride: int
         stride of the convolution
+    bn_affine: bool
+        If set to ``True``, ``torch.nn.BatchNorm2d`` will have learnable affine parameters. Default: True
+    bn_momentun: float
+        the value used for the running_mean and running_var computation. Default: 0.1
+    bn_track_running_stats: bool
+        When set to ``True``, ``torch.nn.BatchNorm2d`` tracks the running mean and variance. Default: True
     """
-    def __init__(self, configs, cell_id, C_in, C_out, stride, bn_affine=True, bn_momentum=0.1, bn_track_running_stats=True):
+    def __init__(self, cell_id, C_in, C_out, stride, bn_affine=True, bn_momentum=0.1, bn_track_running_stats=True):
         super(NASBench201Cell, self).__init__()
 
         self.NUM_NODES = 4
