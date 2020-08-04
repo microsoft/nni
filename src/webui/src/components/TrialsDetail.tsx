@@ -182,9 +182,10 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     </Stack>
                     <TableList
                         pageSize={tablePageSize}
-                        tableSource={source.map(trial => trial.tableRecord)}
+                        tableSource={source}
                         columnList={columnList}
                         changeColumn={changeColumn}
+                        searchSpace={EXPERIMENT.searchSpaceNew}
                         trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                         // TODO: change any to specific type
                         ref={(tabList): any => this.tableList = tabList}
