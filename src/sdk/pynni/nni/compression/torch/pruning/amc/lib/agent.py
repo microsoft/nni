@@ -143,7 +143,7 @@ class DDPG(object):
         # Actor update
         self.actor.zero_grad()
 
-        policy_loss = -self.critic([
+        policy_loss = -self.critic([ # pylint: disable=all
             to_tensor(state_batch),
             self.actor(to_tensor(state_batch))
         ])

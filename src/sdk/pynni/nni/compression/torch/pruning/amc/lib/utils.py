@@ -3,9 +3,6 @@
 
 import os
 import torch
-import time
-import sys
-
 
 class TextLogger(object):
     """Write log immediately to the disk"""

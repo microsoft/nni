@@ -26,6 +26,8 @@ def get_layer_param(model):
 
     return sum([functools.reduce(operator.mul, i.size(), 1) for i in model.parameters()])
 
+count_ops = 0
+count_params = 0
 
 def measure_layer(layer, x):
     global count_ops, count_params
