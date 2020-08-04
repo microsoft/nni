@@ -2,14 +2,13 @@
 # Licensed under the MIT license.
 
 import time
-from copy import deepcopy
 import math
 import copy
 import numpy as np
 import torch
 import torch.nn as nn
 
-from nni.compression.torch.compressor import Pruner, LayerInfo, PrunerModuleWrapper
+from nni.compression.torch.compressor import PrunerModuleWrapper
 from .lib.utils import prGreen
 from .. import AMCWeightMasker
 
@@ -300,7 +299,7 @@ class ChannelPruningEnv:
 
     def _cur_flops(self):
         flops = 0
-        for i, idx in enumerate(self.prunable_idx):
+        for idx in self.prunable_idx:
             c, n = self.strategy_dict[idx]  # input, output pruning ratio
             flops += self.layer_info_dict[idx]['flops'] * c * n
             # add buffer computation
@@ -358,7 +357,7 @@ class ChannelPruningEnv:
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)
 
         self.buffer_idx = []
-        for k, v in self.buffer_dict.items():
+        for _, v in self.buffer_dict.items():
             self.buffer_idx += v
 
         print('=> Prunable layer idx: {}'.format(self.prunable_idx))
@@ -401,11 +400,11 @@ class ChannelPruningEnv:
         # now let the image flow
         print('=> Extracting information...')
         with torch.no_grad():
-            for i_b, (input, target) in enumerate(self._val_loader):  # use image from train set
+            for i_b, (inputs, target) in enumerate(self._val_loader):  # use image from train set
                 if i_b == self.n_calibration_batches:
                     break
-                self.data_saver.append((input.clone(), target.clone()))
-                input_var = torch.autograd.Variable(input).to(device)
+                self.data_saver.append((inputs.clone(), target.clone()))
+                input_var = torch.autograd.Variable(inputs).to(device)
 
                 # inference and collect stats
                 _ = self.model(input_var)

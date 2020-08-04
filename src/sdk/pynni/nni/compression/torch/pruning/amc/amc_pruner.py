@@ -272,7 +272,7 @@ class AMCPruner(Pruner):
                 final_reward = T[-1][0]
                 # print('final_reward: {}'.format(final_reward))
                 # agent observe and update policy
-                for r_t, s_t, s_t1, a_t, done in T:
+                for _, s_t, s_t1, a_t, done in T:
                     agent.observe(final_reward, s_t, s_t1, a_t, done)
                     if episode > self.ddpg_args.warmup:
                         agent.update_policy()
