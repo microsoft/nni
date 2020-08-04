@@ -86,11 +86,17 @@ class Trial:
                     break
                 time.sleep(0.1)
 
+        trial_command = self.args.trial_command
+
+        gpuIndices = self.data.get('gpuIndices')
+        if (gpuIndices is not None):
+            trial_command = 'CUDA_VISIBLE_DEVICES="%s " %s' % (gpuIndices, trial_command)
+
         self.log_pipe_stdout = self.trial_syslogger_stdout.get_pipelog_reader()
-        self.process = Popen(self.args.trial_command, shell=True, stdout=self.log_pipe_stdout,
+        self.process = Popen(trial_command, shell=True, stdout=self.log_pipe_stdout,
                              stderr=self.log_pipe_stdout, cwd=trial_code_dir, env=dict(environ))
         nni_log(LogType.Info, '{0}: spawns a subprocess (pid {1}) to run command: {2}'.
-                format(self.name, self.process.pid, shlex.split(self.args.trial_command)))
+                format(self.name, self.process.pid, shlex.split(trial_command)))
 
     def save_parameter_file(self, command_data):
         parameters = command_data["parameters"]

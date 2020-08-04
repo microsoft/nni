@@ -129,13 +129,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             className="title"
                             onClick={this.clickMaxTop}
                         >
-                            <Title1 text="Top Maximal trials" icon="max.png" fontColor={titleMaxbgcolor} />
+                            <Title1 text="Top maximal trials" icon="max.png" fontColor={titleMaxbgcolor} />
                         </div>
                         <div
                             className="title minTitle"
                             onClick={this.clickMinTop}
                         >
-                            <Title1 text="Top Minimal trials" icon="min.png" fontColor={titleMinbgcolor} />
+                            <Title1 text="Top minimal trials" icon="min.png" fontColor={titleMinbgcolor} />
                         </div>
                         <div style={{position: 'absolute', right: '2%', top: 8}}>
                             <Dropdown
