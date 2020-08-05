@@ -29,6 +29,7 @@ class NASBench201Cell(nn.Module):
     bn_track_running_stats: bool
         When set to ``True``, ``torch.nn.BatchNorm2d`` tracks the running mean and variance. Default: True
     """
+
     def __init__(self, cell_id, C_in, C_out, stride, bn_affine=True, bn_momentum=0.1, bn_track_running_stats=True):
         super(NASBench201Cell, self).__init__()
 
@@ -38,11 +39,17 @@ class NASBench201Cell(nn.Module):
 
         OPS = lambda layer_idx: OrderedDict([
             ("none", Zero(C_in, C_out, stride)),
-            ("avg_pool_3x3", Pooling(C_in, C_out, stride if layer_idx == 0 else 1, "avg", bn_affine, bn_momentum, bn_track_running_stats)),
-            ("max_pool_3x3", Pooling(C_in, C_out, stride if layer_idx == 0 else 1, "max", bn_affine, bn_momentum, bn_track_running_stats)),
-            ("nor_conv_3x3", ReLUConvBN(C_in, C_out, 3, stride if layer_idx == 0 else 1, 1, 1, bn_affine, bn_momentum, bn_track_running_stats)),
-            ("nor_conv_1x1", ReLUConvBN(C_in, C_out, 1, stride if layer_idx == 0 else 1, 0, 1, bn_affine, bn_momentum, bn_track_running_stats)),
-            ("skip_connect", nn.Identity() if stride == 1 and C_in == C_out else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum, bn_track_running_stats))
+            ("avg_pool_3x3", Pooling(C_in, C_out, stride if layer_idx == 0 else 1, "avg", bn_affine, bn_momentum,
+                                     bn_track_running_stats)),
+            ("max_pool_3x3", Pooling(C_in, C_out, stride if layer_idx == 0 else 1, "max", bn_affine, bn_momentum,
+                                     bn_track_running_stats)),
+            ("nor_conv_3x3", ReLUConvBN(C_in, C_out, 3, stride if layer_idx == 0 else 1, 1, 1, bn_affine, bn_momentum,
+                                        bn_track_running_stats)),
+            ("nor_conv_1x1", ReLUConvBN(C_in, C_out, 1, stride if layer_idx == 0 else 1, 0, 1, bn_affine, bn_momentum,
+                                        bn_track_running_stats)),
+            ("skip_connect", nn.Identity() if stride == 1 and C_in == C_out
+            else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
+                                  bn_track_running_stats))
         ])
 
         for i in range(self.NUM_NODES):
