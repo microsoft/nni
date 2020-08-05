@@ -555,15 +555,15 @@ Debug mode will disable version check function in Trialkeeper.
   nnictl experiment save [experiment_id] --saveCodeDir
   ```
 
-* __nnictl experiment open__
+* __nnictl experiment load__
   * Description
 
-    Open a nni experiment.
+    Load a nni experiment.
 
   * Usage
 
     ```bash
-    nnictl experiment open [OPTIONS]
+    nnictl experiment load [OPTIONS]
     ```
 
   * Options
@@ -576,10 +576,10 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Examples
 
-  > open an expeirment
+  > load an expeirment
 
   ```bash
-  nnictl experiment open --path [path] --codeDir [codeDir]
+  nnictl experiment load --path [path] --codeDir [codeDir]
   ```
 
 

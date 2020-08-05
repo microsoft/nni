@@ -793,8 +793,8 @@ def save_experiment(args):
     # Step5. Cleanup temp data
     shutil.rmtree(temp_root_dir)
 
-def open_experiment(args):
-    '''open experiment data'''
+def load_experiment(args):
+    '''load experiment data'''
     package_path = os.path.expanduser(args.path)
     if not os.path.exists(args.path):
         print_error('file path %s does not exist!' % args.path)

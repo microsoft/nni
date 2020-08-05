@@ -12,7 +12,7 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
                           get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
-                          save_experiment, open_experiment
+                          save_experiment, load_experiment
 from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -150,11 +150,11 @@ def parse_args():
                                    of the experiment')
     parser_save_data.set_defaults(func=save_experiment)
     #open experiment data
-    parser_open_data = parser_experiment_subparsers.add_parser('open', help='open experiment data')
+    parser_open_data = parser_experiment_subparsers.add_parser('load', help='load experiment data')
     parser_open_data.add_argument('--path', '-p', required=True, help='the path of nni package file')
     parser_open_data.add_argument('--codeDir', '-c', required=True, help='the path of codeDir')
     parser_open_data.add_argument('--logDir', '-l', required=False, help='the path of logDir')
-    parser_open_data.set_defaults(func=open_experiment)
+    parser_open_data.set_defaults(func=load_experiment)
 
     #parse platform command
     parser_platform = subparsers.add_parser('platform', help='get platform information')
