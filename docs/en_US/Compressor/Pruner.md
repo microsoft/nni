@@ -20,6 +20,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -497,6 +498,39 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
+## AutoML for Model Compression Pruner
+
+AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+![](../../img/amc_pruner.jpg)
+
+For more details, please refer to [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf).
+
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import AMCPruner
+config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }]
+pruner = AMCPruner(model, config_list, evaluator, val_loader, sparsity=0.5)
+pruner.compress()
+```
+
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+
+#### User configuration for AutoCompress Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AMCPruner
+```
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
