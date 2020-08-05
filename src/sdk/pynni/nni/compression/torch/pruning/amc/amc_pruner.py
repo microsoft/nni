@@ -38,10 +38,9 @@ class AMCPruner(Pruner):
             Data loader of validation dataset.
         suffix: str
             suffix to help you remember what experiment you ran
-        job: str
-            train: search best pruned model.
-            export: export a searched model, before exporting model, you must run this pruner
-            to search a pruned model with job=train.
+        export: boolean
+            False: search best pruned model and export after search.
+            True: export a searched model, before exporting model, you must run this pruner
         export_path: str
             path for exporting models
 
@@ -112,8 +111,9 @@ class AMCPruner(Pruner):
             evaluator,
             val_loader,
             suffix=None,
-            job='train',
+            export=False,
             export_path=None,
+            export_source_path=None,
             model_type='mobilenet',
             sparsity=0.5,
             lbound=0.,
@@ -141,7 +141,8 @@ class AMCPruner(Pruner):
             epsilon=50000,
             seed=None):
 
-        self.job = job
+        self.export = export
+        self.export_source_path = export_source_path
         self.export_path = export_path
 
         if seed is not None:
@@ -157,6 +158,15 @@ class AMCPruner(Pruner):
         preserve_ratio = 1. - sparsity
         lbound, rbound = 1. - rbound, 1. - lbound
 
+        # build folder and logs
+        base_folder_name = '{}_r{}_search'.format(model_type, preserve_ratio)
+        if suffix is not None:
+            base_folder_name = base_folder_name + '_' + suffix
+        self.output = get_output_folder(output, base_folder_name)
+
+        if self.export_path is None:
+            self.export_path = os.path.join(self.output, '{}_r{}_exported.pth'.format(model_type, preserve_ratio))
+
         self.env_args = Namespace(
             model_type=model_type,
             preserve_ratio=preserve_ratio,
@@ -165,18 +175,14 @@ class AMCPruner(Pruner):
             reward=reward,
             n_calibration_batches=n_calibration_batches,
             n_points_per_layer=n_points_per_layer,
-            channel_round=channel_round
+            channel_round=channel_round,
+            output=self.output
         )
 
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint, args=self.env_args)
 
-        if self.job == 'train':
-            # build folder and logs
-            base_folder_name = '{}_r{}_search'.format(model_type, preserve_ratio)
-            if suffix is not None:
-                base_folder_name = base_folder_name + '_' + suffix
-            self.output = get_output_folder(output, base_folder_name)
+        if not self.export:
             print('=> Saving logs to {}'.format(self.output))
             self.tfwriter = SummaryWriter(logdir=self.output)
             self.text_writer = open(os.path.join(self.output, 'log.txt'), 'w')
@@ -210,10 +216,9 @@ class AMCPruner(Pruner):
 
 
     def compress(self):
-        if self.job == 'train':
+        if not self.export:
             self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output)
-        else:
-            self.export()
+        self.export_pruned_model()
 
     def train(self, num_episode, agent, env, output):
         agent.is_training = True
@@ -303,8 +308,12 @@ class AMCPruner(Pruner):
                 self.text_writer.write('best policy: {}\n'.format(env.best_strategy))
         self.text_writer.close()
 
-    def export(self):
-        wrapper_model_ckpt = 'best_wrapped_model.pth'
+    def export_pruned_model(self):
+        if self.export_source_path is None:
+            wrapper_model_ckpt = os.path.join(self.output, 'best_wrapped_model.pth')
+        else:
+            wrapper_model_ckpt = self.export_source_path
+        self.env.reset()
         self.bound_model.load_state_dict(torch.load(wrapper_model_ckpt))
 
         print('validate searched model:', self.env._validate(self.env._val_loader, self.env.model))

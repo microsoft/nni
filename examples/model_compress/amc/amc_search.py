@@ -15,26 +15,21 @@ device = None
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')
-
-    parser.add_argument('--job', default='train', type=str, help='support option: train/export')
-    parser.add_argument('--suffix', default=None, type=str, help='suffix to help you remember what experiment you ran')
-
-    # env
     parser.add_argument('--model_type', default='mobilenet', type=str, help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
     parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
     parser.add_argument('--sparsity', default=0.5, type=float, help='sparsity of the model')
     parser.add_argument('--lbound', default=0., type=float, help='minimum sparsity')
     parser.add_argument('--rbound', default=0.8, type=float, help='maximum sparsity')
-    parser.add_argument('--reward', default='acc_reward', type=str, help='Setting the reward')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
 
     parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
     parser.add_argument('--data_bsize', default=50, type=int, help='number of data batch size')
-    parser.add_argument('--resume', default='default', type=str, help='Resuming model path for testing')
+    parser.add_argument('--export', action='store_true', help='search best pruning policy or just export model with searched policy')
     parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
+    parser.add_argument('--export_source_path', default=None, type=str, help='path for searched best wrapped model')
 
     return parser.parse_args()
 
@@ -122,9 +117,6 @@ def validate(val_loader, model, verbose=False):
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.job == 'export' and args.export_path is None:
-        print('Please specify export_path')
-        exit(1)
 
     device = torch.device('cuda') if torch.cuda.is_available() and args.n_gpu > 0 else torch.device('cpu')
 
@@ -134,6 +126,9 @@ if __name__ == "__main__":
     config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
-    pruner = AMCPruner(model, config_list, validate, val_loader, model_type=args.model_type,
-            job=args.job, train_episode=args.train_episode, export_path=args.export_path)
+    pruner = AMCPruner(
+        model, config_list, validate, val_loader, model_type=args.model_type,
+        train_episode=args.train_episode, export=args.export, export_path=args.export_path,
+        export_source_path=args.export_source_path,
+        sparsity=args.sparsity, lbound=args.lbound, rbound=args.rbound)
     pruner.compress()
