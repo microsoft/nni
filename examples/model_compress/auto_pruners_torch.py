@@ -28,7 +28,7 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
     '''
     get data
     '''
-    kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
+    kwargs = {'num_workers': 6, 'pin_memory': True} if torch.cuda.is_available() else {
     }
 
     if dataset == 'mnist':
