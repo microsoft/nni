@@ -323,7 +323,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Description
   
-    You can use this command to show trial results with highest/lowest metric. Shown results are sorted by default metric ascending or decreasing.
+    You can use this command to show trial results with highest metric. Shown results are sorted by default metric decreasing.
 
   * Usage
 
@@ -337,7 +337,27 @@ Debug mode will disable version check function in Trialkeeper.
   |---|---|---|---|
   |id|  False| |ID of the experiment you want to set|
   |--num, -n|False|10|the number of listed items|
-  |--reverse, -r|False|False|is minimal trial results demanded|
+
+  Note that if `--num` exceeds the number of trials, all trial results are listed.
+
+* __nnictl trial tail__
+
+  * Description
+  
+    You can use this command to show trial results with lowest metric. Shown results are sorted by default metric ascending.
+
+  * Usage
+
+    ```bash
+    nnictl trial tail [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |---|---|---|---|
+  |id|  False| |ID of the experiment you want to set|
+  |--num, -n|False|10|the number of listed items|
 
   Note that if `--num` exceeds the number of trials, all trial results are listed.
 

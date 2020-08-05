@@ -741,13 +741,16 @@ def search_space_auto_gen(args):
 def trial_head(args):
     '''list maximal trials' id and results'''
     def rec_process(x):
-        idx = x['data'].find('default')
-        if idx == -1:
-            x['data'] = float(x['data'])
+        data = eval(eval(x['data']))
+        if isinstance(data, float):
+            x['data'] = data
             return x
-        end = x['data'].find(',', idx)
-        x['data'] = x['data'][idx + 11: end]
-        return x
+        elif isinstance(data, dict):
+            x['data'] = data['default']
+            return x
+        else:
+            print_error("Records cannot be loaded, please check the service.")
+            raise ValueError
 
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')

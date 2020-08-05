@@ -115,8 +115,11 @@ def parse_args():
     parser_trial_head = parser_trial_subparsers.add_parser('head', help='list trial id and results with highest metric')
     parser_trial_head.add_argument('--num', '-n', default=10, type=int)
     parser_trial_head.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_head.add_argument('--reverse', '-r', action='store_true')
-    parser_trial_head.set_defaults(func=trial_head)
+    parser_trial_head.set_defaults(func=trial_head, reverse=False)
+    parser_trial_tail = parser_trial_subparsers.add_parser('tail', help='list trial id and results with lowest metric')
+    parser_trial_tail.add_argument('--num', '-n', default=10, type=int)
+    parser_trial_tail.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_tail.set_defaults(func=trial_head, reverse=True)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
