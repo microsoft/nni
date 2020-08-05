@@ -235,9 +235,17 @@ function formatAccuracy(accuracy: number): string {
     return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+function formatComplexTypeValue(value: any): string | number {
+    if (['number', 'string'].includes(typeof value)) {
+        return value;
+    } else {
+        return value.toString();
+    }
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics,
+    formatAccuracy, formatComplexTypeValue, formatTimestamp, metricAccuracy, parseMetrics,
     isArrayType, requestAxios
 };

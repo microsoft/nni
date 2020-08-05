@@ -1,5 +1,5 @@
 import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType, formatComplexTypeValue } from '../function';
 import JSON5 from 'json5';
 
 /**
@@ -28,10 +28,10 @@ function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: str
                     subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
                 }
             } else {
-                parameters.set(axisKey, v);
+                parameters.set(axisKey, formatComplexTypeValue(v));
             }
         } else {
-            unexpectedEntries.set(prefix + k, v);
+            unexpectedEntries.set(prefix + k, formatComplexTypeValue(v));
         }
     }
     return [parameters, unexpectedEntries];

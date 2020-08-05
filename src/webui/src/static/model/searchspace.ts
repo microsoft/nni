@@ -1,5 +1,6 @@
 import { SingleAxis, MultipleAxes, TableObj } from '../interface';
 import { SUPPORTED_SEARCH_SPACE_TYPE } from '../const';
+import { formatComplexTypeValue } from '../function';
 
 function fullNameJoin(prefix: string, name: string): string {
     return prefix ? (prefix + '/' + name) : name;
@@ -52,7 +53,7 @@ class SimpleOrdinalAxis implements SingleAxis {
         this.baseName = baseName;
         this.fullName = fullName;
         this.type = type;
-        this.domain = value;
+        this.domain = Array.from(value).map(formatComplexTypeValue);
     }
 }
 
