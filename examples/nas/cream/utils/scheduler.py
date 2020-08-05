@@ -31,7 +31,7 @@ class Scheduler:
                  initialize: bool = True) -> None:
         self.optimizer = optimizer
         self.param_group_field = param_group_field
-        self._initial_param_group_field = f"initial_{param_group_field}"
+        self._initial_param_group_field = "initial_" + param_group_field
         if initialize:
             for i, group in enumerate(self.optimizer.param_groups):
                 if param_group_field not in group:

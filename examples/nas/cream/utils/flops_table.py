@@ -54,7 +54,7 @@ class LatencyEst(object):
     def get_params(self, arch):
         params = 0
         for block_id, block in enumerate(arch.keys()):
-            if block is 'LayerChoice1' or block is 'LayerChoice23':
+            if block == 'LayerChoice1' or block == 'LayerChoice23':
                 continue
             for idx, choice in enumerate(arch[block]):
                 params += self.params_dict[block_id][idx] * (choice is True)
@@ -64,7 +64,7 @@ class LatencyEst(object):
     def get_flops(self, arch):
         flops = 0
         for block_id, block in enumerate(arch.keys()):
-            if block is 'LayerChoice1' or block_id is 'LayerChoice23':
+            if block == 'LayerChoice1' or block_id == 'LayerChoice23':
                 continue
             for idx, choice in enumerate(arch[block]):
                 flops += self.flops_dict[block_id][idx] * (1 if choice else 0)

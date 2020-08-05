@@ -40,7 +40,7 @@ You need to first download the [ImageNet-2012](http://www.image-net.org/) to the
 
 Put the imagenet data in `./data`. It should be like following:
 
-```buildoutcfg
+```
 ./data/imagenet/train
 ./data/imagenet/val
 ...
@@ -58,7 +58,7 @@ pip install -r ./requirements.txt
 
 To search for an architecture, you need to configure the parameters `flops_minimum` and `flops_maximum` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./run.sh`
 
-```buildoutcfg
+```
 --flops_minimum 0 # Minimum Flops of Architecture
 --flops_maximum 600 # Maximum Flops of Architecture
 ```
@@ -67,7 +67,7 @@ For example, if you expect to search an architecture with model Flops <= 200M, p
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 
-```buildoutcfg
+```
 sh ./run.sh
 ```
 
@@ -77,7 +77,7 @@ Searched model needs to be retrained to obtain the final model. Retraining code 
 
 To test our trained of models, you need to use `model_selection` in `./test.sh` to specify which model to test.
 
-```buildoutcfg
+```
 --model_selection 42 # test 42m model
 --model_selection 470 # test 470m model
 ......
@@ -85,7 +85,7 @@ To test our trained of models, you need to use `model_selection` in `./test.sh` 
 
 After specifying the flops of the model, you need to write the path to the resume model in `./test.sh`.
 
-```buildoutcfg
+```
 --resume './data/ckpts/42.pth.tar'
 --resume './data/ckpts/470.pth.tar'
 ......
@@ -95,7 +95,7 @@ We provide 14M/42M/114M/285M/470M/600M pretrained models in [google drive](https
 
 After downloading the pretrained models and adding `--model_selection` and `--resume` in './test.sh', you need to use the following command to test the model.
 
-```buildoutcfg
+```
 sh ./test.sh
 ```
 
