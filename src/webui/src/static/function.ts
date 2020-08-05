@@ -52,12 +52,13 @@ const convertDuration = (num: number): string => {
 
 function parseMetrics(metricData: string): any {
     if(metricData !== undefined){
-        if (metricData.includes('NaN') && metricData.includes('Infinity')) {
-            // return JSON5.parse(JSON5.parse(metricData));
-            return JSON5.parse(metricData);
+        if (metricData.includes('NaN') || metricData.includes('Infinity')) {
+            // const dealed = metricData.replace(/Infinity|NaN/gi, '0');
+            return JSON5.parse(JSON5.parse(metricData));
+            // return JSON5.parse(dealed);
         } else {
-            return JSON.parse(metricData);
-            // return JSON.parse(JSON.parse(metricData));
+            return JSON.parse(JSON.parse(metricData));
+            // return JSON.parse(metricData);
         }
     } else {
         return undefined;
@@ -103,7 +104,7 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
-        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')) {
+        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default') && (typeof showDefault.default === 'number')) {
             return showDefault;
         }
     } else {

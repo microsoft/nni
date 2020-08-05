@@ -1,2526 +1,2526 @@
 {
-    "checkStatus": {
-      "status": "DONE",
-      "errors": []
-    },
-    "experiment": {
-      "id": "Tkaxm2mb",
-      "revision": 118,
-      "execDuration": 150,
-      "logDir": "/***/nni/experiments/Tkaxm2mb",
-      "nextSequenceId": 110,
-      "params": {
-        "authorName": "default",
-        "experimentName": "default",
-        "trialConcurrency": 10,
-        "maxExecDuration": 3600,
-        "maxTrialNum": 100,
-        "searchSpace": "{\"intermediate1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate3\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2, 3]}, \"final1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2]}}",
-        "trainingServicePlatform": "local",
-        "tuner": {
-          "codeDir": "/***/nnidev/src/webui/tests/metrics-test/.",
-          "classFileName": "naive_random.py",
-          "className": "NaiveRandomTuner",
-          "checkpointDir": "/***/nni/experiments/Tkaxm2mb/checkpoint"
+  "checkStatus": {
+    "status": "DONE",
+    "errors": []
+  },
+  "experiment": {
+    "id": "Tkaxm2mb",
+    "revision": 118,
+    "execDuration": 150,
+    "logDir": "/***/nni/experiments/Tkaxm2mb",
+    "nextSequenceId": 110,
+    "params": {
+      "authorName": "default",
+      "experimentName": "default",
+      "trialConcurrency": 10,
+      "maxExecDuration": 3600,
+      "maxTrialNum": 100,
+      "searchSpace": "{\"intermediate1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate3\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2, 3]}, \"final1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2]}}",
+      "trainingServicePlatform": "local",
+      "tuner": {
+        "codeDir": "/***/nnidev/src/webui/tests/metrics-test/.",
+        "classFileName": "naive_random.py",
+        "className": "NaiveRandomTuner",
+        "checkpointDir": "/***/nni/experiments/Tkaxm2mb/checkpoint"
+      },
+      "versionCheck": true,
+      "clusterMetaData": [
+        {
+          "key": "codeDir",
+          "value": "/***/nnidev/src/webui/tests/metrics-test/."
         },
-        "versionCheck": true,
-        "clusterMetaData": [
-          {
-            "key": "codeDir",
-            "value": "/***/nnidev/src/webui/tests/metrics-test/."
-          },
-          {
-            "key": "command",
-            "value": "python trial.py"
-          }
-        ]
-      },
-      "startTime": 1595901129833,
-      "endTime": 1595901290657
+        {
+          "key": "command",
+          "value": "python trial.py"
+        }
+      ]
     },
-    "metricData": [
-      {
-        "timestamp": 1595901141232,
-        "trialJobId": "sXvMz",
-        "parameterId": "0",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -7.823851251971656, \\\"other\\\": -9.844189628757352}\""
-      },
-      {
-        "timestamp": 1595901141321,
-        "trialJobId": "y3owq",
-        "parameterId": "1",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"-5.8373125018382055\\\"\""
-      },
-      {
-        "timestamp": 1595901141347,
-        "trialJobId": "etEUl",
-        "parameterId": "2",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901141374,
-        "trialJobId": "r5pwY",
-        "parameterId": "3",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901141455,
-        "trialJobId": "JxX0I",
-        "parameterId": "4",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901141543,
-        "trialJobId": "ywQvm",
-        "parameterId": "5",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -9.945796251990785}}\""
-      },
-      {
-        "timestamp": 1595901141643,
-        "trialJobId": "tkxcP",
-        "parameterId": "6",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901141708,
-        "trialJobId": "MjX3O",
-        "parameterId": "7",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901141754,
-        "trialJobId": "MQlPp",
-        "parameterId": "9",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.887609164015767}}\""
-      },
-      {
-        "timestamp": 1595901141756,
-        "trialJobId": "LKVCX",
-        "parameterId": "8",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901142236,
-        "trialJobId": "sXvMz",
-        "parameterId": "0",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": -8.08656113718457, \\\"other\\\": 7.483152033140179}\""
-      },
-      {
-        "timestamp": 1595901142326,
-        "trialJobId": "y3owq",
-        "parameterId": "1",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 6.896445698700774}}\""
-      },
-      {
-        "timestamp": 1595901142355,
-        "trialJobId": "etEUl",
-        "parameterId": "2",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"3.727416078457388\\\"\""
-      },
-      {
-        "timestamp": 1595901142458,
-        "trialJobId": "JxX0I",
-        "parameterId": "4",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.963738323502998}}\""
-      },
-      {
-        "timestamp": 1595901142548,
-        "trialJobId": "ywQvm",
-        "parameterId": "5",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"4.024454725511186\""
-      },
-      {
-        "timestamp": 1595901142758,
-        "trialJobId": "MQlPp",
-        "parameterId": "9",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901142760,
-        "trialJobId": "LKVCX",
-        "parameterId": "8",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"0.982665154375141\\\"\""
-      },
-      {
-        "timestamp": 1595901143239,
-        "trialJobId": "sXvMz",
-        "parameterId": "0",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -8.10531137074138}}\""
-      },
-      {
-        "timestamp": 1595901143362,
-        "trialJobId": "etEUl",
-        "parameterId": "2",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901143462,
-        "trialJobId": "JxX0I",
-        "parameterId": "4",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": -5.433157293214572}\""
-      },
-      {
-        "timestamp": 1595901143552,
-        "trialJobId": "ywQvm",
-        "parameterId": "5",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901143761,
-        "trialJobId": "MQlPp",
-        "parameterId": "9",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 8.927687040316364}\""
-      },
-      {
-        "timestamp": 1595901143764,
-        "trialJobId": "LKVCX",
-        "parameterId": "8",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901144556,
-        "trialJobId": "ywQvm",
-        "parameterId": "5",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-4.804921436452929\""
-      },
-      {
-        "timestamp": 1595901144765,
-        "trialJobId": "MQlPp",
-        "parameterId": "9",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901156846,
-        "trialJobId": "fJHIW",
-        "parameterId": "10",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -6.3254623036120545, \\\"other\\\": 6.661583778582873}\""
-      },
-      {
-        "timestamp": 1595901156921,
-        "trialJobId": "z7WgL",
-        "parameterId": "13",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901156954,
-        "trialJobId": "Ofyt2",
-        "parameterId": "12",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"1.7787198770217199\""
-      },
-      {
-        "timestamp": 1595901157264,
-        "trialJobId": "aKV3K",
-        "parameterId": "17",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901157336,
-        "trialJobId": "EFsFo",
-        "parameterId": "19",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-0.9452602480917385\""
-      },
-      {
-        "timestamp": 1595901157852,
-        "trialJobId": "fJHIW",
-        "parameterId": "10",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901157925,
-        "trialJobId": "z7WgL",
-        "parameterId": "13",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901157959,
-        "trialJobId": "Ofyt2",
-        "parameterId": "12",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901158930,
-        "trialJobId": "z7WgL",
-        "parameterId": "13",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 1.8045794393579122}\""
-      },
-      {
-        "timestamp": 1595901158961,
-        "trialJobId": "Ofyt2",
-        "parameterId": "12",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.685460178518326}}\""
-      },
-      {
-        "timestamp": 1595901159931,
-        "trialJobId": "z7WgL",
-        "parameterId": "13",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -7.794922103589295}\""
-      },
-      {
-        "timestamp": 1595901159966,
-        "trialJobId": "Ofyt2",
-        "parameterId": "12",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 7.483634247448858}}\""
-      },
-      {
-        "timestamp": 1595901160970,
-        "trialJobId": "Ofyt2",
-        "parameterId": "12",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-3.905177892216985\\\"\""
-      },
-      {
-        "timestamp": 1595901172384,
-        "trialJobId": "dUJTL",
-        "parameterId": "20",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901172404,
-        "trialJobId": "xAoeQ",
-        "parameterId": "21",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 4.1133250278375915, \\\"other\\\": -2.4983824090454387}\""
-      },
-      {
-        "timestamp": 1595901172422,
-        "trialJobId": "de6XT",
-        "parameterId": "22",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -4.1861178094861495, \\\"other\\\": -1.8025564533646659}\""
-      },
-      {
-        "timestamp": 1595901172467,
-        "trialJobId": "Rofrb",
-        "parameterId": "24",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 8.461683188282755}\""
-      },
-      {
-        "timestamp": 1595901172471,
-        "trialJobId": "MOOrR",
-        "parameterId": "25",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.970771731370702}}\""
-      },
-      {
-        "timestamp": 1595901172521,
-        "trialJobId": "A7C0a",
-        "parameterId": "23",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901172629,
-        "trialJobId": "p2m5y",
-        "parameterId": "26",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-4.874888030632755\""
-      },
-      {
-        "timestamp": 1595901172661,
-        "trialJobId": "mSPRF",
-        "parameterId": "27",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901172822,
-        "trialJobId": "G5nv9",
-        "parameterId": "28",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901172910,
-        "trialJobId": "ciSWN",
-        "parameterId": "29",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901173388,
-        "trialJobId": "dUJTL",
-        "parameterId": "20",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901173408,
-        "trialJobId": "xAoeQ",
-        "parameterId": "21",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901173428,
-        "trialJobId": "de6XT",
-        "parameterId": "22",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901173472,
-        "trialJobId": "Rofrb",
-        "parameterId": "24",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -8.764260228545442, \\\"other\\\": 1.191253727619479}\""
-      },
-      {
-        "timestamp": 1595901173476,
-        "trialJobId": "MOOrR",
-        "parameterId": "25",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"-9.609870583781277\\\"\""
-      },
-      {
-        "timestamp": 1595901173524,
-        "trialJobId": "A7C0a",
-        "parameterId": "23",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901173633,
-        "trialJobId": "p2m5y",
-        "parameterId": "26",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"other\\\": 6.950769342806488}\""
-      },
-      {
-        "timestamp": 1595901173664,
-        "trialJobId": "mSPRF",
-        "parameterId": "27",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901173827,
-        "trialJobId": "G5nv9",
-        "parameterId": "28",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"8.83440457248663\\\"\""
-      },
-      {
-        "timestamp": 1595901173915,
-        "trialJobId": "ciSWN",
-        "parameterId": "29",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901174413,
-        "trialJobId": "xAoeQ",
-        "parameterId": "21",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"1.8151933189474878\""
-      },
-      {
-        "timestamp": 1595901174434,
-        "trialJobId": "de6XT",
-        "parameterId": "22",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 0.8472658215331563}\""
-      },
-      {
-        "timestamp": 1595901174481,
-        "trialJobId": "MOOrR",
-        "parameterId": "25",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901174636,
-        "trialJobId": "p2m5y",
-        "parameterId": "26",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"9.902729745066438\""
-      },
-      {
-        "timestamp": 1595901174667,
-        "trialJobId": "mSPRF",
-        "parameterId": "27",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-2.5183912965656763\\\"\""
-      },
-      {
-        "timestamp": 1595901174831,
-        "trialJobId": "G5nv9",
-        "parameterId": "28",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"default\\\": 5.406128202621579, \\\"other\\\": -6.350852877668696}\""
-      },
-      {
-        "timestamp": 1595901175418,
-        "trialJobId": "xAoeQ",
-        "parameterId": "21",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-8.43771544998285\""
-      },
-      {
-        "timestamp": 1595901175438,
-        "trialJobId": "de6XT",
-        "parameterId": "22",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901175485,
-        "trialJobId": "MOOrR",
-        "parameterId": "25",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"2.8954800063491586\\\"\""
-      },
-      {
-        "timestamp": 1595901175671,
-        "trialJobId": "mSPRF",
-        "parameterId": "27",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901175834,
-        "trialJobId": "G5nv9",
-        "parameterId": "28",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901176422,
-        "trialJobId": "xAoeQ",
-        "parameterId": "21",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901176489,
-        "trialJobId": "MOOrR",
-        "parameterId": "25",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901176838,
-        "trialJobId": "G5nv9",
-        "parameterId": "28",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"3.5218235306581356\""
-      },
-      {
-        "timestamp": 1595901187944,
-        "trialJobId": "zaTFd",
-        "parameterId": "33",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901187975,
-        "trialJobId": "WrtVY",
-        "parameterId": "30",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 6.446947454739629, \\\"other\\\": 4.2394889873504695}\""
-      },
-      {
-        "timestamp": 1595901188002,
-        "trialJobId": "RZ45L",
-        "parameterId": "32",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"8.53321110060542\""
-      },
-      {
-        "timestamp": 1595901188047,
-        "trialJobId": "Ss6eU",
-        "parameterId": "34",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -2.6862091423857564, \\\"other\\\": 8.839298350682931}\""
-      },
-      {
-        "timestamp": 1595901188087,
-        "trialJobId": "J5lYo",
-        "parameterId": "31",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901188183,
-        "trialJobId": "tb6Tr",
-        "parameterId": "35",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901188267,
-        "trialJobId": "ZMzvY",
-        "parameterId": "36",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901188275,
-        "trialJobId": "PNJDQ",
-        "parameterId": "39",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"6.952238868136657\\\"\""
-      },
-      {
-        "timestamp": 1595901188309,
-        "trialJobId": "VFEj6",
-        "parameterId": "37",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 5.022546354803907}\""
-      },
-      {
-        "timestamp": 1595901188338,
-        "trialJobId": "mcAWe",
-        "parameterId": "38",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"5.528136238632005\""
-      },
-      {
-        "timestamp": 1595901188979,
-        "trialJobId": "WrtVY",
-        "parameterId": "30",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-4.361541180657595\""
-      },
-      {
-        "timestamp": 1595901189006,
-        "trialJobId": "RZ45L",
-        "parameterId": "32",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"2.781596441148668\""
-      },
-      {
-        "timestamp": 1595901189053,
-        "trialJobId": "Ss6eU",
-        "parameterId": "34",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-3.3592681835773286\""
-      },
-      {
-        "timestamp": 1595901189093,
-        "trialJobId": "J5lYo",
-        "parameterId": "31",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"-8.400621787401052\\\"\""
-      },
-      {
-        "timestamp": 1595901189269,
-        "trialJobId": "ZMzvY",
-        "parameterId": "36",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901189279,
-        "trialJobId": "PNJDQ",
-        "parameterId": "39",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 2.1053341113677}}\""
-      },
-      {
-        "timestamp": 1595901189343,
-        "trialJobId": "mcAWe",
-        "parameterId": "38",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901189984,
-        "trialJobId": "WrtVY",
-        "parameterId": "30",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"default\\\": -9.29846727931565, \\\"other\\\": -3.5575764805061}\""
-      },
-      {
-        "timestamp": 1595901190056,
-        "trialJobId": "Ss6eU",
-        "parameterId": "34",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"6.581757373301858\""
-      },
-      {
-        "timestamp": 1595901190098,
-        "trialJobId": "J5lYo",
-        "parameterId": "31",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901190273,
-        "trialJobId": "ZMzvY",
-        "parameterId": "36",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": 3.39802649436532}\""
-      },
-      {
-        "timestamp": 1595901190283,
-        "trialJobId": "PNJDQ",
-        "parameterId": "39",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-1.8105252216174517\""
-      },
-      {
-        "timestamp": 1595901190988,
-        "trialJobId": "WrtVY",
-        "parameterId": "30",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"9.357586503792628\""
-      },
-      {
-        "timestamp": 1595901191101,
-        "trialJobId": "J5lYo",
-        "parameterId": "31",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -4.784440856817207}}\""
-      },
-      {
-        "timestamp": 1595901191277,
-        "trialJobId": "ZMzvY",
-        "parameterId": "36",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901191287,
-        "trialJobId": "PNJDQ",
-        "parameterId": "39",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 3.1762929944716927}\""
-      },
-      {
-        "timestamp": 1595901192106,
-        "trialJobId": "J5lYo",
-        "parameterId": "31",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 9.239821847210145}\""
-      },
-      {
-        "timestamp": 1595901203447,
-        "trialJobId": "B0prO",
-        "parameterId": "41",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"-2.479154993253598\\\"\""
-      },
-      {
-        "timestamp": 1595901203492,
-        "trialJobId": "ggpj9",
-        "parameterId": "43",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901203506,
-        "trialJobId": "ta3sm",
-        "parameterId": "40",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 9.24069239452307}\""
-      },
-      {
-        "timestamp": 1595901203549,
-        "trialJobId": "IZ5SL",
-        "parameterId": "44",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-0.9142325374848674\\\"\""
-      },
-      {
-        "timestamp": 1595901203646,
-        "trialJobId": "MInUq",
-        "parameterId": "45",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901203705,
-        "trialJobId": "YWceT",
-        "parameterId": "46",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901203869,
-        "trialJobId": "idTj5",
-        "parameterId": "47",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 6.469325465919496}\""
-      },
-      {
-        "timestamp": 1595901203924,
-        "trialJobId": "LLkId",
-        "parameterId": "49",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901204452,
-        "trialJobId": "B0prO",
-        "parameterId": "41",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"5.017413317607618\\\"\""
-      },
-      {
-        "timestamp": 1595901204496,
-        "trialJobId": "ggpj9",
-        "parameterId": "43",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"4.245668260906047\\\"\""
-      },
-      {
-        "timestamp": 1595901204511,
-        "trialJobId": "ta3sm",
-        "parameterId": "40",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901204553,
-        "trialJobId": "IZ5SL",
-        "parameterId": "44",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901204651,
-        "trialJobId": "MInUq",
-        "parameterId": "45",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"0.25272592242281533\\\"\""
-      },
-      {
-        "timestamp": 1595901204710,
-        "trialJobId": "YWceT",
-        "parameterId": "46",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.908361500557971}}\""
-      },
-      {
-        "timestamp": 1595901204874,
-        "trialJobId": "idTj5",
-        "parameterId": "47",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901204929,
-        "trialJobId": "LLkId",
-        "parameterId": "49",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -1.7045174390916955, \\\"other\\\": 9.14883282895672}\""
-      },
-      {
-        "timestamp": 1595901205501,
-        "trialJobId": "ggpj9",
-        "parameterId": "43",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901205516,
-        "trialJobId": "ta3sm",
-        "parameterId": "40",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 1.7906001963110256, \\\"other\\\": 0.7111312975095512}\""
-      },
-      {
-        "timestamp": 1595901205714,
-        "trialJobId": "YWceT",
-        "parameterId": "46",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": -5.9019641918541055}\""
-      },
-      {
-        "timestamp": 1595901205878,
-        "trialJobId": "idTj5",
-        "parameterId": "47",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": 2.823040228107409}\""
-      },
-      {
-        "timestamp": 1595901206505,
-        "trialJobId": "ggpj9",
-        "parameterId": "43",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 4.182220602389556}}\""
-      },
-      {
-        "timestamp": 1595901206882,
-        "trialJobId": "idTj5",
-        "parameterId": "47",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-4.4221564350515274\""
-      },
-      {
-        "timestamp": 1595901219027,
-        "trialJobId": "ZbXHn",
-        "parameterId": "52",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901219044,
-        "trialJobId": "En80l",
-        "parameterId": "51",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901219069,
-        "trialJobId": "l99Rx",
-        "parameterId": "50",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -9.014544365514672}}\""
-      },
-      {
-        "timestamp": 1595901219082,
-        "trialJobId": "ZnEue",
-        "parameterId": "54",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901219271,
-        "trialJobId": "elkq7",
-        "parameterId": "55",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 5.0465681238608}\""
-      },
-      {
-        "timestamp": 1595901219313,
-        "trialJobId": "eE79m",
-        "parameterId": "56",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901219316,
-        "trialJobId": "glY0F",
-        "parameterId": "57",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -7.127630310607653}}\""
-      },
-      {
-        "timestamp": 1595901219433,
-        "trialJobId": "RQQYv",
-        "parameterId": "58",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901219441,
-        "trialJobId": "mYziy",
-        "parameterId": "59",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-5.80358242411701\""
-      },
-      {
-        "timestamp": 1595901220032,
-        "trialJobId": "ZbXHn",
-        "parameterId": "52",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901220048,
-        "trialJobId": "En80l",
-        "parameterId": "51",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 2.6298452518160538, \\\"other\\\": -0.7910217651464624}\""
-      },
-      {
-        "timestamp": 1595901220075,
-        "trialJobId": "l99Rx",
-        "parameterId": "50",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"5.408334907304216\\\"\""
-      },
-      {
-        "timestamp": 1595901220086,
-        "trialJobId": "ZnEue",
-        "parameterId": "54",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"other\\\": -1.0699150731178424}\""
-      },
-      {
-        "timestamp": 1595901220276,
-        "trialJobId": "elkq7",
-        "parameterId": "55",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901220437,
-        "trialJobId": "RQQYv",
-        "parameterId": "58",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": 5.991596839229384, \\\"other\\\": -5.791984484999113}\""
-      },
-      {
-        "timestamp": 1595901221036,
-        "trialJobId": "ZbXHn",
-        "parameterId": "52",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"-5.745821975821488\""
-      },
-      {
-        "timestamp": 1595901221079,
-        "trialJobId": "l99Rx",
-        "parameterId": "50",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": -2.8010065229085024}\""
-      },
-      {
-        "timestamp": 1595901221280,
-        "trialJobId": "elkq7",
-        "parameterId": "55",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"default\\\": -7.3137237874911705, \\\"other\\\": -7.995517504106601}\""
-      },
-      {
-        "timestamp": 1595901221441,
-        "trialJobId": "RQQYv",
-        "parameterId": "58",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"\\\"-1.3969094674689302\\\"\""
-      },
-      {
-        "timestamp": 1595901222041,
-        "trialJobId": "ZbXHn",
-        "parameterId": "52",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901222284,
-        "trialJobId": "elkq7",
-        "parameterId": "55",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.087980079012624}}\""
-      },
-      {
-        "timestamp": 1595901222446,
-        "trialJobId": "RQQYv",
-        "parameterId": "58",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901223290,
-        "trialJobId": "elkq7",
-        "parameterId": "55",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 4.0721479933987474}\""
-      },
-      {
-        "timestamp": 1595901223449,
-        "trialJobId": "RQQYv",
-        "parameterId": "58",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901234574,
-        "trialJobId": "VmI7f",
-        "parameterId": "60",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -1.820722180261674}\""
-      },
-      {
-        "timestamp": 1595901234697,
-        "trialJobId": "VSWkZ",
-        "parameterId": "63",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901234732,
-        "trialJobId": "EZUe0",
-        "parameterId": "62",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901234745,
-        "trialJobId": "zHVA2",
-        "parameterId": "64",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"5.633256430913928\\\"\""
-      },
-      {
-        "timestamp": 1595901234746,
-        "trialJobId": "a1MOX",
-        "parameterId": "61",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901234806,
-        "trialJobId": "u8t3k",
-        "parameterId": "66",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901234898,
-        "trialJobId": "OuLsc",
-        "parameterId": "65",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 8.765460410421554, \\\"other\\\": 6.246732298977708}\""
-      },
-      {
-        "timestamp": 1595901234949,
-        "trialJobId": "eGrff",
-        "parameterId": "67",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901234962,
-        "trialJobId": "Ujc39",
-        "parameterId": "68",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -1.1268667476429037}\""
-      },
-      {
-        "timestamp": 1595901235066,
-        "trialJobId": "wg7hy",
-        "parameterId": "69",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901235579,
-        "trialJobId": "VmI7f",
-        "parameterId": "60",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 5.584444622345025}\""
-      },
-      {
-        "timestamp": 1595901235703,
-        "trialJobId": "VSWkZ",
-        "parameterId": "63",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-3.8928731668227456\\\"\""
-      },
-      {
-        "timestamp": 1595901235735,
-        "trialJobId": "EZUe0",
-        "parameterId": "62",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": -9.739986972816562, \\\"other\\\": -0.357173900732942}\""
-      },
-      {
-        "timestamp": 1595901235743,
-        "trialJobId": "zHVA2",
-        "parameterId": "64",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901235747,
-        "trialJobId": "a1MOX",
-        "parameterId": "61",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -2.2757225430354033}}\""
-      },
-      {
-        "timestamp": 1595901235809,
-        "trialJobId": "u8t3k",
-        "parameterId": "66",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"2.6146452798999604\""
-      },
-      {
-        "timestamp": 1595901235903,
-        "trialJobId": "OuLsc",
-        "parameterId": "65",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901235953,
-        "trialJobId": "eGrff",
-        "parameterId": "67",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901235967,
-        "trialJobId": "Ujc39",
-        "parameterId": "68",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"5.879185588587639\""
-      },
-      {
-        "timestamp": 1595901236070,
-        "trialJobId": "wg7hy",
-        "parameterId": "69",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901236584,
-        "trialJobId": "VmI7f",
-        "parameterId": "60",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901236740,
-        "trialJobId": "EZUe0",
-        "parameterId": "62",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 1.091872290620957}}\""
-      },
-      {
-        "timestamp": 1595901236749,
-        "trialJobId": "zHVA2",
-        "parameterId": "64",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901236813,
-        "trialJobId": "u8t3k",
-        "parameterId": "66",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"8.789904140828813\""
-      },
-      {
-        "timestamp": 1595901236956,
-        "trialJobId": "eGrff",
-        "parameterId": "67",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901236971,
-        "trialJobId": "Ujc39",
-        "parameterId": "68",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901237078,
-        "trialJobId": "wg7hy",
-        "parameterId": "69",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901237754,
-        "trialJobId": "zHVA2",
-        "parameterId": "64",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"6.067140454523734\\\"\""
-      },
-      {
-        "timestamp": 1595901237817,
-        "trialJobId": "u8t3k",
-        "parameterId": "66",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 6.738254874676596, \\\"other\\\": 3.407365737620623}\""
-      },
-      {
-        "timestamp": 1595901237960,
-        "trialJobId": "eGrff",
-        "parameterId": "67",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-8.799684391921716\""
-      },
-      {
-        "timestamp": 1595901250174,
-        "trialJobId": "rCq1z",
-        "parameterId": "70",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901250225,
-        "trialJobId": "lCV9F",
-        "parameterId": "71",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -8.842244100829086, \\\"other\\\": -2.386236945799789}\""
-      },
-      {
-        "timestamp": 1595901250260,
-        "trialJobId": "IiCNj",
-        "parameterId": "72",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901250333,
-        "trialJobId": "e9bF7",
-        "parameterId": "74",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 1.0496251402087449}}\""
-      },
-      {
-        "timestamp": 1595901250335,
-        "trialJobId": "QPHAP",
-        "parameterId": "73",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 2.32920853708144}\""
-      },
-      {
-        "timestamp": 1595901250425,
-        "trialJobId": "XURUT",
-        "parameterId": "75",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -1.0644703377033373, \\\"other\\\": -9.313141516349681}\""
-      },
-      {
-        "timestamp": 1595901250515,
-        "trialJobId": "QafjF",
-        "parameterId": "76",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901250567,
-        "trialJobId": "ognsb",
-        "parameterId": "77",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901250642,
-        "trialJobId": "bsqIF",
-        "parameterId": "78",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-8.862311093464992\""
-      },
-      {
-        "timestamp": 1595901250807,
-        "trialJobId": "OiDp3",
-        "parameterId": "79",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901251178,
-        "trialJobId": "rCq1z",
-        "parameterId": "70",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"6.248246468866515\""
-      },
-      {
-        "timestamp": 1595901251229,
-        "trialJobId": "lCV9F",
-        "parameterId": "71",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-4.715082675645508\""
-      },
-      {
-        "timestamp": 1595901251264,
-        "trialJobId": "IiCNj",
-        "parameterId": "72",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901251338,
-        "trialJobId": "e9bF7",
-        "parameterId": "74",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -5.9184589897185536}}\""
-      },
-      {
-        "timestamp": 1595901251339,
-        "trialJobId": "QPHAP",
-        "parameterId": "73",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901251429,
-        "trialJobId": "XURUT",
-        "parameterId": "75",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901251519,
-        "trialJobId": "QafjF",
-        "parameterId": "76",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"2.8245498927483315\""
-      },
-      {
-        "timestamp": 1595901251572,
-        "trialJobId": "ognsb",
-        "parameterId": "77",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"-8.995058023766827\\\"\""
-      },
-      {
-        "timestamp": 1595901251646,
-        "trialJobId": "bsqIF",
-        "parameterId": "78",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"0.8160856187719805\""
-      },
-      {
-        "timestamp": 1595901251812,
-        "trialJobId": "OiDp3",
-        "parameterId": "79",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901252345,
-        "trialJobId": "QPHAP",
-        "parameterId": "73",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901252345,
-        "trialJobId": "e9bF7",
-        "parameterId": "74",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901252434,
-        "trialJobId": "XURUT",
-        "parameterId": "75",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901252523,
-        "trialJobId": "QafjF",
-        "parameterId": "76",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"other\\\": 1.0945194250479169}\""
-      },
-      {
-        "timestamp": 1595901252575,
-        "trialJobId": "ognsb",
-        "parameterId": "77",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901253438,
-        "trialJobId": "XURUT",
-        "parameterId": "75",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901253527,
-        "trialJobId": "QafjF",
-        "parameterId": "76",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": 2.541955892720406, \\\"other\\\": -4.377781317201417}\""
-      },
-      {
-        "timestamp": 1595901265903,
-        "trialJobId": "wkVrB",
-        "parameterId": "82",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901265939,
-        "trialJobId": "bQhQx",
-        "parameterId": "81",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -7.7245400592833535}\""
-      },
-      {
-        "timestamp": 1595901266079,
-        "trialJobId": "VstNm",
-        "parameterId": "84",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -6.8832078296276, \\\"other\\\": -7.67458445595935}\""
-      },
-      {
-        "timestamp": 1595901266081,
-        "trialJobId": "GRUrH",
-        "parameterId": "85",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901266190,
-        "trialJobId": "RzOte",
-        "parameterId": "87",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -2.6660304258057117}}\""
-      },
-      {
-        "timestamp": 1595901266208,
-        "trialJobId": "Sb2tj",
-        "parameterId": "86",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901266317,
-        "trialJobId": "NB1ou",
-        "parameterId": "89",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": -6.409147608132686, \\\"other\\\": 3.281989187926694}\""
-      },
-      {
-        "timestamp": 1595901266894,
-        "trialJobId": "wkVrB",
-        "parameterId": "82",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901266944,
-        "trialJobId": "bQhQx",
-        "parameterId": "81",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901267086,
-        "trialJobId": "GRUrH",
-        "parameterId": "85",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901267194,
-        "trialJobId": "RzOte",
-        "parameterId": "87",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": -5.66892041315209, \\\"other\\\": 2.3283168851019287}\""
-      },
-      {
-        "timestamp": 1595901267322,
-        "trialJobId": "NB1ou",
-        "parameterId": "89",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901267898,
-        "trialJobId": "wkVrB",
-        "parameterId": "82",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901268197,
-        "trialJobId": "RzOte",
-        "parameterId": "87",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901268902,
-        "trialJobId": "wkVrB",
-        "parameterId": "82",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-8.643383856668647\\\"\""
-      },
-      {
-        "timestamp": 1595901269906,
-        "trialJobId": "wkVrB",
-        "parameterId": "82",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"5.674545659125172\\\"\""
-      },
-      {
-        "timestamp": 1595901281386,
-        "trialJobId": "utKiW",
-        "parameterId": "90",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901281478,
-        "trialJobId": "uPdSU",
-        "parameterId": "92",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901281487,
-        "trialJobId": "dPeSr",
-        "parameterId": "91",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901281537,
-        "trialJobId": "pCXHB",
-        "parameterId": "93",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901281579,
-        "trialJobId": "okxUn",
-        "parameterId": "95",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -2.023400446813328}\""
-      },
-      {
-        "timestamp": 1595901281605,
-        "trialJobId": "QO9EO",
-        "parameterId": "94",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -7.37571843162065}\""
-      },
-      {
-        "timestamp": 1595901281742,
-        "trialJobId": "MrNMC",
-        "parameterId": "97",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"-0.03936926816899877\\\"\""
-      },
-      {
-        "timestamp": 1595901281745,
-        "trialJobId": "zZquy",
-        "parameterId": "99",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"-5.576159193327383\\\"\""
-      },
-      {
-        "timestamp": 1595901281765,
-        "trialJobId": "tXlrm",
-        "parameterId": "98",
-        "type": "PERIODICAL",
-        "sequence": 0,
-        "data": "\"\\\"2.8878423268479807\\\"\""
-      },
-      {
-        "timestamp": 1595901282391,
-        "trialJobId": "utKiW",
-        "parameterId": "90",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-Infinity\""
-      },
-      {
-        "timestamp": 1595901282484,
-        "trialJobId": "uPdSU",
-        "parameterId": "92",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{}\""
-      },
-      {
-        "timestamp": 1595901282540,
-        "trialJobId": "pCXHB",
-        "parameterId": "93",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"other\\\": 1.9549026751543792}\""
-      },
-      {
-        "timestamp": 1595901282583,
-        "trialJobId": "okxUn",
-        "parameterId": "95",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"NaN\""
-      },
-      {
-        "timestamp": 1595901282611,
-        "trialJobId": "QO9EO",
-        "parameterId": "94",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"-3.3552487681830145\""
-      },
-      {
-        "timestamp": 1595901282746,
-        "trialJobId": "MrNMC",
-        "parameterId": "97",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"{\\\"default\\\": 3.641608082036285, \\\"other\\\": -8.348670460176342}\""
-      },
-      {
-        "timestamp": 1595901282749,
-        "trialJobId": "zZquy",
-        "parameterId": "99",
-        "type": "PERIODICAL",
-        "sequence": 1,
-        "data": "\"\\\"7.462277129845603\\\"\""
-      },
-      {
-        "timestamp": 1595901283396,
-        "trialJobId": "utKiW",
-        "parameterId": "90",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901283488,
-        "trialJobId": "uPdSU",
-        "parameterId": "92",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": 5.491624461329462}\""
-      },
-      {
-        "timestamp": 1595901283544,
-        "trialJobId": "pCXHB",
-        "parameterId": "93",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"-6.732500732566957\""
-      },
-      {
-        "timestamp": 1595901283618,
-        "trialJobId": "QO9EO",
-        "parameterId": "94",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      },
-      {
-        "timestamp": 1595901283751,
-        "trialJobId": "MrNMC",
-        "parameterId": "97",
-        "type": "PERIODICAL",
-        "sequence": 2,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -3.38303756126507}}\""
-      },
-      {
-        "timestamp": 1595901284400,
-        "trialJobId": "utKiW",
-        "parameterId": "90",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -5.853483580522072}}\""
-      },
-      {
-        "timestamp": 1595901284547,
-        "trialJobId": "pCXHB",
-        "parameterId": "93",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -8.024581781976966}\""
-      },
-      {
-        "timestamp": 1595901284621,
-        "trialJobId": "QO9EO",
-        "parameterId": "94",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"\\\"-2.538557600204168\\\"\""
-      },
-      {
-        "timestamp": 1595901284756,
-        "trialJobId": "MrNMC",
-        "parameterId": "97",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"{\\\"other\\\": -0.5479590285769511}\""
-      },
-      {
-        "timestamp": 1595901285760,
-        "trialJobId": "MrNMC",
-        "parameterId": "97",
-        "type": "FINAL",
-        "sequence": 0,
-        "data": "\"Infinity\""
-      }
-    ],
-    "trialJobs": [
-      {
-        "id": "sXvMz",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"dict-normal\",\"intermediate3\":\"normal\",\"intermediate_count\":2,\"final1\":\"dict-defaultdict\",\"final2\":\"dict-nodefault\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/sXvMz",
-        "startTime": 1595901139862,
-        "sequenceId": 0,
-        "endTime": 1595901143276,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901143239,
-            "trialJobId": "sXvMz",
-            "parameterId": "0",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -8.10531137074138}}\""
-          }
-        ]
-      },
-      {
-        "id": "y3owq",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":1,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"string\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":1,\"final1\":\"dict-defaultdict\",\"final2\":\"neginf\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/y3owq",
-        "startTime": 1595901139885,
-        "sequenceId": 1,
-        "endTime": 1595901142374,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901142326,
-            "trialJobId": "y3owq",
-            "parameterId": "1",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 6.896445698700774}}\""
-          }
-        ]
-      },
-      {
-        "id": "etEUl",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":2,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"inf\",\"intermediate3\":\"string\",\"intermediate_count\":1,\"final1\":\"string\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/etEUl",
-        "startTime": 1595901139903,
-        "sequenceId": 2,
-        "endTime": 1595901143415,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901142355,
-            "trialJobId": "etEUl",
-            "parameterId": "2",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"\\\"3.727416078457388\\\"\""
-          }
-        ]
-      },
-      {
-        "id": "r5pwY",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":3,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":0,\"final1\":\"dict-empty\",\"final2\":\"dict-normal\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/r5pwY",
-        "startTime": 1595901139918,
-        "sequenceId": 3,
-        "endTime": 1595901141410,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901141374,
-            "trialJobId": "r5pwY",
-            "parameterId": "3",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{}\""
-          }
-        ]
-      },
-      {
-        "id": "JxX0I",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":4,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"dict-defaultdict\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":3,\"final1\":\"dict-defaultdict\",\"final2\":\"string\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/JxX0I",
-        "startTime": 1595901139981,
-        "sequenceId": 4,
-        "endTime": 1595901143497
-      },
-      {
-        "id": "ywQvm",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":5,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"normal\",\"intermediate3\":\"inf\",\"intermediate_count\":3,\"final1\":\"normal\",\"final2\":\"dict-nodefault\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/ywQvm",
-        "startTime": 1595901140071,
-        "sequenceId": 5,
-        "endTime": 1595901144603,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901144556,
-            "trialJobId": "ywQvm",
-            "parameterId": "5",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"-4.804921436452929\""
-          }
-        ]
-      },
-      {
-        "id": "tkxcP",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":6,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"inf\",\"intermediate_count\":1,\"final1\":\"nan\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/tkxcP",
-        "startTime": 1595901140239,
-        "sequenceId": 6,
-        "endTime": 1595901141679
-      },
-      {
-        "id": "MjX3O",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":7,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"inf\",\"intermediate_count\":0,\"final1\":\"dict-empty\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MjX3O",
-        "startTime": 1595901134932,
-        "sequenceId": 7,
-        "endTime": 1595901141756,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901141708,
-            "trialJobId": "MjX3O",
-            "parameterId": "7",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{}\""
-          }
-        ]
-      },
-      {
-        "id": "LKVCX",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":8,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":2,\"final1\":\"inf\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/LKVCX",
-        "startTime": 1595901134943,
-        "sequenceId": 8,
-        "endTime": 1595901143811,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901143764,
-            "trialJobId": "LKVCX",
-            "parameterId": "8",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"Infinity\""
-          }
-        ]
-      },
-      {
-        "id": "MQlPp",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":9,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MQlPp",
-        "startTime": 1595901134954,
-        "sequenceId": 9,
-        "endTime": 1595901144801,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901143761,
-            "trialJobId": "MQlPp",
-            "parameterId": "9",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"other\\\": 8.927687040316364}\""
-          }
-        ]
-      },
-      {
-        "id": "fJHIW",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":10,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"nan\",\"intermediate_count\":2,\"final1\":\"neginf\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/fJHIW",
-        "startTime": 1595901155426,
-        "sequenceId": 10,
-        "endTime": 1595901157888
-      },
-      {
-        "id": "RDBG2",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":11,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":0,\"final1\":\"inf\",\"final2\":\"neginf\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/RDBG2",
-        "startTime": 1595901155437,
-        "sequenceId": 11,
-        "endTime": 1595901155983
-      },
-      {
-        "id": "Ofyt2",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":12,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"inf\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":3,\"final1\":\"dict-defaultdict\",\"final2\":\"string\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Ofyt2",
-        "startTime": 1595901155450,
-        "sequenceId": 12,
-        "endTime": 1595901161007,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901159966,
-            "trialJobId": "Ofyt2",
-            "parameterId": "12",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 7.483634247448858}}\""
-          }
-        ]
-      },
-      {
-        "id": "z7WgL",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":13,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-normal\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"dict-nodefault\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/z7WgL",
-        "startTime": 1595901155464,
-        "sequenceId": 13,
-        "endTime": 1595901159968,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901158930,
-            "trialJobId": "z7WgL",
-            "parameterId": "13",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"other\\\": 1.8045794393579122}\""
-          }
-        ]
-      },
-      {
-        "id": "OotJc",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":14,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-empty\",\"intermediate2\":\"inf\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":0,\"final1\":\"dict-nodefault\",\"final2\":\"dict-empty\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/OotJc",
-        "startTime": 1595901155490,
-        "sequenceId": 14,
-        "endTime": 1595901156062
-      },
-      {
-        "id": "WxWLk",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":15,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"normal\",\"intermediate3\":\"string\",\"intermediate_count\":0,\"final1\":\"nan\",\"final2\":\"dict-empty\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/WxWLk",
-        "startTime": 1595901155536,
-        "sequenceId": 15,
-        "endTime": 1595901156147
-      },
-      {
-        "id": "Zzazj",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":16,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-empty\",\"intermediate2\":\"dict-normal\",\"intermediate3\":\"normal\",\"intermediate_count\":0,\"final1\":\"neginf\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Zzazj",
-        "startTime": 1595901155644,
-        "sequenceId": 16,
-        "endTime": 1595901156212
-      },
-      {
-        "id": "aKV3K",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":17,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"inf\",\"intermediate3\":\"normal\",\"intermediate_count\":0,\"final1\":\"nan\",\"final2\":\"inf\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/aKV3K",
-        "startTime": 1595901155795,
-        "sequenceId": 17,
-        "endTime": 1595901157314,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901157264,
-            "trialJobId": "aKV3K",
-            "parameterId": "17",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"NaN\""
-          }
-        ]
-      },
-      {
-        "id": "WR5fG",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":18,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"inf\",\"intermediate_count\":0,\"final1\":\"normal\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/WR5fG",
-        "startTime": 1595901155825,
-        "sequenceId": 18,
-        "endTime": 1595901156321
-      },
-      {
-        "id": "EFsFo",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":19,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"nan\",\"intermediate_count\":0,\"final1\":\"normal\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/EFsFo",
-        "startTime": 1595901150521,
-        "sequenceId": 19,
-        "endTime": 1595901157386,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901157336,
-            "trialJobId": "EFsFo",
-            "parameterId": "19",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"-0.9452602480917385\""
-          }
-        ]
-      },
-      {
-        "id": "dUJTL",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":20,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"string\",\"intermediate3\":\"inf\",\"intermediate_count\":1,\"final1\":\"inf\",\"final2\":\"string\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/dUJTL",
-        "startTime": 1595901170933,
-        "sequenceId": 20,
-        "endTime": 1595901173438,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901173388,
-            "trialJobId": "dUJTL",
-            "parameterId": "20",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"Infinity\""
-          }
-        ]
-      },
-      {
-        "id": "xAoeQ",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":21,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"neginf\",\"intermediate3\":\"normal\",\"intermediate_count\":3,\"final1\":\"normal\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/xAoeQ",
-        "startTime": 1595901170945,
-        "sequenceId": 21,
-        "endTime": 1595901176469,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901175418,
-            "trialJobId": "xAoeQ",
-            "parameterId": "21",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"-8.43771544998285\""
-          }
-        ]
-      },
-      {
-        "id": "de6XT",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":22,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"nan\",\"intermediate3\":\"string\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"neginf\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/de6XT",
-        "startTime": 1595901170962,
-        "sequenceId": 22,
-        "endTime": 1595901175475,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901174434,
-            "trialJobId": "de6XT",
-            "parameterId": "22",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"other\\\": 0.8472658215331563}\""
-          }
-        ]
-      },
-      {
-        "id": "A7C0a",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":23,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"normal\",\"intermediate3\":\"neginf\",\"intermediate_count\":1,\"final1\":\"dict-empty\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/A7C0a",
-        "startTime": 1595901170977,
-        "sequenceId": 23,
-        "endTime": 1595901173571,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901173524,
-            "trialJobId": "A7C0a",
-            "parameterId": "23",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{}\""
-          }
-        ]
-      },
-      {
-        "id": "Rofrb",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":24,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"neginf\",\"intermediate_count\":0,\"final1\":\"dict-nodefault\",\"final2\":\"dict-normal\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Rofrb",
-        "startTime": 1595901170990,
-        "sequenceId": 24,
-        "endTime": 1595901173521,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901172467,
-            "trialJobId": "Rofrb",
-            "parameterId": "24",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"{\\\"other\\\": 8.461683188282755}\""
-          }
-        ]
-      },
-      {
-        "id": "MOOrR",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":25,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":3,\"final1\":\"string\",\"final2\":\"neginf\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MOOrR",
-        "startTime": 1595901171032,
-        "sequenceId": 25,
-        "endTime": 1595901176529,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901175485,
-            "trialJobId": "MOOrR",
-            "parameterId": "25",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"\\\"2.8954800063491586\\\"\""
-          }
-        ]
-      },
-      {
-        "id": "p2m5y",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":26,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"inf\",\"intermediate_count\":2,\"final1\":\"normal\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/p2m5y",
-        "startTime": 1595901171129,
-        "sequenceId": 26,
-        "endTime": 1595901174686,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901174636,
-            "trialJobId": "p2m5y",
-            "parameterId": "26",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"9.902729745066438\""
-          }
-        ]
-      },
-      {
-        "id": "mSPRF",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":27,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":2,\"final1\":\"string\",\"final2\":\"dict-empty\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/mSPRF",
-        "startTime": 1595901171272,
-        "sequenceId": 27,
-        "endTime": 1595901175714,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901174667,
-            "trialJobId": "mSPRF",
-            "parameterId": "27",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"\\\"-2.5183912965656763\\\"\""
-          }
-        ]
-      },
-      {
-        "id": "G5nv9",
-        "status": "SUCCEEDED",
-        "hyperParameters": [
-          "{\"parameter_id\":28,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-normal\",\"intermediate_count\":3,\"final1\":\"inf\",\"final2\":\"normal\",\"final_count\":2},\"parameter_index\":0}"
-        ],
-        "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/G5nv9",
-        "startTime": 1595901171428,
-        "sequenceId": 28,
-        "endTime": 1595901176884,
-        "finalMetricData": [
-          {
-            "timestamp": 1595901175834,
-            "trialJobId": "G5nv9",
-            "parameterId": "28",
-            "type": "FINAL",
-            "sequence": 0,
-            "data": "\"Infinity\""
-          }
-        ]
-      }
-    ]
+    "startTime": 1595901129833,
+    "endTime": 1595901290657
+  },
+  "metricData": [
+    {
+      "timestamp": 1595901141232,
+      "trialJobId": "sXvMz",
+      "parameterId": "0",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -7.823851251971656, \\\"other\\\": -9.844189628757352}\""
+    },
+    {
+      "timestamp": 1595901141321,
+      "trialJobId": "y3owq",
+      "parameterId": "1",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"-5.8373125018382055\\\"\""
+    },
+    {
+      "timestamp": 1595901141347,
+      "trialJobId": "etEUl",
+      "parameterId": "2",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901141374,
+      "trialJobId": "r5pwY",
+      "parameterId": "3",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901141455,
+      "trialJobId": "JxX0I",
+      "parameterId": "4",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901141543,
+      "trialJobId": "ywQvm",
+      "parameterId": "5",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -9.945796251990785}}\""
+    },
+    {
+      "timestamp": 1595901141643,
+      "trialJobId": "tkxcP",
+      "parameterId": "6",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901141708,
+      "trialJobId": "MjX3O",
+      "parameterId": "7",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901141754,
+      "trialJobId": "MQlPp",
+      "parameterId": "9",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.887609164015767}}\""
+    },
+    {
+      "timestamp": 1595901141756,
+      "trialJobId": "LKVCX",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901142236,
+      "trialJobId": "sXvMz",
+      "parameterId": "0",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": -8.08656113718457, \\\"other\\\": 7.483152033140179}\""
+    },
+    {
+      "timestamp": 1595901142326,
+      "trialJobId": "y3owq",
+      "parameterId": "1",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 6.896445698700774}}\""
+    },
+    {
+      "timestamp": 1595901142355,
+      "trialJobId": "etEUl",
+      "parameterId": "2",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"3.727416078457388\\\"\""
+    },
+    {
+      "timestamp": 1595901142458,
+      "trialJobId": "JxX0I",
+      "parameterId": "4",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.963738323502998}}\""
+    },
+    {
+      "timestamp": 1595901142548,
+      "trialJobId": "ywQvm",
+      "parameterId": "5",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"4.024454725511186\""
+    },
+    {
+      "timestamp": 1595901142758,
+      "trialJobId": "MQlPp",
+      "parameterId": "9",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901142760,
+      "trialJobId": "LKVCX",
+      "parameterId": "8",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"0.982665154375141\\\"\""
+    },
+    {
+      "timestamp": 1595901143239,
+      "trialJobId": "sXvMz",
+      "parameterId": "0",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -8.10531137074138}}\""
+    },
+    {
+      "timestamp": 1595901143362,
+      "trialJobId": "etEUl",
+      "parameterId": "2",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901143462,
+      "trialJobId": "JxX0I",
+      "parameterId": "4",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": -5.433157293214572}\""
+    },
+    {
+      "timestamp": 1595901143552,
+      "trialJobId": "ywQvm",
+      "parameterId": "5",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901143761,
+      "trialJobId": "MQlPp",
+      "parameterId": "9",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 8.927687040316364}\""
+    },
+    {
+      "timestamp": 1595901143764,
+      "trialJobId": "LKVCX",
+      "parameterId": "8",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901144556,
+      "trialJobId": "ywQvm",
+      "parameterId": "5",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-4.804921436452929\""
+    },
+    {
+      "timestamp": 1595901144765,
+      "trialJobId": "MQlPp",
+      "parameterId": "9",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901156846,
+      "trialJobId": "fJHIW",
+      "parameterId": "10",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -6.3254623036120545, \\\"other\\\": 6.661583778582873}\""
+    },
+    {
+      "timestamp": 1595901156921,
+      "trialJobId": "z7WgL",
+      "parameterId": "13",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901156954,
+      "trialJobId": "Ofyt2",
+      "parameterId": "12",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"1.7787198770217199\""
+    },
+    {
+      "timestamp": 1595901157264,
+      "trialJobId": "aKV3K",
+      "parameterId": "17",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901157336,
+      "trialJobId": "EFsFo",
+      "parameterId": "19",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-0.9452602480917385\""
+    },
+    {
+      "timestamp": 1595901157852,
+      "trialJobId": "fJHIW",
+      "parameterId": "10",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901157925,
+      "trialJobId": "z7WgL",
+      "parameterId": "13",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901157959,
+      "trialJobId": "Ofyt2",
+      "parameterId": "12",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901158930,
+      "trialJobId": "z7WgL",
+      "parameterId": "13",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 1.8045794393579122}\""
+    },
+    {
+      "timestamp": 1595901158961,
+      "trialJobId": "Ofyt2",
+      "parameterId": "12",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.685460178518326}}\""
+    },
+    {
+      "timestamp": 1595901159931,
+      "trialJobId": "z7WgL",
+      "parameterId": "13",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -7.794922103589295}\""
+    },
+    {
+      "timestamp": 1595901159966,
+      "trialJobId": "Ofyt2",
+      "parameterId": "12",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 7.483634247448858}}\""
+    },
+    {
+      "timestamp": 1595901160970,
+      "trialJobId": "Ofyt2",
+      "parameterId": "12",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-3.905177892216985\\\"\""
+    },
+    {
+      "timestamp": 1595901172384,
+      "trialJobId": "dUJTL",
+      "parameterId": "20",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901172404,
+      "trialJobId": "xAoeQ",
+      "parameterId": "21",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 4.1133250278375915, \\\"other\\\": -2.4983824090454387}\""
+    },
+    {
+      "timestamp": 1595901172422,
+      "trialJobId": "de6XT",
+      "parameterId": "22",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -4.1861178094861495, \\\"other\\\": -1.8025564533646659}\""
+    },
+    {
+      "timestamp": 1595901172467,
+      "trialJobId": "Rofrb",
+      "parameterId": "24",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 8.461683188282755}\""
+    },
+    {
+      "timestamp": 1595901172471,
+      "trialJobId": "MOOrR",
+      "parameterId": "25",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.970771731370702}}\""
+    },
+    {
+      "timestamp": 1595901172521,
+      "trialJobId": "A7C0a",
+      "parameterId": "23",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901172629,
+      "trialJobId": "p2m5y",
+      "parameterId": "26",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-4.874888030632755\""
+    },
+    {
+      "timestamp": 1595901172661,
+      "trialJobId": "mSPRF",
+      "parameterId": "27",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901172822,
+      "trialJobId": "G5nv9",
+      "parameterId": "28",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901172910,
+      "trialJobId": "ciSWN",
+      "parameterId": "29",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901173388,
+      "trialJobId": "dUJTL",
+      "parameterId": "20",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901173408,
+      "trialJobId": "xAoeQ",
+      "parameterId": "21",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901173428,
+      "trialJobId": "de6XT",
+      "parameterId": "22",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901173472,
+      "trialJobId": "Rofrb",
+      "parameterId": "24",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -8.764260228545442, \\\"other\\\": 1.191253727619479}\""
+    },
+    {
+      "timestamp": 1595901173476,
+      "trialJobId": "MOOrR",
+      "parameterId": "25",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"-9.609870583781277\\\"\""
+    },
+    {
+      "timestamp": 1595901173524,
+      "trialJobId": "A7C0a",
+      "parameterId": "23",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901173633,
+      "trialJobId": "p2m5y",
+      "parameterId": "26",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"other\\\": 6.950769342806488}\""
+    },
+    {
+      "timestamp": 1595901173664,
+      "trialJobId": "mSPRF",
+      "parameterId": "27",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901173827,
+      "trialJobId": "G5nv9",
+      "parameterId": "28",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"8.83440457248663\\\"\""
+    },
+    {
+      "timestamp": 1595901173915,
+      "trialJobId": "ciSWN",
+      "parameterId": "29",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901174413,
+      "trialJobId": "xAoeQ",
+      "parameterId": "21",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"1.8151933189474878\""
+    },
+    {
+      "timestamp": 1595901174434,
+      "trialJobId": "de6XT",
+      "parameterId": "22",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 0.8472658215331563}\""
+    },
+    {
+      "timestamp": 1595901174481,
+      "trialJobId": "MOOrR",
+      "parameterId": "25",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901174636,
+      "trialJobId": "p2m5y",
+      "parameterId": "26",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"9.902729745066438\""
+    },
+    {
+      "timestamp": 1595901174667,
+      "trialJobId": "mSPRF",
+      "parameterId": "27",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-2.5183912965656763\\\"\""
+    },
+    {
+      "timestamp": 1595901174831,
+      "trialJobId": "G5nv9",
+      "parameterId": "28",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"default\\\": 5.406128202621579, \\\"other\\\": -6.350852877668696}\""
+    },
+    {
+      "timestamp": 1595901175418,
+      "trialJobId": "xAoeQ",
+      "parameterId": "21",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-8.43771544998285\""
+    },
+    {
+      "timestamp": 1595901175438,
+      "trialJobId": "de6XT",
+      "parameterId": "22",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901175485,
+      "trialJobId": "MOOrR",
+      "parameterId": "25",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"2.8954800063491586\\\"\""
+    },
+    {
+      "timestamp": 1595901175671,
+      "trialJobId": "mSPRF",
+      "parameterId": "27",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901175834,
+      "trialJobId": "G5nv9",
+      "parameterId": "28",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901176422,
+      "trialJobId": "xAoeQ",
+      "parameterId": "21",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901176489,
+      "trialJobId": "MOOrR",
+      "parameterId": "25",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901176838,
+      "trialJobId": "G5nv9",
+      "parameterId": "28",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"3.5218235306581356\""
+    },
+    {
+      "timestamp": 1595901187944,
+      "trialJobId": "zaTFd",
+      "parameterId": "33",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901187975,
+      "trialJobId": "WrtVY",
+      "parameterId": "30",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 6.446947454739629, \\\"other\\\": 4.2394889873504695}\""
+    },
+    {
+      "timestamp": 1595901188002,
+      "trialJobId": "RZ45L",
+      "parameterId": "32",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"8.53321110060542\""
+    },
+    {
+      "timestamp": 1595901188047,
+      "trialJobId": "Ss6eU",
+      "parameterId": "34",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -2.6862091423857564, \\\"other\\\": 8.839298350682931}\""
+    },
+    {
+      "timestamp": 1595901188087,
+      "trialJobId": "J5lYo",
+      "parameterId": "31",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901188183,
+      "trialJobId": "tb6Tr",
+      "parameterId": "35",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901188267,
+      "trialJobId": "ZMzvY",
+      "parameterId": "36",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901188275,
+      "trialJobId": "PNJDQ",
+      "parameterId": "39",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"6.952238868136657\\\"\""
+    },
+    {
+      "timestamp": 1595901188309,
+      "trialJobId": "VFEj6",
+      "parameterId": "37",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 5.022546354803907}\""
+    },
+    {
+      "timestamp": 1595901188338,
+      "trialJobId": "mcAWe",
+      "parameterId": "38",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"5.528136238632005\""
+    },
+    {
+      "timestamp": 1595901188979,
+      "trialJobId": "WrtVY",
+      "parameterId": "30",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-4.361541180657595\""
+    },
+    {
+      "timestamp": 1595901189006,
+      "trialJobId": "RZ45L",
+      "parameterId": "32",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"2.781596441148668\""
+    },
+    {
+      "timestamp": 1595901189053,
+      "trialJobId": "Ss6eU",
+      "parameterId": "34",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-3.3592681835773286\""
+    },
+    {
+      "timestamp": 1595901189093,
+      "trialJobId": "J5lYo",
+      "parameterId": "31",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"-8.400621787401052\\\"\""
+    },
+    {
+      "timestamp": 1595901189269,
+      "trialJobId": "ZMzvY",
+      "parameterId": "36",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901189279,
+      "trialJobId": "PNJDQ",
+      "parameterId": "39",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 2.1053341113677}}\""
+    },
+    {
+      "timestamp": 1595901189343,
+      "trialJobId": "mcAWe",
+      "parameterId": "38",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901189984,
+      "trialJobId": "WrtVY",
+      "parameterId": "30",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"default\\\": -9.29846727931565, \\\"other\\\": -3.5575764805061}\""
+    },
+    {
+      "timestamp": 1595901190056,
+      "trialJobId": "Ss6eU",
+      "parameterId": "34",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"6.581757373301858\""
+    },
+    {
+      "timestamp": 1595901190098,
+      "trialJobId": "J5lYo",
+      "parameterId": "31",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901190273,
+      "trialJobId": "ZMzvY",
+      "parameterId": "36",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": 3.39802649436532}\""
+    },
+    {
+      "timestamp": 1595901190283,
+      "trialJobId": "PNJDQ",
+      "parameterId": "39",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-1.8105252216174517\""
+    },
+    {
+      "timestamp": 1595901190988,
+      "trialJobId": "WrtVY",
+      "parameterId": "30",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"9.357586503792628\""
+    },
+    {
+      "timestamp": 1595901191101,
+      "trialJobId": "J5lYo",
+      "parameterId": "31",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -4.784440856817207}}\""
+    },
+    {
+      "timestamp": 1595901191277,
+      "trialJobId": "ZMzvY",
+      "parameterId": "36",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901191287,
+      "trialJobId": "PNJDQ",
+      "parameterId": "39",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 3.1762929944716927}\""
+    },
+    {
+      "timestamp": 1595901192106,
+      "trialJobId": "J5lYo",
+      "parameterId": "31",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 9.239821847210145}\""
+    },
+    {
+      "timestamp": 1595901203447,
+      "trialJobId": "B0prO",
+      "parameterId": "41",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"-2.479154993253598\\\"\""
+    },
+    {
+      "timestamp": 1595901203492,
+      "trialJobId": "ggpj9",
+      "parameterId": "43",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901203506,
+      "trialJobId": "ta3sm",
+      "parameterId": "40",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 9.24069239452307}\""
+    },
+    {
+      "timestamp": 1595901203549,
+      "trialJobId": "IZ5SL",
+      "parameterId": "44",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-0.9142325374848674\\\"\""
+    },
+    {
+      "timestamp": 1595901203646,
+      "trialJobId": "MInUq",
+      "parameterId": "45",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901203705,
+      "trialJobId": "YWceT",
+      "parameterId": "46",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901203869,
+      "trialJobId": "idTj5",
+      "parameterId": "47",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 6.469325465919496}\""
+    },
+    {
+      "timestamp": 1595901203924,
+      "trialJobId": "LLkId",
+      "parameterId": "49",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901204452,
+      "trialJobId": "B0prO",
+      "parameterId": "41",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"5.017413317607618\\\"\""
+    },
+    {
+      "timestamp": 1595901204496,
+      "trialJobId": "ggpj9",
+      "parameterId": "43",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"4.245668260906047\\\"\""
+    },
+    {
+      "timestamp": 1595901204511,
+      "trialJobId": "ta3sm",
+      "parameterId": "40",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901204553,
+      "trialJobId": "IZ5SL",
+      "parameterId": "44",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901204651,
+      "trialJobId": "MInUq",
+      "parameterId": "45",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"0.25272592242281533\\\"\""
+    },
+    {
+      "timestamp": 1595901204710,
+      "trialJobId": "YWceT",
+      "parameterId": "46",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -6.908361500557971}}\""
+    },
+    {
+      "timestamp": 1595901204874,
+      "trialJobId": "idTj5",
+      "parameterId": "47",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901204929,
+      "trialJobId": "LLkId",
+      "parameterId": "49",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -1.7045174390916955, \\\"other\\\": 9.14883282895672}\""
+    },
+    {
+      "timestamp": 1595901205501,
+      "trialJobId": "ggpj9",
+      "parameterId": "43",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901205516,
+      "trialJobId": "ta3sm",
+      "parameterId": "40",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 1.7906001963110256, \\\"other\\\": 0.7111312975095512}\""
+    },
+    {
+      "timestamp": 1595901205714,
+      "trialJobId": "YWceT",
+      "parameterId": "46",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": -5.9019641918541055}\""
+    },
+    {
+      "timestamp": 1595901205878,
+      "trialJobId": "idTj5",
+      "parameterId": "47",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": 2.823040228107409}\""
+    },
+    {
+      "timestamp": 1595901206505,
+      "trialJobId": "ggpj9",
+      "parameterId": "43",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 4.182220602389556}}\""
+    },
+    {
+      "timestamp": 1595901206882,
+      "trialJobId": "idTj5",
+      "parameterId": "47",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-4.4221564350515274\""
+    },
+    {
+      "timestamp": 1595901219027,
+      "trialJobId": "ZbXHn",
+      "parameterId": "52",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901219044,
+      "trialJobId": "En80l",
+      "parameterId": "51",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901219069,
+      "trialJobId": "l99Rx",
+      "parameterId": "50",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -9.014544365514672}}\""
+    },
+    {
+      "timestamp": 1595901219082,
+      "trialJobId": "ZnEue",
+      "parameterId": "54",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901219271,
+      "trialJobId": "elkq7",
+      "parameterId": "55",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 5.0465681238608}\""
+    },
+    {
+      "timestamp": 1595901219313,
+      "trialJobId": "eE79m",
+      "parameterId": "56",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901219316,
+      "trialJobId": "glY0F",
+      "parameterId": "57",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -7.127630310607653}}\""
+    },
+    {
+      "timestamp": 1595901219433,
+      "trialJobId": "RQQYv",
+      "parameterId": "58",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901219441,
+      "trialJobId": "mYziy",
+      "parameterId": "59",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-5.80358242411701\""
+    },
+    {
+      "timestamp": 1595901220032,
+      "trialJobId": "ZbXHn",
+      "parameterId": "52",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901220048,
+      "trialJobId": "En80l",
+      "parameterId": "51",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 2.6298452518160538, \\\"other\\\": -0.7910217651464624}\""
+    },
+    {
+      "timestamp": 1595901220075,
+      "trialJobId": "l99Rx",
+      "parameterId": "50",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"5.408334907304216\\\"\""
+    },
+    {
+      "timestamp": 1595901220086,
+      "trialJobId": "ZnEue",
+      "parameterId": "54",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"other\\\": -1.0699150731178424}\""
+    },
+    {
+      "timestamp": 1595901220276,
+      "trialJobId": "elkq7",
+      "parameterId": "55",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901220437,
+      "trialJobId": "RQQYv",
+      "parameterId": "58",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": 5.991596839229384, \\\"other\\\": -5.791984484999113}\""
+    },
+    {
+      "timestamp": 1595901221036,
+      "trialJobId": "ZbXHn",
+      "parameterId": "52",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"-5.745821975821488\""
+    },
+    {
+      "timestamp": 1595901221079,
+      "trialJobId": "l99Rx",
+      "parameterId": "50",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": -2.8010065229085024}\""
+    },
+    {
+      "timestamp": 1595901221280,
+      "trialJobId": "elkq7",
+      "parameterId": "55",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"default\\\": -7.3137237874911705, \\\"other\\\": -7.995517504106601}\""
+    },
+    {
+      "timestamp": 1595901221441,
+      "trialJobId": "RQQYv",
+      "parameterId": "58",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"\\\"-1.3969094674689302\\\"\""
+    },
+    {
+      "timestamp": 1595901222041,
+      "trialJobId": "ZbXHn",
+      "parameterId": "52",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901222284,
+      "trialJobId": "elkq7",
+      "parameterId": "55",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 8.087980079012624}}\""
+    },
+    {
+      "timestamp": 1595901222446,
+      "trialJobId": "RQQYv",
+      "parameterId": "58",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901223290,
+      "trialJobId": "elkq7",
+      "parameterId": "55",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 4.0721479933987474}\""
+    },
+    {
+      "timestamp": 1595901223449,
+      "trialJobId": "RQQYv",
+      "parameterId": "58",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901234574,
+      "trialJobId": "VmI7f",
+      "parameterId": "60",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -1.820722180261674}\""
+    },
+    {
+      "timestamp": 1595901234697,
+      "trialJobId": "VSWkZ",
+      "parameterId": "63",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901234732,
+      "trialJobId": "EZUe0",
+      "parameterId": "62",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901234745,
+      "trialJobId": "zHVA2",
+      "parameterId": "64",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"5.633256430913928\\\"\""
+    },
+    {
+      "timestamp": 1595901234746,
+      "trialJobId": "a1MOX",
+      "parameterId": "61",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901234806,
+      "trialJobId": "u8t3k",
+      "parameterId": "66",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901234898,
+      "trialJobId": "OuLsc",
+      "parameterId": "65",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 8.765460410421554, \\\"other\\\": 6.246732298977708}\""
+    },
+    {
+      "timestamp": 1595901234949,
+      "trialJobId": "eGrff",
+      "parameterId": "67",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901234962,
+      "trialJobId": "Ujc39",
+      "parameterId": "68",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -1.1268667476429037}\""
+    },
+    {
+      "timestamp": 1595901235066,
+      "trialJobId": "wg7hy",
+      "parameterId": "69",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901235579,
+      "trialJobId": "VmI7f",
+      "parameterId": "60",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 5.584444622345025}\""
+    },
+    {
+      "timestamp": 1595901235703,
+      "trialJobId": "VSWkZ",
+      "parameterId": "63",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-3.8928731668227456\\\"\""
+    },
+    {
+      "timestamp": 1595901235735,
+      "trialJobId": "EZUe0",
+      "parameterId": "62",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": -9.739986972816562, \\\"other\\\": -0.357173900732942}\""
+    },
+    {
+      "timestamp": 1595901235743,
+      "trialJobId": "zHVA2",
+      "parameterId": "64",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901235747,
+      "trialJobId": "a1MOX",
+      "parameterId": "61",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -2.2757225430354033}}\""
+    },
+    {
+      "timestamp": 1595901235809,
+      "trialJobId": "u8t3k",
+      "parameterId": "66",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"2.6146452798999604\""
+    },
+    {
+      "timestamp": 1595901235903,
+      "trialJobId": "OuLsc",
+      "parameterId": "65",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901235953,
+      "trialJobId": "eGrff",
+      "parameterId": "67",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901235967,
+      "trialJobId": "Ujc39",
+      "parameterId": "68",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"5.879185588587639\""
+    },
+    {
+      "timestamp": 1595901236070,
+      "trialJobId": "wg7hy",
+      "parameterId": "69",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901236584,
+      "trialJobId": "VmI7f",
+      "parameterId": "60",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901236740,
+      "trialJobId": "EZUe0",
+      "parameterId": "62",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 1.091872290620957}}\""
+    },
+    {
+      "timestamp": 1595901236749,
+      "trialJobId": "zHVA2",
+      "parameterId": "64",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901236813,
+      "trialJobId": "u8t3k",
+      "parameterId": "66",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"8.789904140828813\""
+    },
+    {
+      "timestamp": 1595901236956,
+      "trialJobId": "eGrff",
+      "parameterId": "67",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901236971,
+      "trialJobId": "Ujc39",
+      "parameterId": "68",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901237078,
+      "trialJobId": "wg7hy",
+      "parameterId": "69",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901237754,
+      "trialJobId": "zHVA2",
+      "parameterId": "64",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"6.067140454523734\\\"\""
+    },
+    {
+      "timestamp": 1595901237817,
+      "trialJobId": "u8t3k",
+      "parameterId": "66",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 6.738254874676596, \\\"other\\\": 3.407365737620623}\""
+    },
+    {
+      "timestamp": 1595901237960,
+      "trialJobId": "eGrff",
+      "parameterId": "67",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-8.799684391921716\""
+    },
+    {
+      "timestamp": 1595901250174,
+      "trialJobId": "rCq1z",
+      "parameterId": "70",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901250225,
+      "trialJobId": "lCV9F",
+      "parameterId": "71",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -8.842244100829086, \\\"other\\\": -2.386236945799789}\""
+    },
+    {
+      "timestamp": 1595901250260,
+      "trialJobId": "IiCNj",
+      "parameterId": "72",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901250333,
+      "trialJobId": "e9bF7",
+      "parameterId": "74",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 1.0496251402087449}}\""
+    },
+    {
+      "timestamp": 1595901250335,
+      "trialJobId": "QPHAP",
+      "parameterId": "73",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 2.32920853708144}\""
+    },
+    {
+      "timestamp": 1595901250425,
+      "trialJobId": "XURUT",
+      "parameterId": "75",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -1.0644703377033373, \\\"other\\\": -9.313141516349681}\""
+    },
+    {
+      "timestamp": 1595901250515,
+      "trialJobId": "QafjF",
+      "parameterId": "76",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901250567,
+      "trialJobId": "ognsb",
+      "parameterId": "77",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901250642,
+      "trialJobId": "bsqIF",
+      "parameterId": "78",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-8.862311093464992\""
+    },
+    {
+      "timestamp": 1595901250807,
+      "trialJobId": "OiDp3",
+      "parameterId": "79",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901251178,
+      "trialJobId": "rCq1z",
+      "parameterId": "70",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"6.248246468866515\""
+    },
+    {
+      "timestamp": 1595901251229,
+      "trialJobId": "lCV9F",
+      "parameterId": "71",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-4.715082675645508\""
+    },
+    {
+      "timestamp": 1595901251264,
+      "trialJobId": "IiCNj",
+      "parameterId": "72",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901251338,
+      "trialJobId": "e9bF7",
+      "parameterId": "74",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -5.9184589897185536}}\""
+    },
+    {
+      "timestamp": 1595901251339,
+      "trialJobId": "QPHAP",
+      "parameterId": "73",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901251429,
+      "trialJobId": "XURUT",
+      "parameterId": "75",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901251519,
+      "trialJobId": "QafjF",
+      "parameterId": "76",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"2.8245498927483315\""
+    },
+    {
+      "timestamp": 1595901251572,
+      "trialJobId": "ognsb",
+      "parameterId": "77",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"-8.995058023766827\\\"\""
+    },
+    {
+      "timestamp": 1595901251646,
+      "trialJobId": "bsqIF",
+      "parameterId": "78",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"0.8160856187719805\""
+    },
+    {
+      "timestamp": 1595901251812,
+      "trialJobId": "OiDp3",
+      "parameterId": "79",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901252345,
+      "trialJobId": "QPHAP",
+      "parameterId": "73",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901252345,
+      "trialJobId": "e9bF7",
+      "parameterId": "74",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901252434,
+      "trialJobId": "XURUT",
+      "parameterId": "75",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901252523,
+      "trialJobId": "QafjF",
+      "parameterId": "76",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"other\\\": 1.0945194250479169}\""
+    },
+    {
+      "timestamp": 1595901252575,
+      "trialJobId": "ognsb",
+      "parameterId": "77",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901253438,
+      "trialJobId": "XURUT",
+      "parameterId": "75",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901253527,
+      "trialJobId": "QafjF",
+      "parameterId": "76",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": 2.541955892720406, \\\"other\\\": -4.377781317201417}\""
+    },
+    {
+      "timestamp": 1595901265903,
+      "trialJobId": "wkVrB",
+      "parameterId": "82",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901265939,
+      "trialJobId": "bQhQx",
+      "parameterId": "81",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -7.7245400592833535}\""
+    },
+    {
+      "timestamp": 1595901266079,
+      "trialJobId": "VstNm",
+      "parameterId": "84",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -6.8832078296276, \\\"other\\\": -7.67458445595935}\""
+    },
+    {
+      "timestamp": 1595901266081,
+      "trialJobId": "GRUrH",
+      "parameterId": "85",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901266190,
+      "trialJobId": "RzOte",
+      "parameterId": "87",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -2.6660304258057117}}\""
+    },
+    {
+      "timestamp": 1595901266208,
+      "trialJobId": "Sb2tj",
+      "parameterId": "86",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901266317,
+      "trialJobId": "NB1ou",
+      "parameterId": "89",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": -6.409147608132686, \\\"other\\\": 3.281989187926694}\""
+    },
+    {
+      "timestamp": 1595901266894,
+      "trialJobId": "wkVrB",
+      "parameterId": "82",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901266944,
+      "trialJobId": "bQhQx",
+      "parameterId": "81",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901267086,
+      "trialJobId": "GRUrH",
+      "parameterId": "85",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901267194,
+      "trialJobId": "RzOte",
+      "parameterId": "87",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": -5.66892041315209, \\\"other\\\": 2.3283168851019287}\""
+    },
+    {
+      "timestamp": 1595901267322,
+      "trialJobId": "NB1ou",
+      "parameterId": "89",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901267898,
+      "trialJobId": "wkVrB",
+      "parameterId": "82",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901268197,
+      "trialJobId": "RzOte",
+      "parameterId": "87",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901268902,
+      "trialJobId": "wkVrB",
+      "parameterId": "82",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-8.643383856668647\\\"\""
+    },
+    {
+      "timestamp": 1595901269906,
+      "trialJobId": "wkVrB",
+      "parameterId": "82",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"5.674545659125172\\\"\""
+    },
+    {
+      "timestamp": 1595901281386,
+      "trialJobId": "utKiW",
+      "parameterId": "90",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901281478,
+      "trialJobId": "uPdSU",
+      "parameterId": "92",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901281487,
+      "trialJobId": "dPeSr",
+      "parameterId": "91",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901281537,
+      "trialJobId": "pCXHB",
+      "parameterId": "93",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901281579,
+      "trialJobId": "okxUn",
+      "parameterId": "95",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -2.023400446813328}\""
+    },
+    {
+      "timestamp": 1595901281605,
+      "trialJobId": "QO9EO",
+      "parameterId": "94",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -7.37571843162065}\""
+    },
+    {
+      "timestamp": 1595901281742,
+      "trialJobId": "MrNMC",
+      "parameterId": "97",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"-0.03936926816899877\\\"\""
+    },
+    {
+      "timestamp": 1595901281745,
+      "trialJobId": "zZquy",
+      "parameterId": "99",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"-5.576159193327383\\\"\""
+    },
+    {
+      "timestamp": 1595901281765,
+      "trialJobId": "tXlrm",
+      "parameterId": "98",
+      "type": "PERIODICAL",
+      "sequence": 0,
+      "data": "\"\\\"2.8878423268479807\\\"\""
+    },
+    {
+      "timestamp": 1595901282391,
+      "trialJobId": "utKiW",
+      "parameterId": "90",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-Infinity\""
+    },
+    {
+      "timestamp": 1595901282484,
+      "trialJobId": "uPdSU",
+      "parameterId": "92",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{}\""
+    },
+    {
+      "timestamp": 1595901282540,
+      "trialJobId": "pCXHB",
+      "parameterId": "93",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"other\\\": 1.9549026751543792}\""
+    },
+    {
+      "timestamp": 1595901282583,
+      "trialJobId": "okxUn",
+      "parameterId": "95",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"NaN\""
+    },
+    {
+      "timestamp": 1595901282611,
+      "trialJobId": "QO9EO",
+      "parameterId": "94",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"-3.3552487681830145\""
+    },
+    {
+      "timestamp": 1595901282746,
+      "trialJobId": "MrNMC",
+      "parameterId": "97",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"{\\\"default\\\": 3.641608082036285, \\\"other\\\": -8.348670460176342}\""
+    },
+    {
+      "timestamp": 1595901282749,
+      "trialJobId": "zZquy",
+      "parameterId": "99",
+      "type": "PERIODICAL",
+      "sequence": 1,
+      "data": "\"\\\"7.462277129845603\\\"\""
+    },
+    {
+      "timestamp": 1595901283396,
+      "trialJobId": "utKiW",
+      "parameterId": "90",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901283488,
+      "trialJobId": "uPdSU",
+      "parameterId": "92",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": 5.491624461329462}\""
+    },
+    {
+      "timestamp": 1595901283544,
+      "trialJobId": "pCXHB",
+      "parameterId": "93",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"-6.732500732566957\""
+    },
+    {
+      "timestamp": 1595901283618,
+      "trialJobId": "QO9EO",
+      "parameterId": "94",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    },
+    {
+      "timestamp": 1595901283751,
+      "trialJobId": "MrNMC",
+      "parameterId": "97",
+      "type": "PERIODICAL",
+      "sequence": 2,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -3.38303756126507}}\""
+    },
+    {
+      "timestamp": 1595901284400,
+      "trialJobId": "utKiW",
+      "parameterId": "90",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -5.853483580522072}}\""
+    },
+    {
+      "timestamp": 1595901284547,
+      "trialJobId": "pCXHB",
+      "parameterId": "93",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -8.024581781976966}\""
+    },
+    {
+      "timestamp": 1595901284621,
+      "trialJobId": "QO9EO",
+      "parameterId": "94",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"\\\"-2.538557600204168\\\"\""
+    },
+    {
+      "timestamp": 1595901284756,
+      "trialJobId": "MrNMC",
+      "parameterId": "97",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"{\\\"other\\\": -0.5479590285769511}\""
+    },
+    {
+      "timestamp": 1595901285760,
+      "trialJobId": "MrNMC",
+      "parameterId": "97",
+      "type": "FINAL",
+      "sequence": 0,
+      "data": "\"Infinity\""
+    }
+  ],
+  "trialJobs": [
+    {
+      "id": "sXvMz",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":0,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"dict-normal\",\"intermediate3\":\"normal\",\"intermediate_count\":2,\"final1\":\"dict-defaultdict\",\"final2\":\"dict-nodefault\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/sXvMz",
+      "startTime": 1595901139862,
+      "sequenceId": 0,
+      "endTime": 1595901143276,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901143239,
+          "trialJobId": "sXvMz",
+          "parameterId": "0",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": -8.10531137074138}}\""
+        }
+      ]
+    },
+    {
+      "id": "y3owq",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":1,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"string\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":1,\"final1\":\"dict-defaultdict\",\"final2\":\"neginf\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/y3owq",
+      "startTime": 1595901139885,
+      "sequenceId": 1,
+      "endTime": 1595901142374,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901142326,
+          "trialJobId": "y3owq",
+          "parameterId": "1",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 6.896445698700774}}\""
+        }
+      ]
+    },
+    {
+      "id": "etEUl",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":2,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"inf\",\"intermediate3\":\"string\",\"intermediate_count\":1,\"final1\":\"string\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/etEUl",
+      "startTime": 1595901139903,
+      "sequenceId": 2,
+      "endTime": 1595901143415,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901142355,
+          "trialJobId": "etEUl",
+          "parameterId": "2",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"\\\"3.727416078457388\\\"\""
+        }
+      ]
+    },
+    {
+      "id": "r5pwY",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":3,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":0,\"final1\":\"dict-empty\",\"final2\":\"dict-normal\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/r5pwY",
+      "startTime": 1595901139918,
+      "sequenceId": 3,
+      "endTime": 1595901141410,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901141374,
+          "trialJobId": "r5pwY",
+          "parameterId": "3",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{}\""
+        }
+      ]
+    },
+    {
+      "id": "JxX0I",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":4,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"dict-defaultdict\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":3,\"final1\":\"dict-defaultdict\",\"final2\":\"string\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/JxX0I",
+      "startTime": 1595901139981,
+      "sequenceId": 4,
+      "endTime": 1595901143497
+    },
+    {
+      "id": "ywQvm",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":5,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"normal\",\"intermediate3\":\"inf\",\"intermediate_count\":3,\"final1\":\"normal\",\"final2\":\"dict-nodefault\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/ywQvm",
+      "startTime": 1595901140071,
+      "sequenceId": 5,
+      "endTime": 1595901144603,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901144556,
+          "trialJobId": "ywQvm",
+          "parameterId": "5",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"-4.804921436452929\""
+        }
+      ]
+    },
+    {
+      "id": "tkxcP",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":6,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"inf\",\"intermediate_count\":1,\"final1\":\"nan\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/tkxcP",
+      "startTime": 1595901140239,
+      "sequenceId": 6,
+      "endTime": 1595901141679
+    },
+    {
+      "id": "MjX3O",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":7,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"inf\",\"intermediate_count\":0,\"final1\":\"dict-empty\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MjX3O",
+      "startTime": 1595901134932,
+      "sequenceId": 7,
+      "endTime": 1595901141756,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901141708,
+          "trialJobId": "MjX3O",
+          "parameterId": "7",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{}\""
+        }
+      ]
+    },
+    {
+      "id": "LKVCX",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":8,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":2,\"final1\":\"inf\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/LKVCX",
+      "startTime": 1595901134943,
+      "sequenceId": 8,
+      "endTime": 1595901143811,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901143764,
+          "trialJobId": "LKVCX",
+          "parameterId": "8",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"Infinity\""
+        }
+      ]
+    },
+    {
+      "id": "MQlPp",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":9,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MQlPp",
+      "startTime": 1595901134954,
+      "sequenceId": 9,
+      "endTime": 1595901144801,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901143761,
+          "trialJobId": "MQlPp",
+          "parameterId": "9",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"other\\\": 8.927687040316364}\""
+        }
+      ]
+    },
+    {
+      "id": "fJHIW",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":10,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"nan\",\"intermediate_count\":2,\"final1\":\"neginf\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/fJHIW",
+      "startTime": 1595901155426,
+      "sequenceId": 10,
+      "endTime": 1595901157888
+    },
+    {
+      "id": "RDBG2",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":11,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":0,\"final1\":\"inf\",\"final2\":\"neginf\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/RDBG2",
+      "startTime": 1595901155437,
+      "sequenceId": 11,
+      "endTime": 1595901155983
+    },
+    {
+      "id": "Ofyt2",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":12,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"inf\",\"intermediate3\":\"dict-defaultdict\",\"intermediate_count\":3,\"final1\":\"dict-defaultdict\",\"final2\":\"string\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Ofyt2",
+      "startTime": 1595901155450,
+      "sequenceId": 12,
+      "endTime": 1595901161007,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901159966,
+          "trialJobId": "Ofyt2",
+          "parameterId": "12",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"default\\\": {\\\"tensor\\\": 0, \\\"data\\\": 7.483634247448858}}\""
+        }
+      ]
+    },
+    {
+      "id": "z7WgL",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":13,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-normal\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"dict-nodefault\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/z7WgL",
+      "startTime": 1595901155464,
+      "sequenceId": 13,
+      "endTime": 1595901159968,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901158930,
+          "trialJobId": "z7WgL",
+          "parameterId": "13",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"other\\\": 1.8045794393579122}\""
+        }
+      ]
+    },
+    {
+      "id": "OotJc",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":14,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-empty\",\"intermediate2\":\"inf\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":0,\"final1\":\"dict-nodefault\",\"final2\":\"dict-empty\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/OotJc",
+      "startTime": 1595901155490,
+      "sequenceId": 14,
+      "endTime": 1595901156062
+    },
+    {
+      "id": "WxWLk",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":15,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"normal\",\"intermediate3\":\"string\",\"intermediate_count\":0,\"final1\":\"nan\",\"final2\":\"dict-empty\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/WxWLk",
+      "startTime": 1595901155536,
+      "sequenceId": 15,
+      "endTime": 1595901156147
+    },
+    {
+      "id": "Zzazj",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":16,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-empty\",\"intermediate2\":\"dict-normal\",\"intermediate3\":\"normal\",\"intermediate_count\":0,\"final1\":\"neginf\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Zzazj",
+      "startTime": 1595901155644,
+      "sequenceId": 16,
+      "endTime": 1595901156212
+    },
+    {
+      "id": "aKV3K",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":17,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"inf\",\"intermediate3\":\"normal\",\"intermediate_count\":0,\"final1\":\"nan\",\"final2\":\"inf\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/aKV3K",
+      "startTime": 1595901155795,
+      "sequenceId": 17,
+      "endTime": 1595901157314,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901157264,
+          "trialJobId": "aKV3K",
+          "parameterId": "17",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"NaN\""
+        }
+      ]
+    },
+    {
+      "id": "WR5fG",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":18,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-empty\",\"intermediate3\":\"inf\",\"intermediate_count\":0,\"final1\":\"normal\",\"final2\":\"nan\",\"final_count\":0},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/WR5fG",
+      "startTime": 1595901155825,
+      "sequenceId": 18,
+      "endTime": 1595901156321
+    },
+    {
+      "id": "EFsFo",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":19,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"nan\",\"intermediate_count\":0,\"final1\":\"normal\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/EFsFo",
+      "startTime": 1595901150521,
+      "sequenceId": 19,
+      "endTime": 1595901157386,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901157336,
+          "trialJobId": "EFsFo",
+          "parameterId": "19",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"-0.9452602480917385\""
+        }
+      ]
+    },
+    {
+      "id": "dUJTL",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":20,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"string\",\"intermediate3\":\"inf\",\"intermediate_count\":1,\"final1\":\"inf\",\"final2\":\"string\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/dUJTL",
+      "startTime": 1595901170933,
+      "sequenceId": 20,
+      "endTime": 1595901173438,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901173388,
+          "trialJobId": "dUJTL",
+          "parameterId": "20",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"Infinity\""
+        }
+      ]
+    },
+    {
+      "id": "xAoeQ",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":21,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"neginf\",\"intermediate3\":\"normal\",\"intermediate_count\":3,\"final1\":\"normal\",\"final2\":\"inf\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/xAoeQ",
+      "startTime": 1595901170945,
+      "sequenceId": 21,
+      "endTime": 1595901176469,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901175418,
+          "trialJobId": "xAoeQ",
+          "parameterId": "21",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"-8.43771544998285\""
+        }
+      ]
+    },
+    {
+      "id": "de6XT",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":22,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-normal\",\"intermediate2\":\"nan\",\"intermediate3\":\"string\",\"intermediate_count\":2,\"final1\":\"dict-nodefault\",\"final2\":\"neginf\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/de6XT",
+      "startTime": 1595901170962,
+      "sequenceId": 22,
+      "endTime": 1595901175475,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901174434,
+          "trialJobId": "de6XT",
+          "parameterId": "22",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"other\\\": 0.8472658215331563}\""
+        }
+      ]
+    },
+    {
+      "id": "A7C0a",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":23,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"nan\",\"intermediate2\":\"normal\",\"intermediate3\":\"neginf\",\"intermediate_count\":1,\"final1\":\"dict-empty\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/A7C0a",
+      "startTime": 1595901170977,
+      "sequenceId": 23,
+      "endTime": 1595901173571,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901173524,
+          "trialJobId": "A7C0a",
+          "parameterId": "23",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{}\""
+        }
+      ]
+    },
+    {
+      "id": "Rofrb",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":24,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"inf\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"neginf\",\"intermediate_count\":0,\"final1\":\"dict-nodefault\",\"final2\":\"dict-normal\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/Rofrb",
+      "startTime": 1595901170990,
+      "sequenceId": 24,
+      "endTime": 1595901173521,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901172467,
+          "trialJobId": "Rofrb",
+          "parameterId": "24",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"{\\\"other\\\": 8.461683188282755}\""
+        }
+      ]
+    },
+    {
+      "id": "MOOrR",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":25,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"dict-defaultdict\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-empty\",\"intermediate_count\":3,\"final1\":\"string\",\"final2\":\"neginf\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/MOOrR",
+      "startTime": 1595901171032,
+      "sequenceId": 25,
+      "endTime": 1595901176529,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901175485,
+          "trialJobId": "MOOrR",
+          "parameterId": "25",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"\\\"2.8954800063491586\\\"\""
+        }
+      ]
+    },
+    {
+      "id": "p2m5y",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":26,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"normal\",\"intermediate2\":\"dict-nodefault\",\"intermediate3\":\"inf\",\"intermediate_count\":2,\"final1\":\"normal\",\"final2\":\"dict-defaultdict\",\"final_count\":1},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/p2m5y",
+      "startTime": 1595901171129,
+      "sequenceId": 26,
+      "endTime": 1595901174686,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901174636,
+          "trialJobId": "p2m5y",
+          "parameterId": "26",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"9.902729745066438\""
+        }
+      ]
+    },
+    {
+      "id": "mSPRF",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":27,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"nan\",\"intermediate3\":\"dict-nodefault\",\"intermediate_count\":2,\"final1\":\"string\",\"final2\":\"dict-empty\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/mSPRF",
+      "startTime": 1595901171272,
+      "sequenceId": 27,
+      "endTime": 1595901175714,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901174667,
+          "trialJobId": "mSPRF",
+          "parameterId": "27",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"\\\"-2.5183912965656763\\\"\""
+        }
+      ]
+    },
+    {
+      "id": "G5nv9",
+      "status": "SUCCEEDED",
+      "hyperParameters": [
+        "{\"parameter_id\":28,\"parameter_source\":\"algorithm\",\"parameters\":{\"intermediate1\":\"neginf\",\"intermediate2\":\"string\",\"intermediate3\":\"dict-normal\",\"intermediate_count\":3,\"final1\":\"inf\",\"final2\":\"normal\",\"final_count\":2},\"parameter_index\":0}"
+      ],
+      "logPath": "file://localhost:/***/nni/experiments/Tkaxm2mb/trials/G5nv9",
+      "startTime": 1595901171428,
+      "sequenceId": 28,
+      "endTime": 1595901176884,
+      "finalMetricData": [
+        {
+          "timestamp": 1595901175834,
+          "trialJobId": "G5nv9",
+          "parameterId": "28",
+          "type": "FINAL",
+          "sequence": 0,
+          "data": "\"Infinity\""
+        }
+      ]
+    }
+  ]
 }

@@ -277,11 +277,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
             const otherkeys: string[] = [];
-            // One trial job may contains multiple parameter id
-            // only show current trial's metric data
-            const metricDatas = res.data.filter(item => {
-                return item.parameterId == record.parameterId;
-            });
+            const metricDatas = res.data;
             if (metricDatas.length !== 0) {
                 // just add type=number keys
                 const intermediateMetrics = parseMetrics(res.data[0].data);
