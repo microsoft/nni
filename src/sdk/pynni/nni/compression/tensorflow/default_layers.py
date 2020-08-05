@@ -2,8 +2,8 @@
 # Licensed under the MIT license.
 
 weighted_modules = [
-    'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d', 'ConvTranspose2d', 'ConvTranspose3d',
-    'Linear', 'Bilinear',
+    'Conv1D', 'Conv2D', 'Conv3D', 'Conv1DTranspose', 'Conv2DTranspose', 'Conv3DTranspose',
+    'Dense',
     'PReLU',
-    'Embedding', 'EmbeddingBag',
+    'Embedding',
 ]
