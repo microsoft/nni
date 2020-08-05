@@ -12,27 +12,20 @@ class OneshotPruner(Pruner):
         self.set_wrapper_attribute('if_calculated', False)
         self.masker = MASKER_DICT[pruning_alogrithm](model, self, **algo_kwargs)
 
+
     def validate_config(self, model, config_list):
-        pass
+        pass  # TODO
+
 
     def calc_mask(self, wrapper, wrapper_idx=None):
         if wrapper.if_calculated:
             return None
-
         sparsity = wrapper.config['sparsity']
-        if not wrapper.if_calculated:
-            masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        if masks is not None:
+            wrapper.if_calculated = True
+        return masks
 
-            if masks is not None:
-                wrapper.if_calculated = True
-            return masks
-        else:
-            return None
-
-
-MASKER_DICT = {
-    'level': LevelPrunerMasker,
-}
 
 class WeightMasker:
     def __init__(self, model, pruner, **kwargs):
@@ -41,6 +34,7 @@ class WeightMasker:
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         raise NotImplementedError()
+
 
 class LevelPrunerMasker(WeightMasker):
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
@@ -51,3 +45,8 @@ class LevelPrunerMasker(WeightMasker):
         threshold = tf.reduce_max(tf.topk(tf.reshape(w_abs, [-1]), k, largest=False)[0])
         mask_weight = tf.cast((w_abs > threshold), weight.dtype)
         return {'weight_mask': mask_weight}
+
+
+MASKER_DICT = {
+    'level': LevelPrunerMasker,
+}

@@ -4,43 +4,28 @@
 import logging
 import tensorflow as tf
 from . import default_layers
-tf.config.experimental_run_functions_eagerly(True)
 
 _logger = logging.getLogger(__name__)
 
 
 class LayerInfo:
-    def __init__(self, keras_layer):
-        self.keras_layer = keras_layer
-        self.name = keras_layer.name
-        self.type = default_layers.get_op_type(type(keras_layer))
-        self.weight_index = default_layers.get_weight_index(self.type)
-        if self.weight_index is not None:
-            self.weight = keras_layer.weights[self.weight_index]
-        self._call = None
+    def __init__(self, layer):
+        self.module = layer
+        self.name = layer._name
+        self.type = type(layer).__name__
 
-def _setattr(model, name, module):
-    name_list = name.split('.')
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    setattr(model, name_list[-1], module)
+
+def _wrap_model(model, wrapped_layers):
+    for key, value in model.__dict__.items():
+        if isinstance(value, tf.keras.Model):
+            _wrap_model(value, wrapped_layers)
+        for layer in wrapped_layers:
+            if value is layer.module:
+                setattr(model, key, layer)
+
 
 class Compressor:
-    """
-    Abstract base TensorFlow compressor
-    """
-
     def __init__(self, model, config_list, optimizer=None):
-        """
-        Record necessary info in class members
-
-        Parameters
-        ----------
-        model : keras model
-            the model user wants to compress
-        config_list : list
-            the configurations that users specify for compression
-        """
         assert isinstance(model, tf.keras.Model)
         self.validate_config(model, config_list)
 
@@ -50,10 +35,6 @@ class Compressor:
 
         self.modules_to_compress = None
         self.modules_wrapper = []
-        self.is_wrapped = False
-
-        self._fwd_hook_handles = {}
-        self._fwd_hook_id = 0
 
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
@@ -61,14 +42,9 @@ class Compressor:
         if not self.modules_wrapper:
             _logger.warning('Nothing is configured to compress, please check your model and config list')
 
-        self._wrap_model()
+        _wrap_model(model, self.modules_wrapper)
 
     def _detect_modules_to_compress(self):
-        """
-        detect all modules should be compressed, and save the result in `self.modules_to_compress`.
-
-        The model will be instrumented and user should never edit it after calling this method.
-        """
         if self.modules_to_compress is None:
             self.modules_to_compress = []
             for keras_layer in self.bound_model.layers:
@@ -78,128 +54,67 @@ class Compressor:
                     self.modules_to_compress.append((layer, config))
         return self.modules_to_compress
 
-    def _wrap_model(self):
-        for wrapper in reversed(self.modules_wrapper):
-            _setattr(self.bound_model, wrapper.name, wrapper)
-        self.is_wrapped = True
-
     def compress(self):
-        """
-        Compress the model with algorithm implemented by subclass.
-
-        The model will be instrumented and user should never edit it after calling this method.
-        `self.modules_to_compress` records all the to-be-compressed layers
-        """
-        #modules_to_compress = self.detect_modules_to_compress()
-        #for layer, config in modules_to_compress:
-        #    self._instrument_layer(layer, config)
         return self.bound_model
 
-    def get_modules_to_compress(self):
-        """
-        To obtain all the to-be-compressed layers.
+    def set_wrappers_attribute(self, name, value):
+        for wrapper in self.get_modules_wrapper():
+            setattr(wrapper, name, value)
 
-        Returns
-        -------
-        self.modules_to_compress : list
-            a list of the layers, each of which is a tuple (`layer`, `config`),
-            `layer` is `LayerInfo`, `config` is a `dict`
-        """
+    def get_modules_to_compress(self):
         return self.modules_to_compress
 
     def select_config(self, layer):
-        """
-        Find the configuration for `layer` by parsing `self.config_list`
-
-        Parameters
-        ----------
-        layer: LayerInfo
-            one layer
-
-        Returns
-        -------
-        ret : config or None
-            the retrieved configuration for this layer, if None, this layer should
-            not be compressed
-        """
         ret = None
         if layer.type is None:
             return None
         for config in self.config_list:
             config = config.copy()
-            config['op_types'] = self._expand_config_op_types(config)
-            if layer.type not in config['op_types']:
+            if 'op_types' in config and 'default' in config['op_type']:
+                expanded_op_types = []
+            for op_type in config['op_types']:
+                if op_type == 'default':
+                    expanded_op_types.extend(default_layers.weighted_modules)
+                else:
+                    expanded_op_types.append(op_type)
+            config['op_types'] = expanded_op_types
+
+            if 'op_types' in config and layer.type not in config['op_types']:
                 continue
-            if config.get('op_names') and layer.name not in config['op_names']:
+            if 'op_names' in config and layer.name not in config['op_names']:
                 continue
+
             ret = config
-        if ret is None or ret.get('exclude'):
+
+        if ret is None or 'exclude' is ret:
             return None
         return ret
 
+
     def update_epoch(self, epoch):
-        """
-        If user want to update model every epoch, user can override this method.
-        This method should be called at the beginning of each epoch
-
-        Parameters
-        ----------
-        epoch : num
-            the current epoch number
-        """
-
-    def step(self):
-        """
-        If user want to update mask every step, user can override this method
-        """
+        pass
 
 
     def _wrap_modules(self, layer, config):
         raise NotImplementedError()
 
-    def _instrument_layer(self, layer, config):
-        """
-        This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
 
-        Parameters
-        ----------
-        layer : LayerInfo
-            the layer to instrument the compression operation
-        config : dict
-            the configuration for compressing this layer
-        """
-        raise NotImplementedError()
-
-    def _expand_config_op_types(self, config):
-        if config is None:
-            return []
-        op_types = []
-
-        for op_type in config.get('op_types', []):
-            if op_type == 'default':
-                op_types.extend(default_layers.default_layers)
-            else:
-                op_types.append(op_type)
-        return op_types
+    def patch_optimizer(self, **tasks):
+        pass
 
 
 class Pruner(Compressor):
-    """
-    Abstract base TensorFlow pruner
-    """
-
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
         if optimizer is not None:
-            raise RuntimeError('Optimizer patching not implemented yet')
-            #self.patch_optimizer(self.update_mask)
+            self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()
         return self.bound_model
 
     def update_mask(self):
-        for wrapper_idx, wrapper in enumerate(self.modules_wrapper):
+        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
             masks = self.calc_mask(wrapper, wrapper_idx=wrapper_idx)
             if masks is not None:
                 for k in masks:
@@ -207,38 +122,29 @@ class Pruner(Compressor):
                     setattr(wrapper, k, masks[k])
 
     def calc_mask(self, wrapper, **kwargs):
-        """
-        Pruners should overload this method to provide mask for weight tensors.
-        The mask must have the same shape and type comparing to the weight.
-        It will be applied with `mul()` operation on the weight.
-        This method is effectively hooked to `forward()` method of the model.
-
-        Parameters
-        ----------
-        layer : LayerInfo
-            calculate mask for `layer`'s weight
-        config : dict
-            the configuration for generating the mask
-        """
         raise NotImplementedError("Pruners must overload calc_mask()")
 
     def _wrap_modules(self, layer, config):
-        """
-        Create a wrapper forward function to replace the original one.
-
-        Parameters
-        ----------
-        layer : LayerInfo
-            the layer to instrument the mask
-        config : dict
-            the configuration for generating the mask
-        """
+        _logger.info('Module detected to compress : %s.', layer.name)
         return PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
-#class Quantizer(Compressor):
-#    """
-#    Abstract base TensorFlow quantizer
-#    """
-#
-#    def quantize_weight(self, weight, config, op, op_type, op_name):
-#        raise NotImplementedError("Quantizer must overload quantize_weight()")
+
+class PrunerModuleWrapper(tf.keras.Model):
+    def __init__(self, module, module_name, module_type, config, pruner):
+        super().__init__()
+        self.module = module
+        self.name = module_name
+        self.type = module_type
+        self.config = config
+        self.pruner = pruner
+        self.masks = []
+        for weight in module.weights:
+            self.masks.append(tf.ones_like(weight))
+            # TODO: filter weight name like 'kernel'/'bias'/etc?
+
+    def call(self, *inputs):
+        new_weights = []
+        for mask, weight in zip(self.masks, self.module.weights):
+            new_weights.append(tf.math.multiply(mask, weight).numpy())
+        self.module.set_weights(new_weights)
+        return self.module(*inputs)
