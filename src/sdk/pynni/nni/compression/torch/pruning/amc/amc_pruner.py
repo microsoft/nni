@@ -6,14 +6,14 @@ from copy import deepcopy
 from argparse import Namespace
 import numpy as np
 import torch
-torch.backends.cudnn.deterministic = True
-
 from tensorboardX import SummaryWriter
 
 from nni.compression.torch.compressor import Pruner
 from .channel_pruning_env import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
+
+torch.backends.cudnn.deterministic = True
 
 class AMCPruner(Pruner):
     """
