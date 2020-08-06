@@ -367,19 +367,21 @@ def main(args):
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
         elif args.dataset == 'cifar10' and args.model == 'vgg16':
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         elif args.dataset == 'cifar10' and args.model == 'resnet18':
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         elif args.dataset == 'cifar10' and args.model == 'resnet50':
-            optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         best_acc = 0
         for epoch in range(args.fine_tune_epochs):
+            acc = evaluator(model)
+            print("acc at the begining", acc)
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
             acc = evaluator(model)
@@ -455,6 +457,7 @@ if __name__ == '__main__':
     parser.add_argument('--save-model', type=str2bool, default=True,
                         help='For Saving the current Model')
     parser.add_argument('--constrained', type=str2bool, default=False, help='if enable the constraint-aware pruner')
+    parser.add_argument('--lr', type=float, default=0.01, help='The learning rate for the finetuning')
     args = parser.parse_args()
 
     if not os.path.exists(args.experiment_data_dir):
