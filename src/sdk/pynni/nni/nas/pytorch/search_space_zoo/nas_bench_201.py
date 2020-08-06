@@ -1,5 +1,5 @@
-import torch.nn as nn
 from collections import OrderedDict
+import torch.nn as nn
 from nni.nas.pytorch.mutables import LayerChoice
 
 from .nas_bench_201_ops import Pooling, ReLUConvBN, Zero, FactorizedReduce
@@ -10,7 +10,7 @@ class NASBench201Cell(nn.Module):
     Builtin cell structure of NAS Bench 201. One cell contains four nodes. The First node serves as an input node
     accepting the output of the previous cell. And other nodes connect to all previous nodes with an edge that
     represents an operation chosen from a set to transform the tensor from the source node to the target node.
-    Every node accepts all its inputs and adds them as its output. 
+    Every node accepts all its inputs and adds them as its output.
 
     Parameters
     ---
@@ -48,7 +48,7 @@ class NASBench201Cell(nn.Module):
             ("nor_conv_1x1", ReLUConvBN(C_in, C_out, 1, stride if layer_idx == 0 else 1, 0, 1, bn_affine, bn_momentum,
                                         bn_track_running_stats)),
             ("skip_connect", nn.Identity() if stride == 1 and C_in == C_out
-            else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
+             else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
                                   bn_track_running_stats))
         ])
 
