@@ -781,7 +781,7 @@ def save_experiment(args):
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
         shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
- 
+
     # Step4. Archive folder
     zip_package_name = 'nni_experiment_%s' % args.id
     if args.path:
