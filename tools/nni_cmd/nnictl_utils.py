@@ -750,7 +750,7 @@ def trial_head(args):
             return x
         else:
             print_error("Records cannot be loaded, please check the service.")
-            raise ValueError
+            exit(1)
 
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
