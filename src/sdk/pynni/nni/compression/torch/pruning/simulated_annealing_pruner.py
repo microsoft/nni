@@ -336,6 +336,7 @@ class SimulatedAnnealingPruner(Pruner):
 
                         # save the overall best masked model
                         self.bound_model = model_masked
+                        modules_wrapper_final = pruner.get_modules_wrapper()
                     break
                 # if not, accept with probability e^(-deltaE/current_temperature)
                 else:
@@ -379,5 +380,7 @@ class SimulatedAnnealingPruner(Pruner):
 
         if return_config_list:
             return self._best_config_list
-
+        # This should be done only at the final stage,
+        # because the modules_wrapper with all the ops are used during the annealing process
+        self.modules_wrapper = modules_wrapper_final
         return self.bound_model
