@@ -5,7 +5,7 @@ import torch.nn as nn
 class ReLUConvBN(nn.Module):
     """
     Parameters
-    --- 
+    ---
     C_in: int
         the number of input channels
     C_out: int
