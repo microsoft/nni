@@ -85,6 +85,30 @@ class Trial implements TableObj {
         return this.metricsInitialized && this.finalAcc !== undefined && !isNaN(this.finalAcc);
     }
 
+    get latestAccuracy(): number | undefined {
+        
+        if (this.accuracy !== undefined && (typeof this.accuracy === 'number')) {
+            return this.accuracy;
+        } else if (this.intermediates.length > 0) {
+            const temp = this.intermediates[this.intermediates.length - 1];
+            if (temp !== undefined) {
+                if (isArrayType(parseMetrics(temp.data))) {
+                    return undefined;
+                } else if (typeof parseMetrics(temp.data) === 'object' && (parseMetrics(temp.data)).hasOwnProperty('default')) {
+                    return parseMetrics(temp.data).default;
+                } else if (typeof parseMetrics(temp.data) === 'number') {
+                    return parseMetrics(temp.data);
+                }
+            } else {
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
+    }
+
+    /* table obj start */
+
     get tableRecord(): TableRecord {
         const endTime = this.info.endTime || new Date().getTime();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -117,29 +141,6 @@ class Trial implements TableObj {
             accDictionary: this.acc
         };
     }
-
-    get latestAccuracy(): number | undefined {
-        
-        if (this.accuracy !== undefined && (typeof this.accuracy === 'number')) {
-            return this.accuracy;
-        } else if (this.intermediates.length > 0) {
-            const temp = this.intermediates[this.intermediates.length - 1];
-            if (temp !== undefined) {
-                if (isArrayType(parseMetrics(temp.data))) {
-                    return undefined;
-                } else if (typeof parseMetrics(temp.data) === 'object' && (parseMetrics(temp.data)).hasOwnProperty('default')) {
-                    return parseMetrics(temp.data).default;
-                } else if (typeof parseMetrics(temp.data) === 'number') {
-                    return parseMetrics(temp.data);
-                }
-            } else {
-                return undefined;
-            }
-        } else {
-            return undefined;
-        }
-    }
-    /* table obj start */
 
     get key(): number {
         return this.info.sequenceId;
@@ -225,7 +226,6 @@ class Trial implements TableObj {
         const ret = new Map<SingleAxis, any>();
         const unexpectedEntries = new Map<string, any>();
         if (this.acc === undefined) {
-            console.info(111111); // eslint-disable-line
             return ret;
         }
         const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;

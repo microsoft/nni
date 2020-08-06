@@ -53,12 +53,9 @@ const convertDuration = (num: number): string => {
 function parseMetrics(metricData: string): any {
     if(metricData !== undefined){
         if (metricData.includes('NaN') || metricData.includes('Infinity')) {
-            // const dealed = metricData.replace(/Infinity|NaN/gi, '0');
             return JSON5.parse(JSON5.parse(metricData));
-            // return JSON5.parse(dealed);
         } else {
             return JSON.parse(JSON.parse(metricData));
-            // return JSON.parse(metricData);
         }
     } else {
         return undefined;
