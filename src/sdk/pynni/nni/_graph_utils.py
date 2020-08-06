@@ -530,8 +530,15 @@ class TorchModuleGraph(TorchGraph):
             return True
         if node_cpp.kind() in [LIST_UNPACK_KIND, TUPLE_UNPACK_KIND]:
             # We cannot merge the List/Tuple
-            # Construct/Unpack func into other nodes, else it
+            # Unpack func into other nodes, else it
             # may lead to a graph construction error.
+            # The reason why we donnot take the construct node
+            # also as a key node is that `cat` operation node need
+            # the last(previous) visited node to infer the mask. If
+            # we take the Construct node as the important node, the
+            # predecessor of the `cat` node will always be a construct
+            # node, which means we cannot infer the mask for the cat
+            # operation.
             return True
         return False
 
