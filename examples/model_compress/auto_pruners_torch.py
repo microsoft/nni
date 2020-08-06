@@ -308,7 +308,7 @@ def main(args):
         pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=2, training_epochs=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
-            model, config_list, evaluator=evaluator, base_algo=args.base_algo,
+            model, config_list, evaluator=evaluator, dummy_input=dummy_input,  base_algo=args.base_algo,
             cool_down_rate=args.cool_down_rate, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'AutoCompressPruner':
         pruner = AutoCompressPruner(
@@ -319,7 +319,10 @@ def main(args):
     else:
         raise ValueError(
             "Pruner not supported.")
-
+    if args.constrained:
+        pruner.constrained = True
+    else:
+        pruner.constrained = False
     # Pruner.compress() returns the masked model
     # but for AutoCompressPruner, Pruner.compress() returns directly the pruned model
     model = pruner.compress()

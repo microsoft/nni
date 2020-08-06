@@ -15,7 +15,7 @@ from nni.utils import OptimizeMode
 from ..compressor import Pruner
 from ..utils.config_validation import CompressorSchema
 from .constants_pruner import PRUNER_DICT
-
+from nni.compression.torch.utils.shape_dependency import ChannelDependency
 
 _logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class SimulatedAnnealingPruner(Pruner):
         4. cool down, current_temperature <- current_temperature * cool_down_rate
     """
 
-    def __init__(self, model, config_list, evaluator, optimize_mode='maximize', base_algo='l1',
+    def __init__(self, model, config_list, evaluator, dummy_input, optimize_mode='maximize', base_algo='l1',
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35, experiment_data_dir='./'):
         """
         Parameters
@@ -81,7 +81,8 @@ class SimulatedAnnealingPruner(Pruner):
         # original model
         self._model_to_prune = copy.deepcopy(model)
         self._base_algo = base_algo
-
+        self.cd=ChannelDependency(model, dummy_input=dummy_input)
+        self.cd_sets = self.cd.dependency_sets
         super().__init__(model, config_list)
 
         self._evaluator = evaluator
@@ -109,7 +110,7 @@ class SimulatedAnnealingPruner(Pruner):
         self._experiment_data_dir = experiment_data_dir
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
-
+        self.constrained = False
     def validate_config(self, model, config_list):
         """
         Parameters
@@ -154,17 +155,40 @@ class SimulatedAnnealingPruner(Pruner):
         sparsities = sorted(sparsities)
         self.modules_wrapper = sorted(
             self.modules_wrapper, key=lambda wrapper: wrapper.module.weight.data.numel())
-
+        tmp_dict = {}
+        sparsity_sum = {}
+        for idx, dset in enumerate(self.cd_sets):
+            sparsity_sum[idx] = []
+            for layer in dset:
+                tmp_dict[layer]=dset
         # a layer with more weights will have no less pruning rate
         for idx, wrapper in enumerate(self.get_modules_wrapper()):
             # L1Filter Pruner requires to specify op_types
+            sidx = self.cd_sets.index(tmp_dict[wrapper.name])
+            sparsity_sum[sidx].append(sparsities[idx])
             if self._base_algo in ['l1', 'l2']:
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_types': ['Conv2d'], 'op_names': [wrapper.name]})
             elif self._base_algo == 'level':
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
+        print('\n\n##########')
+        if self.constrained:
+            print('test %%%%%%%%%%%%%%%%%%')
 
+            for cfg in config_list:
+                # print(cfg)
+                layer = cfg['op_names'][0]
+                idx = self.cd_sets.index(tmp_dict[layer])
+                ori_sparsity = cfg['sparsity']
+                
+                cfg['sparsity'] = sum(sparsity_sum[idx]) / len(tmp_dict[layer])
+                if len(tmp_dict[layer]) > 1:
+                    print('##### fix the sparsity')
+                    print(sparsity_sum[idx])
+                    print('original sparsity', ori_sparsity)
+                    print(cfg)
+                    print(tmp_dict[layer])
         config_list = [val for val in config_list if not math.isclose(val['sparsity'], 0, abs_tol=1e-6)]
 
         return config_list

@@ -196,7 +196,7 @@ class AutoCompressPruner(Pruner):
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=[
                     {"sparsity": sparsity_each_round, "op_types": ['Conv2d']}],
-                evaluator=self._evaluator,
+                evaluator=self._evaluator, dummy_input=self._dummy_input,
                 optimize_mode=self._optimize_mode,
                 base_algo=self._base_algo,
                 start_temperature=self._start_temperature,
