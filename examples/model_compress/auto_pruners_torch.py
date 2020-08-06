@@ -369,15 +369,15 @@ def main(args):
         elif args.dataset == 'cifar10' and args.model == 'vgg16':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
+                optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         elif args.dataset == 'cifar10' and args.model == 'resnet18':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
+                optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         elif args.dataset == 'cifar10' and args.model == 'resnet50':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
+                optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
         best_acc = 0
         for epoch in range(args.fine_tune_epochs):
             acc = evaluator(model)
