@@ -10,5 +10,5 @@ class NASBench201Mutator(Mutator):
             if isinstance(mutable, LayerChoice):
                 keywords_split = mutable.key.split("_")
                 onehot = matrix[int(keywords_split[-2]), int(keywords_split[-1])]
-                result[mutable.key] = torch.tensor(onehot, dtype=torch.bool)
+                result[mutable.key] = torch.tensor(onehot, dtype=torch.bool)  # pylint: disable=E1102
         self._cache = result
