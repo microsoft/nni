@@ -106,3 +106,12 @@ sh ./test.sh
 ```
 
 The test result will be saved in `./retrain`. You can configure the `--output` in `./test.sh` to specify a path for it.
+
+```eval_rst
+..  autoclass:: nni.nas.pytorch.cream.CreamSupernetTrainer
+    :members:
+
+..  autoclass:: nni.nas.pytorch.cdarts.CreamSupernetTrainingMutator
+    :members:
+    
+```
