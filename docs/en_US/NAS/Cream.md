@@ -1,14 +1,12 @@
 # Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search
 
 ## Introduction
-One-shot weight sharing methods have recently drawn great attention in neural architecture search due to high efficiency and competitive performance. However, weight sharing across models has an inherent deficiency, i.e., insufficient training
-of subnetworks in the hypernetwork. To alleviate this problem, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training
-process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized
-paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. We directly select the most promising
-one from the prioritized paths as the final architecture, without using other complex search methods, such as reinforcement learning or evolution algorithms. The experiments on ImageNet verify such path distillation method can improve the
-convergence ratio and performance of the hypernetwork, as well as boosting the training of subnetworks. The discovered architectures achieve superior performance compared to the recent MobileNetV3 and EfficientNet families under aligned
-settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method.
-For more details, please refer to the paper (coming soon).
+One-shot weight sharing methods have recently drawn great attention in neural architecture search due to high efficiency and competitive performance. However, weight sharing across models has an inherent deficiency, i.e., insufficient training of subnetworks in the hypernetwork. To alleviate this problem, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. We directly select the most promising one from the prioritized paths as the final architecture, without using other complex search methods, such as reinforcement learning or evolution algorithms. The experiments on ImageNet verify such path distillation method can improve the convergence ratio and performance of the hypernetwork, as well as boosting the training of subnetworks. The discovered architectures achieve superior performance compared to the recent MobileNetV3 and EfficientNet families under aligned settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method. For more details, please refer to the paper (coming soon).
+
+<div align="left">
+  <img src="./../../img/cream.jpg" height="230" alt="Ocean"/><br/>
+  <!-- <p>Example SiamFC, SiamRPN and SiamMask outputs.</p> -->
+</div>
 
 ## Reproduction Results
 Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior than 8 Gpus.
@@ -21,6 +19,14 @@ Top-1 Accuracy on ImageNet. The training with 16 Gpus is a little bit superior t
 | 285M | 76.7 | 77.6 |
 | 470M | 78.9 | 79.2 |
 | 600M | 79.4 | 80.0 |
+
+Top-1 Accuracy on ImageNet reported in the paper, supassing MobileNetV3 and EfficientNet-B0/B1.
+
+<table style="border: none">
+    <th><img src="./../../img/cream_flops100.jpg" alt="drawing" width="400"/></th>
+    <th><img src="./../../img/cream_flops600.jpg" alt="drawing" width="400"/></th>
+</table>
+
 
 ## Requirements
 * python >= 3.6
