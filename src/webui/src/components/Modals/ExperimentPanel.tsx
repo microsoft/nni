@@ -1,16 +1,16 @@
 import * as React from 'react';
-import axios from 'axios';
 import { downFile } from '../../static/function';
 import {
     Stack, PrimaryButton, DefaultButton, Panel, StackItem, Pivot, PivotItem
 } from 'office-ui-fabric-react';
-import { MANAGER_IP, DRAWEROPTION } from '../../static/const';
+import { DRAWEROPTION } from '../../static/const';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';
 import '../../static/style/logDrawer.scss';
 
 interface ExpDrawerProps {
-    isVisble: boolean;
     closeExpDrawer: () => void;
+    experimentProfile: object;
 }
 
 interface ExpDrawerState {
@@ -20,7 +20,9 @@ interface ExpDrawerState {
 
 class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
 
-    public _isCompareMount!: boolean;
+    public _isExperimentMount!: boolean;
+    private refreshId!: number | undefined;
+
     constructor(props: ExpDrawerProps) {
         super(props);
 
@@ -31,6 +33,7 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     getExperimentContent = (): void => {
+<<<<<<< HEAD:src/webui/src/components/Modals/ExperimentDrawer.tsx
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -63,10 +66,42 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
                     if (this._isCompareMount === true) {
                         this.setState({ experiment: JSON.stringify(result, null, 4) });
                     }
+=======
+        const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
+        if (experimentData.params.searchSpace) {
+            experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
+        }
+        const trialMessagesArr = TRIALS.getTrialJobList();
+        const interResultList = TRIALS.getMetricsList();
+        Object.keys(trialMessagesArr).map(item => {
+            // not deal with trial's hyperParameters
+            const trialId = trialMessagesArr[item].jobId;
+            // add intermediate result message
+            trialMessagesArr[item].intermediate = [];
+            Object.keys(interResultList).map(key => {
+                const interId = interResultList[key].trialJobId;
+                if (trialId === interId) {
+                    trialMessagesArr[item].intermediate.push(interResultList[key]);
+>>>>>>> 109d9a3210f618d1803cc751436cdf3dfa2ba589:src/webui/src/components/Modals/ExperimentPanel.tsx
                 }
-            }));
-    }
+            });
+        });
+        const result = {
+            experimentParameters: experimentData,
+            trialMessage: trialMessagesArr
+        };
+        if (this._isExperimentMount === true) {
+            this.setState({ experiment: JSON.stringify(result, null, 4) });
+        }
 
+        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+            if(this.refreshId !== null || this.refreshId !== undefined){
+                window.clearInterval(this.refreshId);
+            }
+        } 
+        
+    }
+    
     downExperimentParameters = (): void => {
         const { experiment } = this.state;
         downFile(experiment, 'experiment.json');
@@ -77,31 +112,28 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 
     componentDidMount(): void {
-        this._isCompareMount = true;
+        this._isExperimentMount = true;
         this.getExperimentContent();
+        this.refreshId = window.setInterval(this.getExperimentContent, 10000);
         window.addEventListener('resize', this.onWindowResize);
     }
 
-    componentWillReceiveProps(nextProps: ExpDrawerProps): void {
-        const { isVisble } = nextProps;
-        if (isVisble === true) {
-            this.getExperimentContent();
-        }
-    }
-
     componentWillUnmount(): void {
-        this._isCompareMount = false;
+        this._isExperimentMount = false;
+        window.clearTimeout(this.refreshId);
         window.removeEventListener('resize', this.onWindowResize);
     }
 
     render(): React.ReactNode {
-        const { isVisble, closeExpDrawer } = this.props;
+        const { closeExpDrawer } = this.props;
         const { experiment, expDrawerHeight } = this.state;
         return (
             <Stack className="logDrawer">
                 <Panel
-                    isOpen={isVisble}
+                    isOpen={true}
                     hasCloseButton={false}
+                    isLightDismiss={true}
+                    onLightDismissClick={closeExpDrawer}
                     styles={{ root: { height: expDrawerHeight, paddingTop: 15 } }}
                 >
                     <Pivot style={{ minHeight: 190 }} className="log-tab-body">
