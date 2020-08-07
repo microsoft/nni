@@ -17,15 +17,15 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
         }
     }
     // to compatiable with multi-trial in same job, fix offset of sequence
-    ret.forEach((trialMetrics) => {
+    ret.forEach(trialMetrics => {
         let minSequenceNumber = Number.POSITIVE_INFINITY;
-        trialMetrics.map((item) => {
-            if (item.sequence < minSequenceNumber && item.type !== "FINAL") {
+        trialMetrics.map(item => {
+            if (item.sequence < minSequenceNumber && item.type !== 'FINAL') {
                 minSequenceNumber = item.sequence;
             }
         });
-        trialMetrics.map((item) => {
-            if (item.type !== "FINAL") {
+        trialMetrics.map(item => {
+            if (item.type !== 'FINAL') {
                 item.sequence -= minSequenceNumber;
             }
         });
@@ -107,7 +107,7 @@ class TrialManager {
         if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
             return succeedTrialsList[0].finalKeys();
         } else {
-            return ["default"];
+            return ['default'];
         }
     }
 
@@ -125,7 +125,7 @@ class TrialManager {
             ['FAILED', 0],
             ['USER_CANCELED', 0],
             ['SYS_CANCELED', 0],
-            ['EARLY_STOPPED', 0],
+            ['EARLY_STOPPED', 0]
         ]);
         for (const trial of this.trials.values()) {
             if (trial.initialized()) {
@@ -153,20 +153,20 @@ class TrialManager {
                 let trial: TrialJobInfo | undefined;
                 let lastTrial: TrialJobInfo | undefined;
                 for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
-                    const hyperParameters = jobInfo.hyperParameters[i]
+                    const hyperParameters = jobInfo.hyperParameters[i];
                     const hpObject = JSON.parse(hyperParameters);
-                    const parameterId = hpObject["parameter_id"];
+                    const parameterId = hpObject['parameter_id'];
                     trial = {
                         id: `${jobInfo.id}-${parameterId}`,
                         jobId: jobInfo.id,
                         parameterId: parameterId,
                         sequenceId: parameterId,
-                        status: "SUCCEEDED",
+                        status: 'SUCCEEDED',
                         startTime: jobInfo.startTime,
                         endTime: jobInfo.startTime,
                         hyperParameters: [hyperParameters],
                         logPath: jobInfo.logPath,
-                        stderrPath: jobInfo.stderrPath,
+                        stderrPath: jobInfo.stderrPath
                     };
                     if (jobInfo.finalMetricData) {
                         for (const metricData of jobInfo.finalMetricData) {
@@ -235,7 +235,6 @@ class TrialManager {
     }
 
     private async updateInfo(): Promise<boolean> {
-
         let updated = false;
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
@@ -304,7 +303,11 @@ class TrialManager {
             return;
         }
         this.doingBatchUpdate = true;
-        for (let i = 0; i < this.maxSequenceId && this.isMetricdataRangeError === false; i += METRIC_GROUP_UPDATE_SIZE) {
+        for (
+            let i = 0;
+            i < this.maxSequenceId && this.isMetricdataRangeError === false;
+            i += METRIC_GROUP_UPDATE_SIZE
+        ) {
             requestAxios(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`)
                 .then(data => {
                     const updated = this.doUpdateMetrics(data as any, false);

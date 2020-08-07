@@ -24,7 +24,6 @@ interface ParaProps {
 }
 
 class Para extends React.Component<ParaProps, ParaState> {
-
     private paraRef = React.createRef<HTMLDivElement>();
     private pcs: any;
 
@@ -57,7 +56,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 this.renderParallelCoordinates();
             });
         }
-    }
+    };
 
     // select all final keys
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
@@ -66,7 +65,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 this.renderParallelCoordinates();
             });
         }
-    }
+    };
 
     componentDidMount(): void {
         this.renderParallelCoordinates();
@@ -86,8 +85,8 @@ class Para extends React.Component<ParaProps, ParaState> {
         const { selectedPercent, noChart } = this.state;
 
         return (
-            <div className="parameter">
-                <Stack horizontal className="para-filter" horizontalAlign="end">
+            <div className='parameter'>
+                <Stack horizontal className='para-filter' horizontalAlign='end'>
                     <Dropdown
                         selectedKey={selectedPercent}
                         onChange={this.percentNum}
@@ -95,15 +94,15 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.01', text: 'Top 1%' },
                             { key: '0.05', text: 'Top 5%' },
                             { key: '0.2', text: 'Top 20%' },
-                            { key: '1', text: 'Top 100%' },
+                            { key: '1', text: 'Top 100%' }
                         ]}
                         styles={{ dropdown: { width: 120 } }}
-                        className="para-filter-percent"
+                        className='para-filter-percent'
                     />
                     {this.finalKeysDropdown()}
                 </Stack>
-                <div className="parcoords" style={this.chartMulineStyle} ref={this.paraRef}/>
-                {noChart && <div className="nodata">No data</div>}
+                <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />
+                {noChart && <div className='nodata'>No data</div>}
             </div>
         );
     }
@@ -116,18 +115,19 @@ class Para extends React.Component<ParaProps, ParaState> {
             const finalKeysDropdown: any = [];
             TRIALS.finalKeys().forEach(item => {
                 finalKeysDropdown.push({
-                    key: item, text: item
+                    key: item,
+                    text: item
                 });
             });
             return (
                 <div>
-                    <span className="para-filter-text para-filter-middle">Metrics</span>
+                    <span className='para-filter-text para-filter-middle'>Metrics</span>
                     <Dropdown
                         selectedKey={primaryMetricKey}
                         options={finalKeysDropdown}
                         onChange={this.updateEntries}
                         styles={{ root: { width: 150, display: 'inline-block' } }}
-                        className="para-filter-percent"
+                        className='para-filter-percent'
                     />
                 </div>
             );
@@ -150,13 +150,17 @@ class Para extends React.Component<ParaProps, ParaState> {
         let convertedTrials = this.getTrialsAsObjectList(inferredSearchSpace, inferredMetricSpace);
 
         const dimensions: [any, any][] = [];
-        let colorDim: string | undefined = undefined, colorScale: any = undefined;
+        let colorDim: string | undefined = undefined,
+            colorScale: any = undefined;
         // treat every axis as numeric to fit for brush
         for (const [k, v] of inferredSearchSpace.axes) {
-            dimensions.push([k, {
-                type: 'number',
-                yscale: this.convertToD3Scale(v)
-            }]);
+            dimensions.push([
+                k,
+                {
+                    type: 'number',
+                    yscale: this.convertToD3Scale(v)
+                }
+            ]);
         }
         for (const [k, v] of inferredMetricSpace.axes) {
             const scale = this.convertToD3Scale(v);
@@ -169,7 +173,9 @@ class Para extends React.Component<ParaProps, ParaState> {
                 // filter top trials
                 if (percent != 1) {
                     const keptTrialNum = Math.max(Math.ceil(convertedTrials.length * percent), 1);
-                    convertedTrials.sort((a, b) => EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]);
+                    convertedTrials.sort((a, b) =>
+                        EXPERIMENT.optimizeMode === 'minimize' ? a[k] - b[k] : b[k] - a[k]
+                    );
                     convertedTrials = convertedTrials.slice(0, keptTrialNum);
                     const domain = d3.extent(convertedTrials, item => item[k]);
                     scale.domain([domain[0], domain[1]]);
@@ -178,10 +184,13 @@ class Para extends React.Component<ParaProps, ParaState> {
                     }
                 }
             }
-            dimensions.push([k, {
-                type: 'number',
-                yscale: scale
-            }]);
+            dimensions.push([
+                k,
+                {
+                    type: 'number',
+                    yscale: scale
+                }
+            ]);
         }
 
         if (convertedTrials.length === 0) {
@@ -192,13 +201,15 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (firstRun) {
             this.pcs = ParCoords()(this.paraRef.current);
         }
-        this.pcs.data(convertedTrials)
+        this.pcs
+            .data(convertedTrials)
             .dimensions(dimensions.reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {}));
         if (firstRun) {
-            this.pcs.margin(this.innerChartMargins)
+            this.pcs
+                .margin(this.innerChartMargins)
                 .alphaOnBrushed(0.2)
                 .smoothness(0.1)
-                .brushMode("1D-axes")
+                .brushMode('1D-axes')
                 .reorderable()
                 .interactive();
         }
@@ -217,7 +228,7 @@ class Para extends React.Component<ParaProps, ParaState> {
 
         return succeededTrials.map(s => {
             const entries = Array.from(s.parameters(inferredSearchSpace).entries());
-            entries.push(...(Array.from(s.metrics(inferredMetricSpace).entries())));
+            entries.push(...Array.from(s.metrics(inferredMetricSpace).entries()));
             const ret = {};
             for (const [k, v] of entries) {
                 ret[k.fullName] = v;
@@ -236,20 +247,26 @@ class Para extends React.Component<ParaProps, ParaState> {
 
     private convertToD3Scale(axis: SingleAxis, initRange: boolean = true): any {
         const padLinear = ([x0, x1], k = 0.1): [number, number] => {
-            const dx = (x1 - x0) * k / 2;
+            const dx = ((x1 - x0) * k) / 2;
             return [x0 - dx, x1 + dx];
         };
         const padLog = ([x0, x1], k = 0.1): [number, number] => {
             const [y0, y1] = padLinear([Math.log(x0), Math.log(x1)], k);
             return [Math.exp(y0), Math.exp(y1)];
-        }
+        };
         let scaleInst: any = undefined;
         if (axis.scale === 'ordinal') {
             if (axis.nested) {
                 // TODO: handle nested entries
-                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys())).padding(0.2);
+                scaleInst = d3
+                    .scalePoint()
+                    .domain(Array.from(axis.domain.keys()))
+                    .padding(0.2);
             } else {
-                scaleInst = d3.scalePoint().domain(axis.domain).padding(0.2);
+                scaleInst = d3
+                    .scalePoint()
+                    .domain(axis.domain)
+                    .padding(0.2);
             }
         } else if (axis.scale === 'log') {
             scaleInst = d3.scaleLog().domain(padLog(axis.domain));

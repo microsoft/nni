@@ -8,38 +8,32 @@ interface PaiTrialChildProps {
 }
 
 class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
-
     constructor(props: PaiTrialChildProps) {
         super(props);
-
     }
 
     render(): React.ReactNode {
         const { logString, id, logCollect } = this.props;
         return (
             <div>
-                {
-                    logString === ''
-                        ?
-                        <div />
-                        :
-                        <div>
-                            {
-                                logCollect
-                                    ?
-                                    <a
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        href={`${DOWNLOAD_IP}/trial_${id}.log`}
-                                        style={{ marginRight: 10 }}
-                                    >
-                                        trial stdout
-                                    </a>
-                                    :
-                                    <span>trial stdout: {logString}</span>
-                            }
-                        </div>
-                }
+                {logString === '' ? (
+                    <div />
+                ) : (
+                    <div>
+                        {logCollect ? (
+                            <a
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                href={`${DOWNLOAD_IP}/trial_${id}.log`}
+                                style={{ marginRight: 10 }}
+                            >
+                                trial stdout
+                            </a>
+                        ) : (
+                            <span>trial stdout: {logString}</span>
+                        )}
+                    </div>
+                )}
             </div>
         );
     }

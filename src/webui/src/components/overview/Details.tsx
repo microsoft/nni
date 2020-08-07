@@ -11,7 +11,6 @@ interface DetailsState {
 }
 
 class Details extends React.Component<DetailsProps, DetailsState> {
-
     constructor(props: DetailsProps) {
         super(props);
         this.state = { isExpand: false };
@@ -22,9 +21,11 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         const { isExpand } = this.state;
         return (
             <div>
-                <div onClick={(): void => {
-                    this.setState(() => ({ isExpand: !isExpand }));
-                }}>
+                <div
+                    onClick={(): void => {
+                        this.setState(() => ({ isExpand: !isExpand }));
+                    }}
+                >
                     <DetailsRow {...detailsProps} />
                 </div>
                 {isExpand && <OpenRow trialId={detailsProps.item.id} />}

@@ -38,25 +38,24 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         // #999 panel active bgcolor; #b3b3b3 as usual
         const { changeMetricGraphMode } = this.props;
         changeMetricGraphMode('max');
-    }
-
+    };
 
     clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         const { changeMetricGraphMode } = this.props;
         changeMetricGraphMode('min');
-    }
+    };
 
     changeConcurrency = (val: number): void => {
         this.setState({ trialConcurrency: val });
-    }
+    };
 
     // updateEntries = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
             this.props.changeEntries(item.key);
         }
-    }
+    };
 
     render(): React.ReactNode {
         const { trialConcurrency } = this.state;
@@ -67,11 +66,11 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
 
-        const titleMaxbgcolor = (metricGraphMode === 'max' ? '#333' : '#b3b3b3');
-        const titleMinbgcolor = (metricGraphMode === 'min' ? '#333' : '#b3b3b3');
+        const titleMaxbgcolor = metricGraphMode === 'max' ? '#333' : '#b3b3b3';
+        const titleMinbgcolor = metricGraphMode === 'min' ? '#333' : '#b3b3b3';
 
         const stackTokens: IStackTokens = {
-            childrenGap: 30,
+            childrenGap: 30
         };
 
         const entriesOption = [
@@ -82,17 +81,17 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
             { key: '100', text: 'Display top 100 trials' }
         ];
         return (
-            <div className="overview">
+            <div className='overview'>
                 {/* status and experiment block */}
-                <Stack className="bottomDiv bgNNI">
-                    <Title1 text="Experiment" icon="11.png" />
+                <Stack className='bottomDiv bgNNI'>
+                    <Title1 text='Experiment' icon='11.png' />
                     <BasicInfo experimentUpdateBroadcast={experimentUpdateBroadcast} />
                 </Stack>
 
-                <Stack horizontal className="overMessage bottomDiv">
+                <Stack horizontal className='overMessage bottomDiv'>
                     {/* status block */}
-                    <Stack.Item grow className="prograph bgNNI borderRight">
-                        <Title1 text="Status" icon="5.png" />
+                    <Stack.Item grow className='prograph bgNNI borderRight'>
+                        <Title1 text='Status' icon='5.png' />
                         <Progressed
                             bestAccuracy={bestAccuracy}
                             concurrency={trialConcurrency}
@@ -101,18 +100,18 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         />
                     </Stack.Item>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Stack.Item grow styles={{root: {width: 450}}} className="overviewBoder borderRight bgNNI">
-                        <Title1 text="Search space" icon="10.png" />
-                        <Stack className="experiment">
+                    <Stack.Item grow styles={{ root: { width: 450 } }} className='overviewBoder borderRight bgNNI'>
+                        <Title1 text='Search space' icon='10.png' />
+                        <Stack className='experiment'>
                             <SearchSpace searchSpace={EXPERIMENT.searchSpace} />
                         </Stack>
                     </Stack.Item>
                     {/* <Stack.Item grow styles={{root: {width: 450}}} className="bgNNI"> */}
-                    <Stack.Item grow styles={{root: {width: 450}}} className="bgNNI">
-                        <Title1 text="Config" icon="4.png" />
-                        <Stack className="experiment">
+                    <Stack.Item grow styles={{ root: { width: 450 } }} className='bgNNI'>
+                        <Title1 text='Config' icon='4.png' />
+                        <Stack className='experiment'>
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
-                            <div className="experiment searchSpace">
+                            <div className='experiment searchSpace'>
                                 <TrialInfo
                                     experimentUpdateBroadcast={experimentUpdateBroadcast}
                                     concurrency={trialConcurrency}
@@ -122,21 +121,15 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     </Stack.Item>
                 </Stack>
 
-                <Stack style={{backgroundColor: '#fff'}}>
-                    <Stack horizontal className="top10bg" style={{position: 'relative'}}>
-                        <div
-                            className="title"
-                            onClick={this.clickMaxTop}
-                        >
-                            <Title1 text="Top maximal trials" icon="max.png" fontColor={titleMaxbgcolor} />
+                <Stack style={{ backgroundColor: '#fff' }}>
+                    <Stack horizontal className='top10bg' style={{ position: 'relative' }}>
+                        <div className='title' onClick={this.clickMaxTop}>
+                            <Title1 text='Top maximal trials' icon='max.png' fontColor={titleMaxbgcolor} />
                         </div>
-                        <div
-                            className="title minTitle"
-                            onClick={this.clickMinTop}
-                        >
-                            <Title1 text="Top minimal trials" icon="min.png" fontColor={titleMinbgcolor} />
+                        <div className='title minTitle' onClick={this.clickMinTop}>
+                            <Title1 text='Top minimal trials' icon='min.png' fontColor={titleMinbgcolor} />
                         </div>
-                        <div style={{position: 'absolute', right: 52, top: 6}}>
+                        <div style={{ position: 'absolute', right: 52, top: 6 }}>
                             <Dropdown
                                 selectedKey={bestTrialEntries}
                                 options={entriesOption}
@@ -146,14 +139,10 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                         </div>
                     </Stack>
                     <Stack horizontal tokens={stackTokens}>
-                        <div style={{ width: '40%', position: 'relative'}}>
-                            <Accuracy
-                                accuracyData={accuracyGraphData}
-                                accNodata={noDataMessage}
-                                height={404}
-                            />
+                        <div style={{ width: '40%', position: 'relative' }}>
+                            <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={404} />
                         </div>
-                        <div style={{ width: '60%'}}>
+                        <div style={{ width: '60%' }}>
                             <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
                         </div>
                     </Stack>
@@ -197,11 +186,13 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                 scale: true,
                 data: ySequence
             },
-            series: [{
-                symbolSize: 6,
-                type: 'scatter',
-                data: ySequence
-            }]
+            series: [
+                {
+                    symbolSize: 6,
+                    type: 'scatter',
+                    data: ySequence
+                }
+            ]
         };
     }
 }

@@ -1,7 +1,5 @@
 import * as React from 'react';
-import {
-    Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultButton
-} from 'office-ui-fabric-react';
+import { Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultButton } from 'office-ui-fabric-react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
 import { tableListIcon } from './Buttons/Icon';
@@ -28,7 +26,6 @@ interface TrialsDetailProps {
 }
 
 class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> {
-
     public interAccuracy = 0;
     public interAllTableList = 2;
 
@@ -73,17 +70,17 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 alert(`Unexpected search filter ${this.state.searchType}`);
         }
         this.setState({ searchFilter: filter });
-    }
+    };
 
     handleTablePageSizeSelect = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
         if (item !== undefined) {
             this.setState({ tablePageSize: item.text === 'all' ? -1 : parseInt(item.text, 10) });
         }
-    }
+    };
 
     handleWhichTabs = (item: any): void => {
-        this.setState({whichChart: item.props.headerText});
-    }
+        this.setState({ whichChart: item.props.headerText });
+    };
 
     updateSearchFilterType = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
         // clear input value and re-render table
@@ -93,7 +90,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             }
             this.setState(() => ({ searchType: item.key.toString() }));
         }
-    }
+    };
 
     render(): React.ReactNode {
         const { tablePageSize, whichChart, searchType } = this.state;
@@ -104,15 +101,20 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             { key: 'id', text: 'Id' },
             { key: 'Trial No.', text: 'Trial No.' },
             { key: 'status', text: 'Status' },
-            { key: 'parameters', text: 'Parameters' },
+            { key: 'parameters', text: 'Parameters' }
         ];
         return (
             <div>
-                <div className="trial" id="tabsty">
-                    <Pivot defaultSelectedKey={"0"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichChart}>
+                <div className='trial' id='tabsty'>
+                    <Pivot
+                        defaultSelectedKey={'0'}
+                        className='detial-title'
+                        onLinkClick={this.handleWhichTabs}
+                        selectedKey={whichChart}
+                    >
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
-                        <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="Default metric">
-                            <Stack className="graph">
+                        <PivotItem headerText='Default metric' itemIcon='HomeGroup' key='Default metric'>
+                            <Stack className='graph'>
                                 <DefaultPoint
                                     trialIds={trialIds}
                                     visible={whichChart === 'Default metric'}
@@ -121,21 +123,21 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
-                        <PivotItem headerText="Hyper-parameter" itemIcon="Equalizer" key="Hyper-parameter">
-                            <Stack className="graph">
-                                <Para
-                                    trials={source}
-                                    searchSpace={EXPERIMENT.searchSpaceNew}
-                                    whichChart={whichChart}
-                                />
+                        <PivotItem headerText='Hyper-parameter' itemIcon='Equalizer' key='Hyper-parameter'>
+                            <Stack className='graph'>
+                                <Para trials={source} searchSpace={EXPERIMENT.searchSpaceNew} whichChart={whichChart} />
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
-                        <PivotItem headerText="Duration" itemIcon="BarChartHorizontal" key="Duration">
+                        <PivotItem headerText='Duration' itemIcon='BarChartHorizontal' key='Duration'>
                             <Duration source={source} whichChart={whichChart} />
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
-                        <PivotItem headerText="Intermediate result" itemIcon="StackedLineChart" key="Intermediate result">
+                        <PivotItem
+                            headerText='Intermediate result'
+                            itemIcon='StackedLineChart'
+                            key='Intermediate result'
+                        >
                             {/* *why this graph has small footprint? */}
                             <Intermediate source={source} whichChart={whichChart} />
                         </PivotItem>
@@ -143,25 +145,33 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                 </div>
                 {/* trial table list */}
                 <div style={{ backgroundColor: '#fff' }}>
-                    <Stack horizontal className="panelTitle" style={{ marginTop: 10 }}>
+                    <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
                         <span style={{ marginRight: 12 }}>{tableListIcon}</span>
                         <span>Trial jobs</span>
                     </Stack>
-                    <Stack horizontal className="allList">
+                    <Stack horizontal className='allList'>
                         <StackItem grow={50}>
                             <DefaultButton
-                                text="Compare"
-                                className="allList-compare"
+                                text='Compare'
+                                className='allList-compare'
                                 // use child-component tableList's function, the function is in child-component.
-                                onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
+                                onClick={(): void => {
+                                    if (this.tableList) {
+                                        this.tableList.compareBtn();
+                                    }
+                                }}
                             />
                         </StackItem>
                         <StackItem grow={50}>
-                            <Stack horizontal horizontalAlign="end" className="allList">
+                            <Stack horizontal horizontalAlign='end' className='allList'>
                                 <DefaultButton
-                                    className="allList-button-gap"
-                                    text="Add column"
-                                    onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
+                                    className='allList-button-gap'
+                                    text='Add column'
+                                    onClick={(): void => {
+                                        if (this.tableList) {
+                                            this.tableList.addColumn();
+                                        }
+                                    }}
                                 />
                                 <Dropdown
                                     selectedKey={searchType}
@@ -170,12 +180,12 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                                     styles={{ root: { width: 150 } }}
                                 />
                                 <input
-                                    type="text"
-                                    className="allList-search-input"
+                                    type='text'
+                                    className='allList-search-input'
                                     placeholder={`Search by ${this.state.searchType}`}
                                     onChange={this.searchTrial}
                                     style={{ width: 230 }}
-                                    ref={(text): any => (this.searchInput) = text}
+                                    ref={(text): any => (this.searchInput = text)}
                                 />
                             </Stack>
                         </StackItem>
@@ -187,7 +197,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         changeColumn={changeColumn}
                         trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                         // TODO: change any to specific type
-                        ref={(tabList): any => this.tableList = tabList}
+                        ref={(tabList): any => (this.tableList = tabList)}
                     />
                 </div>
             </div>

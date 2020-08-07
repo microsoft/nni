@@ -33,7 +33,7 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
-    parameters(axes: MultipleAxes): Map<SingleAxis, any>; 
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
     metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
@@ -214,8 +214,25 @@ interface EventMap {
 }
 
 export {
-    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
-    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
-    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
+    TableObj,
+    TableRecord,
+    SearchSpace,
+    FinalType,
+    ErrorParameter,
+    Parameters,
+    AccurPoint,
+    DetailAccurPoint,
+    TooltipForIntermediate,
+    TooltipForAccuracy,
+    Dimobj,
+    ParaObj,
+    Intermedia,
+    MetricDataRecord,
+    TrialJobInfo,
+    ExperimentParams,
+    ExperimentProfile,
+    NNIManagerStatus,
+    EventMap,
+    SingleAxis,
+    MultipleAxes
 };
