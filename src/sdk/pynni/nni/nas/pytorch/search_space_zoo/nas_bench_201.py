@@ -49,7 +49,7 @@ class NASBench201Cell(nn.Module):
                                         bn_track_running_stats)),
             ("skip_connect", nn.Identity() if stride == 1 and C_in == C_out
              else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
-                                  bn_track_running_stats))
+                                   bn_track_running_stats))
         ])
 
         for i in range(self.NUM_NODES):
