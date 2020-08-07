@@ -3,28 +3,32 @@ import tensorflow as tf
 from ..compressor import Pruner
 
 __all__ = [
-    'OneshotPruner'
+    'OneshotPruner',
+    'LevelPruner',
 ]
 
 class OneshotPruner(Pruner):
-    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None, **algo_kwargs):
-        super().__init__(model, config_list, optimizer)
-        self.set_wrapper_attribute('if_calculated', False)
-        self.masker = MASKER_DICT[pruning_alogrithm](model, self, **algo_kwargs)
-
+    def __init__(self, model, config_list, pruning_algorithm='level', **algo_kwargs):
+        super().__init__(model, config_list)
+        self.set_wrappers_attribute('calculated', False)
+        self.masker = MASKER_DICT[pruning_algorithm](model, self, **algo_kwargs)
 
     def validate_config(self, model, config_list):
         pass  # TODO
 
-
-    def calc_mask(self, wrapper, wrapper_idx=None):
-        if wrapper.if_calculated:
+    def calc_masks(self, wrapper, wrapper_idx=None):
+        if wrapper.calculated:
             return None
         sparsity = wrapper.config['sparsity']
-        masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        masks = self.masker.calc_masks(sparsity, wrapper, wrapper_idx)
         if masks is not None:
-            wrapper.if_calculated = True
+            wrapper.calculated = True
         return masks
+
+
+class LevelPruner(OneshotPruner):
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list, pruning_algorithm='level')
 
 
 class WeightMasker:
@@ -32,19 +36,30 @@ class WeightMasker:
         self.model = model
         self.pruner = pruner
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+    def calc_masks(self, sparsity, wrapper, wrapper_idx=None):
         raise NotImplementedError()
 
 
 class LevelPrunerMasker(WeightMasker):
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
-        weight = wrapper.module.weight * wrapper.weight_mask
-        w_abs = tf.abs(w_abs)
-        k = int(tf.size(weight) * sparsity)
-        assert k > 0  # FIXME
-        threshold = tf.reduce_max(tf.topk(tf.reshape(w_abs, [-1]), k, largest=False)[0])
-        mask_weight = tf.cast((w_abs > threshold), weight.dtype)
-        return {'weight_mask': mask_weight}
+    def calc_masks(self, sparsity, wrapper, wrapper_idx=None):
+        masks = {}
+        for i, weight_variable in enumerate(wrapper.layer.weights):
+            if weight_variable.name == 'bias':
+                continue
+
+            k = int(tf.size(weight_variable) * sparsity)
+            if k == 0:
+                continue
+
+            weight = weight_variable.read_value()
+            if wrapper.masks[weight.name] is not None:
+                weight = tf.math.multiply(weight, wrapper.masks[weight.name])
+
+            w_abs = tf.math.abs(tf.reshape(weight, [-1]))
+            threshold = tf.math.topk(w_abs, k)[0][0]
+            mask = tf.math.greater(w_abs, threshold)
+            masks[weight.name] = tf.cast(mask, weight.dtype)
+        return masks
 
 
 MASKER_DICT = {

@@ -44,10 +44,10 @@ def create_model(model_name='naive'):
     ])
 
 
-def create_pruner(model, pruner_name, optimizer=None):
+def create_pruner(model, pruner_name):
     pruner_class = prune_config[pruner_name]['pruner_class']
     config_list = prune_config[pruner_name]['config_list']
-    return pruner_class(model, config_list, optimizer)
+    return pruner_class(model, config_list)
 
 
 def main(args):
@@ -64,9 +64,10 @@ def main(args):
 
     print('start model pruning')
     optimizer_finetune = tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9, decay=1e-4)
-    pruner = create_pruner(model, args.pruner_name, optimizer_finetune)
+    pruner = create_pruner(model, args.pruner_name)
     model = pruner.compress()
     model.compile(optimizer=optimizer_finetune, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model.fit(train_set[0], train_set[1], batch_size=args.batch_size, epochs=args.prune_epochs, validation_data=test_set)
 
 
 if __name__ == '__main__':

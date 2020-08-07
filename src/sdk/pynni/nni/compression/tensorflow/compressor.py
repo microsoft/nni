@@ -9,142 +9,151 @@ _logger = logging.getLogger(__name__)
 
 
 class LayerInfo:
-    def __init__(self, layer):
-        self.module = layer
-        self.name = layer._name
+    def __init__(self, layer, path=None):
+        self.layer = layer
+        self.name = layer.name
         self.type = type(layer).__name__
-
-
-def _wrap_model(model, wrapped_layers):
-    for key, value in model.__dict__.items():
-        if isinstance(value, tf.keras.Model):
-            _wrap_model(value, wrapped_layers)
-        for layer in wrapped_layers:
-            if value is layer.module:
-                setattr(model, key, layer)
+        self.path = path
+        self.config = None
 
 
 class Compressor:
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, LayerWrapperClass, model, config_list):
         assert isinstance(model, tf.keras.Model)
         self.validate_config(model, config_list)
 
         self.bound_model = model
-        self.config_list = config_list
-        self.optimizer = optimizer
+        self.wrappers = []
 
-        self.modules_to_compress = None
-        self.modules_wrapper = []
-
-        for layer, config in self._detect_modules_to_compress():
-            wrapper = self._wrap_modules(layer, config)
-            self.modules_wrapper.append(wrapper)
-        if not self.modules_wrapper:
+        for layer_info in _detect_layers_to_compress(model, config_list):
+            self.wrappers.append(LayerWrapperClass(layer_info, self))
+        if not self.wrappers:
             _logger.warning('Nothing is configured to compress, please check your model and config list')
 
-        _wrap_model(model, self.modules_wrapper)
-
-    def _detect_modules_to_compress(self):
-        if self.modules_to_compress is None:
-            self.modules_to_compress = []
-            for keras_layer in self.bound_model.layers:
-                layer = LayerInfo(keras_layer)
-                config = self.select_config(layer)
-                if config is not None:
-                    self.modules_to_compress.append((layer, config))
-        return self.modules_to_compress
-
-    def compress(self):
-        return self.bound_model
+        _instrument_model(model, self.wrappers)
 
     def set_wrappers_attribute(self, name, value):
-        for wrapper in self.get_modules_wrapper():
+        for wrapper in self.wrappers:
             setattr(wrapper, name, value)
-
-    def get_modules_to_compress(self):
-        return self.modules_to_compress
-
-    def select_config(self, layer):
-        ret = None
-        if layer.type is None:
-            return None
-        for config in self.config_list:
-            config = config.copy()
-            if 'op_types' in config and 'default' in config['op_type']:
-                expanded_op_types = []
-            for op_type in config['op_types']:
-                if op_type == 'default':
-                    expanded_op_types.extend(default_layers.weighted_modules)
-                else:
-                    expanded_op_types.append(op_type)
-            config['op_types'] = expanded_op_types
-
-            if 'op_types' in config and layer.type not in config['op_types']:
-                continue
-            if 'op_names' in config and layer.name not in config['op_names']:
-                continue
-
-            ret = config
-
-        if ret is None or 'exclude' is ret:
-            return None
-        return ret
-
-
-    def update_epoch(self, epoch):
-        pass
-
-
-    def _wrap_modules(self, layer, config):
-        raise NotImplementedError()
-
-
-    def patch_optimizer(self, **tasks):
-        pass
 
 
 class Pruner(Compressor):
-    def __init__(self, model, config_list, optimizer=None):
-        super().__init__(model, config_list, optimizer)
-        if optimizer is not None:
-            self.patch_optimizer(self.update_mask)
+    def __init__(self, model, config_list):
+        super().__init__(PrunerLayerWrapper, model, config_list)
+        #self.callback = PrunerCallback(self)
 
     def compress(self):
         self.update_mask()
         return self.bound_model
 
     def update_mask(self):
-        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
-            masks = self.calc_mask(wrapper, wrapper_idx=wrapper_idx)
+        for wrapper_idx, wrapper in enumerate(self.wrappers):
+            masks = self.calc_masks(wrapper, wrapper_idx=wrapper_idx)
             if masks is not None:
-                for k in masks:
-                    assert hasattr(wrapper, k)
-                    setattr(wrapper, k, masks[k])
+                wrapper.masks = masks
 
-    def calc_mask(self, wrapper, **kwargs):
-        raise NotImplementedError("Pruners must overload calc_mask()")
-
-    def _wrap_modules(self, layer, config):
-        _logger.info('Module detected to compress : %s.', layer.name)
-        return PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+    def calc_masks(self, wrapper, **kwargs):
+        # TODO: maybe it should be able to calc on weight-granularity, beside from layer-granularity
+        raise NotImplementedError("Pruners must overload calc_masks()")
 
 
-class PrunerModuleWrapper(tf.keras.Model):
-    def __init__(self, module, module_name, module_type, config, pruner):
+class PrunerLayerWrapper(tf.keras.Model):
+    def __init__(self, layer_info, pruner):
         super().__init__()
-        self.module = module
-        self.name = module_name
-        self.type = module_type
-        self.config = config
+        self.layer_info = layer_info
+        self.layer = layer_info.layer
+        self.config = layer_info.config
         self.pruner = pruner
-        self.masks = []
-        for weight in module.weights:
-            self.masks.append(tf.ones_like(weight))
-            # TODO: filter weight name like 'kernel'/'bias'/etc?
+        self.masks = {}
+        _logger.info('Layer detected to compress: %s', self.layer.name)
 
     def call(self, *inputs):
         new_weights = []
-        for mask, weight in zip(self.masks, self.module.weights):
-            new_weights.append(tf.math.multiply(mask, weight).numpy())
-        self.module.set_weights(new_weights)
-        return self.module(*inputs)
+        for weight in self.layer.weights:
+            mask = self.masks.get(weight.name)
+            if mask is not None:
+                new_weights.append(tf.math.multiply(weight, mask).numpy())
+            else:
+                new_weights.append(weight.numpy())
+        self.layer.set_weights(new_weights)
+        return self.layer(*inputs)
+
+
+# TODO: designed to replace `patch_optimizer`
+#class PrunerCallback(tf.keras.callbacks.Callback):
+#    def __init__(self, pruner):
+#        super().__init__()
+#        self._pruner = pruner
+#
+#    def on_train_batch_end(self, batch, logs=None):
+#        self._pruner.update_mask()
+
+
+def _detect_layers_to_compress(model, config_list):
+    located_layers = _locate_layers(model)
+    ret = []
+    for layer in model.layers:
+        config = _select_config(LayerInfo(layer), config_list)
+        if config is not None:
+            if id(layer) not in located_layers:
+                _logger.error('Failed to locate layer %s in model. The layer will not be compressed. '
+                              'This is a bug in NNI, feel free to fire an issue.', layer.name)
+                continue
+            layer_info = located_layers[id(layer)]
+            layer_info.config = config
+            ret.append(layer_info)
+    return ret
+
+def _locate_layers(model, cur_path=[]):
+    # FIXME: this cannot find layers contained in list, dict, non-model custom classes, etc
+    ret = {}
+
+    if isinstance(model, tf.keras.Model):
+        for key, value in model.__dict__.items():
+            if isinstance(value, tf.keras.Model):
+                ret.update(_locate_layers(value, cur_path + [key]))
+            elif isinstance(value, list):
+                ret.update(_locate_layers(value, cur_path + [key]))
+            elif isinstance(value, tf.keras.layers.Layer):
+                ret[id(value)] = LayerInfo(value, cur_path + [key])
+
+    elif isinstance(model, list):
+        for i, item in enumerate(model):
+            if isinstance(item, tf.keras.Model):
+                ret.update(_locate_layers(item, cur_path + [i]))
+            elif isinstance(item, tf.keras.layers.Layer):
+                ret[id(item)] = LayerInfo(item, cur_path + [i])
+
+    else:
+        raise ValueError('Unexpected model type: {}'.format(type(model)))
+    return ret
+
+def _select_config(layer_info, config_list):
+    ret = None
+    for config in config_list:
+        if 'op_types' in config:
+            match = layer_info.type in config['op_types']
+            match_default = 'default' in config['op_types'] and layer_info.type in default_layers.weighted_modules
+            if not match and not match_default:
+                continue
+        if 'op_names' in config and layer_info.name not in config['op_names']:
+            continue
+        ret = config
+    if ret is None or 'exclude' in ret:
+        return None
+    return ret
+
+
+def _instrument_model(model, wrappers):
+    for wrapper in wrappers:
+        cur = model
+        for key in wrapper.layer_info.path[:-1]:
+            if isinstance(key, int):
+                cur = cur[key]
+            else:
+                cur = getattr(cur, key)
+        key = wrapper.layer_info.path[-1]
+        if isinstance(key, int):
+            cur[key] = wrapper
+        else:
+            setattr(cur, key, wrapper)
