@@ -173,6 +173,7 @@ class SimulatedAnnealingPruner(Pruner):
                 config_list.append(
                     {'sparsity': sparsities[idx], 'op_names': [wrapper.name]})
         print('\n\n##########')
+        print('Constrained', self.constrained)
         if self.constrained:
             print('test %%%%%%%%%%%%%%%%%%')
 
