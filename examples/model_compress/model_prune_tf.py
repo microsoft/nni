@@ -10,7 +10,7 @@ prune_config = {
         'model_name': 'naive',
         'pruner_class': nni.compression.tensorflow.LevelPruner,
         'config_list': [{
-            'sparsity': 0.5,
+            'sparsity': 0.9,
             'op_types': ['default'],
         }]
     },
