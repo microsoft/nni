@@ -226,9 +226,11 @@ class Trial implements TableObj {
         const ret = new Map<SingleAxis, any>();
         const unexpectedEntries = new Map<string, any>();
         if (this.acc === undefined) {
+            console.info(111111); // eslint-disable-line
             return ret;
         }
         const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;
+        console.info('acc', acc); // eslint-disable-line
         Object.entries(acc).forEach(item => {
             const [k, v] = item;
             const column = space.axes.get(k);

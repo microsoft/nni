@@ -101,8 +101,12 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
-        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default') && (typeof showDefault.default === 'number')) {
-            return showDefault;
+        } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')) {
+            if (typeof showDefault.default === 'number') {
+                return showDefault;
+            } else {
+                return undefined;
+            }
         }
     } else {
         return undefined;
