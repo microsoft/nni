@@ -83,7 +83,7 @@
     "npx": "^10.2.0",
     "typescript": "^3.8.0"
   },
-  "proxy": "http://localhost:12138",
+  "proxy": "http://localhost:8080",
   "scripts": {
     "start": "node --max-old-space-size=3072 scripts/start.js",
     "build": "node --max-old-space-size=3072 scripts/build.js",
