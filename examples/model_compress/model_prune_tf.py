@@ -41,6 +41,7 @@ def create_model(model_name='naive'):
         tf.keras.layers.Dense(units=500),
         tf.keras.layers.ReLU(),
         tf.keras.layers.Dense(units=10),
+        tf.keras.layers.Softmax()
     ])
 
 
