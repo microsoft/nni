@@ -272,7 +272,7 @@ class L1ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
         else:
             c_mask = torch.ones(filters).to(weight.device)
         mask_weight = c_mask[:, None, None, None].expand_as(
-            weight).type_as(weight)
+            weight).type_as(weight).clone()
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             mask_bias = c_mask.type_as(weight).detach()
@@ -322,7 +322,7 @@ class L2ConstrainedFilterPrunerMasker(ConstrainedStructuredWeightMasker):
         else:
             c_mask = torch.ones(filters).to(weight.device)
         mask_weight = c_mask[:, None, None, None].expand_as(
-            weight).type_as(weight)
+            weight).type_as(weight).clone()
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             mask_bias = c_mask.type_as(weight).detach()
@@ -623,7 +623,7 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
         if self.pruner.hook_id in self.pruner._fwd_hook_handles:
             self.pruner.remove_activation_collector(self.pruner.hook_id)
         mask_weight = c_mask[:, None, None, None].expand_as(
-            weight).type_as(weight)
+            weight).type_as(weight).clone()
         mask_bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
             mask_bias = c_mask.type_as(weight).detach()
