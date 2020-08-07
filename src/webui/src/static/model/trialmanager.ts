@@ -7,29 +7,13 @@ import { requestAxios } from '../function';
 function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDataRecord[]> {
     const ret = new Map<string, MetricDataRecord[]>();
     for (const metric of metrics) {
-        const trialId = `${metric.trialJobId}-${metric.parameterId}`;
-        metric.trialId = trialId;
-        if (ret.has(trialId)) {
+        if (ret.has(metric.trialJobId)) {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            ret.get(trialId)!.push(metric);
+            ret.get(metric.trialJobId)!.push(metric);
         } else {
-            ret.set(trialId, [metric]);
+            ret.set(metric.trialJobId, [metric]);
         }
     }
-    // to compatiable with multi-trial in same job, fix offset of sequence
-    ret.forEach(trialMetrics => {
-        let minSequenceNumber = Number.POSITIVE_INFINITY;
-        trialMetrics.map(item => {
-            if (item.sequence < minSequenceNumber && item.type !== 'FINAL') {
-                minSequenceNumber = item.sequence;
-            }
-        });
-        trialMetrics.map(item => {
-            if (item.type !== 'FINAL') {
-                item.sequence -= minSequenceNumber;
-            }
-        });
-    });
     return ret;
 }
 
@@ -145,57 +129,6 @@ class TrialManager {
         return new MetricSpace([...this.trials.values()]);
     }
 
-    public static expandJobsToTrials(jobs: TrialJobInfo[]): TrialJobInfo[] {
-        const trials: TrialJobInfo[] = [];
-
-        for (const jobInfo of jobs as TrialJobInfo[]) {
-            if (jobInfo.hyperParameters) {
-                let trial: TrialJobInfo | undefined;
-                let lastTrial: TrialJobInfo | undefined;
-                for (let i = 0; i < jobInfo.hyperParameters.length; i++) {
-                    const hyperParameters = jobInfo.hyperParameters[i];
-                    const hpObject = JSON.parse(hyperParameters);
-                    const parameterId = hpObject['parameter_id'];
-                    trial = {
-                        id: `${jobInfo.id}-${parameterId}`,
-                        jobId: jobInfo.id,
-                        parameterId: parameterId,
-                        sequenceId: parameterId,
-                        status: 'SUCCEEDED',
-                        startTime: jobInfo.startTime,
-                        endTime: jobInfo.startTime,
-                        hyperParameters: [hyperParameters],
-                        logPath: jobInfo.logPath,
-                        stderrPath: jobInfo.stderrPath
-                    };
-                    if (jobInfo.finalMetricData) {
-                        for (const metricData of jobInfo.finalMetricData) {
-                            if (metricData.parameterId == parameterId) {
-                                trial.finalMetricData = [metricData];
-                                trial.endTime = metricData.timestamp;
-                                break;
-                            }
-                        }
-                    }
-                    if (lastTrial) {
-                        trial.startTime = lastTrial.endTime;
-                    } else {
-                        trial.startTime = jobInfo.startTime;
-                    }
-                    lastTrial = trial;
-                    trials.push(trial);
-                }
-                if (lastTrial !== undefined) {
-                    lastTrial.status = jobInfo.status;
-                    lastTrial.endTime = jobInfo.endTime;
-                }
-            } else {
-                trials.push(jobInfo);
-            }
-        }
-        return trials;
-    }
-
     // if this.jobListError = true, show trial error message [/trial-jobs]
     public jobListError(): boolean {
         return this.isJobListError;
@@ -238,9 +171,7 @@ class TrialManager {
         let updated = false;
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
-                const newTrials = TrialManager.expandJobsToTrials(data as any);
-                this.trialJobList = newTrials;
-                for (const trialInfo of newTrials as TrialJobInfo[]) {
+                for (const trialInfo of data as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                         updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
