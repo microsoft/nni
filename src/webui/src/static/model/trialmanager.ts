@@ -48,6 +48,16 @@ class TrialManager {
     private latestMetricdataErrorMessage: string = ''; // metric-data-latest error message
     private isMetricdataRangeError: boolean = false; // metric-data-range api error filed
     private metricdataRangeErrorMessage: string = ''; // metric-data-latest error message
+    private metricsList: Array<MetricDataRecord> = [];
+    private trialJobList: Array<TrialJobInfo> = [];
+
+    public getMetricsList(): Array<MetricDataRecord> {
+        return this.metricsList;
+    }
+
+    public getTrialJobList(): Array<TrialJobInfo> {
+        return this.trialJobList;
+    }
 
     public async init(): Promise<void> {
         while (!this.infoInitialized || !this.metricInitialized) {
@@ -230,6 +240,7 @@ class TrialManager {
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
                 const newTrials = TrialManager.expandJobsToTrials(data as any);
+                this.trialJobList = newTrials;
                 for (const trialInfo of newTrials as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.id)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -265,7 +276,10 @@ class TrialManager {
 
     private async updateAllMetrics(): Promise<boolean> {
         return requestAxios(`${MANAGER_IP}/metric-data`)
-            .then(data => this.doUpdateMetrics(data as any, false))
+            .then(data => {
+                this.metricsList = data;
+                return this.doUpdateMetrics(data as any, false);
+            })
             .catch(error => {
                 this.isMetricdataError = true;
                 this.MetricdataErrorMessage = `${error.message}`;
