@@ -23,6 +23,12 @@ azure_pipeline:
     - apt-get update
     - apt-get install -y sudo apt-utils git curl unzip wget build-essential
   script:
+    - export KUBECONFIG="`pwd`/kubeconfig"
+    - curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.7/2020-07-08/bin/linux/amd64/aws-iam-authenticator
+    - chmod +x ./aws-iam-authenticator
+    - mkdir -p $HOME/bin
+    - cp ./aws-iam-authenticator $HOME/bin/
+    - export PATH=$PATH:$HOME/bin
     - python3 -m pip install --upgrade pip setuptools
     - python3 -m pip install coverage
     - echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
@@ -45,6 +51,7 @@ azure_pipeline:
     - nnictl package install --name=SMAC
     - nnictl package install --name=BOHB
   # displayName: 'Install dependencies' (for unittest)
+    - python3 -m pip install --extra-index-url http://pypi.int.petuum.com:8080/simple --trusted-host pypi.int.petuum.com adaptdl==0.1.16.dev32+g8fe97ba5d
     - cd test
     - source scripts/unittest.sh
 

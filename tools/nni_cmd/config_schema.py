@@ -124,7 +124,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'),
+        'trainingServicePlatform', 'adl', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -259,6 +259,22 @@ aml_config_schema = {
         'computeTarget': setType('computeTarget', str),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool),
+    }
+}
+
+adl_trial_schema = {
+    'trial':{
+        'codeDir': setType('codeDir', str),
+        'command': setType('command', str),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'image': setType('image', str),
+        'checkpoint': {
+            'storageClass': setType('storageClass', str),
+            'storageSize': setType('storageSize', str)
+        },
+        Optional('imagePullSecrets'): [{
+            'name': setType('name', str)
+        }]
     }
 }
 
@@ -404,6 +420,7 @@ machine_list_schema = {
 }
 
 training_service_schema_dict = {
+    'adl': Schema({**common_schema, **adl_trial_schema}),
     'local': Schema({**common_schema, **common_trial_schema}),
     'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema, **remote_config_schema}),
     'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),

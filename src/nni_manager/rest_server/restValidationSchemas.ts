@@ -93,6 +93,13 @@ export namespace ValidationSchemas {
                         minFailedTaskCount: joi.number(),
                         minSucceededTaskCount: joi.number()
                     })
+                }),
+                imagePullSecrets: joi.array({
+                    name: joi.string().min(1).required()
+                }),
+                checkpoint: joi.object({
+                    storageClass: joi.string().min(1).required(),
+                    storageSize: joi.string().min(1).required()
                 })
             }),
             pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase

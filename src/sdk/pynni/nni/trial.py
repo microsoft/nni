@@ -21,6 +21,7 @@ _params = None
 _experiment_id = platform.get_experiment_id()
 _trial_id = platform.get_trial_id()
 _sequence_id = platform.get_sequence_id()
+INTERMEDIATE_OFFSET = "intermediate_result_idx_offset"
 
 
 def get_next_parameter():
@@ -97,7 +98,7 @@ def get_sequence_id():
 
 _intermediate_seq = 0
 
-def report_intermediate_result(metric):
+def report_intermediate_result(metric, accum=None):
     """
     Reports intermediate result to NNI.
 
@@ -105,8 +106,22 @@ def report_intermediate_result(metric):
     ----------
     metric:
         serializable object.
+    accum:
+        An adaptdl Accumulator which persists running state. It is only
+        used during adaptdl training.
     """
     global _intermediate_seq
+
+    if accum is not None:
+        from adaptdl.torch.accumulator import Accumulator
+        if not isinstance(accum, Accumulator):
+            raise TypeError("accum is not Adaptdl Accumulator!")
+        with accum.synchronized():
+            if INTERMEDIATE_OFFSET not in accum:
+                accum[INTERMEDIATE_OFFSET] = 0
+            _intermediate_seq = accum[INTERMEDIATE_OFFSET]
+            accum[INTERMEDIATE_OFFSET] += 1
+
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'
     metric = to_json({

@@ -19,6 +19,32 @@ class GeneralK8sClient {
         this.client.loadSpec();
     }
 
+    public async createConfigMap(configMapManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;
+        const response: any = await this.client.api.v1.namespaces('default')
+          .configmaps.post({body: configMapManifest});
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create configMap failed, statusCode is ${response.statusCode}`);
+        }
+
+        return result;
+    }
+
+    public async createPersistentVolumeClaim(pvcManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;
+        const response: any = await this.client.api.v1.namespaces('default')
+          .persistentvolumeclaims.post({body: pvcManifest});
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create pvc failed, statusCode is ${response.statusCode}`);
+        }
+
+        return result;
+    }
+
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces('default').secrets

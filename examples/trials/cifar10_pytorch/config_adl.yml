@@ -1,0 +1,23 @@
+authorName: default
+experimentName: cifar_adl
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+nniManagerIp: 10.20.41.69
+trainingServicePlatform: adl
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 /root/apps/cifar10_pytorch/main_adaptdl.py
+  codeDir: .
+  gpuNum: 1
+  image: registry.petuum.com/dev/nni:cifar10-adl
+  imagePullSecrets:
+    - name: stagingsecrets
+  checkpoint:
+    storageClass: dfs
+    storageSize: 1Gi

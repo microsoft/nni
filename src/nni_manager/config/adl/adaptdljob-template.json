@@ -1,0 +1,73 @@
+{
+    "apiVersion": "adaptdl.petuum.com/v1",
+    "kind": "AdaptDLJob",
+    "metadata": {
+        "name": "<name>",
+        "labels": {
+            "app": "<app_name>",
+            "expId": "<exp_id>",
+            "trialId": "<trial_id>"
+        }
+    },
+    "spec": {
+        "template": {
+            "spec": {
+                "containers": [
+                    {
+                        "command": ["/run.sh"],
+                        "env": [
+                            {
+                                "name": "ADAPTDL_CHECKPOINT_PATH",
+                                "value": "/adaptdl/checkpoint"
+                            },
+                            {
+                                "name": "ADAPTDL_SHARE_PATH",
+                                "value": "/adaptdl/share"
+                            }
+                        ],
+                        "image": "<image>",
+                        "name": "main",
+                        "resources": {
+                            "limits": {
+                                "nvidia.com/gpu": 1
+                            }
+                        },
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/adaptdl/checkpoint",
+                                "name": "adaptdl-pvc",
+                                "subPath": "adaptdl/checkpoint"
+                            },
+                            {
+                                "mountPath": "/adaptdl/share",
+                                "name": "adaptdl-pvc",
+                                "subPath": "adaptdl/share"
+                            },
+                            {
+                                "mountPath": "/run.sh",
+                                "name": "adaptdl-nni-configmap",
+                                "subPath": "run.sh"
+                            }
+                        ]
+                    }
+                ],
+                "imagePullSecrets": [],
+                "volumes": [
+                    {
+                        "name": "adaptdl-pvc",
+                        "persistentVolumeClaim": {
+                            "claimName": "<adaptdl_pvc_name>"
+                        }
+                    },
+                    {
+                        "name": "adaptdl-nni-configmap",
+                        "configMap": {
+                            "name": "<adaptdl_nni_configmap_name>",
+                            "defaultMode": 511
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,4 @@
+{
+    "bs":{"_type":"choice","_value":[64,96,128]},
+    "lr":{"_type":"choice","_value":[0.1,0.01,0.001]}
+}
