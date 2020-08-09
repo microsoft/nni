@@ -122,7 +122,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                                 />
                                                 <PrimaryButton
                                                     onClick={this.openTrialLog.bind(this, 'TRIAL_STDERR')}
-                                                    text="View stderr log"
+                                                    text="View trial error"
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />
                                             </div>
