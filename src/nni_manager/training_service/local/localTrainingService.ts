@@ -462,8 +462,8 @@ class LocalTrainingService implements TrainingService {
         while (!this.stopping) {
             while (!this.stopping && this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
-                const trialJobDeatil: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
-                if (trialJobDeatil !== undefined && trialJobDeatil.status === 'WAITING') {
+                const trialJobDetail: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
+                if (trialJobDetail !== undefined && trialJobDetail.status === 'WAITING') {
                     const [success, resource] = this.tryGetAvailableResource();
                     if (!success) {
                         break;
