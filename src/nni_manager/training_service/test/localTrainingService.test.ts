@@ -55,7 +55,7 @@ describe('Unit Test for LocalTrainingService', () => {
         });
     });
 
-    it('Submit job and Cancel job', async () => {
+    it('Submit job, Get trial log and Cancel job', async () => {
         await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
 
         // submit job
@@ -68,6 +68,12 @@ describe('Unit Test for LocalTrainingService', () => {
         };
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
         chai.expect(jobDetail.status).to.be.equals('WAITING');
+        await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG').then((log: string) => {
+            chai.expect(log).to.be.a('string')
+        })
+        await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR').then((log: string) => {
+            chai.expect(log).to.be.a('string')
+        })
         await localTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
     }).timeout(20000);
