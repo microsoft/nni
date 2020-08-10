@@ -86,13 +86,14 @@ describe('Unit Test for LocalTrainingService', () => {
             }
         };
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
-        chai.expect(jobDetail.status).to.be.equals('WAITING');
-        localTrainingService.listTrialJobs().then((jobList)=>{
-            chai.expect(jobList.length).to.be.equals(1);
-        });
 
+        chai.expect(jobDetail.status).to.be.equals('WAITING');
+        await delay(1000);
+        chai.expect(jobDetail.status).to.be.equals('RUNNING');
         chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.a('string');
         chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.a('string');
+
+        await localTrainingService.cancelTrialJob(jobDetail.id);
     }).timeout(20000);
 
     it('Read metrics, Add listener, and remove listener', async () => {
