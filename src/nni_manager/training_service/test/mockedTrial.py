@@ -5,7 +5,18 @@ import os
 import time
 
 METRICS_FILENAME = '.nni/metrics'
+TRIAL_LOG_FILENAME = 'trial.log'
+TRIAL_STDERR_FILENAME = 'stderr'
 MAGIC = 'ME'
+
+def generate_logfile():
+    out_dir = os.getenv('NNI_SYS_DIR')
+    if not os.path.isdir(out_dir):
+        raise Exception('Can not find NNI_SYS_DIR: {}'.format(out_dir))
+    with open(os.path.join(out_dir, TRIAL_LOG_FILENAME)) as f:
+        f.write('This is trial log')
+    with open(os.path.join(out_dir, TRIAL_STDERR_FILENAME)) as f:
+        f.write('This is stderr')
 
 def sdk_send_data(data):
     out_dir = os.getenv('NNI_SYS_DIR')
@@ -21,6 +32,7 @@ def sdk_send_data(data):
         f.write('ME{:06d}{}'.format(datalen, wrapped_data))
 
 def user_code():
+    generate_logfile()
 
     epochs = 20
 

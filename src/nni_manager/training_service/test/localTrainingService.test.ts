@@ -55,7 +55,7 @@ describe('Unit Test for LocalTrainingService', () => {
         });
     });
 
-    it('Submit job, Get trial log and Cancel job', async () => {
+    it('Submit job and Cancel job', async () => {
         await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
 
         // submit job
@@ -68,13 +68,31 @@ describe('Unit Test for LocalTrainingService', () => {
         };
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
         chai.expect(jobDetail.status).to.be.equals('WAITING');
-
-        localTrainingService.run();
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.a('string');
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.a('string');
-
         await localTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+    }).timeout(20000);
+
+    it('Get trial log', async () => {
+        // set meta data
+        const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`
+        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+
+        // submit job
+        const form: TrialJobApplicationForm = {
+            sequenceId: 0,
+            hyperParameters: {
+                value: 'mock hyperparameters',
+                index: 0
+            }
+        };
+        const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
+        chai.expect(jobDetail.status).to.be.equals('WAITING');
+        localTrainingService.listTrialJobs().then((jobList)=>{
+            chai.expect(jobList.length).to.be.equals(1);
+        });
+
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.a('string');
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.a('string');
     }).timeout(20000);
 
     it('Read metrics, Add listener, and remove listener', async () => {
