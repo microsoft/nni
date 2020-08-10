@@ -162,8 +162,7 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
-/jobs/${trialJobDetail.paiJobName}/executionType`,
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
             body: { value: 'STOP' },
@@ -178,6 +177,7 @@ abstract class PAITrainingService implements TrainingService {
         const deferred: Deferred<void> = new Deferred<void>();
 
         request(stopJobRequest, (error: Error, response: request.Response, _body: any) => {
+            // Status code 202 for success.
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject((error !== undefined && error !== null) ? error.message :

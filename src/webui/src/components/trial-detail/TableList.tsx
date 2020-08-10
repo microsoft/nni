@@ -269,7 +269,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.jobId}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
@@ -277,14 +277,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
             const otherkeys: string[] = [];
-            // One trial job may contains multiple parameter id
-            // only show current trial's metric data
-            const metricDatas = res.data.filter(item => {
-                return item.parameterId == record.parameterId;
-            });
+            const metricDatas = res.data;
             if (metricDatas.length !== 0) {
                 // just add type=number keys
-                const intermediateMetrics = parseMetrics(res.data[0].data);
+                const intermediateMetrics = parseMetrics(metricDatas[0].data);
                 for (const key in intermediateMetrics) {
                     if (typeof intermediateMetrics[key] === 'number') {
                         otherkeys.push(key);
