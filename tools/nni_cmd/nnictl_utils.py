@@ -699,7 +699,7 @@ def export_trials_data(args):
         return
     running, response = check_rest_server_quick(rest_port)
     if not running:
-        print_error('Restful server is not Running')
+        print_error('Restful server is not running')
         return
     response = rest_get(export_data_url(rest_port), 20)
     if response is not None and check_response(response):
