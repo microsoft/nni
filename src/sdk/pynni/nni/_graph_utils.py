@@ -563,7 +563,10 @@ class TorchModuleGraph(TorchGraph):
                     _logger.debug('List/Tuple Construct Node(cpp) %s', str(last_cpp))
                     _logger.debug('List/Tuple Unpack Node(cpp) %s', str(unpack_cpp))
                     assert len(list(unpack_cpp.outputs())) == len(list(last_cpp.inputs()))
-                    assert len(node.inputs) == len(list(last_cpp.inputs()))
+                    errmsg = '%s Input number: %d if inconsistent with the output number %d' % (unpack_cpp, \
+                        len(node.inputs), len(list(last_cpp.inputs())))
+
+                    assert len(node.inputs) == len(list(last_cpp.inputs())), errmsg
                     for _debug_input, _debug_output in zip(node.inputs, node.outputs):
                         # _debug_input = _input.debugName()
                         # _debug_output = _output.debugName()
@@ -582,9 +585,9 @@ class TorchModuleGraph(TorchGraph):
                         # the construct and tuple
                         if _debug_output in self.input_to_node:
                             for following_node in self.input_to_node[_debug_output]:
-                                following_node.inputs.remove(_debug_output)
-                                if _debug_input not in following_node.inputs:
-                                    following_node.inputs.append(_debug_input)
+                                _tmp_index = following_node.inputs.index(_debug_output)
+                                following_node.inputs[_tmp_index] = _debug_input
+
 
         self.unpacked = True
 
