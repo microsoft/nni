@@ -41,7 +41,7 @@ setup(
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'scikit-learn>=0.23,<=0.24',
+        'scikit-learn>=0.23',
         'pkginfo',
         'websockets'
     ],
