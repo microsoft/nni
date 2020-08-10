@@ -49,9 +49,9 @@ jobs:
       sphinx-build -M html . _build -W
     displayName: 'Sphinx Documentation Build check'
 
-- job: 'ubuntu_1604_python35_legacy_torch_tf'
+- job: 'ubuntu_1804_python36_legacy_torch_tf'
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: 'Ubuntu 18.04'
 
   steps:
   - script: |
