@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import sys
 import argparse
 import time
 
@@ -11,25 +12,26 @@ from nni.compression.torch import AMCPruner
 from data import get_split_dataset
 from utils import AverageMeter, accuracy
 
-device = None
+sys.path.append('../models')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')
-    parser.add_argument('--model_type', default='mobilenet', type=str, help='model to prune')
-    parser.add_argument('--dataset', default='cifar10', type=str, help='dataset to use (cifar/imagenet)')
+    parser.add_argument('--model_type', default='mobilenet', type=str, choices=['mobilenet', 'mobilenetv2'], help='model to prune')
+    parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'imagenet'], help='dataset to use (cifar/imagenet)')
+    parser.add_argument('--batch_size', default=50, type=int, help='number of data batch size')
     parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
-    parser.add_argument('--sparsity', default=0.5, type=float, help='sparsity of the model')
-    parser.add_argument('--lbound', default=0., type=float, help='minimum sparsity')
-    parser.add_argument('--rbound', default=0.8, type=float, help='maximum sparsity')
+    parser.add_argument('--flops_ratio', default=0.5, type=float, help='target flops ratio to preserve of the model')
+    parser.add_argument('--lbound', default=0.2, type=float, help='minimum sparsity')
+    parser.add_argument('--rbound', default=1., type=float, help='maximum sparsity')
     parser.add_argument('--ckpt_path', default=None, type=str, help='manual path of checkpoint')
 
     parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
-    parser.add_argument('--data_bsize', default=50, type=int, help='number of data batch size')
-    parser.add_argument('--export', action='store_true', help='search best pruning policy or just export model with searched policy')
+    parser.add_argument('--job', default='train_export', type=str, choices=['train_export', 'export_only'],
+                        help='search best pruning policy and export or just export model with searched policy')
     parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
-    parser.add_argument('--export_source_path', default=None, type=str, help='path for searched best wrapped model')
+    parser.add_argument('--searched_model_path', default=None, type=str, help='path for searched best wrapped model')
 
     return parser.parse_args()
 
@@ -70,7 +72,7 @@ def init_data(args):
     # for ImageNet, split 3k for val
     val_size = 5000 if 'cifar' in args.dataset else 3000
     train_loader, val_loader, _ = get_split_dataset(
-        args.dataset, args.data_bsize,
+        args.dataset, args.batch_size,
         args.n_worker, val_size,
         data_root=args.data_root,
         shuffle=False
@@ -127,8 +129,8 @@ if __name__ == "__main__":
         'op_types': ['Conv2d', 'Linear']
     }]
     pruner = AMCPruner(
-        model, config_list, validate, val_loader, model_type=args.model_type,
-        train_episode=args.train_episode, export=args.export, export_path=args.export_path,
-        export_source_path=args.export_source_path,
-        sparsity=args.sparsity, lbound=args.lbound, rbound=args.rbound)
+        model, config_list, validate, val_loader, model_type=args.model_type, dataset=args.dataset,
+        train_episode=args.train_episode, job=args.job, export_path=args.export_path,
+        searched_model_path=args.searched_model_path,
+        flops_ratio=args.flops_ratio, lbound=args.lbound, rbound=args.rbound)
     pruner.compress()

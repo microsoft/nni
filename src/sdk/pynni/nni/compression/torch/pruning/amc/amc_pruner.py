@@ -37,52 +37,57 @@ class AMCPruner(Pruner):
         val_loader: torch.utils.data.DataLoader
             Data loader of validation dataset.
         suffix: str
-            suffix to help you remember what experiment you ran
-        export: boolean
-            False: search best pruned model and export after search.
-            True: export a searched model, before exporting model, you must run this pruner
+            suffix to help you remember what experiment you ran. Default: None.
+        job: str
+            train_export: search best pruned model and export after search.
+            export_only: export a searched model, searched_model_path and export_path must be specified.
+        searched_model_path: str
+            when job == export_only, use searched_model_path to specify the path of the searched model.
         export_path: str
             path for exporting models
 
         # parameters for pruning environment
         model_type: str
-            model type to prune, currently 'mobilenet' and 'mobilenetv2' are supported.
-        sparsity: float
-            prune ratio
+            model type to prune, currently 'mobilenet' and 'mobilenetv2' are supported. Default: mobilenet
+        flops_ratio: float
+            preserve flops ratio. Default: 0.5
         lbound: float
-            minimum prune ratio
+            minimum weight preserve ratio for each layer. Default: 0.2
         rbound: float
-            maximum prune ratio
+            maximum weight preserve ratio for each layer. Default: 1.0
         reward: function
             reward function type
 
         # parameters for channel pruning
         n_calibration_batches: int
-            number of batches to extract layer information
+            number of batches to extract layer information. Default: 60
         n_points_per_layer: int
-            number of feature points per layer
+            number of feature points per layer. Default: 10
         channel_round: int
-            round channel to multiple of channel_round
+            round channel to multiple of channel_round. Default: 8
 
         # parameters for ddpg agent
         hidden1: int
-            hidden num of first fully connect layer
+            hidden num of first fully connect layer. Default: 300
         hidden2: int
-            hidden num of second fully connect layer
+            hidden num of second fully connect layer. Default: 300
         lr_c: float
-            learning rate for critic
+            learning rate for critic. Default: 1e-3
         lr_a: float
-            learning rate for actor
+            learning rate for actor. Default: 1e-4
         warmup: int
-            time without training but only filling the replay memory
+            number of episodes without training but only filling the replay memory. During warmup episodes,
+            random actions ares used for pruning. Default: 100
         discount: float
+            next Q value discount for deep Q value target. Default: 0.99
         bsize: int
-            minibatch size
+            minibatch size for training DDPG agent. Default: 64
         rmsize: int
-            memory size for each layer
+            memory size for each layer. Default: 100
         window_length: int
+            replay buffer window length. Default: 1
         tau: float
-            moving average for target network
+            moving average for target network being used by soft_update. Default: 0.99
         # noise
         init_delta: float
             initial variance of truncated normal distribution
@@ -92,16 +97,16 @@ class AMCPruner(Pruner):
         # parameters for training ddpg agent
         max_episode_length: int
             maximum episode length
-        output: str
-            output dir
+        output_dir: str
+            output directory to save log files and model files. Default: ./logs
         debug: boolean
             debug mode
         train_episode: int
-            train iters each timestep
+            train iters each timestep. Default: 800
         epsilon: int
-            linear decay of exploration policy
+            linear decay of exploration policy. Default: 50000
         seed: int
-            random seed to set
+            random seed to set for reproduce experiment. Default: None
     """
 
     def __init__(
@@ -111,13 +116,14 @@ class AMCPruner(Pruner):
             evaluator,
             val_loader,
             suffix=None,
-            export=False,
+            job='train_export',
             export_path=None,
-            export_source_path=None,
+            searched_model_path=None,
             model_type='mobilenet',
-            sparsity=0.5,
-            lbound=0.,
-            rbound=0.8,
+            dataset='cifar10',
+            flops_ratio=0.5,
+            lbound=0.2,
+            rbound=1.,
             reward='acc_reward',
             n_calibration_batches=60,
             n_points_per_layer=10,
@@ -133,16 +139,16 @@ class AMCPruner(Pruner):
             window_length=1,
             tau=0.01,
             init_delta=0.5,
-            delta_decay=0.95,
+            delta_decay=0.99,
             max_episode_length=1e9,
-            output='./logs',
+            output_dir='./logs',
             debug=False,
             train_episode=800,
             epsilon=50000,
             seed=None):
 
-        self.export = export
-        self.export_source_path = export_source_path
+        self.job = job
+        self.searched_model_path = searched_model_path
         self.export_path = export_path
 
         if seed is not None:
@@ -154,39 +160,35 @@ class AMCPruner(Pruner):
 
         super().__init__(model, config_list, optimizer=None)
 
-        # convert sparsity to preserve ratio
-        preserve_ratio = 1. - sparsity
-        lbound, rbound = 1. - rbound, 1. - lbound
-
         # build folder and logs
-        base_folder_name = '{}_r{}_search'.format(model_type, preserve_ratio)
+        base_folder_name = '{}_{}_r{}_search'.format(model_type, dataset, flops_ratio)
         if suffix is not None:
             base_folder_name = base_folder_name + '_' + suffix
-        self.output = get_output_folder(output, base_folder_name)
+        self.output_dir = get_output_folder(output_dir, base_folder_name)
 
         if self.export_path is None:
-            self.export_path = os.path.join(self.output, '{}_r{}_exported.pth'.format(model_type, preserve_ratio))
+            self.export_path = os.path.join(self.output_dir, '{}_r{}_exported.pth'.format(model_type, flops_ratio))
 
         self.env_args = Namespace(
             model_type=model_type,
-            preserve_ratio=preserve_ratio,
+            preserve_ratio=flops_ratio,
             lbound=lbound,
             rbound=rbound,
             reward=reward,
             n_calibration_batches=n_calibration_batches,
             n_points_per_layer=n_points_per_layer,
             channel_round=channel_round,
-            output=self.output
+            output=self.output_dir
         )
 
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint, args=self.env_args)
 
-        if not self.export:
-            print('=> Saving logs to {}'.format(self.output))
-            self.tfwriter = SummaryWriter(logdir=self.output)
-            self.text_writer = open(os.path.join(self.output, 'log.txt'), 'w')
-            print('=> Output path: {}...'.format(self.output))
+        if self.job == 'train_export':
+            print('=> Saving logs to {}'.format(self.output_dir))
+            self.tfwriter = SummaryWriter(logdir=self.output_dir)
+            self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
+            print('=> Output path: {}...'.format(self.output_dir))
 
             nb_states = self.env.layer_embedding.shape[1]
             nb_actions = 1  # just 1 action here
@@ -216,11 +218,11 @@ class AMCPruner(Pruner):
 
 
     def compress(self):
-        if not self.export:
-            self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output)
+        if self.job == 'train_export':
+            self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output_dir)
         self.export_pruned_model()
 
-    def train(self, num_episode, agent, env, output):
+    def train(self, num_episode, agent, env, output_dir):
         agent.is_training = True
         step = episode = episode_steps = 0
         episode_reward = 0.
@@ -251,7 +253,7 @@ class AMCPruner(Pruner):
 
             # [optional] save intermideate model
             if num_episode / 3 <= 1 or episode % int(num_episode / 3) == 0:
-                agent.save_model(output)
+                agent.save_model(output_dir)
 
             # update
             step += 1
@@ -309,10 +311,10 @@ class AMCPruner(Pruner):
         self.text_writer.close()
 
     def export_pruned_model(self):
-        if self.export_source_path is None:
-            wrapper_model_ckpt = os.path.join(self.output, 'best_wrapped_model.pth')
+        if self.searched_model_path is None:
+            wrapper_model_ckpt = os.path.join(self.output_dir, 'best_wrapped_model.pth')
         else:
-            wrapper_model_ckpt = self.export_source_path
+            wrapper_model_ckpt = self.searched_model_path
         self.env.reset()
         self.bound_model.load_state_dict(torch.load(wrapper_model_ckpt))
 
