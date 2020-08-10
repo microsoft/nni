@@ -16,22 +16,22 @@ logger = logging.getLogger('torch filter pruners')
 class StructuredWeightMasker(WeightMasker):
     """
     A structured pruning masker base class that prunes convolutional layer filters.
+
+    Parameters
+    ----------
+    model: nn.Module
+        model to be pruned
+    pruner: Pruner
+        A Pruner instance used to prune the model
+    preserve_round: int
+        after pruning, preserve filters/channels round to `preserve_round`, for example:
+        for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
+        1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
+        32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
+        be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
+
     """
     def __init__(self, model, pruner, preserve_round=1):
-        """
-        Parameters
-        ----------
-        model: nn.Module
-            model to be pruned
-        pruner: Pruner
-            A Pruner instance used to prune the model
-        preserve_round: int
-            after pruning, preserve filters/channels round to `preserve_round`, for example:
-            for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
-            1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
-            32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
-            be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
-        """
         self.model = model
         self.pruner = pruner
         self.preserve_round = preserve_round
@@ -401,21 +401,26 @@ def least_square_sklearn(X, Y):
     return reg.coef_
 
 class AMCWeightMasker(WeightMasker):
+    """
+    Weight maskser class for AMC pruner. Currently, AMCPruner only supports pruning kernel
+    size 1x1 pointwise Conv2d layer. Before using this class to prune kernels, AMCPruner
+    collected input and output feature maps for each layer, the features maps are flattened
+    and save into wrapper.input_feat and wrapper.output_feat.
+
+    Parameters
+    ----------
+    model: nn.Module
+        model to be pruned
+    pruner: Pruner
+        A Pruner instance used to prune the model
+    preserve_round: int
+        after pruning, preserve filters/channels round to `preserve_round`, for example:
+        for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
+        1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
+        32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
+        be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
+    """
     def __init__(self, model, pruner, preserve_round=1):
-        """
-        Parameters
-        ----------
-        model: nn.Module
-            model to be pruned
-        pruner: Pruner
-            A Pruner instance used to prune the model
-        preserve_round: int
-            after pruning, preserve filters/channels round to `preserve_round`, for example:
-            for a Conv2d layer, output channel is 32, sparsity is 0.2, if preserve_round is
-            1 (no preserve round), then there will be int(32 * 0.2) = 6 filters pruned, and
-            32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
-            be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
-        """
         self.model = model
         self.pruner = pruner
         self.preserve_round = preserve_round

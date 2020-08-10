@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import sys
 import os
 import time
 import argparse
@@ -18,6 +19,8 @@ from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
 
 from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar
+
+sys.path.append('../models')
 from mobilenet import MobileNet
 from mobilenet_v2 import MobileNetV2
 
@@ -69,7 +72,7 @@ def get_model(args):
             net = ckpt
 
     net.to(args.device)
-    if torch.cuda.is_available() and args.n_gpu:
+    if torch.cuda.is_available() and args.n_gpu > 1:
         net = torch.nn.DataParallel(net, list(range(args.n_gpu)))
     return net
 
