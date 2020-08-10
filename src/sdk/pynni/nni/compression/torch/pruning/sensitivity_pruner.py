@@ -123,7 +123,7 @@ class SensitivityPruner(Pruner):
                 # if hasattr(submodule, 'weight'): # Count all the weights of the model
                 self.weight_count[name] = submodule.weight.data.numel()
                 self.weight_sum += self.weight_count[name]
-        # function to generate the sparsity proportion betweent the conv layers
+        # function to generate the sparsity proportion between the conv layers
         if sparsity_proportion_calc is None:
             self.sparsity_proportion_calc = self._max_prune_ratio
         else:
@@ -212,7 +212,7 @@ class SensitivityPruner(Pruner):
     def normalize(self, ratios, target_pruned):
         """
         Normalize the prune ratio of each layer according to the
-        total already pruned ratio and the finnal target total pruning
+        total already pruned ratio and the final target total pruning
         ratio
 
         Parameters
@@ -278,7 +278,7 @@ class SensitivityPruner(Pruner):
 
     def current_sparsity(self):
         """
-        The sparisity of the weight.
+        The sparsity of the weight.
         """
         pruned_weight = 0
         for layer_name in self.analyzer.already_pruned:
