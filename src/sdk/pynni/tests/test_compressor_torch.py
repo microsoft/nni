@@ -60,9 +60,8 @@ class CompressorTestCase(TestCase):
 
     def test_torch_level_pruner(self):
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
-        torch_compressor.LevelPruner(model, configure_list, optimizer).compress()
+        torch_compressor.LevelPruner(model, configure_list).compress()
 
     def test_torch_naive_quantizer(self):
         model = TorchModel()
@@ -92,7 +91,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
-        pruner = torch_compressor.FPGMPruner(model, config_list, torch.optim.SGD(model.parameters(), lr=0.01))
+        pruner = torch_compressor.FPGMPruner(model, config_list)
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(model.conv2)
@@ -262,7 +261,7 @@ class CompressorTestCase(TestCase):
     def test_torch_pruner_validation(self):
         # test bad configuraiton
         pruner_classes = [torch_compressor.__dict__[x] for x in \
-            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGP_Pruner', \
+            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', \
             'ActivationMeanRankFilterPruner', 'ActivationAPoZRankFilterPruner']]
 
         bad_configs = [
@@ -284,11 +283,10 @@ class CompressorTestCase(TestCase):
             ]
         ]
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         for pruner_class in pruner_classes:
             for config_list in bad_configs:
                 try:
-                    pruner_class(model, config_list, optimizer)
+                    pruner_class(model, config_list)
                     print(config_list)
                     assert False, 'Validation error should be raised for bad configuration'
                 except schema.SchemaError:

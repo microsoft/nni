@@ -51,7 +51,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     dispatcherHTML = (): React.ReactNode => {
         return (
             <div>
-                <span>Dispatcher Log</span>
+                <span>Dispatcher log</span>
                 <span className="refresh" onClick={this.manualRefresh}>
                     {infoIcon}
                 </span>
@@ -62,7 +62,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     nnimanagerHTML = (): React.ReactNode => {
         return (
             <div>
-                <span>NNImanager Log</span>
+                <span>NNImanager log</span>
                 <span className="refresh" onClick={this.manualRefresh}>{infoIcon}</span>
             </div>
         );
@@ -92,6 +92,8 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     isOpen={true}
                     hasCloseButton={false}
                     isFooterAtBottom={true}
+                    isLightDismiss={true}
+                    onLightDismissClick={closeDrawer}
                 >
                     <div className="log-tab-body">
                         <Pivot
@@ -99,7 +101,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                             style={{ minHeight: 190, paddingTop: '16px' }}
                         >
                             {/* <PivotItem headerText={this.dispatcherHTML()} key="dispatcher" onLinkClick> */}
-                            <PivotItem headerText="Dispatcher Log" key="dispatcher">
+                            <PivotItem headerText="Dispatcher log" key="dispatcher">
                                 <MonacoHTML
                                     content={dispatcherLogStr || 'Loading...'}
                                     loading={isLoading}
@@ -115,7 +117,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                     </StackItem>
                                 </Stack>
                             </PivotItem>
-                            <PivotItem headerText="NNIManager Log" key="nnimanager">
+                            <PivotItem headerText="NNIManager log" key="nnimanager">
                                 {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
                                 <MonacoHTML
                                     content={nniManagerLogStr || 'Loading...'}
