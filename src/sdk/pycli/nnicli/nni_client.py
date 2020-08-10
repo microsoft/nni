@@ -23,10 +23,15 @@ import sys
 import os
 import subprocess
 import re
+import json
 import requests
 
 __all__ = [
-    'NNIExperiment'
+    'NNIExperiment',
+    'NNITrialResult',
+    'NNITrialMetricData',
+    'NNITrialHyperParameters',
+    'NNITrialJob'
 ]
 
 EXPERIMENT_PATH = 'experiment'
@@ -69,6 +74,138 @@ def _create_process(cmd):
 def _check_endpoint(endpoint):
     if endpoint is None:
         raise AssertionError("This instance hasn't been connect to an experiment.")
+
+class NNITrialResult:
+    """
+    NNITrialResult stores the result information of a trial job.
+
+    Parameters
+    ----------
+    json_obj:
+        json object that stores the result information
+
+    Attrbutes
+    -----
+    parameter:
+        hyper parameters for this trial
+    value:
+        final result
+    id:
+        trial id
+    """
+    def __init__(self, json_obj):
+        self.parameter = None
+        self.value = None
+        self.id = None
+        for key in json_obj.keys():
+            self.__setattr__(key, json_obj[key])
+
+class NNITrialMetricData:
+    """
+    NNITrialMetricData stores the metric data of a trial job.
+    A trial job may have both intermediate metric and final metric.
+
+    Parameters
+    ----------
+    json_obj:
+        json object that stores the metric data
+
+    Attrbutes
+    -----
+    timestamp:
+        time stamp
+    trialJobId:
+        trial id
+    parameterId:
+        parameter id
+    type:
+        metric type, `PERIODICAL` for intermediate result and `FINAL` for final result
+    sequence:
+        sequence number in this trial
+    data:
+        metric data
+    """
+    def __init__(self, json_obj):
+        self.timestamp = None
+        self.trialJobId = None
+        self.parameterId = None
+        self.type = None
+        self.sequence = None
+        self.data = None
+        for key in json_obj.keys():
+            self.__setattr__(key, json_obj[key])
+
+class NNITrialHyperParameters:
+    """
+    NNITrialHyperParameters stores the hyper parameters of a trial job.
+
+    Parameters
+    ----------
+    json_obj:
+        json object that stores the hyper parameters
+
+    Attrbutes
+    -----
+    parameter_id:
+        parameter id
+    parameter_source:
+        parameter source
+    parameters:
+        hyper parameters
+    parameter_index:
+        parameter index
+    """
+    def __init__(self, json_obj):
+        self.parameter_id = None
+        self.parameter_source = None
+        self.parameters = None
+        self.parameter_index = None
+        for key in json_obj.keys():
+            self.__setattr__(key, json_obj[key])
+
+class NNITrialJob:
+    """
+    NNITrialJob stores the information of a trial job.
+
+    Parameters
+    ----------
+    json_obj:
+        json object that stores the hyper parameters
+
+    Attrbutes
+    -----
+    id:
+        trial id
+    status:
+        job status
+    hyperParameters:
+        see `NNITrialHyperParameters`
+    logPath:
+        log path
+    startTime:
+        job start time (timestamp)
+    endTime:
+        job end time (timestamp)
+    finalMetricData:
+
+    parameter_index:
+        parameter index
+    """
+    def __init__(self, json_obj):
+        self.id = None
+        self.status = None
+        self.hyperParameters = None
+        self.logPath = None
+        self.startTime = None
+        self.endTime = None
+        self.finalMetricData = None
+        self.stderrPath = None
+        for key in json_obj.keys():
+            self.__setattr__(key, json_obj[key])
+        if self.hyperParameters:
+            self.hyperParameters = [NNITrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
+        if self.finalMetricData:
+            self.finalMetricData = [NNITrialMetricData(e) for e in self.finalMetricData]
 
 class NNIExperiment:
     def __init__(self):
@@ -263,14 +400,16 @@ class NNIExperiment:
         """
         _check_endpoint(self.endpoint)
         assert trial_job_id is not None
-        return _nni_rest_get(self.endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
+        trial_job = _nni_rest_get(self.endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
+        return NNITrialJob(trial_job)
 
     def list_trial_jobs(self):
         """
         Return information for all trial jobs as a list.
         """
         _check_endpoint(self.endpoint)
-        return _nni_rest_get(self.endpoint, TRIAL_JOBS_PATH)
+        trial_jobs = _nni_rest_get(self.endpoint, TRIAL_JOBS_PATH)
+        return [NNITrialJob(e) for e in trial_jobs]
 
     def get_job_statistics(self):
         """
@@ -290,14 +429,23 @@ class NNIExperiment:
         """
         _check_endpoint(self.endpoint)
         api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
-        return _nni_rest_get(self.endpoint, api_path)
+        output = {}
+        trail_metrics =  _nni_rest_get(self.endpoint, api_path)
+        for metric in trail_metrics:
+            trial_id = metric["trialJobId"]
+            if trial_id not in output:
+                output[trial_id] = [NNITrialMetricData(metric)]
+            else:
+                output[trial_id].append(NNITrialMetricData(metric))
+        return output
 
     def export_data(self):
         """
         Return exported information for all trial jobs.
         """
         _check_endpoint(self.endpoint)
-        return _nni_rest_get(self.endpoint, EXPORT_DATA_PATH)
+        trial_results = _nni_rest_get(self.endpoint, EXPORT_DATA_PATH)
+        return [NNITrialResult(e) for e in trial_results]
 
     def get_experiment_profile(self):
         """
