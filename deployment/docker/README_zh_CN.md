@@ -9,7 +9,7 @@
     TensorFlow-gpu 1.10.0
     Keras 2.1.6
     PyTorch 0.4.1
-    scikit-learn 0.20.0
+    scikit-learn 0.23.2
     pandas 0.23.4
     lightgbm 2.2.2
     NNI v0.7
