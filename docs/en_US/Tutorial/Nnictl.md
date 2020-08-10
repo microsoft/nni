@@ -465,7 +465,7 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  False| |ID of the experiment    |
   |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
-  |--intermediate, -i|False||Is intermediate results required|
+  |--intermediate, -i|False||Are intermediate results included|
 
   * Examples
 
