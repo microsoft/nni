@@ -687,7 +687,7 @@ def export_trials_data(args):
         sorted(intermediate_results, key=lambda x: x['timestamp'])
         groupby = dict()
         for content in intermediate_results:
-            groupby.setdefault(content['trialJobId'], []).append(eval(content['data']))
+            groupby.setdefault(content['trialJobId'], []).append(json.loads(content['data']))
         return groupby
 
     nni_config = Config(get_config_filename(args))
@@ -705,11 +705,11 @@ def export_trials_data(args):
     if response is not None and check_response(response):
         content = json.loads(response.text)
         if args.intermediate:
-            intermediate_results = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
-            if not intermediate_results or not check_response(intermediate_results):
+            intermediate_results_response = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
+            if not intermediate_results_response or not check_response(intermediate_results_response):
                 print_error('Error getting intermediate results.')
                 return
-            intermediate_results = groupby_trial_id(json.loads(intermediate_results.text))
+            intermediate_results = groupby_trial_id(json.loads(intermediate_results_response.text))
             for record in content:
                 record['intermediate'] = intermediate_results[record['id']]
         if args.type == 'json':
