@@ -69,6 +69,7 @@ describe('Unit Test for LocalTrainingService', () => {
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
         chai.expect(jobDetail.status).to.be.equals('WAITING');
 
+        localTrainingService.run()
         chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.a('string')
         chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.a('string')
 
