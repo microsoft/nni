@@ -12,6 +12,7 @@ import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
+import { getExperimentId } from '../../common/experimentStartupInfo'
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../local/localTrainingService';
 
@@ -86,10 +87,12 @@ describe('Unit Test for LocalTrainingService', () => {
                 index: 0
             }
         };
-        let rootDir: string = getExperimentRootDir()
-        console.log(rootDir)
+
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
-        fs.mkdirSync(rootDir)
+
+        // get trial log
+        const rootDir: string = getExperimentRootDir()
+        fs.mkdirSync(path.join(rootDir, 'trials'))
         fs.mkdirSync(jobDetail.workingDirectory)
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'trial.log'), 'trial log')
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'stderr'), 'trial stderr')
@@ -98,6 +101,8 @@ describe('Unit Test for LocalTrainingService', () => {
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'trial.log'))
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'stderr'))
         fs.rmdirSync(jobDetail.workingDirectory)
+        fs.rmdirSync(path.join(rootDir, 'trials'))
+
         await localTrainingService.cancelTrialJob(jobDetail.id);
     }).timeout(20000);
 
