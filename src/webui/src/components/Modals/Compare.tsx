@@ -1,11 +1,17 @@
 import * as React from 'react';
-import { Stack, Modal, IconButton } from 'office-ui-fabric-react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from 'office-ui-fabric-react';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
+import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/compare.scss';
-import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
+
+const dragOptions: IDragOptions = {
+    moveMenuItemText: 'Move',
+    closeMenuItemText: 'Close',
+    menu: ContextualMenu
+};
 
 // the modal of trial compare
 interface CompareProps {
@@ -79,7 +85,8 @@ class Compare extends React.Component<CompareProps, {}> {
                 containLabel: true
             },
             legend: {
-                data: idsList
+                // more than 10 trials will hide legend
+                data: idsList.length > 10 ? null : idsList
             },
             xAxis: {
                 type: 'category',
@@ -209,6 +216,8 @@ class Compare extends React.Component<CompareProps, {}> {
                 isOpen={true}
                 containerClassName={contentStyles.container}
                 className="compare-modal"
+                allowTouchBodyScroll={true}
+                dragOptions={dragOptions}
             >
                 <div>
                     <div className={contentStyles.header}>
