@@ -680,7 +680,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
                     </Stack>
 
-                {/* /> */}
                 </div>
                 {/* Intermediate Result Modal */}
                 <Modal
