@@ -131,7 +131,8 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
         yAxis: {
             name: 'Default metric',
             type: 'value',
-            data: intermediateArr
+            data: intermediateArr,
+            scale: true
         },
         series: [
             {

@@ -12,6 +12,18 @@ import TrialInfo from './overview/TrialProfile';
 import '../static/style/overview.scss';
 import '../static/style/logPath.scss';
 
+const stackTokens: IStackTokens = {
+    childrenGap: 30,
+};
+
+const entriesOption = [
+    { key: '10', text: 'Display top 10 trials' },
+    { key: '20', text: 'Display top 20 trials' },
+    { key: '30', text: 'Display top 30 trials' },
+    { key: '50', text: 'Display top 50 trials' },
+    { key: '100', text: 'Display top 100 trials' }
+];
+
 interface OverviewProps {
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
@@ -69,17 +81,6 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
         const titleMaxbgcolor = metricGraphMode === 'max' ? '#333' : '#b3b3b3';
         const titleMinbgcolor = metricGraphMode === 'min' ? '#333' : '#b3b3b3';
 
-        const stackTokens: IStackTokens = {
-            childrenGap: 30
-        };
-
-        const entriesOption = [
-            { key: '10', text: 'Display top 10 trials' },
-            { key: '20', text: 'Display top 20 trials' },
-            { key: '30', text: 'Display top 30 trials' },
-            { key: '50', text: 'Display top 50 trials' },
-            { key: '100', text: 'Display top 100 trials' }
-        ];
         return (
             <div className='overview'>
                 {/* status and experiment block */}
@@ -121,15 +122,18 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     </Stack.Item>
                 </Stack>
 
-                <Stack style={{ backgroundColor: '#fff' }}>
-                    <Stack horizontal className='top10bg' style={{ position: 'relative' }}>
-                        <div className='title' onClick={this.clickMaxTop}>
-                            <Title1 text='Top maximal trials' icon='max.png' fontColor={titleMaxbgcolor} />
+                <Stack style={{backgroundColor: '#fff'}}>
+                    <Stack horizontal className="top10bg" style={{position: 'relative', height: 42}}>
+                        <div
+                            className="title"
+                            onClick={this.clickMaxTop}
+                        >
+                            <Title1 text="Top maximal trials" icon="max.png" fontColor={titleMaxbgcolor} />
                         </div>
                         <div className='title minTitle' onClick={this.clickMinTop}>
                             <Title1 text='Top minimal trials' icon='min.png' fontColor={titleMinbgcolor} />
                         </div>
-                        <div style={{ position: 'absolute', right: 52, top: 6 }}>
+                        <div style={{position: 'absolute', right: '2%', top: 8}}>
                             <Dropdown
                                 selectedKey={bestTrialEntries}
                                 options={entriesOption}
