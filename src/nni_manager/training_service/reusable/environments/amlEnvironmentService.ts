@@ -112,13 +112,15 @@ export class AMLEnvironmentService extends EnvironmentService {
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
         environment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
+        environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,
             this.amlClusterConfig.resourceGroup,
             this.amlClusterConfig.workspaceName,
             this.experimentId,
-            this.amlTrialConfig.computeTarget,
+            this.amlClusterConfig.computeTarget,
             this.amlTrialConfig.image,
             'nni_script.py',
             environmentLocalTempFolder

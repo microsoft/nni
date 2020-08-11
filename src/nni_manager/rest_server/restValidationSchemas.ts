@@ -39,7 +39,6 @@ export namespace ValidationSchemas {
                 nniManagerNFSMountPath: joi.string().min(1),
                 containerNFSMountPath: joi.string().min(1),
                 paiConfigPath: joi.string(),
-                computeTarget: joi.string(),
                 nodeCount: joi.number(),
                 paiStorageConfigName: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
@@ -159,7 +158,10 @@ export namespace ValidationSchemas {
             aml_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 subscriptionId: joi.string().min(1),
                 resourceGroup: joi.string().min(1),
-                workspaceName: joi.string().min(1)
+                workspaceName: joi.string().min(1),
+                computeTarget: joi.string().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
