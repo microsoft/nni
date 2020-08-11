@@ -318,10 +318,7 @@ class Trial implements TableObj {
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
         if(this.status === 'SUCCEEDED'){
-            // console.info(`id: ${this.id} accuracy: ${this.accuracy}`); // eslint-disable-line
-            return (this.accuracy === undefined ? '---': this.renderNumber(this.accuracy));
-            
-            // return this.acc === undefined ? '---': this.renderNumber(this.acc.default);
+            return (this.accuracy === undefined ? '--': this.renderNumber(this.accuracy));
         } else {
             if (this.accuracy !== undefined) {
                 return this.renderNumber(this.accuracy);
