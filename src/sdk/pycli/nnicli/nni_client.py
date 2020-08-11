@@ -100,6 +100,9 @@ class NNITrialResult:
         self.id = None
         for key in json_obj.keys():
             self.__setattr__(key, json_obj[key])
+    
+    def __repr__(self):
+        return "NNITrialResult(parameter:{} value:{} id:{})".format(self.parameter, self.value, self.id)
 
 class NNITrialMetricData:
     """
@@ -136,6 +139,10 @@ class NNITrialMetricData:
         for key in json_obj.keys():
             self.__setattr__(key, json_obj[key])
 
+    def __repr__(self):
+        return "NNITrialMetricData(timestamp:{} trialJobId:{} parameterId:{} type:{} sequence:{} data:{})" \
+            .format(self.timestamp, self.trialJobId, self.parameterId, self.type, self.sequence, self.data)
+
 class NNITrialHyperParameters:
     """
     NNITrialHyperParameters stores the hyper parameters of a trial job.
@@ -164,6 +171,10 @@ class NNITrialHyperParameters:
         for key in json_obj.keys():
             self.__setattr__(key, json_obj[key])
 
+    def __repr__(self):
+        return "NNITrialHyperParameters(parameter_id:{} parameter_source:{} parameters:{} parameter_index:{})" \
+            .format(self.parameter_id, self.parameter_source, self.parameters, self.parameter_index)
+
 class NNITrialJob:
     """
     NNITrialJob stores the information of a trial job.
@@ -188,7 +199,7 @@ class NNITrialJob:
     endTime:
         job end time (timestamp)
     finalMetricData:
-
+        see `NNITrialMetricData`
     parameter_index:
         parameter index
     """
@@ -207,6 +218,11 @@ class NNITrialJob:
             self.hyperParameters = [NNITrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
         if self.finalMetricData:
             self.finalMetricData = [NNITrialMetricData(e) for e in self.finalMetricData]
+
+    def __repr__(self):
+        return "NNITrialJob(id:{} status:{} hyperParameters:{} logPath:{} startTime:{} endTime:{} finalMetricData:{} stderrPath:{})" \
+            .format(self.id, self.status, self.hyperParameters, self.logPath,
+                    self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
 
 class NNIExperiment:
     def __init__(self):
