@@ -182,7 +182,7 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
     else:
         raise ValueError("model not recognized")
 
-    if not args.load_pretrained_model:
+    if not args.load_pretrained_model and args.pretrain_epochs > 0:
         best_acc = 0
         best_epoch = 0
         state_dict = None
@@ -203,7 +203,8 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
         if args.save_model:
             torch.save(state_dict, os.path.join(args.experiment_data_dir, 'model_trained.pth'))
             print('Model trained saved to %s', args.experiment_data_dir)
-
+    acc = test(model, device, criterion, val_loader)
+    print('Original Accuracy before the pruning', acc)
     return model, optimizer
 
 
@@ -366,15 +367,15 @@ def main(args):
         if args.dataset == 'mnist':
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
-        elif args.dataset == 'cifar10' and args.model == 'vgg16':
+        elif  args.model == 'vgg16':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
-        elif args.dataset == 'cifar10' and args.model == 'resnet18':
+        elif  args.model == 'resnet18':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
-        elif args.dataset == 'cifar10' and args.model == 'resnet50':
+        elif  args.model == 'resnet50':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
@@ -410,7 +411,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Example for SimulatedAnnealingPruner')
 
     # dataset and model
-    parser.add_argument('--dataset', type=str, default='cifar10',
+    parser.add_argument('--dataset', type=str, default='imagenet',
                         help='dataset to use, mnist, cifar10 or imagenet')
     parser.add_argument('--data-dir', type=str, default='./data/',
                         help='dataset directory')
