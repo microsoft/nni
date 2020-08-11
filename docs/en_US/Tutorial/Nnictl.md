@@ -545,7 +545,7 @@ Debug mode will disable version check function in Trialkeeper.
   |------|------|------ |------|
   |id|  True| |The id of the experiment you want to save|
   |--path, -p|  False| |the folder path to store nni experiment data, default current working directory|
-  |--saveCodeDir, -s| | |save codeDir data of the experiment, default False|
+  |--saveCodeDir, -s| False| |save codeDir data of the experiment, default False|
 
   * Examples
 
@@ -558,7 +558,7 @@ Debug mode will disable version check function in Trialkeeper.
 * __nnictl experiment load__
   * Description
 
-    Load a nni experiment.
+    Load an nni experiment.
 
   * Usage
 
@@ -570,9 +570,9 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |--path, -p|  True| |the full file path of nni package|
-  |--codeDir, -c| True| |the path of codeDir|
-  |--logDir, -l| False| |the path of logDir|
+  |--path, -p|  True| |the file path of nni package|
+  |--codeDir, -c| True| |the path of codeDir for loaded experiment, this path will also put the code in the loaded experiment package|
+  |--logDir, -l| False| |the path of logDir for loaded experiment|
 
   * Examples
 

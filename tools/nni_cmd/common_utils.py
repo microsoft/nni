@@ -4,7 +4,10 @@
 import os
 import sys
 import json
+import tempfile
 import socket
+import string
+import random
 import ruamel.yaml as yaml
 import psutil
 from colorama import Fore
@@ -83,3 +86,13 @@ def check_tensorboard_version():
         print_error('import tensorboard error!')
         exit(1)
 
+def generate_temp_dir():
+    '''generate a temp folder'''
+    def generate_folder_name():
+        return os.path.join(tempfile.gettempdir(), 'nni', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
+    temp_dir = generate_folder_name()
+    while os.path.exists(temp_dir):
+        temp_dir = generate_folder_name()
+    os.makedirs(temp_dir, exist_ok=True)
+    return temp_dir
+        

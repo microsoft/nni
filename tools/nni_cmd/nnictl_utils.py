@@ -5,11 +5,8 @@ import csv
 import os
 import sys
 import json
-import tempfile
 import time
-import random
 import re
-import string
 import shutil
 import subprocess
 from datetime import datetime, timezone
@@ -21,9 +18,9 @@ from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
 from .config_utils import Config, Experiments
-from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
+from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
+from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -745,17 +742,20 @@ def save_experiment(args):
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if args.id is None:
-        print_error('please set experiment id.')
+        print_error('Please set experiment id.')
         exit(1)
     if args.id not in experiment_dict:
         print_error('Cannot find experiment {0}.'.format(args.id))
         exit(1)
+    if experiment_dict[args.id].get('status') != 'STOPPED':
+        print_error('Can only save stopped experiment!')
+        exit(1)
     print_normal('Saving...')
     nni_config = Config(experiment_dict[args.id]['fileName'])
-    logDir = os.path.join(os.path.expanduser("~"), 'nni-experiments', args.id)
+    logDir = os.path.join(NNI_HOME_DIR, args.id)
     if nni_config.get_config('logDir'):
         logDir = os.path.join(nni_config.get_config('logDir'), args.id)
-    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
+    temp_root_dir = generate_temp_dir()
 
     # Step1. Copy logDir to temp folder
     if not os.path.exists(logDir):
@@ -799,7 +799,7 @@ def load_experiment(args):
     if not os.path.exists(args.path):
         print_error('file path %s does not exist!' % args.path)
         exit(1)
-    temp_root_dir = os.path.join(tempfile.gettempdir(), 'nni', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
+    temp_root_dir = generate_temp_dir()
     shutil.unpack_archive(package_path, temp_root_dir)
     print_normal('Opening...')
     # Step1. Validation
@@ -867,7 +867,7 @@ def load_experiment(args):
     # Step4. Copy code dir
     codeDir = os.path.expanduser(args.codeDir)
     if not os.path.isabs(codeDir):
-        codeDir = os.path.join(os. getcwd(), codeDir)
+        codeDir = os.path.join(os.getcwd(), codeDir)
         print_normal('Expand codeDir to %s' % codeDir)
     nnictl_exp_config['trial']['codeDir'] = codeDir
     archive_code_dir = os.path.join(temp_root_dir, 'code')

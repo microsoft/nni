@@ -141,20 +141,21 @@ def parse_args():
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
     parser_trial_export.set_defaults(func=export_trials_data)
-    #save experiment data
-    parser_save_data = parser_experiment_subparsers.add_parser('save', help='save experiment data')
-    parser_save_data.add_argument('id', nargs='?', help='the id of experiment')
-    parser_save_data.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, \
+    #save an NNI experiment
+    parser_save_experiment = parser_experiment_subparsers.add_parser('save', help='save an experiment')
+    parser_save_experiment.add_argument('id', nargs='?', help='the id of experiment')
+    parser_save_experiment.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, \
                                    default current working directory')
-    parser_save_data.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data \
+    parser_save_experiment.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data \
                                    of the experiment')
-    parser_save_data.set_defaults(func=save_experiment)
-    #open experiment data
-    parser_open_data = parser_experiment_subparsers.add_parser('load', help='load experiment data')
-    parser_open_data.add_argument('--path', '-p', required=True, help='the path of nni package file')
-    parser_open_data.add_argument('--codeDir', '-c', required=True, help='the path of codeDir')
-    parser_open_data.add_argument('--logDir', '-l', required=False, help='the path of logDir')
-    parser_open_data.set_defaults(func=load_experiment)
+    parser_save_experiment.set_defaults(func=save_experiment)
+    #load an NNI experiment
+    parser_load_experiment = parser_experiment_subparsers.add_parser('load', help='load an experiment')
+    parser_load_experiment.add_argument('--path', '-p', required=True, help='the path of nni package file')
+    parser_load_experiment.add_argument('--codeDir', '-c', required=True, help='the path of codeDir for loaded experiment, \
+                                   this path will also put the code in the loaded experiment package')
+    parser_load_experiment.add_argument('--logDir', '-l', required=False, help='the path of logDir for loaded experiment')
+    parser_load_experiment.set_defaults(func=load_experiment)
 
     #parse platform command
     parser_platform = subparsers.add_parser('platform', help='get platform information')
