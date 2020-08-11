@@ -120,7 +120,7 @@ class ChannelPruningEnv:
         self.channel_round = args.channel_round
 
         # sanity check
-        assert self.preserve_ratio > self.lbound, 'Error! You can make achieve preserve_ratio smaller than lbound!'
+        assert self.preserve_ratio > self.lbound, 'Error! You can not achieve preserve_ratio smaller than lbound!'
 
         # prepare data
         self._val_loader = val_loader
