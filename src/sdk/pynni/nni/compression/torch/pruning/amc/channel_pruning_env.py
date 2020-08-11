@@ -201,7 +201,6 @@ class ChannelPruningEnv:
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
                 torch.save(self.model.state_dict(), os.path.join(self.args.output, 'best_wrapped_model.pth'))
-                self.pruner.export_model(model_path=os.path.join(self.args.output, 'model.pth'), mask_path=os.path.join(self.args.output, 'masks.pth'))
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
