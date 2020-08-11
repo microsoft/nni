@@ -856,7 +856,7 @@ def load_experiment(args):
         if nnictl_exp_config.get('logDir'):
             logDir = nnictl_exp_config['logDir']
         else:
-            logDir = os.path.join(os.path.expanduser("~"), 'nni-experiments')
+            logDir = NNI_HOME_DIR
     os.rename(os.path.join(temp_root_dir, 'experiment'), os.path.join(temp_root_dir, experiment_id))
     src_path = os.path.join(os.path.join(temp_root_dir, experiment_id))
     dest_path = os.path.join(os.path.join(logDir, experiment_id))

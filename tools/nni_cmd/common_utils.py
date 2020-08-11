@@ -93,6 +93,6 @@ def generate_temp_dir():
     temp_dir = generate_folder_name()
     while os.path.exists(temp_dir):
         temp_dir = generate_folder_name()
-    os.makedirs(temp_dir, exist_ok=True)
+    os.makedirs(temp_dir)
     return temp_dir
         
