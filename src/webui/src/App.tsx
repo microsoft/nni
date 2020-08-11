@@ -21,7 +21,7 @@ class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-    
+    private appRefresh = 0;
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -38,8 +38,8 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
-        this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        // this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
         this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
         // final result is legal
@@ -106,7 +106,7 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
-        
+        console.info('appRefresh', this.appRefresh++); // eslint-disable-line
         const errorList = [
             { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
             { errorWhere: EXPERIMENT.experimentError(), errorMessage: EXPERIMENT.getExperimentMessage() },
@@ -163,12 +163,15 @@ class App extends React.Component<{}, AppState> {
         // only refresh this page after clicking the refresh options
         if (this.firstLoad !== true) {
             const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
-            if (experimentUpdated) {
-                this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
+            if (experimentUpdated || trialsUpdated) {
+                this.setState(state => ({ 
+                    experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+                    trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 
+                }));
             }
-            if (trialsUpdated) {
-                this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
-            }
+            // if (trialsUpdated) {
+            //     this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+            // }
 
         } else {
             this.firstLoad = false;
@@ -189,8 +192,8 @@ class App extends React.Component<{}, AppState> {
     public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
-        this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        // this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
     }
 }
 

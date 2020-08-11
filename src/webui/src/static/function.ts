@@ -51,11 +51,20 @@ const convertDuration = (num: number): string => {
 };
 
 function parseMetrics(metricData: string): any {
-    if (metricData.includes('NaN')) {
+    if (metricData.includes('NaN') || metricData.includes('Infinity')) {
         return JSON5.parse(JSON5.parse(metricData));
     } else {
         return JSON.parse(JSON.parse(metricData));
     }
+    //   if(metricData !== undefined){
+    //     if (metricData.includes('NaN') || metricData.includes('Infinity')) {
+    //         return JSON5.parse(JSON5.parse(metricData));
+    //     } else {
+    //         return JSON.parse(JSON.parse(metricData));
+    //     }
+    // } else {
+    //     return undefined;
+    // }
 }
 
 const isArrayType = (list: any): boolean | undefined => {
@@ -84,15 +93,18 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
     }
 };
 
+function isNaNorInfinity(val: number): boolean {
+    return Object.is(val, NaN) || Object.is(val, Infinity);
+}
+
 // get final result value // acc obj
 const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
     let showDefault: FinalType;
     if (final) {
         showDefault = parseMetrics(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
-            if(!isNaN(showDefault)){
-                showDefault = { default: showDefault };
-                return showDefault;
+            if(!isNaNorInfinity(showDefault)){
+                return { default: showDefault };
             }
         } else if (isArrayType(showDefault)) {
             // not support final type
@@ -164,11 +176,9 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
         .catch(error => {
             if (error.response.status === 500) {
                 if (error.response.data.error) {
-                    alert(123);
-                    // message.error(error.response.data.error);
+                    alert(error.response.data.error);
                 } else {
-                    alert(234);
-                    // message.error('500 error, fail to cancel the job');
+                    alert('500 error, fail to cancel the job');
                 }
             }
         });
@@ -228,9 +238,17 @@ function formatAccuracy(accuracy: number): string {
     return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+function formatComplexTypeValue(value: any): string | number {
+    if (['number', 'string'].includes(typeof value)) {
+        return value;
+    } else {
+        return value.toString();
+    }
+}
+
 export {
     convertTime, convertDuration, getFinalResult, getFinal, downFile,
     intermediateGraphOption, killJob, filterByStatus, filterDuration,
     formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics,
-    isArrayType, requestAxios
+    isArrayType, requestAxios, isNaNorInfinity, formatComplexTypeValue
 };
