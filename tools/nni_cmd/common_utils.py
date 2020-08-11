@@ -95,4 +95,3 @@ def generate_temp_dir():
         temp_dir = generate_folder_name()
     os.makedirs(temp_dir)
     return temp_dir
-        

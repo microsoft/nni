@@ -801,7 +801,7 @@ def load_experiment(args):
         exit(1)
     temp_root_dir = generate_temp_dir()
     shutil.unpack_archive(package_path, temp_root_dir)
-    print_normal('Opening...')
+    print_normal('Loading...')
     # Step1. Validation
     if not os.path.exists(args.codeDir):
         print_error('Invalid: codeDir path does not exist!')
