@@ -7,6 +7,7 @@ import * as assert from 'assert';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
@@ -86,14 +87,14 @@ describe('Unit Test for LocalTrainingService', () => {
             }
         };
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
-
-        chai.expect(jobDetail.status).to.be.equals('WAITING');
-        localTrainingService.run()
-        await delay(5000);
-        //chai.expect(jobDetail.status).to.be.equals('RUNNING');
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.a('string');
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.a('string');
-
+        fs.mkdirSync(jobDetail.workingDirectory)
+        fs.writeFileSync(path.join(jobDetail.workingDirectory, 'trial.log'), 'trial log')
+        fs.writeFileSync(path.join(jobDetail.workingDirectory, 'stderr'), 'trial stderr')
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.equals('trial log');
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.equals('trial stderr');
+        fs.unlinkSync(path.join(jobDetail.workingDirectory, 'trial.log'))
+        fs.unlinkSync(path.join(jobDetail.workingDirectory, 'stderr'))
+        fs.rmdirSync(jobDetail.workingDirectory)
         await localTrainingService.cancelTrialJob(jobDetail.id);
     }).timeout(20000);
 
