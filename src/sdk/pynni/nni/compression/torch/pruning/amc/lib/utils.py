@@ -52,7 +52,6 @@ def measure_layer_for_pruning(wrapper, x):
     multi_add = 1
     layer = wrapper.module
     type_name = get_layer_type(layer)
-    #print(type_name)
 
     # ops_conv
     if type_name in ['Conv2d']:

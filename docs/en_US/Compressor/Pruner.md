@@ -518,7 +518,7 @@ from nni.compression.torch import AMCPruner
 config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
-pruner = AMCPruner(model, config_list, evaluator, val_loader, sparsity=0.5)
+pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
 pruner.compress()
 ```
 

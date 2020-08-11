@@ -280,6 +280,7 @@ class ChannelPruningEnv:
                 break
             self.cur_ind += 1
 
+    #TODO replace this speedup implementation with nni.compression.torch.ModelSpeedup
     def export_layer(self, op_idx):
         m_list = list(self.model.modules())
         op = m_list[op_idx]
@@ -486,6 +487,7 @@ class ChannelPruningEnv:
         def new_forward(m):
             def lambda_forward(x):
                 m.input_feat = x.clone()
+                #TODO replace this flops counter with nni.compression.torch.utils.counter.count_flops_params
                 measure_layer_for_pruning(m, x)
                 y = m.old_forward(x)
                 m.output_feat = y.clone()
