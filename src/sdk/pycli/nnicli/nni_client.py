@@ -85,8 +85,8 @@ class NNITrialResult:
     json_obj:
         json object that stores the result information
 
-    Attrbutes
-    -----
+    Attributes
+    ----------
     parameter:
         hyper parameters for this trial
     value:
@@ -111,8 +111,8 @@ class NNITrialMetricData:
     json_obj:
         json object that stores the metric data
 
-    Attrbutes
-    -----
+    Attributes
+    ----------
     timestamp:
         time stamp
     trialJobId:
@@ -145,8 +145,8 @@ class NNITrialHyperParameters:
     json_obj:
         json object that stores the hyper parameters
 
-    Attrbutes
-    -----
+    Attributes
+    ----------
     parameter_id:
         parameter id
     parameter_source:
@@ -173,8 +173,8 @@ class NNITrialJob:
     json_obj:
         json object that stores the hyper parameters
 
-    Attrbutes
-    -----
+    Attributes
+    ----------
     id:
         trial id
     status:
