@@ -322,15 +322,15 @@ class ChannelPruningEnv:
         for idx in range(prev_idx, op_idx):
             m = m_list[idx]
             if type(m) == nn.Conv2d:  # depthwise
-                m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask, :, :, :]).to(device)
+                m.weight.data = m.weight.data[mask, :, :, :]
                 if m.groups == m.in_channels:
                     m.groups = int(np.sum(mask))
                 m.out_channels = d_prime
             elif type(m) == nn.BatchNorm2d:
-                m.weight.data = torch.from_numpy(m.weight.data.cpu().numpy()[mask]).to(device)
-                m.bias.data = torch.from_numpy(m.bias.data.cpu().numpy()[mask]).to(device)
-                m.running_mean.data = torch.from_numpy(m.running_mean.data.cpu().numpy()[mask]).to(device)
-                m.running_var.data = torch.from_numpy(m.running_var.data.cpu().numpy()[mask]).to(device)
+                m.weight.data = m.weight.data[mask]
+                m.bias.data = m.bias.data[mask]
+                m.running_mean.data = m.running_mean.data[mask]
+                m.running_var.data = m.running_var.data[mask]
                 m.num_features = d_prime
 
     def _is_final_layer(self):

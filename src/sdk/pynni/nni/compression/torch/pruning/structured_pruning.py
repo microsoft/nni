@@ -469,13 +469,13 @@ class AMCWeightMasker(WeightMasker):
             num_preserve = num_total - num_prune
             num_preserve = int(math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
             if num_preserve > num_total:
-                num_preserve = int(math.floor(num_total * 1. / self.preserve_round) * self.preserve_round)
+                num_preserve = num_total
             num_prune = num_total - num_preserve
 
         if (num_total < 2 or num_prune < 1) and preserve_idx is None:
             return mask
 
-        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx, preserve_idx)
+        return self.get_mask(mask, weight, num_preserve, wrapper, wrapper_idx, preserve_idx)
 
     def get_mask(self, base_mask, weight, num_preserve, wrapper, wrapper_idx, preserve_idx):
         w = weight.data.cpu().numpy()
