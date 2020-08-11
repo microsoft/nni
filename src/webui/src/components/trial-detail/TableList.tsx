@@ -644,7 +644,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: '50', text: '50 items per page'},
             { key: 'all', text: 'All items'},
         ];
-        console.info('detail', iii++); // eslint-disable-line
+        console.info('detail', this.iii++); // eslint-disable-line
         return (
             <Stack>
                 <div id="tableList">

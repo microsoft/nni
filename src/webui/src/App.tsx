@@ -38,10 +38,14 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({ 
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, 
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
+            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
+        }));
         // this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
-        this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
+        // this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
         // final result is legal
         // get a succeed trial，see final result data's format
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -163,15 +167,14 @@ class App extends React.Component<{}, AppState> {
         // only refresh this page after clicking the refresh options
         if (this.firstLoad !== true) {
             const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
-            if (experimentUpdated || trialsUpdated) {
+            if (experimentUpdated) {
                 this.setState(state => ({ 
                     experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
-                    trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 
                 }));
             }
-            // if (trialsUpdated) {
-            //     this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
-            // }
+            if (trialsUpdated) {
+                this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+            }
 
         } else {
             this.firstLoad = false;
