@@ -11,8 +11,7 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
-                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
-                          trial_head
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas
 from .package_management import package_install, package_uninstall, package_show, package_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
@@ -103,6 +102,8 @@ def parse_args():
     parser_trial_subparsers = parser_trial.add_subparsers()
     parser_trial_ls = parser_trial_subparsers.add_parser('ls', help='list trial jobs')
     parser_trial_ls.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_ls.add_argument('--head', type=int)
+    parser_trial_ls.add_argument('--tail', type=int)
     parser_trial_ls.set_defaults(func=trial_ls)
     parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
@@ -112,14 +113,6 @@ def parse_args():
     parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
     parser_trial_codegen.set_defaults(func=trial_codegen)
-    parser_trial_head = parser_trial_subparsers.add_parser('head', help='list trial id and results with highest metric')
-    parser_trial_head.add_argument('--num', '-n', default=10, type=int)
-    parser_trial_head.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_head.set_defaults(func=trial_head, reverse=False)
-    parser_trial_tail = parser_trial_subparsers.add_parser('tail', help='list trial id and results with lowest metric')
-    parser_trial_tail.add_argument('--num', '-n', default=10, type=int)
-    parser_trial_tail.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_tail.set_defaults(func=trial_head, reverse=True)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')

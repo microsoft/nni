@@ -9,6 +9,7 @@ import time
 import re
 import shutil
 import subprocess
+from functools import cmp_to_key
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
@@ -16,11 +17,10 @@ from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_latest_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
 from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
-     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT, \
-     EXPERIMENT_RESULT_FORMAT, EXPERIMENT_RESULT_DETAIL_FORMAT
+     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
@@ -249,6 +249,22 @@ def stop_experiment(args):
 
 def trial_ls(args):
     '''List trial'''
+    def final_metric_data_cmp(lhs, rhs):
+        # The first json.loads handles the serialized data and the second
+        # reconstructs data structure to handle dict metric.
+        metric_l = json.loads(json.loads(lhs['finalMetricData'][0]['data']))
+        metric_r = json.loads(json.loads(rhs['finalMetricData'][0]['data']))
+        if isinstance(metric_l, float):
+            return metric_l - metric_r
+        elif isinstance(metric_l, dict):
+            return metric_l['default'] - metric_r['default']
+        else:
+            print_error('Unexpected data format. Please check your data.')
+            raise ValueError
+
+    if args.head and args.tail:
+        print_error('Head and tail cannot be set at the same time.')
+        return
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -260,6 +276,14 @@ def trial_ls(args):
         response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
+            if args.head:
+                assert int(args.head) > 0, 'The number of requested data must be greater than 0.'
+                args.head = min(int(args.head), len(content))
+                content = sorted(content, key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
+            elif args.tail:
+                assert int(args.tail) > 0, 'The number of requested data must be greater than 0.'
+                args.tail = min(int(args.tail), len(content))
+                content = sorted(content, key=cmp_to_key(final_metric_data_cmp))[:args.tail]
             for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
@@ -737,42 +761,3 @@ def search_space_auto_gen(args):
         print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
-
-def trial_head(args):
-    '''list maximal trials' id and results'''
-    def rec_process(x):
-        data = eval(eval(x['data']))
-        if isinstance(data, float):
-            x['data'] = data
-            return x
-        elif isinstance(data, dict):
-            x['data'] = data['default']
-            return x
-        else:
-            print_error("Records cannot be loaded, please check the service.")
-            exit(1)
-
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
-    if not detect_process(rest_pid):
-        print_error('Experiment is not running...')
-        return
-    running, response = check_rest_server_quick(rest_port)
-    if not running:
-        print_error('Restful server is not Running')
-        return
-    response = rest_get(metric_data_latest_url(rest_port), 20)
-    if response is not None and check_response(response):
-        content = json.loads(response.text)
-        content = sorted(map(lambda x: rec_process(x),
-                             filter(lambda x: x['type'] == 'FINAL', content)),
-                         key=lambda x: x['data'],
-                         reverse=not args.reverse)
-        list_trial = ''
-        for idx in range(min(int(args.num), len(content))):
-            list_trial += EXPERIMENT_RESULT_DETAIL_FORMAT.format(content[idx]['trialJobId'],
-                                                                 content[idx]['data'])
-        print_normal(EXPERIMENT_RESULT_FORMAT.format('Minimal' if args.reverse else 'Maximal', list_trial))
-    else:
-        print_error('Get latest data failed...')
