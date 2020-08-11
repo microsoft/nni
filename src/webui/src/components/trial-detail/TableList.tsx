@@ -581,6 +581,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
+    // slice all table data into current page data
     updateData(): void {
         const tableSource: Array<TableRecord> = this.props.tableSource;
         const { offset, perPage, sortMessage } = this.state;
@@ -605,8 +606,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
     
+    // update data when click the page index
     handlePageClick = (evt: any): void => {
-
         const selectedPage = evt.selected;
         const offset = selectedPage * this.state.perPage;
         
@@ -619,10 +620,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     updateperPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
-        // clear input value and re-render table
+        const { currentPage } = this.state;
+        
         if (item !== undefined) {
+            const curPerPage = item.key === 'all' ? this.props.tableSource.length: Number(item.key);
             this.setState({ 
-                perPage: item.key === 'all' ? this.props.tableSource.length: Number(item.key) 
+                perPage: curPerPage,
+                offset: item.key === 'all' ? 0 : currentPage * curPerPage
             }, () => {
                 this.updateData();
             });
