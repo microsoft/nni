@@ -5,9 +5,9 @@
 
 Example:
 
-from nnicli import NNIExperiment
+from nnicli import Experiment
 
-exp = NNIExperiment()
+exp = Experiment()
 exp.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
 
 exp.update_concurrency(3)
@@ -28,11 +28,11 @@ import json
 import requests
 
 __all__ = [
-    'NNIExperiment',
-    'NNITrialResult',
-    'NNITrialMetricData',
-    'NNITrialHyperParameters',
-    'NNITrialJob'
+    'Experiment',
+    'TrialResult',
+    'TrialMetricData',
+    'TrialHyperParameters',
+    'TrialJob'
 ]
 
 EXPERIMENT_PATH = 'experiment'
@@ -76,9 +76,9 @@ def _check_endpoint(endpoint):
     if endpoint is None:
         raise RuntimeError("This instance hasn't been connect to an experiment.")
 
-class NNITrialResult:
+class TrialResult:
     """
-    NNITrialResult stores the result information of a trial job.
+    TrialResult stores the result information of a trial job.
 
     Parameters
     ----------
@@ -102,11 +102,11 @@ class NNITrialResult:
             self.__setattr__(key, json_obj[key])
     
     def __repr__(self):
-        return "NNITrialResult(parameter:{} value:{} id:{})".format(self.parameter, self.value, self.id)
+        return "TrialResult(parameter:{} value:{} id:{})".format(self.parameter, self.value, self.id)
 
-class NNITrialMetricData:
+class TrialMetricData:
     """
-    NNITrialMetricData stores the metric data of a trial job.
+    TrialMetricData stores the metric data of a trial job.
     A trial job may have both intermediate metric and final metric.
 
     Parameters
@@ -140,12 +140,12 @@ class NNITrialMetricData:
             self.__setattr__(key, json_obj[key])
 
     def __repr__(self):
-        return "NNITrialMetricData(timestamp:{} trialJobId:{} parameterId:{} type:{} sequence:{} data:{})" \
+        return "TrialMetricData(timestamp:{} trialJobId:{} parameterId:{} type:{} sequence:{} data:{})" \
             .format(self.timestamp, self.trialJobId, self.parameterId, self.type, self.sequence, self.data)
 
-class NNITrialHyperParameters:
+class TrialHyperParameters:
     """
-    NNITrialHyperParameters stores the hyper parameters of a trial job.
+    TrialHyperParameters stores the hyper parameters of a trial job.
 
     Parameters
     ----------
@@ -172,12 +172,12 @@ class NNITrialHyperParameters:
             self.__setattr__(key, json_obj[key])
 
     def __repr__(self):
-        return "NNITrialHyperParameters(parameter_id:{} parameter_source:{} parameters:{} parameter_index:{})" \
+        return "TrialHyperParameters(parameter_id:{} parameter_source:{} parameters:{} parameter_index:{})" \
             .format(self.parameter_id, self.parameter_source, self.parameters, self.parameter_index)
 
-class NNITrialJob:
+class TrialJob:
     """
-    NNITrialJob stores the information of a trial job.
+    TrialJob stores the information of a trial job.
 
     Parameters
     ----------
@@ -191,7 +191,7 @@ class NNITrialJob:
     status:
         job status
     hyperParameters:
-        see `NNITrialHyperParameters`
+        see `TrialHyperParameters`
     logPath:
         log path
     startTime:
@@ -199,7 +199,7 @@ class NNITrialJob:
     endTime:
         job end time (timestamp)
     finalMetricData:
-        see `NNITrialMetricData`
+        see `TrialMetricData`
     parameter_index:
         parameter index
     """
@@ -215,16 +215,16 @@ class NNITrialJob:
         for key in json_obj.keys():
             self.__setattr__(key, json_obj[key])
         if self.hyperParameters:
-            self.hyperParameters = [NNITrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
+            self.hyperParameters = [TrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
         if self.finalMetricData:
-            self.finalMetricData = [NNITrialMetricData(e) for e in self.finalMetricData]
+            self.finalMetricData = [TrialMetricData(e) for e in self.finalMetricData]
 
     def __repr__(self):
-        return "NNITrialJob(id:{} status:{} hyperParameters:{} logPath:{} startTime:{} endTime:{} finalMetricData:{} stderrPath:{})" \
+        return "TrialJob(id:{} status:{} hyperParameters:{} logPath:{} startTime:{} endTime:{} finalMetricData:{} stderrPath:{})" \
             .format(self.id, self.status, self.hyperParameters, self.logPath,
                     self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
 
-class NNIExperiment:
+class Experiment:
     def __init__(self):
         self.endpoint = None
         self.exp_id = None
@@ -401,7 +401,7 @@ class NNIExperiment:
         _check_endpoint(self.endpoint)
         assert trial_job_id is not None
         trial_job = _nni_rest_get(self.endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
-        return NNITrialJob(trial_job)
+        return TrialJob(trial_job)
 
     def list_trial_jobs(self):
         """
@@ -409,7 +409,7 @@ class NNIExperiment:
         """
         _check_endpoint(self.endpoint)
         trial_jobs = _nni_rest_get(self.endpoint, TRIAL_JOBS_PATH)
-        return [NNITrialJob(e) for e in trial_jobs]
+        return [TrialJob(e) for e in trial_jobs]
 
     def get_job_statistics(self):
         """
@@ -430,13 +430,13 @@ class NNIExperiment:
         _check_endpoint(self.endpoint)
         api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
         output = {}
-        trail_metrics =  _nni_rest_get(self.endpoint, api_path)
+        trail_metrics = _nni_rest_get(self.endpoint, api_path)
         for metric in trail_metrics:
             trial_id = metric["trialJobId"]
             if trial_id not in output:
-                output[trial_id] = [NNITrialMetricData(metric)]
+                output[trial_id] = [TrialMetricData(metric)]
             else:
-                output[trial_id].append(NNITrialMetricData(metric))
+                output[trial_id].append(TrialMetricData(metric))
         return output
 
     def export_data(self):
@@ -445,7 +445,7 @@ class NNIExperiment:
         """
         _check_endpoint(self.endpoint)
         trial_results = _nni_rest_get(self.endpoint, EXPORT_DATA_PATH)
-        return [NNITrialResult(e) for e in trial_results]
+        return [TrialResult(e) for e in trial_results]
 
     def get_experiment_profile(self):
         """

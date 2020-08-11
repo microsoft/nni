@@ -140,8 +140,8 @@ testCases:
   config:
     maxTrialNum: 4
     trialConcurrency: 4
-  launchCommand: python3 -c 'from nnicli import NNIExperiment; exp = NNIExperiment(); exp.start_experiment("$configFile")'
-  stopCommand: python3 -c 'from nnicli import NNIExperiment; exp = NNIExperiment(); exp.connect_experiment("http://localhost:8080/"); exp.stop_experiment()'
+  launchCommand: python3 -c 'from nnicli import Experiment; exp = Experiment(); exp.start_experiment("$configFile")'
+  stopCommand: python3 -c 'from nnicli import Experiment; exp = Experiment(); exp.connect_experiment("http://localhost:8080/"); exp.stop_experiment()'
   validator:
     class: NnicliValidator
   platform: linux darwin
