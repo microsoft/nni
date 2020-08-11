@@ -83,26 +83,30 @@ class TrialResult:
     Parameters
     ----------
     json_obj: dict
-        json object that stores the result information
+        Json object that stores the result information.
 
     Attributes
     ----------
     parameter: dict
-        hyper parameters for this trial
-    value: str
-        final result
-    id: str
-        trial id
+        Hyper parameters for this trial.
+    value: serializable object, usually a number, or a dict with key "default" and other extra keys
+        Final result.
+    trialJobId: str
+        Trial job id.
     """
     def __init__(self, json_obj):
         self.parameter = None
         self.value = None
-        self.id = None
+        self.trialJobId = None
         for key in json_obj.keys():
-            setattr(self, key, json_obj[key])
+            if key == 'id':
+                setattr(self, 'trialJobId', json_obj[key])
+            elif hasattr(self, key):
+                setattr(self, key, json_obj[key])
+        self.value = json.loads(self.value)
 
     def __repr__(self):
-        return "TrialResult(parameter:{} value:{} id:{})".format(self.parameter, self.value, self.id)
+        return "TrialResult(parameter: {} value: {} trialJobId: {})".format(self.parameter, self.value, self.trialJobId)
 
 class TrialMetricData:
     """
@@ -112,22 +116,22 @@ class TrialMetricData:
     Parameters
     ----------
     json_obj: dict
-        json object that stores the metric data
+        Json object that stores the metric data.
 
     Attributes
     ----------
     timestamp: int
-        time stamp
+        Time stamp.
     trialJobId: str
-        trial id
+        Trial job id.
     parameterId: int
-        parameter id
+        Parameter id.
     type: str
-        metric type, `PERIODICAL` for intermediate result and `FINAL` for final result
+        Metric type, `PERIODICAL` for intermediate result and `FINAL` for final result.
     sequence: int
-        sequence number in this trial
-    data: str
-        metric data
+        Sequence number in this trial.
+    data: serializable object, usually a number, or a dict with key "default" and other extra keys
+        Metric data.
     """
     def __init__(self, json_obj):
         self.timestamp = None
@@ -138,9 +142,10 @@ class TrialMetricData:
         self.data = None
         for key in json_obj.keys():
             setattr(self, key, json_obj[key])
+        self.data = json.loads(json.loads(self.data))
 
     def __repr__(self):
-        return "TrialMetricData(timestamp:{} trialJobId:{} parameterId:{} type:{} sequence:{} data:{})" \
+        return "TrialMetricData(timestamp: {} trialJobId: {} parameterId: {} type: {} sequence: {} data: {})" \
             .format(self.timestamp, self.trialJobId, self.parameterId, self.type, self.sequence, self.data)
 
 class TrialHyperParameters:
@@ -150,18 +155,18 @@ class TrialHyperParameters:
     Parameters
     ----------
     json_obj: dict
-        json object that stores the hyper parameters
+        Json object that stores the hyper parameters.
 
     Attributes
     ----------
     parameter_id: int
-        parameter id
+        Parameter id.
     parameter_source: str
-        parameter source
+        Parameter source.
     parameters: dict
-        hyper parameters
+        Hyper parameters.
     parameter_index: int
-        parameter index
+        Parameter index.
     """
     def __init__(self, json_obj):
         self.parameter_id = None
@@ -169,10 +174,11 @@ class TrialHyperParameters:
         self.parameters = None
         self.parameter_index = None
         for key in json_obj.keys():
-            setattr(self, key, json_obj[key])
+            if hasattr(self, key):
+                setattr(self, key, json_obj[key])
 
     def __repr__(self):
-        return "TrialHyperParameters(parameter_id:{} parameter_source:{} parameters:{} parameter_index:{})" \
+        return "TrialHyperParameters(parameter_id: {} parameter_source: {} parameters: {} parameter_index: {})" \
             .format(self.parameter_id, self.parameter_source, self.parameters, self.parameter_index)
 
 class TrialJob:
@@ -186,25 +192,25 @@ class TrialJob:
 
     Attributes
     ----------
-    id:
-        trial id: str
+    trialJobId: str
+        Trial job id.
     status: str
-        job status
-    hyperParameters: list of nnicli.TrialHyperParameters
-        see `TrialHyperParameters`
+        Job status.
+    hyperParameters: list of `nnicli.TrialHyperParameters`
+        See `nnicli.TrialHyperParameters`.
     logPath: str
-        log path
+        Log path.
     startTime: int
-        job start time (timestamp)
+        Job start time (timestamp).
     endTime: int
-        job end time (timestamp)
-    finalMetricData: list of nnicli.TrialMetricData
-        see `TrialMetricData`
+        Job end time (timestamp).
+    finalMetricData: list of `nnicli.TrialMetricData`
+        See `nnicli.TrialMetricData`.
     parameter_index: int
-        parameter index
+        Parameter index.
     """
     def __init__(self, json_obj):
-        self.id = None
+        self.trialJobId = None
         self.status = None
         self.hyperParameters = None
         self.logPath = None
@@ -213,16 +219,20 @@ class TrialJob:
         self.finalMetricData = None
         self.stderrPath = None
         for key in json_obj.keys():
-            setattr(self, key, json_obj[key])
+            if key == 'id':
+                setattr(self, 'trialJobId', json_obj[key])
+            elif hasattr(self, key):
+                setattr(self, key, json_obj[key])
         if self.hyperParameters:
             self.hyperParameters = [TrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
         if self.finalMetricData:
             self.finalMetricData = [TrialMetricData(e) for e in self.finalMetricData]
 
     def __repr__(self):
-        return "TrialJob(id:{} status:{} hyperParameters:{} logPath:{} startTime:{} endTime:{} finalMetricData:{} stderrPath:{})" \
-            .format(self.id, self.status, self.hyperParameters, self.logPath,
-                    self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
+        return ("TrialJob(trialJobId: {} status: {} hyperParameters: {} logPath: {} startTime: {} "
+                "endTime: {} finalMetricData: {} stderrPath: {})") \
+                    .format(self.trialJobId, self.status, self.hyperParameters, self.logPath,
+                            self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
 
 class Experiment:
     def __init__(self):
@@ -262,11 +272,11 @@ class Experiment:
         Parameters
         ----------
         config_file: str
-            path to the config file
+            Path to the config file.
         port: int
-            the port of restful server, bigger than 1024
+            The port of restful server, bigger than 1024.
         debug: boolean
-            set debug mode
+            Set debug mode.
         """
         cmd = 'nnictl create --config {}'.format(config_file).split(' ')
         if port:
@@ -282,11 +292,11 @@ class Experiment:
         Parameters
         ----------
         exp_id: str
-            experiment id
+            Experiment id.
         port: int
-            the port of restful server, bigger than 1024
+            The port of restful server, bigger than 1024.
         debug: boolean
-            set debug mode
+            Set debug mode.
         """
         cmd = 'nnictl resume {}'.format(exp_id).split(' ')
         if port:
@@ -302,9 +312,9 @@ class Experiment:
         Parameters
         ----------
         exp_id: str
-            experiment id
+            Experiment id.
         port: int
-            the port of restful server, bigger than 1024
+            The port of restful server, bigger than 1024.
         """
         cmd = 'nnictl view {}'.format(exp_id).split(' ')
         if port:
@@ -318,7 +328,7 @@ class Experiment:
         Parameters
         ----------
         endpoint: str
-            the endpoint of nni rest server, i.e, the url of Web UI. Should be a format like `http://ip:port`
+            The endpoint of nni rest server, i.e, the url of Web UI. Should be a format like `http://ip:port`.
         """
         if self._endpoint is not None:
             raise RuntimeError('This instance has been connected to an experiment.')
@@ -347,7 +357,7 @@ class Experiment:
         Parameters
         ----------
         filename: str
-            path to the searchspace file
+            Path to the searchspace file.
         """
         _check_endpoint(self._endpoint)
         cmd = 'nnictl update searchspace {} --filename {}'.format(self._exp_id, filename).split(' ')
@@ -361,7 +371,7 @@ class Experiment:
         Parameters
         ----------
         value: int
-            new concurrency value
+            New concurrency value.
         """
         _check_endpoint(self._endpoint)
         cmd = 'nnictl update concurrency {} --value {}'.format(self._exp_id, value).split(' ')
@@ -390,7 +400,7 @@ class Experiment:
         Parameters
         ----------
         value: int
-            new trailnum value
+            New trailnum value.
         """
         _check_endpoint(self._endpoint)
         cmd = 'nnictl update trialnum {} --value {}'.format(self._exp_id, value).split(' ')
@@ -400,18 +410,28 @@ class Experiment:
     def get_experiment_status(self):
         """
         Return experiment status as a dict.
+
+        Returns
+        ----------
+        dict
+            Experiment status.
         """
         _check_endpoint(self._endpoint)
         return _nni_rest_get(self._endpoint, STATUS_PATH)
 
     def get_trial_job(self, trial_job_id):
         """
-        Return trial job information as a dict.
+        Return a trial job.
 
         Parameters
         ----------
         trial_job_id: str
-            trial id
+            Trial job id.
+
+        Returns
+        ----------
+        nnicli.TrialJob
+            A `nnicli.TrialJob` instance corresponding to `trial_job_id`.
         """
         _check_endpoint(self._endpoint)
         assert trial_job_id is not None
@@ -421,6 +441,11 @@ class Experiment:
     def list_trial_jobs(self):
         """
         Return information for all trial jobs as a list.
+
+        Returns
+        ----------
+        list
+            List of `nnicli.TrialJob`.
         """
         _check_endpoint(self._endpoint)
         trial_jobs = _nni_rest_get(self._endpoint, TRIAL_JOBS_PATH)
@@ -429,6 +454,11 @@ class Experiment:
     def get_job_statistics(self):
         """
         Return trial job statistics information as a dict.
+
+        Returns
+        ----------
+        list
+            Job statistics information.
         """
         _check_endpoint(self._endpoint)
         return _nni_rest_get(self._endpoint, JOB_STATISTICS_PATH)
@@ -440,7 +470,12 @@ class Experiment:
         Parameters
         ----------
         trial_job_id: str
-            trial id. if this parameter is None, all trail jobs' metrics will be returned.
+            trial job id. if this parameter is None, all trail jobs' metrics will be returned.
+
+        Returns
+        ----------
+        dict
+            Each key is a trialJobId, the corresponding value is a list of `nnicli.TrialMetricData`.
         """
         _check_endpoint(self._endpoint)
         api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
@@ -457,6 +492,11 @@ class Experiment:
     def export_data(self):
         """
         Return exported information for all trial jobs.
+
+        Returns
+        ----------
+        list
+            List of `nnicli.TrialResult`.
         """
         _check_endpoint(self._endpoint)
         trial_results = _nni_rest_get(self._endpoint, EXPORT_DATA_PATH)
@@ -465,6 +505,11 @@ class Experiment:
     def get_experiment_profile(self):
         """
         Return experiment profile as a dict.
+
+        Returns
+        ----------
+        dict
+            The profile of the experiment.
         """
         _check_endpoint(self._endpoint)
         return _nni_rest_get(self._endpoint, EXPERIMENT_PATH)
