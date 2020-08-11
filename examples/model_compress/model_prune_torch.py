@@ -145,10 +145,7 @@ def create_model(model_name='naive'):
 def create_pruner(model, pruner_name, optimizer=None):
     pruner_class = prune_config[pruner_name]['pruner_class']
     config_list = prune_config[pruner_name]['config_list']
-    if pruner_name in ['level', 'slim', 'fpgm', 'l1filter']:
-        return pruner_class(model, config_list)
-    else:
-        return pruner_class(model, config_list, optimizer)
+    return pruner_class(model, config_list, optimizer)
 
 def train(model, device, train_loader, optimizer):
     model.train()

@@ -95,8 +95,8 @@ class LevelPruner(OneshotPruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Operation types to prune.
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, pruning_algorithm='level')
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, pruning_algorithm='level', optimizer=optimizer)
 
 class SlimPruner(OneshotPruner):
     """
@@ -109,8 +109,8 @@ class SlimPruner(OneshotPruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only BatchNorm2d is supported in Slim Pruner.
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, pruning_algorithm='slim')
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, pruning_algorithm='slim', optimizer=optimizer)
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
@@ -148,8 +148,8 @@ class L1FilterPruner(_StructuredFilterPruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in L1FilterPruner.
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, pruning_algorithm='l1')
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer)
 
 class L2FilterPruner(_StructuredFilterPruner):
     """
@@ -162,8 +162,8 @@ class L2FilterPruner(_StructuredFilterPruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in L2FilterPruner.
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, pruning_algorithm='l2')
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer)
 
 class FPGMPruner(_StructuredFilterPruner):
     """
@@ -176,8 +176,8 @@ class FPGMPruner(_StructuredFilterPruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in FPGM Pruner.
     """
-    def __init__(self, model, config_list):
-        super().__init__(model, config_list, pruning_algorithm='fpgm')
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, pruning_algorithm='fpgm', optimizer=optimizer)
 
 class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
     """
