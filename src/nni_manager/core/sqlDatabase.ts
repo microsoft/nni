@@ -203,7 +203,7 @@ class SqlDB implements Database {
     public storeMetricData(trialJobId: string, data: string): Promise<void> {
         const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
         const json: MetricDataRecord = JSON.parse(data);
-        const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
+        const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, json.data];
 
         this.log.trace(`storeMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<void> = new Deferred<void>();

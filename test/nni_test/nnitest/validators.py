@@ -64,7 +64,7 @@ class MetricsValidator(ITValidator):
         for metric in metrics:
             # metrics value are encoded by NNI SDK as json string,
             # here we decode the value by json.loads twice
-            metric_value = json.loads(json.loads(metric['data']))
+            metric_value = json.loads(metric['data'])
             if metric['type'] == 'PERIODICAL':
                 if metric['trialJobId'] in intermediate_result:
                     intermediate_result[metric['trialJobId']].append(metric_value)

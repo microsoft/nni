@@ -52,7 +52,7 @@ class App extends React.Component<{}, AppState> {
         for (let i = 0; this.state.isillegalFinal === false; i++) {
             if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
+                const oneSucceedTrial = JSON.parse(TRIALS.succeededTrials()[0].final!.data);
                 if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
                     window.clearInterval(this.dataFormatimer);
                     break;

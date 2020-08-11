@@ -52,9 +52,9 @@ const convertDuration = (num: number): string => {
 
 function parseMetrics(metricData: string): any {
     if (metricData.includes('NaN')) {
-        return JSON5.parse(JSON5.parse(metricData));
+        return JSON5.parse(metricData);
     } else {
-        return JSON.parse(JSON.parse(metricData));
+        return JSON.parse(metricData);
     }
 }
 
