@@ -82,16 +82,16 @@ class TrialResult:
 
     Parameters
     ----------
-    json_obj:
+    json_obj: dict
         json object that stores the result information
 
     Attributes
     ----------
-    parameter:
+    parameter: dict
         hyper parameters for this trial
-    value:
+    value: str
         final result
-    id:
+    id: str
         trial id
     """
     def __init__(self, json_obj):
@@ -99,8 +99,8 @@ class TrialResult:
         self.value = None
         self.id = None
         for key in json_obj.keys():
-            self.__setattr__(key, json_obj[key])
-    
+            setattr(self, key, json_obj[key])
+
     def __repr__(self):
         return "TrialResult(parameter:{} value:{} id:{})".format(self.parameter, self.value, self.id)
 
@@ -111,22 +111,22 @@ class TrialMetricData:
 
     Parameters
     ----------
-    json_obj:
+    json_obj: dict
         json object that stores the metric data
 
     Attributes
     ----------
-    timestamp:
+    timestamp: int
         time stamp
-    trialJobId:
+    trialJobId: str
         trial id
-    parameterId:
+    parameterId: int
         parameter id
-    type:
+    type: str
         metric type, `PERIODICAL` for intermediate result and `FINAL` for final result
-    sequence:
+    sequence: int
         sequence number in this trial
-    data:
+    data: str
         metric data
     """
     def __init__(self, json_obj):
@@ -137,7 +137,7 @@ class TrialMetricData:
         self.sequence = None
         self.data = None
         for key in json_obj.keys():
-            self.__setattr__(key, json_obj[key])
+            setattr(self, key, json_obj[key])
 
     def __repr__(self):
         return "TrialMetricData(timestamp:{} trialJobId:{} parameterId:{} type:{} sequence:{} data:{})" \
@@ -149,18 +149,18 @@ class TrialHyperParameters:
 
     Parameters
     ----------
-    json_obj:
+    json_obj: dict
         json object that stores the hyper parameters
 
     Attributes
     ----------
-    parameter_id:
+    parameter_id: int
         parameter id
-    parameter_source:
+    parameter_source: str
         parameter source
-    parameters:
+    parameters: dict
         hyper parameters
-    parameter_index:
+    parameter_index: int
         parameter index
     """
     def __init__(self, json_obj):
@@ -169,7 +169,7 @@ class TrialHyperParameters:
         self.parameters = None
         self.parameter_index = None
         for key in json_obj.keys():
-            self.__setattr__(key, json_obj[key])
+            setattr(self, key, json_obj[key])
 
     def __repr__(self):
         return "TrialHyperParameters(parameter_id:{} parameter_source:{} parameters:{} parameter_index:{})" \
@@ -181,26 +181,26 @@ class TrialJob:
 
     Parameters
     ----------
-    json_obj:
+    json_obj: dict
         json object that stores the hyper parameters
 
     Attributes
     ----------
     id:
-        trial id
-    status:
+        trial id: str
+    status: str
         job status
-    hyperParameters:
+    hyperParameters: list of nnicli.TrialHyperParameters
         see `TrialHyperParameters`
-    logPath:
+    logPath: str
         log path
-    startTime:
+    startTime: int
         job start time (timestamp)
-    endTime:
+    endTime: int
         job end time (timestamp)
-    finalMetricData:
+    finalMetricData: list of nnicli.TrialMetricData
         see `TrialMetricData`
-    parameter_index:
+    parameter_index: int
         parameter index
     """
     def __init__(self, json_obj):
@@ -213,7 +213,7 @@ class TrialJob:
         self.finalMetricData = None
         self.stderrPath = None
         for key in json_obj.keys():
-            self.__setattr__(key, json_obj[key])
+            setattr(self, key, json_obj[key])
         if self.hyperParameters:
             self.hyperParameters = [TrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
         if self.finalMetricData:
@@ -226,22 +226,34 @@ class TrialJob:
 
 class Experiment:
     def __init__(self):
-        self.endpoint = None
-        self.exp_id = None
-        self.port = None
+        self._endpoint = None
+        self._exp_id = None
+        self._port = None
+
+    @property
+    def endpoint(self):
+        return self._endpoint
+
+    @property
+    def exp_id(self):
+        return self._exp_id
+
+    @property
+    def port(self):
+        return self._port
 
     def _exec_command(self, cmd, port=None):
-        if self.endpoint is not None:
+        if self._endpoint is not None:
             raise RuntimeError('This instance has been connected to an experiment.')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to establish experiment, please check your config.')
         else:
             if port:
-                self.port = port
+                self._port = port
             else:
-                self.port = 8080
-            self.endpoint = 'http://localhost:{}'.format(self.port)
-            self.exp_id = self.get_experiment_profile()['id']
+                self._port = 8080
+            self._endpoint = 'http://localhost:{}'.format(self._port)
+            self._exp_id = self.get_experiment_profile()['id']
 
     def start_experiment(self, config_file, port=None, debug=False):
         """
@@ -308,22 +320,25 @@ class Experiment:
         endpoint: str
             the endpoint of nni rest server, i.e, the url of Web UI. Should be a format like `http://ip:port`
         """
-        if self.endpoint is not None:
+        if self._endpoint is not None:
             raise RuntimeError('This instance has been connected to an experiment.')
-        self.endpoint = endpoint
+        self._endpoint = endpoint
         try:
-            self.exp_id = self.get_experiment_profile()['id']
+            self._exp_id = self.get_experiment_profile()['id']
         except TypeError:
             raise RuntimeError('Invalid experiment endpoint.')
-        self.port = int(re.search(r':[0-9]+', self.endpoint).group().replace(':', ''))
+        self._port = int(re.search(r':[0-9]+', self._endpoint).group().replace(':', ''))
 
     def stop_experiment(self):
         """Stop the experiment.
         """
-        _check_endpoint(self.endpoint)
-        cmd = 'nnictl stop {}'.format(self.exp_id).split(' ')
+        _check_endpoint(self._endpoint)
+        cmd = 'nnictl stop {}'.format(self._exp_id).split(' ')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to stop experiment.')
+        self._endpoint = None
+        self._exp_id = None
+        self._port = None
 
     def update_searchspace(self, filename):
         """
@@ -334,8 +349,8 @@ class Experiment:
         filename: str
             path to the searchspace file
         """
-        _check_endpoint(self.endpoint)
-        cmd = 'nnictl update searchspace {} --filename {}'.format(self.exp_id, filename).split(' ')
+        _check_endpoint(self._endpoint)
+        cmd = 'nnictl update searchspace {} --filename {}'.format(self._exp_id, filename).split(' ')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to update searchspace.')
 
@@ -348,8 +363,8 @@ class Experiment:
         value: int
             new concurrency value
         """
-        _check_endpoint(self.endpoint)
-        cmd = 'nnictl update concurrency {} --value {}'.format(self.exp_id, value).split(' ')
+        _check_endpoint(self._endpoint)
+        cmd = 'nnictl update concurrency {} --value {}'.format(self._exp_id, value).split(' ')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to update concurrency.')
 
@@ -363,8 +378,8 @@ class Experiment:
             Strings like '1m' for one minute or '2h' for two hours.
             SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
-        _check_endpoint(self.endpoint)
-        cmd = 'nnictl update duration {} --value {}'.format(self.exp_id, value).split(' ')
+        _check_endpoint(self._endpoint)
+        cmd = 'nnictl update duration {} --value {}'.format(self._exp_id, value).split(' ')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to update duration.')
 
@@ -377,8 +392,8 @@ class Experiment:
         value: int
             new trailnum value
         """
-        _check_endpoint(self.endpoint)
-        cmd = 'nnictl update trialnum {} --value {}'.format(self.exp_id, value).split(' ')
+        _check_endpoint(self._endpoint)
+        cmd = 'nnictl update trialnum {} --value {}'.format(self._exp_id, value).split(' ')
         if _create_process(cmd) != 0:
             raise RuntimeError('Failed to update trailnum.')
 
@@ -386,8 +401,8 @@ class Experiment:
         """
         Return experiment status as a dict.
         """
-        _check_endpoint(self.endpoint)
-        return _nni_rest_get(self.endpoint, STATUS_PATH)
+        _check_endpoint(self._endpoint)
+        return _nni_rest_get(self._endpoint, STATUS_PATH)
 
     def get_trial_job(self, trial_job_id):
         """
@@ -398,25 +413,25 @@ class Experiment:
         trial_job_id: str
             trial id
         """
-        _check_endpoint(self.endpoint)
+        _check_endpoint(self._endpoint)
         assert trial_job_id is not None
-        trial_job = _nni_rest_get(self.endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
+        trial_job = _nni_rest_get(self._endpoint, os.path.join(TRIAL_JOBS_PATH, trial_job_id))
         return TrialJob(trial_job)
 
     def list_trial_jobs(self):
         """
         Return information for all trial jobs as a list.
         """
-        _check_endpoint(self.endpoint)
-        trial_jobs = _nni_rest_get(self.endpoint, TRIAL_JOBS_PATH)
+        _check_endpoint(self._endpoint)
+        trial_jobs = _nni_rest_get(self._endpoint, TRIAL_JOBS_PATH)
         return [TrialJob(e) for e in trial_jobs]
 
     def get_job_statistics(self):
         """
         Return trial job statistics information as a dict.
         """
-        _check_endpoint(self.endpoint)
-        return _nni_rest_get(self.endpoint, JOB_STATISTICS_PATH)
+        _check_endpoint(self._endpoint)
+        return _nni_rest_get(self._endpoint, JOB_STATISTICS_PATH)
 
     def get_job_metrics(self, trial_job_id=None):
         """
@@ -427,10 +442,10 @@ class Experiment:
         trial_job_id: str
             trial id. if this parameter is None, all trail jobs' metrics will be returned.
         """
-        _check_endpoint(self.endpoint)
+        _check_endpoint(self._endpoint)
         api_path = METRICS_PATH if trial_job_id is None else os.path.join(METRICS_PATH, trial_job_id)
         output = {}
-        trail_metrics = _nni_rest_get(self.endpoint, api_path)
+        trail_metrics = _nni_rest_get(self._endpoint, api_path)
         for metric in trail_metrics:
             trial_id = metric["trialJobId"]
             if trial_id not in output:
@@ -443,13 +458,13 @@ class Experiment:
         """
         Return exported information for all trial jobs.
         """
-        _check_endpoint(self.endpoint)
-        trial_results = _nni_rest_get(self.endpoint, EXPORT_DATA_PATH)
+        _check_endpoint(self._endpoint)
+        trial_results = _nni_rest_get(self._endpoint, EXPORT_DATA_PATH)
         return [TrialResult(e) for e in trial_results]
 
     def get_experiment_profile(self):
         """
         Return experiment profile as a dict.
         """
-        _check_endpoint(self.endpoint)
-        return _nni_rest_get(self.endpoint, EXPERIMENT_PATH)
+        _check_endpoint(self._endpoint)
+        return _nni_rest_get(self._endpoint, EXPERIMENT_PATH)
