@@ -21,6 +21,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
 * [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -622,3 +623,35 @@ We try to reproduce the experiment result of the fully connected network on MNIS
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+
+
+## Sensitivity Pruner
+For each round, SensitivityPruner prunes the model based on the sensitivity to the accuracy of each layer until meeting the final configured sparsity of the whole model:
+        1. Analyze the sensitivity of each layer in the current state of the model.
+        2. Prune each layer according to the sensitivity.
+
+For more details, please refer to [Learning both Weights and Connections for Efficient Neural Networks ](https://arxiv.org/abs/1506.02626).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SensitivityPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = SensitivityPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+# eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+pruner.compress(eval_args=[model], finetune_args=[model])
+```
+
+
+#### User configuration for Sensitivity Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```
