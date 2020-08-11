@@ -223,9 +223,6 @@ class Trial implements TableObj {
         if (this.acc === undefined) {
             return ret;
         }
-        if(typeof this.acc.default !== 'number'){
-            return ret;
-        }
         const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;
         Object.entries(acc).forEach(item => {
             const [k, v] = item;

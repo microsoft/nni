@@ -165,7 +165,7 @@ export class MetricSpace implements MultipleAxes {
             if (value.every(v => typeof v === 'number')) {
                 this.axes.set(key, new NumericAxis(key, key, 'uniform', [Math.min(...value), Math.max(...value)]));
             } else {
-                // TODO: skip for now
+                this.axes.set(key, new SimpleOrdinalAxis(key, key, 'choice', value));
             }
         });
     }
