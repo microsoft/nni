@@ -1,7 +1,9 @@
 from nni_client import NNIExperiment
 import json
+import time
 exp = NNIExperiment()
-exp.connect_experiment('http://10.190.175.223:8080/')
+exp.start_experiment('/home/v-junwsu/mnist-pytorch/config.yml')
+time.sleep(10)
 jobs = exp.list_trial_jobs()
 j = jobs[0]
 for k, v in j.__dict__.items():

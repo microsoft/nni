@@ -30,4 +30,12 @@ exp.stop_experiment()
 ```eval_rst
 ..  autoclass:: nnicli.NNIExperiment
     :members:
+..  autoclass:: nnicli.NNITrialJob
+    :members:
+..  autoclass:: nnicli.NNITrialHyperParameters
+    :members:
+..  autoclass:: nnicli.NNITrialMetricData
+    :members:
+..  autoclass:: nnicli.NNITrialResult
+    :members:
 ```

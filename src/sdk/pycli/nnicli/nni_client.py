@@ -53,7 +53,7 @@ def _nni_rest_get(endpoint, api_path, response_type='json'):
         elif response_type == 'text':
             return res.text
         else:
-            raise AssertionError('Incorrect response_type')
+            raise RuntimeError('Incorrect response_type')
     else:
         return None
 
@@ -74,7 +74,7 @@ def _create_process(cmd):
 
 def _check_endpoint(endpoint):
     if endpoint is None:
-        raise AssertionError("This instance hasn't been connect to an experiment.")
+        raise RuntimeError("This instance hasn't been connect to an experiment.")
 
 class NNITrialResult:
     """
@@ -214,6 +214,19 @@ class NNIExperiment:
         self.exp_id = None
         self.port = None
 
+    def _exec_command(self, cmd, port=None):
+        if self.endpoint is not None:
+            raise RuntimeError('This instance has been connected to an experiment.')
+        if _create_process(cmd) != 0:
+            raise RuntimeError('Failed to establish experiment, please check your config.')
+        else:
+            if port:
+                self.port = port
+            else:
+                self.port = 8080
+            self.endpoint = 'http://localhost:{}'.format(self.port)
+            self.exp_id = self.get_experiment_profile()['id']
+
     def start_experiment(self, config_file, port=None, debug=False):
         """
         Start an experiment with specified configuration file and connect to it.
@@ -227,22 +240,12 @@ class NNIExperiment:
         debug: boolean
             set debug mode
         """
-        if self.endpoint is not None:
-            raise RuntimeError('This instance has been connected to an experiment.')
         cmd = 'nnictl create --config {}'.format(config_file).split(' ')
         if port:
             cmd += '--port {}'.format(port).split(' ')
         if debug:
             cmd += ['--debug']
-        if _create_process(cmd) != 0:
-            raise RuntimeError('Failed to start experiment, please check your config.')
-        else:
-            if port:
-                self.port = port
-            else:
-                self.port = 8080
-            self.endpoint = 'http://localhost:{}'.format(self.port)
-            self.exp_id = self.get_experiment_profile()['id']
+        self._exec_command(cmd, port)
 
     def resume_experiment(self, exp_id, port=None, debug=False):
         """
@@ -257,22 +260,12 @@ class NNIExperiment:
         debug: boolean
             set debug mode
         """
-        if self.endpoint is not None:
-            raise RuntimeError('This instance has been connected to an experiment.')
         cmd = 'nnictl resume {}'.format(exp_id).split(' ')
         if port:
             cmd += '--port {}'.format(port).split(' ')
         if debug:
             cmd += ['--debug']
-        if _create_process(cmd) != 0:
-            raise RuntimeError('Failed to resume experiment.')
-        else:
-            if port:
-                self.port = port
-            else:
-                self.port = 8080
-            self.endpoint = 'http://localhost:{}'.format(self.port)
-            self.exp_id = self.get_experiment_profile()['id']
+        self._exec_command(cmd, port)
 
     def view_experiment(self, exp_id, port=None):
         """
@@ -285,20 +278,10 @@ class NNIExperiment:
         port: int
             the port of restful server, bigger than 1024
         """
-        if self.endpoint is not None:
-            raise RuntimeError('This instance has been connected to an experiment.')
         cmd = 'nnictl view {}'.format(exp_id).split(' ')
         if port:
             cmd += '--port {}'.format(port).split(' ')
-        if _create_process(cmd) != 0:
-            raise RuntimeError('Failed to view experiment.')
-        else:
-            if port:
-                self.port = port
-            else:
-                self.port = 8080
-            self.endpoint = 'http://localhost:{}'.format(self.port)
-            self.exp_id = self.get_experiment_profile()['id']
+        self._exec_command(cmd, port)
 
     def connect_experiment(self, endpoint):
         """
