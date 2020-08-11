@@ -6,7 +6,6 @@ from copy import deepcopy
 from argparse import Namespace
 import numpy as np
 import torch
-from tensorboardX import SummaryWriter
 
 from nni.compression.torch.compressor import Pruner
 from .channel_pruning_env import ChannelPruningEnv
@@ -147,6 +146,8 @@ class AMCPruner(Pruner):
             epsilon=50000,
             seed=None):
 
+        from tensorboardX import SummaryWriter
+
         self.job = job
         self.searched_model_path = searched_model_path
         self.export_path = export_path
@@ -243,7 +244,6 @@ class AMCPruner(Pruner):
 
             # env response with next_observation, reward, terminate_info
             observation2, reward, done, info = env.step(action)
-            observation2 = deepcopy(observation2)
 
             T.append([reward, deepcopy(observation), deepcopy(observation2), action, done])
 

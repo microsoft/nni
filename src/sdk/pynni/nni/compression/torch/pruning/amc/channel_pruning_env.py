@@ -47,24 +47,24 @@ class ChannelPruningEnv:
                     agent.update_policy()
                 T = []
 
-    Initialization:
-        At class initialization, it build/extract follow information for later pruning:
-
-        self.prunable_idx: layer indices for pruable layers, the index values are the index
+    Attributes:
+        prunable_idx: layer indices for pruable layers, the index values are the index
             of list(self.model.modules()). Pruable layers are pointwise Conv2d layers and Linear
             layers.
-        self.buffer_idx: layer indices for buffer layers which refers the depthwise layers.
+        buffer_idx: layer indices for buffer layers which refers the depthwise layers.
             Each depthwise layer is always followd by a pointwise layer for both mobilenet and
             mobilenetv2. The depthwise layer's filters are pruned when its next pointwise layer's
             corresponding input channels are pruned.
-        self.shared_idx: layer indices for layers which share input.
+        shared_idx: layer indices for layers which share input.
             For example: [[1,4], [8, 10, 15]] means layer 1 and 4 share same input, and layer
             8, 10 and 15 share another input.
-        self.layer_embedding: embeddings for each prunable layers, the embedding is used as
+        layer_embedding: embeddings for each prunable layers, the embedding is used as
             observation for DDPG agent.
-        self.layer_info_dict: flops and number of parameters of each layer.
-        self.min_strategy_dict: key is layer index, value is a tuple, the first value is the minimum
+        layer_info_dict: flops and number of parameters of each layer.
+        min_strategy_dict: key is layer index, value is a tuple, the first value is the minimum
             action of input channel, the second value is the minimum action value of output channel.
+        strategy_dict: key is layer index, value is a tuple, the first value is the action of input
+            channel, the second value is the action of output channel.
 
     Parameters:
         pruner: Pruner
@@ -201,6 +201,7 @@ class ChannelPruningEnv:
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
                 torch.save(self.model.state_dict(), os.path.join(self.args.output, 'best_wrapped_model.pth'))
+                self.pruner.export_model(model_path=os.path.join(self.args.output, 'model.pth'), mask_path=os.path.join(self.args.output, 'masks.pth'))
                 prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
                 prGreen('New best policy: {}'.format(self.best_strategy))
                 prGreen('New best d primes: {}'.format(self.best_d_prime_list))
