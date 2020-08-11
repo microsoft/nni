@@ -142,19 +142,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
-        const key = columnKey as keyof T;
-        return items.slice(0).sort(function (a: T, b: T): any {
-            if (a[key] === undefined) {
-                return 1;
-            }
-            if (b[key] === undefined) {
-                return -1;
-            }
-            return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
-        });
-    }
-
     AccuracyColumnConfig: any = {
         name: 'Default metric',
         className: 'leftTitle',
@@ -599,10 +586,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
 
         const tableSlice = tableSource.slice(offset, offset + perPage)
-        
+        const curPageCount = Math.ceil(tableSource.length / perPage)
         this.setState({
             tablePerPage: tableSlice,
-            pageCount: Math.ceil(tableSource.length / perPage),
+            pageCount: curPageCount,
         });
     }
     
@@ -619,14 +606,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
-    updateperPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
-        const { currentPage } = this.state;
+    // update per page option when click the dropdown
+    updatePerPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
+        const { pageCount } = this.state;
         
         if (item !== undefined) {
-            const curPerPage = item.key === 'all' ? this.props.tableSource.length: Number(item.key);
+            const currentPerPage = item.key === 'all' ? this.props.tableSource.length: Number(item.key)
+            const currentPageCount = this.props.tableSource.length <= currentPerPage ? 1 : pageCount
+            
             this.setState({ 
-                perPage: curPerPage,
-                offset: item.key === 'all' ? 0 : currentPage * curPerPage
+                perPage: currentPerPage,
+                offset: 0,
+                currentPage: 0,
+                pageCount: currentPageCount
             }, () => {
                 this.updateData();
             });
@@ -638,7 +630,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
             isShowCustomizedModal, copyTrialId, intermediateOption,
-            tablePerPage
+            tablePerPage, currentPage
         } = this.state;
         const { columnList, trialsUpdateBroadcast } = this.props;
         const perPageOptions = [
@@ -667,10 +659,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <Dropdown
                         selectedKey={this.state.perPage === this.props.tableSource.length ? 'all':String(this.state.perPage)}
                         options={perPageOptions}
-                        onChange={this.updateperPage}
+                        onChange={this.updatePerPage}
                         styles={{dropdown: { width: 150}}}/>
 
-                        {/* this.props.tableSource.length > this.state.perPage &&  */}
                         <ReactPaginate
                         previousLabel={"<"}
                         nextLabel={">"}
@@ -683,7 +674,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         containerClassName={(this.props.tableSource.length == 0 ? "pagination hidden" : "pagination" )}
                         subContainerClassName={"pages pagination"}
                         disableInitialCallback={false}
-                        activeClassName={"active"}/>
+                        activeClassName={"active"}
+                        forcePage={this.state.currentPage}
+                        key={currentPage}/>
 
                     </Stack>
 
