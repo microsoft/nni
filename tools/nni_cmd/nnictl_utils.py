@@ -894,7 +894,7 @@ def load_experiment(args):
                                      experiment_metadata.get('experimentName'),
                                      experiment_metadata.get('endTime'),
                                      experiment_metadata.get('status'))
-    print_normal('Open experiment %s succsss!' % experiment_id)
+    print_normal('Load experiment %s succsss!' % experiment_id)
 
     # Step6. Cleanup temp data
     shutil.rmtree(temp_root_dir)
