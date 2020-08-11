@@ -6,7 +6,7 @@ from os import remove
 import subprocess
 import json
 import requests
-import nnicli as nc
+from nnicli import NNIExperiment
 from utils import METRICS_URL
 
 
@@ -76,3 +76,12 @@ class MetricsValidator(ITValidator):
                 else:
                     final_result[metric['trialJobId']] = [metric_value]
         return intermediate_result, final_result
+
+class NnicliValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        print(rest_endpoint)
+        exp = NNIExperiment()
+        exp.connect_experiment(rest_endpoint)
+        print(exp.get_job_statistics())
+        print(exp.get_experiment_status())
+        print(exp.list_trial_jobs())

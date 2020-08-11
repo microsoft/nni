@@ -42,6 +42,17 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics_dict.json
 
+- name: nnicli
+  configFile: test/config/examples/sklearn-regression.yml
+  config:
+    maxTrialNum: 4
+    trialConcurrency: 4
+  launchCommand: python3 -c 'from nnicli import NNIExperiment; exp = NNIExperiment(); exp.start_experiment("$configFile")'
+  stopCommand: python3 -c 'from nnicli import NNIExperiment; exp = NNIExperiment(); exp.connect_experiment("http://localhost:8080/"); exp.stop_experiment()'
+  validator:
+    class: NnicliValidator
+  platform: linux darwin
+
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml
 

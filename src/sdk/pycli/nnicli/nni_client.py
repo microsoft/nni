@@ -7,6 +7,7 @@ Example:
 
 from nnicli import NNIExperiment
 
+exp = NNIExperiment()
 exp.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
 
 exp.update_concurrency(3)
