@@ -25,14 +25,14 @@ class AMCPruner(Pruner):
         config_list: list
             Configuration list to configure layer pruning.
             Supported keys:
-                op_types: operation type to be pruned
-                op_names: operation name to be pruned
+            - op_types: operation type to be pruned
+            - op_names: operation name to be pruned
         evaluator: function
             function to evaluate the pruned model.
             The prototype of the function:
-                >>> def val_func(val_loader, model):
-                >>>     ...
-                >>>     return acc
+            >>> def evaluator(val_loader, model):
+            >>>     ...
+            >>>     return acc
         val_loader: torch.utils.data.DataLoader
             Data loader of validation dataset.
         suffix: str
