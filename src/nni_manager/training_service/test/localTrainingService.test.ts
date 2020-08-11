@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
-import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
+import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../local/localTrainingService';
 
@@ -86,12 +86,15 @@ describe('Unit Test for LocalTrainingService', () => {
                 index: 0
             }
         };
+        let rootDir: string = getExperimentRootDir()
+        console.log(rootDir)
         const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
+        fs.mkdirSync(rootDir)
         fs.mkdirSync(jobDetail.workingDirectory)
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'trial.log'), 'trial log')
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'stderr'), 'trial stderr')
         chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.equals('trial log');
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_STDERR')).to.be.equals('trial stderr');
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_ERROR')).to.be.equals('trial stderr');
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'trial.log'))
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'stderr'))
         fs.rmdirSync(jobDetail.workingDirectory)
