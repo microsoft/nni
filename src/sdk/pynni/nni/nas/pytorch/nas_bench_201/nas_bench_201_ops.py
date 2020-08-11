@@ -54,8 +54,6 @@ class Pooling(nn.Module):
         the number of output channels
     stride: int
         stride of the convolution
-    mode: str
-        must be ``avg`` or ``max``
     bn_affine: bool
         If set to ``True``, ``torch.nn.BatchNorm2d`` will have learnable affine parameters. Default: True
     bn_momentun: float
@@ -71,12 +69,7 @@ class Pooling(nn.Module):
         else:
             self.preprocess = ReLUConvBN(C_in, C_out, 1, 1, 0, 0,
                                          bn_affine, bn_momentum, bn_track_running_stats)
-        if mode == "avg":
-            self.op = nn.AvgPool2d(3, stride=stride, padding=1, count_include_pad=False)
-        elif mode == "max":
-            self.op = nn.MaxPool2d(3, stride=stride, padding=1)
-        else:
-            raise ValueError("Invalid mode={:} in Pooling".format(mode))
+        self.op = nn.AvgPool2d(3, stride=stride, padding=1, count_include_pad=False)
 
     def forward(self, x):
         """

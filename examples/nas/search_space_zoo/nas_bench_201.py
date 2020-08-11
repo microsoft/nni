@@ -9,8 +9,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from nni.nas.pytorch.utils import AverageMeterGroup
-from nni.nas.pytorch.nas_bench_201.mutator import NASBench201Mutator
-from nni.nas.pytorch.search_space_zoo import NASBench201Cell
+from nni.nas.pytorch.nas_bench_201 import NASBench201Cell
 
 
 class ReLUConvBN(nn.Module):

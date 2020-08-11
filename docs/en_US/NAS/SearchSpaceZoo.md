@@ -189,12 +189,7 @@ The search space of NAS Bench 201 is shown below.
 
 [example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/nas_bench_201.py)
 
-```bash
-git clone https://github.com/Microsoft/nni.git
-cd nni/examples/nas/search_space_zoo
-# search the best cell structure
-python3 nas_bench_201.py
-```
+*No executable example provided.*
 
 <a name="nas-bench-201-reference"></a>
 
@@ -202,14 +197,13 @@ python3 nas_bench_201.py
 
 All supported operations for NAS Bench 201 are listed below.
 
-* MaxPool / AvgPool
+* AvgPool
   
   If the number of input channels is not equal to the number of output channels, the input will first pass through a `ReLUConvBN` layer with `kernel_size=1`, `stride=1`, `padding=0`, and `dilation=0`.
-  * MaxPool: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
-  * AvgPool: Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
+  Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.Pooling
+  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.Pooling
       :members:
   ```
 
@@ -218,7 +212,7 @@ All supported operations for NAS Bench 201 are listed below.
   * Conv3x3: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.ReLUConvBN
+  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.ReLUConvBN
       :members:
   ```
 
@@ -231,7 +225,7 @@ All supported operations for NAS Bench 201 are listed below.
   Generate zero tensors indicating there is no connection from the source node to the target node.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.search_space_zoo.nas_bench_201_ops.Zero
+  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.Zero
       :members:
   ```
 
