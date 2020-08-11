@@ -8,7 +8,7 @@
  */
 type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 
-type LogType = 'TRIAL_LOG' | 'TRIAL_STDERR';
+type LogType = 'TRIAL_LOG' | 'TRIAL_ERROR';
 
 interface TrainingServiceMetadata {
     readonly key: string;

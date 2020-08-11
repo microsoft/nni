@@ -188,7 +188,7 @@ class LocalTrainingService implements TrainingService {
         let logPath: string;
         if (logType === 'TRIAL_LOG') {
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
-        } else if (logType === 'TRIAL_STDERR') {
+        } else if (logType === 'TRIAL_ERROR') {
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
         } else {
             throw new Error('unexpected log type');
