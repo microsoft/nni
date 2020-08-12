@@ -60,7 +60,6 @@ class Experiment {
             .then(data => {
                 updated = updated || !compareProfiles(this.profileField, data);
                 this.profileField = data;
-                console.info('ddddddd'); // eslint-disable-line
             })
             .catch(error => {
                 this.isexperimentError = true;

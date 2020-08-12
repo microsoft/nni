@@ -56,15 +56,6 @@ function parseMetrics(metricData: string): any {
     } else {
         return JSON.parse(JSON.parse(metricData));
     }
-    //   if(metricData !== undefined){
-    //     if (metricData.includes('NaN') || metricData.includes('Infinity')) {
-    //         return JSON5.parse(JSON5.parse(metricData));
-    //     } else {
-    //         return JSON.parse(JSON.parse(metricData));
-    //     }
-    // } else {
-    //     return undefined;
-    // }
 }
 
 const isArrayType = (list: any): boolean | undefined => {

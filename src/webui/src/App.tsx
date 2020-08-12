@@ -174,9 +174,7 @@ class App extends React.Component<{}, AppState> {
         if (this.firstLoad !== true) {
             const [experimentUpdated, trialsUpdated] = await Promise.all([EXPERIMENT.update(), TRIALS.update()]);
             if (experimentUpdated) {
-                this.setState(state => ({ 
-                    experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
-                }));
+                this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
             }
             if (trialsUpdated) {
                 this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
@@ -189,7 +187,6 @@ class App extends React.Component<{}, AppState> {
         // experiment status and /trial-jobs api's status could decide website update
         if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
-            
             this.setState(() => ({ interval: 0, isUpdate: false }));
             return;
         }
@@ -202,7 +199,6 @@ class App extends React.Component<{}, AppState> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
         this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
-        // this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
     }
 }
 
