@@ -581,6 +581,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 if (b[sortMessage.field] === undefined || Object.is(b[sortMessage.field], NaN) || Object.is(b[sortMessage.field], Infinity) || Object.is(b[sortMessage.field], -Infinity) || typeof b[sortMessage.field] === 'object' ) {   
                     return -1;  
                 }	
+                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
             });	
         }
 
