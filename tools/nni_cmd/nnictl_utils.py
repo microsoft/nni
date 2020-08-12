@@ -9,6 +9,7 @@ import time
 import re
 import shutil
 import subprocess
+from functools import cmp_to_key
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
@@ -248,6 +249,20 @@ def stop_experiment(args):
 
 def trial_ls(args):
     '''List trial'''
+    def final_metric_data_cmp(lhs, rhs):
+        metric_l = json.loads(json.loads(lhs['finalMetricData'][0]['data']))
+        metric_r = json.loads(json.loads(rhs['finalMetricData'][0]['data']))
+        if isinstance(metric_l, float):
+            return metric_l - metric_r
+        elif isinstance(metric_l, dict):
+            return metric_l['default'] - metric_r['default']
+        else:
+            print_error('Unexpected data format. Please check your data.')
+            raise ValueError
+
+    if args.head and args.tail:
+        print_error('Head and tail cannot be set at the same time.')
+        return
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -259,6 +274,14 @@ def trial_ls(args):
         response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
+            if args.head:
+                assert args.head > 0, 'The number of requested data must be greater than 0.'
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
+            elif args.tail:
+                assert args.tail > 0, 'The number of requested data must be greater than 0.'
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp))[:args.tail]
             for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))

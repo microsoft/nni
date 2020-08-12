@@ -28,7 +28,6 @@ def metric_data_url(port):
     '''get metric_data url'''
     return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, METRIC_DATA_API)
 
-
 def check_status_url(port):
     '''get check_status url'''
     return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, CHECK_STATUS_API)

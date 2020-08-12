@@ -305,12 +305,14 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Description
 
-    You can use this command to show trial's information.
+    You can use this command to show trial's information. Note that if `head` or `tail` is set, only complete trials will be listed.
 
   * Usage
 
     ```bash
     nnictl trial ls
+    nnictl trial ls --head 10
+    nnictl trial ls --tail 10
     ```
 
   * Options
@@ -318,6 +320,8 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
+  |--head|False||the number of items to be listed with the highest default metric|
+  |--tail|False||the number of items to be listed with the lowest default metric|
 
 * __nnictl trial kill__
 
