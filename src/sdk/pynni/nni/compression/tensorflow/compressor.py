@@ -52,7 +52,7 @@ class Compressor:
     Common base class for all compressors.
 
     This class is designed for other base classes.
-    Algorithms should inherit ``Pruner`` or Quantizer instead.
+    Algorithms should inherit ``Pruner`` or ``Quantizer`` instead.
 
 
     Attributes
@@ -99,7 +99,7 @@ class Pruner(Compressor):
     """
     Base class for pruning algorithms.
 
-    End users should use ``compress`` and callback APIs to prune their models.
+    End users should use ``compress`` and callback APIs (WIP) to prune their models.
 
     The underlying model is instrumented upon initialization of pruner object.
     So if you want to pre-train the model, train it before creating pruner object.
@@ -123,7 +123,7 @@ class Pruner(Compressor):
         """
         Apply compression on a pre-trained model.
 
-        If you want to prune the model during training, use callback API instead.
+        If you want to prune the model during training, use callback API (WIP) instead.
 
         Returns
         -------
