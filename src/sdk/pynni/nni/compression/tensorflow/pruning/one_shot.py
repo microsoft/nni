@@ -43,7 +43,7 @@ class WeightMasker:
 class LevelPrunerMasker(WeightMasker):
     def calc_masks(self, sparsity, wrapper, wrapper_idx=None):
         masks = {}
-        for i, weight_variable in enumerate(wrapper.layer.weights):
+        for weight_variable in wrapper.layer.weights:
             if weight_variable.name == 'bias':
                 continue
 
