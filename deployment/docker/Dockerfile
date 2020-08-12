@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu18.04
+FROM nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
