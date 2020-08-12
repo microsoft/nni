@@ -250,8 +250,8 @@ def stop_experiment(args):
 def trial_ls(args):
     '''List trial'''
     def final_metric_data_cmp(lhs, rhs):
-        metric_l = json.loads(lhs['finalMetricData'][0]['data'])
-        metric_r = json.loads(rhs['finalMetricData'][0]['data'])
+        metric_l = json.loads(json.loads(lhs['finalMetricData'][0]['data']))
+        metric_r = json.loads(json.loads(rhs['finalMetricData'][0]['data']))
         if isinstance(metric_l, float):
             return metric_l - metric_r
         elif isinstance(metric_l, dict):
