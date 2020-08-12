@@ -262,7 +262,7 @@ class CompressorTestCase(TestCase):
     def test_torch_pruner_validation(self):
         # test bad configuraiton
         pruner_classes = [torch_compressor.__dict__[x] for x in \
-            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGP_Pruner', \
+            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGPPruner',\
             'ActivationMeanRankFilterPruner', 'ActivationAPoZRankFilterPruner']]
 
         bad_configs = [

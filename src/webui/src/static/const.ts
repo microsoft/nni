@@ -34,7 +34,7 @@ const OPERATION = 'Operation';
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', OPERATION];
 // all choice column !dictory final
-const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
+const COLUMNPro = ['Trial No.', 'ID', 'Start time', 'End time', 'Duration', 'Status',
     'Intermediate result', 'Default', OPERATION];
 const CONCURRENCYTOOLTIP = 'Trial concurrency is the number of trials running concurrently.';
 const SUPPORTED_SEARCH_SPACE_TYPE = [

@@ -40,7 +40,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.state = {
             tablePageSize: 20,
             whichChart: 'Default metric',
-            searchType: 'Id',
+            searchType: 'id',
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
             searchFilter: trial => true
         };
@@ -56,16 +56,16 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             return;
         }
         switch (this.state.searchType) {
-            case 'Id':
+            case 'id':
                 filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'Trial No.':
                 filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue;
                 break;
-            case 'Status':
+            case 'status':
                 filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
                 break;
-            case 'Parameters':
+            case 'parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
                 filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
                 break;
@@ -91,7 +91,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             if (this.searchInput !== null) {
                 this.searchInput.value = '';
             }
-            this.setState(() => ({ searchType: item.text }));
+            this.setState(() => ({ searchType: item.key.toString() }));
         }
     }
 
@@ -101,10 +101,10 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         const source = TRIALS.filter(this.state.searchFilter);
         const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
         const searchOptions = [
-            { key: 'Id', text: 'Id' },
+            { key: 'id', text: 'Id' },
             { key: 'Trial No.', text: 'Trial No.' },
-            { key: 'Status', text: 'Status' },
-            { key: 'Parameters', text: 'Parameters' },
+            { key: 'status', text: 'Status' },
+            { key: 'parameters', text: 'Parameters' },
         ];
         return (
             <div>
