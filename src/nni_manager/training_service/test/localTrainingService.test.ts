@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as assert from 'assert';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
