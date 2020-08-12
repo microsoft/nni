@@ -11,9 +11,10 @@ import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
 import {
     NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
@@ -115,6 +116,10 @@ abstract class PAITrainingService implements TrainingService {
         }
 
         return jobs;
+    }
+
+    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {

@@ -7,7 +7,7 @@ import { Deferred } from 'ts-deferred';
 import { Provider } from 'typescript-ioc';
 
 import { MethodNotImplementedError } from '../../common/errors';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 
 const testTrainingServiceProvider: Provider = {
     get: () => { return new MockedTrainingService(); }
@@ -61,6 +61,10 @@ class MockedTrainingService extends TrainingService {
             deferred.reject();
         }
         return deferred.promise;
+    }
+
+    public getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     async run(): Promise<void> {
