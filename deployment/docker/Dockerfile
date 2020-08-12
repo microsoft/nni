@@ -47,7 +47,7 @@ RUN python3 -m pip --no-cache-dir install \
 #
 # Tensorflow 1.15
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15.2
 
 #
 # Keras 2.1.6
