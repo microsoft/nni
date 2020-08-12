@@ -5,8 +5,9 @@ FROM nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
-RUN DEBIAN_FRONTEND=noninteractive && \
-    apt-get -y update && \
+ENV DEBIAN_FRONTEND=noninteractive 
+
+RUN apt-get -y update && \
     apt-get -y install sudo \
     apt-utils \
     git \
@@ -21,7 +22,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     openssh-client \
     openssh-server \
     lsof \
-    python3.5 \
+    python3.6 \
     python3-dev \
     python3-pip \
     python3-tk \
