@@ -10,9 +10,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
-import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
-import { getExperimentId } from '../../common/experimentStartupInfo'
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../local/localTrainingService';
 
