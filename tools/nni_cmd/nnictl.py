@@ -140,6 +140,8 @@ def parse_args():
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
+    parser_trial_export.add_argument('--intermediate', '-i', action='store_true',
+                                     default=False, help='are intermediate results included')
     parser_trial_export.set_defaults(func=export_trials_data)
     #save an NNI experiment
     parser_save_experiment = parser_experiment_subparsers.add_parser('save', help='save an experiment')

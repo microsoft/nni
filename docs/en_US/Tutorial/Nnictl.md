@@ -462,13 +462,14 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  False| |ID of the experiment    |
   |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
+  |--intermediate, -i|False||Are intermediate results included|
 
   * Examples
 
   > export all trial data in an experiment as json format
 
   ```bash
-  nnictl experiment export [experiment_id] --filename [file_path] --type json
+  nnictl experiment export [experiment_id] --filename [file_path] --type json --intermediate
   ```
 
 * __nnictl experiment import__
@@ -903,4 +904,3 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl --version
     ```
-    
