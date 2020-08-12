@@ -447,9 +447,6 @@ Debug mode will disable version check function in Trialkeeper.
   |--all|  False| |delete all of experiments|
 
 
-
-<a name="export"></a>
-
 * __nnictl experiment export__
   * Description
 
@@ -468,13 +465,14 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  False| |ID of the experiment    |
   |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
+  |--intermediate, -i|False||Are intermediate results included|
 
   * Examples
 
   > export all trial data in an experiment as json format
 
   ```bash
-  nnictl experiment export [experiment_id] --filename [file_path] --type json
+  nnictl experiment export [experiment_id] --filename [file_path] --type json --intermediate
   ```
 
 * __nnictl experiment import__
@@ -533,6 +531,62 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
+
+* __nnictl experiment save__
+  * Description
+
+    Save nni experiment metadata and code data.
+
+  * Usage
+
+    ```bash
+    nnictl experiment save [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  True| |The id of the experiment you want to save|
+  |--path, -p|  False| |the folder path to store nni experiment data, default current working directory|
+  |--saveCodeDir, -s| False| |save codeDir data of the experiment, default False|
+
+  * Examples
+
+  > save an expeirment
+
+  ```bash
+  nnictl experiment save [experiment_id] --saveCodeDir
+  ```
+
+* __nnictl experiment load__
+  * Description
+
+    Load an nni experiment.
+
+  * Usage
+
+    ```bash
+    nnictl experiment load [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--path, -p|  True| |the file path of nni package|
+  |--codeDir, -c| True| |the path of codeDir for loaded experiment, this path will also put the code in the loaded experiment package|
+  |--logDir, -l| False| |the path of logDir for loaded experiment|
+
+  * Examples
+
+  > load an expeirment
+
+  ```bash
+  nnictl experiment load --path [path] --codeDir [codeDir]
+  ```
+
+
 
 <a name="platform"></a>
 ### Manage platform information
@@ -853,4 +907,3 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl --version
     ```
-    

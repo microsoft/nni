@@ -3,32 +3,11 @@
 
 from unittest import TestCase, main
 import numpy as np
-import tensorflow as tf
 import torch
 import torch.nn.functional as F
 import schema
 import nni.compression.torch as torch_compressor
 import math
-
-if tf.__version__ >= '2.0':
-    import nni.compression.tensorflow as tf_compressor
-
-
-def get_tf_model():
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Conv2D(filters=5, kernel_size=7, input_shape=[28, 28, 1], activation='relu', padding="SAME"),
-        tf.keras.layers.MaxPooling2D(pool_size=2),
-        tf.keras.layers.Conv2D(filters=10, kernel_size=3, activation='relu', padding="SAME"),
-        tf.keras.layers.MaxPooling2D(pool_size=2),
-        tf.keras.layers.Flatten(),
-        tf.keras.layers.Dense(units=128, activation='relu'),
-        tf.keras.layers.Dropout(0.5),
-        tf.keras.layers.Dense(units=10, activation='softmax'),
-    ])
-    model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=tf.keras.optimizers.SGD(lr=1e-3),
-                  metrics=["accuracy"])
-    return model
 
 
 class TorchModel(torch.nn.Module):
@@ -51,13 +30,6 @@ class TorchModel(torch.nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
-
-def tf2(func):
-    def test_tf2_func(*args):
-        if tf.__version__ >= '2.0':
-            func(*args)
-
-    return test_tf2_func
 
 class CompressorTestCase(TestCase):
     def test_torch_quantizer_modules_detection(self):
@@ -92,11 +64,6 @@ class CompressorTestCase(TestCase):
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
         torch_compressor.LevelPruner(model, configure_list, optimizer).compress()
 
-    @tf2
-    def test_tf_level_pruner(self):
-        configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
-        tf_compressor.LevelPruner(get_tf_model(), configure_list).compress()
-
     def test_torch_naive_quantizer(self):
         model = TorchModel()
         configure_list = [{
@@ -107,10 +74,6 @@ class CompressorTestCase(TestCase):
             'op_types': ['Conv2d', 'Linear']
         }]
         torch_compressor.NaiveQuantizer(model, configure_list).compress()
-
-    @tf2
-    def test_tf_naive_quantizer(self):
-        tf_compressor.NaiveQuantizer(get_tf_model(), [{'op_types': ['default']}]).compress()
 
     def test_torch_fpgm_pruner(self):
         """
@@ -141,23 +104,7 @@ class CompressorTestCase(TestCase):
         masks = pruner.calc_mask(model.conv2)
         assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 0., 0., 0., 0., 0., 0., 125., 125.]))
 
-    @tf2
-    def test_tf_fpgm_pruner(self):
-        w = np.array([np.ones((5, 3, 3)) * (i+1) for i in range(10)]).astype(np.float32)
-        model = get_tf_model()
-        config_list = [{'sparsity': 0.2, 'op_types': ['Conv2D']}]
-
-        pruner = tf_compressor.FPGMPruner(model, config_list)
-        weights = model.layers[2].weights
-        weights[0] = np.array(w).astype(np.float32).transpose([2, 3, 0, 1]).transpose([0, 1, 3, 2])
-        model.layers[2].set_weights([weights[0], weights[1].numpy()])
-
-        layer = tf_compressor.compressor.LayerInfo(model.layers[2])
-        masks = pruner.calc_mask(layer, config_list[0]).numpy()
-        masks = masks.reshape((-1, masks.shape[-1])).transpose([1, 0])
-
-        assert all(masks.sum((1)) == np.array([45., 45., 45., 45., 0., 0., 45., 45., 45., 45.]))
-        
+       
     def test_torch_l1filter_pruner(self):
         """
         Filters with the minimum sum of the weights' L1 norm are pruned in this paper:
@@ -315,7 +262,7 @@ class CompressorTestCase(TestCase):
     def test_torch_pruner_validation(self):
         # test bad configuraiton
         pruner_classes = [torch_compressor.__dict__[x] for x in \
-            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGP_Pruner', \
+            ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGPPruner',\
             'ActivationMeanRankFilterPruner', 'ActivationAPoZRankFilterPruner']]
 
         bad_configs = [
