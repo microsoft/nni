@@ -38,7 +38,7 @@ RUN cp /usr/bin/python3 /usr/bin/python
 #
 # update pip
 #
-RUN python3 -m pip install --upgrade pip setuptools==39.1.0
+RUN python3 -m pip install --upgrade pip==20.0.2 setuptools==39.1.0
 
 # numpy 1.14.3  scipy 1.1.0
 RUN python3 -m pip --no-cache-dir install \
@@ -47,7 +47,7 @@ RUN python3 -m pip --no-cache-dir install \
 #
 # Tensorflow 1.15
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15.2
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15.0
 
 #
 # Keras 2.1.6
