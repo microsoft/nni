@@ -305,7 +305,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Description
 
-    You can use this command to show trial's information.
+    You can use this command to show trial's information. Note that if `head` or `tail` is set, only complete trials will be listed.
 
   * Usage
 
