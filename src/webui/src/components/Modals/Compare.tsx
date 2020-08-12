@@ -224,7 +224,7 @@ class Compare extends React.Component<CompareProps, {}> {
             <Modal
                 isOpen={true}
                 containerClassName={contentStyles.container}
-                className="compare-modal"
+                className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
             >

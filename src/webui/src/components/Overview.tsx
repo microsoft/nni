@@ -13,7 +13,7 @@ import '../static/style/overview.scss';
 import '../static/style/logPath.scss';
 
 const stackTokens: IStackTokens = {
-    childrenGap: 30,
+    childrenGap: 30
 };
 
 const entriesOption = [
@@ -122,18 +122,15 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                     </Stack.Item>
                 </Stack>
 
-                <Stack style={{backgroundColor: '#fff'}}>
-                    <Stack horizontal className="top10bg" style={{position: 'relative', height: 42}}>
-                        <div
-                            className="title"
-                            onClick={this.clickMaxTop}
-                        >
-                            <Title1 text="Top maximal trials" icon="max.png" fontColor={titleMaxbgcolor} />
+                <Stack style={{ backgroundColor: '#fff' }}>
+                    <Stack horizontal className='top10bg' style={{ position: 'relative', height: 42 }}>
+                        <div className='title' onClick={this.clickMaxTop}>
+                            <Title1 text='Top maximal trials' icon='max.png' fontColor={titleMaxbgcolor} />
                         </div>
                         <div className='title minTitle' onClick={this.clickMinTop}>
                             <Title1 text='Top minimal trials' icon='min.png' fontColor={titleMinbgcolor} />
                         </div>
-                        <div style={{position: 'absolute', right: '2%', top: 8}}>
+                        <div style={{ position: 'absolute', right: '2%', top: 8 }}>
                             <Dropdown
                                 selectedKey={bestTrialEntries}
                                 options={entriesOption}
