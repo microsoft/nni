@@ -6,6 +6,8 @@ from colorama import Fore
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local', 'nnictl')
 
+NNI_HOME_DIR = os.path.join(os.path.expanduser('~'), 'nni-experiments')
+
 ERROR_INFO = 'ERROR: '
 NORMAL_INFO = 'INFO: '
 WARNING_INFO = 'WARNING: '

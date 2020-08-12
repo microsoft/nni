@@ -44,9 +44,9 @@ RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0
 
 #
-# Tensorflow 1.10.0
+# Tensorflow 1.15
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15
 
 #
 # Keras 2.1.6
@@ -60,9 +60,9 @@ RUN python3 -m pip --no-cache-dir install torch==1.4.0
 RUN python3 -m pip install torchvision==0.5.0
 
 #
-# sklearn 0.20.0
+# sklearn 0.23.2
 #
-RUN python3 -m pip --no-cache-dir install scikit-learn==0.20.0
+RUN python3 -m pip --no-cache-dir install scikit-learn==0.23.2
 
 #
 # pandas==0.23.4 lightgbm==2.2.2

@@ -86,6 +86,9 @@ class ChannelDependency(Dependency):
         Build the channel dependency for the conv layers
         in the model.
         """
+        # unpack the tuple/list manually before analyze the
+        # channel dependency
+        self.graph.unpack_manually()
         for node in self.graph.nodes_py.nodes_op:
             parent_layers = []
             # find the node that contains aten::add
