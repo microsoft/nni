@@ -310,7 +310,8 @@ Debug mode will disable version check function in Trialkeeper.
   * Usage
 
     ```bash
-    nnictl trial ls
+    nnictl trial ls --head 10
+    nnictl trial ls --tail 10
     ```
 
   * Options
