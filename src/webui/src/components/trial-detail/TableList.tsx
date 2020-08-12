@@ -557,7 +557,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
-        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource) {
+        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource || prevProps.trialsUpdateBroadcast !== this.props.trialsUpdateBroadcast) {
             const { columnList } = this.props;
             this.setState({
                 tableColumns: this.initTableColumnList(columnList),
@@ -630,9 +630,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
             isShowCustomizedModal, copyTrialId, intermediateOption,
-            tablePerPage, currentPage
+            tablePerPage
         } = this.state;
-        const { columnList, trialsUpdateBroadcast } = this.props;
+        const { columnList } = this.props;
         const perPageOptions = [
             { key: '10', text: '10 items per page'},
             { key: '20', text: '20 items per page'},
@@ -652,7 +652,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         layoutMode={DetailsListLayoutMode.justified}
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
-                        key={trialsUpdateBroadcast}
                     />
                       
                     <Stack horizontal horizontalAlign="end" verticalAlign="baseline" styles={{root:{padding:10}}} tokens={horizontalGapStackTokens}>
@@ -676,8 +675,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         disableInitialCallback={false}
                         activeClassName={"active"}
                         forcePage={this.state.currentPage}
-                        key={currentPage}/>
-
+                        />
                     </Stack>
 
                 </div>
