@@ -37,7 +37,7 @@ TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -102,16 +102,6 @@ pruner.compress()
 
 ### 用法
 
-TensorFlow 代码
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
 PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
