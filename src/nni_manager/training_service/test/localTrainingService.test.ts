@@ -73,8 +73,6 @@ describe('Unit Test for LocalTrainingService', () => {
     }).timeout(20000);
 
     it('Get trial log', async () => {
-        // set meta data
-        const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`
         await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
 
         // submit job
