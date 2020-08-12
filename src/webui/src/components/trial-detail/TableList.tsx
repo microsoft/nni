@@ -75,7 +75,7 @@ interface TableListState {
     tableSourceForSort: Array<TableRecord>;
     sortMessage: SortInfo;
     offset: number;
-    tablePerPage: Array<TableRecord>;
+    data: Array<TableRecord>;
     perPage: number;
     currentPage: number;
     pageCount: number;
@@ -85,7 +85,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     public intervalTrialLog = 10;
     public trialId!: string;
-    private iii = 0;
 
     constructor(props: TableListProps) {
         super(props);
@@ -112,7 +111,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             allColumnList: this.getAllColumnKeys(),
             sortMessage: { field: '', isDescend: false },
             offset: 0,
-            tablePerPage: [],
+            data: [],
             perPage: 20,
             currentPage: 0,
             pageCount: 0,
@@ -122,7 +121,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     // sort for table column
     onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
-        const { tableColumns } = this.state;
+        const { tableColumns, tableSourceForSort } = this.state;
         const newColumns: IColumn[] = tableColumns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
         newColumns.forEach((newCol: IColumn) => {
@@ -134,14 +133,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 newCol.isSortedDescending =  true;
             }
         });
-
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newItems = this.copyAndSort(tableSourceForSort, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             tableColumns: newColumns,
+            tableSourceForSort: newItems,
             sortMessage: { field: getColumn.key, isDescend: currColumn.isSortedDescending }
-        }, () => {
-            this.updateData();
         });
-    }
+
+    };
 
     private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
         const key = columnKey as keyof T;
@@ -567,7 +567,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     componentDidMount(): void {
         window.addEventListener('resize', this.onWindowResize);
-        this.updateData();
+        this.updateData()
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
@@ -576,46 +576,30 @@ class TableList extends React.Component<TableListProps, TableListState> {
             this.setState({
                 tableColumns: this.initTableColumnList(columnList),
                 allColumnList: this.getAllColumnKeys()
-                }, () => {
-                    this.updateData();
-                });
+                }, () => {this.updateData();
+            });
         }
     }
 
     updateData(): void {
-        const tableSource: Array<TableRecord> = this.props.tableSource;
-        const { offset, perPage, sortMessage } = this.state;
+        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
 
-        if (sortMessage.field !== '') {	
-            tableSource.sort(function (a, b): any {	
-                if (a[sortMessage.field] === undefined) {	
-                    return 1;	
-                }	
-                if (b[sortMessage.field] === undefined) {	
-                    return -1;	
-                }	
-                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;	
-            });	
-        }
-
-        const tableSlice = tableSource.slice(offset, offset + perPage)
+        const tableSlice = tableSource.slice(this.state.offset, this.state.offset + this.state.perPage)
         
         this.setState({
-            tablePerPage: tableSlice,
-            pageCount: Math.ceil(tableSource.length / perPage),
+            tableSourceForSort: tableSlice,
+            pageCount: Math.ceil(tableSource.length / this.state.perPage),
         });
     }
     
     handlePageClick = (evt: any): void => {
-
         const selectedPage = evt.selected;
         const offset = selectedPage * this.state.perPage;
         
         this.setState({ 
             currentPage: selectedPage, 
-            offset: offset
-        }, () => {
-            this.updateData();
+            offset: offset }, 
+            () => { this.updateData();
         });
     }
 
@@ -623,41 +607,53 @@ class TableList extends React.Component<TableListProps, TableListState> {
         // clear input value and re-render table
         if (item !== undefined) {
             this.setState({ 
-                perPage: item.key === 'all' ? this.props.tableSource.length: Number(item.key) 
-            }, () => {
-                this.updateData();
+                perPage: item.key === 'all' ? this.props.tableSource.length: Number(item.key) },
+                () => {this.updateData();
             });
         }
     }
+
 
     render(): React.ReactNode {
         const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
-            isShowCustomizedModal, copyTrialId, intermediateOption,
-            tablePerPage
+            isShowCustomizedModal, copyTrialId, intermediateOption, sortMessage
         } = this.state;
-        const { columnList, trialsUpdateBroadcast } = this.props;
+        const { columnList } = this.props;
+        const tableSource = this.state.tableSourceForSort
         const perPageOptions = [
             { key: '10', text: '10 items per page'},
             { key: '20', text: '20 items per page'},
             { key: '50', text: '50 items per page'},
             { key: 'all', text: 'All items'},
         ];
-        console.info('detail', this.iii++); // eslint-disable-line
+        
+
+        if (sortMessage.field !== '') {
+            tableSource.sort(function (a, b): any {
+                if (a[sortMessage.field] === undefined) {
+                    return 1;
+                }
+                if (b[sortMessage.field] === undefined) {
+                    return -1;
+                }
+                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
+            });
+        }
+
         return (
             <Stack>
                 <div id="tableList">
                     <DetailsList
                         columns={tableColumns}
-                        items={tablePerPage}
+                        items={tableSource}
                         setKey="set"
                         compact={true}
                         onRenderRow={this.onRenderRow}
                         layoutMode={DetailsListLayoutMode.justified}
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
-                        key={trialsUpdateBroadcast}
                     />
                       
                     <Stack horizontal horizontalAlign="end" verticalAlign="baseline" styles={{root:{padding:10}}} tokens={horizontalGapStackTokens}>
@@ -727,6 +723,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             style={{
                                 width: 0.5 * modalIntermediateWidth,
                                 height: 0.7 * modalIntermediateHeight,
+                                maxHeight: 534,
                                 padding: 20
                             }}
                             theme="my_theme"
