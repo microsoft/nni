@@ -593,7 +593,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
     
-    // update data when click the page index
+    // update data when click the page index of pagination
     handlePageClick = (evt: any): void => {
         const selectedPage = evt.selected;
         const offset = selectedPage * this.state.perPage;
@@ -606,7 +606,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
-    // update per page option when click the dropdown
+    // update per page items when click the dropdown of pagination
     updatePerPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
         const { pageCount } = this.state;
         
