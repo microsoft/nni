@@ -250,10 +250,8 @@ def stop_experiment(args):
 def trial_ls(args):
     '''List trial'''
     def final_metric_data_cmp(lhs, rhs):
-        # The first json.loads handles the serialized data and the second
-        # reconstructs data structure to handle dict metric.
-        metric_l = json.loads(json.loads(lhs['finalMetricData'][0]['data']))
-        metric_r = json.loads(json.loads(rhs['finalMetricData'][0]['data']))
+        metric_l = json.loads(lhs['finalMetricData'][0]['data'])
+        metric_r = json.loads(rhs['finalMetricData'][0]['data'])
         if isinstance(metric_l, float):
             return metric_l - metric_r
         elif isinstance(metric_l, dict):
@@ -279,7 +277,8 @@ def trial_ls(args):
             if args.head:
                 assert int(args.head) > 0, 'The number of requested data must be greater than 0.'
                 args.head = min(int(args.head), len(content))
-                content = sorted(content, key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
             elif args.tail:
                 assert int(args.tail) > 0, 'The number of requested data must be greater than 0.'
                 args.tail = min(int(args.tail), len(content))
