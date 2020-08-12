@@ -275,14 +275,13 @@ def trial_ls(args):
         if response and check_response(response):
             content = json.loads(response.text)
             if args.head:
-                assert int(args.head) > 0, 'The number of requested data must be greater than 0.'
-                args.head = min(int(args.head), len(content))
+                assert args.head > 0, 'The number of requested data must be greater than 0.'
                 content = sorted(filter(lambda x: 'finalMetricData' in x, content),
                                  key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
             elif args.tail:
-                assert int(args.tail) > 0, 'The number of requested data must be greater than 0.'
-                args.tail = min(int(args.tail), len(content))
-                content = sorted(content, key=cmp_to_key(final_metric_data_cmp))[:args.tail]
+                assert args.tail > 0, 'The number of requested data must be greater than 0.'
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp))[:args.tail]
             for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
