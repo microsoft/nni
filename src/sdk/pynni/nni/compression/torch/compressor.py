@@ -417,7 +417,6 @@ class Pruner(Compressor):
             _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         self._wrap_model()
-        return mask_dict, self.bound_model.state_dict()
 
     def load_model_state_dict(self, model_state):
         """

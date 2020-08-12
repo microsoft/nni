@@ -55,8 +55,10 @@ class AMCPruner(Pruner):
         rbound: float
             maximum weight preserve ratio for each layer. Default: 1.0
         reward: function
-            reward function type
-
+            reward function type:
+            - acc_reward: accuracy * 0.01
+            - acc_flops_reward: - (100 - accuracy) * 0.01 * np.log(flops)
+            Default: acc_reward
         # parameters for channel pruning
         n_calibration_batches: int
             number of batches to extract layer information. Default: 60
