@@ -126,6 +126,9 @@ def get_command(test_case_config, commandKey):
     # hack for windows, not limited to local training service
     if sys.platform == 'win32':
         command = command.replace('python3', 'python')
+        command = command.replace('mkdir', 'md')
+        command = command.replace('/', '\\')
+        command = command.replace('touch', 'type nul>')
 
     return command
 
