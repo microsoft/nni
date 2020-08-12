@@ -15,7 +15,7 @@ from google.protobuf import text_format
 import unittest
 from unittest import TestCase, main
 
-from nni._graph_utils import build_module_graph, build_graph, TorchModuleGraph
+from nni._graph_utils import build_module_graph, build_graph, TorchModuleGraph, TUPLE_UNPACK_KIND
 
 class BackboneModel1(nn.Module):
     def __init__(self):
@@ -193,6 +193,102 @@ class GraphUtilsTestCase(TestCase):
                     nodes = modulegraph.find_successors(node)
                     assert len(nodes) == 1
                     node = nodes[0]
+
+    @unittest.skipIf(torch.__version__ < "1.4.0", "not supported")
+    def test_module_unpack(self):
+        """
+        test the tuple/list unpack function of TorchModuleGraph.
+        Following models are from the issue 2756
+        https://github.com/microsoft/nni/issues/2756.
+        MyModule will have two successive tuple unpack operations
+        between the B and C.
+        """
+        class CBR(nn.Module):
+            def __init__(self, i, o):
+                super(CBR, self).__init__()
+                self.conv1 = nn.Conv2d(i, o, kernel_size=1)
+                self.bn1 = nn.BatchNorm2d(o)
+                self.act1 = nn.ReLU()
+
+            def forward(self, x):
+                return self.act1(self.bn1(self.conv1(x)))
+
+
+        class A(nn.Module):
+            def __init__(self):
+                super(A, self).__init__()
+                self.conv1 = CBR(3, 6, )
+                self.conv2 = CBR(6, 8, )
+                self.conv3 = CBR(6, 12)
+
+            def forward(self, x):
+                x1 = self.conv1(x)
+                x2 = self.conv2(x1)
+                x3 = self.conv3(x1)
+                return (x2, x3)
+
+
+        class B1(nn.Module):
+            def __init__(self):
+                super(B1, self).__init__()
+                self.conv1 = CBR(12, 32)
+                self.conv2 = CBR(32, 32)
+                self.conv3 = CBR(32, 32)
+
+            def forward(self, x):
+                x1 = self.conv1(x)
+                x2 = self.conv2(x1)
+                x3 = self.conv3(x2)
+                return (x1, x2, x3)
+
+        class B(nn.Module):
+            def __init__(self):
+                super(B, self).__init__()
+                self.b = B1()
+
+            def forward(self, x):
+                return self.b(x[-1])
+
+        class C(nn.Module):
+            def __init__(self):
+                super(C, self).__init__()
+                self.conv1 = CBR(8, 32)
+                self.conv2 = CBR(12, 32)
+                self.conv3 = CBR(32, 32)
+                self.conv4 = CBR(32, 32)
+                self.conv5 = CBR(32, 32)
+
+            def forward(self, x):
+                return(self.conv1(x[0]), self.conv2(x[1]), self.conv3(x[2]),self.conv4(x[3]),self.conv5(x[4]))
+
+        class MyModule(nn.Module):
+            def __init__(self):
+                super(MyModule, self).__init__()
+                self.a = A()
+                self.b = B()
+                # self.dummy = Dummy()
+                self.c = C()
+
+            def forward(self, x):
+                x_a = self.a(x)
+                x_b = self.b(x_a)
+                xc = self.c(x_a + x_b)
+                return xc
+
+        dummy_input = torch.rand(1, 3, 28, 28)
+        model = MyModule()
+        graph = TorchModuleGraph(model, dummy_input)
+        graph.unpack_manually()
+        for node in graph.nodes_py.nodes_op:
+            # The input of the function nodes should
+            # not come from the TupleUnpack node, because
+            # all the TupleUnpack nodes have been removed(unpacked)
+            # manually
+            for _input in node.inputs:
+                if _input in graph.output_to_node:
+                    preprocessor = graph.output_to_node[_input]
+                    assert preprocessor.op_type != TUPLE_UNPACK_KIND
+
 
 if __name__ == '__main__':
     main()

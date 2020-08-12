@@ -195,7 +195,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             }]);
         }
 
-        if (convertedTrials.length === 0) {
+        if (convertedTrials.length === 0 || dimensions.length <= 1) {
             return;
         }
 
