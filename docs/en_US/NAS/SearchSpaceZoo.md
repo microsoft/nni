@@ -181,7 +181,7 @@ The search space of NAS Bench 201 is shown below.
 ![](../../img/NAS_Bench_201.svg)
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.search_space_zoo.NASBench201Cell
+..  autoclass:: nni.nas.pytorch.nas_bench_201.NASBench201Cell
     :members:
 ```
 
