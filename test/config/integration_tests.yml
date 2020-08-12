@@ -158,7 +158,7 @@ testCases:
   configFile: test/config/examples/sklearn-regression.yml
   setExperimentIdtoVar: $resumeExpId
   # for subfolder in codedir test
-  launchCommand: mkdir -p ../examples/trials/sklearn/regression/subfolder && touch ../examples/trials/sklearn/regression/subfolder/subfile && nnictl create --config $configFile --debug
+  launchCommand: python3 -c "import os; os.makedirs('../examples/trials/sklearn/regression/subfolder', exist_ok=True); open('../examples/trials/sklearn/regression/subfolder/subfile', 'a').close()" && nnictl create --config $configFile --debug
 
 # Experiment resume test part 2
 - name: nnictl-resume-2
