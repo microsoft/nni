@@ -38,7 +38,7 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -117,17 +117,6 @@ FPGMPruner prune filters with the smallest geometric median.
 
 ### Usage
 
-Tensorflow code
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
-
 PyTorch code
 ```python
 from nni.compression.torch import FPGMPruner
@@ -144,11 +133,6 @@ pruner.compress()
 ##### PyTorch
 ```eval_rst
 ..  autoclass:: nni.compression.torch.FPGMPruner
-```
-
-##### Tensorflow
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.FPGMPruner
 ```
 
 ## L1Filter Pruner
@@ -381,12 +365,6 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.AGPPruner
-```
-
-##### Tensorflow
-
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.AGPPruner
 ```
 
 ***
