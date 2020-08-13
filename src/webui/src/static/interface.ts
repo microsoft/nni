@@ -43,12 +43,10 @@ interface TableRecord {
     startTime: number;
     endTime?: number;
     id: string;
-    jobId: string;
-    parameterId: string;
     duration: number;
     status: string;
     intermediateCount: number;
-    accuracy?: number;
+    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
     accDictionary: FinalType | undefined;
@@ -126,8 +124,6 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
-    trialId: string;
-    parameterId: string;
     type: string;
     sequence: number;
     data: string;
@@ -135,8 +131,6 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
-    jobId: string;
-    parameterId: string;
     sequenceId: number;
     status: string;
     startTime?: number;

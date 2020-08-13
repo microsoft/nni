@@ -58,7 +58,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/experiment`)
             .then(data => {
-                updated = updated || compareProfiles(this.profileField, data);
+                updated = updated || !compareProfiles(this.profileField, data);
                 this.profileField = data;
             })
             .catch(error => {
@@ -69,7 +69,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/check-status`)
             .then(data => {
-                updated = JSON.stringify(this.statusField) === JSON.stringify(data);
+                updated = JSON.stringify(this.statusField) !== JSON.stringify(data);
                 this.statusField = data;
             })
             .catch(error => {

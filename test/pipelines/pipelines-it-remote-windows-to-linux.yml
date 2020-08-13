@@ -16,7 +16,7 @@ jobs:
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python -m pip install scikit-learn==0.20.1 --user
+      python -m pip install scikit-learn==0.23.2 --user
     displayName: 'Install dependencies for integration tests'
   - task: SSH@0
     inputs:

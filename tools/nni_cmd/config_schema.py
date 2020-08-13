@@ -245,7 +245,7 @@ aml_trial_schema = {
         'codeDir': setPathCheck('codeDir'),
         'command': setType('command', str),
         'image': setType('image', str),
-        'computeTarget': setType('computeTarget', str)
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     }
 }
 
@@ -254,6 +254,9 @@ aml_config_schema = {
         'subscriptionId': setType('subscriptionId', str),
         'resourceGroup': setType('resourceGroup', str),
         'workspaceName': setType('workspaceName', str),
+        'computeTarget': setType('computeTarget', str),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool),
     }
 }
 
