@@ -54,7 +54,7 @@ abstract class PAITrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         this.jobQueue = [];
-        this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
+        this.expRootDir = path.join('/nni-experiments', getExperimentId());
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.paiTokenUpdateInterval = 7200000; //2hours

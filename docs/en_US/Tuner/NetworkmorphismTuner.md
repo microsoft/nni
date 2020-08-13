@@ -59,7 +59,7 @@ If you want to save and load the **best model**, the following methods are recom
 ```python
 # 1. Use NNI API
 ## You can get the best model ID from WebUI
-## or `nni/experiments/experiment_id/log/model_path/best_model.txt'
+## or `nni-experiments/experiment_id/log/model_path/best_model.txt'
 
 ## read the json string from model file and load it with NNI API
 with open("best-model.json") as json_file:
