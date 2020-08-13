@@ -518,11 +518,11 @@ def experiment_clean(args):
             exit(0)
         #clean local data
         home = str(Path.home())
-        local_dir = nni_config.get_config('experimentConfig').get('logDir')
-        if not local_dir:
-            local_dir = NNI_HOME_DIR
-        local_dir = os.path.join(local_dir, experiment_id)
-        local_clean(local_dir)
+        local_base_dir = nni_config.get_config('experimentConfig').get('logDir')
+        if not local_base_dir:
+            local_base_dir = NNI_HOME_DIR
+        local_experiment_dir = os.path.join(local_base_dir, experiment_id)
+        local_clean(local_experiment_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
         experiment_config.remove_experiment(experiment_id)
