@@ -6,6 +6,7 @@ from copy import deepcopy
 from argparse import Namespace
 import numpy as np
 import torch
+from torch.utils.tensorboard import SummaryWriter
 
 from nni.compression.torch.compressor import Pruner
 from .channel_pruning_env import ChannelPruningEnv
@@ -148,8 +149,6 @@ class AMCPruner(Pruner):
             epsilon=50000,
             seed=None):
 
-        from tensorboardX import SummaryWriter
-
         self.job = job
         self.searched_model_path = searched_model_path
         self.export_path = export_path
@@ -189,7 +188,7 @@ class AMCPruner(Pruner):
 
         if self.job == 'train_export':
             print('=> Saving logs to {}'.format(self.output_dir))
-            self.tfwriter = SummaryWriter(logdir=self.output_dir)
+            self.tfwriter = SummaryWriter(log_dir=self.output_dir)
             self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
             print('=> Output path: {}...'.format(self.output_dir))
 
