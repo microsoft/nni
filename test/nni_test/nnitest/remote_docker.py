@@ -37,7 +37,7 @@ def start_container(image, name, nnimanager_os):
     '''Start docker container, generate a port in /tmp/nnitest/{name}/port file'''
     port = find_port()
     source_dir = '/tmp/nnitest/' + name
-    run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
+    run_cmds = ['docker', 'run', '-d', '-t', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
     
