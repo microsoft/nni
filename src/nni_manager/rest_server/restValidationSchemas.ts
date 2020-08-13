@@ -100,6 +100,11 @@ export namespace ValidationSchemas {
                 checkpoint: joi.object({
                     storageClass: joi.string().min(1).required(),
                     storageSize: joi.string().min(1).required()
+                }),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required(),
+                    containerMountPath: joi.string().min(1).required()
                 })
             }),
             pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase

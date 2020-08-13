@@ -29,6 +29,23 @@ export class ImagePullSecretConfig{
 }
 
 /**
+ * NFS Config
+ */
+export class NFSConfig {
+    public readonly server: string;
+
+    public readonly path: string;
+
+    public readonly containerMountPath: string;
+
+    constructor(server: string, path: string, containerMountPath: string) {
+        this.server = server;
+        this.path = path;
+        this.containerMountPath = containerMountPath;
+    }
+}
+
+/**
  * Trial job configuration for Adl
  */
 export class AdlTrialConfig {
@@ -42,17 +59,21 @@ export class AdlTrialConfig {
 
     public readonly image: string;
 
-    public readonly imagePullSecrets: ImagePullSecretConfig[];
+    public readonly imagePullSecrets?: ImagePullSecretConfig[];
+
+    public readonly nfs?: NFSConfig;
 
     constructor(checkpoint: CheckpointConfig, codeDir: string,
                 command: string, gpuNum: number,
-                image: string, imagePullSecrets: ImagePullSecretConfig[]) {
+                image: string, imagePullSecrets?: ImagePullSecretConfig[],
+                nfs?: NFSConfig) {
         this.checkpoint = checkpoint;
         this.codeDir = codeDir;
         this.command = command;
         this.gpuNum = gpuNum;
         this.image = image;
         this.imagePullSecrets = imagePullSecrets;
+        this.nfs = nfs;
     }
 }
 

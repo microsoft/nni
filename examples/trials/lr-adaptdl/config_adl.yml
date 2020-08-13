@@ -25,3 +25,7 @@ trial:
   checkpoint:
     storageClass: dfs
     storageSize: 1Gi
+  nfs:
+    server: 172.20.188.236
+    path: /export
+    containerMountPath: /nfs

@@ -20,8 +20,17 @@ fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for AdlTrainingService', () => {
     let skip: boolean = false;
-    let testAdlTrialConfig : any = JSON.stringify(
-    {
+    let testAdlTrialConfig: any = JSON.stringify({
+        "command": "python3 /root/apps/nni_linear_regression/main.py",
+        "codeDir": ".",
+        "gpuNum": 0,
+        "image": "registry.petuum.com/dev/adaptdl-submit:latest",
+        "checkpoint": {
+            "storageClass": "dfs",
+            "storageSize": "1Gi"
+        }
+    });
+    let testAdlTrialConfig2: any = JSON.stringify({
         "command": "python3 /root/apps/nni_linear_regression/main.py",
         "codeDir": ".",
         "gpuNum": 0,
@@ -34,12 +43,16 @@ describe('Unit Test for AdlTrainingService', () => {
         "checkpoint": {
             "storageClass": "dfs",
             "storageSize": "1Gi"
+        },
+        "nfs": {
+            "server": "172.20.188.236",
+            "path": "/exports",
+            "containerMountPath": "/nfs"
         }
-     });
-    let testNniManagerIp: any = JSON.stringify(
-    `{
+    });
+    let testNniManagerIp: any = JSON.stringify({
         "nniManagerIp": "0.0.0.0"
-     }`);
+    });
     let adlTrainingService: AdlTrainingService;
     console.log(tmp.dirSync().name);
 
@@ -63,15 +76,14 @@ describe('Unit Test for AdlTrainingService', () => {
     });
 
     it('Set and get cluster metadata', async () => {
-        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig);
+        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig2);
         await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, testNniManagerIp);
         let data:string = await adlTrainingService.getClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG);
-        chai.expect(data).to.be.equals(testAdlTrialConfig);
+        chai.expect(data).to.be.equals(testAdlTrialConfig2);
     });
 
     it('Submit job', async () => {
         await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig);
-        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, testNniManagerIp);
         // submit job
         const form: TrialJobApplicationForm = {
             sequenceId: 0,

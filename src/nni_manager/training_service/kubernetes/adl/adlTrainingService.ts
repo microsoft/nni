@@ -13,8 +13,6 @@ import {
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getVersion, uniqueString } from '../../../common/utils';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-// import { validateCodeDir } from '../../common/util';
-// import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { AdlClientFactory } from './adlApiClient'
@@ -109,9 +107,27 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             .persistentVolumeClaim.claimName = adlJobName
         this.jobTemplate.spec.template.spec.volumes[1]
             .configMap.name = adlJobName
-        this.jobTemplate.spec.template.spec.imagePullSecrets = this.jobTemplate
-            .spec.template.spec.imagePullSecrets.concat(
-                this.adlTrialConfig.imagePullSecrets);
+        // Handle imagePullSecrets
+        if (this.adlTrialConfig.imagePullSecrets !== undefined) {
+            this.jobTemplate.spec.template.spec.imagePullSecrets = this.jobTemplate
+                .spec.template.spec.imagePullSecrets.concat(
+                    this.adlTrialConfig.imagePullSecrets);
+        }
+        // Handle NFS
+        if (this.adlTrialConfig.nfs !== undefined) {
+            this.jobTemplate.spec.template.spec.volumes.push({
+                "name": "nfs",
+                "nfs": {
+                    "server": this.adlTrialConfig.nfs.server,
+                    "path": this.adlTrialConfig.nfs.path,
+                    "readOnly": false
+                }
+            });
+            this.jobTemplate.spec.template.spec.containers[0].volumeMounts.push({
+                "name": "nfs",
+                "mountPath": this.adlTrialConfig.nfs.containerMountPath
+            });
+        }
         await this.kubernetesCRDClient.createKubernetesJob(this.jobTemplate);
         const k8sadlJob: any = await this.kubernetesCRDClient.getKubernetesJob(adlJobName);
 

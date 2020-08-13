@@ -274,7 +274,12 @@ adl_trial_schema = {
         },
         Optional('imagePullSecrets'): [{
             'name': setType('name', str)
-        }]
+        }],
+        Optional('nfs'): {
+            'server': setType('server', str),
+            'path': setType('path', str),
+            'containerMountPath': setType('containerMountPath', str)
+        }
     }
 }
 
