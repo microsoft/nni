@@ -57,7 +57,7 @@ def start_container(image, name, nnimanager_os):
         else:
             return '/tmp/nni/dist/{0}'.format(wheel_name)
         
-    pip_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools==39.1.0']
+    pip_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--upgrade', 'pip', 'setuptools==41.0.0']
     check_call(pip_cmds)
     sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', get_dist(wheel_name)]
     check_call(sdk_cmds)
