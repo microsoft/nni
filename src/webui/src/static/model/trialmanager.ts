@@ -88,7 +88,7 @@ class TrialManager {
 
     public finalKeys(): string[] {
         const succeedTrialsList = this.filter(trial => trial.status === 'SUCCEEDED');
-        if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
+        if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined && succeedTrialsList[0].acc != undefined) {
             return succeedTrialsList[0].finalKeys();
         } else {
             return ['default'];
@@ -96,8 +96,9 @@ class TrialManager {
     }
 
     public sort(): Trial[] {
+        // (Petuum: no matter trial.sortable, we sort and show all to Overview page without filtering.)
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return this.filter(trial => trial.sortable).sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
+        return this.toArray().sort((trial1, trial2) => trial1.compareAccuracy(trial2)!);
     }
 
     public countStatus(): Map<string, number> {
