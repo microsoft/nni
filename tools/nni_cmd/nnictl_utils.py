@@ -422,9 +422,9 @@ def remote_clean(machine_list, experiment_id=None):
         sshKeyPath = machine.get('sshKeyPath')
         passphrase = machine.get('passphrase')
         if experiment_id:
-            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', experiment_id])
+            remote_dir = '/' + '/'.join(['tmp', 'nni-experiments', experiment_id])
         else:
-            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments'])
+            remote_dir = '/' + '/'.join(['tmp', 'nni-experiments'])
         sftp = create_ssh_sftp_client(host, port, userName, passwd, sshKeyPath, passphrase)
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remove_remote_directory(sftp, remote_dir)
