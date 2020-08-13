@@ -17,6 +17,7 @@ from recommonmark.parser import CommonMarkParser
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
+sys.path.insert(1, os.path.abspath('../../src/sdk/pycli'))
 
 
 # -- Project information ---------------------------------------------------

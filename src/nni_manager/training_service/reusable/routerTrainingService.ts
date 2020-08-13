@@ -6,7 +6,8 @@
 import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
+import { MethodNotImplementedError } from '../../common/errors'
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
@@ -45,6 +46,10 @@ class RouterTrainingService implements TrainingService {
             throw new Error("TrainingService is not assigned!");
         }
         return await this.internalTrainingService.getTrialJob(trialJobId);
+    }
+
+    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {

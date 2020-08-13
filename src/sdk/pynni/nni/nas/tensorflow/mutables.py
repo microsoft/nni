@@ -28,19 +28,18 @@ class Mutable(Model):
     def __deepcopy__(self, memodict=None):
         raise NotImplementedError("Deep copy doesn't work for mutables.")
 
-    def __call__(self, *args, **kwargs):
-        self._check_built()
-        return super().__call__(*args, **kwargs)
-
     def set_mutator(self, mutator):
-        if 'mutator' in self.__dict__:
+        if hasattr(self, 'mutator'):
             raise RuntimeError('`set_mutator is called more than once. '
                                'Did you parse the search space multiple times? '
                                'Or did you apply multiple fixed architectures?')
-        self.__dict__['mutator'] = mutator
+        self.mutator = mutator
 
     def call(self, *inputs):
         raise NotImplementedError('Method `call` of Mutable must be overridden')
+
+    def build(self, input_shape):
+        self._check_built()
 
     @property
     def key(self):
@@ -68,7 +67,6 @@ class Mutable(Model):
 class MutableScope(Mutable):
     def __call__(self, *args, **kwargs):
         try:
-            self._check_built()
             self.mutator.enter_mutable_scope(self)
             return super().__call__(*args, **kwargs)
         finally:
@@ -80,7 +78,7 @@ class LayerChoice(Mutable):
         super().__init__(key=key)
         self.names = []
         if isinstance(op_candidates, OrderedDict):
-            for name, _ in op_candidates.items():
+            for name in op_candidates:
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.names.append(name)
@@ -94,20 +92,17 @@ class LayerChoice(Mutable):
         self.choices = op_candidates
         self.reduction = reduction
         self.return_mask = return_mask
-        self._built = False
 
     def call(self, *inputs):
-        if not self._built:
-            for op in self.choices:
-                if len(inputs) > 1:  # FIXME: not tested
-                    op.build([inp.shape for inp in inputs])
-                elif len(inputs) == 1:
-                    op.build(inputs[0].shape)
-            self._built = True
         out, mask = self.mutator.on_forward_layer_choice(self, *inputs)
         if self.return_mask:
             return out, mask
         return out
+
+    def build(self, input_shape):
+        self._check_built()
+        for op in self.choices:
+            op.build(input_shape)
 
     def __len__(self):
         return len(self.choices)

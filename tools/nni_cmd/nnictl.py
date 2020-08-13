@@ -103,6 +103,8 @@ def parse_args():
     parser_trial_subparsers = parser_trial.add_subparsers()
     parser_trial_ls = parser_trial_subparsers.add_parser('ls', help='list trial jobs')
     parser_trial_ls.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_ls.add_argument('--head', type=int, help='list the highest experiments on the default metric')
+    parser_trial_ls.add_argument('--tail', type=int, help='list the lowest experiments on the default metric')
     parser_trial_ls.set_defaults(func=trial_ls)
     parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
