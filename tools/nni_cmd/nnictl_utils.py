@@ -517,7 +517,6 @@ def experiment_clean(args):
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
         #clean local data
-        home = str(Path.home())
         local_base_dir = nni_config.get_config('experimentConfig').get('logDir')
         if not local_base_dir:
             local_base_dir = NNI_HOME_DIR
