@@ -27,7 +27,7 @@ setup(
         'nni_gpu_tool':'tools/nni_gpu_tool'
     },
     package_data = {'nni': ['**/requirements.txt']},
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     install_requires = [
         'astor',
         'hyperopt==0.1.2',
