@@ -520,7 +520,7 @@ def experiment_clean(args):
         home = str(Path.home())
         local_dir = nni_config.get_config('experimentConfig').get('logDir')
         if not local_dir:
-            local_dir = os.path.join(home, 'nni-experiments')
+            local_dir = NNI_HOME_DIR
         local_dir = os.path.join(local_dir, experiment_id)
         local_clean(local_dir)
         experiment_config = Experiments()
