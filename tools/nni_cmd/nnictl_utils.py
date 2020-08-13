@@ -521,7 +521,11 @@ def experiment_clean(args):
         if not local_base_dir:
             local_base_dir = NNI_HOME_DIR
         local_experiment_dir = os.path.join(local_base_dir, experiment_id)
-        local_clean(local_experiment_dir)
+        experiment_folder_name_list = ['checkpoint', 'db', 'log', 'trials']
+        for folder_name in experiment_folder_name_list:
+            local_clean(os.path.join(local_experiment_dir, folder_name))
+        if not os.listdir(local_experiment_dir):
+            local_clean(local_experiment_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
         experiment_config.remove_experiment(experiment_id)
