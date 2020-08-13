@@ -61,8 +61,7 @@ class Pooling(nn.Module):
     bn_track_running_stats: bool
         When set to ``True``, ``torch.nn.BatchNorm2d`` tracks the running mean and variance. Default: True
     """
-    def __init__(self, C_in, C_out, stride, mode, bn_affine=True,
-                 bn_momentum=0.1, bn_track_running_stats=True):
+    def __init__(self, C_in, C_out, stride, bn_affine=True, bn_momentum=0.1, bn_track_running_stats=True):
         super(Pooling, self).__init__()
         if C_in == C_out:
             self.preprocess = None
