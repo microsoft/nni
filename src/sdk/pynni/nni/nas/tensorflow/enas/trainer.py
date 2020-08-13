@@ -136,10 +136,10 @@ class EnasTrainer:
             meters = AverageMeterGroup()
             for x, y in test_loader:
                 self.mutator.reset()
-                logits = self.model(x)
+                logits = self.model(x, training=False)
                 if isinstance(logits, tuple):
                     logits, _ = logits
-                metrics = self.metrics(logits, y)
+                metrics = self.metrics(y, logits)
                 loss = self.loss(y, logits)
                 metrics['loss'] = tf.reduce_mean(loss).numpy()
                 meters.update(metrics)
@@ -151,8 +151,8 @@ class EnasTrainer:
 
     def _create_train_loader(self):
         train_set = self.train_set.shuffle(1000000).repeat().batch(self.batch_size)
-        test_set = self.test_set.shuffle(1000000).repeat().batch(self.batch_size)
+        test_set = self.valid_set.shuffle(1000000).repeat().batch(self.batch_size)
         return iter(train_set), iter(test_set)
 
     def _create_validate_loader(self):
-        return iter(self.test_set.shuffle(1000000).repeat().batch(self.batch_size))
+        return iter(self.test_set.shuffle(1000000).batch(self.batch_size))

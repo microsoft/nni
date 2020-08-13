@@ -140,8 +140,8 @@ testCases:
   config:
     maxTrialNum: 4
     trialConcurrency: 4
-  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
-  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+  launchCommand: python3 -c 'from nnicli import Experiment; exp = Experiment(); exp.start_experiment("$configFile")'
+  stopCommand: python3 -c 'from nnicli import Experiment; exp = Experiment(); exp.connect_experiment("http://localhost:8080/"); exp.stop_experiment()'
   validator:
     class: NnicliValidator
   platform: linux darwin
@@ -158,7 +158,7 @@ testCases:
   configFile: test/config/examples/sklearn-regression.yml
   setExperimentIdtoVar: $resumeExpId
   # for subfolder in codedir test
-  launchCommand: mkdir -p ../examples/trials/sklearn/regression/subfolder && touch ../examples/trials/sklearn/regression/subfolder/subfile && nnictl create --config $configFile --debug
+  launchCommand: python3 -c "import os; os.makedirs('../examples/trials/sklearn/regression/subfolder', exist_ok=True); open('../examples/trials/sklearn/regression/subfolder/subfile', 'a').close()" && nnictl create --config $configFile --debug
 
 # Experiment resume test part 2
 - name: nnictl-resume-2

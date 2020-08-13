@@ -3,14 +3,14 @@
 
 'use strict';
 
-import * as assert from 'assert';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as fs from 'fs';
+import * as path from 'path';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
-import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
-import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
+import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingService';
+import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../local/localTrainingService';
 
@@ -70,6 +70,36 @@ describe('Unit Test for LocalTrainingService', () => {
         chai.expect(jobDetail.status).to.be.equals('WAITING');
         await localTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+    }).timeout(20000);
+
+    it('Get trial log', async () => {
+        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+
+        // submit job
+        const form: TrialJobApplicationForm = {
+            sequenceId: 0,
+            hyperParameters: {
+                value: 'mock hyperparameters',
+                index: 0
+            }
+        };
+
+        const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
+
+        // get trial log
+        const rootDir: string = getExperimentRootDir()
+        fs.mkdirSync(path.join(rootDir, 'trials'))
+        fs.mkdirSync(jobDetail.workingDirectory)
+        fs.writeFileSync(path.join(jobDetail.workingDirectory, 'trial.log'), 'trial log')
+        fs.writeFileSync(path.join(jobDetail.workingDirectory, 'stderr'), 'trial stderr')
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.equals('trial log');
+        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_ERROR')).to.be.equals('trial stderr');
+        fs.unlinkSync(path.join(jobDetail.workingDirectory, 'trial.log'))
+        fs.unlinkSync(path.join(jobDetail.workingDirectory, 'stderr'))
+        fs.rmdirSync(jobDetail.workingDirectory)
+        fs.rmdirSync(path.join(rootDir, 'trials'))
+
+        await localTrainingService.cancelTrialJob(jobDetail.id);
     }).timeout(20000);
 
     it('Read metrics, Add listener, and remove listener', async () => {

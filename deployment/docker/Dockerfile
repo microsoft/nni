@@ -1,12 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
+FROM nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
-RUN DEBIAN_FRONTEND=noninteractive && \
-    apt-get -y update && \
+ENV DEBIAN_FRONTEND=noninteractive 
+
+RUN apt-get -y update && \
     apt-get -y install sudo \
     apt-utils \
     git \
@@ -21,7 +22,7 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     openssh-client \
     openssh-server \
     lsof \
-    python3.5 \
+    python3.6 \
     python3-dev \
     python3-pip \
     python3-tk \
@@ -37,7 +38,7 @@ RUN cp /usr/bin/python3 /usr/bin/python
 #
 # update pip
 #
-RUN python3 -m pip install --upgrade pip setuptools==39.1.0
+RUN python3 -m pip install --upgrade pip==20.0.2 setuptools==39.1.0
 
 # numpy 1.14.3  scipy 1.1.0
 RUN python3 -m pip --no-cache-dir install \
@@ -46,7 +47,7 @@ RUN python3 -m pip --no-cache-dir install \
 #
 # Tensorflow 1.15
 #
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15.0
 
 #
 # Keras 2.1.6
@@ -60,9 +61,9 @@ RUN python3 -m pip --no-cache-dir install torch==1.4.0
 RUN python3 -m pip install torchvision==0.5.0
 
 #
-# sklearn 0.20.0
+# sklearn 0.23.2
 #
-RUN python3 -m pip --no-cache-dir install scikit-learn==0.20.0
+RUN python3 -m pip --no-cache-dir install scikit-learn==0.23.2
 
 #
 # pandas==0.23.4 lightgbm==2.2.2
