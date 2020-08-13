@@ -175,7 +175,7 @@ class ShellExecutor {
     }
 
     public getRemoteExperimentRootDir(experimentId: string): string {
-        return this.joinPath(this.tempPath, 'nni-experiments', experimentId);
+        return this.joinPath(this.tempPath, 'nni', 'experiments', experimentId);
     }
 
     public joinPath(...paths: string[]): string {

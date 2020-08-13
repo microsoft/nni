@@ -173,8 +173,8 @@ def download_parameter(meta_list, args):
     meta_list format is defined in paiJobRestServer.ts
     example meta_list:
     [
-        {"experimentId":"yWFJarYa","trialId":"UpPkl","filePath":"/chec/nni-experiments/yWFJarYa/trials/UpPkl/parameter_1.cfg"},
-        {"experimentId":"yWFJarYa","trialId":"aIUMA","filePath":"/chec/nni-experiments/yWFJarYa/trials/aIUMA/parameter_1.cfg"}
+        {"experimentId":"yWFJarYa","trialId":"UpPkl","filePath":"/chec/nni/experiments/yWFJarYa/trials/UpPkl/parameter_1.cfg"},
+        {"experimentId":"yWFJarYa","trialId":"aIUMA","filePath":"/chec/nni/experiments/yWFJarYa/trials/aIUMA/parameter_1.cfg"}
     ]
     """
     nni_log(LogType.Debug, str(meta_list))
