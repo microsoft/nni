@@ -12,7 +12,7 @@ setuptools.setup(
     version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['tests']),
 
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     install_requires = [
         'hyperopt==0.1.2',
         'json_tricks',

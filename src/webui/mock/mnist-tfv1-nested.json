@@ -7,7 +7,7 @@
         "id": "AKVcExIf",
         "revision": 29,
         "execDuration": 172,
-        "logDir": "/home/v-yugzh/nni/experiments/AKVcExIf",
+        "logDir": "/home/v-yugzh/nni-experiments/AKVcExIf",
         "nextSequenceId": 10,
         "params": {
             "authorName": "default",
