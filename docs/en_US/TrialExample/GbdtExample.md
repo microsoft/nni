@@ -147,8 +147,6 @@ if __name__ == '__main__':
 +   RECEIVED_PARAMS = nni.get_next_parameter()
     PARAMS = get_default_parameters()
 +   PARAMS.update(RECEIVED_PARAMS)
-    PARAMS = get_default_parameters()
-    PARAMS.update(RECEIVED_PARAMS)
 
     # train
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)

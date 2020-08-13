@@ -4,6 +4,7 @@
 import logging
 from collections import OrderedDict
 
+import numpy as np
 import torch
 
 _counter = 0
@@ -43,6 +44,16 @@ def to_device(obj, device):
     if isinstance(obj, (int, float, str)):
         return obj
     raise ValueError("'%s' has unsupported type '%s'" % (obj, type(obj)))
+
+
+def to_list(arr):
+    if torch.is_tensor(arr):
+        return arr.cpu().numpy().tolist()
+    if isinstance(arr, np.ndarray):
+        return arr.tolist()
+    if isinstance(arr, (list, tuple)):
+        return list(arr)
+    return arr
 
 
 class AverageMeterGroup:

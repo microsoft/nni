@@ -10,7 +10,7 @@ export namespace ValidationSchemas {
         body: {
             machine_list: joi.array().items(joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 username: joi.string().required(),
-                ip: joi.string().ip().required(),
+                ip: joi.string().hostname().required(),
                 port: joi.number().min(1).max(65535).required(),
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
@@ -39,7 +39,8 @@ export namespace ValidationSchemas {
                 nniManagerNFSMountPath: joi.string().min(1),
                 containerNFSMountPath: joi.string().min(1),
                 paiConfigPath: joi.string(),
-                paiStoragePlugin: joi.string().min(1),
+                nodeCount: joi.number(),
+                paiStorageConfigName: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
                 portList: joi.array().items(joi.object({
                     label: joi.string().required(),
@@ -101,9 +102,14 @@ export namespace ValidationSchemas {
             }),
             pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
-                passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
+                reuse: joi.boolean(),
+                cpuNum: joi.number().min(1),
+                memoryMB: joi.number().min(100),
+                gpuNum: joi.number().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean(),
             }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),
@@ -149,6 +155,14 @@ export namespace ValidationSchemas {
                 email: joi.string().min(1),
                 password: joi.string().min(1)
             }),
+            aml_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                subscriptionId: joi.string().min(1),
+                resourceGroup: joi.string().min(1),
+                workspaceName: joi.string().min(1),
+                computeTarget: joi.string().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
+            }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             })
@@ -169,7 +183,7 @@ export namespace ValidationSchemas {
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({
-                builtinAdvisorName: joi.string().valid('Hyperband', 'BOHB'),
+                builtinAdvisorName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -178,7 +192,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string()
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner', 'GPTuner', 'PPOTuner', 'PBTTuner'),
+                builtinTunerName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -188,7 +202,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string()
             }),
             assessor: joi.object({
-                builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
+                builtinAssessorName: joi.string(),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

@@ -2,9 +2,11 @@
 # Licensed under the MIT license.
 
 import os.path as osp
+from os import remove
+import subprocess
 import json
 import requests
-import nnicli as nc
+from nnicli import Experiment
 from utils import METRICS_URL
 
 
@@ -12,6 +14,24 @@ class ITValidator:
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         pass
 
+class ExportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        proc1 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "csv", "-f", "report.csv"])
+        assert proc1.returncode == 0, '`nnictl experiment export -t csv` failed with code %d' % proc1.returncode
+        with open("report.csv", 'r') as f:
+            print('Exported CSV file: \n')
+            print(''.join(f.readlines()))
+            print('\n\n')
+        remove('report.csv')
+
+        proc2 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "json", "-f", "report.json"])
+        assert proc2.returncode == 0, '`nnictl experiment export -t json` failed with code %d' % proc2.returncode
+        with open("report.json", 'r') as f:
+            print('Exported JSON file: \n')
+            print('\n'.join(f.readlines()))
+            print('\n\n')
+        remove('report.json')
 
 class MetricsValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
@@ -60,8 +80,8 @@ class MetricsValidator(ITValidator):
 class NnicliValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         print(rest_endpoint)
-        nc.set_endpoint(rest_endpoint)
-        #print(nc.version())
-        print(nc.get_job_statistics())
-        print(nc.get_experiment_status())
-        print(nc.list_trial_jobs())
+        exp = Experiment()
+        exp.connect_experiment(rest_endpoint)
+        print(exp.get_job_statistics())
+        print(exp.get_experiment_status())
+        print(exp.list_trial_jobs())

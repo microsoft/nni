@@ -42,4 +42,8 @@ python search.py
 
 ## 重新训练
 
-待完成
+```
+sh run_retrain.sh
+```
+
+默认情况下，脚本会重新训练 SST-2 数据集上作者所提供的网络结构。

@@ -8,6 +8,8 @@ https://github.com/pytorch/examples/blob/master/mnist/main.py
 import os
 import argparse
 import logging
+from collections import OrderedDict
+
 import nni
 import torch
 import torch.nn as nn
@@ -26,13 +28,15 @@ class Net(nn.Module):
     def __init__(self, hidden_size):
         super(Net, self).__init__()
         # two options of conv1
-        self.conv1 = LayerChoice([nn.Conv2d(1, 20, 5, 1),
-                                  nn.Conv2d(1, 20, 3, 1)],
-                                 key='first_conv')
+        self.conv1 = LayerChoice(OrderedDict([
+            ("conv5x5", nn.Conv2d(1, 20, 5, 1)),
+            ("conv3x3", nn.Conv2d(1, 20, 3, 1))
+        ]), key='first_conv')
         # two options of mid_conv
-        self.mid_conv = LayerChoice([nn.Conv2d(20, 20, 3, 1, padding=1),
-                                     nn.Conv2d(20, 20, 5, 1, padding=2)],
-                                    key='mid_conv')
+        self.mid_conv = LayerChoice([
+            nn.Conv2d(20, 20, 3, 1, padding=1),
+            nn.Conv2d(20, 20, 5, 1, padding=2)
+        ], key='mid_conv')
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.fc1 = nn.Linear(4*4*50, hidden_size)
         self.fc2 = nn.Linear(hidden_size, 10)
@@ -105,8 +109,7 @@ def main(args):
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
-    #data_dir = os.path.join(args['data_dir'], nni.get_trial_id())
-    data_dir = os.path.join(args['data_dir'], 'data')
+    data_dir = args['data_dir']
 
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(data_dir, train=True, download=True,
@@ -166,7 +169,6 @@ def get_params():
                         help='disables CUDA training')
     parser.add_argument('--log_interval', type=int, default=1000, metavar='N',
                         help='how many batches to wait before logging training status')
-
 
     args, _ = parser.parse_known_args()
     return args

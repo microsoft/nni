@@ -6,7 +6,7 @@ echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
 
-echo "testing classic nas..."
+echo "testing nnictl ss_gen (classic nas)..."
 cd $EXAMPLE_DIR/classic_nas
 SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
 if [ -f $SEARCH_SPACE_JSON ]; then
@@ -28,9 +28,10 @@ cd $EXAMPLE_DIR/enas
 python3 search.py --search-for macro --epochs 1
 python3 search.py --search-for micro --epochs 1
 
-echo "testing naive..."
-cd $EXAMPLE_DIR/naive
-python3 train.py
+#disabled for now
+#echo "testing naive..."
+#cd $EXAMPLE_DIR/naive
+#python3 train.py
 
 echo "testing pdarts..."
 cd $EXAMPLE_DIR/pdarts

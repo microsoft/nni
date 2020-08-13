@@ -52,7 +52,7 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            uri: `${protocol}://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
+            uri: `${protocol}://${paiClusterConfig.host}/rest-server/api/v2/jobs/${paiClusterConfig.userName}~${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
                headers: {
@@ -62,9 +62,10 @@ export class PAIJobInfoCollector {
         };
 
         //TODO : pass in request timeout param?
-        request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
-            if ((error !== undefined && error !== null) || response.statusCode >= 500) {
-                this.log.error(`PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!`);
+        request(getJobInfoRequest, (error: Error, response: request.Response, _body: any) => {
+            // Status code 200 for success
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
+                // The job refresh time could be ealier than job submission, so it might return 404 error code, need refactor
                 // Queried PAI job info failed, set job status to UNKNOWN
                 if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
                     paiTrialJob.status = 'UNKNOWN';
@@ -84,7 +85,7 @@ export class PAIJobInfoCollector {
                                 if (response.body.jobStatus.appTrackingUrl) {
                                     paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
                                 } else {
-                                    paiTrialJob.url = paiTrialJob.logPath;
+                                    paiTrialJob.url = paiTrialJob.paiJobDetailUrl;
                                 }
                             }
                             break;

@@ -98,7 +98,7 @@ class SqlDB implements Database {
                 this.resolve(this.initTask, err);
             } else {
                 if (createNew) {
-                    this.db.exec(createTables, (error: Error | null) => {
+                    this.db.exec(createTables, (_error: Error | null) => {
                         this.resolve(this.initTask, err);
                     });
                 } else {

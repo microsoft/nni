@@ -144,7 +144,7 @@ from sklearn.feature_selection.base import SelectorMixin
 
 from nni.feature_engineering.feature_selector import FeatureSelector
 
-class CustomizedSelector(FeatureSelector, BaseEstimator):
+class CustomizedSelector(FeatureSelector, BaseEstimator, SelectorMixin):
     def __init__(self, ...):
         ...
 
@@ -157,9 +157,9 @@ class CustomizedSelector(FeatureSelector, BaseEstimator):
         if not key.endswith('_')}
         return params
 
-        def set_params(self, **params):
+    def set_params(self, **params):
         """
-        设置参数
+        为此 estimator 设置参数
         """
         for param in params:
         if hasattr(self, param):

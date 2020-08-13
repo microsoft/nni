@@ -19,10 +19,11 @@ import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentParams, Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
+import { logLevelNameMap } from './log';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
-            .getLogDir();
+        .getLogDir();
 }
 
 function getLogDir(): string {
@@ -31,7 +32,7 @@ function getLogDir(): string {
 
 function getLogLevel(): string {
     return getExperimentStartupInfo()
-    .getLogLevel();
+        .getLogLevel();
 }
 
 function getDefaultDatabaseDir(): string {
@@ -113,11 +114,16 @@ function uniqueString(len: number): string {
     return String.fromCharCode(...codes);
 }
 
+function randomInt(max: number): number {
+    return Math.floor(Math.random() * max);
+}
+
 function randomSelect<T>(a: T[]): T {
     assert(a !== undefined);
 
     return a[Math.floor(Math.random() * a.length)];
 }
+
 function parseArg(names: string[]): string {
     if (process.argv.length >= 4) {
         for (let i: number = 2; i < process.argv.length - 1; i++) {
@@ -132,7 +138,7 @@ function parseArg(names: string[]): string {
 
 function getCmdPy(): string {
     let cmd = 'python3';
-    if(process.platform === 'win32'){
+    if (process.platform === 'win32') {
         cmd = 'python';
     }
     return cmd;
@@ -160,7 +166,7 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
     assert(hyperParameters.index >= 0);
 
     let paramFileName: string;
-    if(hyperParameters.index == 0) {
+    if (hyperParameters.index == 0) {
         paramFileName = 'parameter.cfg';
     } else {
         paramFileName = `parameter_${hyperParameters.index}.cfg`
@@ -179,7 +185,12 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(true, 'unittest', 8080);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
+        console.log(`FATAL: invalid log_level: ${logLevel}`);
+    }
+
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -211,26 +222,19 @@ function getIPV4Address(): string {
         return cachedipv4Address;
     }
 
-    if(os.networkInterfaces().eth0) {
-        for(const item of os.networkInterfaces().eth0) {
-            if(item.family === 'IPv4') {
+    const networkInterfaces = os.networkInterfaces();
+    if (networkInterfaces.eth0) {
+        for (const item of networkInterfaces.eth0) {
+            if (item.family === 'IPv4') {
                 cachedipv4Address = item.address;
                 return cachedipv4Address;
             }
         }
     } else {
-        throw Error('getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.');
+        throw Error(`getIPV4Address() failed because os.networkInterfaces().eth0 is undefined. Please specify NNI manager IP in config.`);
     }
 
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
-}
-
-function getRemoteTmpDir(osType: string): string {
-    if (osType == 'linux') {
-        return '/tmp';
-    } else {
-        throw Error(`remote OS ${osType} not supported`);
-    }
 }
 
 /**
@@ -245,7 +249,7 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
  * @param directory directory name
  */
 function countFilesRecursively(directory: string): Promise<number> {
-    if(!fs.existsSync(directory)) {
+    if (!fs.existsSync(directory)) {
         throw Error(`Direcotory ${directory} doesn't exist`);
     }
 
@@ -261,13 +265,13 @@ function countFilesRecursively(directory: string): Promise<number> {
 
     let fileCount: number = -1;
     let cmd: string;
-    if(process.platform === "win32") {
+    if (process.platform === "win32") {
         cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
     } else {
         cmd = `find ${directory} -type f | wc -l`;
     }
     cpp.exec(cmd).then((result) => {
-        if(result.stdout && parseInt(result.stdout)) {
+        if (result.stdout && parseInt(result.stdout)) {
             fileCount = parseInt(result.stdout);
         }
         deferred.resolve(fileCount);
@@ -277,23 +281,23 @@ function countFilesRecursively(directory: string): Promise<number> {
     });
 }
 
-function validateFileName(fileName: string): boolean {
+export function validateFileName(fileName: string): boolean {
     const pattern: string = '^[a-z0-9A-Z._-]+$';
     const validateResult = fileName.match(pattern);
-    if(validateResult) {
+    if (validateResult) {
         return true;
     }
     return false;
 }
 
 async function validateFileNameRecursively(directory: string): Promise<boolean> {
-    if(!fs.existsSync(directory)) {
+    if (!fs.existsSync(directory)) {
         throw Error(`Direcotory ${directory} doesn't exist`);
     }
 
     const fileNameArray: string[] = fs.readdirSync(directory);
     let result = true;
-    for(const name of fileNameArray){
+    for (const name of fileNameArray) {
         const fullFilePath: string = path.join(directory, name);
         try {
             // validate file names and directory names
@@ -301,14 +305,14 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
             if (fs.lstatSync(fullFilePath).isDirectory()) {
                 result = result && await validateFileNameRecursively(fullFilePath);
             }
-            if(!result) {
+            if (!result) {
                 return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
             }
-        } catch(error) {
+        } catch (error) {
             return Promise.reject(error);
         }
     }
-    return Promise.resolve(result);   
+    return Promise.resolve(result);
 }
 
 /**
@@ -316,9 +320,9 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
  */
 async function getVersion(): Promise<string> {
     const deferred: Deferred<string> = new Deferred<string>();
-    import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
+    import(path.join(__dirname, '..', 'package.json')).then((pkg) => {
         deferred.resolve(pkg.version);
-    }).catch((error)=>{
+    }).catch((error) => {
         deferred.reject(error);
     });
     return deferred.promise;
@@ -331,9 +335,9 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
     let cmd: string = command;
     let arg: string[] = [];
     let newShell: boolean = true;
-    if(process.platform === "win32"){
+    if (process.platform === "win32") {
         cmd = command.split(" ", 1)[0];
-        arg = command.substr(cmd.length+1).split(" ");
+        arg = command.substr(cmd.length + 1).split(" ");
         newShell = false;
     }
     const tunerProc: ChildProcess = spawn(cmd, arg, {
@@ -383,7 +387,7 @@ async function killPid(pid: any): Promise<void> {
         if (process.platform === "win32") {
             await cpp.exec(`cmd.exe /c taskkill /PID ${pid} /F`);
         }
-        else{
+        else {
             await cpp.exec(`kill -9 ${pid}`);
         }
     } catch (error) {
@@ -397,7 +401,7 @@ function getNewLine(): string {
     if (process.platform === "win32") {
         return "\r\n";
     }
-    else{
+    else {
         return "\n";
     }
 }
@@ -412,6 +416,8 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
-export {countFilesRecursively, validateFileNameRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
+export {
+    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
-    mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };
+    mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
+};

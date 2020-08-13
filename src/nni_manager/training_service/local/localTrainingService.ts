@@ -14,7 +14,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
@@ -184,6 +184,18 @@ class LocalTrainingService implements TrainingService {
         return trialJob;
     }
 
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        let logPath: string;
+        if (logType === 'TRIAL_LOG') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
+        } else if (logType === 'TRIAL_ERROR') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
+        } else {
+            throw new Error('unexpected log type');
+        }
+        return fs.promises.readFile(logPath, 'utf8');
+    }
+
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.eventEmitter.on('metric', listener);
     }
@@ -334,9 +346,11 @@ class LocalTrainingService implements TrainingService {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
                 //Refer https://github.com/Juul/tail-stream/issues/20
-                stream.end(0);
-                stream.emit('end');
-                this.jobStreamMap.delete(trialJob.id);
+                setTimeout(() => {
+                    stream.end(0);
+                    stream.emit('end');
+                    this.jobStreamMap.delete(trialJob.id);
+                }, 5000);
             }
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
@@ -359,21 +373,25 @@ class LocalTrainingService implements TrainingService {
         trialJobDetail: TrialJobDetail,
         resource: { gpuIndices: number[] },
         gpuNum: number | undefined): { key: string; value: string }[] {
-        const envVariables: { key: string; value: string }[] = [
-            { key: 'NNI_PLATFORM', value: 'local' },
-            { key: 'NNI_EXP_ID', value: this.experimentId },
-            { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
-            { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
-            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
-            { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
-        ];
-        if (gpuNum !== undefined) {
-            envVariables.push({
-                key: 'CUDA_VISIBLE_DEVICES',
-                value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
-            });
-        }
+            if (this.localTrialConfig === undefined) {
+                throw new Error('localTrialConfig is not initialized!');
+            }
+            const envVariables: { key: string; value: string }[] = [
+                { key: 'NNI_PLATFORM', value: 'local' },
+                { key: 'NNI_EXP_ID', value: this.experimentId },
+                { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
+                { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
+                { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+                { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
+                { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() },
+                { key: 'NNI_CODE_DIR', value: this.localTrialConfig.codeDir}
+            ];
+            if (gpuNum !== undefined) {
+                envVariables.push({
+                    key: 'CUDA_VISIBLE_DEVICES',
+                    value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
+                });
+            }
 
         return envVariables;
     }
@@ -444,8 +462,8 @@ class LocalTrainingService implements TrainingService {
         while (!this.stopping) {
             while (!this.stopping && this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
-                const trialJobDeatil: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
-                if (trialJobDeatil !== undefined && trialJobDeatil.status === 'WAITING') {
+                const trialJobDetail: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
+                if (trialJobDetail !== undefined && trialJobDetail.status === 'WAITING') {
                     const [success, resource] = this.tryGetAvailableResource();
                     if (!success) {
                         break;
@@ -471,12 +489,14 @@ class LocalTrainingService implements TrainingService {
     private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
+            script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
                 `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
+            script.push(`cd $NNI_CODE_DIR`);
             script.push(`eval ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
@@ -504,7 +524,6 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         }
-        runScriptContent.push(`cd '${this.localTrialConfig.codeDir}'`);
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }

@@ -57,10 +57,11 @@ class NNIRestHandler {
         this.getMetricData(router);
         this.getMetricDataByRange(router);
         this.getLatestMetricData(router);
+        this.getTrialLog(router);
         this.exportData(router);
 
         // Express-joi-validator configuration
-        router.use((err: any, req: Request, res: Response, next: any) => {
+        router.use((err: any, _req: Request, res: Response, _next: any) => {
             if (err.isBoom) {
                 this.log.error(err.output.payload);
 
@@ -262,6 +263,19 @@ class NNIRestHandler {
         router.get('/metric-data-latest/', async (req: Request, res: Response) => {
             this.nniManager.getLatestMetricData().then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private getTrialLog(router: Router): void {
+        router.get('/trial-log/:id/:type', async(req: Request, res: Response) => {
+            this.nniManager.getTrialLog(req.params.id, req.params.type).then((log: string) => {
+                if (log === '') {
+                    log = 'No logs available.'
+                }
+                res.send(log);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });

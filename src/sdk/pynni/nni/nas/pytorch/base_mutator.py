@@ -104,7 +104,7 @@ class BaseMutator(nn.Module):
         """
         pass
 
-    def on_forward_layer_choice(self, mutable, *inputs):
+    def on_forward_layer_choice(self, mutable, *args, **kwargs):
         """
         Callbacks of forward in LayerChoice.
 
@@ -112,8 +112,10 @@ class BaseMutator(nn.Module):
         ----------
         mutable : LayerChoice
             Module whose forward is called.
-        inputs : list of torch.Tensor
+        args : list of torch.Tensor
             The arguments of its forward function.
+        kwargs : dict
+            The keyword arguments of its forward function.
 
         Returns
         -------

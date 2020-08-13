@@ -10,7 +10,12 @@ jobs:
     displayName: 'Install python tools'
 
   - script: |
+      set -e
       cd deployment/pypi
+      if [ -d ./dist ]
+      then
+        rm -rf ./dist/*
+      fi
       echo 'building prerelease package...'
       make build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
@@ -28,6 +33,7 @@ jobs:
     displayName: 'Install dependencies for integration tests in Kubeflow mode'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi
@@ -35,7 +41,7 @@ jobs:
 
         echo 'updating docker file for installing nni from local...'
         # update Dockerfile to install NNI in docker image from whl file built in last step
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\/\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
         cat ../docker/Dockerfile
         export IMG_TAG=`date -u +%y%m%d%H%M`
         docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .

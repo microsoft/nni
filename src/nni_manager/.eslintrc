@@ -23,6 +23,13 @@
         "@typescript-eslint/consistent-type-assertions": 0,
         "@typescript-eslint/no-inferrable-types": 0,
         "no-inner-declarations": 0,
+        "@typescript-eslint/explicit-function-return-type": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ],
         "@typescript-eslint/no-var-requires": 0
     },
     "ignorePatterns": [

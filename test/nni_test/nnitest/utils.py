@@ -10,6 +10,7 @@ import subprocess
 import requests
 import time
 import ruamel.yaml as yaml
+import shlex
 
 EXPERIMENT_DONE_SIGNAL = 'Experiment done'
 
@@ -65,14 +66,16 @@ def get_experiment_id(experiment_url):
     experiment_id = requests.get(experiment_url).json()['id']
     return experiment_id
 
-def get_experiment_dir(experiment_url):
+def get_experiment_dir(experiment_url=None, experiment_id=None):
     '''get experiment root directory'''
-    experiment_id = get_experiment_id(experiment_url)
-    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
+    assert any([experiment_url, experiment_id])
+    if experiment_id is None:
+        experiment_id = get_experiment_id(experiment_url)
+    return os.path.join(os.path.expanduser('~'), 'nni-experiments', experiment_id)
 
-def get_nni_log_dir(experiment_url):
+def get_nni_log_dir(experiment_url=None, experiment_id=None):
     '''get nni's log directory from nni's experiment url'''
-    return os.path.join(get_experiment_dir(experiment_url), 'log')
+    return os.path.join(get_experiment_dir(experiment_url, experiment_id), 'log')
 
 def get_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
@@ -125,11 +128,16 @@ def print_trial_job_log(training_service, trial_jobs_url):
         for log_file in log_files:
             print_file_content(os.path.join(trial_log_dir, log_file))
 
-def print_experiment_log(experiment_url):
-    log_dir = get_nni_log_dir(experiment_url)
+def print_experiment_log(experiment_id):
+    log_dir = get_nni_log_dir(experiment_id=experiment_id)
     for log_file in ['dispatcher.log', 'nnimanager.log']:
         filepath = os.path.join(log_dir, log_file)
         print_file_content(filepath)
+
+    print('nnictl log stderr:')
+    subprocess.run(shlex.split('nnictl log stderr {}'.format(experiment_id)))
+    print('nnictl log stdout:')
+    subprocess.run(shlex.split('nnictl log stdout {}'.format(experiment_id)))
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]
@@ -160,6 +168,13 @@ def detect_port(port):
     except:
         return False
 
-def snooze():
-    '''Sleep to make sure previous stopped exp has enough time to exit'''
-    time.sleep(6)
+
+def wait_for_port_available(port, timeout):
+    begin_time = time.time()
+    while True:
+        if not detect_port(port):
+            return
+        if time.time() - begin_time > timeout:
+            msg = 'port {} is not available in {} seconds.'.format(port, timeout)
+            raise RuntimeError(msg)
+        time.sleep(1)

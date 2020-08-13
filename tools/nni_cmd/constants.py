@@ -6,14 +6,13 @@ from colorama import Fore
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local', 'nnictl')
 
-ERROR_INFO = 'ERROR: %s'
+NNI_HOME_DIR = os.path.join(os.path.expanduser('~'), 'nni-experiments')
 
-NORMAL_INFO = 'INFO: %s'
-
-WARNING_INFO = 'WARNING: %s'
+ERROR_INFO = 'ERROR: '
+NORMAL_INFO = 'INFO: '
+WARNING_INFO = 'WARNING: '
 
 DEFAULT_REST_PORT = 8080
-
 REST_TIME_OUT = 20
 
 EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fore.RESET + \
@@ -62,10 +61,25 @@ TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
 
 TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
-PACKAGE_REQUIREMENTS = {
-    'SMAC': 'smac_tuner',
-    'BOHB': 'bohb_advisor',
-    'PPOTuner': 'ppo_tuner'
+INSTALLABLE_PACKAGE_META = {
+    'SMAC': {
+        'type': 'tuner',
+        'class_name': 'nni.smac_tuner.smac_tuner.SMACTuner',
+        'code_sub_dir': 'smac_tuner',
+        'class_args_validator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator'
+    },
+    'BOHB': {
+        'type': 'advisor',
+        'class_name': 'nni.bohb_advisor.bohb_advisor.BOHB',
+        'code_sub_dir': 'bohb_advisor',
+        'class_args_validator': 'nni.bohb_advisor.bohb_advisor.BOHBClassArgsValidator'
+    },
+    'PPOTuner': {
+        'type': 'tuner',
+        'class_name': 'nni.ppo_tuner.ppo_tuner.PPOTuner',
+        'code_sub_dir': 'ppo_tuner',
+        'class_args_validator': 'nni.ppo_tuner.ppo_tuner.PPOClassArgsValidator'
+    }
 }
 
 TUNERS_SUPPORTING_IMPORT_DATA = {
@@ -83,14 +97,6 @@ TUNERS_NO_NEED_TO_IMPORT_DATA = {
     'Hyperband'
 }
 
-COLOR_RED_FORMAT = Fore.RED + '%s'
-
-COLOR_GREEN_FORMAT = Fore.GREEN + '%s'
-
-COLOR_YELLOW_FORMAT = Fore.YELLOW + '%s'
-
 SCHEMA_TYPE_ERROR = '%s should be %s type!'
-
 SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
-
 SCHEMA_PATH_ERROR = '%s path not exist!'

@@ -86,15 +86,15 @@ class EnasMutator(Mutator):
         for mutable in self.mutables:
             if isinstance(mutable, LayerChoice):
                 if self.max_layer_choice == 0:
-                    self.max_layer_choice = mutable.length
-                assert self.max_layer_choice == mutable.length, \
+                    self.max_layer_choice = len(mutable)
+                assert self.max_layer_choice == len(mutable), \
                     "ENAS mutator requires all layer choice have the same number of candidates."
                 # We are judging by keys and module types to add biases to layer choices. Needs refactor.
                 if "reduce" in mutable.key:
                     def is_conv(choice):
                         return "conv" in str(type(choice)).lower()
                     bias = torch.tensor([self.branch_bias if is_conv(choice) else -self.branch_bias  # pylint: disable=not-callable
-                                         for choice in mutable.choices])
+                                         for choice in mutable])
                     self.bias_dict[mutable.key] = nn.Parameter(bias, requires_grad=False)
 
         self.embedding = nn.Embedding(self.max_layer_choice + 1, self.lstm_size)

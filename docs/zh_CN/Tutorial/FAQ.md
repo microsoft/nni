@@ -54,7 +54,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### NNI 在 Windows 上的问题
 
-参考 [Windows 上的 NNI](InstallationWin.md#FAQ)
+参考 [Windows 上的 NNI](InstallationWin.md)
 
 ### 更多常见问题解答
 

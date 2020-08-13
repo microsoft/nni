@@ -1,66 +1,60 @@
-**Set up NNI developer environment**
+# Setup NNI development environment
 
-===
+NNI development environment supports Ubuntu 1604 (or above), and Windows 10 with Python3 64bit.
 
-## Best practice for debug NNI source code
+## Installation
 
-For debugging NNI source code, your development environment should be under Ubuntu 16.04 (or above) system with python 3 and pip 3 installed, then follow the below steps.
+The installation steps are similar with installing from source code. But the installation links to code directory, so that code changes can be applied to installation as easy as possible.
 
-**1. Clone the source code**
+### 1. Clone source code
 
-Run the command
-
-```
+```bash
 git clone https://github.com/Microsoft/nni.git
 ```
 
-to clone the source code
+Note, if you want to contribute code back, it needs to fork your own NNI repo, and clone from there.
 
-**2. Prepare the debug environment and install dependencies**
+### 2. Install from source code
 
-Change directory to the source code folder, then run the command
+#### Ubuntu
 
-```
-make install-dependencies
-```
-
-to install the dependent tools for the environment
-
-**3. Build source code**
-
-Run the command
-
-```
-make build
+```bash
+make dev-easy-install
 ```
 
-to build the source code
+#### Windows
 
-**4. Install NNI to development environment**
-
-Run the command
-
-```
-make dev-install
+```bat
+powershell -ExecutionPolicy Bypass -file install.ps1 -Development
 ```
 
-to install the distribution content to development environment, and create cli scripts
-
-**5. Check if the environment is ready**
+### 3. Check if the environment is ready
 
 Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
 
-```
-nnictl create --config ~/nni/examples/trials/mnist-tfv1/config.yml
+```bash
+nnictl create --config examples/trials/mnist-tfv1/config.yml
 ```
 
 And open WebUI to check if everything is OK
 
-**6. Redeploy**
+### 4. Reload changes
 
-After the code changes, use **step 3** to rebuild your codes, then the changes will take effect immediately.
+#### Python
 
----
-At last, wish you have a wonderful day.
-For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](Contributing.md) document.
+Nothing to do, the code is already linked to package folders.
+
+#### TypeScript
+
+* If `src/nni_manager` is changed, run `yarn watch` under this folder. It will watch and build code continually. The `nnictl` need to be restarted to reload NNI manager.
+* If `src/webui` is changed, run `yarn dev`, which will run a mock API server and a webpack dev server simultaneously. Use `EXPERIMENT` environment variable (e.g., `mnist-tfv1-running`) to specify the mock data being used. Built-in mock experiments are listed in `src/webui/mock`. An example of the full command is `EXPERIMENT=mnist-tfv1-running yarn dev`.
+* If `src/nasui` is changed, run `yarn start` under the corresponding folder. The web UI will refresh automatically if code is changed. There is also a mock API server that is useful when developing. It can be launched via `node server.js`.
+
+### 5. Submit Pull Request
+
+All changes are merged to master branch from your forked repo. The description of Pull Request must be meaningful, and useful.
+
+We will review the changes as soon as possible. Once it passes review, we will merge it to master branch.
+
+For more contribution guidelines and coding styles, you can refer to the [contributing document](Contributing.md).

@@ -4,8 +4,6 @@
 'use strict';
 
 import { Request, Response, Router } from 'express';
-import { Inject } from 'typescript-ioc';
-import * as component from '../../common/component';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { PAITrainingService } from './paiTrainingService';
 

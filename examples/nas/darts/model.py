@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 
@@ -43,17 +45,15 @@ class Node(nn.Module):
             stride = 2 if i < num_downsample_connect else 1
             choice_keys.append("{}_p{}".format(node_id, i))
             self.ops.append(
-                mutables.LayerChoice(
-                    [
-                        ops.PoolBN('max', channels, 3, stride, 1, affine=False),
-                        ops.PoolBN('avg', channels, 3, stride, 1, affine=False),
-                        nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False),
-                        ops.SepConv(channels, channels, 3, stride, 1, affine=False),
-                        ops.SepConv(channels, channels, 5, stride, 2, affine=False),
-                        ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False),
-                        ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False)
-                    ],
-                    key=choice_keys[-1]))
+                mutables.LayerChoice(OrderedDict([
+                    ("maxpool", ops.PoolBN('max', channels, 3, stride, 1, affine=False)),
+                    ("avgpool", ops.PoolBN('avg', channels, 3, stride, 1, affine=False)),
+                    ("skipconnect", nn.Identity() if stride == 1 else ops.FactorizedReduce(channels, channels, affine=False)),
+                    ("sepconv3x3", ops.SepConv(channels, channels, 3, stride, 1, affine=False)),
+                    ("sepconv5x5", ops.SepConv(channels, channels, 5, stride, 2, affine=False)),
+                    ("dilconv3x3", ops.DilConv(channels, channels, 3, stride, 2, 2, affine=False)),
+                    ("dilconv5x5", ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False))
+                ]), key=choice_keys[-1]))
         self.drop_path = ops.DropPath()
         self.input_switch = mutables.InputChoice(choose_from=choice_keys, n_chosen=2, key="{}_switch".format(node_id))
 

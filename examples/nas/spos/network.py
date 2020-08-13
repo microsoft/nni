@@ -147,10 +147,11 @@ class ShuffleNetV2OneShot(nn.Module):
 
 def load_and_parse_state_dict(filepath="./data/checkpoint-150000.pth.tar"):
     checkpoint = torch.load(filepath, map_location=torch.device("cpu"))
+    if "state_dict" in checkpoint:
+        checkpoint = checkpoint["state_dict"]
     result = dict()
-    for k, v in checkpoint["state_dict"].items():
+    for k, v in checkpoint.items():
         if k.startswith("module."):
             k = k[len("module."):]
-        k = re.sub(r"^(features.\d+).(\d+)", "\\1.choices.\\2", k)
         result[k] = v
     return result

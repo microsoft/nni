@@ -3,6 +3,7 @@
 import importlib
 import os
 import sys
+from collections import OrderedDict
 from unittest import TestCase, main
 
 import torch
@@ -11,6 +12,7 @@ from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.enas import EnasMutator
 from nni.nas.pytorch.fixed import apply_fixed_architecture
+from nni.nas.pytorch.mutables import LayerChoice
 from nni.nas.pytorch.random import RandomMutator
 from nni.nas.pytorch.utils import _reset_global_mutable_counting
 
@@ -100,6 +102,43 @@ class NasTestCase(TestCase):
             model = model_cls(self)
             get_and_apply_next_architecture(model)
             self.iterative_sample_and_forward(model)
+
+    def test_proxylessnas(self):
+        model = self.model_module.LayerChoiceOnlySearchSpace(self)
+        get_and_apply_next_architecture(model)
+        self.iterative_sample_and_forward(model)
+
+    def test_layer_choice(self):
+        for i in range(2):
+            for j in range(2):
+                if j == 0:
+                    # test number
+                    layer_choice = LayerChoice([nn.Conv2d(3, 3, 3), nn.Conv2d(3, 5, 3), nn.Conv2d(3, 6, 3)])
+                else:
+                    # test ordered dict
+                    layer_choice = LayerChoice(OrderedDict([
+                        ("conv1", nn.Conv2d(3, 3, 3)),
+                        ("conv2", nn.Conv2d(3, 5, 3)),
+                        ("conv3", nn.Conv2d(3, 6, 3))
+                    ]))
+                if i == 0:
+                    # test modify
+                    self.assertEqual(len(layer_choice.choices), 3)
+                    layer_choice[1] = nn.Conv2d(3, 4, 3)
+                    self.assertEqual(layer_choice[1].out_channels, 4)
+                    self.assertEqual(len(layer_choice[0:2]), 2)
+                    if j > 0:
+                        layer_choice["conv3"] = nn.Conv2d(3, 7, 3)
+                        self.assertEqual(layer_choice[-1].out_channels, 7)
+                if i == 1:
+                    # test delete
+                    del layer_choice[1]
+                    self.assertEqual(len(layer_choice), 2)
+                    self.assertEqual(len(list(layer_choice)), 2)
+                    self.assertEqual(layer_choice.names, ["conv1", "conv3"] if j > 0 else ["0", "2"])
+                    if j > 0:
+                        del layer_choice["conv1"]
+                        self.assertEqual(len(layer_choice), 1)
 
 
 if __name__ == '__main__':

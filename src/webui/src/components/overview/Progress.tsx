@@ -1,13 +1,17 @@
 import * as React from 'react';
-import { Stack, Callout, Link, IconButton, FontWeights, mergeStyleSets, getId, getTheme, StackItem } from 'office-ui-fabric-react';
+import {
+    Stack, Callout, Link, IconButton, FontWeights, mergeStyleSets,
+    getId, getTheme, StackItem, TooltipHost
+} from 'office-ui-fabric-react';
 import axios from 'axios';
-import { MANAGER_IP } from '../../static/const';
+import { MANAGER_IP, CONCURRENCYTOOLTIP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { convertTime } from '../../static/function';
 import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
-import LogDrawer from '../Modals/LogDrawer';
+import LogDrawer from '../Modals/LogPanel';
 import MessageInfo from '../Modals/MessageInfo';
+import { infoIcon } from "../Buttons/Icon";
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 interface ProgressProps {
@@ -97,7 +101,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
     hideSucceedInfo = (): void => {
         this.setState(() => ({ isShowSucceedInfo: false }));
     }
-    
+
     /**
      * info: message content
      * typeInfo: message type: success | error...
@@ -264,7 +268,9 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     </span>
                     <span style={itemStyles}>
                         {/* modify concurrency */}
-                        <p>Concurrency</p>
+                        <TooltipHost content={CONCURRENCYTOOLTIP}>
+                        <p className="cursor">Concurrency<span className="progress-info">{infoIcon}</span></p>
+                        </TooltipHost>
                         <ConcurrencyInput value={this.props.concurrency} updateValue={this.editTrialConcurrency} />
                     </span>
                     <span style={itemStyles} className="basic colorOfbasic"></span>

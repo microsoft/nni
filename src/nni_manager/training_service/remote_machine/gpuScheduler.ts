@@ -6,10 +6,8 @@
 import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
-import { GPUInfo } from '../common/gpuData';
-import {
-    parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, SSHClientManager
-} from './remoteMachineData';
+import { GPUInfo, parseGpuIndices, ScheduleResultType } from '../common/gpuData';
+import { ExecutorManager, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail } from './remoteMachineData';
 
 type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
 
@@ -18,7 +16,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
  */
 export class GPUScheduler {
 
-    private readonly machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>;
+    private readonly machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>;
     private readonly log: Logger = getLogger();
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
@@ -26,12 +24,12 @@ export class GPUScheduler {
 
     /**
      * Constructor
-     * @param machineSSHClientMap map from remote machine to sshClient
+     * @param machineExecutorMap map from remote machine to executor
      */
-    constructor(machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>) {
-        assert(machineSSHClientMap.size > 0);
-        this.machineSSHClientMap = machineSSHClientMap;
-        this.configuredRMs = Array.from(machineSSHClientMap.keys());
+    constructor(machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>) {
+        assert(machineExecutorMap.size > 0);
+        this.machineExecutorMap = machineExecutorMap;
+        this.configuredRMs = Array.from(machineExecutorMap.keys());
     }
 
     /**
@@ -39,16 +37,16 @@ export class GPUScheduler {
      * @param requiredGPUNum required GPU number
      */
     public scheduleMachine(requiredGPUNum: number | undefined, trialJobDetail: RemoteMachineTrialJobDetail): RemoteMachineScheduleResult {
-        if(requiredGPUNum === undefined) {
+        if (requiredGPUNum === undefined) {
             requiredGPUNum = 0;
         }
         assert(requiredGPUNum >= 0);
-        const allRMs: RemoteMachineMeta[] = Array.from(this.machineSSHClientMap.keys());
+        const allRMs: RemoteMachineMeta[] = Array.from(this.machineExecutorMap.keys());
         assert(allRMs.length > 0);
 
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
         const eligibleRM: RemoteMachineMeta[] = allRMs.filter((rmMeta: RemoteMachineMeta) =>
-                 rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && rmMeta.gpuSummary.gpuCount >= requiredGPUNum));
+            rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && rmMeta.gpuSummary.gpuCount >= requiredGPUNum));
         if (eligibleRM.length === 0) {
             // If the required gpu number exceeds the upper limit of all machine's GPU number
             // Return REQUIRE_EXCEED_TOTAL directly
@@ -75,8 +73,8 @@ export class GPUScheduler {
         this.log.warning(`Scheduler: trialJob id ${trialJobDetail.id}, no machine can be scheduled, return TMP_NO_AVAILABLE_GPU `);
 
         return {
-            resultType : ScheduleResultType.TMP_NO_AVAILABLE_GPU,
-            scheduleInfo : undefined
+            resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
+            scheduleInfo: undefined
         };
     }
 
@@ -135,7 +133,7 @@ export class GPUScheduler {
      */
     private gpuResourceDetection(): Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
-        this.machineSSHClientMap.forEach((sshClientManager: SSHClientManager, rmMeta: RemoteMachineMeta) => {
+        this.machineExecutorMap.forEach((executorManager: ExecutorManager, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
                 const availableGPUs: GPUInfo[] = [];
@@ -159,7 +157,7 @@ export class GPUScheduler {
                             const num: number | undefined = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
                             const maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu ? rmMeta.maxTrialNumPerGpu : 1;
                             if ((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu)) ||
-                               (num !== undefined && num < maxTrialNumPerGpu)) {
+                                (num !== undefined && num < maxTrialNumPerGpu)) {
                                 availableGPUs.push(gpuInfo);
                             }
                         } else {
@@ -200,7 +198,7 @@ export class GPUScheduler {
     }
 
     private allocateHost(requiredGPUNum: number, rmMeta: RemoteMachineMeta,
-                         gpuInfos: GPUInfo[], trialJobDetail: RemoteMachineTrialJobDetail): RemoteMachineScheduleResult {
+        gpuInfos: GPUInfo[], trialJobDetail: RemoteMachineTrialJobDetail): RemoteMachineScheduleResult {
         assert(gpuInfos.length >= requiredGPUNum);
         const allocatedGPUs: GPUInfo[] = this.selectGPUsForTrial(gpuInfos, requiredGPUNum);
         allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
@@ -222,10 +220,10 @@ export class GPUScheduler {
             scheduleInfo: {
                 rmMeta: rmMeta,
                 cudaVisibleDevice: allocatedGPUs
-                                    .map((gpuInfo: GPUInfo) => {
-                                        return gpuInfo.index;
-                                    })
-                                    .join(',')
+                    .map((gpuInfo: GPUInfo) => {
+                        return gpuInfo.index;
+                    })
+                    .join(',')
             }
         };
     }

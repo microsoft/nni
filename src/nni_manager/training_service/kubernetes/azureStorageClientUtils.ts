@@ -20,7 +20,7 @@ export namespace AzureStorageClientUtility {
      */
     export async function createShare(fileServerClient: any, azureShare: any): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        fileServerClient.createShareIfNotExists(azureShare, (error: any, result: any, response: any) => {
+        fileServerClient.createShareIfNotExists(azureShare, (error: any, _result: any, _response: any) => {
             if (error) {
                 getLogger()
                   .error(`Create share failed:, ${error}`);
@@ -41,7 +41,7 @@ export namespace AzureStorageClientUtility {
      */
     export async function createDirectory(fileServerClient: azureStorage.FileService, azureFoler: any, azureShare: any): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, (error: any, result: any, response: any) => {
+        fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, (error: any, _result: any, _response: any) => {
             if (error) {
                 getLogger()
                   .error(`Create directory failed:, ${error}`);
@@ -89,7 +89,7 @@ export namespace AzureStorageClientUtility {
                                      localFilePath: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         await fileServerClient.createFileFromLocalFile(azureShare, azureDirectory, azureFileName, localFilePath,
-                                                       (error: any, result: any, response: any) => {
+                                                       (error: any, _result: any, _response: any) => {
             if (error) {
                 getLogger()
                   .error(`Upload file failed:, ${error}`);
@@ -114,7 +114,7 @@ export namespace AzureStorageClientUtility {
                                 localFilePath: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath),
-                                               (error: any, result: any, response: any) => {
+                                               (error: any, _result: any, _response: any) => {
             if (error) {
                 getLogger()
                   .error(`Download file failed:, ${error}`);
@@ -183,7 +183,7 @@ export namespace AzureStorageClientUtility {
         const deferred: Deferred<void> = new Deferred<void>();
         await mkDirP(localDirectory);
         fileServerClient.listFilesAndDirectoriesSegmented(azureShare, azureDirectory, 'null',
-                                                          async (error: any, result: any, response: any) => {
+                                                          async (_error: any, result: any, _response: any) => {
             if (('entries' in result) === false) {
                 getLogger()
                   .error(`list files failed, can't get entries in result`);

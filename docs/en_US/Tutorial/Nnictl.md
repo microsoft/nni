@@ -28,7 +28,7 @@ nnictl support commands:
 ### Manage an experiment
 
 <a name="create"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
+### nnictl create
 
 * Description
 
@@ -79,7 +79,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="resume"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
+### nnictl resume
 
 * Description
 
@@ -110,7 +110,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="view"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+### nnictl view
 
 * Description
 
@@ -138,7 +138,7 @@ Debug mode will disable version check function in Trialkeeper.
   ```
 
 <a name="stop"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
+### nnictl stop
 
 * Description
 
@@ -190,7 +190,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="update"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
+### nnictl update
 
 * __nnictl update searchspace__
   * Description
@@ -262,7 +262,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
-  |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+  |--value, -v|  True| | Strings like '1m' for one minute or '2h' for two hours. SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.|
 
   * Example
 
@@ -299,18 +299,20 @@ Debug mode will disable version check function in Trialkeeper.
     ```
 
 <a name="trial"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
+### nnictl trial
 
 * __nnictl trial ls__
 
   * Description
 
-    You can use this command to show trial's information.
+    You can use this command to show trial's information. Note that if `head` or `tail` is set, only complete trials will be listed.
 
   * Usage
 
     ```bash
     nnictl trial ls
+    nnictl trial ls --head 10
+    nnictl trial ls --tail 10
     ```
 
   * Options
@@ -318,6 +320,8 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
+  |--head|False||the number of items to be listed with the highest default metric|
+  |--tail|False||the number of items to be listed with the lowest default metric|
 
 * __nnictl trial kill__
 
@@ -348,7 +352,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="top"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
+### nnictl top
 
 * Description
 
@@ -368,7 +372,7 @@ Debug mode will disable version check function in Trialkeeper.
   |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
 
 <a name="experiment"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage experiment information`
+### Manage experiment information
 
 * __nnictl experiment show__
 
@@ -444,9 +448,6 @@ Debug mode will disable version check function in Trialkeeper.
   |--all|  False| |delete all of experiments|
 
 
-
-<a name="export"></a>
-
 * __nnictl experiment export__
   * Description
 
@@ -465,13 +466,14 @@ Debug mode will disable version check function in Trialkeeper.
   |id|  False| |ID of the experiment    |
   |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
+  |--intermediate, -i|False||Are intermediate results included|
 
   * Examples
 
   > export all trial data in an experiment as json format
 
   ```bash
-  nnictl experiment export [experiment_id] --filename [file_path] --type json
+  nnictl experiment export [experiment_id] --filename [file_path] --type json --intermediate
   ```
 
 * __nnictl experiment import__
@@ -531,8 +533,64 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
+* __nnictl experiment save__
+  * Description
+
+    Save nni experiment metadata and code data.
+
+  * Usage
+
+    ```bash
+    nnictl experiment save [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  True| |The id of the experiment you want to save|
+  |--path, -p|  False| |the folder path to store nni experiment data, default current working directory|
+  |--saveCodeDir, -s| False| |save codeDir data of the experiment, default False|
+
+  * Examples
+
+  > save an expeirment
+
+  ```bash
+  nnictl experiment save [experiment_id] --saveCodeDir
+  ```
+
+* __nnictl experiment load__
+  * Description
+
+    Load an nni experiment.
+
+  * Usage
+
+    ```bash
+    nnictl experiment load [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--path, -p|  True| |the file path of nni package|
+  |--codeDir, -c| True| |the path of codeDir for loaded experiment, this path will also put the code in the loaded experiment package|
+  |--logDir, -l| False| |the path of logDir for loaded experiment|
+
+  * Examples
+
+  > load an expeirment
+
+  ```bash
+  nnictl experiment load --path [path] --codeDir [codeDir]
+  ```
+
+
+
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage platform information`
+### Manage platform information
 
 * __nnictl platform clean__
 
@@ -558,7 +616,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 
 <a name="config"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
+### nnictl config show
 
 * Description
 
@@ -572,7 +630,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+### Manage log
 
 * __nnictl log stdout__
 
@@ -643,12 +701,12 @@ Debug mode will disable version check function in Trialkeeper.
   |--trial_id, -T|  False| |ID of the trial to be found the log path, required when id is not empty.|
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
+### Manage webui
 
 * __nnictl webui url__
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
+### Manage tensorboard
 
 * __nnictl tensorboard start__
 
@@ -697,48 +755,116 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage package`
+### Manage package
 
 * __nnictl package install__
   * Description
 
-    Install the packages needed in nni experiments.
+    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
 
   * Usage
 
     ```bash
-    nnictl package install [OPTIONS]
+    nnictl package install --name <package name>
+    ```
+
+    The available `<package name>` can be checked via `nnictl package list` command.
+
+    or
+
+    ```bash
+    nnictl package install <installation source>
+    ```
+
+    Reference [Install customized algorithms](InstallCustomizedAlgos.md) to prepare the installation source.
+
+  * Example
+
+    > Install SMAC tuner
+
+    ```bash
+    nnictl package install --name SMAC
+    ```
+
+    > Install a customized tuner
+
+    ```bash
+    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
+    ```
+
+
+* __nnictl package show__
+
+  * Description
+
+    Show the detailed information of specified packages.
+
+  * Usage
+
+    ```bash
+    nnictl package show <package name>
+    ```
+
+  * Example
+
+    ```bash
+    nnictl package show SMAC
+    ```
+
+* __nnictl package list__
+  * Description
+
+    List the installed/all packages.
+
+  * Usage
+
+    ```bash
+    nnictl package list [OPTIONS]
     ```
 
   * Options
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |--name|  True| |The name of package to be installed|
+  |--all|  False| |List all packages|
 
   * Example
 
-    > Install the packages needed in tuner SMAC
+    > List installed packages
 
     ```bash
-    nnictl package install --name=SMAC
+    nnictl package list
     ```
 
-* __nnictl package show__
+    > List all packages
+
+    ```bash
+    nnictl package list --all
+    ```
+
+* __nnictl package uninstall__
 
   * Description
 
-    List the packages supported.
+    Uninstall a package.
 
   * Usage
 
     ```bash
-    nnictl package show
+    nnictl package uninstall <package name>
     ```
+
+  * Example
+    Uninstall SMAC package
+
+    ```bash
+    nnictl package uninstall SMAC
+    ```
+
 
 <a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Generate search space`
+### Generate search space
 
 * __nnictl ss_gen__
   * Description
@@ -769,7 +895,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
+### Check NNI version
 
 * __nnictl --version__
 
@@ -782,4 +908,3 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl --version
     ```
-    

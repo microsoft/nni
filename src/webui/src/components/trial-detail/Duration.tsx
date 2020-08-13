@@ -1,7 +1,7 @@
 import * as React from 'react';
 import ReactEcharts from 'echarts-for-react';
-import { TableObj, EventMap } from '../../static/interface'; // eslint-disable-line no-unused-vars
-import { filterDuration } from '../../static/function';
+import { TableObj, EventMap } from '../../static/interface';
+import { filterDuration, convertDuration } from '../../static/function';
 import 'echarts/lib/chart/bar';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -13,7 +13,7 @@ interface Runtrial {
 
 interface DurationProps {
     source: Array<TableObj>;
-    whichGraph: string;
+    whichChart: string;
 }
 
 interface DurationState {
@@ -49,7 +49,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',
@@ -93,7 +99,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 trigger: 'axis',
                 axisPointer: {
                     type: 'shadow'
-                }
+                },
+                formatter: (data: any): React.ReactNode => (
+                    '<div>' +
+                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
+                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '</div>'
+                ),
             },
             grid: {
                 bottom: '3%',
@@ -155,36 +167,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
         this.drawDurationGraph(source);
     }
 
-    componentWillReceiveProps(nextProps: DurationProps): void {
-        const { whichGraph, source } = nextProps;
-        if (whichGraph === '3') {
-            this.drawDurationGraph(source);
-        }
-    }
-
-    shouldComponentUpdate(nextProps: DurationProps): boolean {
-
-        const { whichGraph, source } = nextProps;
-        if (whichGraph === '3') {
-            const beforeSource = this.props.source;
-            if (whichGraph !== this.props.whichGraph) {
-                return true;
-            }
-
-            if (source.length !== beforeSource.length) {
-                return true;
-            }
-
-            if (beforeSource[beforeSource.length - 1] !== undefined) {
-                if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
-                    return true;
-                }
-                if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
-                    return true;
-                }
+    componentDidUpdate(prevProps: DurationProps): void {
+        // add this if to prevent endless loop
+        if (this.props.source !== prevProps.source) {
+            if (this.props.whichChart === 'Duration') {
+                this.drawDurationGraph(this.props.source);
             }
         }
-        return false;
     }
 
     render(): React.ReactNode {

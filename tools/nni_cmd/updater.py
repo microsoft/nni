@@ -14,7 +14,7 @@ from .constants import REST_TIME_OUT, TUNERS_SUPPORTING_IMPORT_DATA, TUNERS_NO_N
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
     if not str(value).isdigit() or int(value) < start or int(value) > end:
-        raise ValueError('%s must be a digit from %s to %s' % (value, start, end))
+        raise ValueError('value (%s) must be a digit from %s to %s' % (value, start, end))
 
 def validate_file(path):
     '''validate if a file exist'''

@@ -9,6 +9,10 @@ jobs:
 
   - script: |
       cd deployment/pypi
+      if [ -d ./dist ]
+      then
+        rm -rf ./dist/*
+      fi
       echo 'building prerelease package...'
       make build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
@@ -16,13 +20,14 @@ jobs:
     displayName: 'build nni bdsit_wheel'
 
   - script: |
+      set -e
       if [ $(build_docker_img) = 'true' ]
       then
         cd deployment/pypi
         docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
         echo 'updating docker file for installing nni from local...'
         # update Dockerfile to install NNI in docker image from whl file built in last step
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\/\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
         cat ../docker/Dockerfile
         export IMG_TAG=`date -u +%y%m%d%H%M`
 
@@ -57,12 +62,13 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       set PATH=$(ENV_PATH)
-      python -m pip install scikit-learn==0.21.0 --user
+      python -m pip install scikit-learn==0.23.2 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
       set PATH=$(ENV_PATH)
       python --version
-      python nni_test/nnitest/generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) --nni_docker_image $(docker_image) --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai --exclude multi-phase
+      mount -o anon $(pai_nfs_uri) $(local_nfs_uri)
+      python nni_test/nnitest/generate_ts_config.py --ts pai --pai_token $(pai_token) --pai_host $(pai_host) --pai_user $(pai_user) --nni_docker_image $(docker_image) --pai_storage_config_name $(pai_storage_config_name) --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) --container_nfs_mount_path $(container_nfs_mount_path) --nni_manager_ip $(nni_manager_ip) --vc $(virtual_cluster)
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
     displayName: 'Examples and advanced features tests on pai'

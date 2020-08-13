@@ -23,11 +23,7 @@ const ipcIncomingFd: number = 4;
  */
 function encodeCommand(commandType: string, content: string): Buffer {
     const contentBuffer: Buffer = Buffer.from(content);
-    if (contentBuffer.length >= 1_000_000) {
-        throw new RangeError('Command too long');
-    }
-    const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(6, '0'));
-
+    const contentLengthBuffer: Buffer = Buffer.from(contentBuffer.length.toString().padStart(14, '0'));
     return Buffer.concat([Buffer.from(commandType), contentLengthBuffer, contentBuffer]);
 }
 
@@ -43,12 +39,12 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
         return [false, '', '', data];
     }
     const commandType: string = data.slice(0, 2).toString();
-    const contentLength: number = parseInt(data.slice(2, 8).toString(), 10);
-    if (data.length < contentLength + 8) {
+    const contentLength: number = parseInt(data.slice(2, 16).toString(), 10);
+    if (data.length < contentLength + 16) {
         return [false, '', '', data];
     }
-    const content: string = data.slice(8, contentLength + 8).toString();
-    const remain: Buffer = data.slice(contentLength + 8);
+    const content: string = data.slice(16, contentLength + 16).toString();
+    const remain: Buffer = data.slice(contentLength + 16);
 
     return [true, commandType, content, remain];
 }
@@ -139,4 +135,4 @@ function createDispatcherInterface(process: ChildProcess): IpcInterface {
     return new IpcInterface(process, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
 }
 
-export { IpcInterface, createDispatcherInterface };
+export { IpcInterface, createDispatcherInterface, encodeCommand, decodeCommand };

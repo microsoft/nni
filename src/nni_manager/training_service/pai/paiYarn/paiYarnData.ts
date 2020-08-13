@@ -3,8 +3,6 @@
 
 'use strict';
 
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../../common/trainingService';
-
 export const PAI_INSTALL_NNI_SHELL_FORMAT: string =
 `#!/bin/bash
 if python3 -c 'import nni' > /dev/null 2>&1; then

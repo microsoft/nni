@@ -2,14 +2,15 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
 import { Trial } from '../../static/model/trial';
-import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { MANAGER_IP } from '../../static/const';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../Modals/MessageInfo';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
+import '../../static/style/openRow.scss';
 
 interface OpenRowProps {
     trialId: string;
@@ -56,35 +57,20 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         }
     }
 
+    openTrialLog = (type: string): void => {
+        window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
+    }
+
     render(): React.ReactNode {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
-        const trialLink: string = `${MANAGER_IP}/trial-jobs/${trialId}`;
         const logPathRow = trial.info.logPath || 'This trial\'s log path is not available.';
-        const multiProgress = trial.info.hyperParameters === undefined ? 0 : trial.info.hyperParameters.length;
         return (
             <Stack className="openRow">
                 <Stack className="openRowContent">
                     <Pivot>
                         <PivotItem headerText="Parameters" key="1" itemIcon="TestParameter">
-                            {
-                                EXPERIMENT.multiPhase
-                                    ?
-                                    <Stack className="link">
-                                        {
-                                            `
-                                        Trails for multiphase experiment will return a set of parameters,
-                                        we are listing the latest parameter in webportal.
-                                        For the entire parameter set, please refer to the following "
-                                        `
-                                        }
-                                        <a href={trialLink} rel="noopener noreferrer" target="_blank">{trialLink}</a>{`".`}
-                                        <div>Current Phase: {multiProgress}.</div>
-                                    </Stack>
-                                    :
-                                    null
-                            }
                             {
                                 trial.info.hyperParameters !== undefined
                                     ?
@@ -125,7 +111,23 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         logCollection={EXPERIMENT.logCollectionEnabled}
                                     />
                                     :
-                                    <TrialLog logStr={logPathRow} id={trialId} />
+                                    <div>
+                                        <TrialLog logStr={logPathRow} id={trialId} />
+                                        {/* view each trial log in drawer*/}
+                                        <div id="trialog">
+                                            <div className="copy" style={{ marginTop: 15 }}>
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
+                                                    text="View trial log"
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_ERROR')}
+                                                    text="View trial error"
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                             }
                         </PivotItem>
                     </Pivot>

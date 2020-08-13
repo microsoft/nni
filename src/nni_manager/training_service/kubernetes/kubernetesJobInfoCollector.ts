@@ -40,8 +40,8 @@ export class KubernetesJobInfoCollector {
         await Promise.all(updateKubernetesTrialJobs);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-                                               kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
+    protected async retrieveSingleTrialJobInfo(_kubernetesCRDClient: KubernetesCRDClient | undefined,
+                                               _kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
             throw new MethodNotImplementedError();
     }
 }

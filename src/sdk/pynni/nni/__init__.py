@@ -1,7 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+__version__ = '999.0.0-developing'
+
 from .env_vars import dispatcher_env_vars
+from .utils import ClassArgsValidator
 
 if dispatcher_env_vars.SDK_PROCESS != 'dispatcher':
     from .trial import *

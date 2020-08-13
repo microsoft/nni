@@ -1,3 +1,26 @@
+/**
+ * Definition of single dimension in search space.
+ */
+interface SingleAxis {
+    baseName: string;
+    fullName: string;
+    type: string;
+    scale: 'log' | 'linear' | 'ordinal';
+    domain: any;
+    nested: boolean;
+}
+
+/**
+ * Definition of combination of multiple dimensions.
+ * The decision in multiple dimensions will be combined together.
+ * Typically, it is a search space or a sub search space.
+ */
+interface MultipleAxes {
+    baseName: string;
+    fullName: string;
+    axes: Map<string, SingleAxis>;
+}
+
 // draw accuracy graph data export interface
 interface TableObj {
     key: number;
@@ -10,6 +33,8 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>; 
+    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
 interface TableRecord {
@@ -21,7 +46,7 @@ interface TableRecord {
     duration: number;
     status: string;
     intermediateCount: number;
-    accuracy?: number;
+    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
     accDictionary: FinalType | undefined;
@@ -99,7 +124,6 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
-    parameterId: string;
     type: string;
     sequence: number;
     data: string;
@@ -126,7 +150,6 @@ interface ExperimentParams {
     maxTrialNum: number;
     searchSpace: string;
     trainingServicePlatform: string;
-    multiPhase?: boolean;
     multiThread?: boolean;
     versionCheck?: boolean;
     logCollection?: string;
@@ -188,5 +211,5 @@ export {
     TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
     AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
     Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap
+    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
 };

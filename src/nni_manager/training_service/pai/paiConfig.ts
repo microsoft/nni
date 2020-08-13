@@ -3,14 +3,21 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig';
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
 
 export class PAIClusterConfig {
     public readonly userName: string;
     public readonly passWord?: string;
     public host: string;
     public readonly token?: string;
+    public readonly reuse?: boolean;
+
+    public cpuNum?: number;
+    public memoryMB?: number;
+    public gpuNum?: number;
+
+    public useActiveGpu?: boolean;
+    public maxTrialNumPerGpu?: number;
 
     /**
      * Constructor
@@ -18,12 +25,18 @@ export class PAIClusterConfig {
      * @param passWord password of PAI Cluster
      * @param host Host IP of PAI Cluster
      * @param token PAI token of PAI Cluster
+     * @param reuse If job is reusable for multiple trials
      */
-    constructor(userName: string, host: string, passWord?: string, token?: string) {
+    constructor(userName: string, host: string, passWord?: string, token?: string, reuse?: boolean,
+        cpuNum?: number, memoryMB?: number, gpuNum?: number) {
         this.userName = userName;
         this.passWord = passWord;
         this.host = host;
         this.token = token;
+        this.reuse = reuse;
+        this.cpuNum = cpuNum;
+        this.memoryMB = memoryMB;
+        this.gpuNum = gpuNum;
     }
 }
 
@@ -43,9 +56,10 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public form: TrialJobApplicationForm;
     public logPath: string;
     public isEarlyStopped?: boolean;
+    public paiJobDetailUrl?: string;
 
     constructor(id: string, status: TrialJobStatus, paiJobName: string,
-                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, logPath: string) {
+                submitTime: number, workingDirectory: string, form: TrialJobApplicationForm, logPath: string, paiJobDetailUrl?: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
@@ -54,5 +68,6 @@ export class PAITrialJobDetail implements TrialJobDetail {
         this.form = form;
         this.tags = [];
         this.logPath = logPath;
+        this.paiJobDetailUrl = paiJobDetailUrl;
     }
 }

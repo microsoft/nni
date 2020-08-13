@@ -8,13 +8,13 @@ _out_file = open(4, 'wb')
 def send(command, data):
     command = command.encode('utf8')
     data = data.encode('utf8')
-    msg = b'%b%06d%b' % (command, len(data), data)
+    msg = b'%b%14d%b' % (command, len(data), data)
     _out_file.write(msg)
     _out_file.flush()
 
 
 def receive():
-    header = _in_file.read(8)
+    header = _in_file.read(16)
     l = int(header[2:])
     command = header[:2].decode('utf8')
     data = _in_file.read(l).decode('utf8')

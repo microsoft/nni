@@ -104,7 +104,7 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
 
 - `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
-- `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
+- `bayesian.py` 是用来基于已经搜索到的模型来预测未知模型指标的贝叶斯算法。
 
 - `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
   - Graph 从模型中抽取神经网络。

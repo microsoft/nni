@@ -23,3 +23,4 @@ Tuner 从 Trial 接收指标结果，来评估一组超参或网络结构的性�
     Hyperband<Tuner/HyperbandAdvisor>
     BOHB<Tuner/BohbAdvisor>
     PPO Tuner <Tuner/PPOTuner>
+    PBT Tuner <Tuner/PBTTuner>

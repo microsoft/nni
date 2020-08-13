@@ -4,6 +4,7 @@ import DefaultMetric from '../public-child/DefaultMetric';
 import Details from './Details';
 import { convertDuration } from '../../static/function';
 import { TRIALS } from '../../static/datamodel';
+import { DETAILTABS } from '../stateless-component/NNItabs';
 import '../../static/style/succTable.scss';
 import '../../static/style/openRow.scss';
 
@@ -54,6 +55,13 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         const key = columnKey as keyof T;
         return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
     }
+
+    tooltipStr = (
+        <div>
+            <p>The experiment is running, please wait for the final metric patiently.</p>
+            <div className="link">You could also find status of trial job with <span>{DETAILTABS}</span> button.</div>
+        </div>
+    );
 
     columns = [
         {
@@ -118,16 +126,19 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
     ];
 
-    componentWillReceiveProps(nextProps: SuccessTableProps): void {
-        const { trialIds } = nextProps;
-        this.setState(() => ({ source: TRIALS.table(trialIds) }));
+    componentDidUpdate(prevProps: SuccessTableProps): void {
+        if(this.props.trialIds !== prevProps.trialIds){
+            const { trialIds } = this.props;
+            this.setState(() => ({ source: TRIALS.table(trialIds) }));
+        }
     }
 
     render(): React.ReactNode {
         const { columns, source } = this.state;
+        const isNoneData = (source.length === 0) ? true : false;
+        
         return (
             <div id="succTable">
-                {/* TODO: [style] lineHeight question */}
                 <DetailsList
                     columns={columns}
                     items={source}
@@ -135,7 +146,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     compact={true}
                     onRenderRow={this.onRenderRow}
                     selectionMode={0} // close selector function
+                    className="succTable"
                 />
+                {isNoneData && <div className="succTable-tooltip">{this.tooltipStr}</div>}
             </div>
         );
     }

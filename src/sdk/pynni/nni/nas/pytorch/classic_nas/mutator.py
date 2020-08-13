@@ -92,8 +92,8 @@ class ClassicMutator(Mutator):
             The list for corresponding search space.
         """
         # doesn't support multihot for layer choice yet
-        onehot_list = [False] * mutable.length
-        assert 0 <= idx < mutable.length and search_space_item[idx] == value, \
+        onehot_list = [False] * len(mutable)
+        assert 0 <= idx < len(mutable) and search_space_item[idx] == value, \
             "Index '{}' in search space '{}' is not '{}'".format(idx, search_space_item, value)
         onehot_list[idx] = True
         return torch.tensor(onehot_list, dtype=torch.bool)  # pylint: disable=not-callable
@@ -203,7 +203,7 @@ class ClassicMutator(Mutator):
             # for now we only generate flattened search space
             if isinstance(mutable, LayerChoice):
                 key = mutable.key
-                val = [repr(choice) for choice in mutable.choices]
+                val = mutable.names
                 search_space[key] = {"_type": LAYER_CHOICE, "_value": val}
             elif isinstance(mutable, InputChoice):
                 key = mutable.key

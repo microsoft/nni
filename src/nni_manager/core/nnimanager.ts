@@ -16,7 +16,7 @@ import {
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -266,7 +266,7 @@ class NNIManager implements Manager {
         const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
             timeoutId = setTimeout(
                 () => { reject(new Error('TrainingService setClusterMetadata timeout. Please check your config file.')); },
-                10000);
+                30000);
         });
         await Promise.race([delay1, this.trainingService.setClusterMetadata(key, value)]).finally(() => {
             clearTimeout(timeoutId);
@@ -325,6 +325,10 @@ class NNIManager implements Manager {
         // FIXME: unit test
     }
 
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        return this.trainingService.getTrialLog(trialJobId, logType);
+    }
+
     public getExperimentProfile(): Promise<ExperimentProfile> {
         // TO DO: using Promise.resolve()
         const deferred: Deferred<ExperimentProfile> = new Deferred<ExperimentProfile>();
@@ -368,7 +372,7 @@ class NNIManager implements Manager {
             CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
-        const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
+        const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
@@ -436,7 +440,9 @@ class NNIManager implements Manager {
         }
         await killPid(this.dispatcherPid);
         const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
-        // TO DO: to promise all
+
+        // DON'T try to make it in parallel, the training service may not handle it well.
+        // If there is performance concern, consider to support batch cancellation on training service.
         for (const trialJob of trialJobList) {
             if (trialJob.status === 'RUNNING' ||
                 trialJob.status === 'WAITING') {
@@ -444,7 +450,7 @@ class NNIManager implements Manager {
                     this.log.info(`cancelTrialJob: ${trialJob.id}`);
                     await this.trainingService.cancelTrialJob(trialJob.id);
                 } catch (error) {
-                    // pid does not exist, do nothing here
+                    this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
                 }
             }
         }
@@ -564,7 +570,7 @@ class NNIManager implements Manager {
             assert(this.status.status === 'RUNNING' ||
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL' ||
-                this.status.status === 'TUNER_NO_MORE_TRIAL');
+                this.status.status === 'TUNER_NO_MORE_TRIAL', `Actual status: ${this.status.status}`);
             if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
                 if (this.status.status !== 'DONE') {
