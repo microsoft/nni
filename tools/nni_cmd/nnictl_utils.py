@@ -11,7 +11,6 @@ import shutil
 import subprocess
 from functools import cmp_to_key
 from datetime import datetime, timezone
-from pathlib import Path
 from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
