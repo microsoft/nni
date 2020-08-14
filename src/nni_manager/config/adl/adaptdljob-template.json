@@ -21,11 +21,16 @@
                                 "value": "/adaptdl/checkpoint"
                             },
                             {
+                                "name": "ADAPTDLCTL_TENSORBOARD_LOGDIR",
+                                "value": "/adaptdl/tensorboard"
+                            },
+                            {
                                 "name": "ADAPTDL_SHARE_PATH",
                                 "value": "/adaptdl/share"
                             }
                         ],
                         "image": "<image>",
+                        "imagePullPolicy": "Always",
                         "name": "main",
                         "resources": {
                             "limits": {
@@ -44,6 +49,11 @@
                                 "subPath": "adaptdl/share"
                             },
                             {
+                                "mountPath": "/adaptdl/tensorboard",
+                                "name": "adaptdl-tensorboard-pvc",
+                                "subPath": "adaptdl/tensorboard"
+                            },
+                            {
                                 "mountPath": "/run.sh",
                                 "name": "adaptdl-nni-configmap",
                                 "subPath": "run.sh"
@@ -57,6 +67,12 @@
                         "name": "adaptdl-pvc",
                         "persistentVolumeClaim": {
                             "claimName": "<adaptdl_pvc_name>"
+                        }
+                    },
+                    {
+                        "name": "adaptdl-tensorboard-pvc",
+                        "persistentVolumeClaim": {
+                            "claimName": "<adaptdl_tensorflow_pvc_name>"
                         }
                     },
                     {

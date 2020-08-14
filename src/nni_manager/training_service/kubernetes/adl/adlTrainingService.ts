@@ -30,6 +30,10 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
     private configmapTemplate: any;
     private jobTemplate: any;
     private pvcTemplate: any;
+    private tensorboardPvcTemplate: any;
+    private tensorboardDeploymentTemplate: any;
+    //TODO: change the logic here when we want to support multiple tensorboard
+    private tensorboardName: string = "adaptdl-tensorboard-" + getExperimentId().toLowerCase();
 
     constructor() {
         super();
@@ -42,10 +46,19 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             fs.readFileSync('./config/adl/adaptdljob-template.json', 'utf8'));
         this.pvcTemplate = JSON.parse(
             fs.readFileSync('./config/adl/adaptdl-pvc-template.json', 'utf8'));
+        this.tensorboardPvcTemplate = JSON.parse(
+            fs.readFileSync('./config/adl/adaptdl-tensorboard-pvc-template.json', 'utf8'));
+        this.tensorboardDeploymentTemplate = JSON.parse(
+            fs.readFileSync('./config/adl/adaptdl-tensorboard-deployment-template.json', 'utf8'));
+
         this.log.info('Construct Adl training service.');
     }
 
     public async run(): Promise<void> {
+        this.log.info(this.tensorboardName);
+        this.log.info('Start tensorboard deployment.');
+        await this.launchTensorboard()
+
         this.log.info('Run Adl training service.');
         this.kubernetesJobRestServer = component.get(AdlJobRestServer);
         if (this.kubernetesJobRestServer === undefined) {
@@ -63,6 +76,30 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             }
         }
         this.log.info('Adl training service exit.');
+    }
+    private async launchTensorboard(): Promise<void> {
+        // Start the tensorboard at the beginning of the experiment.
+        // TODO: add uuid after demo. For now just use fixed name
+        if (this.adlTrialConfig === undefined) {
+            throw new Error('Adl trial config is undefined');
+        }
+        // Create tensorboard deployment
+        this.tensorboardDeploymentTemplate.metadata.name = this.tensorboardName
+        this.tensorboardDeploymentTemplate.metadata.labels.expId = this.experimentId
+        this.tensorboardDeploymentTemplate.spec.selector.matchLabels.app = this.tensorboardName
+        this.tensorboardDeploymentTemplate.spec.template.metadata.labels.app = this.tensorboardName
+        this.tensorboardDeploymentTemplate.spec.template.spec.volumes[0]
+            .persistentVolumeClaim.claimName = this.tensorboardName
+        const deploymentUid: string = await this.genericK8sClient.createDeployment(this.tensorboardDeploymentTemplate);
+        // Create pvc
+        this.tensorboardPvcTemplate.metadata.name = this.tensorboardName;
+        this.tensorboardPvcTemplate.metadata.ownerReferences[0].name = this.tensorboardName;
+        this.tensorboardPvcTemplate.metadata.ownerReferences[0].uid = deploymentUid
+        this.tensorboardPvcTemplate.spec.resources.requests.storage = this.adlTrialConfig.checkpoint.storageSize;
+        this.tensorboardPvcTemplate.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        await this.genericK8sClient.createPersistentVolumeClaim(this.tensorboardPvcTemplate);
+
+        return Promise.resolve()
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
@@ -106,6 +143,8 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         this.jobTemplate.spec.template.spec.volumes[0]
             .persistentVolumeClaim.claimName = adlJobName
         this.jobTemplate.spec.template.spec.volumes[1]
+            .persistentVolumeClaim.claimName = this.tensorboardName
+        this.jobTemplate.spec.template.spec.volumes[2]
             .configMap.name = adlJobName
         // Handle imagePullSecrets
         if (this.adlTrialConfig.imagePullSecrets !== undefined) {

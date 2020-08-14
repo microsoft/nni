@@ -19,6 +19,30 @@ class GeneralK8sClient {
         this.client.loadSpec();
     }
 
+    public async createDeployment(deploymentManifest: any): Promise<string> {
+        let result: Promise<string>;
+        const response: any = await this.client.apis.apps.v1.namespaces('default').deployments.post({ body: deploymentManifest })
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(response.body.metadata.uid);
+        } else {
+            result = Promise.reject(`Create deployment failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
+    public async deleteDeployment(deploymentName: string): Promise<boolean> {
+        let result: Promise<boolean>;
+        // TODO: change this hard coded deployment name after demo
+        const response: any = await this.client.apis.apps.v1.namespaces('default')
+          .deployment(deploymentName).delete();
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Delete deployment failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
     public async createConfigMap(configMapManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces('default')
@@ -41,7 +65,6 @@ class GeneralK8sClient {
         } else {
             result = Promise.reject(`Create pvc failed, statusCode is ${response.statusCode}`);
         }
-
         return result;
     }
 

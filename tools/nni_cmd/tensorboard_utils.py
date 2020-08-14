@@ -10,7 +10,7 @@ from .rest_utils import rest_get, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
+from .common_utils import print_normal, print_warning, print_error, print_green, detect_process, detect_port, check_tensorboard_version
 from .nnictl_utils import check_experiment_id, check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
@@ -110,10 +110,26 @@ def stop_tensorboard(args):
     else:
         print_error('No tensorboard configuration!')
 
+def adl_tensorboard_helper(args):
+    '''start tensorboard on adl'''
+    import subprocess
+    from kubernetes import client, config
+    if args.trial_id is not None:
+        print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
+    cmd = "kubectl port-forward deployment/{} {}:{}".format(
+        "adaptdl-tensorboard" + "-" + args.id.lower(),
+        args.port,
+        6006
+    )
+    print_green('Tensorboard is launched on localhost:{}'.format(args.port))
+    subprocess.run(args=cmd, shell=True)
 
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if args.adaptdl:
+        adl_tensorboard_helper(args)
+        return
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     config_file_name = experiment_dict[experiment_id]['fileName']

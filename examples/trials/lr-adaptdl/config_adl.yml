@@ -3,7 +3,7 @@ experimentName: lr_adl
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-nniManagerIp: 10.20.100.181
+nniManagerIp: 10.20.41.69
 trainingServicePlatform: adl
 searchSpacePath: search_space.json
 #choice: true, false
@@ -16,12 +16,12 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: minimize
 trial:
-  command: python3 /root/apps/nni_linear_regression/main.py
+  command: python3 /root/apps/lr-adaptdl/linear_regression.py
   codeDir: .
-  gpuNum: 0
-  image: registry.petuum.com/dev/adaptdl-submit@sha256:e3b01e8ae9f54e8b1298c9ef9679cfaaee77162a34a7e3fa39b17098e2685223
+  gpuNum: 1
+  image: registry.petuum.com/dev/nni:tmp-test
   imagePullSecrets:
-    - name: stagingsecrets
+    - name: stagingsecret
   checkpoint:
     storageClass: dfs
     storageSize: 1Gi

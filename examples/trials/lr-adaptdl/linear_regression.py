@@ -26,6 +26,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.backends.cudnn as cudnn
 from torch.utils.data import Dataset
+from torch.utils.tensorboard import SummaryWriter
 
 import argparse
 import adaptdl
@@ -52,13 +53,16 @@ class Trainer(object):
         self.criterion = nn.CrossEntropyLoss()
 
     # Training
-    def train(self, inputs, targets):
+    def train(self, inputs, targets, stats):
         inputs, targets = inputs.to(device), targets.to(device)
         self.optim.zero_grad()
         outputs = self.model(inputs)
         loss = F.smooth_l1_loss(outputs, targets)
         loss.backward()
         self.optim.step()
+
+        stats["loss_sum"] += loss.item() * targets.size(0)
+        stats["total"] += targets.size(0)
         return {"Loss": loss.item()}
 
 
@@ -118,14 +122,24 @@ def main(params):
     trainer = Trainer(net, optimizer, lr_scheduler)
 
     # Accumulator is an api of adaptdl to record training status.
-    accum = et.Accumulator()
-    for epoch in et.remaining_epochs_until(params["epochs"]):
-        for inputs, targets in dataloader: 
-            batch_stat = trainer.train(inputs, targets)
-            if IS_CHIEF:
-                nni.report_intermediate_result(batch_stat["Loss"], accum)
-    if IS_CHIEF:
-        nni.report_final_result(batch_stat["Loss"])
+    stats = et.Accumulator()
+    tensorboard_dir = os.path.join(
+        os.getenv("ADAPTDLCTL_TENSORBOARD_LOGDIR", "/adaptdl/tensorboard"),
+        os.getenv("NNI_TRIAL_JOB_ID", "lr-adaptdl")
+    )
+    if not os.path.exists(tensorboard_dir):
+        os.makedirs(tensorboard_dir)
+    with SummaryWriter(tensorboard_dir) as writer:
+        for epoch in et.remaining_epochs_until(params["epochs"]):
+            for inputs, targets in dataloader: 
+                batch_stat = trainer.train(inputs, targets, stats)
+                if IS_CHIEF:
+                    nni.report_intermediate_result(batch_stat["Loss"], stats)
+            with stats.synchronized():
+                stats["loss_avg"] = stats["loss_sum"] / stats["total"]
+                writer.add_scalar("Loss/Train", stats["loss_avg"], epoch)
+        if IS_CHIEF:
+            nni.report_final_result(batch_stat["Loss"])
 
 
 def get_params():
