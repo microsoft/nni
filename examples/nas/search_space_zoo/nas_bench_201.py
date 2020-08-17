@@ -129,7 +129,7 @@ if __name__ == '__main__':
                                num_modules_per_stack=args.num_modules_per_stack,
                                bn_affine=args.bn_affine,
                                bn_momentum=args.bn_momentum,
-                               bn_track_running_stats=self.bn_track_running_stats)
+                               bn_track_running_stats=args.bn_track_running_stats)
     criterion = nn.CrossEntropyLoss()
 
     optim = torch.optim.SGD(model.parameters(), 0.025)

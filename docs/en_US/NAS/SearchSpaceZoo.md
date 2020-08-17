@@ -189,7 +189,12 @@ The search space of NAS Bench 201 is shown below.
 
 [example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/nas_bench_201.py)
 
-*No executable example provided.* 
+```bash
+# for structure searching
+git clone https://github.com/Microsoft/nni.git
+cd nni/examples/nas/search_space_zoo
+python3 nas_bench_201.py
+```
 
 <a name="nas-bench-201-reference"></a>
 
