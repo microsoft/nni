@@ -10,7 +10,13 @@ import torch.nn as nn
 import torch.optim as optim
 from nni.nas.pytorch.utils import AverageMeterGroup
 from nni.nas.pytorch.nas_bench_201 import NASBench201Cell
+from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
+from nni.nas.pytorch.darts import DartsTrainer
+from utils import accuracy
 
+import datasets
+
+logger = logging.getLogger('nni')
 
 class ReLUConvBN(nn.Module):
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation,
@@ -80,9 +86,9 @@ class NASBench201Network(nn.Module):
         self.cells = nn.ModuleList()
         for i, (C_curr, reduction) in enumerate(zip(layer_channels, layer_reductions)):
             if reduction:
-                cell = ResNetBasicBlock(C_prev, C_curr, 2, self.affine, self.momentum, self.bn_track_running_stats)
+                cell = ResNetBasicBlock(C_prev, C_curr, 2, self.bn_affine, self.bn_momentum, self.bn_track_running_stats)
             else:
-                cell = NASBench201Cell(i, C_prev, C_curr, 1, self.bn_affine, self.momentum, self.bn_track_running_stats)
+                cell = NASBench201Cell(i, C_prev, C_curr, 1, self.bn_affine, self.bn_momentum, self.bn_track_running_stats)
             self.cells.append(cell)
             C_prev = C_curr
 
@@ -104,3 +110,40 @@ class NASBench201Network(nn.Module):
         logits = self.classifier(out)
 
         return logits
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser("nb201")
+    parser.add_argument('--stem_out_channels', default=16, type=int)
+    parser.add_argument('--unrolled', default=False, action='store_true')
+    parser.add_argument('--batch-size', default=64, type=int)
+    parser.add_argument('--epochs', default=50, type=int)
+    parser.add_argument('--num_modules_per_stack', default=5, type=int)
+    parser.add_argument('--log-frequency', default=10, type=int)
+    parser.add_argument('--bn_momentum', default=0.1, type=int)
+    parser.add_argument('--bn_affine', default=True, type=bool)
+    parser.add_argument('--bn_track_running_stats', default=True, type=bool)
+    args = parser.parse_args()
+
+    dataset_train, dataset_valid = datasets.get_dataset("cifar10")
+    model = NASBench201Network(stem_out_channels=args.stem_out_channels,
+                               num_modules_per_stack=args.num_modules_per_stack,
+                               bn_affine=args.bn_affine,
+                               bn_momentum=args.bn_momentum,
+                               bn_track_running_stats=self.bn_track_running_stats)
+    criterion = nn.CrossEntropyLoss()
+
+    optim = torch.optim.SGD(model.parameters(), 0.025)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, args.epochs, eta_min=0.001)
+
+    trainer = DartsTrainer(model,
+                           loss=criterion,
+                           metrics=lambda output, target: accuracy(output, target, topk=(1,)),
+                           optimizer=optim,
+                           num_epochs=args.epochs,
+                           dataset_train=dataset_train,
+                           dataset_valid=dataset_valid,
+                           batch_size=args.batch_size,
+                           log_frequency=args.log_frequency,
+                           unrolled=args.unrolled,
+                           callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+    trainer.train()
