@@ -14,7 +14,7 @@
             "trainingServicePlatform": "local",
             "tuner": {
                 "builtinTunerName": "Random",
-                "checkpointDir": "/home/user/nni/experiments/TN5K0Qju/checkpoint"
+                "checkpointDir": "/home/user/nni-experiments/TN5K0Qju/checkpoint"
             },
             "versionCheck": true,
             "clusterMetaData": [
