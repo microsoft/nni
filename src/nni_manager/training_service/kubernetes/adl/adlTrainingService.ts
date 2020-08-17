@@ -27,9 +27,9 @@ import { AdlTrialConfig } from './adlConfig'
 class AdlTrainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private adlTrialConfig?: AdlTrialConfig;
     private readonly adlJobInfoCollector: AdlJobInfoCollector;
-    private configmapTemplate: any;
-    private jobTemplate: any;
-    private pvcTemplate: any;
+    private configmapTemplateStr: string;
+    private jobTemplateStr: string;
+    private pvcTemplateStr: string;
     private tensorboardPvcTemplate: any;
     private tensorboardDeploymentTemplate: any;
     //TODO: change the logic here when we want to support multiple tensorboard
@@ -40,12 +40,10 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         this.adlJobInfoCollector = new AdlJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
         this.kubernetesCRDClient = AdlClientFactory.createClient();
-        this.configmapTemplate = JSON.parse(
-            fs.readFileSync('./config/adl/adaptdl-nni-configmap-template.json', 'utf8'));
-        this.jobTemplate = JSON.parse(
-            fs.readFileSync('./config/adl/adaptdljob-template.json', 'utf8'));
-        this.pvcTemplate = JSON.parse(
-            fs.readFileSync('./config/adl/adaptdl-pvc-template.json', 'utf8'));
+        this.configmapTemplateStr = fs.readFileSync(
+            './config/adl/adaptdl-nni-configmap-template.json', 'utf8');
+        this.jobTemplateStr = fs.readFileSync('./config/adl/adaptdljob-template.json', 'utf8');
+        this.pvcTemplateStr = fs.readFileSync('./config/adl/adaptdl-pvc-template.json', 'utf8');
         this.tensorboardPvcTemplate = JSON.parse(
             fs.readFileSync('./config/adl/adaptdl-tensorboard-pvc-template.json', 'utf8'));
         this.tensorboardDeploymentTemplate = JSON.parse(
@@ -132,29 +130,29 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         );
 
         // Create adljob
-        this.jobTemplate.metadata.name = adlJobName
-        this.jobTemplate.metadata.labels.app = this.NNI_KUBERNETES_TRIAL_LABEL
-        this.jobTemplate.metadata.labels.expId = this.experimentId
-        this.jobTemplate.metadata.labels.trialId = trialJobId
-        this.jobTemplate.spec.template.spec.containers[0]
+        const job: any = JSON.parse(this.jobTemplateStr);
+        job.metadata.name = adlJobName
+        job.metadata.labels.app = this.NNI_KUBERNETES_TRIAL_LABEL
+        job.metadata.labels.expId = this.experimentId
+        job.metadata.labels.trialId = trialJobId
+        job.spec.template.spec.containers[0]
             .image = this.adlTrialConfig.image;
-        this.jobTemplate.spec.template.spec.containers[0]
+        job.spec.template.spec.containers[0]
             .resources.limits["nvidia.com/gpu"] = this.adlTrialConfig.gpuNum;
-        this.jobTemplate.spec.template.spec.volumes[0]
+        job.spec.template.spec.volumes[0]
             .persistentVolumeClaim.claimName = adlJobName
-        this.jobTemplate.spec.template.spec.volumes[1]
+        job.spec.template.spec.volumes[1]
             .persistentVolumeClaim.claimName = this.tensorboardName
-        this.jobTemplate.spec.template.spec.volumes[2]
+        job.spec.template.spec.volumes[2]
             .configMap.name = adlJobName
         // Handle imagePullSecrets
         if (this.adlTrialConfig.imagePullSecrets !== undefined) {
-            this.jobTemplate.spec.template.spec.imagePullSecrets = this.jobTemplate
-                .spec.template.spec.imagePullSecrets.concat(
-                    this.adlTrialConfig.imagePullSecrets);
+            job.spec.template.spec.imagePullSecrets = job.spec.template.spec
+                .imagePullSecrets.concat(this.adlTrialConfig.imagePullSecrets);
         }
         // Handle NFS
         if (this.adlTrialConfig.nfs !== undefined) {
-            this.jobTemplate.spec.template.spec.volumes.push({
+            job.spec.template.spec.volumes.push({
                 "name": "nfs",
                 "nfs": {
                     "server": this.adlTrialConfig.nfs.server,
@@ -162,30 +160,32 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
                     "readOnly": false
                 }
             });
-            this.jobTemplate.spec.template.spec.containers[0].volumeMounts.push({
+            job.spec.template.spec.containers[0].volumeMounts.push({
                 "name": "nfs",
                 "mountPath": this.adlTrialConfig.nfs.containerMountPath
             });
         }
-        await this.kubernetesCRDClient.createKubernetesJob(this.jobTemplate);
+        await this.kubernetesCRDClient.createKubernetesJob(job);
         const k8sadlJob: any = await this.kubernetesCRDClient.getKubernetesJob(adlJobName);
 
         // Create pvc
-        this.pvcTemplate.metadata.name = adlJobName;
-        this.pvcTemplate.metadata.ownerReferences[0].name = adlJobName;
-        this.pvcTemplate.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
-        this.pvcTemplate.spec.resources.requests.storage = this.adlTrialConfig
+        const pvc: any = JSON.parse(this.pvcTemplateStr);
+        pvc.metadata.name = adlJobName;
+        pvc.metadata.ownerReferences[0].name = adlJobName;
+        pvc.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
+        pvc.spec.resources.requests.storage = this.adlTrialConfig
             .checkpoint.storageSize;
-        this.pvcTemplate.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
-        await this.genericK8sClient.createPersistentVolumeClaim(this.pvcTemplate);
+        pvc.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        await this.genericK8sClient.createPersistentVolumeClaim(pvc);
 
         // prepare the runscript and convert it to configmap and mount it
-        this.configmapTemplate.metadata.name = adlJobName;
-        this.configmapTemplate.metadata.ownerReferences[0].name = adlJobName;
-        this.configmapTemplate.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
-        this.configmapTemplate.data["run.sh"] = await this.prepareRunSh(
+        const configmap: any = JSON.parse(this.configmapTemplateStr);
+        configmap.metadata.name = adlJobName;
+        configmap.metadata.ownerReferences[0].name = adlJobName;
+        configmap.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
+        configmap.data["run.sh"] = await this.prepareRunSh(
             trialJobId, form, codeDir, outputDir)
-        await this.genericK8sClient.createConfigMap(this.configmapTemplate)
+        await this.genericK8sClient.createConfigMap(configmap)
 
         // Set trial job detail until create Adl job successfully
         this.trialJobsMap.set(trialJobId, trialJobDetail);

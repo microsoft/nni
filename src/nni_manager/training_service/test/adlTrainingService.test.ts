@@ -26,7 +26,7 @@ describe('Unit Test for AdlTrainingService', () => {
         "gpuNum": 0,
         "image": "registry.petuum.com/dev/adaptdl-submit:latest",
         "checkpoint": {
-            "storageClass": "dfs",
+            "storageClass": "aws-efs",
             "storageSize": "1Gi"
         }
     });
@@ -41,7 +41,7 @@ describe('Unit Test for AdlTrainingService', () => {
             }
         ],
         "checkpoint": {
-            "storageClass": "dfs",
+            "storageClass": "aws-efs",
             "storageSize": "1Gi"
         },
         "nfs": {
@@ -83,7 +83,7 @@ describe('Unit Test for AdlTrainingService', () => {
     });
 
     it('Submit job', async () => {
-        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig);
+        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig2);
         // submit job
         const form: TrialJobApplicationForm = {
             sequenceId: 0,
