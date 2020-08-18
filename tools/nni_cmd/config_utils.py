@@ -3,7 +3,9 @@
 
 import os
 import json
+import shutil
 from .constants import NNICTL_HOME_DIR
+from .command_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
@@ -77,7 +79,12 @@ class Experiments:
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
         if expId in self.experiments:
-            self.experiments.pop(expId)
+            directory = self.experiments.pop(expId).get('fileName')
+            if directory:
+                try:
+                    shutil.rmtree(directory)
+                except FileNotFoundError:
+                    print_error('{0} does not exist.'.format(directory))
         self.write_file()
 
     def get_all_experiments(self):
