@@ -41,9 +41,9 @@ class NASBench201Cell(nn.Module):
             ("none", Zero(C_in, C_out, stride)),
             ("avg_pool_3x3", Pooling(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
                                      bn_track_running_stats)),
-            ("nor_conv_3x3", ReLUConvBN(C_in, C_out, 3, stride if layer_idx == 0 else 1, 1, 1, bn_affine, bn_momentum,
+            ("conv_3x3", ReLUConvBN(C_in, C_out, 3, stride if layer_idx == 0 else 1, 1, 1, bn_affine, bn_momentum,
                                         bn_track_running_stats)),
-            ("nor_conv_1x1", ReLUConvBN(C_in, C_out, 1, stride if layer_idx == 0 else 1, 0, 1, bn_affine, bn_momentum,
+            ("conv_1x1", ReLUConvBN(C_in, C_out, 1, stride if layer_idx == 0 else 1, 0, 1, bn_affine, bn_momentum,
                                         bn_track_running_stats)),
             ("skip_connect", nn.Identity() if stride == 1 and C_in == C_out
              else FactorizedReduce(C_in, C_out, stride if layer_idx == 0 else 1, bn_affine, bn_momentum,
