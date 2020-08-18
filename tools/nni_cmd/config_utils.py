@@ -79,12 +79,13 @@ class Experiments:
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
         if expId in self.experiments:
-            directory = self.experiments.pop(expId).get('fileName')
-            if directory:
+            fileName = self.experiments.pop(expId).get('fileName')
+            if fileName:
+                logPath = os.path.join(NNICTL_HOME_DIR, fileName)
                 try:
-                    shutil.rmtree(directory)
+                    shutil.rmtree(logPath)
                 except FileNotFoundError:
-                    print_error('{0} does not exist.'.format(directory))
+                    print_error('{0} does not exist.'.format(logPath))
         self.write_file()
 
     def get_all_experiments(self):
