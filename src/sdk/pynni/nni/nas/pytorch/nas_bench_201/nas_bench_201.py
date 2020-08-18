@@ -34,7 +34,6 @@ class NASBench201Cell(nn.Module):
         super(NASBench201Cell, self).__init__()
 
         self.NUM_NODES = 4
-        self.ENABLE_VIS = False
         self.layers = nn.ModuleList()
 
         OPS = lambda layer_idx: OrderedDict([
