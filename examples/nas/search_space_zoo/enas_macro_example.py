@@ -58,7 +58,6 @@ if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
-    # parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     parser.add_argument("--epochs", default=None, type=int, help="Number of epochs (default: macro 310, micro 150)")
     parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
@@ -71,7 +70,6 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
-
     trainer = enas.EnasTrainer(model,
                                loss=criterion,
                                metrics=accuracy,
