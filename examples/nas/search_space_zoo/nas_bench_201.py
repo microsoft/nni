@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import pprint
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,8 @@ import torch.nn as nn
 import torch.optim as optim
 from nni.nas.pytorch.utils import AverageMeterGroup
 from nni.nas.pytorch.nas_bench_201 import NASBench201Cell
+from nni.nas.pytorch.fixed import apply_fixed_architecture
+from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
@@ -122,6 +125,8 @@ if __name__ == '__main__':
     parser.add_argument('--bn_momentum', default=0.1, type=int)
     parser.add_argument('--bn_affine', default=True, type=bool)
     parser.add_argument('--bn_track_running_stats', default=True, type=bool)
+    parser.add_argument('--arch', default=None, help='json file which should meet requirements in NAS-Bench-201')
+    parser.add_argument('--visualization', default=False, action='store_true')
     args = parser.parse_args()
 
     dataset_train, dataset_valid = datasets.get_dataset("cifar10")
@@ -130,10 +135,17 @@ if __name__ == '__main__':
                                bn_affine=args.bn_affine,
                                bn_momentum=args.bn_momentum,
                                bn_track_running_stats=args.bn_track_running_stats)
-    criterion = nn.CrossEntropyLoss()
 
     optim = torch.optim.SGD(model.parameters(), 0.025)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, args.epochs, eta_min=0.001)
+    criterion = nn.CrossEntropyLoss()
+
+    if args.arch is not None: 
+        with open(args.arch, 'r') as f:
+            arch = json.load(f)
+        for trial in query_nb201_trial_stats(arch, 200, 'cifar100'):
+            pprint.pprint(trial)
+        apply_fixed_architecture(model, args.arch)
 
     trainer = DartsTrainer(model,
                            loss=criterion,
@@ -146,4 +158,6 @@ if __name__ == '__main__':
                            log_frequency=args.log_frequency,
                            unrolled=args.unrolled,
                            callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+    if args.visualization:
+        trainer.enable_visualization()
     trainer.train()
