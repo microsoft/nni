@@ -1,1 +1,1 @@
-from evo_nas_tuner import EvoNasTuner
+from .evo_nas_tuner import EvoNasTuner

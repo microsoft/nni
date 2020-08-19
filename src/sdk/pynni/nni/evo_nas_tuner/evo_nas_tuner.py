@@ -81,7 +81,7 @@ class EvoNasTuner(Tuner):
         assert self.search_space is None
         self.search_space = search_space
 
-        for key, val in search_space.items():
+        for _, val in search_space.items():
             if val['_type'] != 'layer_choice' and val['_type'] != 'input_choice':
                 raise ValueError('Unsupported search space type: %s' % (val['_type']))
 
