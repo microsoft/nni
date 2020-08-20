@@ -491,7 +491,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform === 'win32') {
             script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
-                `cmd.exe /c ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`,
+                `cmd.exe /c ${localTrialConfig.command} 2>&1 | Out-File "${path.join(workingDirectory, 'stderr')}" -encoding utf8`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
@@ -523,7 +523,8 @@ class LocalTrainingService implements TrainingService {
         const runScriptContent: string[] = [];
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
-        }
+        } else {
+            runScriptContent.push(`$env:PATH="${process.env.path}"`)
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }
