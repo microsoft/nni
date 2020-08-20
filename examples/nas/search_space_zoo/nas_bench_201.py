@@ -9,13 +9,14 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from nni.nas.pytorch import enas
 from nni.nas.pytorch.utils import AverageMeterGroup
 from nni.nas.pytorch.nas_bench_201 import NASBench201Cell
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from nni.nas.pytorch.darts import DartsTrainer
-from utils import accuracy
+from utils import accuracy, reward_accuracy
 
 import datasets
 
@@ -147,17 +148,20 @@ if __name__ == '__main__':
             pprint.pprint(trial)
         apply_fixed_architecture(model, args.arch)
 
-    trainer = DartsTrainer(model,
-                           loss=criterion,
-                           metrics=lambda output, target: accuracy(output, target, topk=(1,)),
-                           optimizer=optim,
-                           num_epochs=args.epochs,
-                           dataset_train=dataset_train,
-                           dataset_valid=dataset_valid,
-                           batch_size=args.batch_size,
-                           log_frequency=args.log_frequency,
-                           unrolled=args.unrolled,
-                           callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
+    mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
+    trainer = enas.EnasTrainer(model,
+                               loss=criterion,
+                               metrics=lambda output, target: accuracy(output, target, topk=(1,)),
+                               reward_function=reward_accuracy,
+                               optimizer=optim,
+                               callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
+                               batch_size=args.batch_size,
+                               num_epochs=args.epochs,
+                               dataset_train=dataset_train,
+                               dataset_valid=dataset_valid,
+                               log_frequency=args.log_frequency,
+                               mutator=mutator)
+
     if args.visualization:
         trainer.enable_visualization()
     trainer.train()
