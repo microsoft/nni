@@ -52,7 +52,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                             />
                                             <LogPathChild
                                                 eachLogpath={logStr.split(',')[1]}
-                                                logName="Log on HDFS:"
+                                                logName="Log on NFS:"
                                             />
                                         </div>
                                 }

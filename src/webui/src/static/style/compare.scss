@@ -2,16 +2,23 @@
     /* decide modal size */
     .ms-Dialog-main{
         width: 50%;
-        overflow: hidden;
+        min-width: 450px;
     }
-
+    .ms-Modal-scrollableContent{
+        overflow-x: hidden;
+    }
     /* compare-md: table style */
+    .flex{
+        display: flex;
+    }
     &-table{
         width: 92%;
         margin: 0 auto;
         margin-bottom: 20px;
         border: 1px solid transparent;
-        overflow: auto;
+        align-items: center;
+        overflow-x: auto;
+        overflow-y: hidden;
         color: #333;
         tr{
             line-height: 30px;

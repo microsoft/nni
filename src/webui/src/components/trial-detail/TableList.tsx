@@ -632,6 +632,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             isShowCustomizedModal, copyTrialId, intermediateOption,
             tablePerPage
         } = this.state;
+        console.info(tablePerPage); // eslint-disable-line
         const { columnList } = this.props;
         const perPageOptions = [
             { key: '10', text: '10 items per page'},

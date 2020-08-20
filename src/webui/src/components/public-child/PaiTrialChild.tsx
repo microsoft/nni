@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DOWNLOAD_IP } from '../../static/const';
+import LogPathChild from './LogPathChild';
 
 interface PaiTrialChildProps {
     logString: string;
@@ -36,7 +37,10 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                         trial stdout
                                     </a>
                                     :
-                                    <span>trial stdout: {logString}</span>
+                                    <LogPathChild
+                                        eachLogpath={logString}
+                                        logName="Trial stdout:"
+                                    />
                             }
                         </div>
                 }
