@@ -34,6 +34,7 @@ interface TrialJobApplicationForm {
 interface TrialJobDetail {
     readonly id: string;
     readonly status: TrialJobStatus;
+    readonly message?: string;
     readonly submitTime: number;
     readonly startTime?: number;
     readonly endTime?: number;

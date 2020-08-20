@@ -44,6 +44,7 @@ class NNIManager implements Manager {
     private readonly: boolean;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
+    public trialJobMessage: Map<string, string | undefined>;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -68,6 +69,7 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
+        this.trialJobMessage = new Map<string, string>()
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -501,6 +503,7 @@ class NNIManager implements Manager {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
             }
+            this.trialJobMessage.set(trialJobId, trialJobDetail.message);
             let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
@@ -609,6 +612,7 @@ class NNIManager implements Manager {
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
+                    this.trialJobMessage.set(trialJobDetail.id, trialJobDetail.message);
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(

@@ -11,6 +11,7 @@ import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../
 export class KubernetesTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
+    public message?: string;
     public submitTime: number;
     public startTime?: number;
     public endTime?: number;
@@ -26,6 +27,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
                 kubernetesJobName: string, url: string) {
         this.id = id;
         this.status = status;
+        this.message = 'Creating the trial job.';
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;

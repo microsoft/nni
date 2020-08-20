@@ -46,6 +46,7 @@ interface TrialJobInfo {
     id: string;
     sequenceId?: number;
     status: TrialJobStatus;
+    message?: string;
     startTime?: number;
     endTime?: number;
     hyperParameters?: string[];

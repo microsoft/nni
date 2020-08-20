@@ -134,6 +134,7 @@ interface TrialJobInfo {
     id: string;
     sequenceId: number;
     status: string;
+    message?: string;
     startTime?: number;
     endTime?: number;
     hyperParameters?: string[];

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { KubernetesCRDClient } from '../kubernetesApiClient';
+import { AdlClientV1 } from './adlApiClient';
 import { KubernetesTrialJobDetail} from '../kubernetesData';
 import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
 import { AdlJobStatus } from './adlConfig';
@@ -16,7 +16,7 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
         super(jobMap);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
+    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: AdlClientV1 | undefined,
                                                kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
@@ -27,8 +27,10 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
         }
 
         let kubernetesJobInfo: any;
+        let kubernetesPodsInfo: any;
         try {
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
+            kubernetesPodsInfo = await kubernetesCRDClient.getKubernetesPods(kubernetesTrialJob.kubernetesJobName);
         } catch (error) {
             // Notice: it maynot be a 'real' error since cancel trial job can also cause getKubernetesJob failed.
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
@@ -43,22 +45,31 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
                 case 'Pending':
                 case 'Starting':
                     kubernetesTrialJob.status = 'WAITING';
+                    if (kubernetesPodsInfo.items.length > 0){
+                        kubernetesTrialJob.message = kubernetesPodsInfo.items
+                            .map((pod: any) => JSON.stringify(pod.status.containerStatuses))
+                            .join('\n');
+                    }
                     kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.metadata.creationTimestamp);
                     break;
                 case 'Running':
                 case 'Stopping':
                     kubernetesTrialJob.status = 'RUNNING';
+                    kubernetesTrialJob.message = undefined;  //TODO
                     if (kubernetesTrialJob.startTime === undefined) {
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.metadata.creationTimestamp);
                     }
                     break;
                 case 'Failed':
                     kubernetesTrialJob.status = 'FAILED';
+                    kubernetesTrialJob.message = kubernetesJobInfo.status.message;
+                    // undefined => NaN as endTime here
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTimestamp);
                     break;
                 case  'Succeeded':
                     kubernetesTrialJob.status = 'SUCCEEDED';
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTimestamp);
+                    kubernetesTrialJob.message = `Succeeded at ${kubernetesJobInfo.status.completionTimestamp}`
                     break;
                 default:
             }

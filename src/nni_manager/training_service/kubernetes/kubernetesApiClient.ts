@@ -126,7 +126,7 @@ abstract class KubernetesCRDClient {
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
-            result = Promise.reject(`Create kubernetes job failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubernetesApiClient createKubernetesJob failed, statusCode is ${response.statusCode}`);
         }
 
         return result;
@@ -140,7 +140,7 @@ abstract class KubernetesCRDClient {
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
         } else {
-            result = Promise.reject(`KubeflowOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubernetesApiClient getKubernetesJob failed, statusCode is ${response.statusCode}`);
         }
 
         return result;
@@ -164,7 +164,7 @@ abstract class KubernetesCRDClient {
                 result = Promise.resolve(true);
             } else {
                 result = Promise.reject(
-                    `KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
+                    `KubernetesApiClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
             }
         } catch (err) {
             result = Promise.reject(err);

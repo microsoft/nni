@@ -26,6 +26,18 @@ class AdlClientV1 extends KubernetesCRDClient {
     public get containerName(): string {
         return 'main';
     }
+
+    public async getKubernetesPods(jobName: string): Promise<any> {
+        let result: Promise<any>;
+        const response = await this.client.api.v1.namespaces('default').pods
+            .get({ qs: { labelSelector: `adaptdl/job=${jobName}` } });
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(response.body);
+        } else {
+            result = Promise.reject(`AdlClient getKubernetesPods failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
 }
 
 /**
@@ -41,3 +53,4 @@ class AdlClientFactory {
 }
 
 export { AdlClientFactory, GeneralK8sClient };
+export { AdlClientV1 }
