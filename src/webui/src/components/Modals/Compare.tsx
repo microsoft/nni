@@ -138,16 +138,16 @@ class Compare extends React.Component<CompareProps, {}> {
                 ? true : false;
         }
         const width = this.getWebUIWidth();
-        let tableClass;
+        let scrollClass;
         if (width > 1200) {
-            tableClass = idList.length > 3 ? 'flex' : '';
+            scrollClass = idList.length > 3 ? 'flex' : '';
         } else if (width < 700) {
-            tableClass = idList.length > 1 ? 'flex' : '';
+            scrollClass = idList.length > 1 ? 'flex' : '';
         } else {
-            tableClass = idList.length > 2 ? 'flex' : '';
+            scrollClass = idList.length > 2 ? 'flex' : '';
         }
         return (
-            <table className={`compare-modal-table ${tableClass}`}>
+            <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
                     <tr>
                         <td className="column">Id</td>
@@ -217,12 +217,10 @@ class Compare extends React.Component<CompareProps, {}> {
 
     componentDidMount(): void {
         this._isCompareMount = true;
-        // window.addEventListener('resize', this.getWebUIWidth);
     }
 
     componentWillUnmount(): void {
         this._isCompareMount = false;
-        // window.removeEventListener('resize', this.getWebUIWidth);
     }
 
     render(): React.ReactNode {
@@ -234,7 +232,6 @@ class Compare extends React.Component<CompareProps, {}> {
                 containerClassName={contentStyles.container}
                 className="compare-modal"
                 allowTouchBodyScroll={true}
-                isBlocking={false}
                 dragOptions={dragOptions}
             >
                 <div>

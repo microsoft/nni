@@ -16,9 +16,7 @@
         margin: 0 auto;
         margin-bottom: 20px;
         border: 1px solid transparent;
-        align-items: center;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: auto hidden;
         color: #333;
         tr{
             line-height: 30px;
