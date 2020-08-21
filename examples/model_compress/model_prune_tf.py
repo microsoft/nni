@@ -10,7 +10,7 @@ prune_config = {
         'model_name': 'naive',
         'pruner_class': nni.compression.tensorflow.LevelPruner,
         'config_list': [{
-            'sparsity': 0.9,
+            'sparsity': 1.0,
             'op_types': ['default'],
         }]
     },
@@ -75,8 +75,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pruner_name', type=str, default='level')
     parser.add_argument('--batch_size', type=int, default=256)
-    parser.add_argument('--pretrain_epochs', type=int, default=10)
-    parser.add_argument('--prune_epochs', type=int, default=10)
+    parser.add_argument('--pretrain_epochs', type=int, default=1)
+    parser.add_argument('--prune_epochs', type=int, default=1)
 
     args = parser.parse_args()
     main(args)

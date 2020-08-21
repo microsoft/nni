@@ -25,9 +25,9 @@ class LayerInfo:
         The layer's name. Note that it's local to sub-model and may differ from its attribute name.
     type : str
         Name of the layer's class.
-    path : list of str/int
+    path : list of str or tuple of (str, int)
         The layer object's and its parents' attribute name / list index.
-        For example, if the path is `['cells', 2, 'conv']`, then the layer can be accessed as `model.cells[2].conv`.
+        For example, if the path is `[('cells', 2), 'conv']`, then the layer can be accessed as `model.cells[2].conv`.
     config : JSON object
         Selected configuration for this layer. The format is detailed in tutorial.
 
@@ -35,7 +35,7 @@ class LayerInfo:
     ----------
     layer : tf.keras.layers.Layer
         See attributes section.
-    path : list of str/int
+    path : list of str or tuple of (str, int)
         See attributes section.
     """
 
@@ -130,6 +130,8 @@ class Pruner(Compressor):
         tf.keras.Model
             The compressed model, for convenience. This is exactly the same object to constructor argument.
         """
+        print(self.bound_model.run_eagerly)
+        self.bound_model.run_eagerly = True
         self._update_mask()
         return self.bound_model
 
@@ -244,26 +246,19 @@ def _locate_layers(model, cur_path=[]):
     # and to my knowledge `Layer.name` is only useful for read-only access.
     # `cur_path`s format is documented in `LayerInfo.path`.
     # TODO: it can only find layers in `Model` and `list` for now.
+    assert isinstance(model, tf.keras.Model)
     ret = {}
-
-    if isinstance(model, tf.keras.Model):
-        for key, value in model.__dict__.items():
-            if isinstance(value, tf.keras.Model):
-                ret.update(_locate_layers(value, cur_path + [key]))
-            elif isinstance(value, list):
-                ret.update(_locate_layers(value, cur_path + [key]))
-            elif isinstance(value, tf.keras.layers.Layer):
-                ret[id(value)] = LayerInfo(value, cur_path + [key])
-
-    elif isinstance(model, list):
-        for i, item in enumerate(model):
-            if isinstance(item, tf.keras.Model):
-                ret.update(_locate_layers(item, cur_path + [i]))
-            elif isinstance(item, tf.keras.layers.Layer):
-                ret[id(item)] = LayerInfo(item, cur_path + [i])
-
-    else:
-        raise ValueError('Unexpected model type: {}'.format(type(model)))
+    for key, value in model.__dict__.items():
+        if isinstance(value, tf.keras.Model):
+            ret.update(_locate_layers(value, cur_path + [key]))
+        elif isinstance(value, tf.keras.layers.Layer):
+            ret[id(value)] = LayerInfo(value, cur_path + [key])
+        elif isinstance(value, list):
+            for i, item in enumerate(value):
+                if isinstance(item, tf.keras.Model):
+                    ret.update(_locate_layers(item, cur_path + [(key, i)]))
+                elif isinstance(item, tf.keras.layers.Layer):
+                    ret[id(item)] = LayerInfo(item, cur_path + [(key, i)])
     return ret
 
 def _select_config(layer_info, config_list):
@@ -289,12 +284,17 @@ def _instrument_model(model, wrappers):
     for wrapper in reversed(wrappers):
         cur = model
         for key in wrapper.layer_info.path[:-1]:
-            if isinstance(key, int):
-                cur = cur[key]
-            else:
+            if isinstance(key, str):
                 cur = getattr(cur, key)
+            else:
+                name, index = key
+                cur = getattr(cur, name)[index]
         key = wrapper.layer_info.path[-1]
-        if isinstance(key, int):
-            cur[key] = wrapper
-        else:
+        if isinstance(key, str):
             setattr(cur, key, wrapper)
+        else:
+            name, index = key
+            getattr(cur, name)[index] = wrapper
+            if isinstance(cur, tf.keras.Sequential):
+                cur._graph_initialized = False
+                cur._layer_call_argspecs[wrapper] = cur._layer_call_argspecs[wrapper.layer]
