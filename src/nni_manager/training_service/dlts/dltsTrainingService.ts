@@ -12,9 +12,10 @@ import { EventEmitter } from 'events';
 import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
 import {
     NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { DLTS_TRIAL_COMMAND_FORMAT } from './dltsData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
@@ -246,6 +247,10 @@ class DLTSTrainingService implements TrainingService {
         return trialJob
     }
 
+    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.on('metric', listener);
     }
@@ -261,7 +266,7 @@ class DLTSTrainingService implements TrainingService {
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobId: string = uniqueString(5);
         const trialWorkingFolder: string = path.join(
-            '/nni/experiments', getExperimentId(),
+            '/nni-experiments', getExperimentId(),
             '/trials/', trialJobId);
         const trialJobDetail = new DLTSTrialJobDetail(
             trialJobId, // id

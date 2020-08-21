@@ -20,6 +20,8 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -37,7 +39,7 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -116,17 +118,6 @@ FPGMPruner prune filters with the smallest geometric median.
 
 ### Usage
 
-Tensorflow code
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
-
 PyTorch code
 ```python
 from nni.compression.torch import FPGMPruner
@@ -143,11 +134,6 @@ pruner.compress()
 ##### PyTorch
 ```eval_rst
 ..  autoclass:: nni.compression.torch.FPGMPruner
-```
-
-##### Tensorflow
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.FPGMPruner
 ```
 
 ## L1Filter Pruner
@@ -382,12 +368,6 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AGPPruner
 ```
 
-##### Tensorflow
-
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.AGPPruner
-```
-
 ***
 
 ## NetAdapt Pruner
@@ -497,6 +477,39 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
+## AutoML for Model Compression Pruner
+
+AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+![](../../img/amc_pruner.jpg)
+
+For more details, please refer to [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf).
+
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import AMCPruner
+config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }]
+pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
+pruner.compress()
+```
+
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+
+#### User configuration for AutoCompress Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AMCPruner
+```
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -588,3 +601,35 @@ We try to reproduce the experiment result of the fully connected network on MNIS
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+
+
+## Sensitivity Pruner
+For each round, SensitivityPruner prunes the model based on the sensitivity to the accuracy of each layer until meeting the final configured sparsity of the whole model:
+        1. Analyze the sensitivity of each layer in the current state of the model.
+        2. Prune each layer according to the sensitivity.
+
+For more details, please refer to [Learning both Weights and Connections for Efficient Neural Networks ](https://arxiv.org/abs/1506.02626).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SensitivityPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = SensitivityPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+# eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+pruner.compress(eval_args=[model], finetune_args=[model])
+```
+
+
+#### User configuration for Sensitivity Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```

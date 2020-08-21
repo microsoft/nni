@@ -7,7 +7,7 @@
     height: 324px;
     overflow: hidden;
     #succeTable .commonTableStyle{
-        overflow-y: scroll;
+        overflow-y: auto;
     }
 }
 
@@ -55,5 +55,5 @@
 }
 .columns-height{
     max-height: 335px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }

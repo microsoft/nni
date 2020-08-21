@@ -11,7 +11,7 @@ scipy 1.1.0
 tensorflow-gpu 1.15.0
 keras 2.1.6
 torch 1.4.0
-scikit-learn 0.20.0
+scikit-learn 0.23.2
 pandas 0.23.4
 lightgbm 2.2.2
 nni

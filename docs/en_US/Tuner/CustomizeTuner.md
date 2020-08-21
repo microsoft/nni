@@ -87,7 +87,7 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**Note that** The working directory of your tuner is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`, therefore, if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
+**Note that** The working directory of your tuner is `<home>/nni-experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`, therefore, if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
 
 ```python
 _pwd = os.path.dirname(__file__)

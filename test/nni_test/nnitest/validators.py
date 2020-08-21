@@ -6,7 +6,7 @@ from os import remove
 import subprocess
 import json
 import requests
-import nnicli as nc
+from nnicli import Experiment
 from utils import METRICS_URL
 
 
@@ -80,8 +80,8 @@ class MetricsValidator(ITValidator):
 class NnicliValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         print(rest_endpoint)
-        nc.set_endpoint(rest_endpoint)
-        #print(nc.version())
-        print(nc.get_job_statistics())
-        print(nc.get_experiment_status())
-        print(nc.list_trial_jobs())
+        exp = Experiment()
+        exp.connect_experiment(rest_endpoint)
+        print(exp.get_job_statistics())
+        print(exp.get_experiment_status())
+        print(exp.list_trial_jobs())
