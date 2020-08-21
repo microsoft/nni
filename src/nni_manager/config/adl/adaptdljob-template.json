@@ -14,6 +14,16 @@
             "spec": {
                 "containers": [
                     {
+                        "lifecycle":
+                        {
+                            "preStop":
+                            {
+                                "exec": 
+                                {
+                                    "command": ["/cleanup.sh"]
+                                }
+                            }
+                        },
                         "command": ["/run.sh"],
                         "env": [
                             {
@@ -52,6 +62,11 @@
                                 "mountPath": "/adaptdl/tensorboard",
                                 "name": "adaptdl-tensorboard-pvc",
                                 "subPath": "adaptdl/tensorboard"
+                            },
+                            {
+                                "mountPath": "/cleanup.sh",
+                                "name": "adaptdl-nni-configmap",
+                                "subPath": "cleanup.sh"
                             },
                             {
                                 "mountPath": "/run.sh",

@@ -47,10 +47,10 @@ class TrialTestCase(TestCase):
         adaptdl.torch.init_process_group(
             "nccl" if torch.cuda.is_available() else "gloo"
         )
+        INTERMEDIATE_OFFSET = "intermediate_result_idx_offset"
         stats = et.Accumulator()
-        res = nni.report_intermediate_result(123, stats)
         with stats.synchronized():
-            INTERMEDIATE_OFFSET = "intermediate_result_idx_offset"
+            res = nni.report_intermediate_result(123, stats)
             self.assertEqual(stats[INTERMEDIATE_OFFSET], 1)
 
     def test_report_final_result_simple(self):

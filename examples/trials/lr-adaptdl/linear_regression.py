@@ -133,13 +133,14 @@ def main(params):
         for epoch in et.remaining_epochs_until(params["epochs"]):
             for inputs, targets in dataloader: 
                 batch_stat = trainer.train(inputs, targets, stats)
+            with stats.synchronized():
                 if IS_CHIEF:
                     nni.report_intermediate_result(batch_stat["Loss"], stats)
-            with stats.synchronized():
                 stats["loss_avg"] = stats["loss_sum"] / stats["total"]
                 writer.add_scalar("Loss/Train", stats["loss_avg"], epoch)
-        if IS_CHIEF:
-            nni.report_final_result(batch_stat["Loss"])
+        with stats.synchronized():
+            if IS_CHIEF:
+                nni.report_final_result(batch_stat["Loss"])
 
 
 def get_params():

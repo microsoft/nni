@@ -185,6 +185,21 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         configmap.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
         configmap.data["run.sh"] = await this.prepareRunSh(
             trialJobId, form, codeDir, outputDir)
+        const cleanupScriptTemplate: string =
+`#!/bin/bash
+ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | xargs kill -2
+while true;
+do
+    proc=\`ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | grep "" -c\`
+    if (( $proc == 1  )); then
+        exit 0
+    else
+        echo "waiting"
+    fi
+    sleep 1
+done
+`;
+        configmap.data["cleanup.sh"] = cleanupScriptTemplate
         await this.genericK8sClient.createConfigMap(configmap)
 
         // Set trial job detail until create Adl job successfully

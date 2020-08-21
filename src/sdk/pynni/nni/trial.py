@@ -113,14 +113,15 @@ def report_intermediate_result(metric, accum=None):
     global _intermediate_seq
 
     if accum is not None:
+        # NOTE: Accumulator should be used under synchronized mode,
+        # which can only be given from user script side.
         from adaptdl.torch.accumulator import Accumulator
         if not isinstance(accum, Accumulator):
             raise TypeError("accum is not Adaptdl Accumulator!")
-        with accum.synchronized():
-            if INTERMEDIATE_OFFSET not in accum:
-                accum[INTERMEDIATE_OFFSET] = 0
-            _intermediate_seq = accum[INTERMEDIATE_OFFSET]
-            accum[INTERMEDIATE_OFFSET] += 1
+        if INTERMEDIATE_OFFSET not in accum:
+            accum[INTERMEDIATE_OFFSET] = 0
+        _intermediate_seq = accum[INTERMEDIATE_OFFSET]
+        accum[INTERMEDIATE_OFFSET] += 1
 
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'

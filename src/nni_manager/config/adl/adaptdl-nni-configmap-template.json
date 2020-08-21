@@ -13,6 +13,7 @@
         ]
     },
     "data": {
-        "run.sh": "<run_script>"
+        "run.sh": "<run_script>",
+        "cleanup.sh": "<clean_script>"
     }
 }
