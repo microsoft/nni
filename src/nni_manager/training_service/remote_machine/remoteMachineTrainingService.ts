@@ -87,6 +87,8 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.info('ssh connection initialized!');
             // set sshConnectionPromises to [] to avoid log information duplicated
             this.sshConnectionPromises = [];
+            // initialize gpuScheduler
+            this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
         }
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
@@ -436,7 +438,6 @@ class RemoteMachineTrainingService implements TrainingService {
         const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
         this.log.debug(`reached ${executor.name}`);
         this.machineExecutorManagerMap.set(rmMeta, executorManager);
-        this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
         this.log.debug(`initializing ${executor.name}`);
 
         // Create root working directory after executor is ready
