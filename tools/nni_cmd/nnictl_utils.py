@@ -11,7 +11,6 @@ import shutil
 import subprocess
 from functools import cmp_to_key
 from datetime import datetime, timezone
-from pathlib import Path
 from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
@@ -517,11 +516,15 @@ def experiment_clean(args):
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
         #clean local data
-        home = str(Path.home())
-        local_dir = nni_config.get_config('experimentConfig').get('logDir')
-        if not local_dir:
-            local_dir = os.path.join(home, 'nni-experiments', experiment_id)
-        local_clean(local_dir)
+        local_base_dir = nni_config.get_config('experimentConfig').get('logDir')
+        if not local_base_dir:
+            local_base_dir = NNI_HOME_DIR
+        local_experiment_dir = os.path.join(local_base_dir, experiment_id)
+        experiment_folder_name_list = ['checkpoint', 'db', 'log', 'trials']
+        for folder_name in experiment_folder_name_list:
+            local_clean(os.path.join(local_experiment_dir, folder_name))
+        if not os.listdir(local_experiment_dir):
+            local_clean(local_experiment_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
         experiment_config.remove_experiment(experiment_id)
