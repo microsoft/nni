@@ -22,7 +22,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                 {
                     logString === ''
                         ?
-                        <div />
+                        null
                         :
                         <div>
                             {
@@ -34,7 +34,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                         href={`${DOWNLOAD_IP}/trial_${id}.log`}
                                         style={{ marginRight: 10 }}
                                     >
-                                        trial stdout
+                                        Trial stdout
                                     </a>
                                     :
                                     <LogPathChild

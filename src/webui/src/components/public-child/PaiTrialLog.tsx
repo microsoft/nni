@@ -42,7 +42,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                             >
                                                 Trial stdout
                                             </a>
-                                            <a target="_blank" rel="noopener noreferrer" href={logStr.split(',')[1]}>hdfsLog</a>
+                                            <a target="_blank" rel="noopener noreferrer" href={logStr.split(',')[1]}>NFS log</a>
                                         </div>
                                         :
                                         <div>
