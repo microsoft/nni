@@ -8,4 +8,4 @@ The tuner first randomly initializes the number of `population` models and evalu
 
 The whole procedure is summarized by the pseudocode below.
 
-![img](../../img/EvoNasTuner.png)
+![](../../img/EvoNasTuner.png)
