@@ -127,8 +127,9 @@ class EvoNasTuner(Tuner):
                 individual[key] = {'_value': val['_value'][idx], '_idx': idx}
             elif val['_type'] == 'input_choice':
                 candidates = val['_value']['candidates']
-                # TODO: deal with the value None
                 n_chosen = val['_value']['n_chosen']
+                if n_chosen == None:
+                    raise RuntimeError('Key n_chosen must be set in InputChoice.')
                 idxs = [random.randint(0, len(candidates) - 1) for _ in range(n_chosen)]
                 vals = [candidates[k] for k in idxs]
                 individual[key] = {'_value': vals, '_idx': idxs}
