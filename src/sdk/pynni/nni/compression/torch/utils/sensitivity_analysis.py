@@ -163,7 +163,7 @@ class SensitivityAnalysis:
         if val_kwargs is None:
             val_kwargs = {}
         # Get the original validation metric(accuracy/loss) before pruning
-        # there may be several sensitivity analysis iterations
+        # Get the accuracy baseline before staring the analysis.
         self.ori_metric = self.val_func(*val_args, **val_kwargs)
         namelist = list(self.target_layer.keys())
         if specified_layers is not None:
@@ -172,6 +172,8 @@ class SensitivityAnalysis:
         for name in namelist:
             self.sensitivities[name] = {}
             for sparsity in self.sparsities:
+                # here the sparsity is the relative sparsity of the
+                # the remained weights
                 print('ori sparsity', sparsity)
                 # Calculate the actual prune ratio based on the already pruned ratio
                 real_sparsity = (
