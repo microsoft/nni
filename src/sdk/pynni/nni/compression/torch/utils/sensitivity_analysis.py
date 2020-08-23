@@ -174,7 +174,6 @@ class SensitivityAnalysis:
             for sparsity in self.sparsities:
                 # here the sparsity is the relative sparsity of the
                 # the remained weights
-                print('ori sparsity', sparsity)
                 # Calculate the actual prune ratio based on the already pruned ratio
                 real_sparsity = (
                     1.0 - self.already_pruned[name]) * sparsity + self.already_pruned[name]
@@ -183,7 +182,6 @@ class SensitivityAnalysis:
                 # according to the op_names
                 cfg = [{'sparsity': real_sparsity, 'op_names': [
                     name], 'op_types': ['Conv2d']}]
-                print('cfg in analysis', cfg)
                 pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
                 val_metric = self.val_func(*val_args, **val_kwargs)
@@ -193,7 +191,6 @@ class SensitivityAnalysis:
                 self.sensitivities[name][sparsity] = val_metric
                 pruner._unwrap_model()
                 del pruner
-                print('Analysis ori metric', self.ori_metric, ' current:', val_metric, 'threshold', self.early_stop_value)
                 # check if the current metric meet the stop condition
                 if self._need_to_stop(self.ori_metric, val_metric):
                     break

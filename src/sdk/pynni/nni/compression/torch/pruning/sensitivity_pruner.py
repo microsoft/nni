@@ -334,9 +334,6 @@ class SensitivityPruner(Pruner):
             os.makedirs(self.checkpoint_dir, exist_ok=True)
         modules_wrapper_final = None
         while cur_ratio > target_ratio:
-            print('current ratio', cur_ratio)
-            print('Already pruned')
-            print(self.analyzer.already_pruned)
             iteration_count += 1
             # Each round have three steps:
             # 1) Get the current sensitivity for each layer(the sensitivity
@@ -349,15 +346,12 @@ class SensitivityPruner(Pruner):
             # layers according to the sensitivity result
             proportion = self.sparsity_proportion_calc(
                 ori_acc, self.acc_drop_threshold, self.sensitivities)
-            print('Proportion')
-            print(proportion)
+
             new_pruneratio = self.normalize(proportion, self.sparsity_per_iter)
             cfg_list = self.create_cfg(new_pruneratio)
             if len(cfg_list) == 0:
                 _logger.error('The threshold is too small, please set a larger threshold')
                 return self.model
-            print('CFG_list')
-            print(cfg_list)
             _logger.debug('Pruner Config: %s', str(cfg_list))
             pruner = self.Pruner(self.model, cfg_list)
             pruner.compress()
@@ -372,9 +366,6 @@ class SensitivityPruner(Pruner):
             ori_acc = finetune_acc
             # unwrap the pruner
             pruner._unwrap_model()
-            print('UN Wrap model')
-            for name, module in self.model.named_modules():
-                print(name)
             # update the already prune ratio of each layer befor the new
             # sensitivity analysis
             for layer_cfg in cfg_list:
@@ -386,9 +377,7 @@ class SensitivityPruner(Pruner):
             modules_wrapper_final = pruner.get_modules_wrapper()
             del pruner
             _logger.info('Currently remained weights: %f', cur_ratio)
-            print('before checkpoint')
-            for name, module in self.model.named_modules():
-                print(name)
+
             if self.checkpoint_dir is not None:
                 checkpoint_name = 'Iter_%d_finetune_acc_%.5f_sparsity_%.4f' % (
                     iteration_count, finetune_acc, cur_ratio)
@@ -402,29 +391,20 @@ class SensitivityPruner(Pruner):
                 with open(cfg_path, 'w') as jf:
                     json.dump(cfg_list, jf)
                 self.analyzer.export(sensitivity_path)
-            print('after checkpoint')
-            for name, module in self.model.named_modules():
-                print(name)
+
             if cur_ratio > target_ratio:
                 # If this is the last prune iteration, skip the time-consuming
                 # sensitivity analysis
-                print('Analyzing sensitivity')
+
                 self.analyzer.load_state_dict(self.model.state_dict())
                 self.sensitivities = self.analyzer.analysis(
                     val_args=eval_args, val_kwargs=eval_kwargs)
-                print('Sensitivities')
-                print(self.sensitivities)
 
         _logger.info('After Pruning: %.2f weights remains', cur_ratio)
-        print('before set wrapper')
-        for name, module in self.model.named_modules():
-            print(name)
         self.modules_wrapper = modules_wrapper_final
-        print('after set wrapper')
-        for name, module in self.model.named_modules():
-            print(name)
         # TODO double check if return a normal model or
         # a wrapped model
+        self._wrap_model()
         return self.model
 
     def calc_mask(self, wrapper, **kwargs):
