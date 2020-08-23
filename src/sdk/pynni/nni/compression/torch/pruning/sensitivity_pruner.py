@@ -349,7 +349,7 @@ class SensitivityPruner(Pruner):
 
             new_pruneratio = self.normalize(proportion, self.sparsity_per_iter)
             cfg_list = self.create_cfg(new_pruneratio)
-            if len(cfg_list) == 0:
+            if not cfg_list:
                 _logger.error('The threshold is too small, please set a larger threshold')
                 return self.model
             _logger.debug('Pruner Config: %s', str(cfg_list))
