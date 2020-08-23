@@ -29,12 +29,17 @@ class FinishedIndividual:
 
 class EvoNasTuner(Tuner):
     """
+    EvoNasTuner is tuner using Evolution NAS Tuner.
+    See ``Regularized Evolution for Image Classifier Architecture Search`` for details.
 
     Parameters
     ---
     optimize_mode: str
+        whether to maximize metric or not. default: 'maximize'
     population_size: int
+        the maximum number of keeping models
     sample_size: int
+        the number of models chosen from population each time when evolution
     """
     def __init__(self, optimize_mode="maximize", population_size=100, sample_size=25):
         super(EvoNasTuner, self).__init__()
@@ -47,6 +52,14 @@ class EvoNasTuner(Tuner):
         self.search_space = None
 
     def generate_parameters(self, parameter_id, **kwargs):
+        """
+        This function will returns a dict of trial (hyper-)parameters, as a serializable object.
+
+        Parameters
+        ---
+        parameter_id: int
+            the index of current set of parameters
+        """
         if self.initial_population:
             arch = self.initial_population.popleft()
             self.history[parameter_id] = arch
@@ -64,6 +77,17 @@ class EvoNasTuner(Tuner):
             raise nni.NoMoreTrialError
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
+        """
+        Record the result from a trial
+
+        Parameters
+        ----------
+        parameter_id : int
+        parameters : dict
+        value : dict/float
+            if value is dict, it should have "default" key.
+            value is final metrics of the trial.
+        """
         reward = extract_scalar_reward(value)
         if parameter_id not in self.history:
             raise RuntimeError('Received parameter_id not in total_data.')
@@ -77,6 +101,14 @@ class EvoNasTuner(Tuner):
             self.population.popleft()
 
     def update_search_space(self, search_space):
+        """
+        Update search space.
+        Search_space contains the information that user pre-defined.
+
+        Parameters
+        ----------
+        search_space : dict
+        """
         logger.info('update search space %s', search_space)
         assert self.search_space is None
         self.search_space = search_space
