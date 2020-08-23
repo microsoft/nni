@@ -1,6 +1,6 @@
-# Built-in Tuners for Hyperparameter Tuning
+# HyperParameter Tuning with NNI Built-in Tuners
 
-NNI provides state-of-the-art tuning algorithms as part of our built-in tuners and makes them easy to use. Below is the brief summary of NNI's current built-in tuners:
+To fit a machine/deep learning model into different tasks/problems, hyperparameters always need to be tuned. Automate the process of hyperparaeter tuning always require a good tuning algorithm. NNI has provided state-of-the-art tuning algorithms as part of our built-in tuners and makes them easy to use. Below is the brief summary of NNI's current built-in tuners:
 
 Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an [article](../CommunitySharings/HpoComparison.md) comparing different Tuners on several problems.
 
