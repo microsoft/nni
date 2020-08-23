@@ -353,7 +353,7 @@ class SensitivityPruner(Pruner):
                 _logger.error('The threshold is too small, please set a larger threshold')
                 return self.model
             _logger.debug('Pruner Config: %s', str(cfg_list))
-            cfg_str = ['%s:%.3f'%(cfg['op_names'][0], cfg['sparsity']) for cfg in cfg_list ]
+            cfg_str = ['%s:%.3f'%(cfg['op_names'][0], cfg['sparsity']) for cfg in cfg_list]
             _logger.info('Current Sparsities: %s', ','.join(cfg_str))
 
             pruner = self.Pruner(self.model, cfg_list)
