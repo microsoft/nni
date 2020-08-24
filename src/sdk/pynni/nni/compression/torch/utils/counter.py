@@ -4,15 +4,14 @@
 import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
-
 try:
     from thop import profile
+    from thop.vision.basic_hooks import *
 except Exception as e:
     print('thop is not found, please install the python package: thop')
     raise
 
-
-def count_flops_params(model: nn.Module, input_size, verbose=True):
+def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=True):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -21,15 +20,15 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
     the remained filters according to its mask, which
     not taking the pruned input channels into consideration,
     so the calculated FLOPs will be larger than real number.
-
     Parameters
     ---------
     model : nn.Module
         target model.
     input_size: list, tuple
         the input shape of data
-
-
+    custom_ops: dict
+        custom operation on modules to count flops and parameters.
+        custom_ops will overwrite the default operation.
     Returns
     -------
     flops: float
@@ -44,6 +43,11 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
     inputs = torch.randn(input_size).to(device)
 
     hook_module_list = []
+    if custom_ops is None:
+        custom_ops = {}
+        
+    custom_mask_ops.update(custom_ops)
+
     prev_m = None
     for m in model.modules():
         weight_mask = None
@@ -56,7 +60,7 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
             hook_module_list.append(m)
         prev_m = m
 
-    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=verbose)
+    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_mask_ops, verbose=verbose)
 
 
     for m in hook_module_list:
@@ -74,7 +78,6 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
 def count_convNd_mask(m, x, y):
     """
     The forward hook to count FLOPs and Parameters of convolution operation.
-
     Parameters
     ----------
     m : torch.nn.Module
@@ -101,7 +104,6 @@ def count_convNd_mask(m, x, y):
 def count_linear_mask(m, x, y):
     """
     The forward hook to count FLOPs and Parameters of linear transformation.
-
     Parameters
     ----------
     m : torch.nn.Module
@@ -124,7 +126,7 @@ def count_linear_mask(m, x, y):
     m.total_ops += torch.DoubleTensor([int(total_ops)])
 
 
-custom_ops = {
+custom_mask_ops = {
     nn.Conv1d: count_convNd_mask,
     nn.Conv2d: count_convNd_mask,
     nn.Conv3d: count_convNd_mask,
