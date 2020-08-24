@@ -79,7 +79,6 @@ class ENASMicroLayer(nn.Module):
     """
     def __init__(self, num_nodes, in_channels_pp, in_channels_p, out_channels, reduction):
         super().__init__()
-        print(in_channels_pp, in_channels_p, out_channels, reduction)
         self.reduction = reduction
         if self.reduction:
             self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
@@ -160,7 +159,7 @@ class ENASMacroLayer(mutables.MutableScope):
             PoolBranch('avg', in_filters, out_filters, 3, 1, 1),
             PoolBranch('max', in_filters, out_filters, 3, 1, 1)
         ])
-        if prev_labels > 0:
+        if prev_labels:
             self.skipconnect = mutables.InputChoice(choose_from=prev_labels, n_chosen=None)
         else:
             self.skipconnect = None
