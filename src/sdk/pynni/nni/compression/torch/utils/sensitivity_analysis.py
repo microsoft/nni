@@ -163,7 +163,7 @@ class SensitivityAnalysis:
         if val_kwargs is None:
             val_kwargs = {}
         # Get the original validation metric(accuracy/loss) before pruning
-        # Get the accuracy baseline before staring the analysis.
+        # Get the accuracy baseline before starting the analysis.
         self.ori_metric = self.val_func(*val_args, **val_kwargs)
         namelist = list(self.target_layer.keys())
         if specified_layers is not None:

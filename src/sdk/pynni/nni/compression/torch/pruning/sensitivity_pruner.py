@@ -405,8 +405,7 @@ class SensitivityPruner(Pruner):
 
         _logger.info('After Pruning: %.2f weights remains', cur_ratio)
         self.modules_wrapper = modules_wrapper_final
-        # TODO double check if return a normal model or
-        # a wrapped model
+
         self._wrap_model()
         return self.model
 
