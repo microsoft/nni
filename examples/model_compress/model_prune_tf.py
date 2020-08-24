@@ -10,7 +10,7 @@ prune_config = {
         'model_name': 'naive',
         'pruner_class': nni.compression.tensorflow.LevelPruner,
         'config_list': [{
-            'sparsity': 1.0,
+            'sparsity': 0.9,
             'op_types': ['default'],
         }]
     },
@@ -55,28 +55,48 @@ def main(args):
     model_name = prune_config[args.pruner_name]['model_name']
     dataset_name = prune_config[args.pruner_name]['dataset_name']
     train_set, test_set = get_dataset(dataset_name)
-    model  = create_model(model_name)
-
-    optimizer = tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.9, decay=1e-4)
-    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    model = create_model(model_name)
 
     print('start training')
-    model.fit(train_set[0], train_set[1], batch_size=args.batch_size, epochs=args.pretrain_epochs, validation_data=test_set)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=0.1, momentum=0.9, decay=1e-4)
+    model.compile(
+        optimizer=optimizer,
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    model.fit(
+        train_set[0],
+        train_set[1],
+        batch_size=args.batch_size,
+        epochs=args.pretrain_epochs,
+        validation_data=test_set
+    )
 
     print('start model pruning')
     optimizer_finetune = tf.keras.optimizers.SGD(learning_rate=0.001, momentum=0.9, decay=1e-4)
     pruner = create_pruner(model, args.pruner_name)
     model = pruner.compress()
-    model.compile(optimizer=optimizer_finetune, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(train_set[0], train_set[1], batch_size=args.batch_size, epochs=args.prune_epochs, validation_data=test_set)
+    model.compile(
+        optimizer=optimizer_finetune,
+        loss='sparse_categorical_crossentropy',
+        metrics=['accuracy'],
+        run_eagerly=True  # NOTE: Important, model compression does not work in graph mode!
+    )
+    model.fit(
+        train_set[0],
+        train_set[1],
+        batch_size=args.batch_size,
+        epochs=args.prune_epochs,
+        validation_data=test_set
+    )
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--pruner_name', type=str, default='level')
     parser.add_argument('--batch_size', type=int, default=256)
-    parser.add_argument('--pretrain_epochs', type=int, default=1)
-    parser.add_argument('--prune_epochs', type=int, default=1)
+    parser.add_argument('--pretrain_epochs', type=int, default=10)
+    parser.add_argument('--prune_epochs', type=int, default=10)
 
     args = parser.parse_args()
     main(args)

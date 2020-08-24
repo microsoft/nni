@@ -6,7 +6,10 @@ Abstract base classes for TensorFlow model compression.
 """
 
 import logging
+
 import tensorflow as tf
+assert tf.__version__.startswith('2'), 'NNI model compression only supports TensorFlow v2.x'
+
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -130,8 +133,6 @@ class Pruner(Compressor):
         tf.keras.Model
             The compressed model, for convenience. This is exactly the same object to constructor argument.
         """
-        print(self.bound_model.run_eagerly)
-        self.bound_model.run_eagerly = True
         self._update_mask()
         return self.bound_model
 
@@ -206,10 +207,12 @@ class PrunerLayerWrapper(tf.keras.Model):
         for weight in self.layer.weights:
             mask = self.masks.get(weight.name)
             if mask is not None:
-                new_weights.append(tf.math.multiply(weight, mask).numpy())
+                new_weights.append(tf.math.multiply(weight, mask))
             else:
-                new_weights.append(weight.numpy())
-        self.layer.set_weights(new_weights)
+                new_weights.append(weight)
+        if new_weights and not hasattr(new_weights[0], 'numpy'):
+            raise RuntimeError('NNI: Compressed model can only run in eager mode')
+        self.layer.set_weights([weight.numpy() for weight in new_weights])
         return self.layer(*inputs)
 
 
