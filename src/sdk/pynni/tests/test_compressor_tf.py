@@ -19,7 +19,7 @@ from nni.compression.tensorflow import LevelPruner
 #
 # The naive model is used to test mask calculation.
 # It has a single 10x10 linear layer without bias, and `reduce_sum` its result.
-# To help predicting pruning result, the linear layer has fixed intial weights:
+# To help predicting pruning result, the linear layer has fixed initial weights:
 #     [ [ 0.0, 1.0, 2.0, ..., 9.0 ], [0.1, 1.1, 2.1, ..., 9.1 ], ... , [0.9, 1.0, 2.9, ..., 9.9 ] ]
 #
 ####
@@ -53,8 +53,7 @@ class TfCompressorTestCase(TestCase):
         model = build_naive_model()
         pruners['level'](model).compress()
         x = model(tensor1x10)
-        s = tf.reduce_sum(x)
-        assert s.numpy() == 94.5
+        assert x.numpy() == 94.5
 
 
 class CnnModel(Model):
