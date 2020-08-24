@@ -47,8 +47,8 @@ class LevelPrunerMasker(WeightMasker):
             if 'bias' in weight_variable.name:
                 continue
 
-            k = int(tf.size(weight_variable).numpy() * sparsity)
-            if k == 0:
+            num_prune = int(tf.size(weight_variable).numpy() * sparsity)
+            if num_prune == 0:
                 continue
 
             weight = weight_variable.read_value()
@@ -56,8 +56,12 @@ class LevelPrunerMasker(WeightMasker):
                 weight = tf.math.multiply(weight, wrapper.masks[weight_variable.name])
 
             w_abs = tf.math.abs(weight)
-            threshold = tf.math.top_k(tf.reshape(w_abs, [-1]), k)[0][0]
-            mask = tf.math.greater(w_abs, threshold)
+            k = tf.size(weight) - num_prune
+            topk = tf.math.top_k(tf.reshape(w_abs, [-1]), k)[0]
+            if tf.size(topk) == 0:
+                mask = tf.zeros_like(weight)
+            else:
+                mask = tf.math.greater_equal(w_abs, topk[-1])
             masks[weight_variable.name] = tf.cast(mask, weight.dtype)
         return masks
 

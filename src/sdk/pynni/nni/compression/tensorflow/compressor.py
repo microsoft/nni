@@ -78,6 +78,8 @@ class Compressor:
 
     def __init__(self, LayerWrapperClass, model, config_list):
         assert isinstance(model, tf.keras.Model)
+        if isinstance(model, tf.keras.Sequential):
+            raise ValueError('NNI model compression does not support `Sequential` model for now')
         self.validate_config(model, config_list)
 
         self.bound_model = model
@@ -250,6 +252,8 @@ def _locate_layers(model, cur_path=[]):
     # `cur_path`s format is documented in `LayerInfo.path`.
     # TODO: it can only find layers in `Model` and `list` for now.
     assert isinstance(model, tf.keras.Model)
+    if isinstance(model, tf.keras.Sequential):
+        _logger.warning('`Sequential` model is not supported yet, ignored.')
     ret = {}
     for key, value in model.__dict__.items():
         if isinstance(value, tf.keras.Model):
@@ -298,6 +302,6 @@ def _instrument_model(model, wrappers):
         else:
             name, index = key
             getattr(cur, name)[index] = wrapper
-            if isinstance(cur, tf.keras.Sequential):
-                cur._graph_initialized = False
-                cur._layer_call_argspecs[wrapper] = cur._layer_call_argspecs[wrapper.layer]
+            #if isinstance(cur, tf.keras.Sequential):
+            #    cur._graph_initialized = False
+            #    cur._layer_call_argspecs[wrapper] = cur._layer_call_argspecs[wrapper.layer]
