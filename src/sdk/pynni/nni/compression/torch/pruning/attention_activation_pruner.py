@@ -4,7 +4,7 @@
 import logging
 import torch
 import torch.nn as nn
-from ..compressor import Pruner
+from ..compressor import Pruner, _Constrained_StructuredFilterPruner
 from nni.compression.torch.speedup.compressor import get_module_by_name
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class SELayer(nn.Module):
         return x * y.expand_as(x)
 
 
-class AttentionActivationPruner(Pruner):
+class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
     """
     One-shot pruner based on the attention mechaism.
     """
@@ -98,5 +98,8 @@ class AttentionActivationPruner(Pruner):
         for para in self.bound_model.parameters():
             para.requires_grad = True
         # Calculate the mask based on the attention weights
-        for layer in need_prune:
-            
+        self.update_mask()
+        return self.bound_model
+
+    def _get_channel_sum():
+        pass

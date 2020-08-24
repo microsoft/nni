@@ -693,3 +693,12 @@ class SlimPrunerMasker(WeightMasker):
             mask_bias = mask_weight.clone()
             mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
         return mask
+
+
+class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
+
+    def get_mask(self, wrapper, wrapper_idx, channel_mask):
+        pass
+
+    def _get_channel_sum(self, wrapper, wrapper_idx):
+        pass
