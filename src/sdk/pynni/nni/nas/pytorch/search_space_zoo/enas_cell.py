@@ -109,7 +109,7 @@ class ENASMicroLayer(nn.Module):
         pprev: torch.Tensor
             the output of the previous previous layer
         prev: torch.Tensor
-            the output of the previous previous layer
+            the output of the previous layer
         """
         if self.reduction:
             pprev, prev = self.reduce0(pprev), self.reduce1(prev)
