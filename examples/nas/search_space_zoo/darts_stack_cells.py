@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import torch.nn as nn
-import ops
+from nni.nas.pytorch.search_space_zoo.darts_ops import DropPath
 
 
 class DartsStackedCells(nn.Module):
@@ -79,5 +79,5 @@ class DartsStackedCells(nn.Module):
 
     def drop_path_prob(self, p):
         for module in self.modules():
-            if isinstance(module, ops.DropPath):
+            if isinstance(module, DropPath):
                 module.p = p
