@@ -698,7 +698,30 @@ class SlimPrunerMasker(WeightMasker):
 class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
 
     def get_mask(self, wrapper, wrapper_idx, channel_mask):
-        pass
+        weight = wrapper.module.attention_weight.data
+        filters = weight.shape[0]
+        w_abs_structured = self._get_channel_sum(wrapper, wrapper_idx)
+        # set the sum of the already pruned channel to
+        # zero, so that these channel will be pruned.
+        w_abs_structured = w_abs_structured * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        if num_prune > 0:
+            threshold = torch.topk(
+                w_abs_structured.view(-1), num_prune, largest=False)[0].max()
+            c_mask = torch.gt(w_abs_structured, threshold)
+        else:
+            c_mask = torch.ones(filters).to(weight.device)
+        mask_weight = c_mask[:, None, None, None].expand_as(
+            weight).type_as(weight).clone()
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = c_mask.type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
 
     def _get_channel_sum(self, wrapper, wrapper_idx):
-        pass
+        attention_weight = wrapper.module.attention_weight.data
+        w_abs = attention_weight.abs()
+        return w_abs

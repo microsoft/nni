@@ -92,6 +92,8 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         for name, module in self.bound_model.named_modules():
             if name in need_prune:
                 father_mod, son_mod = get_module_by_name(self.bound_model, name)
+                # save the attention weights in the conv layer
+                son_mod.attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
                 setattr(father_mod, name.split('.')[-1], father_mod.origin_conv)
                 delattr(father_mod, 'origin_conv')
         # unfreeze the weights
@@ -100,6 +102,3 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         # Calculate the mask based on the attention weights
         self.update_mask()
         return self.bound_model
-
-    def _get_channel_sum():
-        pass

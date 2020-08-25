@@ -478,6 +478,8 @@ if __name__ == '__main__':
         PRUNER_DICT['l2'] = tmp_l2_constrained
         setattr(nni.compression.torch, 'L1FilterPruner', tmp_l1_constrained)
         setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
+        L1FilterPruner = tmp_l1_constrained
+        L2FilterPruner = tmp_l2_constrained
     from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 
     main(args)
