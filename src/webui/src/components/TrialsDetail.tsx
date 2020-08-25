@@ -183,7 +183,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     <TableList
                         pageSize={tablePageSize}
                         tableSource={source}
-                        columnList={columnList}
+                        // columnList={columnList}
                         changeColumn={changeColumn}
                         searchSpace={EXPERIMENT.searchSpaceNew}
                         trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
