@@ -215,7 +215,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
 
 ### **Install**
 
-NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.5`.
+NNI supports and is tested on Ubuntu >= 16.04, macOS >= 10.14.1, and Windows 10 >= 1809. Simply run the following `pip install` in an environment that has `python 64-bit >= 3.6`.
 
 Linux or macOS
 

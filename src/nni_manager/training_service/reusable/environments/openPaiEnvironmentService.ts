@@ -4,6 +4,7 @@
 'use strict';
 
 import * as fs from 'fs';
+import * as yaml from 'js-yaml';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
@@ -15,7 +16,6 @@ import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { StorageService } from '../storageService';
 
-const yaml = require('js-yaml');
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
@@ -28,16 +28,17 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     private paiTrialConfig: NNIPAIK8STrialConfig | undefined;
     private paiJobConfig: any;
     private paiToken?: string;
-    private paiTokenUpdateTime?: number;
-    private readonly paiTokenUpdateInterval: number;
     private protocol: string = 'http';
 
     private experimentId: string;
 
     constructor() {
         super();
-        this.paiTokenUpdateInterval = 7200000; //2hours
         this.experimentId = getExperimentId();
+    }
+
+    public get environmentMaintenceLoopInterval(): number {
+        return 5000;
     }
 
     public get hasStorageService(): boolean {
@@ -49,12 +50,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
                 this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                if (this.paiClusterConfig.passWord) {
-                    // Get PAI authentication token
-                    await this.updatePaiToken();
-                } else if (this.paiClusterConfig.token) {
-                    this.paiToken = this.paiClusterConfig.token;
-                }
+                this.paiToken = this.paiClusterConfig.token;
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
@@ -72,6 +68,16 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 if (this.paiTrialConfig.paiConfigPath) {
                     this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
                 }
+
+                if (this.paiClusterConfig.gpuNum === undefined) {
+                    this.paiClusterConfig.gpuNum = this.paiTrialConfig.gpuNum;
+                }
+                if (this.paiClusterConfig.cpuNum === undefined) {
+                    this.paiClusterConfig.cpuNum = this.paiTrialConfig.cpuNum;
+                }
+                if (this.paiClusterConfig.memoryMB === undefined) {
+                    this.paiClusterConfig.memoryMB = this.paiTrialConfig.memoryMB;
+                }
                 break;
             }
             default:
@@ -81,7 +87,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        await this.refreshPlatform();
 
         if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
@@ -101,9 +106,12 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         };
 
         request(getJobInfoRequest, async (error: any, response: request.Response, body: any) => {
+            // Status code 200 for success
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
-                this.log.error(`OpenPAI: get environment list from PAI Cluster failed!\nerror: ${error}`);
-                deferred.reject(error);
+                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(body)}`;
+                this.log.error(`${errorMessage}`);
+                deferred.reject(errorMessage);
             } else {
                 const jobInfos = new Map<string, any>();
                 body.forEach((jobInfo: any) => {
@@ -111,37 +119,38 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 });
 
                 environments.forEach((environment) => {
-                    if (jobInfos.has(environment.jobId)) {
-                        const jobResponse = jobInfos.get(environment.jobId);
+                    if (jobInfos.has(environment.envId)) {
+                        const jobResponse = jobInfos.get(environment.envId);
                         if (jobResponse && jobResponse.state) {
                             const oldEnvironmentStatus = environment.status;
                             switch (jobResponse.state) {
                                 case 'RUNNING':
                                 case 'WAITING':
-                                    // RUNNING status is set by runner, and ignore waiting status
-                                    break;
                                 case 'SUCCEEDED':
+                                    environment.setStatus(jobResponse.state);
+                                    break;
                                 case 'FAILED':
-                                    environment.setFinalStatus(jobResponse.state);
+                                    environment.setStatus(jobResponse.state);
+                                    deferred.reject(`OpenPAI: job ${environment.envId} is failed!`);
                                     break;
                                 case 'STOPPED':
                                 case 'STOPPING':
-                                    environment.setFinalStatus('USER_CANCELED');
+                                    environment.setStatus('USER_CANCELED');
                                     break;
                                 default:
-                                    this.log.error(`OpenPAI: job ${environment.jobId} returns unknown state ${jobResponse.state}.`);
-                                    environment.setFinalStatus('UNKNOWN');
+                                    this.log.error(`OpenPAI: job ${environment.envId} returns unknown state ${jobResponse.state}.`);
+                                    environment.setStatus('UNKNOWN');
                             }
                             if (oldEnvironmentStatus !== environment.status) {
-                                this.log.debug(`OpenPAI: job ${environment.jobId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
+                                this.log.debug(`OpenPAI: job ${environment.envId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
                             }
                         } else {
-                            this.log.error(`OpenPAI: job ${environment.jobId} has no state returned. body:${JSON.stringify(jobResponse)}`);
+                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:${JSON.stringify(jobResponse)}`);
                             // some error happens, and mark this environment
                             environment.status = 'FAILED';
                         }
                     } else {
-                        this.log.error(`OpenPAI job ${environment.jobId} is not found in job list.`);
+                        this.log.error(`OpenPAI job ${environment.envId} is not found in job list.`);
                         environment.status = 'UNKNOWN';
                     }
                 });
@@ -153,8 +162,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-
-        await this.refreshPlatform();
 
         if (this.paiClusterConfig === undefined) {
             throw new Error('PAI Cluster config is not initialized');
@@ -169,8 +176,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         // Step 1. Prepare PAI job configuration
         const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
         environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
-        environment.command = `cd ${environmentRoot} && ${environment.command}`
-        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.jobId}`
+        environment.command = `cd ${environmentRoot} && ${environment.command}`;
+        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
+        environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
+        environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;
 
         // Step 2. Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(environment);
@@ -181,18 +190,21 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
+            followAllRedirects: true,
             headers: {
                 'Content-Type': 'text/yaml',
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
         request(submitJobRequest, (error, response, body) => {
+            // Status code 202 for success, refer https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
-                    `start environment ${environment.jobId} failed, http code:${response.statusCode}, http body: ${body}`;
+                    `start environment ${environment.envId} failed, http code:${response.statusCode}, http body: ${body}`;
 
                 this.log.error(errorMessage);
                 environment.status = 'FAILED';
+                deferred.reject(errorMessage);
             }
             deferred.resolve();
         });
@@ -211,7 +223,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${environment.jobId}/executionType`,
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${environment.envId}/executionType`,
             method: 'PUT',
             json: true,
             body: { value: 'STOP' },
@@ -222,17 +234,20 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             }
         };
 
-        this.log.debug(`stopping OpenPAI environment ${environment.jobId}, ${stopJobRequest.uri}`);
+        this.log.debug(`stopping OpenPAI environment ${environment.envId}, ${stopJobRequest.uri}`);
 
         try {
             request(stopJobRequest, (error, response, _body) => {
                 try {
+                    // Status code 202 for success.
                     if ((error !== undefined && error !== null) || (response && response.statusCode >= 400)) {
-                        this.log.error(`OpenPAI: stop job ${environment.jobId} failed with ${response.statusCode}\n${error}`);
+                        const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                            `OpenPAI: stop job ${environment.envId} failed, http code:${response.statusCode}, http body: ${_body}`;
+                        this.log.error(`${errorMessage}`);
                         deferred.reject((error !== undefined && error !== null) ? error :
                             `Stop trial failed, http code: ${response.statusCode}`);
                     } else {
-                        this.log.info(`OpenPAI job ${environment.jobId} stopped.`);
+                        this.log.info(`OpenPAI job ${environment.envId} stopped.`);
                     }
                     deferred.resolve();
                 } catch (error) {
@@ -248,24 +263,11 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return deferred.promise;
     }
 
-    private async refreshPlatform(): Promise<void> {
-        if (this.paiClusterConfig && this.paiClusterConfig.passWord) {
-            try {
-                await this.updatePaiToken();
-            } catch (error) {
-                this.log.error(`${error}`);
-                if (this.paiToken === undefined) {
-                    throw new Error(error);
-                }
-            }
-        }
-    }
-
     private generateJobConfigInYamlFormat(environment: EnvironmentInformation): any {
         if (this.paiTrialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const jobName = environment.jobId;
+        const jobName = environment.envId;
 
         let nniJobConfig: any = undefined;
         if (this.paiTrialConfig.paiConfigPath) {
@@ -284,7 +286,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     environment.nodeCount += instanceCount;
                 }
 
-
                 // Each taskRole will generate new command in NNI's command format
                 // Each command will be formatted to NNI style
                 for (const taskRoleName in nniJobConfig.taskRoles) {
@@ -298,6 +299,19 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             }
 
         } else {
+            if (this.paiClusterConfig === undefined) {
+                throw new Error('PAI Cluster config is not initialized');
+            }
+            if (this.paiClusterConfig.gpuNum === undefined) {
+                throw new Error('PAI Cluster gpuNum is not initialized');
+            }
+            if (this.paiClusterConfig.cpuNum === undefined) {
+                throw new Error('PAI Cluster cpuNum is not initialized');
+            }
+            if (this.paiClusterConfig.memoryMB === undefined) {
+                throw new Error('PAI Cluster memoryMB is not initialized');
+            }
+
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,
@@ -320,9 +334,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.paiTrialConfig.gpuNum,
-                            cpu: this.paiTrialConfig.cpuNum,
-                            memoryMB: this.paiTrialConfig.memoryMB
+                            gpu: this.paiClusterConfig.gpuNum,
+                            cpu: this.paiClusterConfig.cpuNum,
+                            memoryMB: this.paiClusterConfig.memoryMB
                         },
                         commands: [
                             environment.command
@@ -359,60 +373,5 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         } else {
             return host;
         }
-    }
-    /**
-     * Update pai token by the interval time or initialize the pai token
-     */
-    protected async updatePaiToken(): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
-        const currentTime: number = new Date().getTime();
-        //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-            return Promise.resolve();
-        }
-
-        if (this.paiClusterConfig === undefined) {
-            const paiClusterConfigError: string = `pai cluster config not initialized!`;
-            this.log.error(`${paiClusterConfigError}`);
-            throw Error(`${paiClusterConfigError}`);
-        }
-
-        const authenticationReq: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
-            method: 'POST',
-            json: true,
-            body: {
-                username: this.paiClusterConfig.userName,
-                password: this.paiClusterConfig.passWord
-            }
-        };
-
-        request(authenticationReq, (error: any, response: request.Response, body: any) => {
-            if (error !== undefined && error !== null) {
-                this.log.error(`Get PAI token failed: ${error.message}, authenticationReq: ${authenticationReq}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-            } else {
-                if (response.statusCode !== 200) {
-                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}, authenticationReq: ${authenticationReq}`);
-                    deferred.reject(new Error(`Get PAI token failed code: ${response.statusCode}, body: ${response.body}, authenticationReq: ${authenticationReq}, please check paiConfig username or password`));
-                } else {
-                    this.paiToken = body.token;
-                    this.paiTokenUpdateTime = new Date().getTime();
-                    deferred.resolve();
-                }
-            }
-        });
-
-        let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
-        });
-
-        return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => { clearTimeout(timeoutId); });
     }
 }

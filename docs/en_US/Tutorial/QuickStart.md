@@ -2,7 +2,7 @@
 
 ## Installation
 
-We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.6`.
 
 ### Linux and macOS
 

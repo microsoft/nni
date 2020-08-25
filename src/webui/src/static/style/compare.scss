@@ -1,14 +1,17 @@
 .compare-modal{
     /* decide modal size */
     .ms-Dialog-main{
-        max-width: 70%;
+        width: 50%;
+        overflow: hidden;
     }
 
     /* compare-md: table style */
     &-table{
         width: 92%;
-        table-layout: fixed;
         margin: 0 auto;
+        margin-bottom: 20px;
+        border: 1px solid transparent;
+        overflow: auto;
         color: #333;
         tr{
             line-height: 30px;

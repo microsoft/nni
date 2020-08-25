@@ -8,7 +8,7 @@ setuptools.setup(
     version = '0.1',
     packages = setuptools.find_packages(exclude=['*test*']),
 
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     classifiers = [
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',

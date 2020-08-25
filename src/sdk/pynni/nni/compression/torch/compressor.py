@@ -54,19 +54,33 @@ class Compressor:
         self._fwd_hook_handles = {}
         self._fwd_hook_id = 0
 
-        for layer, config in self._detect_modules_to_compress():
-            wrapper = self._wrap_modules(layer, config)
-            self.modules_wrapper.append(wrapper)
+        self.reset()
+
         if not self.modules_wrapper:
             _logger.warning('Nothing is configured to compress, please check your model and config_list')
-
-        self._wrap_model()
 
     def validate_config(self, model, config_list):
         """
         subclass can optionally implement this method to check if config_list if valid
         """
         pass
+
+    def reset(self, checkpoint=None):
+        """
+        reset model state dict and model wrapper
+        """
+        self._unwrap_model()
+        if checkpoint is not None:
+            self.bound_model.load_state_dict(checkpoint)
+
+        self.modules_to_compress = None
+        self.modules_wrapper = []
+
+        for layer, config in self._detect_modules_to_compress():
+            wrapper = self._wrap_modules(layer, config)
+            self.modules_wrapper.append(wrapper)
+
+        self._wrap_model()
 
     def _detect_modules_to_compress(self):
         """
@@ -346,7 +360,7 @@ class Pruner(Compressor):
         config : dict
             the configuration for generating the mask
         """
-        _logger.info("Module detected to compress : %s.", layer.name)
+        _logger.debug("Module detected to compress : %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
@@ -381,7 +395,7 @@ class Pruner(Compressor):
             if weight_mask is not None:
                 mask_sum = weight_mask.sum().item()
                 mask_num = weight_mask.numel()
-                _logger.info('Layer: %s  Sparsity: %.4f', wrapper.name, 1 - mask_sum / mask_num)
+                _logger.debug('Layer: %s  Sparsity: %.4f', wrapper.name, 1 - mask_sum / mask_num)
                 wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
             if bias_mask is not None:
                 wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)

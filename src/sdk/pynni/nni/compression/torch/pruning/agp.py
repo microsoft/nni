@@ -1,6 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+An automated gradual pruning algorithm that prunes the smallest magnitude
+weights to achieve a preset level of network sparsity.
+Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
+efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
+Learning of Phones and other Consumer Devices.
+"""
+
 import logging
 import torch
 from schema import And, Optional
@@ -8,34 +16,31 @@ from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
 
-__all__ = ['AGP_Pruner']
+__all__ = ['AGPPruner']
 
 logger = logging.getLogger('torch pruner')
 
-class AGP_Pruner(Pruner):
+class AGPPruner(Pruner):
     """
-    An automated gradual pruning algorithm that prunes the smallest magnitude
-    weights to achieve a preset level of network sparsity.
-    Michael Zhu and Suyog Gupta, "To prune, or not to prune: exploring the
-    efficacy of pruning for model compression", 2017 NIPS Workshop on Machine
-    Learning of Phones and other Consumer Devices,
-    https://arxiv.org/pdf/1710.01878.pdf
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned.
+    config_list : listlist
+        Supported keys:
+            - initial_sparsity: This is to specify the sparsity when compressor starts to compress.
+            - final_sparsity: This is to specify the sparsity when compressor finishes to compress.
+            - start_epoch: This is to specify the epoch number when compressor starts to compress, default start from epoch 0.
+            - end_epoch: This is to specify the epoch number when compressor finishes to compress.
+            - frequency: This is to specify every *frequency* number epochs compressor compress once, default frequency=1.
+    optimizer: torch.optim.Optimizer
+        Optimizer used to train model.
+    pruning_algorithm: str
+        Algorithms being used to prune model,
+        choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
     """
 
     def __init__(self, model, config_list, optimizer, pruning_algorithm='level'):
-        """
-        Parameters
-        ----------
-        model : torch.nn.module
-            Model to be pruned
-        config_list : list
-            List on pruning configs
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
-        pruning_algorithm: str
-            algorithms being used to prune model
-        """
-
         super().__init__(model, config_list, optimizer)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
         self.masker = MASKER_DICT[pruning_algorithm](model, self)
@@ -47,7 +52,7 @@ class AGP_Pruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs

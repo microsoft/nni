@@ -9,10 +9,7 @@ from collections import OrderedDict
 import numpy as np
 import torch.nn as nn
 
-from nni.compression.torch import LevelPruner
-from nni.compression.torch import L1FilterPruner
-from nni.compression.torch import L2FilterPruner
-
+from ..pruning.constants_pruner import PRUNER_DICT
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
@@ -77,11 +74,7 @@ class SensitivityAnalysis:
         else:
             self.sparsities = np.arange(0.1, 1.0, 0.1)
         self.sparsities = [np.round(x, 2) for x in self.sparsities]
-        self.Pruner = L1FilterPruner
-        if prune_type == 'l2':
-            self.Pruner = L2FilterPruner
-        elif prune_type == 'fine-grained':
-            self.Pruner = LevelPruner
+        self.Pruner = PRUNER_DICT[prune_type]
         self.early_stop_mode = early_stop_mode
         self.early_stop_value = early_stop_value
         self.ori_metric = None  # original validation metric for the model

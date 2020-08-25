@@ -13,16 +13,18 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [Constrained L1Filter Pruner](#constrained-l1filter-pruner)
 * [L2Filter Pruner](#l2filter-pruner)
 * [Constrained L2Filter Pruner](#constrained-l2filter-pruner)
-* [APoZ Rank Pruner](#activationapozrankfilterpruner)
-* [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
+* [Activation APoZ Rank Filter Pruner](#activationAPoZRankFilter-pruner)
+* [Activation Mean Rank Filter Pruner](#activationmeanrankfilter-pruner)
 * [Constrained Activation Mean Rank Filter Pruner](#constrained-activationmeanrankfilter-pruner)
-* [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+* [Taylor FO On Weight Pruner](#taylorfoweightfilter-pruner)
 
 **Pruning Schedule**
 * [AGP Pruner](#agp-pruner)
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -30,7 +32,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 
 ## Level Pruner
 
-This is one basic one-shot pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60%). 
+This is one basic one-shot pruner: you can set a target sparsity level (expressed as a fraction, 0.6 means we will prune 60% of the weight parameters). 
 
 We first sort the weights in the specified layer by their absolute values. And then mask to zero the smallest magnitude weights until the desired sparsity level is reached.
 
@@ -40,7 +42,7 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -53,9 +55,19 @@ pruner.compress()
 ```
 
 #### User configuration for Level Pruner
-* **sparsity:** This is to specify the sparsity operations to be compressed to
 
-***
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.LevelPruner
+```
+
+##### Tensorflow
+
+```eval_rst
+..  autoclass:: nni.compression.tensorflow.LevelPruner
+```
+
 
 ## Slim Pruner
 
@@ -78,8 +90,11 @@ pruner.compress()
 
 #### User configuration for Slim Pruner
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only BatchNorm2d is supported in Slim Pruner
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SlimPruner
+```
 
 ### Reproduced Experiment
 
@@ -98,7 +113,7 @@ The experiments code can be found at [examples/model_compress]( https://github.c
 
 This is an one-shot pruner, FPGM Pruner is an implementation of paper [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf)
 
-FPGMPruner prune filters with the smallest geometric median
+FPGMPruner prune filters with the smallest geometric median.
 
  ![](../../img/fpgm_fig1.png)
 
@@ -106,16 +121,6 @@ FPGMPruner prune filters with the smallest geometric median
 
 ### Usage
 
-Tensorflow code
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
 PyTorch code
 ```python
 from nni.compression.torch import FPGMPruner
@@ -128,10 +133,11 @@ pruner.compress()
 ```
 
 #### User configuration for FPGM Pruner
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
 
-***
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.FPGMPruner
+```
 
 ## L1Filter Pruner
 
@@ -164,8 +170,10 @@ pruner.compress()
 
 #### User configuration for L1Filter Pruner
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L1Filter Pruner
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.L1FilterPruner
+```
 
 ### Reproduced Experiment
 
@@ -218,9 +226,10 @@ pruner.compress()
 
 ### User configuration for L2Filter Pruner
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to
-- **op_types:** Only Conv2d is supported in L2Filter Pruner
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.L2FilterPruner
+```
 ***
 
 ## Constrained L2Filter Pruner
@@ -236,9 +245,9 @@ pruner = Constrained_L2FilterPruner(model, config_list, dummy_input)
 pruner.compress()
 ```
 
-## ActivationAPoZRankFilterPruner
+## ActivationAPoZRankFilter Pruner
 
-ActivationAPoZRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
+ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
 
 The APoZ is defined as:
 
@@ -260,16 +269,18 @@ pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view example for more information
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
-### User configuration for ActivationAPoZRankFilterPruner
+### User configuration for ActivationAPoZRankFilter Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationAPoZRankFilterPruner
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.ActivationAPoZRankFilterPruner
+```
 ***
 
-## ActivationMeanRankFilterPruner
+
+## ActivationMeanRankFilter Pruner
 
 ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
 
@@ -289,13 +300,14 @@ pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view example for more information
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
 ### User configuration for ActivationMeanRankFilterPruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Only Conv2d is supported in ActivationMeanRankFilterPruner.
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.ActivationMeanRankFilterPruner
+```
 ***
 
 
@@ -312,9 +324,9 @@ pruner = ConstrainedActivationMeanRankFilterPruner(model, config_list, dummy_inp
 pruner.compress()
 ```
 
-## TaylorFOWeightFilterPruner
+## TaylorFOWeightFilter Pruner
 
-TaylorFOWeightFilterPruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
+TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
 
 > 
 
@@ -334,28 +346,32 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
 pruner.compress()
 ```
 
-You can view example for more information
 
-### User configuration for TaylorFOWeightFilterPruner
+#### User configuration for TaylorFOWeightFilter Pruner
 
-- **sparsity:** How much percentage of convolutional filters are to be pruned.
-- **op_types:** Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.TaylorFOWeightFilterPruner
+```
 ***
 
+
 ## AGP Pruner
+
 This is an iterative pruner, In [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878), authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
 
 >We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
 ![](../../img/agp_pruner.png)
->The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation
+
+>The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation (1).
 
 ### Usage
+
 You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
 
 PyTorch code
 ```python
-from nni.compression.torch import AGP_Pruner
+from nni.compression.torch import AGPPruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
@@ -373,7 +389,7 @@ config_list = [{
 # optimizer.step(), so an optimizer is required to prune the model.
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
-pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm='level')
+pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm='level')
 pruner.compress()
 ```
 
@@ -393,14 +409,15 @@ PyTorch code
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view example for more information
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
 #### User configuration for AGP Pruner
-* **initial_sparsity:** This is to specify the sparsity when compressor starts to compress
-* **final_sparsity:** This is to specify the sparsity when compressor finishes to compress
-* **start_epoch:** This is to specify the epoch number when compressor starts to compress, default start from epoch 0
-* **end_epoch:** This is to specify the epoch number when compressor finishes to compress
-* **frequency:** This is to specify every *frequency* number epochs compressor compress once, default frequency=1
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AGPPruner
+```
 
 ***
 
@@ -430,52 +447,11 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for NetAdapt Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **short_term_fine_tuner:** Function to short-term fine tune the masked model.
-This function should include `model` as the only parameter, and fine tune the model for a short term after each pruning iteration.
+##### PyTorch
 
-    Example:
-    ```python
-    >>> def short_term_fine_tuner(model, epoch=3):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     criterion = torch.nn.CrossEntropyLoss()
-    >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    >>>     model.train()
-    >>>     for _ in range(epoch):
-    >>>         for batch_idx, (data, target) in enumerate(train_loader):
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             optimizer.zero_grad()
-    >>>             output = model(data)
-    >>>             loss = criterion(output, target)
-    >>>             loss.backward()
-    >>>             optimizer.step()
-    ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **sparsity_per_iteration:** The sparsity to prune in each iteration. NetAdapt Pruner prune the model by the same level in each iteration to meet the resource budget progressively.
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm and the performance of the pruned model.
+```eval_rst
+..  autoclass:: nni.compression.torch.NetAdaptPruner
+```
 
 
 ## SimulatedAnnealing Pruner
@@ -510,39 +486,16 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for SimulatedAnnealing Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **experiment_data_dir:** PATH to save experiment data, including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
-            
+##### PyTorch
 
+```eval_rst
+..  autoclass:: nni.compression.torch.SimulatedAnnealingPruner
+```
+
+            
 ## AutoCompress Pruner
 For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
-        1. Generate sparsities distribution using SimualtedAnnealingPruner
+        1. Generate sparsities distribution using SimulatedAnnealingPruner
         2. Perform ADMM-based structured pruning to generate pruning result for the next round.
            Here we use `speedup` to perform real pruning.
 
@@ -569,60 +522,45 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for AutoCompress Pruner
 
-- **sparsity:** The target overall sparsity.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem.
-Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
-Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
-    Example:
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **evaluator:** Function to evaluate the masked model. This function should include `model` as the only parameter, and returns a scalar value.
-    Example::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # get the index of the max log-probability
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **dummy_input:** The dummy input for model speed up, users should put it on right device before pass in.
-- **iterations:** The number of overall iterations.
-- **optimize_mode:** Optimize mode, `maximize` or `minimize`, by default `maximize`.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-- **start_temperature:** Simualated Annealing related parameter.
-- **stop_temperature:** Simualated Annealing related parameter.
-- **cool_down_rate:** Simualated Annealing related parameter.
-- **perturbation_magnitude:** Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
-- **admm_num_iterations:** Number of iterations of ADMM Pruner.
-- **admm_training_epochs:** Training epochs of the first optimization subproblem of ADMMPruner.
-- **experiment_data_dir:** PATH to store temporary experiment data.
+##### PyTorch
 
+```eval_rst
+..  autoclass:: nni.compression.torch.AutoCompressPruner
+```
+
+## AutoML for Model Compression Pruner
+
+AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+![](../../img/amc_pruner.jpg)
+
+For more details, please refer to [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf).
+
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import AMCPruner
+config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }]
+pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
+pruner.compress()
+```
+
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+
+#### User configuration for AutoCompress Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AMCPruner
+```
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -657,35 +595,11 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 #### User configuration for ADMM Pruner
 
-- **sparsity:** This is to specify the sparsity operations to be compressed to.
-- **op_types:** The operation type to prune. If `base_algo` is `l1` or `l2`, then only `Conv2d` is supported as `op_types`.
-- **trainer:** Function used for the first subproblem in ADMM optimization, attention, this is not used for fine-tuning.
-Users should write this function as a normal function to train the Pytorch model and include `model, optimizer, criterion, epoch, callback` as function arguments.
-Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-The logic of `callback` is implemented inside the Pruner, users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
+##### PyTorch
 
-    Example: 
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # callback should be inserted between loss.backward() and optimizer.step()
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **num_iterations:** Total number of iterations.
-- **training_epochs:** Training epochs of the first subproblem.
-- **row:** Penalty parameters for ADMM training.
-- **base_algo:** Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
-Given the sparsity distribution among the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+```eval_rst
+..  autoclass:: nni.compression.torch.ADMMPruner
+```
 
 
 ## Lottery Ticket Hypothesis
@@ -723,10 +637,13 @@ The above configuration means that there are 5 times of iterative pruning. As th
 
 *Tensorflow version will be supported later.*
 
-#### User configuration for LotteryTicketPruner
+#### User configuration for LotteryTicket Pruner
 
-* **prune_iterations:** The number of rounds for the iterative pruning, i.e., the number of iterative pruning.
-* **sparsity:** The final sparsity when the compression is done.
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.LotteryTicketPruner
+```
 
 ### Reproduced Experiment
 
@@ -735,3 +652,35 @@ We try to reproduce the experiment result of the fully connected network on MNIS
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+
+
+## Sensitivity Pruner
+For each round, SensitivityPruner prunes the model based on the sensitivity to the accuracy of each layer until meeting the final configured sparsity of the whole model:
+        1. Analyze the sensitivity of each layer in the current state of the model.
+        2. Prune each layer according to the sensitivity.
+
+For more details, please refer to [Learning both Weights and Connections for Efficient Neural Networks ](https://arxiv.org/abs/1506.02626).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SensitivityPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = SensitivityPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+# eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+pruner.compress(eval_args=[model], finetune_args=[model])
+```
+
+
+#### User configuration for Sensitivity Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```

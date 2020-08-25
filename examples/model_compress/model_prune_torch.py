@@ -10,7 +10,7 @@ from torchvision import datasets, transforms
 from models.cifar10.vgg import VGG
 import nni
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
+    L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
 
 prune_config = {
     'level': {
@@ -25,7 +25,7 @@ prune_config = {
     'agp': {
         'dataset_name': 'mnist',
         'model_name': 'naive',
-        'pruner_class': AGP_Pruner,
+        'pruner_class': AGPPruner,
         'config_list': [{
             'initial_sparsity': 0.,
             'final_sparsity': 0.8,

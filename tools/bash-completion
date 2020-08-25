@@ -75,7 +75,7 @@ _nnictl()
 
         # add experiment IDs to candidates if desired
         if [[ $__nnictl_2nd_expid_cmds =~ " ${COMP_WORDS[1]} " ]]; then
-            local experiments=$(ls ~/nni/experiments 2>/dev/null)
+            local experiments=$(ls ~/nni-experiments 2>/dev/null)
             COMPREPLY+=($(compgen -W "$experiments" -- $cur))
         fi
 

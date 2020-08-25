@@ -22,62 +22,56 @@ _logger = logging.getLogger(__name__)
 
 class SimulatedAnnealingPruner(Pruner):
     """
-    This is a Pytorch implementation of Simulated Annealing compression algorithm.
+    A Pytorch implementation of Simulated Annealing compression algorithm.
 
-    - Randomly initialize a pruning rate distribution (sparsities).
-    - While current_temperature < stop_temperature:
-        1. generate a perturbation to current distribution
-        2. Perform fast evaluation on the perturbated distribution
-        3. accept the perturbation according to the performance and probability, if not accepted, return to step 1
-        4. cool down, current_temperature <- current_temperature * cool_down_rate
+    Parameters
+    ----------
+    model : pytorch model
+        The model to be pruned.
+    config_list : list
+        Supported keys:
+            - sparsity : The target overall sparsity.
+            - op_types : The operation type to prune.
+    evaluator : function
+        Function to evaluate the pruned model.
+        This function should include `model` as the only parameter, and returns a scalar value.
+        Example::
+
+            def evaluator(model):
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                val_loader = ...
+                model.eval()
+                correct = 0
+                with torch.no_grad():
+                    for data, target in val_loader:
+                        data, target = data.to(device), target.to(device)
+                        output = model(data)
+                        # get the index of the max log-probability
+                        pred = output.argmax(dim=1, keepdim=True)
+                        correct += pred.eq(target.view_as(pred)).sum().item()
+                accuracy = correct / len(val_loader.dataset)
+                return accuracy
+    optimize_mode : str
+        Optimize mode, `maximize` or `minimize`, by default `maximize`.
+    base_algo : str
+        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+    start_temperature : float
+        Start temperature of the simulated annealing process.
+    stop_temperature : float
+        Stop temperature of the simulated annealing process.
+    cool_down_rate : float
+        Cool down rate of the temperature.
+    perturbation_magnitude : float
+        Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+    experiment_data_dir : string
+        PATH to save experiment data,
+        including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
+
     """
 
     def __init__(self, model, config_list, evaluator, dummy_input, optimize_mode='maximize', base_algo='l1',
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35, experiment_data_dir='./'):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model to be pruned
-        config_list : list
-            Supported keys:
-                - sparsity : The target overall sparsity.
-                - op_types : The operation type to prune.
-        evaluator : function
-            function to evaluate the pruned model.
-            This function should include `model` as the only parameter, and returns a scalar value.
-            Example::
-            >>> def evaluator(model):
-            >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            >>>     val_loader = ...
-            >>>     model.eval()
-            >>>     correct = 0
-            >>>     with torch.no_grad():
-            >>>         for data, target in val_loader:
-            >>>             data, target = data.to(device), target.to(device)
-            >>>             output = model(data)
-            >>>             # get the index of the max log-probability
-            >>>             pred = output.argmax(dim=1, keepdim=True)
-            >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-            >>>     accuracy = correct / len(val_loader.dataset)
-            >>>     return accuracy
-        optimize_mode : str
-            optimize mode, `maximize` or `minimize`, by default `maximize`.
-        base_algo : str
-            Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
-            the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-        start_temperature : float
-            Simualated Annealing related parameter
-        stop_temperature : float
-            Simualated Annealing related parameter
-        cool_down_rate : float
-            Simualated Annealing related parameter
-        perturbation_magnitude : float
-            initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature
-        experiment_data_dir : string
-            PATH to save experiment data,
-            including the config_list generated for the base pruning algorithm, the performance of the pruned model and the pruning history.
-        """
         # original model
         self._model_to_prune = copy.deepcopy(model)
         self._base_algo = base_algo
@@ -115,7 +109,7 @@ class SimulatedAnnealingPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs
@@ -268,13 +262,11 @@ class SimulatedAnnealingPruner(Pruner):
         _logger.info('current perturation magnitude:%s', magnitude)
 
         while True:
-            perturbation = np.random.uniform(-magnitude,
-                                             magnitude, len(self.get_modules_wrapper()))
+            perturbation = np.random.uniform(-magnitude, magnitude, len(self.get_modules_wrapper()))
             sparsities = np.clip(0, self._sparsities + perturbation, None)
             _logger.debug("sparsities before rescalling:%s", sparsities)
 
-            sparsities = self._rescale_sparsities(
-                sparsities, target_sparsity=self._sparsity)
+            sparsities = self._rescale_sparsities(sparsities, target_sparsity=self._sparsity)
             _logger.debug("sparsities after rescalling:%s", sparsities)
 
             if sparsities is not None and sparsities[0] >= 0 and sparsities[-1] < 1:
@@ -337,6 +329,7 @@ class SimulatedAnnealingPruner(Pruner):
 
                         # save the overall best masked model
                         self.bound_model = model_masked
+                        # the ops with sparsity 0 are not included in this modules_wrapper
                         modules_wrapper_final = pruner.get_modules_wrapper()
                     break
                 # if not, accept with probability e^(-deltaE/current_temperature)
