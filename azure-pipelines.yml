@@ -49,9 +49,9 @@ jobs:
       sphinx-build -M html . _build -W
     displayName: 'Sphinx Documentation Build check'
 
-- job: 'ubuntu_1604_python35_legacy_torch_tf'
+- job: 'ubuntu_1804_python36_legacy_torch_tf'
   pool:
-    vmImage: 'Ubuntu 16.04'
+    vmImage: 'Ubuntu 18.04'
 
   steps:
   - script: |
@@ -106,8 +106,8 @@ jobs:
 
   steps:
   - script: |
+      echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${HOME}/Library/Python/3.7/bin:${PATH}"
       python3 -m pip install --upgrade pip setuptools
-      echo "##vso[task.setvariable variable=PATH]${HOME}/Library/Python/3.7/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
       echo "network-timeout 600000" >> ${HOME}/.yarnrc
@@ -141,7 +141,7 @@ jobs:
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python -m pip install scikit-learn==0.20.0 --user
+      python -m pip install scikit-learn==0.23.2 --user
       python -m pip install keras==2.1.6 --user
       python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python -m pip install tensorflow==1.15.2 --user

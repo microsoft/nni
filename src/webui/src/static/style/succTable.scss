@@ -1,6 +1,6 @@
 #succTable{
     height: 404px;
-    overflow-y: scroll;
+    overflow: auto;
     position: relative;
     .succTable-tooltip{
         position: absolute;

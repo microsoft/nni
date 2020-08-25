@@ -287,6 +287,11 @@ class Solver(nn.Module):
         else:
             pin_memory = False
 
+        if num_workers == 0:
+            timeout = 0
+        else:
+            timeout = 60
+
         self.ds_train = ChunkDataLoader(
             PreparedData,
             batch_size=self.Nminibatch,
@@ -294,7 +299,7 @@ class Solver(nn.Module):
             drop_last=True,
             num_workers=num_workers,
             pin_memory=pin_memory,
-            timeout=60)
+            timeout=timeout)
         self.f_train = LearnabilityMB(self.Nminibatch, self.D,
                                       constants.Coefficients.SLE[order],
                                       self.groups,
@@ -338,7 +343,7 @@ class Solver(nn.Module):
         Completes the forward operation and computes gradients for learnability and penalty.
         """
         f_train = self.f_train(s, xsub, ysub)
-        pen = self.penalty(s)
+        pen = self.penalty(s).unsqueeze(0).unsqueeze(0)
         # pylint: disable=E1102
         grad_outputs = torch.tensor([[1]], dtype=torch.get_default_dtype(),
                                     device=self.device)

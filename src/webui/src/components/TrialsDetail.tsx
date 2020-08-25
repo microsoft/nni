@@ -15,7 +15,7 @@ import '../static/style/search.scss';
 
 interface TrialDetailState {
     tablePageSize: number; // table components val
-    whichGraph: string;
+    whichChart: string;
     searchType: string;
     searchFilter: (trial: Trial) => boolean;
 }
@@ -39,8 +39,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         super(props);
         this.state = {
             tablePageSize: 20,
-            whichGraph: 'Default metric',
-            searchType: 'Id',
+            whichChart: 'Default metric',
+            searchType: 'id',
             // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
             searchFilter: trial => true
         };
@@ -56,16 +56,16 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             return;
         }
         switch (this.state.searchType) {
-            case 'Id':
+            case 'id':
                 filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
                 break;
             case 'Trial No.':
                 filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue;
                 break;
-            case 'Status':
+            case 'status':
                 filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
                 break;
-            case 'Parameters':
+            case 'parameters':
                 // TODO: support filters like `x: 2` (instead of `"x": 2`)
                 filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
                 break;
@@ -82,7 +82,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
     }
 
     handleWhichTabs = (item: any): void => {
-        this.setState({whichGraph: item.props.headerText});
+        this.setState({whichChart: item.props.headerText});
     }
 
     updateSearchFilterType = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
@@ -91,31 +91,31 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
             if (this.searchInput !== null) {
                 this.searchInput.value = '';
             }
-            this.setState(() => ({ searchType: item.text }));
+            this.setState(() => ({ searchType: item.key.toString() }));
         }
     }
 
     render(): React.ReactNode {
-        const { tablePageSize, whichGraph, searchType } = this.state;
+        const { tablePageSize, whichChart, searchType } = this.state;
         const { columnList, changeColumn } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
         const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
         const searchOptions = [
-            { key: 'Id', text: 'Id' },
+            { key: 'id', text: 'Id' },
             { key: 'Trial No.', text: 'Trial No.' },
-            { key: 'Status', text: 'Status' },
-            { key: 'Parameters', text: 'Parameters' },
+            { key: 'status', text: 'Status' },
+            { key: 'parameters', text: 'Parameters' },
         ];
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Pivot defaultSelectedKey={"0"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichGraph}>
+                    <Pivot defaultSelectedKey={"0"} className="detial-title" onLinkClick={this.handleWhichTabs} selectedKey={whichChart}>
                         {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                         <PivotItem headerText="Default metric" itemIcon="HomeGroup" key="Default metric">
                             <Stack className="graph">
                                 <DefaultPoint
                                     trialIds={trialIds}
-                                    visible={whichGraph === 'Default metric'}
+                                    visible={whichChart === 'Default metric'}
                                     trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                                 />
                             </Stack>
@@ -124,20 +124,20 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         <PivotItem headerText="Hyper-parameter" itemIcon="Equalizer" key="Hyper-parameter">
                             <Stack className="graph">
                                 <Para
-                                    dataSource={source}
-                                    expSearchSpace={JSON.stringify(EXPERIMENT.searchSpace)}
-                                    whichGraph={whichGraph}
+                                    trials={source}
+                                    searchSpace={EXPERIMENT.searchSpaceNew}
+                                    whichChart={whichChart}
                                 />
                             </Stack>
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
                         <PivotItem headerText="Duration" itemIcon="BarChartHorizontal" key="Duration">
-                            <Duration source={source} whichGraph={whichGraph} />
+                            <Duration source={source} whichChart={whichChart} />
                         </PivotItem>
                         {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
                         <PivotItem headerText="Intermediate result" itemIcon="StackedLineChart" key="Intermediate result">
                             {/* *why this graph has small footprint? */}
-                            <Intermediate source={source} whichGraph={whichGraph} />
+                            <Intermediate source={source} whichChart={whichChart} />
                         </PivotItem>
                     </Pivot>
                 </div>

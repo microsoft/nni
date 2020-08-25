@@ -9,18 +9,18 @@ import time
 import re
 import shutil
 import subprocess
+from functools import cmp_to_key
 from datetime import datetime, timezone
-from pathlib import Path
 from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni.package_utils import get_nni_installation_path
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
-from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
+from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content
+from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -248,6 +248,20 @@ def stop_experiment(args):
 
 def trial_ls(args):
     '''List trial'''
+    def final_metric_data_cmp(lhs, rhs):
+        metric_l = json.loads(json.loads(lhs['finalMetricData'][0]['data']))
+        metric_r = json.loads(json.loads(rhs['finalMetricData'][0]['data']))
+        if isinstance(metric_l, float):
+            return metric_l - metric_r
+        elif isinstance(metric_l, dict):
+            return metric_l['default'] - metric_r['default']
+        else:
+            print_error('Unexpected data format. Please check your data.')
+            raise ValueError
+
+    if args.head and args.tail:
+        print_error('Head and tail cannot be set at the same time.')
+        return
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -259,6 +273,14 @@ def trial_ls(args):
         response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
+            if args.head:
+                assert args.head > 0, 'The number of requested data must be greater than 0.'
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp), reverse=True)[:args.head]
+            elif args.tail:
+                assert args.tail > 0, 'The number of requested data must be greater than 0.'
+                content = sorted(filter(lambda x: 'finalMetricData' in x, content),
+                                 key=cmp_to_key(final_metric_data_cmp))[:args.tail]
             for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
@@ -422,9 +444,9 @@ def remote_clean(machine_list, experiment_id=None):
         sshKeyPath = machine.get('sshKeyPath')
         passphrase = machine.get('passphrase')
         if experiment_id:
-            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', experiment_id])
+            remote_dir = '/' + '/'.join(['tmp', 'nni-experiments', experiment_id])
         else:
-            remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments'])
+            remote_dir = '/' + '/'.join(['tmp', 'nni-experiments'])
         sftp = create_ssh_sftp_client(host, port, userName, passwd, sshKeyPath, passphrase)
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remove_remote_directory(sftp, remote_dir)
@@ -494,11 +516,15 @@ def experiment_clean(args):
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
         #clean local data
-        home = str(Path.home())
-        local_dir = nni_config.get_config('experimentConfig').get('logDir')
-        if not local_dir:
-            local_dir = os.path.join(home, 'nni', 'experiments', experiment_id)
-        local_clean(local_dir)
+        local_base_dir = nni_config.get_config('experimentConfig').get('logDir')
+        if not local_base_dir:
+            local_base_dir = NNI_HOME_DIR
+        local_experiment_dir = os.path.join(local_base_dir, experiment_id)
+        experiment_folder_name_list = ['checkpoint', 'db', 'log', 'trials']
+        for folder_name in experiment_folder_name_list:
+            local_clean(os.path.join(local_experiment_dir, folder_name))
+        if not os.listdir(local_experiment_dir):
+            local_clean(local_experiment_dir)
         experiment_config = Experiments()
         print_normal('removing metadata of experiment {0}'.format(experiment_id))
         experiment_config.remove_experiment(experiment_id)
@@ -681,45 +707,64 @@ def monitor_experiment(args):
     set_monitor(False, args.time)
 
 def export_trials_data(args):
-    '''export experiment metadata to csv
+    '''export experiment metadata and intermediate results to json or csv
     '''
+    def groupby_trial_id(intermediate_results):
+        sorted(intermediate_results, key=lambda x: x['timestamp'])
+        groupby = dict()
+        for content in intermediate_results:
+            groupby.setdefault(content['trialJobId'], []).append(json.loads(content['data']))
+        return groupby
+
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
+
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
     running, response = check_rest_server_quick(rest_port)
-    if running:
-        response = rest_get(export_data_url(rest_port), 20)
-        if response is not None and check_response(response):
-            if args.type == 'json':
-                with open(args.path, 'w') as file:
-                    file.write(response.text)
-            elif args.type == 'csv':
-                content = json.loads(response.text)
-                trial_records = []
-                for record in content:
-                    record_value = json.loads(record['value'])
-                    if not isinstance(record_value, (float, int)):
-                        formated_record = {**record['parameter'], **record_value, **{'id': record['id']}}
-                    else:
-                        formated_record = {**record['parameter'], **{'reward': record_value, 'id': record['id']}}
-                    trial_records.append(formated_record)
-                if not trial_records:
-                    print_error('No trial results collected! Please check your trial log...')
-                    exit(0)
-                with open(args.path, 'w', newline='') as file:
-                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
-                    writer.writeheader()
-                    writer.writerows(trial_records)
-            else:
-                print_error('Unknown type: %s' % args.type)
-                exit(1)
+    if not running:
+        print_error('Restful server is not running')
+        return
+    response = rest_get(export_data_url(rest_port), 20)
+    if response is not None and check_response(response):
+        content = json.loads(response.text)
+        if args.intermediate:
+            intermediate_results_response = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
+            if not intermediate_results_response or not check_response(intermediate_results_response):
+                print_error('Error getting intermediate results.')
+                return
+            intermediate_results = groupby_trial_id(json.loads(intermediate_results_response.text))
+            for record in content:
+                record['intermediate'] = intermediate_results[record['id']]
+        if args.type == 'json':
+            with open(args.path, 'w') as file:
+                file.write(json.dumps(content))
+        elif args.type == 'csv':
+            trial_records = []
+            for record in content:
+                formated_record = dict()
+                if args.intermediate:
+                    formated_record['intermediate'] = '[' + ','.join(record['intermediate']) + ']'
+                record_value = json.loads(record['value'])
+                if not isinstance(record_value, (float, int)):
+                    formated_record.update({**record['parameter'], **record_value, **{'id': record['id']}})
+                else:
+                    formated_record.update({**record['parameter'], **{'reward': record_value, 'id': record['id']}})
+                trial_records.append(formated_record)
+            if not trial_records:
+                print_error('No trial results collected! Please check your trial log...')
+                exit(0)
+            with open(args.path, 'w', newline='') as file:
+                writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
+                writer.writeheader()
+                writer.writerows(trial_records)
         else:
-            print_error('Export failed...')
+            print_error('Unknown type: %s' % args.type)
+            return
     else:
-        print_error('Restful server is not Running')
+        print_error('Export failed...')
 
 def search_space_auto_gen(args):
     '''dry run trial code to generate search space file'''
@@ -736,3 +781,166 @@ def search_space_auto_gen(args):
         print_warning('Expected search space file \'{}\' generated, but not found.'.format(file_path))
     else:
         print_normal('Generate search space done: \'{}\'.'.format(file_path))
+
+def save_experiment(args):
+    '''save experiment data to a zip file'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if args.id is None:
+        print_error('Please set experiment id.')
+        exit(1)
+    if args.id not in experiment_dict:
+        print_error('Cannot find experiment {0}.'.format(args.id))
+        exit(1)
+    if experiment_dict[args.id].get('status') != 'STOPPED':
+        print_error('Can only save stopped experiment!')
+        exit(1)
+    print_normal('Saving...')
+    nni_config = Config(experiment_dict[args.id]['fileName'])
+    logDir = os.path.join(NNI_HOME_DIR, args.id)
+    if nni_config.get_config('logDir'):
+        logDir = os.path.join(nni_config.get_config('logDir'), args.id)
+    temp_root_dir = generate_temp_dir()
+
+    # Step1. Copy logDir to temp folder
+    if not os.path.exists(logDir):
+        print_error('logDir: %s does not exist!' % logDir)
+        exit(1)
+    temp_experiment_dir = os.path.join(temp_root_dir, 'experiment')
+    shutil.copytree(logDir, temp_experiment_dir)
+
+    # Step2. Copy nnictl metadata to temp folder
+    temp_nnictl_dir = os.path.join(temp_root_dir, 'nnictl')
+    os.makedirs(temp_nnictl_dir, exist_ok=True)
+    try:
+        with open(os.path.join(temp_nnictl_dir, '.experiment'), 'w') as file:
+            experiment_dict[args.id]['id'] = args.id
+            json.dump(experiment_dict[args.id], file)
+    except IOError:
+        print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
+        exit(1)
+    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
+    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, experiment_dict[args.id]['fileName']))
+
+    # Step3. Copy code dir
+    if args.saveCodeDir:
+        temp_code_dir = os.path.join(temp_root_dir, 'code')
+        shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
+
+    # Step4. Archive folder
+    zip_package_name = 'nni_experiment_%s' % args.id
+    if args.path:
+        os.makedirs(args.path, exist_ok=True)
+        zip_package_name = os.path.join(args.path, zip_package_name)
+    shutil.make_archive(zip_package_name, 'zip', temp_root_dir)
+    print_normal('Save to %s.zip success!' % zip_package_name)
+
+    # Step5. Cleanup temp data
+    shutil.rmtree(temp_root_dir)
+
+def load_experiment(args):
+    '''load experiment data'''
+    package_path = os.path.expanduser(args.path)
+    if not os.path.exists(args.path):
+        print_error('file path %s does not exist!' % args.path)
+        exit(1)
+    temp_root_dir = generate_temp_dir()
+    shutil.unpack_archive(package_path, temp_root_dir)
+    print_normal('Loading...')
+    # Step1. Validation
+    if not os.path.exists(args.codeDir):
+        print_error('Invalid: codeDir path does not exist!')
+        exit(1)
+    if args.logDir:
+        if not os.path.exists(args.logDir):
+            print_error('Invalid: logDir path does not exist!')
+            exit(1)
+    experiment_temp_dir = os.path.join(temp_root_dir, 'experiment')
+    if not os.path.exists(os.path.join(experiment_temp_dir, 'db')):
+        print_error('Invalid archive file: db file does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    nnictl_temp_dir = os.path.join(temp_root_dir, 'nnictl')
+    if not os.path.exists(os.path.join(nnictl_temp_dir, '.experiment')):
+        print_error('Invalid archive file: nnictl metadata file does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    try:
+        with open(os.path.join(nnictl_temp_dir, '.experiment'), 'r') as file:
+            experiment_metadata = json.load(file)
+    except ValueError as err:
+        print_error('Invalid nnictl metadata file: %s' % err)
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    experiment_id = experiment_metadata.get('id')
+    if experiment_id in experiment_dict:
+        print_error('Invalid: experiment id already exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))):
+        print_error('Invalid: experiment metadata does not exist!')
+        shutil.rmtree(temp_root_dir)
+        exit(1)
+
+    # Step2. Copy nnictl metadata
+    src_path = os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))
+    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_metadata.get('fileName'))
+    if os.path.exists(dest_path):
+        shutil.rmtree(dest_path)
+    shutil.copytree(src_path, dest_path)
+
+    # Step3. Copy experiment data
+    nni_config = Config(experiment_metadata.get('fileName'))
+    nnictl_exp_config = nni_config.get_config('experimentConfig')
+    if args.logDir:
+        logDir = args.logDir
+        nnictl_exp_config['logDir'] = logDir
+    else:
+        if nnictl_exp_config.get('logDir'):
+            logDir = nnictl_exp_config['logDir']
+        else:
+            logDir = NNI_HOME_DIR
+    os.rename(os.path.join(temp_root_dir, 'experiment'), os.path.join(temp_root_dir, experiment_id))
+    src_path = os.path.join(os.path.join(temp_root_dir, experiment_id))
+    dest_path = os.path.join(os.path.join(logDir, experiment_id))
+    if os.path.exists(dest_path):
+        shutil.rmtree(dest_path)
+    shutil.copytree(src_path, dest_path)
+
+    # Step4. Copy code dir
+    codeDir = os.path.expanduser(args.codeDir)
+    if not os.path.isabs(codeDir):
+        codeDir = os.path.join(os.getcwd(), codeDir)
+        print_normal('Expand codeDir to %s' % codeDir)
+    nnictl_exp_config['trial']['codeDir'] = codeDir
+    archive_code_dir = os.path.join(temp_root_dir, 'code')
+    if os.path.exists(archive_code_dir):
+        file_list = os.listdir(archive_code_dir)
+        for file_name in file_list:
+            src_path = os.path.join(archive_code_dir, file_name)
+            target_path = os.path.join(codeDir, file_name)
+            if os.path.exists(target_path):
+                print_error('Copy %s failed, %s exist!' % (file_name, target_path))
+                continue
+            if os.path.isdir(src_path):
+                shutil.copytree(src_path, target_path)
+            else:
+                shutil.copy(src_path, target_path)
+
+    # Step5. Create experiment metadata
+    nni_config.set_config('experimentConfig', nnictl_exp_config)
+    experiment_config.add_experiment(experiment_id,
+                                     experiment_metadata.get('port'),
+                                     experiment_metadata.get('startTime'),
+                                     experiment_metadata.get('fileName'),
+                                     experiment_metadata.get('platform'),
+                                     experiment_metadata.get('experimentName'),
+                                     experiment_metadata.get('endTime'),
+                                     experiment_metadata.get('status'))
+    print_normal('Load experiment %s succsss!' % experiment_id)
+
+    # Step6. Cleanup temp data
+    shutil.rmtree(temp_root_dir)
+

@@ -1,6 +1,7 @@
 import { MANAGER_IP } from '../const';
 import { ExperimentProfile, NNIManagerStatus } from '../interface';
 import { requestAxios } from '../function';
+import { SearchSpace } from './searchspace';
 
 function compareProfiles(profile1?: ExperimentProfile, profile2?: ExperimentProfile): boolean {
     if (!profile1 || !profile2) {
@@ -57,7 +58,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/experiment`)
             .then(data => {
-                updated = updated || compareProfiles(this.profileField, data);
+                updated = updated || !compareProfiles(this.profileField, data);
                 this.profileField = data;
             })
             .catch(error => {
@@ -68,7 +69,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/check-status`)
             .then(data => {
-                updated = JSON.stringify(this.statusField) === JSON.stringify(data);
+                updated = JSON.stringify(this.statusField) !== JSON.stringify(data);
                 this.statusField = data;
             })
             .catch(error => {
@@ -127,6 +128,12 @@ class Experiment {
             }
         }
         return result;
+    }
+
+    get searchSpaceNew(): SearchSpace {
+        // The search space derived directly from profile
+        // eventually this will replace searchSpace
+        return new SearchSpace('', '', this.searchSpace);
     }
 
     get logCollectionEnabled(): boolean {

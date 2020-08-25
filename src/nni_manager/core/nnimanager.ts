@@ -16,7 +16,7 @@ import {
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -323,6 +323,10 @@ class NNIManager implements Manager {
         }
         return finals.concat(Array.from(latestIntermediates.values()));
         // FIXME: unit test
+    }
+
+    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+        return this.trainingService.getTrialLog(trialJobId, logType);
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {

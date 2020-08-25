@@ -293,7 +293,7 @@ Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If
 
 ### logDir
 
-Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+Optional. Path to a directory. Default: `<user home directory>/nni-experiments`.
 
 Configures the directory to store logs and data of the experiment.
 

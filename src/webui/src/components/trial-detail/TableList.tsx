@@ -3,8 +3,9 @@ import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
-    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost
+    PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
 } from 'office-ui-fabric-react';
+import ReactPaginate from 'react-paginate';
 import { LineChart, blocked, copy } from '../Buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
@@ -19,10 +20,12 @@ import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
-import '../../static/style/search.scss';
 import '../../static/style/table.scss';
 import '../../static/style/button.scss';
 import '../../static/style/openRow.scss';
+import '../../static/style/pagination.scss';
+
+
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -30,6 +33,11 @@ require('echarts/lib/component/title');
 echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
+
+const horizontalGapStackTokens: IStackTokens = {
+    childrenGap: 20,
+    padding: 10,
+};
 
 interface TableListProps {
     pageSize: number;
@@ -66,6 +74,11 @@ interface TableListState {
     allColumnList: string[];
     tableSourceForSort: Array<TableRecord>;
     sortMessage: SortInfo;
+    offset: number;
+    tablePerPage: Array<TableRecord>;
+    perPage: number;
+    currentPage: number;
+    pageCount: number;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -96,15 +109,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalIntermediateHeight: window.innerHeight,
             tableColumns: this.initTableColumnList(this.props.columnList),
             allColumnList: this.getAllColumnKeys(),
-            tableSourceForSort: this.props.tableSource,
-            sortMessage: { field: '', isDescend: false }
+            sortMessage: { field: '', isDescend: false },
+            offset: 0,
+            tablePerPage: [],
+            perPage: 20,
+            currentPage: 0,
+            pageCount: 0,
+            tableSourceForSort: this.props.tableSource
         };
     }
 
     // sort for table column
     onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { tableColumns } = this.state;
-        const { tableSource } = this.props;
         const newColumns: IColumn[] = tableColumns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
         newColumns.forEach((newCol: IColumn) => {
@@ -113,29 +130,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 currColumn.isSorted = true;
             } else {
                 newCol.isSorted = false;
-                newCol.isSortedDescending = true;
+                newCol.isSortedDescending =  true;
             }
         });
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this.copyAndSort(tableSource, currColumn.fieldName!, currColumn.isSortedDescending);
+
         this.setState({
             tableColumns: newColumns,
-            tableSourceForSort: newItems,
             sortMessage: { field: getColumn.key, isDescend: currColumn.isSortedDescending }
-        });
-
-    };
-
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
-        const key = columnKey as keyof T;
-        return items.slice(0).sort(function (a: T, b: T): any {
-            if (a[key] === undefined) {
-                return 1;
-            }
-            if (b[key] === undefined) {
-                return -1;
-            }
-            return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+        }, () => {
+            this.updateData();
         });
     }
 
@@ -179,7 +182,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
 
     StartTimeColumnConfig: any = {
-        name: 'Start Time',
+        name: 'Start time',
         key: 'startTime',
         fieldName: 'startTime',
         minWidth: 150,
@@ -193,7 +196,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     };
 
     EndTimeColumnConfig: any = {
-        name: 'End Time',
+        name: 'End time',
         key: 'endTime',
         fieldName: 'endTime',
         minWidth: 200,
@@ -252,7 +255,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.jobId}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
@@ -260,14 +263,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             // get intermediate result dict keys array
             const { intermediateKey } = this.state;
             const otherkeys: string[] = [];
-            // One trial job may contains multiple parameter id
-            // only show current trial's metric data
-            const metricDatas = res.data.filter(item => {
-                return item.parameterId == record.parameterId;
-            });
+            const metricDatas = res.data;
             if (metricDatas.length !== 0) {
                 // just add type=number keys
-                const intermediateMetrics = parseMetrics(res.data[0].data);
+                const intermediateMetrics = parseMetrics(metricDatas[0].data);
                 for (const key in intermediateMetrics) {
                     if (typeof intermediateMetrics[key] === 'number') {
                         otherkeys.push(key);
@@ -448,10 +447,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'ID':
                     showColumn.push(this.IdColumnConfig);
                     break;
-                case 'Start Time':
+                case 'Start time':
                     showColumn.push(this.StartTimeColumnConfig);
                     break;
-                case 'End Time':
+                case 'End time':
                     showColumn.push(this.EndTimeColumnConfig);
                     break;
                 case 'Duration':
@@ -554,15 +553,74 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     componentDidMount(): void {
         window.addEventListener('resize', this.onWindowResize);
+        this.updateData();
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
-        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource) {
-            const { columnList, tableSource } = this.props;
+        if (this.props.columnList !== prevProps.columnList || this.props.tableSource !== prevProps.tableSource || prevProps.trialsUpdateBroadcast !== this.props.trialsUpdateBroadcast) {
+            const { columnList } = this.props;
             this.setState({
-                tableSourceForSort: tableSource,
                 tableColumns: this.initTableColumnList(columnList),
                 allColumnList: this.getAllColumnKeys()
+                }, () => {
+                    this.updateData();
+                });
+        }
+    }
+
+    // slice all table data into current page data
+    updateData(): void {
+        const tableSource: Array<TableRecord> = this.props.tableSource;
+        const { offset, perPage, sortMessage } = this.state;
+
+        if (sortMessage.field !== '') {	
+            tableSource.sort(function (a, b): any {	
+                if (a[sortMessage.field] === undefined || Object.is(a[sortMessage.field], NaN) || Object.is(a[sortMessage.field], Infinity) || Object.is(a[sortMessage.field], -Infinity) || typeof a[sortMessage.field] === 'object' ) {   
+                    return 1;   
+                }   
+                if (b[sortMessage.field] === undefined || Object.is(b[sortMessage.field], NaN) || Object.is(b[sortMessage.field], Infinity) || Object.is(b[sortMessage.field], -Infinity) || typeof b[sortMessage.field] === 'object' ) {   
+                    return -1;  
+                }	
+                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
+            });	
+        }
+
+        const tableSlice = tableSource.slice(offset, offset + perPage)
+        const curPageCount = Math.ceil(tableSource.length / perPage)
+        this.setState({
+            tablePerPage: tableSlice,
+            pageCount: curPageCount,
+        });
+    }
+    
+    // update data when click the page index of pagination
+    handlePageClick = (evt: any): void => {
+        const selectedPage = evt.selected;
+        const offset = selectedPage * this.state.perPage;
+        
+        this.setState({ 
+            currentPage: selectedPage, 
+            offset: offset
+        }, () => {
+            this.updateData();
+        });
+    }
+
+    // update per page items when click the dropdown of pagination
+    updatePerPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
+        const { pageCount } = this.state;
+        
+        if (item !== undefined) {
+            const currentPerPage = item.key === 'all' ? this.props.tableSource.length: Number(item.key)
+            const currentPageCount = this.props.tableSource.length <= currentPerPage ? 1 : pageCount
+            
+            this.setState({ 
+                perPage: currentPerPage,
+                offset: 0,
+                currentPage: 0,
+                pageCount: currentPageCount
+            }, () => {
+                this.updateData();
             });
         }
     }
@@ -571,27 +629,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const { intermediateKey, modalIntermediateWidth, modalIntermediateHeight,
             tableColumns, allColumnList, isShowColumn, modalVisible,
             selectRows, isShowCompareModal, intermediateOtherKeys,
-            isShowCustomizedModal, copyTrialId, intermediateOption, sortMessage
+            isShowCustomizedModal, copyTrialId, intermediateOption,
+            tablePerPage
         } = this.state;
         const { columnList } = this.props;
-        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.state.tableSourceForSort));
-        if (sortMessage.field !== '') {
-            tableSource.sort(function (a, b): any {
-                if (a[sortMessage.field] === undefined) {
-                    return 1;
-                }
-                if (b[sortMessage.field] === undefined) {
-                    return -1;
-                }
-                return (sortMessage.isDescend ? a[sortMessage.field] < b[sortMessage.field] : a[sortMessage.field] > b[sortMessage.field]) ? 1 : -1;
-            });
-        }
+        const perPageOptions = [
+            { key: '10', text: '10 items per page'},
+            { key: '20', text: '20 items per page'},
+            { key: '50', text: '50 items per page'},
+            { key: 'all', text: 'All items'},
+        ];
+        
         return (
             <Stack>
                 <div id="tableList">
                     <DetailsList
                         columns={tableColumns}
-                        items={tableSource}
+                        items={tablePerPage}
                         setKey="set"
                         compact={true}
                         onRenderRow={this.onRenderRow}
@@ -599,6 +653,30 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         selectionMode={SelectionMode.multiple}
                         selection={this.getSelectedRows}
                     />
+                      
+                    <Stack horizontal horizontalAlign="end" verticalAlign="baseline" styles={{root:{padding:10}}} tokens={horizontalGapStackTokens}>
+                        <Dropdown
+                        selectedKey={this.state.perPage === this.props.tableSource.length ? 'all':String(this.state.perPage)}
+                        options={perPageOptions}
+                        onChange={this.updatePerPage}
+                        styles={{dropdown: { width: 150}}}/>
+
+                        <ReactPaginate
+                        previousLabel={"<"}
+                        nextLabel={">"}
+                        breakLabel={"..."}
+                        breakClassName={"break"}
+                        pageCount={this.state.pageCount}
+                        marginPagesDisplayed={2}
+                        pageRangeDisplayed={2}
+                        onPageChange={this.handlePageClick}
+                        containerClassName={(this.props.tableSource.length == 0 ? "pagination hidden" : "pagination" )}
+                        subContainerClassName={"pages pagination"}
+                        disableInitialCallback={false}
+                        activeClassName={"active"}
+                        forcePage={this.state.currentPage}
+                        />
+                    </Stack>
 
                 </div>
                 {/* Intermediate Result Modal */}
@@ -642,6 +720,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             style={{
                                 width: 0.5 * modalIntermediateWidth,
                                 height: 0.7 * modalIntermediateHeight,
+                                maxHeight: 534,
                                 padding: 20
                             }}
                             theme="my_theme"

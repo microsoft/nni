@@ -9,7 +9,7 @@ import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { convertTime } from '../../static/function';
 import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
-import LogDrawer from '../Modals/LogDrawer';
+import LogDrawer from '../Modals/LogPanel';
 import MessageInfo from '../Modals/MessageInfo';
 import { infoIcon } from "../Buttons/Icon";
 import '../../static/style/progress.scss';
