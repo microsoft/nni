@@ -75,8 +75,8 @@ From the experiment result, we get the following conclusions:
     }
     ```
 
-* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). 
-You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data/analyze.py) to plot new performance comparison figures.
+* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners). 
+You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners/analyze.py) to plot new performance comparison figures.
 
 ## Contribution
 

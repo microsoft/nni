@@ -42,7 +42,7 @@ Pruning algorithms compress the original network by removing redundant weights o
 | [SimulatedAnnealing Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#simulatedannealing-pruner) | Automatic pruning with a guided heuristic search method, Simulated Annealing algorithm [Reference Paper](https://arxiv.org/abs/1907.03141) |
 | [AutoCompress Pruner](https://nni.readthedocs.io/en/latest/Compressor/Pruner.html#autocompress-pruner) | Automatic pruning by iteratively call SimulatedAnnealing Pruner and ADMM Pruner [Reference Paper](https://arxiv.org/abs/1907.03141) |
 
-You can refer to this [benchmark](https://github.com/microsoft/nni/tree/master/docs/en_US/Benchmark.md) for the performance of these pruners on some benchmark problems.
+You can refer to this [benchmark](https://github.com/microsoft/nni/blob/master/docs/en_US/CommunitySharings/ModelCompressionComparison.md) for the performance of these pruners on some benchmark problems.
 
 ### Quantization Algorithms
 
