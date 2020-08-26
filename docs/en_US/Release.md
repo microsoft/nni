@@ -1,5 +1,82 @@
 # ChangeLog
 
+# Release 1.8 - 8/26/2020
+
+## Major updates
+
+### Training service
+
+* Add log when copying data in PAI mode (#2702)
+* Add timeout for `web_channel` in `trial_runner` (#2710)
+* Show environment error message in AzureML mode (#2724)
+* Add PAI trial job detail link (#2703)
+* Support GPU scheduler in reusable environment (#2627) (#2769)
+* Access trial log directly on WebUI (local mode only) (#2718)
+
+### WebUI, nnictl and nnicli
+
+* Improve hyper-parameter parallel coordinates plot (#2691) (#2759)
+* Add pagination for trial job list (#2738) (#2773)
+* Enable panel close when clicking overlay region (#2734)
+* Remove support for Multiphase on WebUI (#2760)
+* Support save and restore experiments (#2750)
+* Add intermediate results in export result (#2706)
+* Add [command](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Tutorial/Nnictl.md#nnictl-trial) to list trial results with highest/lowest metrics (#2747)
+* Improve the user experience of [nnicli](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md) with [examples](https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb) (#2713)
+
+### Neural architecture search
+
+* [Search space zoo: ENAS and DARTS](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/NAS/SearchSpaceZoo.md) (#2589)
+* API to query intermediate results in NAS benchmark (#2728)
+
+### Model compression
+
+* Support the List/Tuple Construct/Unpack operation for TorchModuleGraph (#2609)
+* Add support the DenseNet and InceptionV3 for the speedup module (#2719)
+* Support the multiple successive tuple unpack operations (#2768)
+* [Compression benchmark](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.md) (#2742)
+* [Sensitivity pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner) (#2684)
+* TensorFlow v2 support in model compression (#2755)
+* [AMC pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md) (#2573) (#2786)
+
+### Backward incompatible changes
+
+* Update the default experiment folder from `$HOME/nni/experiments` to `$HOME/nni-experiments` (#2686) (#2753)
+* Dropped support for Python 3.5 and scikit-learn 0.20 (#2778) (#2777) (2783) (#2787) (#2788) (#2790)
+
+### Others
+
+* Upgrade TensorFlow version in Docker image (#2732) (#2735) (#2720)
+
+## Examples
+
+* Remove gpuNum in assessor examples (#2641)
+
+## Documentation
+
+* Improve customized tuner documentation (#2628)
+* Fix several typos and grammar mistakes in documentation (#2637 #2638, thanks @tomzx)
+* Improve AzureML training service documentation (#2631)
+* Improve CI of Chinese translation (#2654)
+* Improve PAI training service documenation (#2685)
+* Improve documentation of community sharing (#2640)
+* Add tutorial of Colab support (#2700)
+* Improve documentation structure for model compression (#2676)
+
+## Bug fixes
+
+* Fix mkdir error in training service (#2673)
+* Fix bug when using chmod in remote training service (#2689)
+* Fix dependency issue by making `_graph_utils` imported inline (#2675)
+* Fix mask issue in `SimulatedAnnealingPruner` (#2736)
+* Fix intermediate graph zooming issue (#2738)
+* Fix issue when dict is unordered when querying NAS benchmark (#2728)
+* Fix import issue for gradient selector dataloader iterator (#2690)
+* Fix support for dozens of machines in remote training service (#2725)
+* Fix several styling issues in WebUI (#2762 #2737)
+* Fix support for unusual types for metrics including NaN and Infinity (#2782)
+* Fix nnictl experiment delete (#2791)
+
 # Release 1.7 - 7/8/2020
 
 ## Major Features
