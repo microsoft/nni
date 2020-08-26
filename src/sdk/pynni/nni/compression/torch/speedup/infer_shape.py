@@ -286,7 +286,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
     Parameters
     ----------
     module_masks : ModuleMasks
-        The ModuleMasks instance of the batchnorm2d
+        The ModuleMasks instance of the Conv2d
     mask : CoarseMask
         The mask of its input tensor
     cat_info: dict
