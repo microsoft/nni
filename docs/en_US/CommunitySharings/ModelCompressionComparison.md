@@ -9,7 +9,7 @@ In addition, we provide friendly instructions on the re-implementation of these 
 
 The experiments are performed with the following pruners/datasets/models:
 
-* Models: [VGG16, ResNet18, ResNet50](https://github.com/microsoft/nni/tree/v1.8/examples/model_compress/models/cifar10)
+* Models: [VGG16, ResNet18, ResNet50](https://github.com/microsoft/nni/tree/master/examples/model_compress/models/cifar10)
 
 * Datasets: CIFAR-10
 
@@ -23,7 +23,7 @@ The experiments are performed with the following pruners/datasets/models:
     
     For the pruners with scheduling, `L1Filter Pruner` is used as the base algorithm. That is to say, after the sparsities distribution is decided by the scheduling algorithm, `L1Filter Pruner` is used to performn real pruning.
 
-    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/v1.8/docs/en_US/Compressor/Overview.md).
+    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/Overview.md).
 
 ## Experiment Result
 
@@ -60,14 +60,14 @@ From the experiment result, we get the following conclusions:
 
 * The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
-* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/v1.8/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/v1.8/docs/en_US/Compressor/ModelSpeedup.md).
+* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/ModelSpeedup.md).
 This avoids potential issues of counting them of masked models.
 
-* The experiment code can be found [here]( https://github.com/microsoft/nni/tree/v1.8/examples/model_compress/auto_pruners_torch.py).
+* The experiment code can be found [here]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py).
 
 ### Experiment Result Rendering
 
-* If you follow the practice in the [example]( https://github.com/microsoft/nni/tree/v1.8/examples/model_compress/auto_pruners_torch.py), for every single pruning experiment, the experiment result will be saved in JSON format as follows:
+* If you follow the practice in the [example]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py), for every single pruning experiment, the experiment result will be saved in JSON format as follows:
     ``` json
     {
         "performance": {"original": 0.9298, "pruned": 0.1, "speedup": 0.1, "finetuned": 0.7746}, 
@@ -76,8 +76,8 @@ This avoids potential issues of counting them of masked models.
     }
     ```
 
-* The experiment results are saved [here](https://github.com/microsoft/nni/tree/v1.8/examples/model_compress/comparison_of_pruners). 
-You can refer to [analyze](https://github.com/microsoft/nni/tree/v1.8/examples/model_compress/comparison_of_pruners/analyze.py) to plot new performance comparison figures.
+* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners). 
+You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners/analyze.py) to plot new performance comparison figures.
 
 ## Contribution
 
