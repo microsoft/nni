@@ -4,9 +4,12 @@
 import logging
 import torch
 import torch.nn as nn
-from ..compressor import Pruner, _Constrained_StructuredFilterPruner
-from nni.compression.torch.speedup.compressor import get_module_by_name
+from ..compressor import Pruner
+from .one_shot import _Constrained_StructuredFilterPruner
+from ..speedup.compressor import get_module_by_name
+
 _logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 class SELayer(nn.Module):
     """
@@ -42,7 +45,7 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
     """
     One-shot pruner based on the attention mechaism.
     """
-    def __init__(self, model, config_list, evaluator, finetuner, reduction=16):
+    def __init__(self, model, config_list, dummy_input, evaluator, finetuner, reduction=16):
         """
         Parameters
         ----------
@@ -51,25 +54,24 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         -------
         """
         self.bound_model = model
-        super(AttentionActivationPruner, self).__init__(model, config_list)
+        super(AttentionActivationPruner, self).__init__(model, config_list, dummy_input, pruning_algorithm='attention')
         self._unwrap_model() # unwrap the model
+        self.dummy_input =  dummy_input
         self.evaluator = evaluator
         self.finetuner = finetuner
         self.config_list = config_list
         self.reduction = reduction
 
     def compress(self):
-        need_prune = set()
-        for cfg in self.config_list:
-            for name in cfg['op_names']:
-                need_prune.add(name)
+        module_to_compress = self._detect_modules_to_compress()
         # freeze the original weighs of the model
+        _logger.info('Freeze the original weights of the model')
         for para in self.bound_model.parameters():
             para.requires_grad = False
         se_blocks = {}
         for name, module in self.bound_model.named_modules():
-            if name in need_prune:
-                errmsg = "Currently, only support the pruning for Conv layers, %s is not a conv layer" %name
+            if module in module_to_compress:
+                errmsg = "Currently, only support the pruning for Conv layers, %s is not a conv layer"  % name
                 assert isinstance(module, nn.Conv2d) or isinstance(module, nn.Conv1d), errmsg
                 father_mod, son_mod = get_module_by_name(self.bound_model, name)
                 father_mod.origin_conv = son_mod # save the original conv layer
@@ -78,7 +80,9 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
                 se_blocks[name] = se_layer
                 # use the conv + attention block to replace the original conv layers
                 setattr(father_mod, name.split('.')[-1], new_mod)
+                _logger.info('Add SE block for %s', name)
         # finetune the attention block parameters
+        _logger.info('Finetuning the weights of SEBlock')
         self.finetuner(self.bound_model)
         # also freeze the weight for the se layers
         for name in se_blocks:
@@ -87,10 +91,11 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
             se_blocks.records_weights = True
             for para in se_blocks[name].parameters():
                 para.requires_grad = False
+        _logger.info('Calculaing the attention weights for each channel')
         self.evaluator(self.bound_model)
         # reset the model
         for name, module in self.bound_model.named_modules():
-            if name in need_prune:
+            if module in module_to_compress:
                 father_mod, son_mod = get_module_by_name(self.bound_model, name)
                 # save the attention weights in the conv layer
                 son_mod.attention_weights = se_blocks[name].sum_weights / se_blocks[name].count

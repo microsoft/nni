@@ -18,7 +18,7 @@ from models.cifar10.resnet import ResNet18, ResNet50
 import nni
 from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.compression.torch import Constrained_L1FilterPruner, Constrained_L2FilterPruner
-
+from nni.compression.torch import AttentionActivationPruner
 from nni.compression.torch import ModelSpeedup
 from nni.compression.torch.utils.counter import count_flops_params
 
@@ -278,7 +278,11 @@ def main(args):
         pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,
                                 base_algo=args.base_algo, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'AMCPruner':
-        pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=args.sparsity)
+        def amc_evaluator(val_loader, model):
+            return test(model, device, criterion, val_loader) 
+        pruner = AMCPruner(model, config_list, amc_evaluator, val_loader, flops_ratio=args.sparsity)
+    elif args.pruner == 'AttentionPruner':
+        pruner = AttentionActivationPruner(model, config_list, dummy_input, evaluator, short_term_fine_tuner)
     elif args.pruner == 'ADMMPruner':
         # users are free to change the config here
         if args.model == 'LeNet':
