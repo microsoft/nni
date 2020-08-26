@@ -1,4 +1,4 @@
-# NAS Benchmarks (experimental)
+# NAS Benchmarks
 
 ```eval_rst
 ..  toctree::
@@ -8,12 +8,13 @@
 ```
 
 ## Introduction
+
 To imporve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as [NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326), [NDS](https://arxiv.org/abs/1905.13214), etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
 
 ## Prerequisites
 
-* Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` before importing NNI.
-* Please install `peewee` via `pip install peewee`, which NNI uses to connect to database.
+* Please prepare a folder to household all the benchmark databases. By default, it can be found at `${HOME}/.nni/nasbenchmark`. You can place it anywhere you like, and specify it in `NASBENCHMARK_DIR` via `export NASBENCHMARK_DIR=/path/to/your/nasbenchmark` before importing NNI.
+* Please install `peewee` via `pip3 install peewee`, which NNI uses to connect to database.
 
 ## Data Preparation
 

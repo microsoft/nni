@@ -286,32 +286,9 @@ def create_customized_class_instance(class_params):
 
     return instance
 
-def get_python_dir(sitepackages_path):
-    if sys.platform == "win32":
-        return str(Path(sitepackages_path))
-    else:
-        return str(Path(sitepackages_path).parents[2])
-
 def get_nni_installation_parent_dir():
     ''' Find nni installation parent directory
     '''
-    def try_installation_path_sequentially(*sitepackages):
-        '''Try different installation path sequentially util nni is found.
-        Return None if nothing is found
-        '''
-        def _generate_installation_path(sitepackages_path):
-            python_dir = get_python_dir(sitepackages_path)
-            entry_file = os.path.join(python_dir, 'nni', 'main.js')
-            if os.path.isfile(entry_file):
-                return python_dir
-            return None
-
-        for sitepackage in sitepackages:
-            python_dir = _generate_installation_path(sitepackage)
-            if python_dir:
-                return python_dir
-        return None
-
     if os.getenv('VIRTUAL_ENV'):
         # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
         # Note that conda venv will not have VIRTUAL_ENV
@@ -321,11 +298,20 @@ def get_nni_installation_parent_dir():
         # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
         # that nni exists there
         if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
+            python_dir = _try_installation_path_sequentially(site.getusersitepackages(), *site.getsitepackages())
         else:
-            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
-
+            python_dir = _try_installation_path_sequentially(*site.getsitepackages(), site.getusersitepackages())
     return python_dir
+
+def _try_installation_path_sequentially(*sitepackages):
+    '''Try different installation path sequentially util nni is found.
+    Return None if nothing is found
+    '''
+    for sitepackage in sitepackages:
+        for path in [Path(sitepackage).parents[2], Path(sitepackage)]:
+            if (path / 'nni' / 'main.js').is_file():
+                return str(path)
+    return None
 
 def get_nni_installation_path():
     ''' Find nni installation directory
