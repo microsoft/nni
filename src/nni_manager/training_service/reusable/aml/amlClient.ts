@@ -74,16 +74,12 @@ export class AMLClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('tracking_url');
-        let trackingUrl = '';
+        const self = this;
         this.pythonShellClient.on('message', function (status: any) {
-            const items = status.split(':');
-            if (items[0] === 'tracking_url') {
-                trackingUrl = items.splice(1, items.length).join('')
-                // trackingUrl may be 'http//', 'https//' because of previous process logic,
-                // workaround for a hotfix here, need to refactor
-                trackingUrl = trackingUrl.replace('http//', 'http://').replace('https//', 'https://'); 
+            const trackingUrl = self.parseContent('tracking_url', status);
+            if (trackingUrl !== '') {
+                deferred.resolve(trackingUrl);
             }
-            deferred.resolve(trackingUrl);
         });
         this.monitorError(this.pythonShellClient, deferred);
         return deferred.promise;
@@ -94,12 +90,12 @@ export class AMLClient {
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }
-        let newStatus = oldStatus;
         this.pythonShellClient.send('update_status');
+        const self = this;
         this.pythonShellClient.on('message', function (status: any) {
-            const items = status.split(':');
-            if (items[0] === 'status') {
-                newStatus = items.splice(1, items.length).join('')
+            let newStatus = self.parseContent('status', status);
+            if (newStatus === '') {
+                newStatus = oldStatus;
             }
             deferred.resolve(newStatus);
         });
@@ -120,10 +116,11 @@ export class AMLClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('receive');
+        const self = this;
         this.pythonShellClient.on('message', function (command: any) {
-            const items = command.split(':')
-            if (items[0] === 'receive') {
-                deferred.resolve(JSON.parse(command.slice(8)))
+            const message = self.parseContent('receive', command);
+            if (message !== '') {
+                deferred.resolve(JSON.parse(message))
             }
         });
         this.monitorError(this.pythonShellClient, deferred);
@@ -138,5 +135,14 @@ export class AMLClient {
         pythonShellClient.on('close', function (error: any) {
             deferred.reject(error);
         });
+    }
+    
+    // Parse command content, command format is {head}:{content}
+    public parseContent(head: string, command: string) {
+        const items = command.split(':');
+        if (items[0] === head) {
+            return command.slice(head.length + 1);
+        }
+        return '';
     }
 }
