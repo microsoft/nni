@@ -6,7 +6,7 @@ from ..pruning import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker,
     L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
     ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker, \
     L1ConstrainedFilterPrunerMasker, L2ConstrainedFilterPrunerMasker, \
-    ConstrainedActivationMeanRankFilterPrunerMasker
+    ConstrainedActivationMeanRankFilterPrunerMasker, ConstrainedAttentionPrunerMasker
 
 MASKER_DICT = {
     'level': LevelPrunerMasker,

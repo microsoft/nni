@@ -11,7 +11,7 @@ __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
     'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
     'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'AMCWeightMasker',
     'L1ConstrainedFilterPrunerMasker', 'L2ConstrainedFilterPrunerMasker',
-    'ConstrainedActivationMeanRankFilterPrunerMasker']
+    'ConstrainedActivationMeanRankFilterPrunerMasker', 'ConstrainedAttentionPrunerMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -753,7 +753,7 @@ class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
         attention_weight = wrapper.module.attention_weight.data
         w_abs = attention_weight.abs()
         return w_abs
-        
+
 def least_square_sklearn(X, Y):
     from sklearn.linear_model import LinearRegression
     reg = LinearRegression(fit_intercept=False)

@@ -277,6 +277,8 @@ def main(args):
     elif args.pruner == 'NetAdaptPruner':
         pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,
                                 base_algo=args.base_algo, experiment_data_dir=args.experiment_data_dir)
+    elif args.pruner == 'AMCPruner':
+        pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=args.sparsity)
     elif args.pruner == 'ADMMPruner':
         # users are free to change the config here
         if args.model == 'LeNet':
@@ -480,6 +482,6 @@ if __name__ == '__main__':
         setattr(nni.compression.torch, 'L2FilterPruner', tmp_l2_constrained)
         L1FilterPruner = tmp_l1_constrained
         L2FilterPruner = tmp_l2_constrained
-    from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
+    from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner, AMCPruner
 
     main(args)
