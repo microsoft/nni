@@ -6,10 +6,10 @@
 
 ### Training service
 
-* Add log when copying data in PAI mode (#2702)
+* Add log when copying data in OpenPAI mode (#2702)
 * Add timeout for `web_channel` in `trial_runner` (#2710)
 * Show environment error message in AzureML mode (#2724)
-* Add PAI trial job detail link (#2703)
+* Add OpenPAI trial job detail link (#2703)
 * Support GPU scheduler in reusable environment (#2627) (#2769)
 * Access trial log directly on WebUI (local mode only) (#2718)
 
@@ -58,7 +58,7 @@
 * Fix several typos and grammar mistakes in documentation (#2637 #2638, thanks @tomzx)
 * Improve AzureML training service documentation (#2631)
 * Improve CI of Chinese translation (#2654)
-* Improve PAI training service documenation (#2685)
+* Improve OpenPAI training service documenation (#2685)
 * Improve documentation of community sharing (#2640)
 * Add tutorial of Colab support (#2700)
 * Improve documentation structure for model compression (#2676)
