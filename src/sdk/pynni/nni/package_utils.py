@@ -309,9 +309,8 @@ def _try_installation_path_sequentially(*sitepackages):
     '''
     for sitepackage in sitepackages:
         path = Path(sitepackage)
-        if len(path.parents) > 2:
-            if (path.parents[2] / 'nni' / 'main.js').is_file():
-                return str(path.parents[2])
+        if len(path.parents) > 2 and (path.parents[2] / 'nni' / 'main.js').is_file():
+            return str(path.parents[2])
         if (path / 'nni' / 'main.js').is_file():
             return str(path)
     return None
