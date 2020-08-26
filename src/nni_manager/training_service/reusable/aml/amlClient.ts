@@ -81,7 +81,7 @@ export class AMLClient {
                 trackingUrl = items.splice(1, items.length).join('')
                 // trackingUrl may be 'http//', 'https//' because of previous process logic,
                 // workaround for a hotfix here, need to refactor
-                trackingUrl = trackingUrl.replace('http//', 'http://').replace('https//', 'https://'); 
+                trackingUrl = `${trackingUrl.replace('http//', 'http://').replace('https//', 'https://')}#outputsAndLogs`; 
             }
             deferred.resolve(trackingUrl);
         });
