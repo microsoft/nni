@@ -308,9 +308,12 @@ def _try_installation_path_sequentially(*sitepackages):
     Return None if nothing is found
     '''
     for sitepackage in sitepackages:
-        for path in [Path(sitepackage).parents[2], Path(sitepackage)]:
-            if (path / 'nni' / 'main.js').is_file():
-                return str(path)
+        path = Path(sitepackage)
+        if len(path.parents) > 2:
+            if (path.parents[2] / 'nni' / 'main.js').is_file():
+                return str(path.parents[2])
+        if (path / 'nni' / 'main.js').is_file():
+            return str(path)
     return None
 
 def get_nni_installation_path():
