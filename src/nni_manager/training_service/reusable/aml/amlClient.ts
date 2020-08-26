@@ -79,6 +79,9 @@ export class AMLClient {
             const items = status.split(':');
             if (items[0] === 'tracking_url') {
                 trackingUrl = items.splice(1, items.length).join('')
+                // trackingUrl may be 'http//', 'https//' because of previous process logic,
+                // workaround for a hotfix here, need to refactor
+                trackingUrl = trackingUrl.replace('http//', 'http://').replace('https//', 'https://'); 
             }
             deferred.resolve(trackingUrl);
         });
