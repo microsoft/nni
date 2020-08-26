@@ -89,6 +89,19 @@ class RemoteMachineTrainingService implements TrainingService {
             this.sshConnectionPromises = [];
             // initialize gpuScheduler
             this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
+            if (this.trialConfig ===  undefined) {
+                throw new Error("trial config not initialized!");
+            }
+            // Copy codeDir to remote machine
+            for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
+                const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
+                if (executor !== undefined) {
+                    this.machineCopyExpCodeDirPromiseMap.set(
+                        rmMeta,
+                        executor.copyDirectoryToRemote(this.trialConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
+                    );
+                }
+            }
         }
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
@@ -328,20 +341,8 @@ class RemoteMachineTrainingService implements TrainingService {
                 try {
                     // Validate to make sure codeDir doesn't have too many files
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
-                    // Copy codeDir to remote machine
-                    for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
-                        const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
-                        if (executor !== undefined) {
-                            this.machineCopyExpCodeDirPromiseMap.set(
-                                rmMeta,
-                                executor.copyDirectoryToRemote(remoteMachineTrailConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
-                            );
-                        }
-                    }
-
                 } catch (error) {
                     this.log.error(error);
-
                     return Promise.reject(new Error(error));
                 }
 
