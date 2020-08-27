@@ -36,10 +36,10 @@ class SELayer(nn.Module):
         weights = self.fc(y)
         if self.record_weights:
             with torch.no_grad():
-                print(self.sum_weights.size())
-                print(weights.data.size())
-                print(weights.data)
-                print(self.sum_weights)
+                # print(self.sum_weights.size())
+                # print(weights.data.size())
+                # print(weights.data)
+                # print(self.sum_weights)
                 # exit(-1)
                 self.count += 1
                 self.sum_weights += weights.transpose(1, 0).mean(1)
@@ -128,9 +128,9 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         for name in name_to_compress:
             father_mod, son_mod = get_module_by_name(self.bound_model, name)
             # save the attention weights in the conv layer
-            print('sum_weights')
-            print(se_blocks[name].sum_weights)
-            print(se_blocks[name].sum_weights.size())
+            # print('sum_weights')
+            # print(se_blocks[name].sum_weights)
+            # print(se_blocks[name].sum_weights.size())
             ori_convs[name].attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
             setattr(father_mod, name.split('.')[-1], ori_convs[name])
 
