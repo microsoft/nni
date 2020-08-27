@@ -731,6 +731,7 @@ class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
         w_abs_structured = self._get_channel_sum(wrapper, wrapper_idx)
         # set the sum of the already pruned channel to
         # zero, so that these channel will be pruned.
+        print(channel_mask)
         w_abs_structured = w_abs_structured * channel_mask
         sparsity = wrapper.config['sparsity']
         num_prune = int(filters * sparsity)
@@ -740,6 +741,10 @@ class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
             c_mask = torch.gt(w_abs_structured, threshold)
         else:
             c_mask = torch.ones(filters).to(weight.device)
+        print('calculaing mask for ', wrapper.name)
+        print('Filter:', filters, 'Pruned', num_prune)
+        print(w_abs_structured)
+        print(threshold)
         mask_weight = c_mask[:, None, None, None].expand_as(
             weight).type_as(weight).clone()
         mask_bias = None
@@ -751,6 +756,8 @@ class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
 
     def _get_channel_sum(self, wrapper, wrapper_idx):
         attention_weights = wrapper.module.attention_weights.data
+        print('attention_weights of ', wrapper.name)
+        print(attention_weights.size())
         w_abs = attention_weights.abs()
         return w_abs
 

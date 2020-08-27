@@ -23,6 +23,7 @@ class SELayer(nn.Module):
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel, bias=False),
             nn.Sigmoid()
+            # nn.Softmax()
         ).to(device)
         # if record the weights of the channels during the forward.
         self.record_weights = record_weights
@@ -35,9 +36,16 @@ class SELayer(nn.Module):
         weights = self.fc(y)
         if self.record_weights:
             with torch.no_grad():
+                print(self.sum_weights.size())
+                print(weights.data.size())
+                print(weights.data)
+                print(self.sum_weights)
+                # exit(-1)
                 self.count += 1
-                self.sum_weights += weights.data
-        y= weights.view(n, c, 1, 1)
+                self.sum_weights += weights.transpose(1, 0).mean(1)
+        # print(weights.size())
+        # print(weights)
+        y = weights.view(n, c, 1, 1)
         result = x * y.expand_as(x)
         return result
 
@@ -104,12 +112,13 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
 
         # finetune the attention block parameters
         _logger.info('Finetuning the weights of SEBlock')
-        self.finetuner(self.bound_model)
+        # self.finetuner(self.bound_model)
+
         # also freeze the weight for the se layers
         for name in se_blocks:
             # start recording the weights of the channel before
             # evaluation
-            se_blocks[name].records_weights = True
+            se_blocks[name].record_weights = True
             # freeze the attention weights
             for para in se_blocks[name].parameters():
                 para.requires_grad = False
@@ -119,6 +128,9 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         for name in name_to_compress:
             father_mod, son_mod = get_module_by_name(self.bound_model, name)
             # save the attention weights in the conv layer
+            print('sum_weights')
+            print(se_blocks[name].sum_weights)
+            print(se_blocks[name].sum_weights.size())
             ori_convs[name].attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
             setattr(father_mod, name.split('.')[-1], ori_convs[name])
 
