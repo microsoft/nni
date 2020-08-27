@@ -237,6 +237,7 @@ def main(args):
 
     def short_term_fine_tuner(model, epochs=args.short_term_finetune):
         for epoch in range(epochs):
+            print('Short term finetune epoch :', epoch)
             train(args, model, device, train_loader, criterion, optimizer, epoch)
 
     def trainer(model, optimizer, criterion, epoch, callback):

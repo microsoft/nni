@@ -112,7 +112,7 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
 
         # finetune the attention block parameters
         _logger.info('Finetuning the weights of SEBlock')
-        # self.finetuner(self.bound_model)
+        self.finetuner(self.bound_model)
 
         # also freeze the weight for the se layers
         for name in se_blocks:
