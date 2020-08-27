@@ -6,12 +6,12 @@
 
 ### Training service
 
-* Add log when copying data in OpenPAI mode (#2702)
-* Add timeout for `web_channel` in `trial_runner` (#2710)
-* Show environment error message in AzureML mode (#2724)
+* Access trial log directly on WebUI (local mode only) (#2718)
 * Add OpenPAI trial job detail link (#2703)
 * Support GPU scheduler in reusable environment (#2627) (#2769)
-* Access trial log directly on WebUI (local mode only) (#2718)
+* Add timeout for `web_channel` in `trial_runner` (#2710)
+* Show environment error message in AzureML mode (#2724)
+* Add more log information when copying data in OpenPAI mode (#2702)
 
 ### WebUI, nnictl and nnicli
 
@@ -32,16 +32,16 @@
 ### Model compression
 
 * Support the List/Tuple Construct/Unpack operation for TorchModuleGraph (#2609)
-* Add support the DenseNet and InceptionV3 for the speedup module (#2719)
+* Model speedup improvement: Add support of DenseNet and InceptionV3 (#2719)
 * Support the multiple successive tuple unpack operations (#2768)
-* [Compression benchmark](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.md) (#2742)
+* [Doc of comparing the performance of supported pruners](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.md) (#2742)
 * [Sensitivity pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner) (#2684)
-* TensorFlow v2 support in model compression (#2755)
 * [AMC pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md) (#2573) (#2786)
+* TensorFlow v2 support in model compression (#2755)
 
 ### Backward incompatible changes
 
-* Update the default experiment folder from `$HOME/nni/experiments` to `$HOME/nni-experiments` (#2686) (#2753)
+* Update the default experiment folder from `$HOME/nni/experiments` to `$HOME/nni-experiments`. If you want to view the experiments created by previous nni release, you can move the experiments folders from  `$HOME/nni/experiments` to `$HOME/nni-experiments` manually. (#2686) (#2753)
 * Dropped support for Python 3.5 and scikit-learn 0.20 (#2778) (#2777) (2783) (#2787) (#2788) (#2790)
 
 ### Others
@@ -72,9 +72,9 @@
 * Fix intermediate graph zooming issue (#2738)
 * Fix issue when dict is unordered when querying NAS benchmark (#2728)
 * Fix import issue for gradient selector dataloader iterator (#2690)
-* Fix support for dozens of machines in remote training service (#2725)
+* Fix support of adding tens of machines in remote training service (#2725)
 * Fix several styling issues in WebUI (#2762 #2737)
-* Fix support for unusual types for metrics including NaN and Infinity (#2782)
+* Fix support of unusual types in metrics including NaN and Infinity (#2782)
 * Fix nnictl experiment delete (#2791)
 
 # Release 1.7 - 7/8/2020
