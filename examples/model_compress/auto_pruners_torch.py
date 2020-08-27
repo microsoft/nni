@@ -282,7 +282,7 @@ def main(args):
             return test(model, device, criterion, val_loader) 
         pruner = AMCPruner(model, config_list, amc_evaluator, val_loader, flops_ratio=args.sparsity)
     elif args.pruner == 'AttentionPruner':
-        pruner = AttentionActivationPruner(model, config_list, dummy_input, evaluator, short_term_fine_tuner)
+        pruner = AttentionActivationPruner(model, config_list, dummy_input, optimizer, evaluator, short_term_fine_tuner)
     elif args.pruner == 'ADMMPruner':
         # users are free to change the config here
         if args.model == 'LeNet':

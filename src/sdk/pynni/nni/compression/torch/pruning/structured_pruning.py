@@ -726,7 +726,7 @@ class SlimPrunerMasker(WeightMasker):
 class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
 
     def get_mask(self, wrapper, wrapper_idx, channel_mask):
-        weight = wrapper.module.attention_weight.data
+        weight = wrapper.module.attention_weights.data
         filters = weight.shape[0]
         w_abs_structured = self._get_channel_sum(wrapper, wrapper_idx)
         # set the sum of the already pruned channel to
@@ -750,8 +750,12 @@ class ConstrainedAttentionPrunerMasker(ConstrainedStructuredWeightMasker):
 
 
     def _get_channel_sum(self, wrapper, wrapper_idx):
-        attention_weight = wrapper.module.attention_weight.data
-        w_abs = attention_weight.abs()
+        # not all the conv layers have the attention weight
+        # only the target layer have the attention weights
+        # if not hasattr(wrapper.module, 'attention_weights'):
+        #     return torch.zeros(wrapper.module.out_channels)
+        attention_weights = wrapper.module.attention_weights.data
+        w_abs = attention_weights.abs()
         return w_abs
 
 def least_square_sklearn(X, Y):
