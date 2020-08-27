@@ -1,6 +1,6 @@
 # ChangeLog
 
-# Release 1.8 - 8/26/2020
+# Release 1.8 - 8/27/2020
 
 ## Major updates
 
