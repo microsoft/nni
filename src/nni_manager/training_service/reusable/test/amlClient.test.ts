@@ -13,7 +13,6 @@ describe('Unit Test for amlClient', () => {
         chai.should();
         chai.use(chaiAsPromised);
         prepareUnitTest();
-        log = getLogger();
     });
 
     after(() => {
