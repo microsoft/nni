@@ -119,7 +119,7 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
         for name in name_to_compress:
             father_mod, son_mod = get_module_by_name(self.bound_model, name)
             # save the attention weights in the conv layer
-            ori_convs.attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
+            ori_convs[name].attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
             setattr(father_mod, name.split('.')[-1], ori_convs[name])
 
         self._wrap_model()
