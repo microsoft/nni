@@ -74,9 +74,8 @@ export class AMLClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('tracking_url');
-        const self = this;
-        this.pythonShellClient.on('message', function (status: any) {
-            const trackingUrl = self.parseContent('tracking_url', status);
+        this.pythonShellClient.on('message', (status: any) => {
+            const trackingUrl = this.parseContent('tracking_url', status);
             if (trackingUrl !== '') {
                 deferred.resolve(trackingUrl);
             }
@@ -91,9 +90,8 @@ export class AMLClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('update_status');
-        const self = this;
-        this.pythonShellClient.on('message', function (status: any) {
-            let newStatus = self.parseContent('status', status);
+        this.pythonShellClient.on('message', (status: any) => {
+            let newStatus = this.parseContent('status', status);
             if (newStatus === '') {
                 newStatus = oldStatus;
             }
@@ -116,9 +114,8 @@ export class AMLClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('receive');
-        const self = this;
-        this.pythonShellClient.on('message', function (command: any) {
-            const message = self.parseContent('receive', command);
+        this.pythonShellClient.on('message', (command: any) => {
+            const message = this.parseContent('receive', command);
             if (message !== '') {
                 deferred.resolve(JSON.parse(message))
             }
@@ -138,7 +135,7 @@ export class AMLClient {
     }
     
     // Parse command content, command format is {head}:{content}
-    public parseContent(head: string, command: string) {
+    public parseContent(head: string, command: string): string {
         const items = command.split(':');
         if (items[0] === head) {
             return command.slice(head.length + 1);
