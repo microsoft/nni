@@ -35,13 +35,12 @@
 * Model speedup improvement: Add support of DenseNet and InceptionV3 (#2719)
 * Support the multiple successive tuple unpack operations (#2768)
 * [Doc of comparing the performance of supported pruners](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.md) (#2742)
-* [Sensitivity pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner) (#2684)
-* [AMC pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md) (#2573) (#2786)
+* New pruners: [Sensitivity pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner) (#2684) and [AMC pruner](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md) (#2573) (#2786)
 * TensorFlow v2 support in model compression (#2755)
 
 ### Backward incompatible changes
 
-* Update the default experiment folder from `$HOME/nni/experiments` to `$HOME/nni-experiments`. If you want to view the experiments created by previous nni release, you can move the experiments folders from  `$HOME/nni/experiments` to `$HOME/nni-experiments` manually. (#2686) (#2753)
+* Update the default experiment folder from `$HOME/nni/experiments` to `$HOME/nni-experiments`. If you want to view the experiments created by previous NNI releases, you can move the experiments folders from  `$HOME/nni/experiments` to `$HOME/nni-experiments` manually. (#2686) (#2753)
 * Dropped support for Python 3.5 and scikit-learn 0.20 (#2778) (#2777) (2783) (#2787) (#2788) (#2790)
 
 ### Others
