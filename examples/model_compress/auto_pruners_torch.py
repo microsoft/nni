@@ -465,7 +465,7 @@ if __name__ == '__main__':
                         help='For Saving the current Model')
     parser.add_argument('--constrained', type=str2bool, default=False, help='if enable the constraint-aware pruner')
     parser.add_argument('--lr', type=float, default=0.01, help='The learning rate for the finetuning')
-    parser.add_argument('--short_term_finetune', type=int, default=10, help='the short term finetune epochs')
+    parser.add_argument('--short_term_finetune', type=int, default=20, help='the short term finetune epochs')
     args = parser.parse_args()
 
     if not os.path.exists(args.experiment_data_dir):
