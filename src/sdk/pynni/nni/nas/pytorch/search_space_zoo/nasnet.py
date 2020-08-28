@@ -118,7 +118,7 @@ class NasNetCell(nn.Module):
                                    out_ch=out_ch,
                                    stride=2 if reduction and out_ch < 2 else 1,
                                    stem=stem))
-        self.final_conv_w = nn.Parameter(torch.zeros(out_ch, self.num_nodes + 2, out_ch, 1, 1),
+        self.final_conv_w = nn.Parameter(torch.zeros(out_ch, self.n_hidden + 2, out_ch, 1, 1),
                                          requires_grad=True)
 
     def forward(self, x, x_prev):
@@ -246,22 +246,27 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
     device = torch.device("cuda")
-    data_dir = './data'
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(data_dir, train=True, download=True,
-                       transform=transforms.Compose([
-                           transforms.ToTensor(),
-                           transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
-        batch_size=1000, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST(data_dir, train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])),
-        batch_size=1000, shuffle=True)
+    # data_dir = './data'
+    # train_loader = torch.utils.data.DataLoader(
+    #     datasets.MNIST(data_dir, train=True, download=True,
+    #                    transform=transforms.Compose([
+    #                        transforms.ToTensor(),
+    #                        transforms.Normalize((0.1307,), (0.3081,))
+    #                    ])),
+    #     batch_size=1000, shuffle=True)
+    # test_loader = torch.utils.data.DataLoader(
+    #     datasets.MNIST(data_dir, train=False, transform=transforms.Compose([
+    #         transforms.ToTensor(),
+    #         transforms.Normalize((0.1307,), (0.3081,))
+    #     ])),
+    #     batch_size=1000, shuffle=True)
+
+    train_, test = get_dataset('cifar10')
+    data_loader = torch.utils.data.DataLoader(train_,
+                                              batch_size=4,
+                                              shuffle=True)
 
     for epoch in range(1, num_epochs + 1):
-        train(model, device, train_loader, optimizer, epoch)
+        train(model, device, data_loader, optimizer, epoch)
         # test_acc = test(args, model, device, test_loader)
 
