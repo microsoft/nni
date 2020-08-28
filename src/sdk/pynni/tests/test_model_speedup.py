@@ -145,7 +145,7 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
 
     def test_speedup_integration(self):
-        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'inception_v3']:
+        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3']:
             Model = getattr(models, model_name)
             net = Model(pretrained=True, progress=False).to(device)
             speedup_model = Model().to(device)
