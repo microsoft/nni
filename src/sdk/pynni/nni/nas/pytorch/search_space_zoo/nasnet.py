@@ -7,8 +7,12 @@ import torch.nn.functional as F
 import nni
 from nni.nas.pytorch import mutables
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
+from torchvision import datasets, transforms
 
 from .nasnet_ops import Pool, Identity, SeparableConv2d, StdConv
+import logging
+
+logger = logging.getLogger('nasnet')
 
 
 OPS = lambda in_ch, out_ch, stride, stem: OrderedDict([
@@ -114,6 +118,8 @@ class NasNetCell(nn.Module):
                                    out_ch=out_ch,
                                    stride=2 if reduction and out_ch < 2 else 1,
                                    stem=stem))
+        self.final_conv_w = nn.Parameter(torch.zeros(out_ch, self.num_nodes + 2, out_ch, 1, 1),
+                                         requires_grad=True)
 
     def forward(self, x, x_prev):
         if self.reduction_p:
@@ -131,41 +137,42 @@ class NasNetCell(nn.Module):
             nodes_used_mask[:mask.size(0)] |= mask.to(node_out.device)
             prev_nodes_out.append(node_out)
         unused_nodes = torch.cat([out for used, out in zip(nodes_used_mask, prev_nodes_out) if not used], 1)
-        return unused_nodes
+        unused_nodes = F.relu(unused_nodes)
+        conv_weight = self.final_conv_w[:, ~nodes_used_mask, :, :, :]
+        conv_weight = conv_weight.view(conv_weight.size(0), -1, 1, 1)
+        out = F.conv2d(unused_nodes, conv_weight)
+        return out
 
 
 class NasNet(nn.Module):
-    def __init__(self, num_stem_features, num_normal_cells, filters, scaling, skip_reduction, expand_normal, expand_reduce,
-                 n_hidden=5, num_classes=1000):
+    def __init__(self, num_stem_features, num_normal_cells, filters, scaling=2, n_hidden=5, num_classes=1000):
         super(NasNet, self).__init__()
         self.num_normal_cells = num_normal_cells
-        self.skip_reduction = skip_reduction
         self.num_classes = num_classes
         self.conv0 = nn.Sequential(OrderedDict([
             ('conv', nn.Conv2d(3, num_stem_features, kernel_size=3, stride=2, bias=False)),
             ('bn', nn.BatchNorm2d(num_stem_features, eps=0.001, momentum=0.1, affine=True))
         ]))
-        filters_p = int(filters * scaling ** (-1))
-        filters_pp = int(filters * scaling ** (-2))
+        filters_p = filters_pp = num_stem_features
         self.conv0 = nn.Sequential(OrderedDict([
             ('conv', nn.Conv2d(3, num_stem_features, kernel_size=3, stride=2, bias=False)),
             ('bn', nn.BatchNorm2d(num_stem_features, eps=0.001, momentum=0.1, affine=True))
         ]))
         self.conv1 = nn.Linear(num_stem_features, filters_pp)
         self.conv2 = nn.Linear(num_stem_features, filters_p)
-
-        expand_normal = expand_normal
-        expand_reduce = expand_reduce
+        #
+        # expand_normal = expand_normal
+        # expand_reduce = expand_reduce
 
         self.layers = nn.ModuleList()
         for block in range(3):
             for _ in range(num_normal_cells - 1):
                 self.layers.append(NasNetCell(n_hidden, filters_p, filters_pp, filters))
-                filters_pp, filters_p = filters_p, filters * expand_normal
+                filters_pp, filters_p = filters_p, filters
             filters *= scaling
             if block == 0 or block == 1:
                 self.layers.append(NasNetCell(n_hidden, filters_p, filters_pp, filters, reduction=True))
-                filters_p = expand_reduce * filters
+                filters_p = filters
 
         self.linear = nn.Linear(filters_p, self.num_classes)
 
@@ -182,7 +189,6 @@ class NasNet(nn.Module):
         
         output = self.logits(x)
         return output
-
 
     def logits(self, features):
         x = F.relu(features, inplace=False)
@@ -218,29 +224,44 @@ def reward_accuracy(output, target, topk=(1,)):
     return (predicted == target).sum().item() / batch_size
 
 
+def train(model, device, train_loader, optimizer, epoch):
+    model.train()
+    for batch_idx, (data, target) in enumerate(train_loader):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = F.nll_loss(output, target)
+        loss.backward()
+        optimizer.step()
+        if batch_idx % 50:
+            logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+
 
 if __name__ == "__main__":
-    model = NasNet(num_stem_features=32, num_normal_cells=4, filters=44, scaling=2, skip_reduction=False)
+    model = NasNet(num_stem_features=32, num_normal_cells=4, filters=44, scaling=2)
+    get_and_apply_next_architecture(model)
     num_epochs = 150
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), 0.05, momentum=0.9, weight_decay=1.0E-4)
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs, eta_min=0.001)
-    dataset_train, dataset_valid = get_dataset("cifar10")
-    from nni.nas.pytorch import enas
-    from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
-                                       LRSchedulerCallback)
-    mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
+    device = torch.device("cuda")
+    data_dir = './data'
+    train_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(data_dir, train=True, download=True,
+                       transform=transforms.Compose([
+                           transforms.ToTensor(),
+                           transforms.Normalize((0.1307,), (0.3081,))
+                       ])),
+        batch_size=1000, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST(data_dir, train=False, transform=transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.1307,), (0.3081,))
+        ])),
+        batch_size=1000, shuffle=True)
 
-    trainer = enas.EnasTrainer(model,
-                               loss=criterion,
-                               metrics=accuracy,
-                               reward_function=reward_accuracy,
-                               optimizer=optimizer,
-                               callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")],
-                               batch_size=64,
-                               num_epochs=num_epochs,
-                               dataset_train=dataset_train,
-                               dataset_valid=dataset_valid,
-                               log_frequency=50,
-                               mutator=mutator)
-    
+    for epoch in range(1, num_epochs + 1):
+        train(model, device, train_loader, optimizer, epoch)
+        # test_acc = test(args, model, device, test_loader)
+
