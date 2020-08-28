@@ -14,6 +14,7 @@ from torchvision import datasets, transforms
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
+from models.cifar10.mobilenetv2 import MobileNetV2
 from models.cifar10.resnet import ResNet18, ResNet50
 import nni
 from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner
@@ -148,6 +149,18 @@ def get_trained_model_optimizer(args, device, train_loader, val_loader, criterio
             model = VGG(depth=16).to(device)
         elif args.dataset == 'imagenet':
             model = torchvision.models.vgg16(pretrained=True).to(device)
+        if args.load_pretrained_model:
+            model.load_state_dict(torch.load(args.pretrained_model_dir))
+            optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
+        else:
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+            scheduler = MultiStepLR(
+                optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
+    elif args.model == 'mobilenet_v2':
+        if args.dataset == 'cifar10':
+            model = MobileNetV2().to(device)
+        elif args.dataset == 'imagenet':
+            model = torchvision.models.mobilenet_v2(pretrained=True).to(device)
         if args.load_pretrained_model:
             model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
@@ -354,7 +367,8 @@ def main(args):
                 model = ResNet18().to(device)
             elif args.model == 'resnet50':
                 model = ResNet50().to(device)
-
+            elif args.model == 'mobilenet_v2':
+                model = MobileNetV2().to(device)
             model.load_state_dict(torch.load(os.path.join(args.experiment_data_dir, 'model_masked.pth')))
             masks_file = os.path.join(args.experiment_data_dir, 'mask.pth')
 
@@ -374,15 +388,19 @@ def main(args):
         if args.dataset == 'mnist':
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
             scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
-        elif  args.model == 'vgg16':
+        elif args.model == 'vgg16':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
-        elif  args.model == 'resnet18':
+        elif args.model == 'resnet18':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
-        elif  args.model == 'resnet50':
+        elif args.model == 'resnet50':
+            optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+            scheduler = MultiStepLR(
+                optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)
+        elif args.model == 'mobilenet_v2':
             optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.fine_tune_epochs*0.25), int(args.fine_tune_epochs*0.5), int(args.fine_tune_epochs*0.75)], gamma=0.1)

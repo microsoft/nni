@@ -129,7 +129,8 @@ class AttentionActivationPruner(_Constrained_StructuredFilterPruner):
             father_mod, son_mod = get_module_by_name(self.bound_model, name)
             # save the attention weights in the conv layer
             # print('sum_weights')
-            # print(se_blocks[name].sum_weights)
+            print(name)
+            print(se_blocks[name].sum_weights)
             # print(se_blocks[name].sum_weights.size())
             ori_convs[name].attention_weights = se_blocks[name].sum_weights / se_blocks[name].count
             setattr(father_mod, name.split('.')[-1], ori_convs[name])
