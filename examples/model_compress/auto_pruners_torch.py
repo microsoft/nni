@@ -22,7 +22,7 @@ from nni.compression.torch import Constrained_L1FilterPruner, Constrained_L2Filt
 from nni.compression.torch import AttentionActivationPruner
 from nni.compression.torch import ModelSpeedup
 from nni.compression.torch.utils.counter import count_flops_params
-
+from nni.compression.torch.utils.shape_dependency import ChannelDependency
 
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
@@ -230,6 +230,18 @@ def get_dummy_input(args, device):
         dummy_input = torch.randn([args.test_batch_size, 3, 224, 224]).to(device)
     return dummy_input
 
+def only_no_dependency(model, dummy_input):
+    cd = ChannelDependency(model, dummy_input)
+    c_dsets = cd.dependency_sets
+    no_depen_layers = []
+    for dset in c_dsets:
+        if len(dset) > 1:
+            print('#'*10)
+            print('skip', dset)
+            continue
+        for layer in dset:
+            no_depen_layers.append(layer)
+    return no_depen_layers
 
 def get_input_size(dataset):
     if dataset == 'mnist':
@@ -275,12 +287,23 @@ def main(args):
         op_types = ['Conv2d']
     elif args.base_algo == 'level':
         op_types = ['default']
-
+    dummy_input = get_dummy_input(args, device)
     config_list = [{
         'sparsity': args.sparsity,
         'op_types': op_types
     }]
-    dummy_input = get_dummy_input(args, device)
+
+    if args.only_no_dependency:
+        no_depen_layers = only_no_dependency(model, dummy_input)
+        config_list = []
+        for layer in no_depen_layers:
+            config_list.append({'sparsity': args.sparsity, 'op_types': op_types, 'op_names':[layer]})
+        print('$'*20)
+        print('Only prune the layer with no dependency')
+        print(config_list)
+    if args.sparsity_config:
+        config_list = json.load(args.sparsity_config)
+
 
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(model, config_list)
@@ -458,7 +481,7 @@ if __name__ == '__main__':
                         help='epochs to fine tune')
     parser.add_argument('--experiment-data-dir', type=str, default='./experiment_data',
                         help='For saving experiment data')
-
+    parser.add_argument('--sparsity_config', type=str, default=None, help='the path of the sparsity config file')
     # pruner
     parser.add_argument('--pruner', type=str, default='SimulatedAnnealingPruner',
                         help='pruner to use')
@@ -485,6 +508,7 @@ if __name__ == '__main__':
     parser.add_argument('--constrained', type=str2bool, default=False, help='if enable the constraint-aware pruner')
     parser.add_argument('--lr', type=float, default=0.01, help='The learning rate for the finetuning')
     parser.add_argument('--short_term_finetune', type=int, default=20, help='the short term finetune epochs')
+    parser.add_argument('--only_no_dependency', default=False, type=str2bool, help='If only prune the layers that have no dependency with others')
     args = parser.parse_args()
 
     if not os.path.exists(args.experiment_data_dir):
