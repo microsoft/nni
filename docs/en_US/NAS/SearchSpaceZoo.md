@@ -172,4 +172,37 @@ All supported operations for ENAS macro search are listed below.
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.PoolBranch
     ```
 
-<!-- push -->
+## NasNetCell
+
+NasNet search space gets its name as it gives rise to [NasNet](https://arxiv.org/abs/1707.07012). The network is composed of cells repeated many times where each cell has the same architecture, but different weights. The model is made up of two kinds of cells, normal cell and reduction cell. The only difference between the two is that initial operation is applied to reduction cell's input to reduce the height and width. The reduction cell and the normal cell ought to share the same architecture, but empirical experience shows that separate architectures are preferred.
+In the search space, each cell receives two hidden states as inputs, which are the outputs of the two cells in previous two layers or the input image. One cell is a DAG with N nodes, where the nodes represent local computations, and the edges represent a transformation chosen from [reference](#nasnet-operations). Except the two input nodes, the other nodes choose two previous hidden states as inputs then apply two operations on them respectively. The two results are sumed as the output of the node. Finally, all of the unused hidden states generated in the cell are concated in depth. Note that in the implementation, a special Convolution layer is emplyed to make all cells' outputs have the same dimension.
+
+The search space is shown as follows.
+
+![](../../img/nasnet.png)
+
+### Example code
+
+```bash
+git clone https://github.com/Microsoft/nni.git
+cd nni/examples/nas/search_space_zoo
+# for standalone mode
+python3 nasnet_example.py
+```
+
+<a name="nasnet-operations"></a>
+
+### Reference
+
+* SkipConnect
+
+  Call `torch.nn.Identity` to connect directly to the next cell.
+
+* MaxPool / AvgPool
+  * MaxPool3x3: Call `torch.nn.MaxPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3`, `stride=1` and `padding=1`.
+  * AvgPool3x3: Call `torch.nn.AvgPool2d`. This operation applies a 2D max pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3`, `stride=1` and `padding=1`.
+
+* SepConv
+  * SepConv3x3: The operation is made up by stacking two [DilConvs](#DilConv) with a BatchNorm in the middle. BatchNorm is applied as a pre-operation and post-operation. Note that no BatchNorm or non-linear operation is employed in the middle of depthwise and pointwise convolution. Its parameters are fix to `kernel_size=3`, `stride=1` and `padding=1`.
+  * SepConv5x5: Do the same operation as above. Its parameters are fix to `kernel_size=5`, `stride=1` and `padding=2`.
+  * SepConv7x7: Do the same operation as above. Its parameters are fix to `kernel_size=7`, `stride=1` and `padding=3`.
