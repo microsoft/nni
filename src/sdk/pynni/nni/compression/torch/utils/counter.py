@@ -6,7 +6,6 @@ import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
 try:
     from thop import profile
-    from thop.vision.basic_hooks import *
 except Exception as e:
     print('thop is not found, please install the python package: thop')
     raise
@@ -52,7 +51,7 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     for m in model.modules():
         weight_mask = None
         m_type = type(m)
-        if m_type in custom_ops:
+        if m_type in custom_mask_ops:
             if isinstance(prev_m, PrunerModuleWrapper):
                 weight_mask = prev_m.weight_mask
 
