@@ -50,7 +50,7 @@ def cifar10_dataset(args):
     return train_loader, val_loader, dummy_input
 
 def imagenet_dataset(args):
-    kwargs = {'num_workers': 10, 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': 12, 'pin_memory': True} if torch.cuda.is_available() else {}
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                         std=[0.229, 0.224, 0.225])
     train_loader = torch.utils.data.DataLoader(
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     
     optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
                                 momentum=0.9,
-                                weight_decay=5e-4)
+                                weight_decay=4e-5)
     scheduler1 = None
     scheduler2 = None
     if args.lr_decay == 'multistep':
@@ -192,7 +192,7 @@ if __name__ == '__main__':
 
     optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
                                 momentum=0.9,
-                                weight_decay=5e-4)
+                                weight_decay=4e-5)
     if args.lr_decay == 'multistep':
         scheduler2 = MultiStepLR(
             optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
@@ -212,6 +212,16 @@ if __name__ == '__main__':
         train_loader, val_loader, dummy_input = get_data(args)
     
 
+    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
+    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
+    pruner1._unwrap_model()
+    pruner2._unwrap_model()
+    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
+    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
+    ms1.speedup_model()
+    ms2.speedup_model()
+
+
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
                 criterion2, optimizer2, epoch)
@@ -230,14 +240,6 @@ if __name__ == '__main__':
         print('Learning rate: ', scheduler1.get_last_lr())
         print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
 
-    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
-    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
-    pruner1._unwrap_model()
-    pruner2._unwrap_model()
-    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
-    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
-    ms1.speedup_model()
-    ms2.speedup_model()
 
 
     acc1 = test(net1, device, criterion1, val_loader)
