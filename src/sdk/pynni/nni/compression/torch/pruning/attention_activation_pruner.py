@@ -22,8 +22,8 @@ class SELayer(nn.Module):
             nn.Linear(channel, channel // reduction, bias=False),
             nn.ReLU(inplace=True),
             nn.Linear(channel // reduction, channel, bias=False),
-            # nn.Sigmoid()
-            nn.Softmax()
+            nn.Sigmoid()
+            # nn.Softmax()
         ).to(device)
         # if record the weights of the channels during the forward.
         self.record_weights = record_weights
