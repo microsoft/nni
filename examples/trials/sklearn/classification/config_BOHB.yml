@@ -1,0 +1,27 @@
+authorName: default
+experimentName: example_sklearn-classification
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 100
+#choice: local, remote
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+advisor:
+  builtinAdvisorName: BOHB
+  classArgs:
+    optimize_mode: maximize
+    min_budget: 1
+    max_budget: 27
+    eta: 3
+    min_points_in_model: 7
+    top_n_percent: 15
+    num_samples: 64
+    random_fraction: 0.33
+    bandwidth_factor: 3.0
+    min_bandwidth: 0.001
+trial:
+  command: python3 main.py
+  codeDir: .
+  gpuNum: 0
