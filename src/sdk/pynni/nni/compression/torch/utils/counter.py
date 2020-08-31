@@ -44,7 +44,6 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     hook_module_list = []
     if custom_ops is None:
         custom_ops = {}
-        
     custom_mask_ops.update(custom_ops)
 
     prev_m = None
