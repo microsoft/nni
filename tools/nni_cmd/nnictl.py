@@ -237,8 +237,6 @@ def parse_args():
     parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
     parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
-    parser_tensorboard_start.add_argument('--adaptdl', dest='adaptdl', action='store_true')
-    parser_tensorboard_start.set_defaults(adaptdl=False)
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
     parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
     parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
@@ -254,6 +252,9 @@ def parse_args():
     parser_top.set_defaults(func=monitor_experiment)
 
     args = parser.parse_args()
+    # TODO(Petuum): support flexible additional args without restrictions
+    # args, remaining = parser.parse_known_args()
+    # setattr(args, 'remaining', remaining)
     args.func(args)
 
 if __name__ == '__main__':

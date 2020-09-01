@@ -113,7 +113,6 @@ def stop_tensorboard(args):
 def adl_tensorboard_helper(args):
     '''start tensorboard on adl'''
     import subprocess
-    from kubernetes import client, config
     if args.trial_id is not None:
         print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
     cmd = "kubectl port-forward deployment/{} {}:{}".format(
@@ -127,13 +126,13 @@ def adl_tensorboard_helper(args):
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
-    if args.adaptdl:
-        adl_tensorboard_helper(args)
-        return
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     config_file_name = experiment_dict[experiment_id]['fileName']
     nni_config = Config(config_file_name)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
+        adl_tensorboard_helper(args)
+        return
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
