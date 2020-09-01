@@ -25,7 +25,7 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
         target model.
     input_size: list, tuple
         the input shape of data
-    custom_ops: dict
+    custom_ops:
         custom operation on modules to count flops and parameters.
         custom_ops will overwrite the default operation.
     Returns
