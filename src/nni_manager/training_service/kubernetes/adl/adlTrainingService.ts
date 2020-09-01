@@ -77,7 +77,6 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
     }
     private async launchTensorboard(): Promise<void> {
         // Start the tensorboard at the beginning of the experiment.
-        // TODO: add uuid after demo. For now just use fixed name
         if (this.adlTrialConfig === undefined) {
             throw new Error('Adl trial config is undefined');
         }
@@ -93,8 +92,14 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         this.tensorboardPvcTemplate.metadata.name = this.tensorboardName;
         this.tensorboardPvcTemplate.metadata.ownerReferences[0].name = this.tensorboardName;
         this.tensorboardPvcTemplate.metadata.ownerReferences[0].uid = deploymentUid
-        this.tensorboardPvcTemplate.spec.resources.requests.storage = this.adlTrialConfig.checkpoint.storageSize;
-        this.tensorboardPvcTemplate.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        if (this.adlTrialConfig.checkpoint != undefined) {
+            this.tensorboardPvcTemplate.spec.resources.requests.storage = this.adlTrialConfig.checkpoint.storageSize;
+            this.tensorboardPvcTemplate.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        }
+        else {
+            this.tensorboardPvcTemplate.spec.resources.requests.storage = "1Gi"
+            this.tensorboardPvcTemplate.spec.storageClassName = await this.genericK8sClient.getStorageClass();
+        }
         await this.genericK8sClient.createPersistentVolumeClaim(this.tensorboardPvcTemplate);
 
         return Promise.resolve()
@@ -173,9 +178,15 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         pvc.metadata.name = adlJobName;
         pvc.metadata.ownerReferences[0].name = adlJobName;
         pvc.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
-        pvc.spec.resources.requests.storage = this.adlTrialConfig
-            .checkpoint.storageSize;
-        pvc.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        if (this.adlTrialConfig.checkpoint != undefined) {
+            pvc.spec.resources.requests.storage = this.adlTrialConfig
+                .checkpoint.storageSize;
+            pvc.spec.storageClassName = this.adlTrialConfig.checkpoint.storageClass;
+        }
+        else {
+            pvc.spec.resources.requests.storage = "1Gi"
+            pvc.spec.storageClassName = await this.genericK8sClient.getStorageClass();
+        }
         await this.genericK8sClient.createPersistentVolumeClaim(pvc);
 
         // prepare the runscript and convert it to configmap and mount it

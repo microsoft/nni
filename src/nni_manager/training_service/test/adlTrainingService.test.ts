@@ -25,9 +25,15 @@ describe('Unit Test for AdlTrainingService', () => {
         "codeDir": ".",
         "gpuNum": 0,
         "image": "registry.petuum.com/dev/adaptdl-submit:latest",
-        "checkpoint": {
-            "storageClass": "aws-efs",
-            "storageSize": "1Gi"
+        "imagePullSecrets": [
+            {
+                "name": "stagingsecrets"
+            }
+        ],
+        "nfs": {
+            "server": "172.20.188.236",
+            "path": "/exports",
+            "containerMountPath": "/nfs"
         }
     });
     let testAdlTrialConfig2: any = JSON.stringify({
@@ -83,16 +89,29 @@ describe('Unit Test for AdlTrainingService', () => {
     });
 
     it('Submit job', async () => {
-        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig2);
-        // submit job
-        const form: TrialJobApplicationForm = {
+        // job without given checkpoint
+        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig);
+        let form: TrialJobApplicationForm = {
             sequenceId: 0,
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0
             }
         };
-        const jobDetail: TrialJobDetail = await adlTrainingService.submitTrialJob(form);
+        let jobDetail: TrialJobDetail = await adlTrainingService.submitTrialJob(form);
+        chai.expect(jobDetail.status).to.be.equals('WAITING');
+        await adlTrainingService.cancelTrialJob(jobDetail.id);
+        chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+        // job with given checkpoint
+        await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig2);
+        form = {
+            sequenceId: 0,
+            hyperParameters: {
+                value: 'mock hyperparameters',
+                index: 0
+            }
+        };
+        jobDetail = await adlTrainingService.submitTrialJob(form);
         chai.expect(jobDetail.status).to.be.equals('WAITING');
         await adlTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');

@@ -19,6 +19,44 @@ class GeneralK8sClient {
         this.client.loadSpec();
     }
 
+    private matchStorageClass(response: any): string {
+        const adlSupportedProvisioners: RegExp[] = [
+            new RegExp("microk8s.io/hostpath"),
+            new RegExp(".*cephfs.csi.ceph.com"),
+            new RegExp("\\b" + "efs" + "\\b")
+        ]
+        const templateLen = adlSupportedProvisioners.length,
+              responseLen = response.items.length
+        let i = 0,
+            j = 0;
+        for (; i < responseLen; i++) {
+            const provisioner: string = response.items[i].provisioner
+            for (; j < templateLen; j++) {
+                if (provisioner.match(adlSupportedProvisioners[j])) {
+                    return response.items[i].metadata.name;
+                }
+            }
+        }
+        return "Not Found!";
+    }
+
+    public async getStorageClass(): Promise<string> {
+        let result: Promise<string>;
+        const response: any = await this.client.apis["storage.k8s.io"].v1beta1.storageclasses.get()
+        const storageClassType: string = this.matchStorageClass(response.body)
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            if (storageClassType != "Not Found!") {
+                result = Promise.resolve(storageClassType);
+            }
+            else {
+                result = Promise.reject("No StorageClasses are supported!")
+            }
+        } else {
+            result = Promise.reject(`List storageclasses failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
     public async createDeployment(deploymentManifest: any): Promise<string> {
         let result: Promise<string>;
         const response: any = await this.client.apis.apps.v1.namespaces('default').deployments.post({ body: deploymentManifest })

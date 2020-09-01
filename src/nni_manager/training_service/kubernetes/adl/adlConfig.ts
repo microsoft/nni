@@ -49,8 +49,6 @@ export class NFSConfig {
  * Trial job configuration for Adl
  */
 export class AdlTrialConfig {
-    public readonly checkpoint: CheckpointConfig;
-
     public readonly codeDir: string;
 
     public readonly command: string;
@@ -63,17 +61,19 @@ export class AdlTrialConfig {
 
     public readonly nfs?: NFSConfig;
 
-    constructor(checkpoint: CheckpointConfig, codeDir: string,
+    public readonly checkpoint?: CheckpointConfig;
+
+    constructor(codeDir: string,
                 command: string, gpuNum: number,
                 image: string, imagePullSecrets?: ImagePullSecretConfig[],
-                nfs?: NFSConfig) {
-        this.checkpoint = checkpoint;
+                nfs?: NFSConfig, checkpoint?: CheckpointConfig) {
         this.codeDir = codeDir;
         this.command = command;
         this.gpuNum = gpuNum;
         this.image = image;
         this.imagePullSecrets = imagePullSecrets;
         this.nfs = nfs;
+        this.checkpoint = checkpoint;
     }
 }
 
