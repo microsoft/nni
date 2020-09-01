@@ -10,7 +10,8 @@ except Exception as e:
     print('thop is not found, please install the python package: thop')
     raise
 
-def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=True):
+
+def count_flops_params(model: nn.Module, input_size,custom_ops=None, verbose=True):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -59,7 +60,6 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
         prev_m = m
 
     flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_mask_ops, verbose=verbose)
-
 
     for m in hook_module_list:
         m._buffers.pop("weight_mask")
