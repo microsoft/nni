@@ -19,6 +19,7 @@ azure_pipeline:
   image: python:3.6
   tags:
     - docker
+    - 1.0.8
   before_script:
     - apt-get update
     - apt-get install -y sudo apt-utils git curl unzip wget build-essential

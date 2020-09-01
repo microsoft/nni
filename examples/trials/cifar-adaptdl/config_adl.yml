@@ -10,7 +10,7 @@ useAnnotation: false
 tuner:
   builtinTunerName: TPE
   classArgs:
-    optimize_mode: maximize
+    optimize_mode: minimize
 trial:
   command: python3 /root/apps/pytorch-cifar/main_nni.py
   codeDir: .
