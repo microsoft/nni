@@ -397,7 +397,7 @@ def log_trial_adl_helper(args, experiment_id):
         exit(1)
     finally:
         print_green('<<< [adlJobName:%s]' % adlJobName)
-        nni_manager_collection_path = os.path.expanduser('~/nni/experiments/%s/trials/%s/stdout_log_collection.log' %
+        nni_manager_collection_path = os.path.expanduser('~/nni-experiments/%s/trials/%s/stdout_log_collection.log' %
                                                          (experiment_id, args.trial_id))
         print_green('>>> (Optional) How to persist the complete trial log locally:')
         print(
