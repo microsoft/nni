@@ -30,6 +30,7 @@ def count_flops_params(model: nn.Module, input_size, custom_ops = None, verbose 
     custom_ops:
         custom operation on modules to count flops and parameters.
         custom_ops will overwrite the default operation.
+        
     Returns
     -------
     flops: float
