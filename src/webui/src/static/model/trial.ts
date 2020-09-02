@@ -112,14 +112,14 @@ class Trial implements TableObj {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
         let accuracy;
-        if(this.acc !== undefined && this.acc.default !== undefined){
-            if(typeof this.acc.default === 'number'){
+        if (this.acc !== undefined && this.acc.default !== undefined) {
+            if (typeof this.acc.default === 'number') {
                 accuracy = JSON5.parse(this.acc.default);
-            }else {
+            } else {
                 accuracy = this.acc.default;
             }
         }
-        
+
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
@@ -227,7 +227,7 @@ class Trial implements TableObj {
         Object.entries(acc).forEach(item => {
             const [k, v] = item;
             const column = space.axes.get(k);
-            
+
             if (column !== undefined) {
                 ret.set(column, v);
             } else {
@@ -245,7 +245,7 @@ class Trial implements TableObj {
     }
 
     public finalKeys(): string[] {
-        if(this.acc !== undefined){
+        if (this.acc !== undefined) {
             return Object.keys(this.acc);
         } else {
             return [];
@@ -304,11 +304,16 @@ class Trial implements TableObj {
     }
 
     private renderNumber(val: any): string {
-        if(typeof val === 'number'){
+        if (typeof val === 'number') {
             if (isNaNorInfinity(val)) {
                 return `${val}`; // show 'NaN' or 'Infinity'
             } else {
-                return `${formatAccuracy(val)} (FINAL)`;
+                if (this.accuracy === undefined) {
+                    return `${formatAccuracy(val)} (LATEST)`;
+                } else {
+                    return `${formatAccuracy(val)} (FINAL)`;
+
+                }
             }
         } else {
             // show other types, such as {tensor: {data: }}
@@ -317,8 +322,8 @@ class Trial implements TableObj {
     }
 
     public formatLatestAccuracy(): string {  // TODO: this should be private
-        if(this.status === 'SUCCEEDED'){
-            return (this.accuracy === undefined ? '--': this.renderNumber(this.accuracy));
+        if (this.status === 'SUCCEEDED') {
+            return (this.accuracy === undefined ? '--' : this.renderNumber(this.accuracy));
         } else {
             if (this.accuracy !== undefined) {
                 return this.renderNumber(this.accuracy);
@@ -330,7 +335,7 @@ class Trial implements TableObj {
                 return this.renderNumber(metricAccuracy(latest));
             }
         }
-        
+
     }
 }
 

@@ -60,7 +60,8 @@ From the experiment result, we get the following conclusions:
 
 * The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
-* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/ModelSpeedup.md). This avoids potential issues of counting them of masked models.
+* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/ModelSpeedup.md).
+This avoids potential issues of counting them of masked models.
 
 * The experiment code can be found [here]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py).
 
@@ -75,8 +76,8 @@ From the experiment result, we get the following conclusions:
     }
     ```
 
-* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data). 
-You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/experiment_data/analyze.py) to plot new performance comparison figures.
+* The experiment results are saved [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners). 
+You can refer to [analyze](https://github.com/microsoft/nni/tree/master/examples/model_compress/comparison_of_pruners/analyze.py) to plot new performance comparison figures.
 
 ## Contribution
 
