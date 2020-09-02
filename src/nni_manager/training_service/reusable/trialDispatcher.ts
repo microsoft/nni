@@ -587,7 +587,7 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const envId = uniqueString(5);
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
-        const environment = environmentService.createEnviornmentInfomation(envId, envName);
+        const environment = environmentService.createEnvironmentInfomation(envId, envName);
 
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
