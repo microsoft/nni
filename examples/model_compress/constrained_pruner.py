@@ -50,7 +50,7 @@ def cifar10_dataset(args):
     return train_loader, val_loader, dummy_input
 
 def imagenet_dataset(args):
-    kwargs = {'num_workers': 12, 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': 24, 'pin_memory': True} if torch.cuda.is_available() else {}
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                         std=[0.229, 0.224, 0.225])
     train_loader = torch.utils.data.DataLoader(
