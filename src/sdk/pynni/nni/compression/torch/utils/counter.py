@@ -12,10 +12,10 @@ except Exception as e:
     raise
 
 
-def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=True):
+def count_flops_params(model: nn.Module, input_size, custom_ops = None, verbose = True):
     """
     Count FLOPs and Params of the given model.
-    This function would identify the mask on the module
+    This function would identify the mask on the module 
     and take the pruned shape into consideration.
     Note that, for sturctured pruning, we only identify
     the remained filters according to its mask, which
