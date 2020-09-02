@@ -4,6 +4,7 @@
 import torch
 import torch.nn as nn
 from nni.compression.torch.compressor import PrunerModuleWrapper
+
 try:
     from thop import profile
 except Exception as e:
@@ -38,7 +39,6 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     """
 
     assert input_size is not None
-
     device = next(model.parameters()).device
     inputs = torch.randn(input_size).to(device)
 
