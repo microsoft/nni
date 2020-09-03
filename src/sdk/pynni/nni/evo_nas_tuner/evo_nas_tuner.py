@@ -5,6 +5,7 @@ from collections import deque
 
 import nni
 from nni.tuner import Tuner
+from nni import ClassArgsValidator
 from nni.utils import OptimizeMode, extract_scalar_reward
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,15 @@ class FinishedIndividual:
         self.parameter_id = parameter_id
         self.parameters = parameters
         self.result = result
+        
+
+class EvolutionClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        Schema({
+            'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('population_size'): self.range('population_size', int, 0, 99999),
+            Optional('sample_size'): self.range('sample_size', int, 0, 9999),
+        }).validate(kwargs)
 
 
 class EvoNasTuner(Tuner):
