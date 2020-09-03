@@ -706,19 +706,19 @@ Debug mode will disable version check function in Trialkeeper.
 * __nnictl webui url__
   * Description
 
-      Show an experiment's webui url
+    Show an experiment's webui url
 
-    * Usage
+  * Usage
 
-      ```bash
-      nnictl webui url [options]
-      ```
+    ```bash
+    nnictl webui url [options]
+    ```
 
-    * Options
+  * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |Experiment ID|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |Experiment ID|
 
 <a name="tensorboard"></a>
 ### Manage tensorboard
