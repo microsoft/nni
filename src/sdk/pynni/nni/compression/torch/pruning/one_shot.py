@@ -364,7 +364,22 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
             - sparsity : How much percentage of convolutional filters are to be pruned.
             - op_types : Only Conv2d is supported in ActivationMeanRankFilterPruner.
     optimizer: torch.optim.Optimizer
-            Optimizer used to train model
+            Optimizer used to train model.
+    activation: str
+        The activation type.
+    statistics_batch_num: int
+        The number of batches to statistic the activation.
+    dependency_aware: bool
+        If prune the model in a dependency-aware way. If it is `True`, this pruner will
+        prune the model according to the l2-norm of weights and the channel-dependency or
+        group-dependency of the model. In this way, the pruner will force the conv layers
+        that have dependencies to prune the same channels, so the speedup module can better
+        harvest the speed benefit from the pruned model. Note that, if this flag is set True
+        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+        dependency between the conv layers.
+    dummy_input : torch.Tensor
+        The dummy input to analyze the topology constraints. Note that, the dummy_input
+        should on the same device with the model.
     """
 
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1, dependency_aware=False, dummy_input=None):

@@ -12,6 +12,5 @@ from .net_adapt_pruner import NetAdaptPruner
 from .admm_pruner import ADMMPruner
 from .auto_compress_pruner import AutoCompressPruner
 from .sensitivity_pruner import SensitivityPruner
-from .attention_activation_pruner import AttentionActivationPruner
 from .amc import AMCPruner
 
