@@ -23,18 +23,18 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     so the calculated FLOPs will be larger than real number.
     Parameters
     ---------
-    model : nn.Module
+    model: nn.Module
         target model.
     input_size: list, tuple
         the input shape of data
-    custom_ops:
+    custom_ops: dict
         custom operation on modules to count flops and parameters.
         custom_ops will overwrite the default operation.
     Returns
     -------
     flops: float
         total flops of the model
-    params:
+    params: float
         total params of the model
     """
 
