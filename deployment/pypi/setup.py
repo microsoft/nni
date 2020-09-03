@@ -48,7 +48,7 @@ setuptools.setup(
         'nnicli': '../../src/sdk/pycli/nnicli'
     },
     package_data = {'nni': ['**/requirements.txt']},
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     install_requires = [
         'schema',
         'ruamel.yaml',
