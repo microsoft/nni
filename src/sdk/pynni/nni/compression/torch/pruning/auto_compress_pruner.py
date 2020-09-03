@@ -134,7 +134,7 @@ class AutoCompressPruner(Pruner):
         self._experiment_data_dir = experiment_data_dir
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
-        self.constrained = False
+
     def validate_config(self, model, config_list):
         """
         Parameters
@@ -173,7 +173,7 @@ class AutoCompressPruner(Pruner):
             model with specified modules compressed.
         """
         _logger.info('Starting AutoCompress pruning...')
-        
+
         sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._num_iterations)
 
         for i in range(self._num_iterations):
@@ -188,7 +188,7 @@ class AutoCompressPruner(Pruner):
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=[
                     {"sparsity": sparsity_each_round, "op_types": ['Conv2d']}],
-                evaluator=self._evaluator, dummy_input=self._dummy_input,
+                evaluator=self._evaluator,
                 optimize_mode=self._optimize_mode,
                 base_algo=self._base_algo,
                 start_temperature=self._start_temperature,
@@ -196,9 +196,6 @@ class AutoCompressPruner(Pruner):
                 cool_down_rate=self._cool_down_rate,
                 perturbation_magnitude=self._perturbation_magnitude,
                 experiment_data_dir=self._experiment_data_dir)
-
-            if self.constrained:
-                SApruner.constrained = True
             config_list = SApruner.compress(return_config_list=True)
             _logger.info("Generated config_list : %s", config_list)
 
