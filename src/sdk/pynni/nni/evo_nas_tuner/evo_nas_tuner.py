@@ -4,6 +4,7 @@ import random
 from collections import deque
 
 import nni
+from schema import Schema, Optional
 from nni.tuner import Tuner
 from nni import ClassArgsValidator
 from nni.utils import OptimizeMode, extract_scalar_reward
@@ -26,7 +27,7 @@ class FinishedIndividual:
         self.parameter_id = parameter_id
         self.parameters = parameters
         self.result = result
-        
+
 
 class EvolutionClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
