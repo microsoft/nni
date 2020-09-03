@@ -222,6 +222,10 @@ infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'ReLU6': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::tanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::tanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::hardtanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::hardtanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
@@ -282,7 +286,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
     Parameters
     ----------
     module_masks : ModuleMasks
-        The ModuleMasks instance of the batchnorm2d
+        The ModuleMasks instance of the Conv2d
     mask : CoarseMask
         The mask of its input tensor
     cat_info: dict

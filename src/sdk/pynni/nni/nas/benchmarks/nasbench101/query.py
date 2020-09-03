@@ -15,7 +15,7 @@ def query_nb101_trial_stats(arch, num_epochs, isomorphism=True, reduction=None, 
     arch : dict or None
         If a dict, it is in the format that is described in
         :class:`nni.nas.benchmark.nasbench101.Nb101TrialConfig`. Only trial stats
-        matched will be returned. If none, architecture will be a wildcard.
+        matched will be returned. If none, all architectures in the database will be matched.
     num_epochs : int or None
         If int, matching results will be returned. Otherwise a wildcard.
     isomorphism : boolean
