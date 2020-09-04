@@ -15,11 +15,10 @@ from torchvision import datasets, transforms, models
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
-from nni.compression.torch import L1FilterPruner, Constrained_L1FilterPruner
-from nni.compression.torch import L2FilterPruner, Constrained_L2FilterPruner
-from nni.compression.torch import ActivationMeanRankFilterPruner, ConstrainedActivationMeanRankFilterPruner
+from nni.compression.torch import L1FilterPruner, L2FilterPruner, ActivationMeanRankFilterPruner
 from nni.compression.torch import ModelSpeedup
-from nni.compression.torch.utils.counter import count_flops_params 
+from nni.compression.torch.utils.counter import count_flops_params
+
 
 def cifar10_dataset(args):
     """
@@ -28,7 +27,6 @@ def cifar10_dataset(args):
     kwargs = {'num_workers': 10, 'pin_memory': True} if torch.cuda.is_available() else {
     }
 
-   
     normalize = transforms.Normalize(
         (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     train_loader = torch.utils.data.DataLoader(
@@ -49,31 +47,34 @@ def cifar10_dataset(args):
     dummy_input = torch.ones(1, 3, 32, 32)
     return train_loader, val_loader, dummy_input
 
+
 def imagenet_dataset(args):
-    kwargs = {'num_workers': 24, 'pin_memory': True} if torch.cuda.is_available() else {}
+    kwargs = {'num_workers': 24, 'pin_memory': True} if torch.cuda.is_available() else {
+    }
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                        std=[0.229, 0.224, 0.225])
+                                     std=[0.229, 0.224, 0.225])
     train_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(os.path.join(args.data_dir, 'train'),
-                                transform=transforms.Compose([
-                                    transforms.RandomResizedCrop(224),
-                                    transforms.RandomHorizontalFlip(),
-                                    transforms.ToTensor(),
-                                    normalize,
-                                ])),
+                             transform=transforms.Compose([
+                                 transforms.RandomResizedCrop(224),
+                                 transforms.RandomHorizontalFlip(),
+                                 transforms.ToTensor(),
+                                 normalize,
+                             ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
 
     val_loader = torch.utils.data.DataLoader(
         datasets.ImageFolder(os.path.join(args.data_dir, 'val'),
-                                transform=transforms.Compose([
-                                    transforms.Resize(256),
-                                    transforms.CenterCrop(224),
-                                    transforms.ToTensor(),
-                                    normalize,
-                                ])),
+                             transform=transforms.Compose([
+                                 transforms.Resize(256),
+                                 transforms.CenterCrop(224),
+                                 transforms.ToTensor(),
+                                 normalize,
+                             ])),
         batch_size=args.batch_size, shuffle=True, **kwargs)
     dummy_input = torch.ones(1, 3, 224, 224)
     return train_loader, val_loader, dummy_input
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -91,10 +92,14 @@ def parse_args():
                         help='how many batches to wait before logging training status')
     parser.add_argument('--finetune_epochs', type=int, default=15,
                         help='the number of finetune epochs after pruning')
-    parser.add_argument('--lr', type=float, default=0.001, help='the learning rate of model')
-    parser.add_argument('--lr_decay', choices=['multistep', 'cos'], default='multistep', help='lr decay scheduler type')
-    parser.add_argument('--type', choices=['l1', 'l2', 'activation'], default='l1', help='the pruning algo type')
-    parser.add_argument('--para', action='store_true', help='if use multiple gpus')
+    parser.add_argument('--lr', type=float, default=0.001,
+                        help='the learning rate of model')
+    parser.add_argument(
+        '--lr_decay', choices=['multistep', 'cos'], default='multistep', help='lr decay scheduler type')
+    parser.add_argument(
+        '--type', choices=['l1', 'l2', 'activation'], default='l1', help='the pruning algo type')
+    parser.add_argument('--para', action='store_true',
+                        help='if use multiple gpus')
     return parser.parse_args()
 
 
@@ -140,14 +145,16 @@ def test(model, device, criterion, val_loader):
 
     return accuracy
 
+
 def get_data(args):
     if args.dataset == 'cifar10':
         return cifar10_dataset(args)
     elif args.dataset == 'imagenet':
         return imagenet_dataset(args)
 
+
 if __name__ == '__main__':
-    print("Benchmark the constraint-aware one shot pruner.")
+
     args = parse_args()
     torch.manual_seed(0)
     Model = getattr(models, args.model)
@@ -155,17 +162,21 @@ if __name__ == '__main__':
     train_loader, val_loader, dummy_input = get_data(args)
     net1 = Model(pretrained=True).to(device)
     net2 = Model(pretrained=True).to(device)
-    
-    cfglist = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
+
+    cfglist = [{'op_types': ['Conv2d'], 'sparsity':args.sparsity}]
     if args.type == 'l1':
         pruner1 = L1FilterPruner(net1, cfglist)
-        pruner2 = Constrained_L1FilterPruner(net2, cfglist, dummy_input.to(device))
+        pruner2 = L1FilterPruner(
+            net2, cfglist, dependency_aware=True, dummy_input=dummy_input.to(device))
     elif args.type == 'l2':
         pruner1 = L2FilterPruner(net1, cfglist)
-        pruner2 = Constrained_L2FilterPruner(net2, cfglist, dummy_input.to(device))
+        pruner2 = L2FilterPruner(
+            net2, cfglist, dependency_aware=True, dummy_input=dummy_input.to(device))
     elif args.type == 'activation':
-        pruner1 = ActivationMeanRankFilterPruner(net1, cfglist, statistics_batch_num=10)
-        pruner2 = ConstrainedActivationMeanRankFilterPruner(net2, cfglist, dummy_input.to(device), statistics_batch_num=10)
+        pruner1 = ActivationMeanRankFilterPruner(
+            net1, cfglist, statistics_batch_num=10)
+        pruner2 = ActivationMeanRankFilterPruner(
+            net2, cfglist, statistics_batch_num=10, dependency_aware=True, dummy_input=dummy_input.to(device))
         for batch_idx, (data, target) in enumerate(train_loader):
             data = data.to(device)
             net1(data)
@@ -176,11 +187,11 @@ if __name__ == '__main__':
 
     pruner1.compress()
     pruner2.compress()
-    print('Model speedup finished')
-    
+    print('Compression finished')
+
     optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
-                                momentum=0.9,
-                                weight_decay=4e-5)
+                                 momentum=0.9,
+                                 weight_decay=4e-5)
     scheduler1 = None
     scheduler2 = None
     if args.lr_decay == 'multistep':
@@ -191,8 +202,8 @@ if __name__ == '__main__':
     criterion1 = torch.nn.CrossEntropyLoss()
 
     optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
-                                momentum=0.9,
-                                weight_decay=4e-5)
+                                 momentum=0.9,
+                                 weight_decay=4e-5)
     if args.lr_decay == 'multistep':
         scheduler2 = MultiStepLR(
             optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
@@ -202,7 +213,7 @@ if __name__ == '__main__':
 
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
-    print('After pruning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
+    print('After pruning: Acc of Original Pruner %f, Acc of Dependency-aware Pruner %f' % (acc1, acc2))
 
     if args.para:
         net1 = nn.DataParallel(net1).to(device)
@@ -210,47 +221,50 @@ if __name__ == '__main__':
         # Scale the batch size, rebuild the data loader
         args.batch_size = args.batch_size * cuda.device_count()
         train_loader, val_loader, dummy_input = get_data(args)
-    
 
-    pruner1.export_model('./ori_%f.pth' % args.sparsity, './ori_mask_%f' % args.sparsity)
-    pruner2.export_model('./cons_%f.pth' % args.sparsity, './cons_mask_%f' % args.sparsity)
+    pruner1.export_model('./ori_%f.pth' % args.sparsity,
+                         './ori_mask_%f' % args.sparsity)
+    pruner2.export_model('./cons_%f.pth' % args.sparsity,
+                         './cons_mask_%f' % args.sparsity)
     pruner1._unwrap_model()
     pruner2._unwrap_model()
-    ms1 = ModelSpeedup(net1, dummy_input.to(device), './ori_mask_%f' % args.sparsity)
-    ms2 = ModelSpeedup(net2, dummy_input.to(device), './cons_mask_%f' % args.sparsity)
+    ms1 = ModelSpeedup(net1, dummy_input.to(device),
+                       './ori_mask_%f' % args.sparsity)
+    ms2 = ModelSpeedup(net2, dummy_input.to(device),
+                       './cons_mask_%f' % args.sparsity)
     ms1.speedup_model()
     ms2.speedup_model()
 
-
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
-                criterion2, optimizer2, epoch)
+              criterion2, optimizer2, epoch)
         if scheduler2:
             scheduler2.step()
         acc2 = test(net2, device, criterion2, val_loader)
         print('Learning rate: ', scheduler2.get_last_lr())
-        print('Finetune Epoch %d, acc of constrained pruner %f'%(epoch, acc2))
+        print('Finetune Epoch %d, acc of dependency-aware pruner %f' %
+              (epoch, acc2))
 
     for epoch in range(args.finetune_epochs):
         train(args, net1, device, train_loader,
-                criterion1, optimizer1, epoch)
+              criterion1, optimizer1, epoch)
         if scheduler1:
             scheduler1.step()
         acc1 = test(net1, device, criterion1, val_loader)
         print('Learning rate: ', scheduler1.get_last_lr())
-        print('Finetune Epoch %d, acc of original pruner %f'%(epoch, acc1))
-
-
+        print('Finetune Epoch %d, acc of original pruner %f' % (epoch, acc1))
 
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
-    print('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f' % (acc1, acc2))
-    
+    print('After finetuning: Acc of Original Pruner %f, Acc of dependency-aware Pruner %f' % (acc1, acc2))
+
     flops1, weights1 = count_flops_params(net1, dummy_input.size())
     flops2, weights2 = count_flops_params(net2, dummy_input.size())
     print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
-    print('Constrained L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
+    print('Dependency-aware L1filter pruner flops:{} weight:{}'.format(flops2, weights2))
     with open('result.txt', 'w') as f:
         f.write('L1filter pruner flops:{} weight:{} \n'.format(flops1, weights1))
-        f.write('Constrained L1filter pruner flops:{} weight:{} \n'.format(flops2, weights2))
-        f.write('After finetuning: Acc of Original Pruner %f, Acc of Constrained Pruner %f\n' % (acc1, acc2))
+        f.write(
+            'Dependency-aware L1filter pruner flops:{} weight:{} \n'.format(flops2, weights2))
+        f.write(
+            'After finetuning: Acc of Original Pruner %f, Acc of Dependency-aware Pruner %f\n' % (acc1, acc2))
