@@ -392,7 +392,8 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1, dependency_aware=False, dummy_input=None):
+    def __init__(self, model, config_list, optimizer=None, activation='relu',
+                 statistics_batch_num=1, dependency_aware=False, dummy_input=None):
         pruning_algorithm = 'mean_activation_constrained' if dependency_aware else 'mean_activation'
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input,
