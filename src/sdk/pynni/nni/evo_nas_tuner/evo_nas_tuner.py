@@ -164,5 +164,6 @@ class EvoNasTuner(Tuner):
         return new_individual
 
     def _generate_initial_population(self):
-        while len(self.population) < self.population_size:
+        while len(self.initial_population) < self.population_size:
             self.initial_population.append(self._random_model())
+        logger.info('init population done.')

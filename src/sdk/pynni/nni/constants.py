@@ -62,6 +62,11 @@ BuiltinAlgorithms = {
             'name': 'PBTTuner',
             'class_name': 'nni.pbt_tuner.pbt_tuner.PBTTuner',
             'class_args_validator': 'nni.pbt_tuner.pbt_tuner.PBTClassArgsValidator'
+        },
+        {
+            'name': 'EvolutionNasTuner',
+            'class_name': 'nni.evo_nas_tuner.evo_nas_tuner.EvoNasTuner',
+            'class_args_validator': 'nni.evo_nas_tuner.evo_nas_tuner.EvolutionClassArgsValidator'
         }
     ],
     'assessors': [
