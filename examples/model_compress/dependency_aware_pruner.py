@@ -188,39 +188,12 @@ if __name__ == '__main__':
     pruner1.compress()
     pruner2.compress()
     print('Compression finished')
-
-    optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
-                                 momentum=0.9,
-                                 weight_decay=4e-5)
-    scheduler1 = None
-    scheduler2 = None
-    if args.lr_decay == 'multistep':
-        scheduler1 = MultiStepLR(
-            optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
-    elif args.lr_decay == 'cos':
-        scheduler1 = CosineAnnealingLR(optimizer1, T_max=args.finetune_epochs)
     criterion1 = torch.nn.CrossEntropyLoss()
-
-    optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
-                                 momentum=0.9,
-                                 weight_decay=4e-5)
-    if args.lr_decay == 'multistep':
-        scheduler2 = MultiStepLR(
-            optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
-    elif args.lr_decay == 'cos':
-        scheduler2 = CosineAnnealingLR(optimizer2, T_max=args.finetune_epochs)
     criterion2 = torch.nn.CrossEntropyLoss()
 
     acc1 = test(net1, device, criterion1, val_loader)
     acc2 = test(net2, device, criterion2, val_loader)
     print('After pruning: Acc of Original Pruner %f, Acc of Dependency-aware Pruner %f' % (acc1, acc2))
-
-    if args.para:
-        net1 = nn.DataParallel(net1).to(device)
-        net2 = nn.DataParallel(net2).to(device)
-        # Scale the batch size, rebuild the data loader
-        args.batch_size = args.batch_size * cuda.device_count()
-        train_loader, val_loader, dummy_input = get_data(args)
 
     pruner1.export_model('./ori_%f.pth' % args.sparsity,
                          './ori_mask_%f' % args.sparsity)
@@ -234,6 +207,36 @@ if __name__ == '__main__':
                        './cons_mask_%f' % args.sparsity)
     ms1.speedup_model()
     ms2.speedup_model()
+
+    if args.para:
+        net1 = nn.DataParallel(net1).to(device)
+        net2 = nn.DataParallel(net2).to(device)
+        # Scale the batch size, rebuild the data loader
+        args.batch_size = args.batch_size * cuda.device_count()
+        train_loader, val_loader, dummy_input = get_data(args)
+
+    optimizer1 = torch.optim.SGD(net1.parameters(), lr=args.lr,
+                                 momentum=0.9,
+                                 weight_decay=4e-5)
+    scheduler1 = None
+    scheduler2 = None
+    if args.lr_decay == 'multistep':
+        scheduler1 = MultiStepLR(
+            optimizer1, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler1 = CosineAnnealingLR(optimizer1, T_max=args.finetune_epochs)
+
+
+    optimizer2 = torch.optim.SGD(net2.parameters(), lr=args.lr,
+                                 momentum=0.9,
+                                 weight_decay=4e-5)
+    if args.lr_decay == 'multistep':
+        scheduler2 = MultiStepLR(
+            optimizer2, milestones=[int(args.finetune_epochs*0.5), int(args.finetune_epochs*0.75)], gamma=0.1)
+    elif args.lr_decay == 'cos':
+        scheduler2 = CosineAnnealingLR(optimizer2, T_max=args.finetune_epochs)
+
+
 
     for epoch in range(args.finetune_epochs):
         train(args, net2, device, train_loader,
