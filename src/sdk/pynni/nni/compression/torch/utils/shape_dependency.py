@@ -185,6 +185,49 @@ class ChannelDependency(Dependency):
             d_sets.append(tmp_set)
         return d_sets
 
+class InputChannelDependency(ChannelDependency):
+    def __init__(self, model, dummy_input=None, traced_model=None):
+        super(InputChannelDependency, self).__init__(model, dummy_input, traced_model)
+
+    def _get_following_convs(self, tensor):
+        queue = []
+        following_convs = []
+        queue.extend(self.graph.input_to_node[tensor])
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear':
+                # find the first met conv
+                following_convs.append(curnode.name)
+                continue
+            successors = self.graph.find_successors(curnode.unique_name)
+            successors = [self.graph.name_to_node[name] for name in successors]
+            for layer in successors:
+                queue.append(layer)
+        return following_convs
+
+    def build_dependency(self):
+        """
+        Build the input channel dependencies.
+        The `InputChannelDependency` indicates the layers that have
+        dependencies when pruning the input channel of the conv layers.
+        In contrast, `ChannelDependency` indicates the dependent layers
+        when pruning the output channles of conv layers (for example, L1FilterPruner).
+        """
+        # unpack the tuple or list manually
+        self.graph.unpack_manually()
+        for tensor in self.graph.input_to_node:
+            # start from this tensor, find all the conv layers that
+            # take this tensor as input. Similar to the `ChannelDependency`
+            # the conv layer will truncate the dependencies
+            layers = self._get_following_convs(tensor)
+            dependency_set = set(layers)
+            for layer in layers:
+                if layer in self.dependency:
+                    dependency_set.update(self.dependency[layer])
+            for layer in dependency_set:
+                self.dependency[layer] = dependency_set
+
+
 class CatPaddingDependency(ChannelDependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         super(CatPaddingDependency, self).__init__(model, dummy_input, traced_model)
