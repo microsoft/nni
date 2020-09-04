@@ -2,7 +2,9 @@
 # Licensed under the MIT license.
 
 import setuptools
+from setuptools.command import install
 import platform
+import os
 from os import walk, path
 
 os_type = platform.system()
@@ -14,6 +16,34 @@ elif os_type == 'Windows':
     os_name = 'Microsoft :: Windows'
 else:
     raise NotImplementedError('current platform {} not supported'.format(os_type))
+
+version = '1.8'
+
+class auto_completion(install):
+    def run(self):
+        install.run(self)
+        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/v{}/tools/bash-completion'.format(version)
+        if os_type == 'Linux':
+            if os.geteuid(): # run as root
+                BASH_COMP_PREFIX = '/usr/share/bash-completion/completions'
+            else:
+                HOME = os.environ.get('HOME')
+                if not HOME:
+                    return # can not get $HOME, abort.
+                BASH_COMP_PREFIX = os.path.join(HOME, '.bash_completion.d')
+            # install auto completion script to /usr/share/bash-completion/completions/nnictl for root or 
+            #  ~/.bash_completion.d/nnictl for normal user
+            BASH_COMP_SCRIPT = os.path.join(BASH_COMP_PREFIX, 'nnictl')
+            os.system('mkdir -p {} && wget -O {} {} && chmod 644 {}'.format(BASH_COMP_PREFIX,
+                                                                            BASH_COMP_SCRIPT,
+                                                                            COMP_URL,
+                                                                            BASH_COMP_SCRIPT))
+            # not root and completion not installed
+            if not os.geteuid():
+                if not os.popen('(source {} ; command -v _nnictl) 2>/dev/null'.format(NEED_SOURCE)).read():
+                    os.system("echo '[[ -f {} ]] && source {}' >> {}".format(BASH_COMP_SCRIPT,
+                                                                             BASH_COMP_SCRIPT,
+                                                                             NEED_SOURCE))
 
 data_files = [('bin', ['node-{}-x64/bin/node'.format(os_type.lower())])]
 if os_type == 'Windows':
@@ -28,7 +58,7 @@ with open('../../README.md', 'r', encoding="utf-8") as fh:
 
 setuptools.setup(
     name = 'nni',
-    version = '999.0.0-developing',
+    version = version,
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
@@ -77,5 +107,8 @@ setuptools.setup(
         'console_scripts' : [
             'nnictl = nni_cmd.nnictl:parse_args'
         ]
+    }
+    cmdclass = {
+        'install': auto_completion
     }
 )
