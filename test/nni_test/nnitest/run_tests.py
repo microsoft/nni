@@ -244,8 +244,11 @@ def run(args):
             print('skipped {}, training service {} not match [{}]'.format(
                 name, args.ts, test_case_config['trainingService']))
             continue
-
-        wait_for_port_available(8080, 30)
+        # windows remote mode need more time to cleanup 
+        if test_case_config['platform'] == 'remote':
+            wait_for_port_available(8080, 180)
+        else:
+            wait_for_port_available(8080, 30)
         print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
