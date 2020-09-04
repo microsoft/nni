@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import setuptools
-from setuptools.command import install
+from setuptools.command.install import install
 import platform
 import os
 from os import walk, path
