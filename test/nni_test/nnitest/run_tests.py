@@ -244,7 +244,7 @@ def run(args):
             print('skipped {}, training service {} not match [{}]'.format(
                 name, args.ts, test_case_config['trainingService']))
             continue
-        # windows remote mode need more time to cleanup 
+        # remote mode need more time to cleanup 
         if test_case_config['platform'] == 'remote':
             wait_for_port_available(8080, 180)
         else:
