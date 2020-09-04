@@ -107,7 +107,7 @@ setuptools.setup(
         'console_scripts' : [
             'nnictl = nni_cmd.nnictl:parse_args'
         ]
-    }
+    },
     cmdclass = {
         'install': auto_completion
     }
