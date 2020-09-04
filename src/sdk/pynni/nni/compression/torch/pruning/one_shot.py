@@ -141,6 +141,15 @@ class SlimPruner(OneshotPruner):
 
 
 class _StructuredFilterPruner(OneshotPruner):
+    """
+    _StructuredFilterPruner has two ways to calculate the masks
+    for conv layers. In the normal way, the _StructuredFilterPruner
+    will calculate the mask of each layer separately. For example, each
+    conv layer determine which filters should be pruned according to its L1
+    norm. In constrast, in the dependency-aware way, the layers that in a
+    dependency group will be pruned jointly and these layers will be forced
+    to prune the same channels.
+    """
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
                          optimizer=optimizer, **algo_kwargs)
