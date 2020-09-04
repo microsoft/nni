@@ -19,9 +19,8 @@ else:
 
 version = '1.8'
 
-class auto_completion(install):
+class AutoCompletion(install):
     def run(self):
-        install.run(self)
         COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/v{}/tools/bash-completion'.format(version)
         if os_type == 'Linux':
             if os.geteuid(): # run as root
@@ -29,6 +28,7 @@ class auto_completion(install):
             else:
                 HOME = os.environ.get('HOME')
                 if not HOME:
+                    install.run(self)
                     return # can not get $HOME, abort.
                 BASH_COMP_PREFIX = os.path.join(HOME, '.bash_completion.d')
             # install auto completion script to /usr/share/bash-completion/completions/nnictl for root or 
@@ -44,6 +44,7 @@ class auto_completion(install):
                     os.system("echo '[[ -f {} ]] && source {}' >> {}".format(BASH_COMP_SCRIPT,
                                                                              BASH_COMP_SCRIPT,
                                                                              NEED_SOURCE))
+        install.run(self)
 
 data_files = [('bin', ['node-{}-x64/bin/node'.format(os_type.lower())])]
 if os_type == 'Windows':
@@ -109,6 +110,6 @@ setuptools.setup(
         ]
     },
     cmdclass = {
-        'install': auto_completion
+        'install': AutoCompletion
     }
 )
