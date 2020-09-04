@@ -245,7 +245,7 @@ def run(args):
                 name, args.ts, test_case_config['trainingService']))
             continue
         # remote mode need more time to cleanup 
-        if test_case_config['platform'] == 'remote':
+        if args.ts == 'remote':
             wait_for_port_available(8080, 180)
         else:
             wait_for_port_available(8080, 30)
