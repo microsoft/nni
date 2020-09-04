@@ -10,12 +10,9 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [Slim Pruner](#slim-pruner)
 * [FPGM Pruner](#fpgm-pruner)
 * [L1Filter Pruner](#l1filter-pruner)
-* [Constrained L1Filter Pruner](#constrained-l1filter-pruner)
 * [L2Filter Pruner](#l2filter-pruner)
-* [Constrained L2Filter Pruner](#constrained-l2filter-pruner)
 * [Activation APoZ Rank Filter Pruner](#activationAPoZRankFilter-pruner)
 * [Activation Mean Rank Filter Pruner](#activationmeanrankfilter-pruner)
-* [Constrained Activation Mean Rank Filter Pruner](#constrained-activationmeanrankfilter-pruner)
 * [Taylor FO On Weight Pruner](#taylorfoweightfilter-pruner)
 
 **Pruning Schedule**
@@ -157,6 +154,15 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 > 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
 >      weights are copied to the new model.
 
+In addition, we also provide a dependency-aware mode for the L1FilterPruner. As [dependency analysis utils](./CompressionUtils.md) shows, if the output channels of two convolutional layers(conv1, conv2) are added together, then these two conv layers have channel dependency with each other(more details please see [Compression Utils](./CompressionUtils.md)). Therefore, if we prune the first 50% of output channels(filters) for conv1, and prune the last 50% of output channels for conv2. Although both layers have pruned 50% of the filters, the speedup module still needs to add zeros to align the output channels. In this case, we cannot harvest the speed benefit from the model pruning. To better gain the speed benefit of the model pruning, we add a dependency-aware mode for the Filter Pruner. In the dependency-aware mode, the pruner prunes the model not only based on the l1 norm of each filter, but also the topology of the whole network architecture.
+
+In the dependency-aware mode(`dependency_aware` is set `True`), the pruner will try to prune the same output channels for the layers that have the channel dependencies with each other. Specifically, the pruner will calculate the L1 norm sum of all the layers in the dependency set for each channel. Obviously, the number of channels that can actually be pruned of this dependency set in the end is determined by the minimum sparsity of layers in this dependency set(denoted by `min_sparsity`). According to the L1 norm sum of each channel, the pruner will prune the same `min_sparsity` channels for all the layers. Next, the pruner will additionally prune `sparsity` - `min_sparsity` channels for each convolutional layer based on its own L1 norm of each channel. For example, suppose the output channels of `conv1` , `conv2` are added together and the configured sparsities of `conv1` and `conv2` are 0.3, 0.2 respectively. In this case, the `dependency-aware pruner` will prune the same 20% of channels for `conv1` and `conv2` according to L1 norm sum of `conv1` and `conv2`. Next, the pruner will additionally prune 10% channels for `conv1` according to the L1 norm of each channel of `conv1`.
+
+In addition. for the convolutional layers that have more than one filter group, `dependency-aware pruner` will also try to prune the same number of the channels for each filter group. Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains(channel dependency, etc) to improve the final speed gain after the speedup process. 
+
+In the dependency-aware mode, the pruner will provide a better speed gain from the model pruning.
+
+
 ### Usage
 
 PyTorch code
@@ -165,6 +171,16 @@ PyTorch code
 from nni.compression.torch import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L1FilterPruner(model, config_list)
+pruner.compress()
+```
+
+To enable the dependency-aware mode:
+```python
+from nni.compression.torch import L1FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+# dummy_input is necessary for the dependency_aware mode
+dummy_input = torch.ones(1, 3, 224, 224).cuda()
+pruner = L1FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
 pruner.compress()
 ```
 
@@ -188,30 +204,9 @@ The experiments code can be found at [examples/model_compress]( https://github.c
 
 ***
 
-## Constrained L1Filter Pruner
-This is a topology constraint-aware one-shot pruner. Compared to the [original L1 Filter Pruner](#l1filter-pruner), this pruner prunes the model not only based on the l1 norm of each filter, but also the topology of the network architecture of the target model. Specifically, for the example, if the output channels of two convolutional layers(conv1, conv2) are added together, then we can say that these two conv layers have channel dependency with each other(more details please see [Compression Utils](./CompressionUtils.md)). If we prune the first 50% of output channels(filters) for conv1, and prune the last 50% of output channels for conv2. Although both layers have pruned 50% of the filters, the speedup module still needs to add zeros to align the output channels. In this case, we cannot harvest the speed benefit from the model pruning. To better gain the speed benefit of the model pruning, we develop this constraint(topology)-aware one-shot pruner.
-
-The `Constrained L1Filter Pruner` will try to prune the same output channels for the layers that have the channel dependencies with each other. `Constrained L1Filter Pruner` will calculate the L1 norm sum of all the layers in the dependency set for each channel. We know that the maximum sparsity of the channels of this dependency set is determined by the minimum sparsity of layers in this dependency set(denoted by `min_sparsity`). According to the L1 norm sum of each channel, `Constrained L1Filter Pruner` will prune the same `min_sparsity` channels for all the layers. Next, the pruner will additionally prune `sparsity` - `min_sparsity` channels for each convolutional layer based on its own L1 norm of each channel. For example, suppose the output channels of `conv1` , `conv2` are added together and the configured sparsities of `conv1` and `conv2` are 0.3, 0.2 respectively. In this case, `Constrained L1Filter Pruner` will prune the same 20% of channels for `conv1` and `conv2` according to L1 norm sum of `conv1` and `conv2`. Next, the pruner will additionally prune 10% channels for `conv1` according to the L1 norm of each channel of `conv1`.
-
- In addition. for the convolutional layers that have more than one filter group, `Constrained L1Filter Pruner` will also try to prune the same number of the channels for each filter group. Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains(channel dependency, etc) to improve the final speed gain after the speedup process. 
-
- In a word, compared to `L1Filter`, `Constrained L1Filter Pruner` will provide a better speed gain from the model pruning.
-
-
-### Usage
-Pytorch code
-```python
-from nni.compression.torch import Constrained_L1FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-dummy_input = torch.rand(1, 3, 32, 32)
-pruner = Constrained_L1FilterPruner(model, config_list, dummy_input)
-pruner.compress()
-```
-Compared to `L1FilterPruner`, `ConstrainedL1FilterPruner` needs an additional input parameter called `dummy_input` to analyze the topology of the input model. The other input parameters are same as `L1FilterPruner`.
-
 ## L2Filter Pruner
 
-This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
+This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner. `L2Filter Pruner` also can enable the dependency-aware mode by set `dependency_aware` True.
 
 ### Usage
 
@@ -224,6 +219,16 @@ pruner = L2FilterPruner(model, config_list)
 pruner.compress()
 ```
 
+To enable the dependency-aware mode:
+```python
+from nni.compression.torch import L2FilterPruner
+config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+# dummy_input is necessary for the dependency_aware mode
+dummy_input = torch.ones(1, 3, 224, 224).cuda()
+pruner = L2FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
+pruner.compress()
+```
+
 ### User configuration for L2Filter Pruner
 
 ##### PyTorch
@@ -232,18 +237,6 @@ pruner.compress()
 ```
 ***
 
-## Constrained L2Filter Pruner
-Similar to Constrained L1Filter Pruner, this pruner prunes the model based on the L2 norm and the topology of the model.
-
-### Usage
-Pytorch code
-```python
-from nni.compression.torch import Constrained_L2FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-dummy_input = torch.rand(1, 3, 32, 32)
-pruner = Constrained_L2FilterPruner(model, config_list, dummy_input)
-pruner.compress()
-```
 
 ## ActivationAPoZRankFilter Pruner
 
@@ -282,7 +275,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ## ActivationMeanRankFilter Pruner
 
-ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release. `ActivationMeanRankFilter Pruner` also can enable the dependency-aware mode by set `dependency_aware` True.
 
 ### Usage
 
@@ -302,6 +295,21 @@ Note: ActivationMeanRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
+To enable the dependency-aware mode:
+
+```python
+from nni.compression.torch import ActivationMeanRankFilterPruner
+config_list = [{
+    'sparsity': 0.5,
+    'op_types': ['Conv2d']
+}]
+# dummy_input is necessary for the dependency-aware mode and the
+# dummy_input should be on the same device with the model
+dummy_input = torch.ones(1, 3, 224, 224).cuda()
+pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
+pruner.compress()
+```
+
 ### User configuration for ActivationMeanRankFilterPruner
 
 ##### PyTorch
@@ -310,19 +318,6 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ```
 ***
 
-
-## Constrained ActivationMeanRankFilter Pruner
-Similar to Constrained L1Filter Pruner, this pruner prunes the model based on the activation rank of the filters and the topology of the model.
-
-### Usage
-Pytorch code
-```python
-from nni.compression.torch import ConstrainedActivationMeanRankFilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-dummy_input = torch.rand(1, 3, 32, 32)
-pruner = ConstrainedActivationMeanRankFilterPruner(model, config_list, dummy_input)
-pruner.compress()
-```
 
 ## TaylorFOWeightFilter Pruner
 

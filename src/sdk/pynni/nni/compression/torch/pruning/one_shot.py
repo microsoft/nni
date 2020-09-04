@@ -150,6 +150,7 @@ class _StructuredFilterPruner(OneshotPruner):
     dependency group will be pruned jointly and these layers will be forced
     to prune the same channels.
     """
+
     def __init__(self, model, config_list, pruning_algorithm, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
                          optimizer=optimizer, **algo_kwargs)
