@@ -4,7 +4,7 @@ The NNI CTL module is used to control Neural Network Intelligence, including sta
 
 ```
 Ubuntu 16.04 or other Linux OS
-python >= 3.5
+python >= 3.6
 ```
 
 ## Installation

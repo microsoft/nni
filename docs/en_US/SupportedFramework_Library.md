@@ -1,5 +1,5 @@
 # Framework and Library Supports 
-With the built-in Python API, NNI naturally supports the hyper parameter tuning and neural network search for all the AI frameworks and libraries who support Python models(`version >= 3.5`). NNI had also provided a set of examples and tutorials for some of the popular scenarios to make jump start easier.
+With the built-in Python API, NNI naturally supports the hyper parameter tuning and neural network search for all the AI frameworks and libraries who support Python models(`version >= 3.6`). NNI had also provided a set of examples and tutorials for some of the popular scenarios to make jump start easier.
 
 ## Supported AI Frameworks
 
