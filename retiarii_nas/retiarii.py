@@ -55,6 +55,13 @@ if __name__ == '__main__':
     except FileNotFoundError:
         pass
     finished = False
+    if sys.argv[1].lower() == '-l':
+        print('Launch the script with:\npython retiarii.py e2e_launch.py <nas_mode>\n' + 
+              'nas_mode can be: nasnet_e2e, mnasnet_e2e, amoebanet_e2e, proxylessnas_e2e, ' +
+              'nasbench101_e2e, nasbench201_e2e, fbnet_e2e, textnas_e2e, chamnet_e2e, ' +
+              'onceforall_e2e, singlepathnas_e2e, spos, hierarchical, wann, path_level, ' +
+              'darts, proxyless_g.')
+        sys.exit(0)
     if len(sys.argv) > 2:
         if sys.argv[2] in ['hierarchical', 'wann', 'path_level']:
             algorithm = sys.argv[2]
