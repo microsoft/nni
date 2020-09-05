@@ -170,7 +170,7 @@ if __name__ == '__main__':
     parser.add_argument("--weight-decay", type=float, default=4E-5)
     parser.add_argument("--label-smooth", type=float, default=0.1)
     parser.add_argument("--log-frequency", type=int, default=10)
-    parser.add_argument("--seed", type=int, default=1949)
+    parser.add_argument("--seed", type=int, default=23)
     parser.add_argument("--label-smoothing", type=float, default=0.1)
     parser.add_argument("--enable-gpu-dataloader",
                         default=False, action="store_true")
@@ -291,6 +291,8 @@ if __name__ == '__main__':
             n_model_parallel = world_size
 
         model = model_cls()
+        from op_libs.spos import ShuffleNetV2OneShot
+        ShuffleNetV2OneShot._initialize_weights(model)
         model.cuda()
         if n_model_parallel > 1:
             for p in model.parameters():
