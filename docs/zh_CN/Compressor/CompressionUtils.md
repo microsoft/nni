@@ -125,7 +125,8 @@ NNI 提供了模型计数器，用于计算模型的 FLOPs 和参数。 此计�
 ```
 from nni.compression.torch.utils.counter import count_flops_params
 
-# 给定输入大小 (1, 1, 28, 28)
+# Given input size (1, 1, 28, 28) 
 flops, params = count_flops_params(model, (1, 1, 28, 28))
+# Format output size to M (i.e., 10^6)
 print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
 ```

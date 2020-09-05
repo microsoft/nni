@@ -17,6 +17,7 @@ from recommonmark.parser import CommonMarkParser
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
+sys.path.insert(1, os.path.abspath('../../src/sdk/pycli'))
 
 
 # -- Project information ---------------------------------------------------
@@ -28,7 +29,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.6'
+release = 'v1.8'
 
 # -- General configuration ---------------------------------------------------
 

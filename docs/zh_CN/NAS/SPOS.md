@@ -74,7 +74,7 @@ nnictl ss_gen -t "python tester.py"
 nnictl create --config config_search.yml
 ```
 
-从每个 Epoch 导出的最终架构可在 Tuner 工作目录下的 `checkpoints` 中找到，默认值为 `$HOME/nni/experiments/your_experiment_id/log`。
+从每个 Epoch 导出的最终架构可在 Tuner 工作目录下的 `checkpoints` 中找到，默认值为 `$HOME/nni-experiments/your_experiment_id/log`。
 
 ### 步骤 3. 从头开始训练
 
