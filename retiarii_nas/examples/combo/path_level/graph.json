@@ -1,0 +1,25 @@
+{
+    "_graph": {
+        "inputs": [ "image" ],
+        "hidden_nodes": {
+            "net": { "type": "_cell", "template": "Net" },
+            "flatten": { "type": "Flatten" },
+            "fc1": { "type": "Linear", "units": 500 },
+            "relu": { "type": "ReLU" },
+            "fc2": { "type": "Linear", "units": 32 }
+        },
+        "edges": [
+            { "head": "image", "tail": "net"},
+            { "head": "net", "tail": "flatten" },
+            { "head": "flatten", "tail": "fc1" },
+            { "head": "fc1", "tail": "relu" },
+            { "head": "relu", "tail": "fc2" },
+            { "head": "fc2", "tail": "_outputs" }
+        ]
+    },
+
+    "Net": {
+        "hidden_nodes": { },
+        "edges": [ ]
+    }
+}

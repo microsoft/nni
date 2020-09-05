@@ -1,0 +1,56 @@
+{
+    "_graph": {
+        "hidden_nodes": {
+            "down_sample": { "type": "AveragePool2D", "pool_size": 2 },
+            "flatten": { "type": "Flatten" },
+            "split": { "type": "Split", "dimension": 1 },
+            "wann_net": { "type": "_cell", "template": "WannNet" },
+            "concat": { "type": "Concatenate", "dimension": 1 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "down_sample" },
+            { "head": "down_sample", "tail": "flatten" },
+            { "head": "flatten", "tail": "split" },
+            { "head": "split", "tail": "wann_net" },
+            { "head": [ "wann_net", 0 ], "tail": "concat" },
+            { "head": [ "wann_net", 1 ], "tail": "concat" },
+            { "head": [ "wann_net", 2 ], "tail": "concat" },
+            { "head": [ "wann_net", 3 ], "tail": "concat" },
+            { "head": [ "wann_net", 4 ], "tail": "concat" },
+            { "head": [ "wann_net", 5 ], "tail": "concat" },
+            { "head": [ "wann_net", 6 ], "tail": "concat" },
+            { "head": [ "wann_net", 7 ], "tail": "concat" },
+            { "head": [ "wann_net", 8 ], "tail": "concat" },
+            { "head": [ "wann_net", 9 ], "tail": "concat" },
+            { "head": "concat", "tail": "_outputs" }
+        ]
+    },
+
+    "WannNet": {
+        "hidden_nodes": {
+            "out_0": { "type": "Sum" },
+            "out_1": { "type": "Sum" },
+            "out_2": { "type": "Sum" },
+            "out_3": { "type": "Sum" },
+            "out_4": { "type": "Sum" },
+            "out_5": { "type": "Sum" },
+            "out_6": { "type": "Sum" },
+            "out_7": { "type": "Sum" },
+            "out_8": { "type": "Sum" },
+            "out_9": { "type": "Sum" }
+        },
+
+        "edges": [
+            { "head": "out_0", "tail": [ "_outputs", 0 ] },
+            { "head": "out_1", "tail": [ "_outputs", 1 ] },
+            { "head": "out_2", "tail": [ "_outputs", 2 ] },
+            { "head": "out_3", "tail": [ "_outputs", 3 ] },
+            { "head": "out_4", "tail": [ "_outputs", 4 ] },
+            { "head": "out_5", "tail": [ "_outputs", 5 ] },
+            { "head": "out_6", "tail": [ "_outputs", 6 ] },
+            { "head": "out_7", "tail": [ "_outputs", 7 ] },
+            { "head": "out_8", "tail": [ "_outputs", 8 ] },
+            { "head": "out_9", "tail": [ "_outputs", 9 ] }
+        ]
+    }
+}

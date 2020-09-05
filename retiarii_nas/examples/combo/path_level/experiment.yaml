@@ -1,0 +1,6 @@
+framework: tf
+base_graph: examples/combo/path_level/graph.json
+train: examples.combo.path_level.train.train
+mutator: examples.combo.path_level.main.PathLevelMutator
+strategy.scheduler: examples.combo.path_level.main.main
+strategy.sampler: examples.combo.path_level.main.RandomSampler

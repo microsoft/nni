@@ -1,0 +1,24 @@
+base_graph: examples/graphs/mnist.json
+train: sdk.trainer.train.train
+
+mutator: examples.graphs.mutator.ExampleMutator
+
+strategy.scheduler: naive.strategy.main
+strategy.sampler: naive.strategy.RandomSampler
+
+hyper_parameters:
+    operations:
+      -
+        type: conv_2d
+        channels: 32
+        kernel_size: 3
+      -
+        type: conv_2d
+        channels: 32
+        kernel_size: 5
+#     -
+#       type: max_pool_2d
+#       pool_size: 2
+#     -
+#       type: average_pool_2d
+#       pool_size: 2

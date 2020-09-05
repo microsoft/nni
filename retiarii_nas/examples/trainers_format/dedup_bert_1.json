@@ -1,0 +1,40 @@
+{
+    "graph": {
+        "inputs": [],
+        "outputs": [ [ { "name": "output" } ] ],
+
+        "hidden_nodes": [
+            { "name": "receive", "operation": { "type": "receive", "from": 0 } },
+            { "name": "nas_model", "operation": { "type": "transformer" } }
+        ],
+
+        "edges": [
+            { "head": "receive", "tail": "nas_model" },
+            { "head": "nas_model", "tail": "output" }
+        ]
+    },
+    "training_config": [
+        {
+            "train_loader": null,
+            "optimizer": "adam",
+            "training_step": "lang",
+            "valid_loader": null
+        }
+    ],
+    "all_train_loaders": {},
+    "all_valid_loaders": {},
+    "all_optimizers": {
+        "adam": {
+            "__class__": "Adam",
+            "kwargs": {
+                "lr": 0.001
+            }
+        }
+    },
+    "all_training_steps": {
+        "lang": "my_trainer.customize_language_model"
+    },
+    "all_validation_steps": {
+        "lang": "my_trainer.customize_language_model_val"
+    }
+}

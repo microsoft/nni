@@ -1,0 +1,207 @@
+{
+    "_graph": {
+        "hidden_nodes": {
+            "motif": { "type": "_cell", "template": "Motif_2_0" },
+            "flatten": { "type": "Flatten" },
+            "fc1": { "type": "Linear", "units": 500 },
+            "relu": { "type": "ReLU" },
+            "fc2": { "type": "Linear", "units": 32 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "motif"},
+            { "head": "motif", "tail": "flatten" },
+            { "head": "flatten", "tail": "fc1" },
+            { "head": "fc1", "tail": "relu" },
+            { "head": "relu", "tail": "fc2" },
+            { "head": "fc2", "tail": "_outputs" }
+        ]
+    },
+
+    "Default": {
+        "hidden_nodes": { "op": { "type": "Identity" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_none": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__none" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_0": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__1x1_conv" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_1": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__3x3_depth_conv" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_2": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__3x3_sep_conv" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_3": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__3x3_max_pool" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_4": {
+        "hidden_nodes": { "op": { "type": "Hierarchical__3x3_avg_pool" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_0_5": {
+        "hidden_nodes": { "op": { "type": "Identity" } },
+        "edges": [ { "head": ["_inputs", 0], "tail": "op" }, { "head": "op", "tail": "_outputs" } ]
+    },
+
+    "Motif_1_0": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_1_1": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_1_2": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_1_3": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_1_4": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_1_5": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" }, "node_0_2": { "type": "_cell", "template": "Default" }, "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" }, "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "tensor_2": { "type": "Concatenate", "dimension": 3 }, "tensor_3": { "type": "Concatenate", "dimension": 3 }
+        },
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+            { "head": ["_inputs", 0], "tail": "node_0_2" }, { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" }, { "head": "node_1_2", "tail": "tensor_2" },
+            { "head": ["_inputs", 0], "tail": "node_0_3" }, { "head": "node_0_1", "tail": "node_1_3" }, { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" }, { "head": "node_1_3", "tail": "tensor_3" }, { "head": "node_2_3", "tail": "tensor_3" },
+            { "head": "tensor_3", "tail": "_outputs" }
+        ]
+    },
+
+    "Motif_2_0": {
+        "hidden_nodes": {
+            "node_0_1": { "type": "_cell", "template": "Default" },
+            "node_0_2": { "type": "_cell", "template": "Default" },
+            "node_0_3": { "type": "_cell", "template": "Default" },
+            "node_0_4": { "type": "_cell", "template": "Default" },
+            "node_1_2": { "type": "_cell", "template": "Default" },
+            "node_1_3": { "type": "_cell", "template": "Default" },
+            "node_1_4": { "type": "_cell", "template": "Default" },
+            "node_2_3": { "type": "_cell", "template": "Default" },
+            "node_2_4": { "type": "_cell", "template": "Default" },
+            "node_3_4": { "type": "_cell", "template": "Default" },
+
+            "tensor_2": { "type": "Concatenate", "dimension": 3 },
+            "tensor_3": { "type": "Concatenate", "dimension": 3 },
+            "tensor_4": { "type": "Concatenate", "dimension": 3 }
+        },
+
+        "edges": [
+            { "head": ["_inputs", 0], "tail": "node_0_1" },
+
+            { "head": ["_inputs", 0], "tail": "node_0_2" },
+            { "head": "node_0_1", "tail": "node_1_2" },
+            { "head": "node_0_2", "tail": "tensor_2" },
+            { "head": "node_1_2", "tail": "tensor_2" },
+
+            { "head": ["_inputs", 0], "tail": "node_0_3" },
+            { "head": "node_0_1", "tail": "node_1_3" },
+            { "head": "tensor_2", "tail": "node_2_3" },
+            { "head": "node_0_3", "tail": "tensor_3" },
+            { "head": "node_1_3", "tail": "tensor_3" },
+            { "head": "node_2_3", "tail": "tensor_3" },
+
+            { "head": ["_inputs", 0], "tail": "node_0_4" },
+            { "head": "node_0_1", "tail": "node_1_4" },
+            { "head": "tensor_2", "tail": "node_2_4" },
+            { "head": "tensor_3", "tail": "node_3_4" },
+            { "head": "node_0_4", "tail": "tensor_4" },
+            { "head": "node_1_4", "tail": "tensor_4" },
+            { "head": "node_2_4", "tail": "tensor_4" },
+            { "head": "node_3_4", "tail": "tensor_4" },
+
+            { "head": "tensor_4", "tail": "_outputs" }
+        ]
+    }
+}

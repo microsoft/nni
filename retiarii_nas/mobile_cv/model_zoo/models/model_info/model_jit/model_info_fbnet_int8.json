@@ -1,0 +1,41 @@
+[
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 244.52636,
+        "job": "f155351131",
+        "model_file_type": "int8_jit",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/fACAVX/fbnet_a_i8f_int8_jit_f155351131/model.jpt",
+        "model_type": "Classification",
+        "name": "fbnet_a_i8f_int8_jit",
+        "params_m": 4.27029,
+        "resolution": 224,
+        "top_1_accuracy": 72.192,
+        "top_5_accuracy": 90.31
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 291.10164,
+        "job": "f152919289",
+        "model_file_type": "int8_jit",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/fACAVX/fbnet_b_i8f_int8_jit_f152919289/model.jpt",
+        "model_type": "Classification",
+        "name": "fbnet_b_i8f_int8_jit",
+        "params_m": 4.76667,
+        "resolution": 224,
+        "top_1_accuracy": 73.178,
+        "top_5_accuracy": 91.098
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 378.23344,
+        "job": "f152918373",
+        "model_file_type": "int8_jit",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/fACAVX/fbnet_c_i8f_int8_jit_f152918373/model.jpt",
+        "model_type": "Classification",
+        "name": "fbnet_c_i8f_int8_jit",
+        "params_m": 5.52542,
+        "resolution": 224,
+        "top_1_accuracy": 74.242,
+        "top_5_accuracy": 91.76
+    }
+]

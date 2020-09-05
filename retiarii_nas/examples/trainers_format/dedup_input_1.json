@@ -1,0 +1,44 @@
+{
+    "graph": {
+        "inputs": [ [ ] ],
+        "outputs": [ [ { "name": "out" } ] ],
+
+        "hidden_nodes": [
+            { "name": "broadcast", "operation": { "type": "broadcast", "src": 0 } },
+            { "name": "op1", "operation": { "type": "conv" } },
+            { "name": "op2", "operation": { "type": "conv" } },
+            { "name": "op3", "operation": { "type": "identity" } }
+        ],
+
+        "edges": [
+            { "head": "broadcast", "tail": "op1" },
+            { "head": "op1", "tail": "op2" },
+            { "head": "op2", "tail": "op3" },
+            { "head": "op3", "tail": "out" }
+        ]
+    },
+    "training_config": [
+        {
+            "train_loader": null,
+            "optimizer": "adam",
+            "training_step": "classif",
+            "valid_loader": null
+        }
+    ],
+    "all_optimizers": {
+        "adam": {
+            "__class__": "Adam",
+            "kwargs": {
+                "lr": 0.001
+            }
+        }
+    },
+    "all_train_loaders": [],
+    "all_valid_loaders": [],
+    "all_training_steps": {
+        "classif": "training_steps.typical_classifier"
+    },
+    "all_validation_steps": {
+        "classif": "training_steps.typical_classifier"
+    }
+}
