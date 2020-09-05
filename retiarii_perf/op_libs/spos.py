@@ -195,28 +195,6 @@ class ShuffleNetV2OneShot(nn.Module):
 
 #====================Training approach
 
-import sdk
-from sdk.mutators.builtin_mutators import ModuleMutator
-import datasets
-
-class ModelTrain(sdk.Trainer):
-    def __init__(self, device='cuda'):
-        super(ModelTrain, self).__init__()
-        self.device = torch.device(device)
-        self.data_provider = datasets.ImagenetDataProvider(save_path="/data/v-yugzh/imagenet",
-                                                    train_batch_size=32,
-                                                    test_batch_size=32,
-                                                    valid_size=None,
-                                                    n_worker=4,
-                                                    resize_scale=0.08,
-                                                    distort_color='normal')
-
-    def train_dataloader(self):
-        return self.data_provider.train
-
-    def val_dataloader(self):
-        return self.data_provider.valid
-
 # from spos import ShuffleNetV2OneShot, ModelTrain
 # from sdk.mutators.builtin_mutators import ModuleMutator
 

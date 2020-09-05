@@ -289,12 +289,11 @@ def test_mnasnet_list(job_list, perf_dir='v100perf', plan_path='mnaset.plan'):
 #====================== SPOS (Figure 17)  ======================================
 
 def _gen_spos_super_graph(n_job):
-    from op_libs.spos import ShuffleNetV2OneShot, ModelTrain
+    from op_libs.spos import ShuffleNetV2OneShot
     from sdk.mutators.builtin_mutators import ModuleMutator
 
     base_model = ShuffleNetV2OneShot()
     exp = sdk.create_experiment('spos', base_model)
-    exp.specify_training(ModelTrain)
 
     mutators = []
     for i in range(20):

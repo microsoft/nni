@@ -1,6 +1,6 @@
 absl-py==0.10.0
 anykeystore==0.2
-apex==0.1
+apex==0.9.10.dev0
 astor==0.8.1
 autopep8==1.5.4
 cachetools==4.1.1

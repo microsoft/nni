@@ -81,3 +81,16 @@ venv.bak/
 # VSCode
 .vscode
 .vs
+
+retiarii_perf/artifact_live/micro_dedup/*.perf
+retiarii_perf/artifact_live/micro_dedup/*.py
+retiarii_perf/artifact_live/micro_dedup/*.json
+retiarii_perf/data/imagenet/*
+retiarii_perf/data/sst/*
+retiarii_perf/merged_perf/mnanset-*
+.history
+retiarii_perf/debug.json
+retiarii_perf/dump_batch.json
+retiarii_perf/generated/spos.json
+retiarii_perf/generated/spos.py
+
