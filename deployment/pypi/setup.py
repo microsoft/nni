@@ -17,11 +17,9 @@ elif os_type == 'Windows':
 else:
     raise NotImplementedError('current platform {} not supported'.format(os_type))
 
-version = '1.8'
-
 class AutoCompletion(install):
     def run(self):
-        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/v{}/tools/bash-completion'.format(version)
+        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/master/tools/bash-completion'
         if os_type == 'Linux':
             HOME = os.environ.get('HOME')
             if not os.geteuid(): # run as root
@@ -60,7 +58,7 @@ with open('../../README.md', 'r', encoding="utf-8") as fh:
 
 setuptools.setup(
     name = 'nni',
-    version = version,
+    version = '999.0.0-developing',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
