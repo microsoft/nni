@@ -191,7 +191,6 @@ if __name__ == '__main__':
     #parser.add_argument('--eval', default=False, action="store_true")
 
     args = parser.parse_args()
-    prepare_experiment(args)
     # reset_seed(args.seed)
 
     is_distributed = False
@@ -203,6 +202,7 @@ if __name__ == '__main__':
         args.local_rank = int(os.environ["rank"])
         args.model_parallel = args.world_size
 
+    prepare_experiment(args)
     #import generated.debug as out_spos
     mod = importlib.import_module(args.module_path)
     model_cls = mod.Graph
