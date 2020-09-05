@@ -1,0 +1,19 @@
+{
+    "graph": {
+        "inputs": [ { "name": "image" } ],
+        "outputs": [ { "name": "out" } ],
+
+        "hidden_nodes": [
+            { "name": "op1", "operation": { "type": "identity" } },
+            { "name": "op2", "operation": { "type": "identity" } },
+            { "name": "op3", "operation": { "type": "identity" } }
+        ],
+
+        "edges": [
+            { "head": "image", "tail": "op1" },
+            { "head": "op1", "tail": "op2" },
+            { "head": "op2", "tail": "op3" },
+            { "head": "op3", "tail": "out" }
+        ]
+    }
+}

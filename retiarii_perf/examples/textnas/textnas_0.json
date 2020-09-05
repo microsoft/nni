@@ -1,0 +1,157 @@
+{
+  "name": "textnas_0",
+  "graph": {
+    "inputs": [
+      {
+        "name": "input_1",
+        "attributes": {
+          "shape": [128, 64, 768],
+          "dtype": "torch.float32",
+          "position": "x",
+          "cuda": false
+        }
+      },
+      {
+        "name": "input_2",
+        "attributes": {
+          "shape": [128],
+          "dtype": "torch.int64",
+          "position": "y",
+          "cuda": true
+        }
+      }
+    ],
+    "outputs": [
+      { "name": "origin_x" },
+      { "name": "origin_y" },
+      { "name": "node_100" }
+    ],
+    "hidden_nodes": [
+      {
+        "name": "bert",
+        "operation": {
+          "type": "BertEmbedding",
+          "pretrain_model": "bert-base-uncased",
+          "max_length": 64,
+          "pad_to_max_length": true,
+          "truncation": true
+        },
+        "attributes": {
+          "shape": [128, 64, 768],
+          "dtype": "torch.float",
+          "non-trainable": true
+        }
+      },
+      {
+        "name": "dropout1",
+        "operation": {
+          "type": "Dropout",
+          "p": 0.5
+        }
+      },
+      {
+        "name": "transpose",
+        "operation": {
+          "type": "Transpose",
+          "dim0": 1,
+          "dim1": 2
+        }
+      },
+      {
+        "name": "init_conv",
+        "operation": {
+          "type": "Conv1d",
+          "in_channels": 768,
+          "out_channels": 1,
+          "kernel_size": 1
+        }
+      },
+      {
+        "name": "fc1",
+        "operation": {
+          "type": "Linear",
+          "in_features": 64,
+          "out_features": 5,
+          "bias": true
+        }
+      },
+      {
+        "name": "squeeze",
+        "operation": {
+          "type": "Squeeze"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "head": "input_1",
+        "tail": "bert"
+      },
+      {
+        "head": "bert",
+        "tail": "dropout1"
+      },
+      {
+        "head": "dropout1",
+        "tail": "transpose"
+      },
+      {
+        "head": "transpose",
+        "tail": "init_conv"
+      },
+      {
+        "head": "init_conv",
+        "tail": "fc1"
+      },
+      {
+        "head": "fc1",
+        "tail": "squeeze"
+      },
+      {
+        "head": "squeeze",
+        "tail": "node_100"
+      },
+      {
+        "head": "bert",
+        "tail": "origin_x"
+      },
+      {
+        "head": "input_2",
+        "tail": "origin_y"
+      }
+    ]
+  },
+  "configs": [
+    {
+      "train_dataloader": "mnist_train",
+      "val_dataloader": "mnist_valid",
+      "optimizer": "adam",
+      "training_step": "train_classifier",
+      "validation_step": "valid_classifier",
+      "test_step": "valid_classifier"
+    }
+  ],
+  "utils": {
+    "adam": {
+      "function": "sdk.trainer.optimizers.pytorch_builtin_optimizers",
+      "kwargs": {
+        "classname": "Adam",
+        "lr": 0.001
+      }
+    },
+    "mnist_train": {
+      "function": "sdk.trainer.dataloaders.sst_dataloader",
+      "kwargs": {
+        "train": true
+      }
+    },
+    "mnist_valid": {
+      "function": "sdk.trainer.dataloaders.sst_dataloader",
+      "kwargs": {
+        "train": false
+      }
+    },
+    "train_classifier": "sdk.trainer.steps.classifier_train_step",
+    "valid_classifier": "sdk.trainer.steps.classifier_validation_test_step"
+  }
+}

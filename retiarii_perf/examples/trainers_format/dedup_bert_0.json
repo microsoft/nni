@@ -1,0 +1,54 @@
+{
+    "graph": {
+        "inputs": [ [ { "name": "text" } ] ],
+        "outputs": [ [] ],
+
+        "hidden_nodes": [
+            { "name": "embedding", "operation": { "type": "bert", "requires_grad": false } },
+            { "name": "send", "operation": { "type": "send", "to": [1] } }
+        ],
+
+        "edges": [
+            { "head": "image", "tail": "embedding" },
+            { "head": "embedding", "tail": "transmit" }
+        ]
+    },
+    "training_config": [
+        {
+            "train_loader": "glue",
+            "optimizer": "adam",
+            "training_step": "lang",
+            "valid_loader": "glue"
+        }
+    ],
+    "all_train_loaders": {
+        "glue": {
+            "__func__": "train_loaders.glue_dataloader",
+            "kwargs": {
+                "batch_size": 8
+            }
+        }
+    },
+    "all_valid_loaders": {
+        "glue": {
+            "__func__": "train_loaders.glue_dataloader",
+            "kwargs": {
+                "batch_size": 8
+            }
+        }
+    },
+    "all_optimizers": {
+        "adam": {
+            "__class__": "Adam",
+            "kwargs": {
+                "lr": 0.001
+            }
+        }
+    },
+    "all_training_steps": {
+        "lang": "my_trainer.customize_language_model"
+    },
+    "all_validation_steps": {
+        "lang": "my_trainer.customize_language_model_val"
+    }
+}

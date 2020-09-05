@@ -1,0 +1,215 @@
+{
+    "name" : "mnist_2",
+    "graph": {
+        "inputs": [{ 
+            "name": "input_1" ,  
+            "attributes" : {
+            "shape" : [32, 1, 28, 28], 
+            "dtype": "torch.float32", 
+            "position" : "x"}
+            }, 
+            { 
+                "name": "input_2" ,  
+                "attributes" : {
+                    "shape" : [32],
+                    "dtype": "torch.int64", 
+                    "position" : "y"}
+            }],
+        "outputs": [{"name":"node_origin_x"}, {"name": "node_origin_y"}, { "name": "node_100"}],
+        "hidden_nodes": [{
+            "name": "conv1",
+            "operation": {
+                "type": "Conv2d",
+                "in_channels": 1,
+                "out_channels": 20,
+                "kernel_size": [5, 5],
+                "stride": [1, 1],
+                "padding": [0, 0],
+                "dilation": [1, 1],
+                "groups": 1,
+                "bias": true,
+                "padding_mode": "zeros"
+            },
+            "attributes": {
+                "non-trainable": true
+            }
+        }, {
+            "name": "conv2",
+            "operation": {
+                "type": "SuperGraphOpChoices",
+                "candidates":[
+                    {
+                        "type": "Conv2d",
+                        "in_channels": 20,
+                        "out_channels": 50,
+                        "kernel_size": [5, 5],
+                        "stride": [1, 1],
+                        "padding": [0, 0],
+                        "dilation": [1, 1],
+                        "groups": 1,
+                        "bias": true,
+                        "padding_mode": "zeros"
+                    },
+                    {
+                        "type": "Conv2d",
+                        "in_channels": 20,
+                        "out_channels": 50,
+                        "kernel_size": [5, 5],
+                        "stride": [1, 1],
+                        "padding": [0, 0],
+                        "dilation": [1, 1],
+                        "groups": 1,
+                        "bias": true,
+                        "padding_mode": "zeros"
+                    },
+                    {
+                        "type": "Conv2d",
+                        "in_channels": 20,
+                        "out_channels": 50,
+                        "kernel_size": [5, 5],
+                        "stride": [1, 1],
+                        "padding": [0, 0],
+                        "dilation": [1, 1],
+                        "groups": 1,
+                        "bias": true,
+                        "padding_mode": "zeros"
+                    }
+                ]
+            }
+        }, {
+            "name": "fc1",
+            "operation": {
+                "type": "Linear",
+                "in_features": 800,
+                "out_features": 512,
+                "bias": true
+            }
+        }, {
+            "name": "fc2",
+            "operation": {
+                "type": "Linear",
+                "in_features": 512,
+                "out_features": 10,
+                "bias": true
+            }
+        }, {
+            "name": "aten_relu_4",
+            "operation": {
+                "type": "ReLU"
+            }
+        }, {
+            "name": "aten_max_pool2d_5",
+            "operation": {
+                "type": "MaxPool2D",
+                "kernel_size": [2, 2],
+                "stride": [2, 2]
+            }
+        }, {
+            "name": "aten_relu_6",
+            "operation": {
+                "type": "ReLU"
+            }
+        }, {
+            "name": "aten_max_pool2d_7",
+            "operation": {
+                "type": "MaxPool2D",
+                "kernel_size": [2, 2],
+                "stride": [2, 2]
+            }
+        }, {
+            "name": "aten_view_8",
+            "operation": {
+                "type": "View",
+                "shape": [-1, 800]
+            }
+        }, {
+            "name": "aten_relu_9",
+            "operation": {
+                "type": "ReLU"
+            }
+        }, {
+            "name": "aten_log_softmax_10",
+            "operation": {
+                "type": "LogSoftmax",
+                "dim": -1
+            }
+        }],
+        "edges": [{
+            "head": "conv1",
+            "tail": "aten_relu_4"
+        }, {
+            "head": "conv2",
+            "tail": "aten_relu_6"
+        }, {
+            "head": "fc1",
+            "tail": "aten_relu_9"
+        }, {
+            "head": "fc2",
+            "tail": "aten_log_softmax_10"
+        }, {
+            "head": "aten_relu_4",
+            "tail": "aten_max_pool2d_5"
+        }, {
+            "head": "aten_max_pool2d_5",
+            "tail": "conv2"
+        }, {
+            "head": "aten_relu_6",
+            "tail": "aten_max_pool2d_7"
+        }, {
+            "head": "aten_max_pool2d_7",
+            "tail": "aten_view_8"
+        }, {
+            "head": "aten_view_8",
+            "tail": "fc1"
+        }, {
+            "head": "aten_relu_9",
+            "tail": "fc2"
+        }, {
+            "head": "aten_log_softmax_10",
+            "tail": "node_100"
+        }, {
+            "head": "input_1",
+            "tail": "conv1"
+        },{
+            "head": "input_1",
+            "tail": "node_origin_x"
+        },
+        {
+            "head": "input_2",
+            "tail": "node_origin_y"
+        }]
+    },
+    "configs": [
+        {
+            "train_dataloader": "mnist_train",
+            "val_dataloader": "mnist_valid",
+            "optimizer": "adam",
+            "training_step": "train_classifier",
+            "validation_step": "valid_classifier",
+            "test_step": "valid_classifier"
+        }
+    ],
+    "utils": {
+        "adam": {
+            "function": "sdk.trainer.optimizers.pytorch_builtin_optimizers",
+            "kwargs": {
+                "classname": "Adam",
+                "lr": 0.001
+            }
+        },
+        "mnist_train": {
+            "function": "sdk.trainer.dataloaders.mnist_dataloader",
+            "kwargs": {
+                "train": true
+            }
+        },
+        "mnist_valid": {
+            "function": "sdk.trainer.dataloaders.mnist_dataloader",
+            "kwargs": {
+                "train": false
+            }
+        },
+        "train_classifier": "sdk.trainer.steps.classifier_train_step",
+        "valid_classifier": "sdk.trainer.steps.classifier_validation_test_step"
+    }
+}

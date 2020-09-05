@@ -1,0 +1,75 @@
+{
+    "graph": {
+        "inputs": [ [ { "name": "image1" } ], [ { "name" : "image2" } ] ],
+        "outputs": [ [ { "name": "out1" } ], [ {"name": "out2" } ] ],
+
+        "hidden_nodes": [
+            { "name": "concat", "operation": { "type": "concat", "axis": 1 } },
+            { "name": "conv", "operation": { "type": "conv", "group": 2 } },
+            { "name": "split", "operation": { "type": "conv", "axis": 1, "partition": 2 } }
+        ],
+
+        "edges": [
+            { "head": "image1", "tail": "concat" },
+            { "head": "image2", "tail": "concat" },
+            { "head": "concat", "tail": "conv" },
+            { "head": "conv", "tail": "split" },
+            { "head": "split", "tail": "out1" },
+            { "head": "split", "tail": "out2" }
+        ]
+    },
+    "training_config": [
+        {
+            "train_loader": "mnist",
+            "optimizer": "adam",
+            "training_step": "classif",
+            "valid_loader": "mnist"
+        },
+        {
+            "train_loader": "cifar",
+            "optimizer": "adam",
+            "training_step": "classif",
+            "valid_loader": "cifar"
+        }
+    ],
+    "all_train_loaders": {
+        "mnist": {
+            "__func__": "train_loaders.mnist_dataloader",
+            "kwargs": {
+                "image_size": [28, 28],
+                "batch_size": 32,
+                "augmentation": true
+            }
+        },
+        "cifar": {
+            "__func__": "train_loaders.cifar10"
+        }
+    },
+    "all_valid_loaders": {
+        "mnist": {
+            "__func__": "train_loaders.mnist_dataloader",
+            "kwargs": {
+                "validation": true,
+                "image_size": [28, 28],
+                "batch_size": 512
+            }
+        },
+        "cifar": {
+            "__func__": "train_loaders.cifar10"
+        }
+    },
+    "all_optimizers": {
+        "adam": {
+            "__class__": "Adam",
+            "kwargs": {
+                "lr": 0.001
+            }
+        }
+    },
+    "all_training_steps": {
+        "classif": "training_steps.typical_classifier"
+    },
+    "all_validation_steps": {
+        "classif": "training_steps.typical_classifier"
+    }
+}

@@ -1,0 +1,9 @@
+base_graph: single_mutation/mnist.json
+train: train.train
+
+mutator: single_mutation.single_mutation.AddBatchNorm
+
+strategy.scheduler: single_mutation.single_mutation.main
+strategy.sampler: null
+
+hyper_parameters: {}
