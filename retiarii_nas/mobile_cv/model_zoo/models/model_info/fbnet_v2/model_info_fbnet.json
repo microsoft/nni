@@ -1,0 +1,74 @@
+[
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 244.52636,
+        "job": "f155351132",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_a_f155351132/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_a",
+        "params_m": 4.27029,
+        "resolution": 224,
+        "top_1_accuracy": 73.2980,
+        "top_5_accuracy": 90.9239
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 291.10164,
+        "job": "f153237418",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_b_f153237418/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_b",
+        "params_m": 4.76667,
+        "resolution": 224,
+        "top_1_accuracy": 74.5441,
+        "top_5_accuracy": 91.7846
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 378.23344,
+        "job": "f152910217",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_c_f152910217/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_c",
+        "params_m": 5.52542,
+        "resolution": 224,
+        "top_1_accuracy": 75.2499,
+        "top_5_accuracy": 92.2925
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 204.91779,
+        "job": "f152910216",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_ase_f152910216/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_ase",
+        "params_m": 6.67946,
+        "resolution": 224,
+        "top_1_accuracy": 74.8460,
+        "top_5_accuracy": 92.2960
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 231.43466,
+        "job": "f156832507",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_bse_f156832507/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_bse",
+        "params_m": 7.38941,
+        "resolution": 224,
+        "top_1_accuracy": 75.3400,
+        "top_5_accuracy": 92.3220
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 330.26155,
+        "job": "f156832505",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200103/rAuaZE/fbnet_cse_f156832505/model.pth",
+        "model_type": "Classification",
+        "name": "fbnet_cse",
+        "params_m": 9.23274,
+        "resolution": 224,
+        "top_1_accuracy": 76.6040,
+        "top_5_accuracy": 93.0880
+    }
+]

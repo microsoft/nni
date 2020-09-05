@@ -1,0 +1,6 @@
+framework: tf
+base_graph: examples/combo/wann/graph.json
+train: examples.combo.wann.train.train
+mutator: examples.combo.wann.main.WannMutator
+strategy.scheduler: examples.combo.wann.main.main
+strategy.sampler: examples.combo.wann.main.RandomSampler

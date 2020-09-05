@@ -1,0 +1,18 @@
+authorName: nas
+experimentName: nas
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 999
+trainingServicePlatform: local
+searchSpacePath: empty.json
+useAnnotation: false
+advisor:
+    codeDir: .
+    classFileName: advisor_entry.py #tuner_entry.py
+    className: NasAdvisor #NasTuner
+    classArgs:
+        command: 'tf'
+trial:
+    codeDir: ../..
+    command: python3 -m sdk.nni_integration.trial_main
+    gpuNum: 0

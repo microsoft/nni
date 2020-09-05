@@ -1,0 +1,27 @@
+{
+    "graph": {
+        "inputs": [ { "name": "image" } ],
+        "outputs": [ { "name": "metric" } ],
+
+        "hidden_nodes": [
+            { "name": "conv1", "operation": { "type": "conv_2d", "filters": 32, "kernel_size": 3, "activation": "relu" } },
+            { "name": "pool1", "operation": { "type": "max_pool_2d", "pool_size": 2 } },
+            { "name": "conv2", "operation": { "type": "conv_2d", "filters": 32, "kernel_size": 3, "activation": "relu" } },
+            { "name": "pool2", "operation": { "type": "max_pool_2d", "pool_size": 2 } },
+            { "name": "flatten", "operation": { "type": "flatten" } },
+            { "name": "fc1", "operation": { "type": "linear", "units": 256 } },
+            { "name": "fc2", "operation": { "type": "linear", "units": 10 } }
+        ],
+
+        "edges": [
+            { "head": "image", "tail": "conv1" },
+            { "head": "conv1", "tail": "pool1" },
+            { "head": "pool1", "tail": "conv2" },
+            { "head": "conv2", "tail": "pool2" },
+            { "head": "pool2", "tail": "flatten" },
+            { "head": "flatten", "tail": "fc1" },
+            { "head": "fc1", "tail": "fc2" },
+            { "head": "fc2", "tail": "metric" }
+        ]
+    }
+}

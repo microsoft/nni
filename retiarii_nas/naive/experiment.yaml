@@ -1,0 +1,23 @@
+#base_graph: naive/base_graph.json
+base_code: naive/base_code.py
+train: sdk.trainer.train.train
+
+mutator: naive.mutator.ExampleMutator
+
+strategy.scheduler: naive.strategy.main
+strategy.sampler: naive.strategy.RandomSampler
+
+hyper_parameters:
+    operations:
+      -
+        kernel_size: 5
+      -
+        kernel_size: 5
+      -
+        kernel_size: 5
+#     -
+#       type: max_pool_2d
+#       pool_size: 2
+#     -
+#       type: average_pool_2d
+#       pool_size: 2

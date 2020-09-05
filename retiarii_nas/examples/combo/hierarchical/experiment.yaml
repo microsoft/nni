@@ -1,0 +1,6 @@
+framework: tf
+base_graph: examples/combo/hierarchical/graph.json
+train: examples.combo.hierarchical.train.train
+mutator: examples.combo.hierarchical.main.HierarchicalMutator
+strategy.scheduler: examples.combo.hierarchical.main.main
+strategy.sampler: examples.combo.hierarchical.main.RandomSampler

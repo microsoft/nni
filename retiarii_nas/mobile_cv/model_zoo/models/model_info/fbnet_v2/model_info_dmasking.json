@@ -1,0 +1,58 @@
+[
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 56.27495,
+        "job": "f156819307",
+        "model_file_type": "pytorch",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200104/hnYGKi/dmasking_f1_f156819307/model.pth",
+        "model_type": "Classification",
+        "name": "dmasking_f1",
+        "params_m": 5.99297,
+        "resolution": 128,
+        "resize": 146,
+        "top_1_accuracy": 68.33000183105469,
+        "top_5_accuracy": 87.84000396728516
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 235.88279,
+        "job": "f156704077",
+        "model_file_type": "pytorch",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200104/hnYGKi/dmasking_f4_f156704077/model.pth",
+        "model_type": "Classification",
+        "name": "dmasking_f4",
+        "params_m": 6.99169,
+        "resolution": 224,
+        "resize": 256,
+        "top_1_accuracy": 75.5238,
+        "top_5_accuracy": 92.4504
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 419.06478,
+        "job": "f157689684",
+        "model_file_type": "pytorch",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200104/hnYGKi/dmasking_l2_hs_f157689684/model.pth",
+        "model_type": "Classification",
+        "name": "dmasking_l2_hs",
+        "params_m": 8.49286,
+        "resolution": 256,
+        "resize": 288,
+        "top_1_accuracy": 77.6631,
+        "top_5_accuracy": 93.736
+    },
+    {
+        "dataset": "ImageNet 1k",
+        "flops_m": 753.163968,
+        "job": "f156819299",
+        "model_file_type": "pytorch",
+        "model_path": "https://dl.fbaipublicfiles.com/fbnet/models/20200105/melBmS/dmasking_l3_f156819299/model.pth",
+        "model_type": "Classification",
+        "name": "dmasking_l3",
+        "params_m": 9.39406,
+        "resolution": 288,
+        "resize": 324,
+        "top_1_accuracy": 78.8668,
+        "top_5_accuracy": 94.3318
+    }
+]
