@@ -1,6 +1,5 @@
 absl-py==0.10.0
 anykeystore==0.2
-apex==0.1
 astor==0.8.1
 autopep8==1.5.4
 cachetools==4.1.1
@@ -81,7 +80,6 @@ thop==0.0.31.post2005241907
 threadpoolctl==2.1.0
 tokenizers==0.8.1rc1
 toml==0.10.1
-torch==1.5.1+cu101
 torchvision==0.6.1+cu101
 tqdm==4.48.2
 transaction==3.0.0
