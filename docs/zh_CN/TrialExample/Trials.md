@@ -162,19 +162,19 @@ nni.get_sequence_id＃返回 0
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local
-export NNI_SYS_DIR=/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$
+export NNI_SYS_DIR=/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$
 export NNI_TRIAL_JOB_ID=nrbb2
-export NNI_OUTPUT_DIR=/home/user_name/nni/experiments/$eperiment_id$/trials/$trial_id$
+export NNI_OUTPUT_DIR=/home/user_name/nni-experiments/$eperiment_id$/trials/$trial_id$
 export NNI_TRIAL_SEQ_ID=1
 export MULTI_PHASE=false
 export CUDA_VISIBLE_DEVICES=
-eval python3 mnist.py 2>/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/stderr
-echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
+eval python3 mnist.py 2>/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$/stderr
+echo $? `date +%s%3N` >/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$/.nni/state
 ```
 
 ### 其它模式
 
-当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni/experiments/$experiment_id$/trials/$trial_id$/` 。
+当 Trial 运行在 OpenPAI 这样的远程服务器上时，`NNI_OUTPUT_DIR` 仅会指向 Trial 的输出目录，而 `run.sh` 不会在此目录中。 `trial.log` 文件会被复制回本机的 Trial 目录中。目录的默认位置在 `~/nni-experiments/$experiment_id$/trials/$trial_id$/` 。
 
 详细信息，可参考[调试指南](../Tutorial/HowToDebug.md)。
 

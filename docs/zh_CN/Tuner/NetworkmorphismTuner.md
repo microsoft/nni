@@ -56,10 +56,10 @@ nni.report_final_result(best_acc)
 
 ```python
 # 1. 使用 NNI API
-## 从 Web 界面获取最佳模型的 ID
-## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
+## 可以通过 Web 界面获取最佳模型
+## 或者通过 `nni-experiments/experiment_id/log/model_path/best_model.txt'
 
-## 从 JSON 文件中读取，并使用 NNI API 来加载
+## 从模型文件中读取 json 字符串并使用 NNI API 加载
 with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
