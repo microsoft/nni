@@ -46,7 +46,7 @@ def pre_run(user_cmd):
         yaml.dump(nni_config, fp)
 
 def start_nni_experiment():
-    cmd = 'nnictl create --config nni.yaml --port 9090'
+    cmd = 'nnictl create --config nni.yaml --port 8080'
     subprocess.Popen(cmd.split(' ')).wait()
 
 if __name__ == '__main__':
