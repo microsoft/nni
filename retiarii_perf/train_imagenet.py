@@ -293,6 +293,7 @@ if __name__ == '__main__':
         model = model_cls()
         from op_libs.spos import ShuffleNetV2OneShot
         ShuffleNetV2OneShot._initialize_weights(model)
+	print("init weight")
         model.cuda()
         if n_model_parallel > 1:
             for p in model.parameters():
