@@ -23,10 +23,10 @@ class AutoCompletion(install):
     def run(self):
         COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/v{}/tools/bash-completion'.format(version)
         if os_type == 'Linux':
+            HOME = os.environ.get('HOME')
             if not os.geteuid(): # run as root
                 BASH_COMP_PREFIX = '/usr/share/bash-completion/completions'
             else:
-                HOME = os.environ.get('HOME')
                 if not HOME:
                     install.run(self)
                     return # can not get $HOME, abort.
@@ -40,6 +40,7 @@ class AutoCompletion(install):
                                                                             BASH_COMP_SCRIPT))
             # not root and completion not installed
             if os.geteuid():
+                NEED_SOURCE = os.path.join(HOME, '.bash_completion')
                 if not os.popen('(source {} ; command -v _nnictl) 2>/dev/null'.format(NEED_SOURCE)).read():
                     os.system("echo '[[ -f {} ]] && source {}' >> {}".format(BASH_COMP_SCRIPT,
                                                                              BASH_COMP_SCRIPT,
