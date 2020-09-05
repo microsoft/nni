@@ -15,14 +15,14 @@
 
 ### Web 界面，nnictl 和 nnicli
 
-* Improve hyper-parameter parallel coordinates plot (#2691) (#2759)
-* Add pagination for trial job list (#2738) (#2773)
-* Enable panel close when clicking overlay region (#2734)
-* Remove support for Multiphase on WebUI (#2760)
-* Support save and restore experiments (#2750)
-* Add intermediate results in export result (#2706)
-* Add [command](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Tutorial/Nnictl.md#nnictl-trial) to list trial results with highest/lowest metrics (#2747)
-* Improve the user experience of [nnicli](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md) with [examples](https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb) (#2713)
+* 改进超参数并行坐标图的绘制 (#2691) (#2759)
+* 为 Trial Job 列表添加分页 (#2738) (#2773)
+* 使面板可以在鼠标点击其它区域时关闭 (#2734)
+* 从 Web 界面中去掉多阶段支持 (#2760)
+* 支持保存和加载 Experiment (#2750)
+* 在导出结果的命令中增加导出中间结果的选项 (#2706)
+* 增加了依据最高/最低指标列出 Trial 的[命令](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Tutorial/Nnictl.md#nnictl-trial) (#2747)
+* 提升了 [nnicli](https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md) 的用户体验，并附[示例](https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb) (#2713)
 
 ### 神经网络架构搜索
 
@@ -66,7 +66,7 @@
 
 * 修复训练平台的目录生成错误 (#2673)
 * 修复 Remote 训练平台使用 chmod 时的 Bug (#2689)
-* Fix dependency issue by making `_graph_utils` imported inline (#2675)
+* 通过内联导入 `_graph_utils` 修复依赖问题 (#2675)
 * 修复了 `SimulatedAnnealingPruner` 中的掩码问题 (#2736)
 * 修复了中间结果的图的缩放问题 (#2738)
 * 修复了在查询 NAS 基准测试时字典没有经过排序的问题 (#2728)
