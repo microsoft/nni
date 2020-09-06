@@ -22,12 +22,12 @@ class AutoCompletion(install):
         COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/master/tools/bash-completion'
         if os_type == 'Linux':
             HOME = os.environ.get('HOME')
+            if not HOME:
+                install.run(self)
+                return # can not get $HOME, abort.
             if not os.geteuid(): # run as root
                 BASH_COMP_PREFIX = '/usr/share/bash-completion/completions'
             else:
-                if not HOME:
-                    install.run(self)
-                    return # can not get $HOME, abort.
                 BASH_COMP_PREFIX = os.path.join(HOME, '.bash_completion.d')
             # install auto completion script to /usr/share/bash-completion/completions/nnictl for root or 
             #  ~/.bash_completion.d/nnictl for normal user
