@@ -128,6 +128,14 @@ class LinuxCommands extends OsCommands {
         }
         return command;
     }
+
+    public addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined{
+        if (command === undefined || command === '' || preCommand === undefined || preCommand === ''){
+            return command;
+        } else {
+            return `${preCommand} && ${command}`;
+        }
+    }
 }
 
 export { LinuxCommands };
