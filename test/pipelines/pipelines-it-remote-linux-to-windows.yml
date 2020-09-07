@@ -34,6 +34,12 @@ jobs:
         displayName: "Install dependencies for integration tests in remote mode"
       - script: |
           set -e
+          cd examples/tuners/customized_tuner
+          python3 setup.py develop --user
+          PATH=$HOME/.local/bin:$PATH nnictl package install ./
+        displayName: 'Install demotuner for customized_tuner test'
+      - script: |
+          set -e
           cd test
           python3 nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
           --remote_port $(remote_port) --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
