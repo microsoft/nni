@@ -222,6 +222,11 @@ infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'ReLU6': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::tanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::tanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::hardtanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::hardtanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::relu_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
@@ -241,7 +246,8 @@ infer_from_inshape = {
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
-    'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -258,8 +264,14 @@ def dropout_inshape(module_masks, mask):
         return module_masks.output_mask
     # if alreay visited
     assert module_masks.input_mask <= mask
-    if module_masks.input_mask == mask:
-        return None
+    # It should be the same, we pass the masks by the reference(not the value),
+    # so they acutually are two references of the same object(mask,
+    # module_masks.input_mask). So we should continue pass the mask
+    # to the following nodes even module_masks.input_mask == mask.
+    # if pass the mask by copy.deepcopy(), then we can stop when
+    # module_masks.input_mask == mask.
+    # if module_masks.input_mask == mask:
+    #     return None
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return module_masks.output_mask
@@ -274,7 +286,7 @@ def cat_inshape(module_masks, mask, cat_info, last_visited):
     Parameters
     ----------
     module_masks : ModuleMasks
-        The ModuleMasks instance of the batchnorm2d
+        The ModuleMasks instance of the Conv2d
     mask : CoarseMask
         The mask of its input tensor
     cat_info: dict
@@ -413,7 +425,8 @@ def linear_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     assert mask.mask_index[0] is None
-    assert module_masks.input_mask is None
+    if module_masks.input_mask is not None:
+        assert module_masks.input_mask <= mask
     module_masks.set_input_mask(mask)
     return None
 
@@ -451,7 +464,10 @@ def view_inshape(module_masks, mask, shape):
     assert mask.mask_index[0] is None
     assert mask.mask_index[2] is None
     assert mask.mask_index[3] is None
-    assert module_masks.input_mask is None
+    # due to the cat operation, the same node may be
+    # accessed more than once
+    if module_masks.input_mask is not None:
+        assert module_masks.input_mask <= mask
     module_masks.set_input_mask(mask)
     output_cmask = CoarseMask(num_dim=2)
     index = []
@@ -535,12 +551,9 @@ def relu_inshape(module_masks, mask):
         The mask of its output tensor
     """
     assert isinstance(mask, CoarseMask)
-    # TODO: double check this assert, is it possible that a module is passed twice
     if module_masks.input_mask is not None:
         # check if has a mask conflict
-        assert module_masks.input_mask == mask
-        # No need to pass the mask again
-        return None
+        assert module_masks.input_mask <= mask
     # assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)

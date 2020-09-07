@@ -6,7 +6,11 @@ import {
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
 } from 'office-ui-fabric-react';
 import ReactPaginate from 'react-paginate';
+<<<<<<< HEAD
 import { LineChart, blocked, copy } from '../buttons/Icon';
+=======
+import { LineChart, blocked, copy } from '../Buttons/Icon';
+>>>>>>> 3ca752f0de542284b852ca1991d811fa9fedd25b
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';

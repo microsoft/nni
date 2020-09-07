@@ -54,8 +54,8 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({
-            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+        this.setState(state => ({ 
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, 
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
             metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
         }));

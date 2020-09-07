@@ -10,7 +10,7 @@ kubeflow:
 
   kubeflowConfig:
     operator: tf-operator
-    apiVersion: v1alpha2
+    apiVersion: v1
     storage: azureStorage
     keyVault:
       vaultName:

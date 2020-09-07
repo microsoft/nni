@@ -4,7 +4,11 @@ import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
 import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
+<<<<<<< HEAD
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
+=======
+import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
+>>>>>>> 3ca752f0de542284b852ca1991d811fa9fedd25b
 import '../../static/style/compare.scss';
 
 const dragOptions: IDragOptions = {
@@ -85,8 +89,15 @@ class Compare extends React.Component<CompareProps, {}> {
                 containLabel: true
             },
             legend: {
+<<<<<<< HEAD
                 // more than 10 trials will hide legend
                 data: idsList.length > 10 ? null : idsList
+=======
+                type: 'scroll',
+                right: 40,
+                left: idsList.length > 6 ? 80 : null,
+                data: idsList
+>>>>>>> 3ca752f0de542284b852ca1991d811fa9fedd25b
             },
             xAxis: {
                 type: 'category',
@@ -135,8 +146,17 @@ class Compare extends React.Component<CompareProps, {}> {
             isComplexSearchSpace = (typeof parameterList[0][parameterKeys[0]] === 'object')
                 ? true : false;
         }
+        const width = this.getWebUIWidth();
+        let scrollClass;
+        if (width > 1200) {
+            scrollClass = idList.length > 3 ? 'flex' : '';
+        } else if (width < 700) {
+            scrollClass = idList.length > 1 ? 'flex' : '';
+        } else {
+            scrollClass = idList.length > 2 ? 'flex' : '';
+        }
         return (
-            <table className="compare-modal-table">
+            <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
                     <tr>
                         <td className="column">Id</td>
@@ -200,6 +220,10 @@ class Compare extends React.Component<CompareProps, {}> {
         );
     }
 
+    getWebUIWidth = (): number => {
+        return window.innerWidth;
+    }
+
     componentDidMount(): void {
         this._isCompareMount = true;
     }
@@ -216,7 +240,11 @@ class Compare extends React.Component<CompareProps, {}> {
                 isOpen={true}
                 containerClassName={contentStyles.container}
                 className="compare-modal"
+<<<<<<< HEAD
                 // allowTouchBodyScroll={true}
+=======
+                allowTouchBodyScroll={true}
+>>>>>>> 3ca752f0de542284b852ca1991d811fa9fedd25b
                 dragOptions={dragOptions}
             >
                 <div>
