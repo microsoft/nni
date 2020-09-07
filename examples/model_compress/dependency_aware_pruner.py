@@ -261,6 +261,9 @@ if __name__ == '__main__':
     acc2 = test(net2, device, criterion2, val_loader)
     print('After finetuning: Acc of Original Pruner %f, Acc of dependency-aware Pruner %f' % (acc1, acc2))
 
+    if args.para:
+        net1 = net1.module
+        net2 = net2.module
     flops1, weights1 = count_flops_params(net1, dummy_input.size())
     flops2, weights2 = count_flops_params(net2, dummy_input.size())
     print('L1filter pruner flops:{} weight:{}'.format(flops1, weights1))
