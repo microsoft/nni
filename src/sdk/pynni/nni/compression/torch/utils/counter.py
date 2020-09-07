@@ -27,6 +27,8 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
         target model.
     input_size: list, tuple
         the input shape of data
+    custom_ops:
+        the custom operation to overwrite the default operation.
     Returns
     -------
     flops: float
@@ -44,7 +46,7 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     if custom_ops is None:
         custom_ops = {}
     custom_mask_ops.update(custom_ops)
-
+    
     prev_m = None
     for m in model.modules():
         weight_mask = None
