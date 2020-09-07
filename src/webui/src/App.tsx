@@ -3,7 +3,7 @@ import { Stack } from 'office-ui-fabric-react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
-import MessageInfo from './components/Modals/MessageInfo';
+import MessageInfo from './components/modals/MessageInfo';
 import './App.scss';
 
 interface AppState {
@@ -15,13 +15,28 @@ interface AppState {
     isillegalFinal: boolean;
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
+    isUpdate: boolean;
 }
+
+export const AppContext = React.createContext({
+    interval: 10, // sendons
+    columnList: COLUMN,
+    experimentUpdateBroadcast: 0,
+    trialsUpdateBroadcast: 0,
+    metricGraphMode: 'max',
+    bestTrialEntries: '10',
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeColumn: (val: string[]) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeMetricGraphMode: ( val: 'max' | 'min') => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeEntries: (val: string) => {}
+});
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-    
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -32,16 +47,19 @@ class App extends React.Component<{}, AppState> {
             metricGraphMode: 'max',
             isillegalFinal: false,
             expWarningMessage: '',
-            bestTrialEntries: '10'
+            bestTrialEntries: '10',
+            isUpdate: true
         };
     }
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
-        this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
-        this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
-        this.setState({ metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max') });
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
+            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
+        }));
+        this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
         // final result is legal
         // get a succeed trial，see final result data's format
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -99,6 +117,14 @@ class App extends React.Component<{}, AppState> {
         this.setState({ bestTrialEntries: entries });
     }
 
+    shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
+        if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
+            nextState.isUpdate = true;
+            return false;
+        }
+        return true;
+    }
+
     render(): React.ReactNode {
         const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
             metricGraphMode, isillegalFinal, expWarningMessage, bestTrialEntries
@@ -106,7 +132,6 @@ class App extends React.Component<{}, AppState> {
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null;  // TODO: render a loading page
         }
-        
         const errorList = [
             { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
             { errorWhere: EXPERIMENT.experimentError(), errorMessage: EXPERIMENT.getExperimentMessage() },
@@ -115,19 +140,6 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
-
-        const reactPropsChildren = React.Children.map(this.props.children, child =>
-            React.cloneElement(
-                child as React.ReactElement<any>, {
-                interval,
-                columnList, changeColumn: this.changeColumn,
-                experimentUpdateBroadcast,
-                trialsUpdateBroadcast,
-                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
-                bestTrialEntries, changeEntries: this.changeEntries
-            })
-        );
-
         return (
             <Stack className="nni" style={{ minHeight: window.innerHeight }}>
                 <div className="header">
@@ -150,7 +162,19 @@ class App extends React.Component<{}, AppState> {
                         {isillegalFinal && <div className="warning">
                             <MessageInfo info={expWarningMessage} typeInfo="warning" />
                         </div>}
-                        {reactPropsChildren}
+                        <AppContext.Provider value={{
+                            interval,
+                            columnList, 
+                            changeColumn: this.changeColumn,
+                            experimentUpdateBroadcast,
+                            trialsUpdateBroadcast,
+                            metricGraphMode, 
+                            changeMetricGraphMode: this.changeMetricGraphMode,
+                            bestTrialEntries, 
+                            changeEntries: this.changeEntries
+                        }}>
+                            {this.props.children}
+                        </AppContext.Provider>
                     </Stack>
                 </Stack>
             </Stack>
@@ -158,7 +182,6 @@ class App extends React.Component<{}, AppState> {
     }
 
     private refresh = async (): Promise<void> => {
-
         // resolve this question: 10s -> 20s, page refresh twice.
         // only refresh this page after clicking the refresh options
         if (this.firstLoad !== true) {
@@ -177,8 +200,7 @@ class App extends React.Component<{}, AppState> {
         // experiment status and /trial-jobs api's status could decide website update
         if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
-            this.setState({ interval: 0 });
-            this.lastRefresh();
+            this.setState(() => ({ interval: 0, isUpdate: false }));
             return;
         }
 
@@ -189,11 +211,8 @@ class App extends React.Component<{}, AppState> {
     public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1 }));
-        this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
     }
 }
 
 export default App;
-
-

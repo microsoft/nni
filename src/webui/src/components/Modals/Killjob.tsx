@@ -5,7 +5,7 @@ import {
     PrimaryButton, getTheme, mergeStyleSets, FontWeights
 } from 'office-ui-fabric-react';
 import { killJob } from '../../static/function';
-import { blocked } from '../Buttons/Icon';
+import { blocked } from '../buttons/Icon';
 
 const theme = getTheme();
 const styles = mergeStyleSets({
@@ -77,7 +77,7 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
     onKill = (): void => {
         this.setState({ isCalloutVisible: false }, () => {
             const { trial } = this.props;
-            killJob(trial.key, trial.jobId, trial.status);
+            killJob(trial.key, trial.id, trial.status);
         });
     }
 
