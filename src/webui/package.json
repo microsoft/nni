@@ -72,7 +72,7 @@
     "@types/react": "16.8.15",
     "@types/react-dom": "16.8.4",
     "@typescript-eslint/eslint-plugin": "^2.11.0",
-    "@typescript-eslint/parser": "1.6.0",
+    "@typescript-eslint/parser": "^2.11.0",
     "@uifabric/fluent-theme": "^0.16.7",
     "concurrently": "^5.2.0",
     "eslint": "^5.16.0",
