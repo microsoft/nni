@@ -227,7 +227,7 @@ class Trial implements TableObj {
         Object.entries(acc).forEach(item => {
             const [k, v] = item;
             const column = space.axes.get(k);
-            
+
             if (column !== undefined) {
                 ret.set(column, v);
             } else {
@@ -335,6 +335,7 @@ class Trial implements TableObj {
                 return this.renderNumber(metricAccuracy(latest));
             }
         }
+
     }
 }
 
