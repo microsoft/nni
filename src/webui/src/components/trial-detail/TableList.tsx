@@ -16,11 +16,6 @@ const ChangeColumnComponent = lazy(() => import('../modals/ChangeColumnComponent
 const Compare = lazy(() => import('../modals/Compare'));
 const KillJob = lazy(() => import('../modals/Killjob'));
 const Customize = lazy(() => import('../modals/CustomizedTrial'));
-// import Details from '../overview/Details';
-// import ChangeColumnComponent from '../modals/ChangeColumnComponent';
-// import Compare from '../modals/Compare';
-// import KillJob from '../modals/Killjob';
-// import Customize from '../modals/CustomizedTrial';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
