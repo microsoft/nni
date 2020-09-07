@@ -112,15 +112,14 @@ def count_linear_mask(m, x, y):
     y : torch.Tensor
         output data
     """
-    output_channel = y.size()[1]
-    output_size = torch.zeros(y.size()[2:]).numel()
+    output_channel = y.numel()
 
     bias_flops = 1 if m.bias is not None else 0
 
     if m.weight_mask is not None:
         output_channel = m.weight_mask.sum() // m.in_features
 
-    total_ops = output_channel * output_size * (m.in_features + bias_flops)
+    total_ops = output_channel * (m.in_features + bias_flops)
 
     m.total_ops += torch.DoubleTensor([int(total_ops)])
 
