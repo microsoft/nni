@@ -12,7 +12,7 @@ except Exception as e:
     raise
 
 
-def count_flops_params(model: nn.Module, input_size, verbose=True):
+def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=True):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -41,11 +41,15 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
     inputs = torch.randn(input_size).to(device)
 
     hook_module_list = []
+    if custom_ops is None:
+        custom_ops = {}
+    custom_mask_ops.update(custom_ops)
+
     prev_m = None
     for m in model.modules():
         weight_mask = None
         m_type = type(m)
-        if m_type in custom_ops:
+        if m_type in custom_mask_ops:
             if isinstance(prev_m, PrunerModuleWrapper):
                 weight_mask = prev_m.weight_mask
 
@@ -53,7 +57,7 @@ def count_flops_params(model: nn.Module, input_size, verbose=True):
             hook_module_list.append(m)
         prev_m = m
 
-    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_ops, verbose=verbose)
+    flops, params = profile(model, inputs=(inputs, ), custom_ops=custom_mask_ops, verbose=verbose)
 
 
     for m in hook_module_list:
