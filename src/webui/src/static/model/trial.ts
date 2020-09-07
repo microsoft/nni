@@ -112,14 +112,14 @@ class Trial implements TableObj {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
         let accuracy;
-        if(this.acc !== undefined && this.acc.default !== undefined){
-            if(typeof this.acc.default === 'number'){
+        if (this.acc !== undefined && this.acc.default !== undefined) {
+            if (typeof this.acc.default === 'number') {
                 accuracy = JSON5.parse(this.acc.default);
-            }else {
+            } else {
                 accuracy = this.acc.default;
             }
         }
-        
+
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
@@ -227,6 +227,7 @@ class Trial implements TableObj {
         Object.entries(acc).forEach(item => {
             const [k, v] = item;
             const column = space.axes.get(k);
+            
             if (column !== undefined) {
                 ret.set(column, v);
             } else {
