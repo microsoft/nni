@@ -123,7 +123,7 @@ def count_linear_mask(m, x, y):
     m.total_ops += torch.DoubleTensor([int(total_ops)])
 
 
-custom_ops = {
+custom_mask_ops = {
     nn.Conv1d: count_convNd_mask,
     nn.Conv2d: count_convNd_mask,
     nn.Conv3d: count_convNd_mask,
