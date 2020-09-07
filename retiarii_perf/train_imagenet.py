@@ -170,7 +170,7 @@ if __name__ == '__main__':
     parser.add_argument("--weight-decay", type=float, default=4E-5)
     parser.add_argument("--label-smooth", type=float, default=0.1)
     parser.add_argument("--log-frequency", type=int, default=10)
-    parser.add_argument("--seed", type=int, default=23)
+    parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--label-smoothing", type=float, default=0.1)
     parser.add_argument("--enable-gpu-dataloader",
                         default=False, action="store_true")
