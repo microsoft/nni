@@ -11,7 +11,8 @@ __all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker',
            'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker',
            'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'AMCWeightMasker',
            'L1ConstrainedFilterPrunerMasker', 'L2ConstrainedFilterPrunerMasker',
-           'ConstrainedActivationMeanRankFilterPrunerMasker']
+           'ConstrainedActivationMeanRankFilterPrunerMasker', 'ConstrainedFPGMPrunerMasker',
+           'ConstrainedTaylorFOWeightFilterPrunerMasker', 'ConstrainedActivationAPoZRankFilterPrunerMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -518,6 +519,69 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
             if base_mask['bias_mask'] is not None:
                 base_mask['bias_mask'][idx] = 0.
         return base_mask
+
+    def calc_contributions(self):
+        """
+        Calculate the estimated importance of filters as a sum of individual contribution
+        based on the first order taylor expansion.
+        """
+        if self.pruner.iterations >= self.pruner.statistics_batch_num:
+            return
+        for wrapper in self.pruner.get_modules_wrapper():
+            filters = wrapper.module.weight.size(0)
+            contribution = (
+                wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
+            if wrapper.contribution is None:
+                wrapper.contribution = contribution
+            else:
+                wrapper.contribution += contribution
+
+        self.pruner.iterations += 1
+
+
+class ConstrainedTaylorFOWeightFilterPrunerMasker(ConstrainedStructuredWeightMasker):
+    """
+    A structured pruning algorithm that prunes the filters with the smallest
+    importance approximations based on the first order taylor expansion on the weight.
+    Molchanov, Pavlo and Mallya, Arun and Tyree, Stephen and Frosio, Iuri and Kautz, Jan,
+    "Importance Estimation for Neural Network Pruning", CVPR 2019.
+    http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
+    """
+
+    def __init__(self, model, pruner, statistics_batch_num=1):
+        super().__init__(model, pruner)
+        self.pruner.statistics_batch_num = statistics_batch_num
+        self.pruner.set_wrappers_attribute("contribution", None)
+        self.pruner.iterations = 0
+        self.pruner.patch_optimizer(self.calc_contributions)
+
+    def get_mask(self, wrapper, wrapper_idx, channel_mask):
+        contribution = self._get_channel_sum
+        if contribution is None:
+            return None
+        contribution = contribution * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        if num_prune > 0:
+            threshold = torch.topk(
+                contribution.view(-1), num_prune, largest=False)[0].max()
+            c_mask = torch.gt(contribution, threshold)
+        else:
+            c_mask = torch.ones(filters).to(weight.device)
+        mask_weight = c_mask[:, None, None, None].expand_as(
+            weight).type_as(weight).clone()
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = c_mask.type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+    def _get_channel_sum(self, wrapper, wrapper_idx):
+        if self.pruner.iterations < self.pruner.statistics_batch_num:
+            return None
+        if wrapper.contribution is None:
+            return None
+        return wrapper.contribution
 
     def calc_contributions(self):
         """
