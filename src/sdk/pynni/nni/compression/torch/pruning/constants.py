@@ -21,7 +21,7 @@ MASKER_DICT = {
     'taylorfo': TaylorFOWeightFilterPrunerMasker,
     'taylorfo_constrained': ConstrainedTaylorFOWeightFilterPrunerMasker,
     'apoz': ActivationAPoZRankFilterPrunerMasker,
-    'apoz_contrained': ConstrainedActivationAPoZRankFilterPrunerMasker,
+    'apoz_constrained': ConstrainedActivationAPoZRankFilterPrunerMasker,
     'mean_activation': ActivationMeanRankFilterPrunerMasker,
     'mean_activation_constrained': ConstrainedActivationMeanRankFilterPrunerMasker
 }

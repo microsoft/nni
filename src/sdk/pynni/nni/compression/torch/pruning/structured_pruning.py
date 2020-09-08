@@ -460,7 +460,7 @@ class ConstrainedFPGMPrunerMasker(ConstrainedStructuredWeightMasker):
         dist_list = []
         for out_i in range(weight.size(0)):
             dist_sum = self._get_distance_sum(weight, out_i)
-            dist_list.append(dist_list)
+            dist_list.append(dist_sum)
         return torch.Tensor(dist_list).to(weight.device)
 
     def _get_distance_sum(self, weight, out_idx):

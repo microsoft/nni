@@ -9,7 +9,9 @@ import torch.nn as nn
 import torchvision.models as models
 import numpy as np
 
-from nni.compression.torch import L1FilterPruner, L2FilterPruner
+from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner, \
+                                  TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, \
+                                  ActivationMeanRankFilterPruner
 from nni.compression.torch import ModelSpeedup
 
 unittest.TestLoader.sortTestMethodsUsing = None
@@ -20,8 +22,8 @@ MODEL_FILE, MASK_FILE = './model.pth', './mask.pth'
 class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):
-        model_zoo = ['resnet18', 'resnet34', 'resnet50']
-        pruners = [L1FilterPruner, L2FilterPruner]
+        model_zoo = ['resnet18']
+        pruners = [ActivationAPoZRankFilterPruner]
         sparsity = 0.7
         cfg_list = [{'op_types': ['Conv2d'], 'sparsity':sparsity}]
         dummy_input = torch.ones(1, 3, 224, 224)
@@ -36,6 +38,9 @@ class DependencyawareTest(TestCase):
                         ori_filters[name] = module.out_channels
                 tmp_pruner = pruner(
                     net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
+                # for the pruners that based on the activations, we need feed
+                # enough data before we call the compress function.
+                net(dummy_input)
                 tmp_pruner.compress()
                 tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
                 # if we want to use the same model, we should unwrap the pruner before the speedup
