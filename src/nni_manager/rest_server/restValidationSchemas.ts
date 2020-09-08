@@ -39,7 +39,6 @@ export namespace ValidationSchemas {
                 nniManagerNFSMountPath: joi.string().min(1),
                 containerNFSMountPath: joi.string().min(1),
                 paiConfigPath: joi.string(),
-                computeTarget: joi.string(),
                 nodeCount: joi.number(),
                 paiStorageConfigName: joi.string().min(1),
                 nasMode: joi.string().valid('classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
@@ -103,10 +102,14 @@ export namespace ValidationSchemas {
             }),
             pai_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 userName: joi.string().min(1).required(),
-                passWord: joi.string().min(1),
                 token: joi.string().min(1),
                 host: joi.string().min(1).required(),
                 reuse: joi.boolean(),
+                cpuNum: joi.number().min(1),
+                memoryMB: joi.number().min(100),
+                gpuNum: joi.number().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean(),
             }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),
@@ -155,7 +158,10 @@ export namespace ValidationSchemas {
             aml_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 subscriptionId: joi.string().min(1),
                 resourceGroup: joi.string().min(1),
-                workspaceName: joi.string().min(1)
+                workspaceName: joi.string().min(1),
+                computeTarget: joi.string().min(1),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)

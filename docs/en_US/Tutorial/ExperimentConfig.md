@@ -293,7 +293,7 @@ Note: run `ifconfig` on NNI manager's machine to check if eth0 device exists. If
 
 ### logDir
 
-Optional. Path to a directory. Default: `<user home directory>/nni/experiment`.
+Optional. Path to a directory. Default: `<user home directory>/nni-experiments`.
 
 Configures the directory to store logs and data of the experiment.
 
@@ -573,7 +573,7 @@ Used to specify designated GPU devices for NNI, if it is set, only the specified
 
 #### maxTrialNumPerGpu
 
-Optional. Integer. Default: 99999.
+Optional. Integer. Default: 1.
 
 Used to specify the max concurrency trial number on a GPU device.
 

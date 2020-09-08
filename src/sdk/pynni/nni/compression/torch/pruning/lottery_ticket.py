@@ -13,33 +13,22 @@ logger = logging.getLogger('torch pruner')
 
 class LotteryTicketPruner(Pruner):
     """
-    This is a Pytorch implementation of the paper "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks",
-    following NNI model compression interface.
-
-    1. Randomly initialize a neural network f(x;theta_0) (where theta_0 follows D_{theta}).
-    2. Train the network for j iterations, arriving at parameters theta_j.
-    3. Prune p% of the parameters in theta_j, creating a mask m.
-    4. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
-    5. Repeat step 2, 3, and 4.
+    Parameters
+    ----------
+    model : pytorch model
+        The model to be pruned
+    config_list : list
+        Supported keys:
+            - prune_iterations : The number of rounds for the iterative pruning.
+            - sparsity : The final sparsity when the compression is done.
+    optimizer : pytorch optimizer
+        The optimizer for the model
+    lr_scheduler : pytorch lr scheduler
+        The lr scheduler for the model if used
+    reset_weights : bool
+        Whether reset weights and optimizer at the beginning of each round.
     """
-
     def __init__(self, model, config_list, optimizer=None, lr_scheduler=None, reset_weights=True):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model to be pruned
-        config_list : list
-            Supported keys:
-                - prune_iterations : The number of rounds for the iterative pruning.
-                - sparsity : The final sparsity when the compression is done.
-        optimizer : pytorch optimizer
-            The optimizer for the model
-        lr_scheduler : pytorch lr scheduler
-            The lr scheduler for the model if used
-        reset_weights : bool
-            Whether reset weights and optimizer at the beginning of each round.
-        """
         # save init weights and optimizer
         self.reset_weights = reset_weights
         if self.reset_weights:
@@ -60,7 +49,7 @@ class LotteryTicketPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             Supported keys:

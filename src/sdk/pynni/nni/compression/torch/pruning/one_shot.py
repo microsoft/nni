@@ -21,7 +21,7 @@ class OneshotPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs
@@ -41,7 +41,7 @@ class OneshotPruner(Pruner):
         """
         Parameters
         ----------
-        model : torch.nn.module
+        model : torch.nn.Module
             Model to be pruned
         config_list : list
             List on pruning configs
@@ -85,10 +85,34 @@ class OneshotPruner(Pruner):
             return None
 
 class LevelPruner(OneshotPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Operation types to prune.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='level', optimizer=optimizer)
 
 class SlimPruner(OneshotPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Only BatchNorm2d is supported in Slim Pruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='slim', optimizer=optimizer)
 
@@ -118,27 +142,99 @@ class _StructuredFilterPruner(OneshotPruner):
         schema.validate(config_list)
 
 class L1FilterPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Only Conv2d is supported in L1FilterPruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer)
 
 class L2FilterPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Only Conv2d is supported in L2FilterPruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer)
 
 class FPGMPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : Only Conv2d is supported in FPGM Pruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, pruning_algorithm='fpgm', optimizer=optimizer)
 
 class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : How much percentage of convolutional filters are to be pruned.
+            - op_types : Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='taylorfo', optimizer=optimizer, statistics_batch_num=statistics_batch_num)
 
 class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : How much percentage of convolutional filters are to be pruned.
+            - op_types : Only Conv2d is supported in ActivationAPoZRankFilterPruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)
 
 class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned
+    config_list : list
+        Supported keys:
+            - sparsity : How much percentage of convolutional filters are to be pruned.
+            - op_types : Only Conv2d is supported in ActivationMeanRankFilterPruner.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    """
     def __init__(self, model, config_list, optimizer=None, activation='relu', statistics_batch_num=1):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, \
             activation=activation, statistics_batch_num=statistics_batch_num)

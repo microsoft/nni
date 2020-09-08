@@ -5,13 +5,14 @@ import {
     Stack, initializeIcons, StackItem, CommandBarButton,
     IContextualMenuProps, IStackTokens, IStackStyles
 } from 'office-ui-fabric-react';
-import LogDrawer from './Modals/LogDrawer';
-import ExperimentDrawer from './Modals/ExperimentDrawer';
+import LogPanel from './Modals/LogPanel';
+import ExperimentPanel from './Modals/ExperimentPanel';
 import {
     downLoadIcon, infoIconAbout,
     timeIcon, disableUpdates, requency, closeTimer
 } from './Buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
+import { EXPERIMENT } from '../static/datamodel';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 
@@ -97,9 +98,9 @@ class NavCon extends React.Component<NavProps, NavState> {
     openDocs = (): void => {
         window.open(WEBUIDOC);
     }
-    
+
     openGithubNNI = (): void => {
-        const {version} = this.state;
+        const { version } = this.state;
         const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
         window.open(nniLink);
     }
@@ -178,8 +179,8 @@ class NavCon extends React.Component<NavProps, NavState> {
                     </Stack>
                 </StackItem>
                 {/* the drawer for dispatcher & nnimanager log message */}
-                {isvisibleLogDrawer && <LogDrawer closeDrawer={this.closeLogDrawer} />}
-                <ExperimentDrawer isVisble={isvisibleExperimentDrawer} closeExpDrawer={this.closeExpDrawer} />
+                {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
+                {isvisibleExperimentDrawer && <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />}
             </Stack>
         );
     }
@@ -189,13 +190,13 @@ class NavCon extends React.Component<NavProps, NavState> {
         items: [
             {
                 key: 'experiment',
-                text: 'Experiment Summary',
+                text: 'Experiment summary',
                 iconProps: { iconName: 'ShowResults' },
                 onClick: this.showExpcontent
             },
             {
                 key: 'logfiles',
-                text: 'Logfiles',
+                text: 'Log files',
                 iconProps: { iconName: 'FilePDB' },
                 onClick: this.showDispatcherLog
             }

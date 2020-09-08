@@ -1,5 +1,41 @@
-import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType } from '../function';
+import * as JSON5 from 'json5';
+import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
+import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType, isNaNorInfinity, formatComplexTypeValue } from '../function';
+
+/**
+ * Get a structured representation of parameters
+ * @param paramObj Parameters object
+ * @param space All axes from search space (or sub search space)
+ * @param prefix Current namespace (to make full name for unexpected entries)
+ * @returns Parsed structured parameters and unexpected entries
+ */
+function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: string = ''): [Map<SingleAxis, any>, Map<string, any>] {
+    const parameters = new Map<SingleAxis, any>();
+    const unexpectedEntries = new Map<string, any>();
+    for (const [k, v] of Object.entries(paramObj)) {
+        // prefix can be a good fallback when corresponding item is not found in namespace
+        const axisKey = space.axes.get(k);
+        if (prefix && k === '_name')
+            continue;
+        if (axisKey !== undefined) {
+            if (typeof v === 'object' && v._name !== undefined && axisKey.nested) {
+                // nested entry
+                parameters.set(axisKey, v._name);
+                const subSpace = axisKey.domain.get(v._name);
+                if (subSpace !== undefined) {
+                    const [subParams, subUnexpected] = inferTrialParameters(v, subSpace, prefix + k + '/');
+                    subParams.forEach((v, k) => parameters.set(k, v));
+                    subUnexpected.forEach((v, k) => unexpectedEntries.set(k, v));
+                }
+            } else {
+                parameters.set(axisKey, formatComplexTypeValue(v));
+            }
+        } else {
+            unexpectedEntries.set(prefix + k, formatComplexTypeValue(v));
+        }
+    }
+    return [parameters, unexpectedEntries];
+}
 
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
@@ -75,21 +111,26 @@ class Trial implements TableObj {
         const endTime = this.info.endTime || new Date().getTime();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
+        let accuracy;
+        if (this.acc !== undefined && this.acc.default !== undefined) {
+            if (typeof this.acc.default === 'number') {
+                accuracy = JSON5.parse(this.acc.default);
+            } else {
+                accuracy = this.acc.default;
+            }
+        }
 
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
             id: this.info.id,
-            jobId: this.info.jobId,
-            parameterId: this.info.parameterId,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             startTime: this.info.startTime!,
             endTime: this.info.endTime,
             duration,
             status: this.info.status,
             intermediateCount: this.intermediates.length,
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            accuracy: this.acc !== undefined ? JSON.parse(this.acc!.default) : undefined,
+            accuracy: accuracy,
             latestAccuracy: this.latestAccuracy,
             formattedLatestAccuracy: this.formatLatestAccuracy(),
             accDictionary: this.acc
@@ -119,6 +160,9 @@ class Trial implements TableObj {
     }
 
     get acc(): FinalType | undefined {
+        if (this.info === undefined) {
+            return undefined;
+        }
         return getFinal(this.info.finalMetricData);
     }
 
@@ -156,13 +200,56 @@ class Trial implements TableObj {
         return ret;
     }
 
+    public parameters(axes: MultipleAxes): Map<SingleAxis, any> {
+        if (this.info === undefined || this.info.hyperParameters === undefined) {
+            throw new Map();
+        } else {
+            const tempHyper = this.info.hyperParameters;
+            let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
+            if (typeof params === 'string') {
+                params = JSON.parse(params);
+            }
+            const [result, unexpectedEntries] = inferTrialParameters(params, axes);
+            if (unexpectedEntries.size) {
+                throw unexpectedEntries;
+            }
+            return result;
+        }
+    }
+
+    public metrics(space: MultipleAxes): Map<SingleAxis, any> {
+        const ret = new Map<SingleAxis, any>();
+        const unexpectedEntries = new Map<string, any>();
+        if (this.acc === undefined) {
+            return ret;
+        }
+        const acc = typeof this.acc === 'number' ? { default: this.acc } : this.acc;
+        Object.entries(acc).forEach(item => {
+            const [k, v] = item;
+            const column = space.axes.get(k);
+
+            if (column !== undefined) {
+                ret.set(column, v);
+            } else {
+                unexpectedEntries.set(k, v);
+            }
+        });
+        if (unexpectedEntries.size) {
+            throw unexpectedEntries;
+        }
+        return ret;
+    }
+
     get color(): string | undefined {
         return undefined;
     }
 
     public finalKeys(): string[] {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return Object.keys(this.acc!);
+        if (this.acc !== undefined) {
+            return Object.keys(this.acc);
+        } else {
+            return [];
+        }
     }
 
     /* table obj end */
@@ -216,24 +303,39 @@ class Trial implements TableObj {
         return !same;
     }
 
-    public formatLatestAccuracy(): string {  // TODO: this should be private
-        if (this.accuracy !== undefined) {
-            if (isNaN(this.accuracy)) {
-                return this.accuracy.toString();
+    private renderNumber(val: any): string {
+        if (typeof val === 'number') {
+            if (isNaNorInfinity(val)) {
+                return `${val}`; // show 'NaN' or 'Infinity'
             } else {
-                return `${formatAccuracy(this.accuracy)} (FINAL)`;
+                if (this.accuracy === undefined) {
+                    return `${formatAccuracy(val)} (LATEST)`;
+                } else {
+                    return `${formatAccuracy(val)} (FINAL)`;
+
+                }
             }
-        } else if (this.intermediates.length === 0) {
-            return '--';
         } else {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const latest = this.intermediates[this.intermediates.length - 1]!;
-            if (isNaN(metricAccuracy(latest))) {
-                return 'NaN';
+            // show other types, such as {tensor: {data: }}
+            return JSON.stringify(val);
+        }
+    }
+
+    public formatLatestAccuracy(): string {  // TODO: this should be private
+        if (this.status === 'SUCCEEDED') {
+            return (this.accuracy === undefined ? '--' : this.renderNumber(this.accuracy));
+        } else {
+            if (this.accuracy !== undefined) {
+                return this.renderNumber(this.accuracy);
+            } else if (this.intermediates.length === 0) {
+                return '--';
             } else {
-                return `${formatAccuracy(metricAccuracy(latest))} (LATEST)`;
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                const latest = this.intermediates[this.intermediates.length - 1]!;
+                return this.renderNumber(metricAccuracy(latest));
             }
         }
+
     }
 }
 

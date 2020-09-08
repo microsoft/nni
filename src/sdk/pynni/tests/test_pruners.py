@@ -5,11 +5,14 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.utils.data
 import math
 from unittest import TestCase, main
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGP_Pruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
-    TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, AutoCompressPruner
+    L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
+    TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, \
+    AutoCompressPruner, AMCPruner
+from models.pytorch_models.mobilenet import MobileNet
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
@@ -33,7 +36,7 @@ prune_config = {
         ]
     },
     'agp': {
-        'pruner_class': AGP_Pruner,
+        'pruner_class': AGPPruner,
         'config_list': [{
             'initial_sparsity': 0.,
             'final_sparsity': 0.8,
@@ -154,6 +157,12 @@ prune_config = {
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
         'validators': []
+    },
+    'amc': {
+        'pruner_class': AMCPruner,
+        'config_list':[{
+            'op_types': ['Conv2d', 'Linear']
+        }]
     }
 }
 
@@ -225,7 +234,7 @@ def test_agp(pruning_algorithm):
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config['agp']['config_list']
 
-        pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
+        pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm=pruning_algorithm)
         pruner.compress()
 
         x = torch.randn(2, 1, 28, 28)
@@ -244,6 +253,13 @@ def test_agp(pruning_algorithm):
             # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
             assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
 
+class SimpleDataset:
+    def __getitem__(self, index):
+        return torch.randn(3, 32, 32), 1.
+
+    def __len__(self):
+        return 1000
+
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
@@ -258,6 +274,16 @@ class PrunerTestCase(TestCase):
         for pruning_algorithm in ['level']:
             prune_config['agp']['config_list'][0]['op_types'] = ['default']
             test_agp(pruning_algorithm)
+
+    def testAMC(self):
+        model = MobileNet(n_class=10)
+
+        def validate(val_loader, model):
+            return 80.
+        val_loader = torch.utils.data.DataLoader(SimpleDataset(), batch_size=16, shuffle=False, drop_last=True)
+        config_list = prune_config['amc']['config_list']
+        pruner = AMCPruner(model, config_list, validate, val_loader, train_episode=1)
+        pruner.compress()
 
 if __name__ == '__main__':
     main()

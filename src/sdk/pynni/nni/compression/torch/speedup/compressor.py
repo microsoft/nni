@@ -3,7 +3,6 @@
 
 import logging
 import torch
-from nni._graph_utils import build_module_graph
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
@@ -51,6 +50,8 @@ class ModelSpeedup:
         map_location : str
             the device on which masks are placed, same to map_location in ```torch.load```
         """
+        from nni._graph_utils import build_module_graph
+
         self.bound_model = model
         self.masks = torch.load(masks_file, map_location)
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
@@ -140,6 +141,14 @@ class ModelSpeedup:
         """
         for module_name, mask in self.masks.items():
             _logger.debug('Start mask inference from %s', module_name)
+            if module_name not in self.torch_graph.name_to_node:
+                # this module is not traced in the torch_graph,
+                # jit.trace only correctly records functions and
+                # modules which are not data dependent (e.g., do
+                # not have conditionals on data in tensors)
+                # so, if a node is not traced, we just skip it.
+                _logger.warning('%s has mask, but not found in the traced graph, just skip it.', module_name)
+                continue
             self.infer_module_mask(module_name, None, mask=mask)
 
     def replace_compressed_modules(self):

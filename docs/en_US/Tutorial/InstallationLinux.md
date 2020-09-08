@@ -6,7 +6,7 @@ Installation on Linux and macOS follow the same instructions, given below.
 
 ### Install NNI through pip
 
-  Prerequisite: `python 64-bit >= 3.5`
+  Prerequisite: `python 64-bit >= 3.6`
 
   ```bash
   python3 -m pip install --upgrade nni
@@ -16,10 +16,10 @@ Installation on Linux and macOS follow the same instructions, given below.
 
   If you are interested in special or the latest code versions, you can install NNI through source code.
 
-  Prerequisites: `python 64-bit >=3.5`, `git`, `wget`
+  Prerequisites: `python 64-bit >=3.6`, `git`, `wget`
 
   ```bash
-  git clone -b v1.6 https://github.com/Microsoft/nni.git
+  git clone -b v1.8 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -35,7 +35,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via cloning the source code.
 
   ```bash
-  git clone -b v1.6 https://github.com/Microsoft/nni.git
+  git clone -b v1.8 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

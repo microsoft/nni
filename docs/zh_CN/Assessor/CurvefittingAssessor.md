@@ -1,20 +1,20 @@
 # NNI 中的 Curve Fitting Assessor
 
-## 1. 介绍
+## 介绍
 
 Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
 
 此算法中采用了 12 种曲线来拟合学习曲线。 这组参数曲线模型来自于[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
-![](../../img/curvefitting_learning_curve.PNG)
+![learning_curve](../../img/curvefitting_learning_curve.PNG)
 
 所有学习曲线模型被合并到了单个，更强大的模型中。 合并的模型通过加权线性混合：
 
-![](../../img/curvefitting_f_comb.gif)
+![f_comb](../../img/curvefitting_f_comb.gif)
 
 合并后的新参数向量
 
-![](../../img/curvefitting_expression_xi.gif)
+![expression_xi](../../img/curvefitting_expression_xi.gif)
 
 假设增加一个高斯噪声，且噪声参数初始化为最大似然估计。
 
@@ -30,36 +30,37 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
-![](../../img/curvefitting_example.PNG)
+![示例](../../img/curvefitting_example.PNG)
 
-## 2. 用法
+## 用法
 
 要使用 Curve Fitting Assessor，需要在 Experiment 的 YAML 配置文件进行如下改动。
 
-    assessor:
-        builtinAssessorName: Curvefitting
-        classArgs:
-          # (必须) epoch 的总数。
-          # 需要此数据来决定需要预测的点。
-          epoch_num: 20
-          # (可选) 选项: maximize, minimize
-          *  optimize_mode 的默认值是 maximize
-          optimize_mode: maximize
-          # (可选) 为了节约计算资源，在收到了 start_step 个中间结果后，才开始预测。
-          # start_step 的默认值是 6。
-          start_step: 6
-          # (可选) 决定是否提前终止的阈值。
-          # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
-          * 阈值的默认值是 0.95。
-          # 注意：如果选择了 minimize 模式，要让 threshold >= 1.0 (如 threshold=1.1)
-          threshold: 0.95
-          # (可选) gap 是两次评估之间的间隔次数。
-          # 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
-          * gap 的默认值是 1。
-          gap: 1
-    
+```yaml
+assessor:
+  builtinAssessorName: Curvefitting
+  classArgs:
+    # (必须) epoch 的总数。
+    # 需要此数据来决定需要预测的点。
+    epoch_num: 20
+    # (可选) 为了节约计算资源，仅在收到 start_step 个中间结果后，才开始进行预测。
+    # start_step 的默认值是 6。
+    start_step: 6
+    # (可选) 决定是否提前终止的阈值。
+    # 例如，如果 threshold = 0.95，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
+    # 阈值的默认值是 0.95。
+    threshold: 0.95
+    # (可选) gap 是两次评估之间的间隔次数。
+    # 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
+    # gap 的默认值是 1。
+    gap: 1
+```
 
-## 3. 文件结构
+## 局限性
+
+根据原始论文，仅支持递增函数。 因此，此 Assessor 仅可用于最大化优化指标的场景。 例如，它可用于准确度，但不能用于损失值。
+
+## 文件结构
 
 Assessor 有大量的文件、函数和类。 在这里，会简要描述其中一部分。
 
@@ -67,6 +68,6 @@ Assessor 有大量的文件、函数和类。 在这里，会简要描述其中�
 * `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。
 * `curvefitting_assessor.py` 是接收 Trial 历史数据并评估是否需要提前终止的 Assessor。
 
-## 4. TODO
+## TODO
 
 * 进一步提高预测精度，并在更多模型上测试。

@@ -28,7 +28,8 @@ nnictl 支持的命令：
 ### 管理 Experiment
 
 <a name="create"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
+
+### nnictl create
 
 * 说明
   
@@ -79,7 +80,7 @@ nnictl 支持的命令：
 
 <a name="resume"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
+### nnictl resume
 
 * 说明
   
@@ -110,7 +111,7 @@ nnictl 支持的命令：
 
 <a name="view"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl view`
+### nnictl view
 
 * 说明
   
@@ -138,7 +139,8 @@ nnictl 支持的命令：
   ```
 
 <a name="stop"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
+
+### nnictl stop
 
 * 说明
   
@@ -195,7 +197,7 @@ nnictl 支持的命令：
 
 <a name="update"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
+### nnictl update
 
 * **nnictl update searchspace**
   
@@ -306,7 +308,8 @@ nnictl 支持的命令：
     ```
 
 <a name="trial"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
+
+### nnictl trial
 
 * **nnictl trial ls**
   
@@ -355,7 +358,7 @@ nnictl 支持的命令：
 
 <a name="top"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
+### nnictl top
 
 * 说明
   
@@ -375,7 +378,8 @@ nnictl 支持的命令：
   | --time, -t | False |     | 刷新 Experiment 状态的时间间隔，单位为秒，默认值为 3 秒。 |
 
 <a name="experiment"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 Experiment 的信息`
+
+### 管理 Experiment 信息
 
 * **nnictl experiment show**
   
@@ -539,7 +543,8 @@ nnictl 支持的命令：
     ```
 
 <a name="platform"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理平台的信息`
+
+### 管理平台信息
 
 * **nnictl platform clean**
   
@@ -564,7 +569,8 @@ nnictl 支持的命令：
   | --config | True |     | 创建 Experiment 时的 YAML 配置文件路径。 |
 
 <a name="config"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
+
+### nnictl config show
 
 * 说明
   
@@ -578,7 +584,7 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
+### 管理日志
 
 * **nnictl log stdout**
   
@@ -650,12 +656,14 @@ nnictl 支持的命令：
   | --trial_id, -T | False |     | 所需要找日志路径的 Trial 的 ID，当 id 不为空时，此值也为必需。 |
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 Web 界面`
+
+### 管理 Web 界面
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 TensorBoard`
+
+### 管理 TensorBoard
 
 * **nnictl tensorboard start**
   
@@ -705,49 +713,115 @@ nnictl 支持的命令：
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理包`
+### 管理安装包
 
 * **nnictl package install**
   
   * 说明
     
-    安装 NNI 实验所需要的包。
+    安装自定义的 Tuner，Assessor，Advisor（定制或 NNI 提供的算法）。
   
   * 用法
     
     ```bash
-    nnictl package install [OPTIONS]
+    nnictl package install --name <包名称>
     ```
-  
-  * 选项
-  
-  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
-  | ------ | ---- | --- | ------- |
-  | --name | True |     | 要安装的包名称 |
+    
+    可通过 `nnictl package list` 命令查看可用的`<包名称>`。
+    
+    或者
+    
+    ```bash
+    nnictl package install <安装源>
+    ```
+    
+    参考[安装自定义算法](InstallCustomizedAlgos.md)，来准备安装源。
   
   * 示例
     
-    > 安装 SMAC Tuner 所需要的包
+    > 安装 SMAC Tuner
     
     ```bash
-    nnictl package install --name=SMAC
+    nnictl package install --name SMAC
+    ```
+    
+    > 安装自定义 Tuner
+    
+    ```bash
+    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
     ```
 
 * **nnictl package show**
   
   * 说明
     
-    列出支持的安装包
+    显示包的详情。
   
   * 用法
     
     ```bash
-    nnictl package show
+    nnictl package show <包名称>
+    ```
+  
+  * 示例
+    
+    ```bash
+    nnictl package show SMAC
+    ```
+
+* **nnictl package list**
+  
+  * 说明
+    
+    列出安装的、所有包。
+  
+  * 用法
+    
+    ```bash
+    nnictl package list [OPTIONS]
+    ```
+  
+  * 选项
+  
+  | 参数及缩写 | 是否必需  | 默认值 | 说明    |
+  | ----- | ----- | --- | ----- |
+  | --all | False |     | 列出所有包 |
+  
+  * 示例
+    
+    > 列出已安装的包
+    
+    ```bash
+    nnictl package list
+    ```
+    
+    > 列出所有包
+    
+    ```bash
+    nnictl package list --all
+    ```
+
+* **nnictl package uninstall**
+  
+  * 说明
+    
+    卸载包。
+  
+  * 用法
+    
+    ```bash
+    nnictl package uninstall <包名称>
+    ```
+  
+  * 示例 卸载 SMAC 包
+    
+    ```bash
+    nnictl package uninstall SMAC
     ```
 
 <a name="ss_gen"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `生成搜索空间`
+### 生成搜索空间
 
 * **nnictl ss_gen**
   
@@ -779,7 +853,7 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
+### NNI 版本校验
 
 * **nnictl --version**
   

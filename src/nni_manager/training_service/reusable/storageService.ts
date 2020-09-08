@@ -83,7 +83,7 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy remotePath: ${remotePath} to localPath: ${localPath}`);
-        return await this.internalCopy(localPath, remotePath, true, true, false);
+        return await this.internalCopy(remotePath, localPath, true, true, false);
     }
 
     public async removeDirectory(remotePath: string, isRecursive: boolean): Promise<void> {
@@ -151,7 +151,7 @@ export abstract class StorageService {
         localPath = this.expandPath(false, localPath);
         remotePath = this.expandPath(true, remotePath);
         this.logger.debug(`copy file remotePath: ${remotePath} to localPath: ${localPath}`);
-        await this.internalCopy(localPath, remotePath, false, true, false);
+        await this.internalCopy(remotePath, localPath, false, true, false);
     }
 
     public async removeFile(remotePath: string): Promise<void> {

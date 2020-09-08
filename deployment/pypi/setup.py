@@ -63,7 +63,7 @@ setuptools.setup(
         'scipy',
         'coverage',
         'colorama',
-        'scikit-learn>=0.20,<0.22',
+        'scikit-learn>=0.23.2',
         'pkginfo',
         'websockets'
     ],
