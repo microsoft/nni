@@ -114,14 +114,12 @@ class EvolutionTuner(Tuner):
         **kwargs
             Not used
         """
-        
         self.num_running_trials -= 1
         logger.info('trial (%d) end')
 
         if not success:
             indv = self.running_trials[parameter_id]
             self.population.append(indv)
-            
         if self.credit > 1:
             param_id = self.param_ids.popleft()
             config = self._generate_individual(param_id)
@@ -129,7 +127,7 @@ class EvolutionTuner(Tuner):
             self.send_trial_callback(param_id, config)
             self.credit -= 1
             self.num_running_trials += 1
-            
+
     def generate_multiple_parameters(self, parameter_id_list, **kwargs):
         """
         Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
@@ -176,7 +174,6 @@ class EvolutionTuner(Tuner):
         dict
             A group of candaidte parameters that evolution tuner generated.
         """
-        
         if not self.population:
             is_rand = dict()
             for item in self.space:
@@ -257,7 +254,6 @@ class EvolutionTuner(Tuner):
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
         """
-        
         reward = extract_scalar_reward(value)
 
         if parameter_id not in self.running_trials:
@@ -273,6 +269,5 @@ class EvolutionTuner(Tuner):
         indiv = Individual(config=config, result=reward)
         self.population.append(indiv)
 
-        
     def import_data(self, data):
         pass
