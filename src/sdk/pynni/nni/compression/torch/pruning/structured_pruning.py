@@ -761,7 +761,7 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
         """
         activations = torch.cat(activations, 0)
         _eq_zero = torch.eq(activations, torch.zeros_like(activations))
-        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / \
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3), dtype=torch.float64) / \
             torch.numel(_eq_zero[:, 0, :, :])
         return _apoz
 
@@ -788,7 +788,7 @@ class ConstrainedActivationAPoZRankFilterPrunerMasker(ConstrainedActivationFilte
         """
         activations = torch.cat(activations, 0)
         _eq_zero = torch.eq(activations, torch.zeros_like(activations))
-        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / \
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3), dtype=torch.float64) / \
             torch.numel(_eq_zero[:, 0, :, :])
         return _apoz
 
