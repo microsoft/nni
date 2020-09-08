@@ -19,7 +19,8 @@ else:
 
 class AutoCompletion(install):
     def run(self):
-        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/master/tools/bash-completion'
+        RELEASE_VERSION = os.popen('git describe --tags --abbrev=0').read().strip()
+        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/{}/tools/bash-completion'.format(RELEASE_VERSION)
         if os_type == 'Linux':
             HOME = os.environ.get('HOME')
             if not HOME:
@@ -39,7 +40,7 @@ class AutoCompletion(install):
             # not root and completion not installed
             if os.geteuid():
                 NEED_SOURCE = os.path.join(HOME, '.bash_completion')
-                if not os.popen('(source {} ; command -v _nnictl) 2>/dev/null'.format(NEED_SOURCE)).read():
+                if not os.popen('(source {} ; command -v _nnictl) 2>/dev/null'.format(NEED_SOURCE)).read().strip():
                     os.system("echo '[[ -f {} ]] && source {}' >> {}".format(BASH_COMP_SCRIPT,
                                                                              BASH_COMP_SCRIPT,
                                                                              NEED_SOURCE))
