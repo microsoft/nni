@@ -7,11 +7,11 @@ import numpy as np
 import torch
 from .weight_masker import WeightMasker
 
-__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker', \
-    'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker', \
-    'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'AMCWeightMasker',
-    'L1ConstrainedFilterPrunerMasker', 'L2ConstrainedFilterPrunerMasker',
-    'ConstrainedActivationMeanRankFilterPrunerMasker']
+__all__ = ['L1FilterPrunerMasker', 'L2FilterPrunerMasker', 'FPGMPrunerMasker',
+           'TaylorFOWeightFilterPrunerMasker', 'ActivationAPoZRankFilterPrunerMasker',
+           'ActivationMeanRankFilterPrunerMasker', 'SlimPrunerMasker', 'AMCWeightMasker',
+           'L1ConstrainedFilterPrunerMasker', 'L2ConstrainedFilterPrunerMasker',
+           'ConstrainedActivationMeanRankFilterPrunerMasker']
 
 logger = logging.getLogger('torch filter pruners')
 
@@ -34,6 +34,7 @@ class StructuredWeightMasker(WeightMasker):
         be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
 
     """
+
     def __init__(self, model, pruner, preserve_round=1):
         self.model = model
         self.pruner = pruner
@@ -81,9 +82,11 @@ class StructuredWeightMasker(WeightMasker):
         num_prune = int(num_total * sparsity)
         if self.preserve_round > 1:
             num_preserve = num_total - num_prune
-            num_preserve = int(math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
+            num_preserve = int(
+                math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
             if num_preserve > num_total:
-                num_preserve = int(math.floor(num_total * 1. / self.preserve_round) * self.preserve_round)
+                num_preserve = int(math.floor(
+                    num_total * 1. / self.preserve_round) * self.preserve_round)
             num_prune = num_total - num_preserve
 
         if num_total < 2 or num_prune < 1:
@@ -275,9 +278,12 @@ class L1FilterPrunerMasker(StructuredWeightMasker):
         filters = weight.shape[0]
         w_abs = weight.abs()
         w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
-        threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
-        mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
+        threshold = torch.topk(w_abs_structured.view(-1),
+                               num_prune, largest=False)[0].max()
+        mask_weight = torch.gt(w_abs_structured, threshold)[
+            :, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = torch.gt(w_abs_structured, threshold).type_as(
+            weight).detach() if base_mask['bias_mask'] is not None else None
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
@@ -325,9 +331,12 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
         filters = weight.shape[0]
         w = weight.view(filters, -1)
         w_l2_norm = torch.sqrt((w ** 2).sum(dim=1))
-        threshold = torch.topk(w_l2_norm.view(-1), num_prune, largest=False)[0].max()
-        mask_weight = torch.gt(w_l2_norm, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_l2_norm, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
+        threshold = torch.topk(
+            w_l2_norm.view(-1), num_prune, largest=False)[0].max()
+        mask_weight = torch.gt(w_l2_norm, threshold)[
+            :, None, None, None].expand_as(weight).type_as(weight)
+        mask_bias = torch.gt(w_l2_norm, threshold).type_as(
+            weight).detach() if base_mask['bias_mask'] is not None else None
 
         return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
@@ -416,6 +425,69 @@ class FPGMPrunerMasker(StructuredWeightMasker):
         x = torch.sqrt(x)
         return x.sum()
 
+class ConstrainedFPGMPrunerMasker(ConstrainedStructuredWeightMasker):
+    """
+    The dependency-aware version of the FPGMPrunerMasker.
+    """
+    def get_mask(self, wrapper, wrapper_idx, channel_mask):
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
+        # get the distance sum of each filter
+        distances = self._get_channel_sum(wrapper, wrapper_idx)
+        # set the sum of the already pruned channel to
+        # zero, so that these channel will be pruned.
+        distances = distances * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        if num_prune > 0:
+            threshold = torch.topk(
+                distances.view(-1), num_prune, largest=False)[0].max()
+            c_mask = torch.gt(distances, threshold)
+        else:
+            c_mask = torch.ones(filters).to(weight.device)
+        mask_weight = c_mask[:, None, None, None].expand_as(
+            weight).type_as(weight).clone()
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = c_mask.type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+    def _get_channel_sum(self, wrapper, wrapper_idx):
+        weight = wrapper.module.weight.data
+        assert len(weight.size()) in [3, 4]
+        dist_list = []
+        for out_i in range(weight.size(0)):
+            dist_sum = self._get_distance_sum(weight, out_i)
+            dist_list.append(dist_list)
+        return torch.Tensor(dist_list).to(weight.device)
+
+    def _get_distance_sum(self, weight, out_idx):
+        """
+        Calculate the total distance between a specified filter (by out_idex and in_idx) and
+        all other filters.
+        Parameters
+        ----------
+        weight: Tensor
+            convolutional filter weight
+        out_idx: int
+            output channel index of specified filter, this method calculates the total distance
+            between this specified filter and all other filters.
+        Returns
+        -------
+        float32
+            The total distance
+        """
+        logger.debug('weight size: %s', weight.size())
+        assert len(weight.size()) in [3, 4], 'unsupported weight shape'
+
+        w = weight.view(weight.size(0), -1)
+        anchor_w = w[out_idx].unsqueeze(0).expand(w.size(0), w.size(1))
+        x = w - anchor_w
+        x = (x * x).sum(-1)
+        x = torch.sqrt(x)
+        return x.sum()
+
 
 class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     """
@@ -456,7 +528,8 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
             return
         for wrapper in self.pruner.get_modules_wrapper():
             filters = wrapper.module.weight.size(0)
-            contribution = (wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
+            contribution = (
+                wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
             if wrapper.contribution is None:
                 wrapper.contribution = contribution
             else:
@@ -528,11 +601,59 @@ class ConstrainedActivationFilterPrunerMasker(ConstrainedStructuredWeightMasker)
 
         for wrapper_idx, wrapper in enumerate(pruner.get_modules_wrapper()):
             pruner.collected_activation[wrapper_idx] = []
-            handle = wrapper.register_forward_hook(collector(pruner.collected_activation[wrapper_idx]))
+            handle = wrapper.register_forward_hook(
+                collector(pruner.collected_activation[wrapper_idx]))
 
             pruner._fwd_hook_handles[pruner._fwd_hook_id].append(handle)
         return pruner._fwd_hook_id
 
+    def get_mask(self, wrapper, wrapper_idx, channel_mask):
+        weight = wrapper.module.weight.data
+        filters = weight.shape[0]
+        channel_weights = self._get_channel_sum(wrapper, wrapper_idx)
+        if channel_weights is None:
+            # the batch num does not meet the requirment in config
+            return None
+        channel_weights = channel_weights * channel_mask
+        sparsity = wrapper.config['sparsity']
+        num_prune = int(filters * sparsity)
+        if num_prune > 0:
+            threshold = torch.topk(
+                channel_weights.view(-1), num_prune, largest=False)[0].max()
+            c_mask = torch.gt(channel_weights, threshold)
+        else:
+            c_mask = torch.ones(filters).to(weight.device)
+        # remove the forward hook for the pruner
+        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
+            self.pruner.remove_activation_collector(self.pruner.hook_id)
+        mask_weight = c_mask[:, None, None, None].expand_as(
+            weight).type_as(weight).clone()
+        mask_bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            mask_bias = c_mask.type_as(weight).detach()
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+    def _get_channel_sum(self, wrapper, wrapper_idx):
+        """
+        This function returns the channel-wise weight for the channel
+        pruning. Different pruning algorithm has different ways to
+        calculate the channel-wise weights for pruning. For example,
+        L1 norm pruner will return the L1 sum of each channel.
+
+        Parameters
+        ----------
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
+
+        Returns
+        -------
+        tensor
+        """
+        raise NotImplementedError(
+            '{} _get_channel_sum is not implemented'.format(self.__class__.__name__))
 
 class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     """
@@ -576,8 +697,44 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
         """
         activations = torch.cat(activations, 0)
         _eq_zero = torch.eq(activations, torch.zeros_like(activations))
-        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / torch.numel(_eq_zero[:, 0, :, :])
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / \
+            torch.numel(_eq_zero[:, 0, :, :])
         return _apoz
+
+
+class ConstrainedActivationAPoZRankFilterPrunerMasker(ConstrainedActivationFilterPrunerMasker):
+    """
+    Similar to the ActivationAPoZRankFilterPrunerMasker, but calculate the
+    mask in a dependency-aware way.
+    """
+
+    def _calc_apoz(self, activations):
+        """
+        Calculate APoZ(average percentage of zeros) of activations.
+
+        Parameters
+        ----------
+        activations : list
+            Layer's output activations
+
+        Returns
+        -------
+        torch.Tensor
+            Filter's APoZ(average percentage of zeros) of the activations
+        """
+        activations = torch.cat(activations, 0)
+        _eq_zero = torch.eq(activations, torch.zeros_like(activations))
+        _apoz = torch.sum(_eq_zero, dim=(0, 2, 3)) / \
+            torch.numel(_eq_zero[:, 0, :, :])
+        return _apoz
+
+    def _get_channel_sum(self, wrapper, wrapper_idx):
+        assert wrapper_idx is not None
+        activations = self.pruner.collected_activation[wrapper_idx]
+        if len(activations) < self.statistics_batch_num:
+            # collected activations is not enough
+            return None
+        return self._calc_apoz(activations).to(wrapper.module.weight.device)
 
 
 class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
@@ -631,33 +788,6 @@ class ConstrainedActivationMeanRankFilterPrunerMasker(ConstrainedActivationFilte
     the model base on the activation of the layers.
     """
 
-    def get_mask(self, wrapper, wrapper_idx, channel_mask):
-        weight = wrapper.module.weight.data
-        filters = weight.shape[0]
-        mean_activation = self._get_channel_sum(wrapper, wrapper_idx)
-        if mean_activation is None:
-            # the batch num does not meet the requirment in config
-            return None
-        mean_activation = mean_activation * channel_mask
-        sparsity = wrapper.config['sparsity']
-        num_prune = int(filters * sparsity)
-        if num_prune > 0:
-            threshold = torch.topk(
-                mean_activation.view(-1), num_prune, largest=False)[0].max()
-            c_mask = torch.gt(mean_activation, threshold)
-        else:
-            c_mask = torch.ones(filters).to(weight.device)
-        # remove the forward hook for the pruner
-        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
-            self.pruner.remove_activation_collector(self.pruner.hook_id)
-        mask_weight = c_mask[:, None, None, None].expand_as(
-            weight).type_as(weight).clone()
-        mask_bias = None
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            mask_bias = c_mask.type_as(weight).detach()
-
-        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
-
     def _cal_mean_activation(self, activations):
         """
         Calculate mean value of activations.
@@ -702,7 +832,8 @@ class SlimPrunerMasker(WeightMasker):
             weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
-        self.global_threshold = torch.topk(all_bn_weights.view(-1), k, largest=False)[0].max()
+        self.global_threshold = torch.topk(
+            all_bn_weights.view(-1), k, largest=False)[0].max()
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
@@ -712,14 +843,17 @@ class SlimPrunerMasker(WeightMasker):
             weight = weight * wrapper.weight_mask
 
         base_mask = torch.ones(weight.size()).type_as(weight).detach()
-        mask = {'weight_mask': base_mask.detach(), 'bias_mask': base_mask.clone().detach()}
+        mask = {'weight_mask': base_mask.detach(
+        ), 'bias_mask': base_mask.clone().detach()}
         filters = weight.size(0)
         num_prune = int(filters * sparsity)
         if filters >= 2 and num_prune >= 1:
             w_abs = weight.abs()
-            mask_weight = torch.gt(w_abs, self.global_threshold).type_as(weight)
+            mask_weight = torch.gt(
+                w_abs, self.global_threshold).type_as(weight)
             mask_bias = mask_weight.clone()
-            mask = {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias.detach()}
+            mask = {'weight_mask': mask_weight.detach(
+            ), 'bias_mask': mask_bias.detach()}
         return mask
 
 
@@ -728,6 +862,7 @@ def least_square_sklearn(X, Y):
     reg = LinearRegression(fit_intercept=False)
     reg.fit(X, Y)
     return reg.coef_
+
 
 class AMCWeightMasker(WeightMasker):
     """
@@ -749,6 +884,7 @@ class AMCWeightMasker(WeightMasker):
         32 - 6 = 26 filters are preserved. If preserve_round is 4, preserved filters will
         be round up to 28 (which can be divided by 4) and only 4 filters are pruned.
     """
+
     def __init__(self, model, pruner, preserve_round=1):
         self.model = model
         self.pruner = pruner
@@ -796,7 +932,8 @@ class AMCWeightMasker(WeightMasker):
         num_prune = int(num_total * sparsity)
         if self.preserve_round > 1:
             num_preserve = num_total - num_prune
-            num_preserve = int(math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
+            num_preserve = int(
+                math.ceil(num_preserve * 1. / self.preserve_round) * self.preserve_round)
             if num_preserve > num_total:
                 num_preserve = num_total
             num_prune = num_total - num_preserve
@@ -813,7 +950,8 @@ class AMCWeightMasker(WeightMasker):
 
         if preserve_idx is None:
             importance = np.abs(w).sum((0, 2, 3))
-            sorted_idx = np.argsort(-importance)  # sum magnitude along C_in, sort descend
+            # sum magnitude along C_in, sort descend
+            sorted_idx = np.argsort(-importance)
             d_prime = num_preserve
             preserve_idx = sorted_idx[:d_prime]  # to preserve index
         else:
@@ -828,10 +966,13 @@ class AMCWeightMasker(WeightMasker):
         masked_X = X[:, mask]
         if w.shape[2] == 1:  # 1x1 conv or fc
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
-            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
-            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
+            # (C_out, K_h, K_w, C_in')
+            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)
+            # (C_out, C_in', K_h, K_w)
+            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))
         else:
-            raise NotImplementedError('Current code only supports 1x1 conv now!')
+            raise NotImplementedError(
+                'Current code only supports 1x1 conv now!')
         rec_weight_pad = np.zeros_like(w)
         # pylint: disable=all
         rec_weight_pad[:, mask, :, :] = rec_weight
@@ -842,7 +983,8 @@ class AMCWeightMasker(WeightMasker):
             assert len(rec_weight.shape) == 2
 
         # now assign
-        wrapper.module.weight.data = torch.from_numpy(rec_weight).to(weight.device)
+        wrapper.module.weight.data = torch.from_numpy(
+            rec_weight).to(weight.device)
 
         mask_weight = torch.zeros_like(weight)
         if wrapper.type == 'Linear':
