@@ -10,7 +10,7 @@ CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
-
+RESHAPE_OPS = [CAT_TYPE, 'aten::view', 'aten::reshape', 'aten::flatten']
 
 class Dependency:
     def __init__(self, model=None, dummy_input=None, traced_model=None):
@@ -191,19 +191,22 @@ class InputChannelDependency(ChannelDependency):
 
     def _get_following_convs(self, tensor):
         queue = []
-        following_convs = []
+        key_layers = []
         queue.extend(self.graph.input_to_node[tensor])
         while queue:
             curnode = queue.pop(0)
             if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear':
                 # find the first met conv
-                following_convs.append(curnode.name)
+                key_layers.append(curnode.name)
+                continue
+            elif curnode.op_type in RESHAPE_OPS:
+                # reshape operations also breaks the dependency relationship
                 continue
             successors = self.graph.find_successors(curnode.unique_name)
             successors = [self.graph.name_to_node[name] for name in successors]
             for layer in successors:
                 queue.append(layer)
-        return following_convs
+        return key_layers
 
     def build_dependency(self):
         """
