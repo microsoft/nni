@@ -18,8 +18,10 @@
   <a href="{{ pathto('TrainingService/RemoteMachineMode') }}">远程服务器</a>,
   <a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a>,
   <a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a>,
-  <a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController（如，AKS 等)</a>
-  <a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (又称 DLTS)</a>，以及其它云服务。
+  <a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController（如，AKS 等)</a>,
+  <a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (又称 DLTS)</a>,
+  <a href="{{ pathto('TrainingService/AMLMode') }}">AML (Azure Machine Learning)</a>
+以及其它云服务。
 </p>
 <!-- Who should consider using NNI -->
 <div>
@@ -185,6 +187,7 @@
             <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController (如 AKS 等)</a>
             </li>
             <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (又称 DLTS)</a></li>
+            <li><a href="{{ pathto('TrainingService/AMLMode') }}">AML (Azure Machine Learning)</a></li>
           </ul>
         </ul>
       </td>
@@ -221,7 +224,7 @@
   <div>
     <h2 class="second-title">安装</h2>
     <p>
-      NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64 位 >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+      NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64 位 >= 3.6` 的环境中，只需要运行 `pip install` 即可完成安装。
     </p>
     <div class="command-intro">Linux 或 macOS</div>
     <div class="command">python3 -m pip install --upgrade nni</div>
@@ -249,7 +252,7 @@
     <ul>
       <li>
         <p>通过克隆源代码下载示例。</p>
-        <div class="command">git clone -b v{{ release }} https://github.com/Microsoft/nni.git</div>
+        <div class="command">git clone -b {{ release }} https://github.com/Microsoft/nni.git</div>
       </li>
       <li>
         <p>运行 MNIST 示例。</p>

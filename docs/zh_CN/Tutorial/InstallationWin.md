@@ -2,7 +2,7 @@
 
 ## 先决条件
 
-* Python 3.5（或以上）64 位。 在 Windows 上推荐使用 [Anaconda](https://www.anaconda.com/products/individual) 或 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 来管理多个 Python 环境。
+* Python 3.6（或以上）64 位。 在 Windows 上推荐使用 [Anaconda](https://www.anaconda.com/products/individual) 或 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) 来管理多个 Python 环境。
 
 * 如果是新安装的 Python 环境，需要安装 [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) 来支持 NNI 的依赖项，如 `scikit-learn`。
 
@@ -29,7 +29,7 @@
 * 从源代码安装
 
     ```bat
-    git clone -b v1.6 https://github.com/Microsoft/nni.git
+    git clone -b v1.8 https://github.com/Microsoft/nni.git
     cd nni
     powershell -ExecutionPolicy Bypass -file install.ps1
     ```
@@ -41,7 +41,7 @@
 * 克隆源代码中的示例。
 
     ```bat
-    git clone -b v1.6 https://github.com/Microsoft/nni.git
+    git clone -b v1.8 https://github.com/Microsoft/nni.git
     ```
 
 * 运行 MNIST 示例。
