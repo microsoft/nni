@@ -44,20 +44,20 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
             switch (phase) {
                 case 'Pending':
                 case 'Starting':
+                    kubernetesTrialJob.status = 'WAITING';
                     if (kubernetesPodsInfo.items.length > 0){
-                        const msg: string = kubernetesPodsInfo.items[0].status.containerStatuses[0].state.waiting.reason
-                        if (msg == "ImagePullBackOff" || msg == "ErrImagePull") {
-                            kubernetesTrialJob.status = 'FAILED';
-                        }
-                        else {
-                            kubernetesTrialJob.status = 'WAITING';
+                        if (kubernetesPodsInfo.items[0].status.containerStatuses != undefined) {
+                            const currState: any = kubernetesPodsInfo.items[0].status.containerStatuses[0].state
+                            if (currState.waiting != undefined) {
+                                const msg: string = currState.waiting.reason
+                                if (msg == "ImagePullBackOff" || msg == "ErrImagePull") {
+                                    kubernetesTrialJob.status = 'FAILED';
+                                }
+                            }
                         }
                         kubernetesTrialJob.message = kubernetesPodsInfo.items
                             .map((pod: any) => JSON.stringify(pod.status.containerStatuses))
                             .join('\n');
-                    }
-                    else {
-                        kubernetesTrialJob.status = 'WAITING';
                     }
                     kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.metadata.creationTimestamp);
                     break;
