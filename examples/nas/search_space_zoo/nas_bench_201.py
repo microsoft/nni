@@ -118,6 +118,7 @@ class NASBench201Network(nn.Module):
 
 
 def train(args, model, train_dataloader, valid_dataloader, criterion, optimizer, device):
+    model = model.to(device)
     model.train()
     for epoch in range(args.epochs):
         for batch_idx, (data, target) in enumerate(train_dataloader):
