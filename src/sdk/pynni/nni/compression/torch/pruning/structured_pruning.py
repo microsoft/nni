@@ -125,18 +125,11 @@ class StructuredWeightMasker(WeightMasker):
         # weight*mask_weight: apply base mask for iterative pruning
         return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx, channel_masks)
 
-    def _dependency_calc_mask(self, sparsities, wrappers, wrappers_idx, channel_dsets, groups):
+    def _common_channel_to_prune(self, sparsities, wrappers, wrappers_idx, channel_dsets, groups):
         """
-        Calculate the masks for the layers in the same dependency sets.
-        Similar to the traditional original calc_mask, _dependency_calc_mask
-        will prune the target layers based on the L1/L2 norm of the weights.
-        However, StructuredWeightMasker prunes the filter completely based on the
-        L1/L2 norm of each filter. In contrast, _dependency_calc_mask
-        will try to satisfy the channel/group dependency(see nni.compression.torch.
-        utils.shape_dependency for details). Specifically, _dependency_calc_mask
-        will try to prune the same channels for the layers that have channel dependency.
-        In addition, this mask calculator will also ensure that the number of filters
-        pruned in each group is the same(meet the group dependency).
+        Calculate the common channels should be pruned by all the layers in this group.
+        This function is for filter pruning of Conv layers. if want to support the dependency-aware
+        mode for others ops, you need to inherit this class and overwrite `_common_channel_to_prune`.
 
         Parameters
         ----------
@@ -209,7 +202,33 @@ class StructuredWeightMasker(WeightMasker):
             channel_masks == False).nonzero().squeeze(1).tolist()
         logger.info('Prune the %s channels for all dependent',
                     ','.join([str(x) for x in pruned_channel_index]))
+        return channel_masks
 
+    def _dependency_calc_mask(self, sparsities, wrappers, wrappers_idx, channel_dsets, groups):
+        """
+        Calculate the masks for the layers in the same dependency sets.
+        Similar to the traditional original calc_mask, _dependency_calc_mask
+        will prune the target layers based on the L1/L2 norm of the weights.
+        However, StructuredWeightMasker prunes the filter completely based on the
+        L1/L2 norm of each filter. In contrast, _dependency_calc_mask
+        will try to satisfy the channel/group dependency(see nni.compression.torch.
+        utils.shape_dependency for details). Specifically, _dependency_calc_mask
+        will try to prune the same channels for the layers that have channel dependency.
+        In addition, this mask calculator will also ensure that the number of filters
+        pruned in each group is the same(meet the group dependency).
+
+        Parameters
+        ----------
+        sparsities : list
+            List of float that specify the sparsity for each conv layer.
+        wrappers : list
+            List of wrappers
+        groups : list
+            The number of the filter groups of each layer.
+        wrappers_idx : list
+            The indexes of the wrappers
+        """
+        channel_masks = self._common_channel_to_prune(sparsities, wrappers, wrappers_idx, channel_dsets, groups)
         # calculate the mask for each layer based on channel_masks, first
         # every layer will prune the same channels masked in channel_masks.
         # If the sparsity of a layers is larger than min_sparsity, then it

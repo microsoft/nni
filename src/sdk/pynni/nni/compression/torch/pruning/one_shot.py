@@ -173,10 +173,16 @@ class _StructuredFilterPruner(OneshotPruner):
             self.channel_depen = {
                 name: sets for sets in self.channel_depen for name in sets}
             self.group_depen = self.group_depen.dependency_sets
-            # if prune the model in the dependency-aware way, the pruner will
-            # call the _dependency_update_mask rather than original update_mask
-            # function
-            setattr(self, 'update_mask', self._dependency_update_mask)
+
+    def update_mask(self):
+        if not self.dependency_aware:
+            # if we use the normal way to update the mask,
+            # then call the updata_mask of the father class
+            super(_StructuredFilterPruner, self).update_mask()
+        else:
+            # if we update the mask in a dependency-aware way
+            # then we call _dependency_update_mask
+            self._dependency_update_mask()
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{

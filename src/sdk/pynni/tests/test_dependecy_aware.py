@@ -51,10 +51,11 @@ class DependencyawareTest(TestCase):
                     if isinstance(module, nn.Conv2d):
                         expected = int(ori_filters[name] * (1-sparsity))
                         filter_diff = abs(expected - module.out_channels)
-                        errmsg = 'Ori: %d, Expected: %d, Real: %d' % (ori_filters[name], expected, module.out_channels)
+                        errmsg = '%s Ori: %d, Expected: %d, Real: %d' % (name, ori_filters[name], expected, module.out_channels)
                             
                         # because we are using the dependency-aware mode, so the number of the
                         # filters after speedup should be ori_filters[name] * ( 1 - sparsity )
+                        print(errmsg)
                         assert filter_diff <= 1, errmsg
 
 
