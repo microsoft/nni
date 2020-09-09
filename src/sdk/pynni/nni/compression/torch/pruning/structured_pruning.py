@@ -80,6 +80,9 @@ class StructuredWeightMasker(WeightMasker):
             layer wrapper of this layer
         wrapper_idx: int
             index of this wrapper in pruner's all wrappers
+        channel_masks: Tensor
+            channel_mask indicates the channels that we should at least mask.
+            the finnal masked channels should include these channels.             
         Returns
         -------
         dict

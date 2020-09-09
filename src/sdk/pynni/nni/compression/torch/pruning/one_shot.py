@@ -155,6 +155,8 @@ class _StructuredFilterPruner(OneshotPruner):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
                          optimizer=optimizer, **algo_kwargs)
         self.dependency_aware = dependency_aware
+        # set the dependency-aware switch for the masker
+        self.masker.dependency_aware = dependency_aware
         self.dummy_input = dummy_input
         if self.dependency_aware:
             errmsg = "When dependency_aware is set, the dummy_input should not be None"
@@ -203,8 +205,9 @@ class _StructuredFilterPruner(OneshotPruner):
         # Note that, this number may be different from its
         # original number of groups of filters.
         groups = [self.group_depen[_w.name] for _w in wrappers]
+        sparsities = [_w.config['sparsity'] for _w in wrappers]
         masks = self.masker.calc_mask(
-            wrappers, channel_dsets, groups, wrappers_idx=wrappers_idx)
+            sparsities, wrappers, wrappers_idx=wrappers_idx, channel_dsets=channel_dsets, groups=groups)
         if masks is not None:
             # if masks is None, then the mask calculation fails.
             # for example, in activation related maskers, we should
@@ -271,8 +274,7 @@ class L1FilterPruner(_StructuredFilterPruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'l1_constrained' if dependency_aware else 'l1'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer,
+        super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)
 
 
@@ -302,8 +304,7 @@ class L2FilterPruner(_StructuredFilterPruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'l2_constrained' if dependency_aware else 'l2'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer,
+        super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)
 
 
@@ -333,8 +334,7 @@ class FPGMPruner(_StructuredFilterPruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'fpgm_constrained' if dependency_aware else 'fpgm'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
+        super().__init__(model, config_list, pruning_algorithm='fpgm',
                          dependency_aware=dependency_aware, dummy_input=dummy_input, optimizer=optimizer)
 
 
@@ -368,8 +368,7 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
 
     def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1,
                  dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'taylorfo_constrained' if dependency_aware else 'taylorfo'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
+        super().__init__(model, config_list, pruning_algorithm='taylorfo',
                          dependency_aware=dependency_aware, dummy_input=dummy_input,
                          optimizer=optimizer, statistics_batch_num=statistics_batch_num)
 
@@ -406,8 +405,7 @@ class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
 
     def __init__(self, model, config_list, optimizer=None, activation='relu',
                  statistics_batch_num=1, dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'apoz_constrained' if dependency_aware else 'apoz'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer,
+        super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, statistics_batch_num=statistics_batch_num)
 
@@ -443,7 +441,6 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
 
     def __init__(self, model, config_list, optimizer=None, activation='relu',
                  statistics_batch_num=1, dependency_aware=False, dummy_input=None):
-        pruning_algorithm = 'mean_activation_constrained' if dependency_aware else 'mean_activation'
-        super().__init__(model, config_list, pruning_algorithm=pruning_algorithm, optimizer=optimizer,
+        super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, statistics_batch_num=statistics_batch_num)
