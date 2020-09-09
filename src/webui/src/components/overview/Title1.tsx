@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack } from 'office-ui-fabric-react';
+import { Stack } from '@fluentui/react';
 import { TitleContext } from '../Overview';
 import '../../static/style/overviewTitle.scss';
 

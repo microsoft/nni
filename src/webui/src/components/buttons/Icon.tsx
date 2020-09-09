@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Icon, initializeIcons } from 'office-ui-fabric-react';
+import { Icon, initializeIcons } from '@fluentui/react';
 initializeIcons();
 
 const infoIcon = <Icon iconName='info' />;

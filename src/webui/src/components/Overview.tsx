@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, IStackTokens, Dropdown } from 'office-ui-fabric-react';
+import { Stack, IStackTokens, Dropdown } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
 import { AppContext } from "../App";

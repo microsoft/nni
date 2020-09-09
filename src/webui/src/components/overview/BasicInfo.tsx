@@ -1,5 +1,5 @@
 import React from 'react';
-import { Stack, TooltipHost } from 'office-ui-fabric-react';
+import { Stack, TooltipHost } from '@fluentui/react';
 import { EXPERIMENT } from '../../static/datamodel';
 import { formatTimestamp } from '../../static/function';
 

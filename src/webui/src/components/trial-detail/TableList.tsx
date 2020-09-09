@@ -4,7 +4,7 @@ import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import ReactPaginate from 'react-paginate';
 import { LineChart, blocked, copy } from '../buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
@@ -35,7 +35,7 @@ echarts.registerTheme('my_theme', {
 
 const horizontalGapStackTokens: IStackTokens = {
     childrenGap: 20,
-    // padding: 10,
+    padding: 10
 };
 
 interface TableListProps {

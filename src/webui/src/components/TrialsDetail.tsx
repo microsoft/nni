@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {
     Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultButton
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
 import { AppContext } from "../App";

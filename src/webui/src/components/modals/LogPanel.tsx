@@ -3,7 +3,7 @@ import axios from 'axios';
 import {
     Stack, StackItem, Panel, PrimaryButton, DefaultButton,
     Pivot, PivotItem
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import { infoIcon } from '../buttons/Icon';
 import { DOWNLOAD_IP } from '../../static/const';
 import { downFile } from '../../static/function';

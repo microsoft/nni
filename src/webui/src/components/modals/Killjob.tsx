@@ -3,7 +3,7 @@ import {
     Stack, FocusTrapCallout, DefaultButton,
     FocusZone,
     PrimaryButton, getTheme, mergeStyleSets, FontWeights
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import { killJob } from '../../static/function';
 import { blocked } from '../buttons/Icon';
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Toggle, Stack } from 'office-ui-fabric-react';
+import { Toggle, Stack } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';

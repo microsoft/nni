@@ -2,7 +2,7 @@ import * as React from 'react';
 import {
     Stack, Callout, Link, IconButton, FontWeights, mergeStyleSets,
     getId, getTheme, StackItem, TooltipHost
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import axios from 'axios';
 import { MANAGER_IP, CONCURRENCYTOOLTIP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';

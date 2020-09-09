@@ -4,7 +4,7 @@ import { WEBUIDOC, MANAGER_IP } from '../static/const';
 import {
     Stack, initializeIcons, StackItem, CommandBarButton,
     IContextualMenuProps, IStackTokens, IStackStyles
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import LogPanel from './modals/LogPanel';
 import ExperimentPanel from './modals/ExperimentPanel';
 import {

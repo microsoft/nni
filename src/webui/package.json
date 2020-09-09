@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@fluentui/react": "^7.135.0",
     "axios": "^0.19.0",
     "babel-eslint": "10.0.1",
     "babel-jest": "24.7.1",
@@ -31,7 +32,6 @@
     "monaco-editor": "^0.19.0",
     "monaco-editor-webpack-plugin": "^1.8.1",
     "node-sass": "^4.13.0",
-    "office-ui-fabric-react": "^6.174.0",
     "optimize-css-assets-webpack-plugin": "5.0.1",
     "parcoord-es": "^2.2.10",
     "pnp-webpack-plugin": "1.2.1",
@@ -73,7 +73,6 @@
     "@types/react-dom": "16.8.4",
     "@typescript-eslint/eslint-plugin": "^2.11.0",
     "@typescript-eslint/parser": "^2.11.0",
-    "@uifabric/fluent-theme": "^0.16.7",
     "concurrently": "^5.2.0",
     "eslint": "^5.16.0",
     "eslint-config-react-app": "^4.0.0",

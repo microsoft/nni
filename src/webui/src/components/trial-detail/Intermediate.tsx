@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, PrimaryButton, Toggle, IStackTokens } from 'office-ui-fabric-react';
+import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
 import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';

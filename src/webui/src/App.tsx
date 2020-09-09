@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack } from 'office-ui-fabric-react';
+import { Stack } from '@fluentui/react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';

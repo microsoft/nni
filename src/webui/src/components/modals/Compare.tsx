@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from 'office-ui-fabric-react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
@@ -231,7 +231,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 isOpen={true}
                 containerClassName={contentStyles.container}
                 className="compare-modal"
-                // allowTouchBodyScroll={true}
+                allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
             >
                 <div>
