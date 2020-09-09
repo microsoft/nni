@@ -9,6 +9,7 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from torch.utils.data import DataLoader
 from nni.nas.pytorch import enas
 from nni.nas.pytorch.utils import AverageMeterGroup
 from nni.nas.pytorch.nas_bench_201 import NASBench201Cell
@@ -115,11 +116,43 @@ class NASBench201Network(nn.Module):
 
         return logits
 
+
+def train(args, model, train_dataloader, valid_dataloader, criterion, optimizer, device):
+    model.train()
+    for epoch in range(args.epochs):
+        for batch_idx, (data, target) in enumerate(train_dataloader):
+            data, target = data.to(device), target.to(device)
+            optimizer.zero_grad()
+            output = model(data)
+            loss = criterion(output, target)
+            loss.backward()
+            optimizer.step()
+
+            if batch_idx % args.log_frequency == 0:
+                logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                            epoch, batch_idx * len(data), len(train_dataloader.dataset),
+                            100. * batch_idx / len(train_dataloader), loss.item()))
+        model.eval()
+        correct = 0
+        test_loss = 0.0
+        for data, target in valid_dataloader:
+            data, target = data.to(device), target.to(device)
+            output = model(data)
+            test_loss += criterion(output, target, reduction='sum').item()
+            pred = output.argmax(dim=1, keepdim=True)
+            correct += pred.eq(target.view_as(pred)).sum().item()
+        test_loss /= len(valid_dataloader.dataset)
+        accuracy = 100. * correct / len(valid_dataloader.dataset)
+        logger.info('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct,
+                                                                                           len(valid_dataloader.dataset), accuracy))
+        model.train()
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("nb201")
     parser.add_argument('--stem_out_channels', default=16, type=int)
     parser.add_argument('--unrolled', default=False, action='store_true')
-    parser.add_argument('--batch-size', default=64, type=int)
+    parser.add_argument('--batch_size', default=64, type=int)
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--num_modules_per_stack', default=5, type=int)
     parser.add_argument('--log-frequency', default=10, type=int)
@@ -147,6 +180,11 @@ if __name__ == '__main__':
         for trial in query_nb201_trial_stats(arch, 200, 'cifar100'):
             pprint.pprint(trial)
         apply_fixed_architecture(model, args.arch)
+        dataloader_train = DataLoader(dataset_train, batch_size=args.batch_size, shuffle=True, num_workers=0)
+        dataloader_valid = DataLoader(dataset_valid, batch_size=args.batch_size, shuffle=True, num_workers=0)
+        train(args, model, dataloader_train, dataloader_valid, criterion, optim,
+              torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+        exit(0)
 
     mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
     trainer = enas.EnasTrainer(model,
