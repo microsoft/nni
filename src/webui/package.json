@@ -102,6 +102,9 @@
   "browserslist": [
     "defaults"
   ],
+  "engines": {
+    "node": ">=10.14.0"
+  },
   "babel": {
     "presets": [
       "react-app"
