@@ -523,6 +523,13 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
             return None
         if channel_masks is not None:
             apoz = apoz * channel_masks
+            # Similar to the mean_activation, the relu/relu6 function
+            # may lead to many zeros in the apoz. In order to avoid the
+            # interference of these 0s, we also added channel_masks to apoz.
+            # note that, this add opertion will not change the relative order
+            # of the channel apoz.
+            apoz = apoz + channel_masks.to(torch.float32)
+
         prune_indices = torch.argsort(apoz)[:num_prune]
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
@@ -580,6 +587,13 @@ class ActivationMeanRankFilterPrunerMasker(ActivationFilterPrunerMasker):
             return None
         if channel_masks is not None:
             mean_activation = mean_activation * channel_masks
+            # In case there are many zeors in the original mean_activation, (it's
+            # normal because, we use relu/relu6 to as the activation)
+            # we also add the channel_masks to the mean_activation, note that
+            # this add operation will not change the relative order of the channels
+            # not in the channel_masks, because all the unmasked channels add the same
+            # value (1.0).
+            mean_activation = mean_activation + channel_masks.to(torch.float32)
         prune_indices = torch.argsort(mean_activation)[:num_prune]
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
