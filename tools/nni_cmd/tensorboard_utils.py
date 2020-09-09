@@ -126,6 +126,8 @@ def adl_tensorboard_helper(args):
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if args.id is None:
+        args.id = experiment_id
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     config_file_name = experiment_dict[experiment_id]['fileName']
