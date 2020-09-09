@@ -207,7 +207,7 @@ class _StructuredFilterPruner(OneshotPruner):
         groups = [self.group_depen[_w.name] for _w in wrappers]
         sparsities = [_w.config['sparsity'] for _w in wrappers]
         masks = self.masker.calc_mask(
-            sparsities, wrappers, wrappers_idx=wrappers_idx, channel_dsets=channel_dsets, groups=groups)
+            sparsities, wrappers, wrappers_idx, channel_dsets=channel_dsets, groups=groups)
         if masks is not None:
             # if masks is None, then the mask calculation fails.
             # for example, in activation related maskers, we should

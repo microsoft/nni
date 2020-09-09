@@ -23,7 +23,7 @@ class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):
         model_zoo = ['resnet18']
-        pruners = [ActivationAPoZRankFilterPruner]
+        pruners = [L1FilterPruner, L2FilterPruner, FPGMPruner, ActivationMeanRankFilterPruner, TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner]
         sparsity = 0.7
         cfg_list = [{'op_types': ['Conv2d'], 'sparsity':sparsity}]
         dummy_input = torch.ones(1, 3, 224, 224)
@@ -49,11 +49,13 @@ class DependencyawareTest(TestCase):
                 ms.speedup_model()
                 for name, module in net.named_modules():
                     if isinstance(module, nn.Conv2d):
-                        filter_diff = abs(
-                            int(ori_filters[name] * (1-sparsity)) - module.out_channels)
+                        expected = int(ori_filters[name] * (1-sparsity))
+                        filter_diff = abs(expected - module.out_channels)
+                        errmsg = 'Ori: %d, Expected: %d, Real: %d' % (ori_filters[name], expected, module.out_channels)
+                            
                         # because we are using the dependency-aware mode, so the number of the
                         # filters after speedup should be ori_filters[name] * ( 1 - sparsity )
-                        assert filter_diff <= 1
+                        assert filter_diff <= 1, errmsg
 
 
 if __name__ == '__main__':
