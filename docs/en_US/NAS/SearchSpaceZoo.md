@@ -172,7 +172,7 @@ All supported operations for ENAS macro search are listed below.
     ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.PoolBranch
     ```
 
-## NAS Bench 201
+## NAS-Bench-201
 
 NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell contains four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [reference](#nas-bench-201-reference).
 
@@ -213,8 +213,8 @@ All supported operations for NAS Bench 201 are listed below.
   ```
 
 * Conv
-  * Conv1x1: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=1`, `padding=0`, and `dilation=1`.
-  * Conv3x3: On behalf of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
+  * Conv1x1: Consist of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=1`, `padding=0`, and `dilation=1`.
+  * Conv3x3: Consist of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
 
   ```eval_rst
   ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.ReLUConvBN
