@@ -45,7 +45,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         return new AMLCommandChannel(commandEmitter);
     }
 
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+    public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new AMLEnvironmentInformation(envId, envName);
     }
 

@@ -1,6 +1,6 @@
 ## GradientFeatureSelector
 
-The algorithm in GradinetFeatureSelector comes from ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf).
+The algorithm in GradientFeatureSelector comes from ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf).
 
 GradientFeatureSelector, a gradient-based search algorithm
 for feature selection. 

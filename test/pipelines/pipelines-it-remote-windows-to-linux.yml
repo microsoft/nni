@@ -18,6 +18,11 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.23.2 --user
     displayName: 'Install dependencies for integration tests'
+  - script: |
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl package install ./
+    displayName: 'Install demotuner for customized_tuner test'
   - task: SSH@0
     inputs:
       sshEndpoint: $(end_point)
