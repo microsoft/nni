@@ -58,7 +58,7 @@ class NASBench201Cell(nn.Module):
         self.out_dim = C_out
         self.cell_id = cell_id
 
-    def forward(self, input):
+    def forward(self, input): # pylint: disable=W0622
         """
         Parameters
         ---
