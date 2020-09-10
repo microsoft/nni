@@ -230,7 +230,6 @@ class _StructuredFilterPruner(OneshotPruner):
         the _dependency_update_mask, we may prune several layers at the same
         time according the sparsities and the channel/group depedencies.
         """
-        logger.info('Update the mask in a dependency-aware way')
         name2wraper = {x.name: x for x in self.get_modules_wrapper()}
         wraper2index = {x: i for i, x in enumerate(self.get_modules_wrapper())}
         for wrapper in self.get_modules_wrapper():
