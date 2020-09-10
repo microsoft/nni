@@ -62,7 +62,7 @@ class MicroNetwork(nn.Module):
             reduction = False
             if layer_id in pool_layers:
                 c_cur, reduction = c_p * 2, True
-            self.layers.append(ENASMicroLayer(self.layers, num_nodes, c_pp, c_p, c_cur, reduction))
+            self.layers.append(ENASMicroLayer(num_nodes, c_pp, c_p, c_cur, reduction))
             if reduction:
                 c_pp = c_p = c_cur
             c_pp, c_p = c_p, c_cur
@@ -98,7 +98,6 @@ if __name__ == "__main__":
     parser = ArgumentParser("enas")
     parser.add_argument("--batch-size", default=128, type=int)
     parser.add_argument("--log-frequency", default=10, type=int)
-    # parser.add_argument("--search-for", choices=["macro", "micro"], default="macro")
     parser.add_argument("--epochs", default=None, type=int, help="Number of epochs (default: macro 310, micro 150)")
     parser.add_argument("--visualization", default=False, action="store_true")
     args = parser.parse_args()
