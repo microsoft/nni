@@ -18,18 +18,18 @@ const closeTimer = { iconName: 'Blocked2' };
 const LineChart = <Icon iconName='LineChart' />;
 
 export {
-	infoIcon,
-	warining,
-	errorBadge,
-	completed,
-	blocked,
-	infoIconAbout,
-	copy,
-	tableListIcon,
-	downLoadIcon,
-	timeIcon,
-	disableUpdates,
-	requency,
-	closeTimer,
-	LineChart
+    infoIcon,
+    warining,
+    errorBadge,
+    completed,
+    blocked,
+    infoIconAbout,
+    copy,
+    tableListIcon,
+    downLoadIcon,
+    timeIcon,
+    disableUpdates,
+    requency,
+    closeTimer,
+    LineChart
 };
