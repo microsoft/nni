@@ -175,7 +175,8 @@ if __name__ == '__main__':
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, args.epochs, eta_min=0.001)
     criterion = nn.CrossEntropyLoss()
 
-    if args.arch is not None: 
+    if args.arch is not None:
+        logger.info('model retraining...')
         with open(args.arch, 'r') as f:
             arch = json.load(f)
         for trial in query_nb201_trial_stats(arch, 200, 'cifar100'):

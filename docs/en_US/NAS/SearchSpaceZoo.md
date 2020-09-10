@@ -2,13 +2,13 @@
 
 ## DartsCell
 
-DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in a convolutional network). Directed edges from Node 1 to Node 2 are associated with some operations that transform Node 1 and the result is stored on Node 2. The [operations](#darts-predefined-operations) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node, and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, the categorical choice of a particular operation is relaxed to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probability is chosen to be part of the final structure. A CNN model can be formed by stacking several cells together, which builds a search space. Note that, in DARTS paper all cells in the model share the same structure.
+DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in a convolutional network). Directed edges from Node 1 to Node 2 are associated with some operations that transform Node 1 and the result is stored on Node 2. The [Candidate operations](#predefined-operations-darts) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node, and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, the categorical choice of a particular operation is relaxed to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probability is chosen to be part of the final structure. A CNN model can be formed by stacking several cells together, which builds a search space. Note that, in DARTS paper all cells in the model share the same structure.
 
 One structure in the Darts search space is shown below. Note that, NNI merges the last one of the four intermediate nodes and the output node.
 
 ![](../../img/NAS_Darts_cell.svg)
 
-The predefined operations are shown in [references](#predefined-operations-darts).
+The predefined operations are shown in [Candidate operations](#predefined-operations-darts).
 
 ```eval_rst
 ..  autoclass:: nni.nas.pytorch.search_space_zoo.DartsCell
@@ -28,7 +28,7 @@ python3 darts_example.py
 
 <a name="predefined-operations-darts"></a>
 
-### References
+### Candidate operations
 
 All supported operations for Darts are listed below.
 
@@ -91,7 +91,7 @@ python3 enas_micro_example.py
 
 <a name="predefined-operations-enas"></a>
 
-### References
+### Candidate operations
 
 All supported operations for ENAS micro search are listed below.
 
@@ -116,7 +116,7 @@ All supported operations for ENAS micro search are listed below.
 
 ## ENASMacroLayer
 
-In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the result of the previous layer, ii) which the previous layer to connect to for SkipConnects. ENAS uses a controller to design the whole model architecture instead of one of its components. The output of operations is going to concat with the tensor of the chosen layer for SkipConnect. NNI provides [predefined operations](#macro-operations) for macro search, which are listed in [references](#macro-operations).
+In Macro search, the controller makes two decisions for each layer: i) the [operation](#macro-operations) to perform on the result of the previous layer, ii) which the previous layer to connect to for SkipConnects. ENAS uses a controller to design the whole model architecture instead of one of its components. The output of operations is going to concat with the tensor of the chosen layer for SkipConnect. NNI provides [predefined operations](#macro-operations) for macro search, which are listed in [Candidate operations](#macro-operations).
 
 Part of one structure in the ENAS macro search space is shown below.
 
@@ -147,7 +147,7 @@ python3 enas_macro_example.py
 
 <a name="macro-operations"></a>
 
-### References
+### Candidate operations
 
 All supported operations for ENAS macro search are listed below.
 
@@ -174,14 +174,14 @@ All supported operations for ENAS macro search are listed below.
 
 ## NAS-Bench-201
 
-NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell contains four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [reference](#nas-bench-201-reference).
+NAS Bench 201 defines a unified search space, which is algorithm agnostic. The predefined skeleton consists of a stack of cells that share the same architecture. Every cell contains four nodes and a DAG is formed by connecting edges among them, where the node represents the sum of feature maps and the edge stands for an operation transforming a tensor from the source node to the target node. The predefined candidate operations can be found in [Candidate operations](#nas-bench-201-reference).
 
 The search space of NAS Bench 201 is shown below.
 
 ![](../../img/NAS_Bench_201.svg)
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.nas_bench_201.NASBench201Cell
+..  autoclass:: nni.nas.pytorch.nasbench201.NASBench201Cell
     :members:
 ```
 
@@ -198,7 +198,7 @@ python3 nas_bench_201.py
 
 <a name="nas-bench-201-reference"></a>
 
-### Reference
+### Candidate operations
 
 All supported operations for NAS Bench 201 are listed below.
 
@@ -208,7 +208,7 @@ All supported operations for NAS Bench 201 are listed below.
   Call `torch.nn.AvgPool2d`. This operation applies a 2D average pooling over all input channels followed by BatchNorm2d. Its parameters are fixed to `kernel_size=3` and `padding=1`.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.Pooling
+  ..  autoclass:: nni.nas.pytorch.nasbench201.nasbench201_ops.Pooling
       :members:
   ```
 
@@ -217,7 +217,7 @@ All supported operations for NAS Bench 201 are listed below.
   * Conv3x3: Consist of a sequence of ReLU, `nn.Cinv2d` and BatchNorm. The Conv operation's parameter is fixed to `kernal_size=3`, `padding=1`, and `dilation=1`.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.ReLUConvBN
+  ..  autoclass:: nni.nas.pytorch.nasbench201.nasbench201_ops.ReLUConvBN
       :members:
   ```
 
@@ -230,7 +230,7 @@ All supported operations for NAS Bench 201 are listed below.
   Generate zero tensors indicating there is no connection from the source node to the target node.
 
   ```eval_rst
-  ..  autoclass:: nni.nas.pytorch.nas_bench_201.nas_bench_201_ops.Zero
+  ..  autoclass:: nni.nas.pytorch.nasbench201.nasbench201_ops.Zero
       :members:
   ```
 
