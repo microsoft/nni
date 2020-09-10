@@ -58,14 +58,14 @@ class NASBench201Cell(nn.Module):
         self.out_dim = C_out
         self.cell_id = cell_id
 
-    def forward(self, inputs):
+    def forward(self, input):
         """
         Parameters
         ---
-        inputs: tensor
+        input: torch.tensor
             the output of the previous layer
         """
-        nodes = [inputs]
+        nodes = [input]
         for i in range(1, self.NUM_NODES):
             node_feature = sum(self.layers[i][k](nodes[k]) for k in range(i))
             nodes.append(node_feature)
