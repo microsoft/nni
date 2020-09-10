@@ -275,7 +275,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ## ActivationMeanRankFilter Pruner
 
-ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release. `ActivationMeanRankFilter Pruner` also can enable the dependency-aware mode by set `dependency_aware` True.
+ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release. ActivationMeanRankFilter Pruner also can enable the dependency-aware mode by set `dependency_aware` True.
 
 ### Usage
 

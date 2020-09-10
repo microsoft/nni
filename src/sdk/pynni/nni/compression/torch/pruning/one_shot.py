@@ -230,8 +230,8 @@ class _StructuredFilterPruner(OneshotPruner):
         the _dependency_update_mask, we may prune several layers at the same
         time according the sparsities and the channel/group depedencies.
         """
-        name2wraper = {x.name: x for x in self.get_modules_wrapper()}
-        wraper2index = {x: i for i, x in enumerate(self.get_modules_wrapper())}
+        name2wrapper = {x.name: x for x in self.get_modules_wrapper()}
+        wrapper2index = {x: i for i, x in enumerate(self.get_modules_wrapper())}
         for wrapper in self.get_modules_wrapper():
             if wrapper.if_calculated:
                 continue
@@ -239,18 +239,18 @@ class _StructuredFilterPruner(OneshotPruner):
             # and prune all these layers at the same time.
             _names = [x for x in self.channel_depen[wrapper.name]]
             logger.info('Pruning the dependent layers: %s', ','.join(_names))
-            _wrappers = [name2wraper[name]
-                         for name in _names if name in name2wraper]
-            _wrapper_idxes = [wraper2index[_w] for _w in _wrappers]
+            _wrappers = [name2wrapper[name]
+                         for name in _names if name in name2wrapper]
+            _wrapper_idxes = [wrapper2index[_w] for _w in _wrappers]
 
             masks = self._dependency_calc_mask(
                 _wrappers, _names, wrappers_idx=_wrapper_idxes)
             if masks is not None:
                 for layer in masks:
-                    for k in masks[layer]:
+                    for mask_type in masks[layer]:
                         assert hasattr(
-                            name2wraper[layer], k), "there is no attribute '%s' in wrapper on %s" % (k, layer)
-                        setattr(name2wraper[layer], k, masks[layer][k])
+                            name2wrapper[layer], mask_type), "there is no attribute '%s' in wrapper on %s" % (mask_type, layer)
+                        setattr(name2wrapper[layer], mask_type, masks[layer][mask_type])
 
 
 class L1FilterPruner(_StructuredFilterPruner):
