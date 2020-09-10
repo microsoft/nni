@@ -139,7 +139,7 @@ def train(args, model, train_dataloader, valid_dataloader, criterion, optimizer,
         for data, target in valid_dataloader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += criterion(output, target, reduction='sum').item()
+            test_loss += criterion(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
         test_loss /= len(valid_dataloader.dataset)
