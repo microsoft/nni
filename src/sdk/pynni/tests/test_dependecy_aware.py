@@ -10,8 +10,8 @@ import torchvision.models as models
 import numpy as np
 
 from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner, \
-                                  TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, \
-                                  ActivationMeanRankFilterPruner
+    TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, \
+    ActivationMeanRankFilterPruner
 from nni.compression.torch import ModelSpeedup
 
 unittest.TestLoader.sortTestMethodsUsing = None
@@ -23,7 +23,8 @@ class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):
         model_zoo = ['resnet18']
-        pruners = [L1FilterPruner, L2FilterPruner, FPGMPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner]
+        pruners = [L1FilterPruner, L2FilterPruner, FPGMPruner, TaylorFOWeightFilterPruner,
+                   ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner]
         sparsity = 0.7
         cfg_list = [{'op_types': ['Conv2d'], 'sparsity':sparsity}]
         dummy_input = torch.ones(1, 3, 224, 224)
@@ -37,11 +38,24 @@ class DependencyawareTest(TestCase):
                 for name, module in net.named_modules():
                     if isinstance(module, nn.Conv2d):
                         ori_filters[name] = module.out_channels
-                tmp_pruner = pruner(
-                    net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
+
                 # for the pruners that based on the activations, we need feed
                 # enough data before we call the compress function.
-                net(dummy_input)
+                optimizer = torch.optim.SGD(net.parameters(), lr=0.0001,
+                                 momentum=0.9,
+                                 weight_decay=4e-5)
+                criterion = torch.nn.CrossEntropyLoss()
+                tmp_pruner = pruner(
+                    net, cfg_list, optimizer, dependency_aware=True, dummy_input=dummy_input)
+                # train one single batch so that the the pruner can collect the
+                # statistic
+                optimizer.zero_grad()
+                out = net(dummy_input)
+                batchsize = dummy_input.size(0)
+                loss = criterion(out, torch.zeros(batchsize, dtype=torch.int64))
+                loss.backward()
+                optimizer.step()
+
                 tmp_pruner.compress()
                 tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
                 # if we want to use the same model, we should unwrap the pruner before the speedup
@@ -52,8 +66,9 @@ class DependencyawareTest(TestCase):
                     if isinstance(module, nn.Conv2d):
                         expected = int(ori_filters[name] * (1-sparsity))
                         filter_diff = abs(expected - module.out_channels)
-                        errmsg = '%s Ori: %d, Expected: %d, Real: %d' % (name, ori_filters[name], expected, module.out_channels)
-                            
+                        errmsg = '%s Ori: %d, Expected: %d, Real: %d' % (
+                            name, ori_filters[name], expected, module.out_channels)
+
                         # because we are using the dependency-aware mode, so the number of the
                         # filters after speedup should be ori_filters[name] * ( 1 - sparsity )
                         print(errmsg)
