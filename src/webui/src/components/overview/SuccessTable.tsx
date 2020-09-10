@@ -96,13 +96,11 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 			fieldName: 'duration',
 			data: 'number',
 			onColumnClick: this.onColumnClick,
-			onRender: (item: any): React.ReactNode => {
-				return (
-					<div className='durationsty'>
-						<div>{convertDuration(item.duration)}</div>
-					</div>
-				);
-			}
+			onRender: (item: any): React.ReactNode => (
+				<div className='durationsty'>
+					<div>{convertDuration(item.duration)}</div>
+				</div>
+			)
 		},
 		{
 			name: 'Status',

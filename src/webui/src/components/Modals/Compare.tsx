@@ -147,63 +147,50 @@ class Compare extends React.Component<CompareProps, {}> {
 				<tbody>
 					<tr>
 						<td className='column'>Id</td>
-						{Object.keys(idList).map(key => {
-							return (
-								<td className='value idList' key={key}>
-									{idList[key]}
-								</td>
-							);
-						})}
+						{Object.keys(idList).map(key => (
+							<td className='value idList' key={key}>
+								{idList[key]}
+							</td>
+						))}
 					</tr>
 					<tr>
 						<td className='column'>Trial No.</td>
-						{Object.keys(sequenceIdList).map(key => {
-							return (
-								<td className='value idList' key={key}>
-									{sequenceIdList[key]}
-								</td>
-							);
-						})}
+						{Object.keys(sequenceIdList).map(key => (
+							<td className='value idList' key={key}>
+								{sequenceIdList[key]}
+							</td>
+						))}
 					</tr>
 					<tr>
 						<td className='column'>Default metric</td>
-						{Object.keys(compareStacks).map(index => {
-							const temp = compareStacks[index];
-							return (
-								<td className='value' key={index}>
-									<IntermediateVal trialId={temp.id} />
-								</td>
-							);
-						})}
+						{Object.keys(compareStacks).map(index => (
+							<td className='value' key={index}>
+								<IntermediateVal trialId={compareStacks[index].id} />
+							</td>
+						))}
 					</tr>
 					<tr>
 						<td className='column'>duration</td>
-						{Object.keys(durationList).map(index => {
-							return (
-								<td className='value' key={index}>
-									{durationList[index]}
-								</td>
-							);
-						})}
+						{Object.keys(durationList).map(index => (
+							<td className='value' key={index}>
+								{durationList[index]}
+							</td>
+						))}
 					</tr>
 					{isComplexSearchSpace
 						? null
-						: Object.keys(parameterKeys).map(index => {
-								return (
-									<tr key={index}>
-										<td className='column' key={index}>
-											{parameterKeys[index]}
+						: Object.keys(parameterKeys).map(index => (
+								<tr key={index}>
+									<td className='column' key={index}>
+										{parameterKeys[index]}
+									</td>
+									{Object.keys(parameterList).map(key => (
+										<td key={key} className='value'>
+											{parameterList[key][parameterKeys[index]]}
 										</td>
-										{Object.keys(parameterList).map(key => {
-											return (
-												<td key={key} className='value'>
-													{parameterList[key][parameterKeys[index]]}
-												</td>
-											);
-										})}
-									</tr>
-								);
-						  })}
+									))}
+								</tr>
+						  ))}
 				</tbody>
 			</table>
 		);

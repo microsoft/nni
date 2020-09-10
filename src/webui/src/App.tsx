@@ -146,15 +146,14 @@ class App extends React.Component<{}, AppState> {
 				<Stack className='contentBox'>
 					<Stack className='content'>
 						{/* if api has error field, show error message */}
-						{errorList.map((item, key) => {
-							return (
+						{errorList.map(
+							(item, key) =>
 								item.errorWhere && (
 									<div key={key} className='warning'>
 										<MessageInfo info={item.errorMessage} typeInfo='error' />
 									</div>
 								)
-							);
-						})}
+						)}
 						{isillegalFinal && (
 							<div className='warning'>
 								<MessageInfo info={expWarningMessage} typeInfo='warning' />

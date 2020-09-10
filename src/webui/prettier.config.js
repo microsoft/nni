@@ -4,6 +4,7 @@ module.exports = {
     useTabs: true,
     tabWidth: 4,
     trailingComma: 'none',
+    arrowParens: 'avoid',
     bracketSpacing: true,
     eslintIntegration: true,
     singleQuote: true,
