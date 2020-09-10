@@ -1,0 +1,11 @@
+{
+  "extends": "stylelint-config-standard",
+  "ignoreFiles": [
+    "build/**"
+  ],
+  "rules": {
+    "at-rule-empty-line-before": null,
+    "indentation": 4,
+    "no-descending-specificity": null
+  }
+}

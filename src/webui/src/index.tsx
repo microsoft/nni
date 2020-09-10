@@ -8,16 +8,16 @@ import './index.css';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
-    <Router history={browserHistory}>
-        <Route path='/' component={App}>
-            <IndexRedirect to='/oview' />
-            <Route path='/oview' component={Overview} />
-            <Route path='/detail' component={TrialsDetail} />
-            {/* test branch */}
-        </Route>
-    </Router>,
+	<Router history={browserHistory}>
+		<Route path='/' component={App}>
+			<IndexRedirect to='/oview' />
+			<Route path='/oview' component={Overview} />
+			<Route path='/detail' component={TrialsDetail} />
+			{/* test branch */}
+		</Route>
+	</Router>,
 
-    document.getElementById('root')
+	document.getElementById('root')
 );
 
 // If you want your app to work offline and load faster, you can change

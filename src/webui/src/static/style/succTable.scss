@@ -1,14 +1,17 @@
-#succTable{
+#succTable {
     height: 404px;
     overflow: auto;
     position: relative;
-    .succTable-tooltip{
+
+    .succTable-tooltip {
         position: absolute;
         top: 40%;
         left: 17%;
-        .link{
+
+        .link {
             margin-left: 15px;
-            a{
+
+            a {
                 font-weight: 500;
                 color: blue;
             }

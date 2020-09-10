@@ -1,29 +1,40 @@
-#barBack{
+#barBack {
     /* status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
+
     /* status: 'TUNER_NO_MORE_TRIAL' | 'NO_MORE_TRIAL' */
-    .RUNNING, .STOPPING, .INITIALIZED, .NO_MORE_TRIAL, .TUNER_NO_MORE_TRIAL{
+    .RUNNING,
+    .STOPPING,
+    .INITIALIZED,
+    .NO_MORE_TRIAL,
+    .TUNER_NO_MORE_TRIAL {
         /* specific status color */
         color: #0071bc;
+
         /* progress- duration & trial numbers span */
         .ms-ProgressIndicator-progressBar {
             background-color: #0071bc;
         }
     }
-    .DONE, .STOPPED{
+
+    .DONE,
+    .STOPPED {
         color: #009245;
+
         .ms-ProgressIndicator-progressBar {
             background-color: #009245;
         }
     }
-    .ERROR{
+
+    .ERROR {
         color: #eb0716;
+
         .ms-ProgressIndicator-progressBar {
             background-color: #eb0716;
         }
     }
 }
 
-.errorBtn{
+.errorBtn {
     margin-left: 15px;
     display: inline-block;
     width: 18px;
@@ -36,11 +47,12 @@
     background-color: #4d4d4d;
     color: #fff;
 }
-.errorBtn:hover{
+
+.errorBtn:hover {
     cursor: pointer;
 }
 
-.errors{
+.errors {
     width: 240px;
     font-size: 14px;
     color: #212121;

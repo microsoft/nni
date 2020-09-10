@@ -3,18 +3,18 @@ import { TRIALS } from '../../static/datamodel';
 import { formatAccuracy } from '../../static/function';
 
 interface DefaultMetricProps {
-    trialId: string;
+	trialId: string;
 }
 
 class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
-    constructor(props: DefaultMetricProps) {
-        super(props);
-    }
+	constructor(props: DefaultMetricProps) {
+		super(props);
+	}
 
-    render(): React.ReactNode {
-        const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
-        return <div>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
-    }
+	render(): React.ReactNode {
+		const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
+		return <div>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
+	}
 }
 
 export default DefaultMetric;
