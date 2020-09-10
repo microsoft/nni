@@ -22,6 +22,7 @@
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,
         "@typescript-eslint/no-inferrable-types": 0,
+        "@typescript-eslint/no-use-before-define": [2, "nofunc"],
         "no-inner-declarations": 0,
         "@typescript-eslint/no-var-requires": 0,
         "react/display-name": 0
