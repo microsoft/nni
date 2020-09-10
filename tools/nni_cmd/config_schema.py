@@ -279,7 +279,9 @@ adl_trial_schema = {
         Optional('checkpoint'): {
             'storageClass': setType('storageClass', str),
             'storageSize': setType('storageSize', str)
-        }
+        },
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memorySize'): setType('memorySize', str)
     }
 }
 

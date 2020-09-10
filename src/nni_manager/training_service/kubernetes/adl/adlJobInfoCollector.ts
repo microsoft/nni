@@ -72,6 +72,10 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
                 case 'Failed':
                     kubernetesTrialJob.status = 'FAILED';
                     kubernetesTrialJob.message = kubernetesJobInfo.status.message;
+                    if (kubernetesPodsInfo.items.length > 0) {
+                        kubernetesTrialJob.message += " ; ";
+                        kubernetesTrialJob.message += `Use 'nnictl logs --trial_id ${kubernetesTrialJob.id}' to get pod failure log.`;
+                    }
                     // undefined => NaN as endTime here
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTimestamp);
                     break;

@@ -15,9 +15,11 @@ trial:
   command: python3 /root/apps/pytorch-cifar/main_nni.py
   codeDir: .
   gpuNum: 1
-  image: registry.petuum.com/dev/nni:tmp-nni-cifar
+  image: registry.petuum.com/dev/nni:tmp-nni-cifar-1.8
   imagePullSecrets:
     - name: stagingsecret
   checkpoint:
     storageClass: dfs
     storageSize: 1Gi
+  cpuNum: 1
+  memorySize: 1Gi

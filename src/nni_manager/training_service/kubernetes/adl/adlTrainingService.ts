@@ -142,14 +142,27 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         job.metadata.labels.trialId = trialJobId
         job.spec.template.spec.containers[0]
             .image = this.adlTrialConfig.image;
-        job.spec.template.spec.containers[0]
-            .resources.limits["nvidia.com/gpu"] = this.adlTrialConfig.gpuNum;
         job.spec.template.spec.volumes[0]
             .persistentVolumeClaim.claimName = adlJobName
         job.spec.template.spec.volumes[1]
             .persistentVolumeClaim.claimName = this.tensorboardName
         job.spec.template.spec.volumes[2]
             .configMap.name = adlJobName
+        // Handle Pod Resource
+        let cpu: number = 1;
+        let memory: string = "1Gi";
+        if (this.adlTrialConfig.cpuNum !== undefined) {
+            cpu = this.adlTrialConfig.cpuNum;
+        }
+        if (this.adlTrialConfig.memorySize !== undefined) {
+            memory = this.adlTrialConfig.memorySize;
+        }
+        job.spec.template.spec.containers[0]
+            .resources.requests.memory = memory;
+        job.spec.template.spec.containers[0]
+            .resources.requests.cpu = cpu;
+        job.spec.template.spec.containers[0]
+            .resources.limits["nvidia.com/gpu"] = this.adlTrialConfig.gpuNum;
         // Handle imagePullSecrets
         if (this.adlTrialConfig.imagePullSecrets !== undefined) {
             job.spec.template.spec.imagePullSecrets = job.spec.template.spec

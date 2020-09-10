@@ -32,6 +32,9 @@ export namespace ValidationSchemas {
                 outputDir: joi.string(),
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
+                // ############## adl cpu and memory config ###############
+                memorySize: joi.string(),
+                // ########################################################
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),

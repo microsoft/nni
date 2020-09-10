@@ -63,10 +63,15 @@ export class AdlTrialConfig {
 
     public readonly checkpoint?: CheckpointConfig;
 
+    public readonly cpuNum?: number;
+
+    public readonly memorySize?: string;
+
     constructor(codeDir: string,
                 command: string, gpuNum: number,
                 image: string, imagePullSecrets?: ImagePullSecretConfig[],
-                nfs?: NFSConfig, checkpoint?: CheckpointConfig) {
+                nfs?: NFSConfig, checkpoint?: CheckpointConfig,
+                cpuNum?: number, memorySize?: string) {
         this.codeDir = codeDir;
         this.command = command;
         this.gpuNum = gpuNum;
@@ -74,6 +79,8 @@ export class AdlTrialConfig {
         this.imagePullSecrets = imagePullSecrets;
         this.nfs = nfs;
         this.checkpoint = checkpoint;
+        this.cpuNum = cpuNum;
+        this.memorySize = memorySize;
     }
 }
 

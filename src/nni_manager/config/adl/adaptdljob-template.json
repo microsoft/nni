@@ -43,6 +43,10 @@
                         "imagePullPolicy": "Always",
                         "name": "main",
                         "resources": {
+                            "requests": {
+                                "memory": "<memorySize>",
+                                "cpu": "<cpuNum>"
+                            },
                             "limits": {
                                 "nvidia.com/gpu": 1
                             }

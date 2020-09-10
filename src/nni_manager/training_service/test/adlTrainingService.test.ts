@@ -34,7 +34,9 @@ describe('Unit Test for AdlTrainingService', () => {
             "server": "172.20.188.236",
             "path": "/exports",
             "containerMountPath": "/nfs"
-        }
+        },
+        "memorySize": "1Gi",
+        "cpuNum": 1
     });
     let testAdlTrialConfig2: any = JSON.stringify({
         "command": "python3 /root/apps/nni_linear_regression/main.py",
@@ -89,7 +91,7 @@ describe('Unit Test for AdlTrainingService', () => {
     });
 
     it('Submit job', async () => {
-        // job without given checkpoint
+        // job without given checkpoint, with resource config
         await adlTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testAdlTrialConfig);
         let form: TrialJobApplicationForm = {
             sequenceId: 0,
