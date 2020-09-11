@@ -55,7 +55,7 @@ class Compressor:
         for wrapper in self.wrappers:
             setattr(wrapper, name, value)
 
-    def validate_config(model, config_list):
+    def validate_config(self, model, config_list):
         """
         Compression algorithm should overload this function to validate configuration.
         """
