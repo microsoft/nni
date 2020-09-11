@@ -54,7 +54,7 @@ assessor:
 
 Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
 
-The working directory of your assessor is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`,
+The working directory of your assessor is `<home>/nni-experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`,
 
 More detail example you could see:
 > * [medianstop-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor)

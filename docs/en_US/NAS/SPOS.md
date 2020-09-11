@@ -75,7 +75,7 @@ Then search with evolution tuner.
 nnictl create --config config_search.yml
 ```
 
-The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni/experiments/your_experiment_id/log`.
+The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni-experiments/your_experiment_id/log`.
 
 ### Step 3. Train from Scratch
 

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { DOWNLOAD_IP } from '../../static/const';
+import LogPathChild from './LogPathChild';
 
 interface PaiTrialChildProps {
     logString: string;
@@ -16,24 +17,31 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
         const { logString, id, logCollect } = this.props;
         return (
             <div>
-                {logString === '' ? (
-                    <div />
-                ) : (
-                    <div>
-                        {logCollect ? (
-                            <a
-                                target='_blank'
-                                rel='noopener noreferrer'
-                                href={`${DOWNLOAD_IP}/trial_${id}.log`}
-                                style={{ marginRight: 10 }}
-                            >
-                                trial stdout
-                            </a>
-                        ) : (
-                            <span>trial stdout: {logString}</span>
-                        )}
-                    </div>
-                )}
+                {
+                    logString === ''
+                        ?
+                        null
+                        :
+                        <div>
+                            {
+                                logCollect
+                                    ?
+                                    <a
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        href={`${DOWNLOAD_IP}/trial_${id}.log`}
+                                        style={{ marginRight: 10 }}
+                                    >
+                                        Trial stdout
+                                    </a>
+                                    :
+                                    <LogPathChild
+                                        eachLogpath={logString}
+                                        logName="Trial stdout:"
+                                    />
+                            }
+                        </div>
+                }
             </div>
         );
     }

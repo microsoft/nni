@@ -17,7 +17,7 @@ from ..utils.sensitivity_analysis import SensitivityAnalysis
 MAX_PRUNE_RATIO_PER_ITER = 0.95
 
 _logger = logging.getLogger('Sensitivity_Pruner')
-
+_logger.setLevel(logging.INFO)
 
 class SensitivityPruner(Pruner):
     """
@@ -202,10 +202,10 @@ class SensitivityPruner(Pruner):
             prune_ratios = sorted(sensitivities[layer].keys())
             last_ratio = 0
             for ratio in prune_ratios:
+                last_ratio = ratio
                 cur_acc = sensitivities[layer][ratio]
                 if cur_acc + threshold < ori_acc:
                     break
-                last_ratio = ratio
             max_ratio[layer] = last_ratio
         return max_ratio
 
@@ -244,6 +244,7 @@ class SensitivityPruner(Pruner):
         # MAX_PRUNE_RATIO_PER_ITER we rescal all prune
         # ratios under this threshold
         if _Max > MAX_PRUNE_RATIO_PER_ITER:
+
             for layername in ratios:
                 ratios[layername] = ratios[layername] * \
                     MAX_PRUNE_RATIO_PER_ITER / _Max
@@ -317,6 +318,7 @@ class SensitivityPruner(Pruner):
             finetune_kwargs = {}
         if self.ori_acc is None:
             self.ori_acc = self.evaluator(*eval_args, **eval_kwargs)
+        assert isinstance(self.ori_acc, float) or isinstance(self.ori_acc, int)
         if not resume_sensitivity:
             self.sensitivities = self.analyzer.analysis(
                 val_args=eval_args, val_kwargs=eval_kwargs)
@@ -330,6 +332,7 @@ class SensitivityPruner(Pruner):
         iteration_count = 0
         if self.checkpoint_dir is not None:
             os.makedirs(self.checkpoint_dir, exist_ok=True)
+        modules_wrapper_final = None
         while cur_ratio > target_ratio:
             iteration_count += 1
             # Each round have three steps:
@@ -343,9 +346,16 @@ class SensitivityPruner(Pruner):
             # layers according to the sensitivity result
             proportion = self.sparsity_proportion_calc(
                 ori_acc, self.acc_drop_threshold, self.sensitivities)
+
             new_pruneratio = self.normalize(proportion, self.sparsity_per_iter)
             cfg_list = self.create_cfg(new_pruneratio)
+            if not cfg_list:
+                _logger.error('The threshold is too small, please set a larger threshold')
+                return self.model
             _logger.debug('Pruner Config: %s', str(cfg_list))
+            cfg_str = ['%s:%.3f'%(cfg['op_names'][0], cfg['sparsity']) for cfg in cfg_list]
+            _logger.info('Current Sparsities: %s', ','.join(cfg_str))
+
             pruner = self.Pruner(self.model, cfg_list)
             pruner.compress()
             pruned_acc = self.evaluator(*eval_args, **eval_kwargs)
@@ -367,6 +377,7 @@ class SensitivityPruner(Pruner):
                 self.analyzer.already_pruned[name] = sparsity
             # update the cur_ratio
             cur_ratio = 1 - self.current_sparsity()
+            modules_wrapper_final = pruner.get_modules_wrapper()
             del pruner
             _logger.info('Currently remained weights: %f', cur_ratio)
 
@@ -383,14 +394,19 @@ class SensitivityPruner(Pruner):
                 with open(cfg_path, 'w') as jf:
                     json.dump(cfg_list, jf)
                 self.analyzer.export(sensitivity_path)
+
             if cur_ratio > target_ratio:
                 # If this is the last prune iteration, skip the time-consuming
                 # sensitivity analysis
+
                 self.analyzer.load_state_dict(self.model.state_dict())
                 self.sensitivities = self.analyzer.analysis(
                     val_args=eval_args, val_kwargs=eval_kwargs)
 
         _logger.info('After Pruning: %.2f weights remains', cur_ratio)
+        self.modules_wrapper = modules_wrapper_final
+
+        self._wrap_model()
         return self.model
 
     def calc_mask(self, wrapper, **kwargs):

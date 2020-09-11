@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
 import { Trial } from '../../static/model/trial';
+import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
@@ -9,6 +10,7 @@ import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../Modals/MessageInfo';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
+import '../../static/style/openRow.scss';
 
 interface OpenRowProps {
     trialId: string;
@@ -54,6 +56,10 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         }
     };
 
+    openTrialLog = (type: string): void => {
+        window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
+    }
+
     render(): React.ReactNode {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
@@ -91,17 +97,35 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                 </Stack>
                             )}
                         </PivotItem>
-                        <PivotItem headerText='Log' key='2' itemIcon='M365InvoicingLogo'>
-                            {// FIXME: this should not be handled in web UI side
-                            EXPERIMENT.trainingServicePlatform !== 'local' ? (
-                                <PaiTrialLog
-                                    logStr={logPathRow}
-                                    id={trialId}
-                                    logCollection={EXPERIMENT.logCollectionEnabled}
-                                />
-                            ) : (
-                                <TrialLog logStr={logPathRow} id={trialId} />
-                            )}
+                        <PivotItem headerText="Log" key="2" itemIcon="M365InvoicingLogo">
+                            {
+                                // FIXME: this should not be handled in web UI side
+                                EXPERIMENT.trainingServicePlatform !== 'local'
+                                    ?
+                                    <PaiTrialLog
+                                        logStr={logPathRow}
+                                        id={trialId}
+                                        logCollection={EXPERIMENT.logCollectionEnabled}
+                                    />
+                                    :
+                                    <div>
+                                        <TrialLog logStr={logPathRow} id={trialId} />
+                                        {/* view each trial log in drawer*/}
+                                        <div id="trialog">
+                                            <div className="copy" style={{ marginTop: 15 }}>
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
+                                                    text="View trial log"
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_ERROR')}
+                                                    text="View trial error"
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                            }
                         </PivotItem>
                     </Pivot>
                 </Stack>

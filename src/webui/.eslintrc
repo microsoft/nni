@@ -26,6 +26,7 @@
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,
         "@typescript-eslint/no-inferrable-types": 0,
+        "@typescript-eslint/no-use-before-define": [2, "nofunc"],
         "@typescript-eslint/no-var-requires": 0,
         "arrow-parens": [2, "as-needed"],
         "no-inner-declarations": 0,

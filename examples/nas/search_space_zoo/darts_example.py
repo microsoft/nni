@@ -14,7 +14,7 @@ from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
 from nni.nas.pytorch.search_space_zoo import DartsCell
-from darts_search_space import DartsStackedCells
+from darts_stack_cells import DartsStackedCells
 
 logger = logging.getLogger('nni')
 

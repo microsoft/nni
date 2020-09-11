@@ -51,7 +51,7 @@ const convertDuration = (num: number): string => {
 };
 
 function parseMetrics(metricData: string): any {
-    if (metricData.includes('NaN')) {
+    if (metricData.includes('NaN') || metricData.includes('Infinity')) {
         return JSON5.parse(JSON5.parse(metricData));
     } else {
         return JSON.parse(JSON.parse(metricData));
@@ -83,6 +83,10 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
         return 0;
     }
 };
+
+function isNaNorInfinity(val: number): boolean {
+    return Object.is(val, NaN) || Object.is(val, Infinity);
+}
 
 // get final result value // acc obj
 const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
@@ -167,11 +171,9 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
         .catch(error => {
             if (error.response.status === 500) {
                 if (error.response.data.error) {
-                    alert(123);
-                    // message.error(error.response.data.error);
+                    alert(error.response.data.error);
                 } else {
-                    alert(234);
-                    // message.error('500 error, fail to cancel the job');
+                    alert('500 error, fail to cancel the job');
                 }
             }
         });
@@ -232,6 +234,14 @@ function formatAccuracy(accuracy: number): string {
         .toFixed(6)
         .replace(/0+$/, '')
         .replace(/\.$/, '');
+}
+
+function formatComplexTypeValue(value: any): string | number {
+    if (['number', 'string'].includes(typeof value)) {
+        return value;
+    } else {
+        return value.toString();
+    }
 }
 
 export {

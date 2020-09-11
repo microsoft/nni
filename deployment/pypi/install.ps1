@@ -44,6 +44,7 @@ $env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
 yarn
 yarn build
+Copy-Item config -Destination .\dist\ -Recurse -Force
 cd $CWD\..\..\src\webui
 yarn
 yarn build
