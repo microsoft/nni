@@ -87,6 +87,21 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.info('ssh connection initialized!');
             // set sshConnectionPromises to [] to avoid log information duplicated
             this.sshConnectionPromises = [];
+            // initialize gpuScheduler
+            this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
+            if (this.trialConfig ===  undefined) {
+                throw new Error("trial config not initialized!");
+            }
+            // Copy codeDir to remote machine
+            for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
+                const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
+                if (executor !== undefined) {
+                    this.machineCopyExpCodeDirPromiseMap.set(
+                        rmMeta,
+                        executor.copyDirectoryToRemote(this.trialConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
+                    );
+                }
+            }
         }
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
@@ -310,7 +325,6 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
-                this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -327,20 +341,8 @@ class RemoteMachineTrainingService implements TrainingService {
                 try {
                     // Validate to make sure codeDir doesn't have too many files
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
-                    // Copy codeDir to remote machine
-                    for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
-                        const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
-                        if (executor !== undefined) {
-                            this.machineCopyExpCodeDirPromiseMap.set(
-                                rmMeta,
-                                executor.copyDirectoryToRemote(remoteMachineTrailConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
-                            );
-                        }
-                    }
-
                 } catch (error) {
                     this.log.error(error);
-
                     return Promise.reject(new Error(error));
                 }
 
@@ -426,19 +428,19 @@ class RemoteMachineTrainingService implements TrainingService {
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
 
         for (const rmMeta of rmMetaList) {
-            rmMeta.occupiedGpuIndexMap = new Map<number, number>();
-            const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
-            this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
-            const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
-            this.log.debug(`reached ${executor.name}`);
-            this.machineExecutorManagerMap.set(rmMeta, executorManager);
-            this.log.debug(`initializing ${executor.name}`);
-            this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta, executor));
-            this.log.info(`connecting to ${executor.name}`);
+            this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta));
         }
     }
 
-    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, executor: ShellExecutor): Promise<void> {
+    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta): Promise<void> {
+        rmMeta.occupiedGpuIndexMap = new Map<number, number>();
+        const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
+        this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
+        const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
+        this.log.debug(`reached ${executor.name}`);
+        this.machineExecutorManagerMap.set(rmMeta, executorManager);
+        this.log.debug(`initializing ${executor.name}`);
+
         // Create root working directory after executor is ready
         const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni');
         await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
