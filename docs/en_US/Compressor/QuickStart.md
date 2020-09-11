@@ -147,6 +147,32 @@ when the value is int type, all quantization types share same bits length. eg.
     quant_bits: 8, # weight or output quantization are all 8 bits
 }
 ```
+* __op_names__ : list of string.
+
+Name of layer you want to quantize. If you want to quantize layers into different quant_bits, you can set the specific quant_bits of each op layers. eg.
+```
+configure_list = [{
+        'quant_types': ['weight'],        
+        'quant_bits': 8, 
+        'op_names': ['conv1']
+    }, {
+        'quant_types': ['weight'],
+        'quant_bits': 4,
+        'quant_start_step': 0,
+        'op_names': ['conv2']
+    }, {
+        'quant_types': ['weight'],
+        'quant_bits': 3,
+        'op_names': ['fc1']
+        },
+       {
+        'quant_types': ['weight'],
+        'quant_bits': 2,
+        'op_names': ['fc2']
+        }
+    ]
+```
+In this example, four layers are quantized to different quant_bits.
 
 ### APIs for Updating Fine Tuning Status
 
