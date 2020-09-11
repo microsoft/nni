@@ -159,6 +159,8 @@ def parse_args():
     parser_load_experiment.add_argument('--codeDir', '-c', required=True, help='the path of codeDir for loaded experiment, \
                                    this path will also put the code in the loaded experiment package')
     parser_load_experiment.add_argument('--logDir', '-l', required=False, help='the path of logDir for loaded experiment')
+    parser_load_experiment.add_argument('--searchSpacePath', '-s', required=True, help='the path of search space file for \
+                                   loaded experiment, this path contains file name.')
     parser_load_experiment.set_defaults(func=load_experiment)
 
     #parse platform command
