@@ -15,41 +15,6 @@ from . import default_layers
 _logger = logging.getLogger(__name__)
 
 
-class LayerInfo:
-    """
-    This structure contains all infomation needed to compress a TensorFlow ``Layer``.
-
-
-    Attributes
-    ----------
-    layer : tf.keras.layers.Layer
-        The layer.
-    name : str
-        The layer's name. Note that it's local to sub-model and may differ from its attribute name.
-    type : str
-        Name of the layer's class.
-    path : list of str or tuple of (str, int)
-        The layer object's and its parents' attribute name / list index.
-        For example, if the path is `[('cells', 2), 'conv']`, then the layer can be accessed as `model.cells[2].conv`.
-    config : JSON object
-        Selected configuration for this layer. The format is detailed in tutorial.
-
-    Parameters
-    ----------
-    layer : tf.keras.layers.Layer
-        See attributes section.
-    path : list of str or tuple of (str, int)
-        See attributes section.
-    """
-
-    def __init__(self, layer, path=None):
-        self.layer = layer
-        self.name = layer.name
-        self.type = type(layer).__name__
-        self.path = path
-        self.config = None
-
-
 class Compressor:
     """
     Common base class for all compressors.
@@ -57,40 +22,31 @@ class Compressor:
     This class is designed for other base classes.
     Algorithms should inherit ``Pruner`` or ``Quantizer`` instead.
 
-
     Attributes
     ----------
-    bound_model : tf.keras.Model
+    compressed_model : tf.keras.Model
         Compressed user model.
     wrappers : list of tf.keras.Model
         A wrapper is an instrumented TF ``Layer``, in ``Model`` format.
-        The list is ordered by preorder traversal.
 
     Parameters
     ----------
-    LayerWrapperClass : a class derive from Model
-        The class used to instrument layers.
     model : tf.keras.Model
         The user model to be compressed.
     config_list : list of JSON object
         User configuration. The format is detailed in tutorial.
+    LayerWrapperClass : a class derive from Model
+        The class used to instrument layers.
     """
 
-    def __init__(self, LayerWrapperClass, model, config_list):
+    def __init__(self, model, config_list, LayerWrapperClass):
         assert isinstance(model, tf.keras.Model)
-        if isinstance(model, tf.keras.Sequential):
-            raise ValueError('NNI model compression does not support `Sequential` model for now')
         self.validate_config(model, config_list)
-
-        self.bound_model = model
-        self.wrappers = []
-
-        for layer_info in _detect_layers_to_compress(model, config_list):
-            self.wrappers.append(LayerWrapperClass(layer_info, self))
+        self._wrappers = {}
+        self.compressed_model = _instrument(model, config_list, LayerWrapperClass, self)
+        self.wrappers = list(self._wrappers.values())
         if not self.wrappers:
             _logger.warning('Nothing is configured to compress, please check your model and config list')
-
-        _instrument_model(model, self.wrappers)
 
     def set_wrappers_attribute(self, name, value):
         """
@@ -98,6 +54,12 @@ class Compressor:
         """
         for wrapper in self.wrappers:
             setattr(wrapper, name, value)
+
+    def validate_config(model, config_list):
+        """
+        Compression algorithm should overload this function to validate configuration.
+        """
+        pass
 
 
 class Pruner(Compressor):
@@ -121,7 +83,7 @@ class Pruner(Compressor):
         User configuration. The format is detailed in tutorial.
     """
     def __init__(self, model, config_list):
-        super().__init__(PrunerLayerWrapper, model, config_list)
+        super().__init__(model, config_list, PrunerLayerWrapper)
         #self.callback = PrunerCallback(self)
 
     def compress(self):
@@ -133,10 +95,10 @@ class Pruner(Compressor):
         Returns
         -------
         tf.keras.Model
-            The compressed model, for convenience. This is exactly the same object to constructor argument.
+            The compressed model.
         """
         self._update_mask()
-        return self.bound_model
+        return self.compressed_model
 
     def calc_masks(self, wrapper, **kwargs):
         """
@@ -195,11 +157,10 @@ class PrunerLayerWrapper(tf.keras.Model):
         Afterwards, `masks` is the last return value of ``Pruner.calc_masks``.
         See ``Pruner.calc_masks`` for details.
     """
-    def __init__(self, layer_info, pruner):
+    def __init__(self, layer, config, pruner):
         super().__init__()
-        self.layer_info = layer_info
-        self.layer = layer_info.layer
-        self.config = layer_info.config
+        self.layer = layer
+        self.config = config
         self.pruner = pruner
         self.masks = {}
         _logger.info('Layer detected to compress: %s', self.layer.name)
@@ -228,80 +189,61 @@ class PrunerLayerWrapper(tf.keras.Model):
 #        self._pruner.update_mask()
 
 
-def _detect_layers_to_compress(model, config_list):
-    # Returns list of LayerInfo.
-    located_layers = _locate_layers(model)
-    ret = []
-    for layer in model.layers:
-        config = _select_config(LayerInfo(layer), config_list)
-        if config is not None:
-            if id(layer) not in located_layers:
-                _logger.error('Failed to locate layer %s in model. The layer will not be compressed. '
-                              'This is a bug in NNI, feel free to fire an issue.', layer.name)
-                continue
-            layer_info = located_layers[id(layer)]
-            layer_info.config = config
-            ret.append(layer_info)
-    return ret
+def _instrument(layer, config_list, LayerWrapperClass, compressor):
+    if isinstance(layer, tf.keras.Sequential):
+        return _instrument_sequential(layer, config_list, LayerWrapperClass, compressor)
+    if isinstance(layer, tf.keras.Model):
+        return _instrument_model(layer, config_list, LayerWrapperClass, compressor)
 
-def _locate_layers(model, cur_path=[]):
-    # Find out how to access layers from model object.
-    # Returns dict of (layer's object ID, LayerInfo).
-    # This function is required because TF framework does not track layer's attribute name,
-    # and to my knowledge `Layer.name` is only useful for read-only access.
-    # `cur_path`s format is documented in `LayerInfo.path`.
-    # TODO: it can only find layers in `Model` and `list` for now.
-    assert isinstance(model, tf.keras.Model)
-    if isinstance(model, tf.keras.Sequential):
-        _logger.warning('`Sequential` model is not supported yet, ignored.')
-    ret = {}
-    for key, value in model.__dict__.items():
-        if isinstance(value, tf.keras.Model):
-            ret.update(_locate_layers(value, cur_path + [key]))
-        elif isinstance(value, tf.keras.layers.Layer):
-            ret[id(value)] = LayerInfo(value, cur_path + [key])
+    if id(layer) in compressor._wrappers:
+        return compressor._wrappers[id(layer)]
+
+    config = _select_config(layer.name, type(layer).__name__, config_list)
+    if config is not None:
+        wrapper = LayerWrapperClass(layer, config, compressor)
+        compressor._wrappers[id(layer)] = wrapper
+        return wrapper
+
+    return layer
+
+
+def _instrument_sequential(seq, config_list, LayerWrapperClass, compressor):
+    layers = list(seq.layers)  # seq.layers is read-only property
+    need_rebuild = False
+    for i, layer in enumerate(layers):
+        new_layer = _instrument(layer, config_list, LayerWrapperClass, compressor)
+        if new_layer is not layer:
+            layers[i] = new_layer
+            need_rebuild = True
+    return tf.keras.Sequential(layers) if need_rebuild else seq
+
+
+def _instrument_model(model, config_list, LayerWrapperClass, compressor):
+    for key, value in list(model.__dict__.items()):  # avoid "dictionary keys changed during iteration"
+        if isinstance(value, tf.keras.layers.Layer):
+            new_layer = _instrument(value, config_list, LayerWrapperClass, compressor)
+            if new_layer is not value:
+                setattr(model, key, new_layer)
         elif isinstance(value, list):
             for i, item in enumerate(value):
-                if isinstance(item, tf.keras.Model):
-                    ret.update(_locate_layers(item, cur_path + [(key, i)]))
-                elif isinstance(item, tf.keras.layers.Layer):
-                    ret[id(item)] = LayerInfo(item, cur_path + [(key, i)])
-    return ret
+                if isinstance(item, tf.keras.layers.Layer):
+                    value[i] = _instrument(item, config_list, LayerWrapperClass, compressor)
+    return model
 
-def _select_config(layer_info, config_list):
+
+def _select_config(layer_name, layer_type, config_list):
     # Find the last matching config block for given layer.
     # Returns None if the layer should not be compressed.
-    ret = None
+    last_match = None
     for config in config_list:
         if 'op_types' in config:
-            match = layer_info.type in config['op_types']
-            match_default = 'default' in config['op_types'] and layer_info.type in default_layers.weighted_modules
+            match = layer_type in config['op_types']
+            match_default = 'default' in config['op_types'] and layer_type in default_layers.weighted_modules
             if not match and not match_default:
                 continue
-        if 'op_names' in config and layer_info.name not in config['op_names']:
+        if 'op_names' in config and layer_name not in config['op_names']:
             continue
-        ret = config
-    if ret is None or 'exclude' in ret:
+        last_match = config
+    if last_match is None or 'exclude' in last_match:
         return None
-    return ret
-
-
-def _instrument_model(model, wrappers):
-    # Replace layers to wrappers
-    for wrapper in reversed(wrappers):
-        cur = model
-        for key in wrapper.layer_info.path[:-1]:
-            if isinstance(key, str):
-                cur = getattr(cur, key)
-            else:
-                name, index = key
-                cur = getattr(cur, name)[index]
-        key = wrapper.layer_info.path[-1]
-        if isinstance(key, str):
-            setattr(cur, key, wrapper)
-        else:
-            name, index = key
-            getattr(cur, name)[index] = wrapper
-            #if isinstance(cur, tf.keras.Sequential):
-            #    cur._graph_initialized = False
-            #    cur._layer_call_argspecs[wrapper] = cur._layer_call_argspecs[wrapper.layer]
+    return last_match

@@ -9,9 +9,12 @@ import tensorflow as tf
 
 ####
 #
-# This file tests pruners on 2 models: a classic CNN model, and a naive model with one linear layer
+# This file tests pruners on 3 models:
+#   A classic CNN model built by inheriting `Model`;
+#   The same CNN model built with `Sequential`;
+#   A naive model with only one linear layer.
 #
-# The CNN model is used to test layer detecting and instrumenting.
+# The CNN models are used to test layer detecting and instrumenting.
 #
 # The naive model is used to test mask calculation.
 # It has a single 10x10 linear layer without bias, and `reduce_sum` its result.
@@ -31,11 +34,12 @@ class TfCompressorTestCase(unittest.TestCase):
         # Conv and dense layers should be compressed, pool and flatten should not.
         # This also tests instrumenting functionality.
         self._test_layer_detection_on_model(CnnModel())
+        self._test_layer_detection_on_model(build_sequential_model())
 
     def _test_layer_detection_on_model(self, model):
         pruner = pruners['level'](model)
         pruner.compress()
-        layer_types = sorted(wrapper.layer_info.type for wrapper in pruner.wrappers)
+        layer_types = sorted(type(wrapper.layer).__name__ for wrapper in pruner.wrappers)
         assert layer_types == ['Conv2D', 'Dense', 'Dense'], layer_types
 
     def test_level_pruner(self):
@@ -72,6 +76,15 @@ try:
             x = self.fc1(x)
             x = self.fc2(x)
             return x
+
+    def build_sequential_model():
+        return Sequential([
+            Conv2D(filters=10, kernel_size=3, activation='relu'),
+            MaxPool2D(pool_size=2),
+            Flatten(),
+            Dense(units=10, activation='relu'),
+            Dense(units=5, activation='softmax'),
+        ])
 
     class NaiveModel(Model):
         def __init__(self):
