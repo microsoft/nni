@@ -949,7 +949,7 @@ def load_experiment(args):
         target_path = os.path.join(os.getcwd(), target_path)
         print_normal('Expand search space path to %s' % target_path)
     nnictl_exp_config['searchSpacePath'] = target_path
-    # if the path alerady has a search space file, use the original one, otherwise use archived one
+    # if the path already has a search space file, use the original one, otherwise use archived one
     if not os.path.isfile(target_path):
         if len(os.listdir(archive_search_space_dir)) == 0:
             print_error('Archive file does not contain search space file!')
