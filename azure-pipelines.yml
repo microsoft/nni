@@ -27,6 +27,7 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
+      python3 -m pip install pygments --user --upgrade
       python3 -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python3 -m pip install tensorflow==2.2.0 --user
       python3 -m pip install keras==2.4.2 --user
