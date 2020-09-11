@@ -146,6 +146,32 @@ pruner.compress()
     quant_bits: 8, # 权重和输出的位宽都为 8 bits
 }
 ```
+* __op_names__ : 字符串列表。
+
+需要量化的layer的名字。如果你想将一个模型中各个layer量化成不同的比特位数，你可以设定每一个layer的具体量化比特数。例如：
+```
+configure_list = [{
+        'quant_types': ['weight'],        
+        'quant_bits': 8, 
+        'op_names': ['conv1']
+    }, {
+        'quant_types': ['weight'],
+        'quant_bits': 4,
+        'quant_start_step': 0,
+        'op_names': ['conv2']
+    }, {
+        'quant_types': ['weight'],
+        'quant_bits': 3,
+        'op_names': ['fc1']
+        },
+       {
+        'quant_types': ['weight'],
+        'quant_bits': 2,
+        'op_names': ['fc2']
+        }
+    ]
+```
+在这个例子中，四个layer被设置成了不同的量化比特数。
 
 ### 更新优化状态的 API
 
