@@ -33,6 +33,7 @@ def parse_args():
                         help='search best pruning policy and export or just export model with searched policy')
     parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
     parser.add_argument('--searched_model_path', default=None, type=str, help='path for searched best wrapped model')
+    parser.add_argument('--suffix', default=None, type=str, help='path for searched best wrapped model')
 
     return parser.parse_args()
 
@@ -132,11 +133,12 @@ if __name__ == "__main__":
     _, val_loader = init_data(args)
 
     config_list = [{
-        'op_types': ['Conv2d', 'Linear']
+        #'op_types': ['Conv2d', 'Linear']
+        'op_types': ['Conv2d']
     }]
     pruner = AMCPruner(
         model, config_list, validate, val_loader, model_type=args.model_type, dataset=args.dataset,
         train_episode=args.train_episode, job=args.job, export_path=args.export_path,
         searched_model_path=args.searched_model_path,
-        flops_ratio=args.flops_ratio, lbound=args.lbound, rbound=args.rbound)
+        flops_ratio=args.flops_ratio, lbound=args.lbound, rbound=args.rbound, suffix=args.suffix)
     pruner.compress()

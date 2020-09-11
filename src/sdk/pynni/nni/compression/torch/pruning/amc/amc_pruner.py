@@ -152,6 +152,8 @@ class AMCPruner(Pruner):
         self.job = job
         self.searched_model_path = searched_model_path
         self.export_path = export_path
+        self.val_loader = val_loader
+        self.evaluator = evaluator
 
         if seed is not None:
             np.random.seed(seed)
@@ -165,28 +167,27 @@ class AMCPruner(Pruner):
         # build folder and logs
         base_folder_name = '{}_{}_r{}_search'.format(model_type, dataset, flops_ratio)
         if suffix is not None:
-            base_folder_name = base_folder_name + '_' + suffix
-        self.output_dir = get_output_folder(output_dir, base_folder_name)
+            self.output_dir = os.path.join(output_dir, base_folder_name + '-' + suffix)
+        else:
+            self.output_dir = get_output_folder(output_dir, base_folder_name)
 
         if self.export_path is None:
             self.export_path = os.path.join(self.output_dir, '{}_r{}_exported.pth'.format(model_type, flops_ratio))
 
-        self.env_args = Namespace(
-            model_type=model_type,
-            preserve_ratio=flops_ratio,
-            lbound=lbound,
-            rbound=rbound,
-            reward=reward,
-            n_calibration_batches=n_calibration_batches,
-            n_points_per_layer=n_points_per_layer,
-            channel_round=channel_round,
-            output=self.output_dir
-        )
-
-        self.env = ChannelPruningEnv(
-            self, evaluator, val_loader, checkpoint, args=self.env_args)
-
         if self.job == 'train_export':
+            self.env_args = Namespace(
+                model_type=model_type,
+                preserve_ratio=flops_ratio,
+                lbound=lbound,
+                rbound=rbound,
+                reward=reward,
+                n_calibration_batches=n_calibration_batches,
+                n_points_per_layer=n_points_per_layer,
+                channel_round=channel_round,
+                output=self.output_dir
+            )
+            self.env = ChannelPruningEnv(
+                self, evaluator, val_loader, checkpoint, args=self.env_args)
             print('=> Saving logs to {}'.format(self.output_dir))
             self.tfwriter = SummaryWriter(log_dir=self.output_dir)
             self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
@@ -312,6 +313,32 @@ class AMCPruner(Pruner):
         self.text_writer.close()
 
     def export_pruned_model(self):
+        from nni.compression.torch import ModelSpeedup
+        from nni.compression.torch.pruning.amc.lib.net_measure import measure_model
+
+        model_path = os.path.join(self.output_dir, 'best_model.pth')
+        mask_path = os.path.join(self.output_dir, 'best_mask.pth')
+        #self.env.reset()
+        self._unwrap_model()
+        self.bound_model.load_state_dict(torch.load(model_path))
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        for x, y in self.val_loader:
+            dummy_input = x
+            break
+        IMAGE_SIZE = dummy_input.shape[2]
+
+        n_flops, n_params = measure_model(self.bound_model, IMAGE_SIZE, IMAGE_SIZE, device)
+        print('n_flops before speedup:', n_flops, n_params)
+        print('validate exported model before speedup:', self.evaluator(self.val_loader, self.bound_model))
+
+        m_speedup = ModelSpeedup(self.bound_model, dummy_input, mask_path, device, 1)
+        m_speedup.speedup_model()
+        print('validate exported model:', self.evaluator(self.val_loader, self.bound_model))
+
+        n_flops, n_params = measure_model(self.bound_model, IMAGE_SIZE, IMAGE_SIZE, device)
+        print('n_flops:', n_flops, n_params)
+
+    def export_pruned_model_old(self):
         if self.searched_model_path is None:
             wrapper_model_ckpt = os.path.join(self.output_dir, 'best_wrapped_model.pth')
         else:
