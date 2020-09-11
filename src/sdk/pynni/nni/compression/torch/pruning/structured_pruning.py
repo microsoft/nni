@@ -343,7 +343,7 @@ class L2FilterPrunerMasker(StructuredWeightMasker):
         threshold = torch.topk(
             w_l2_norm.view(-1), num_prune, largest=False)[0].max()
         mask_weight = torch.gt(w_l2_norm, threshold)[
-            :, None, None, None].expand_as(weight).type_as(weight)  # TODO why does not need clone()
+            :, None, None, None].expand_as(weight).type_as(weight)
         mask_bias = torch.gt(w_l2_norm, threshold).type_as(
             weight).detach() if base_mask['bias_mask'] is not None else None
 
@@ -378,7 +378,7 @@ class FPGMPrunerMasker(StructuredWeightMasker):
         if channel_masks is not None:
             channel_dist = channel_dist * channel_masks
         dist_list = [(channel_dist[i], i)
-                     for i in range(channel_dist.size(0))]  # TODO double check
+                     for i in range(channel_dist.size(0))]
         min_gm_kernels = sorted(dist_list, key=lambda x: x[0])[:num_prune]
         return [x[1] for x in min_gm_kernels]
 
