@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@fluentui/react": "^7.135.0",
     "axios": "^0.19.0",
     "babel-eslint": "10.0.1",
     "babel-jest": "24.7.1",
@@ -64,6 +63,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.4.3",
+    "@fluentui/react": "^7.135.0",
     "@svgr/webpack": "4.1.0",
     "@types/d3": "^5.7.2",
     "@types/jest": "24.0.12",
@@ -101,9 +101,6 @@
   "browserslist": [
     "defaults"
   ],
-  "engines": {
-    "node": ">=10.14.2"
-  },
   "babel": {
     "presets": [
       "react-app"

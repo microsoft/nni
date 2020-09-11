@@ -71,7 +71,7 @@ build:
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	cp -rf src/nni_manager/config src/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
-	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
+	cd src/webui && $(NNI_YARN) --ignore-engines && $(NNI_YARN) build
 	#$(_INFO) Building NAS UI $(_END)
 	cd src/nasui && $(NNI_YARN) && $(NNI_YARN) build
 
