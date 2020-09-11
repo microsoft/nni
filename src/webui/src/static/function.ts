@@ -259,5 +259,7 @@ export {
     metricAccuracy,
     parseMetrics,
     isArrayType,
-    requestAxios
+    requestAxios,
+    isNaNorInfinity,
+    formatComplexTypeValue
 };

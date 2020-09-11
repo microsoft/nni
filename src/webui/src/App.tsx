@@ -22,7 +22,7 @@ class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-    
+
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -40,10 +40,10 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ 
-            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, 
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
-            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
+            metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
         }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
         // final result is legal
@@ -103,8 +103,7 @@ class App extends React.Component<{}, AppState> {
     };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
-        
-        if(!(nextState.isUpdate || nextState.isUpdate === undefined)){
+        if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
             nextState.isUpdate = true;
             return false;
         }
@@ -206,7 +205,10 @@ class App extends React.Component<{}, AppState> {
     public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
+        }));
     }
 }
 

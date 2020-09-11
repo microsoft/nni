@@ -209,7 +209,7 @@ class Compare extends React.Component<CompareProps, {}> {
 
     getWebUIWidth = (): number => {
         return window.innerWidth;
-    }
+    };
 
     componentDidMount(): void {
         this._isCompareMount = true;

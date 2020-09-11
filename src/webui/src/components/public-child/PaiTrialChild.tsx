@@ -17,31 +17,22 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
         const { logString, id, logCollect } = this.props;
         return (
             <div>
-                {
-                    logString === ''
-                        ?
-                        null
-                        :
-                        <div>
-                            {
-                                logCollect
-                                    ?
-                                    <a
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        href={`${DOWNLOAD_IP}/trial_${id}.log`}
-                                        style={{ marginRight: 10 }}
-                                    >
-                                        Trial stdout
-                                    </a>
-                                    :
-                                    <LogPathChild
-                                        eachLogpath={logString}
-                                        logName="Trial stdout:"
-                                    />
-                            }
-                        </div>
-                }
+                {logString === '' ? null : (
+                    <div>
+                        {logCollect ? (
+                            <a
+                                target='_blank'
+                                rel='noopener noreferrer'
+                                href={`${DOWNLOAD_IP}/trial_${id}.log`}
+                                style={{ marginRight: 10 }}
+                            >
+                                Trial stdout
+                            </a>
+                        ) : (
+                            <LogPathChild eachLogpath={logString} logName='Trial stdout:' />
+                        )}
+                    </div>
+                )}
             </div>
         );
     }

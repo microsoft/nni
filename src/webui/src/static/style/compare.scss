@@ -4,14 +4,17 @@
         width: 50%;
         min-width: 450px;
     }
-    .ms-Modal-scrollableContent{
+
+    .ms-Modal-scrollableContent {
         overflow-x: hidden;
     }
+
     /* compare-md: table style */
-    .flex{
+    .flex {
         display: flex;
     }
-    &-table{
+
+    &-table {
         width: 92%;
         margin: 0 auto;
         margin-bottom: 20px;
