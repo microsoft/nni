@@ -826,14 +826,14 @@ def save_experiment(args):
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
         shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
-    
+
     # Step4. Copy searchSpace file
     search_space_path = nni_config.get_config('experimentConfig')['searchSpacePath']
     if not os.path.exists(search_space_path):
         print_error('search space %s does not exist!' % search_space_path)
     else:
         temp_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
-        os.makedirs(temp_search_space_dir)
+        os.makedirs(temp_search_space_dir, exist_ok=True)
         search_space_name = os.path.basename(search_space_path)
         shutil.copyfile(search_space_path, os.path.join(temp_search_space_dir, search_space_name))
 
@@ -853,6 +853,9 @@ def load_experiment(args):
     package_path = os.path.expanduser(args.path)
     if not os.path.exists(args.path):
         print_error('file path %s does not exist!' % args.path)
+        exit(1)
+    if os.path.isdir(args.searchSpacePath):
+        print_error('search space path should be a full path with filename, not a directory!')
         exit(1)
     temp_root_dir = generate_temp_dir()
     shutil.unpack_archive(package_path, temp_root_dir)
@@ -938,7 +941,7 @@ def load_experiment(args):
                 shutil.copytree(src_path, target_path)
             else:
                 shutil.copy(src_path, target_path)
-    
+
     # Step5. Copy searchSpace file
     archive_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
     target_path = os.path.expanduser(args.searchSpacePath)
@@ -946,13 +949,17 @@ def load_experiment(args):
         target_path = os.path.join(os.getcwd(), target_path)
         print_normal('Expand search space path to %s' % target_path)
     nnictl_exp_config['searchSpacePath'] = target_path
-    if len(os.listdir(archive_search_space_dir)) == 0:
-        print_error('Archive file does not contain search space file!')
-    else:
-        for file in os.listdir(archive_search_space_dir):
-            source_path = os.path.join(archive_search_space_dir, file)
-            shutil.copyfile(source_path, target_path)
-            break
+    # if the path alerady has a search space file, use the original one, otherwise use archived one
+    if not os.path.isfile(target_path):
+        if len(os.listdir(archive_search_space_dir)) == 0:
+            print_error('Archive file does not contain search space file!')
+            exit(1)
+        else:
+            for file in os.listdir(archive_search_space_dir):
+                source_path = os.path.join(archive_search_space_dir, file)
+                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                shutil.copyfile(source_path, target_path)
+                break
 
     # Step6. Create experiment metadata
     nni_config.set_config('experimentConfig', nnictl_exp_config)
