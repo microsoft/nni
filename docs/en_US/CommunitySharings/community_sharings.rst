@@ -13,3 +13,4 @@ Different from the tutorials and examples in the rest of the document which show
     Feature Engineering <feature_engineering>
     Performance measurement, comparison and analysis <perf_compare>
     Use NNI on Google Colab <NNI_colab_support>
+    Auto Completion <AutoCompletion>
