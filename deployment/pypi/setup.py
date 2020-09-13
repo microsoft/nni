@@ -2,9 +2,7 @@
 # Licensed under the MIT license.
 
 import setuptools
-from setuptools.command.install import install
 import platform
-import os
 from os import walk, path
 
 os_type = platform.system()
@@ -16,35 +14,6 @@ elif os_type == 'Windows':
     os_name = 'Microsoft :: Windows'
 else:
     raise NotImplementedError('current platform {} not supported'.format(os_type))
-
-class AutoCompletion(install):
-    def run(self):
-        RELEASE_VERSION = os.popen('git describe --tags --abbrev=0').read().strip()
-        COMP_URL = 'https://raw.githubusercontent.com/microsoft/nni/{}/tools/bash-completion'.format(RELEASE_VERSION)
-        if os_type == 'Linux':
-            HOME = os.environ.get('HOME')
-            if not HOME:
-                install.run(self)
-                return # can not get $HOME, abort.
-            if not os.geteuid(): # run as root
-                BASH_COMP_PREFIX = '/usr/share/bash-completion/completions'
-            else:
-                BASH_COMP_PREFIX = os.path.join(HOME, '.bash_completion.d')
-            # install auto completion script to /usr/share/bash-completion/completions/nnictl for root or 
-            #  ~/.bash_completion.d/nnictl for normal user
-            BASH_COMP_SCRIPT = os.path.join(BASH_COMP_PREFIX, 'nnictl')
-            os.system('mkdir -p {} && wget -O {} {} && chmod 644 {}'.format(BASH_COMP_PREFIX,
-                                                                            BASH_COMP_SCRIPT,
-                                                                            COMP_URL,
-                                                                            BASH_COMP_SCRIPT))
-            # not root and completion not installed
-            if os.geteuid():
-                NEED_SOURCE = os.path.join(HOME, '.bash_completion')
-                if not os.popen('(source {} ; command -v _nnictl) 2>/dev/null'.format(NEED_SOURCE)).read().strip():
-                    os.system("echo '[[ -f {} ]] && source {}' >> {}".format(BASH_COMP_SCRIPT,
-                                                                             BASH_COMP_SCRIPT,
-                                                                             NEED_SOURCE))
-        install.run(self)
 
 data_files = [('bin', ['node-{}-x64/bin/node'.format(os_type.lower())])]
 if os_type == 'Windows':
@@ -79,7 +48,7 @@ setuptools.setup(
         'nnicli': '../../src/sdk/pycli/nnicli'
     },
     package_data = {'nni': ['**/requirements.txt']},
-    python_requires = '>=3.6',
+    python_requires = '>=3.5',
     install_requires = [
         'schema',
         'ruamel.yaml',
@@ -108,8 +77,5 @@ setuptools.setup(
         'console_scripts' : [
             'nnictl = nni_cmd.nnictl:parse_args'
         ]
-    },
-    cmdclass = {
-        'install': AutoCompletion
     }
 )
