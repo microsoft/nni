@@ -147,7 +147,7 @@ when the value is int type, all quantization types share same bits length. eg.
     quant_bits: 8, # weight or output quantization are all 8 bits
 }
 ```
-By using the quantization specific keys 'quant_bits' along with the key 'op_names' in configuration specification, we can also quantize layers into different bits. eg.
+By using the quantization specific key 'quant_bits' along with the key 'op_names' in configuration specification, we can also quantize layers into different bits. eg.
 ```
 configure_list = [{
         'quant_types': ['weight'],        
