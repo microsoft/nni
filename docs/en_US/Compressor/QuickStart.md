@@ -170,7 +170,7 @@ configure_list = [{
         }
 ]
 ```
-In this example, 'op_names' is the name of layer and four layers are quantized to different quant_bits.
+In this example, 'op_names' is the name of layer and four layers will be quantized to different quant_bits.
 
 ### APIs for Updating Fine Tuning Status
 
