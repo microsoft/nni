@@ -115,7 +115,7 @@ class EvolutionTuner(Tuner):
             Not used
         """
         self.num_running_trials -= 1
-        logger.info('trial (%d) end')
+        logger.info('trial (%d) end', parameter_id)
 
         if not success:
             indv = self.running_trials[parameter_id]
@@ -145,7 +145,10 @@ class EvolutionTuner(Tuner):
         """
 
         result = []
-        self.send_trial_callback = kwargs['st_callback']
+        if 'st_callback' in kwargs:
+            self.send_trial_callback = kwargs['st_callback']
+        else:
+            logger.warning('Send trial callback is not found in kwargs. Evolution tuner might not work properly.')
         for parameter_id in parameter_id_list:
             had_exception = False
             try:
