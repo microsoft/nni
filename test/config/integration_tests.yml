@@ -135,6 +135,13 @@ testCases:
   validator:
     class: ExportValidator 
 
+- name: experiment-import
+  configFile: test/config/nnictl_experiment/sklearn-classification.yml
+  validator:
+    class: ImportValidator
+    kwargs:
+      import_data_file_path: config/nnictl_experiment/test_import.json
+
 - name: nnicli
   configFile: test/config/examples/sklearn-regression.yml
   config:
@@ -170,20 +177,6 @@ testCases:
   configFile: test/config/examples/sklearn-regression.yml
   launchCommand: nnictl view $resumeExpId
   experimentStatusCheck: False
-
-# Experiment import test
-- name: nnictl-experiment-import
-  configFile: test/config/nnictl_experiment/sklearn-classification.yml
-  setExperimentIdtoVar: $imoprtExpId
-  stopCommand: nnictl experiment import $imoprtExpId -f config/nnictl_experiment/test_import.json
-  onExitCommand: nnictl stop
-
-# Experiment export test
-- name: nnictl-experiment-export
-  configFile: test/config/nnictl_experiment/sklearn-classification.yml
-  launchCommand: nnictl resume $imoprtExpId
-  stopCommand: nnictl experiment export --filename config/nnictl_experiment/test_export.json --type json --intermediate
-  onExitCommand: nnictl stop
 
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml

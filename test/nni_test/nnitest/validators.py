@@ -33,6 +33,14 @@ class ExportValidator(ITValidator):
             print('\n\n')
         remove('report.json')
 
+class ImportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        import_data_file_path = kwargs.get('import_data_file_path')
+        proc = subprocess.run(['nnictl', 'experiment', 'import', exp_id, '-f', import_data_file_path])
+        assert proc.returncode == 0, \
+            '`nnictl experiment import {0} -f {1}` failed with code {2}'.format(exp_id, import_data_file_path, proc.returncode)
+
 class MetricsValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         self.check_metrics(nni_source_dir, **kwargs)

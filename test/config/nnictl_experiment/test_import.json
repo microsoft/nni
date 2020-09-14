@@ -1,4 +1,4 @@
 [
-    {"parameter": {"C": 0.15940134774738896, "kernel": "sigmoid", "degree": 3, "gamma": 0.07295826917955316, "coef0 ": 0.0978204758732429}, "value": 0.6},
-    {"parameter": {"C": 0.5556430724708544, "kernel": "linear", "degree": 3, "gamma": 0.04957496655414671, "coef0 ": 0.08520868779907687}, "value": 0.7}
+    {"parameter": {"C": 0.15940134774738896, "kernel": "sigmoid", "degree": 3, "gamma": 0.07295826917955316, "coef0": 0.0978204758732429}, "value": 0.6},
+    {"parameter": {"C": 0.5556430724708544, "kernel": "linear", "degree": 3, "gamma": 0.04957496655414671, "coef0": 0.08520868779907687}, "value": 0.7}
 ]
