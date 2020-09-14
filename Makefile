@@ -142,12 +142,16 @@ clean:
 # Helper targets
 
 $(NNI_NODE_TARBALL):
-	#$(_INFO) Downloading Node.js $(_END)
-	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
+#$(_INFO) Downloading Node.js $(_END)
+ifeq ($(OS_SPEC), linux)
+	wget https://nodejs.org/dist/latest-v10.x/node-v10.22.0-linux-x64.tar.xz -O $(NNI_NODE_TARBALL)
+else ifeq ($(OS_SPEC), darwin)
+	wget https://nodejs.org/dist/latest-v10.x/node-v10.22.0-darwin-x64.tar.xz -O $(NNI_NODE_TARBALL)
+endif
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
+	wget https://yarnpkg.com/latest.tar.gz -O $(NNI_YARN_TARBALL)
 
 .PHONY: install-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
