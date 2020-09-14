@@ -7,10 +7,12 @@ $OS_SPEC = "windows"
 if($version_os -eq 64){
     $OS_VERSION = 'win64'
     $WHEEL_SPEC = 'win_amd64'
+    $NODE_URL = 'https://nodejs.org/download/release/v10.22.0/node-v10.22.0-win-x64.zip'
 }
 else{
     $OS_VERSION = 'win32'
     $WHEEL_SPEC = 'win32'
+    $NODE_URL = 'https://nodejs.org/download/release/v10.22.0/node-v10.22.0-win-x86.zip'
 }
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
@@ -28,11 +30,10 @@ $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 
 python -m pip install --upgrade setuptools wheel
 
-$nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $NNI_NODE_ZIP = "$CWD\node-$OS_SPEC.zip"
 $NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC"
 $unzipNodeDir = "node-v*"
-(New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
+(New-Object Net.WebClient).DownloadFile($NODE_URL, $NNI_NODE_ZIP)
 if(Test-Path $NNI_NODE_FOLDER){
     Remove-Item $NNI_NODE_FOLDER -Recurse -Force
 }

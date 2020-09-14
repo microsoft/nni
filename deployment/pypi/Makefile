@@ -4,9 +4,11 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
 	WHEEL_SPEC := manylinux1_x86_64
+	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-linux-x64.tar.xz
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 	WHEEL_SPEC := macosx_10_9_x86_64
+	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-darwin-x64.tar.xz
 else
 	$(error platform $(UNAME_S) not supported)
 endif
@@ -28,11 +30,11 @@ NNI_YARN := PATH=$(CWD)node-$(OS_SPEC)-x64/bin:$${PATH} $(NNI_YARN_FOLDER)/bin/y
 build:
 	# Building version $(NNI_VERSION_VALUE)
 	python3 -m pip install --user --upgrade setuptools wheel
-	wget -q https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
+	wget -q $(NODE_URL) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
 	rm -rf $(CWD)node-$(OS_SPEC)-x64
 	mkdir $(CWD)node-$(OS_SPEC)-x64
 	tar xf $(CWD)node-$(OS_SPEC)-x64.tar.xz -C node-$(OS_SPEC)-x64 --strip-components 1
-	wget -q https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
+	wget -q https://yarnpkg.com/latest.tar.gz -O $(NNI_YARN_TARBALL)
 	rm -rf $(NNI_YARN_FOLDER)
 	mkdir $(NNI_YARN_FOLDER)
 	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1
