@@ -1,5 +1,5 @@
 #################
-Model Compression
+Pruning
 #################
 
 NNI provides an easy-to-use toolkit to help user design and use compression algorithms.
@@ -15,13 +15,5 @@ For details, please refer to the following tutorials:
 ..  toctree::
     :maxdepth: 2
 
-    Overview <Compressor/Overview>
-    Quick Start <Compressor/QuickStart>
-    Pruning <pruning>
-    Quantizers <Compressor/Quantizer>
-    Automatic Model Compression <Compressor/AutoCompression>
-    Model Speedup <Compressor/ModelSpeedup>
-    Compression Utilities <Compressor/CompressionUtils>
-    Compression Framework <Compressor/Framework>
-    Customize Compression Algorithms <Compressor/CustomizeCompressor>
+    Pruners <Compressor/Pruner>
     Dependency Aware Mode <Compressor/DependencyAware>
