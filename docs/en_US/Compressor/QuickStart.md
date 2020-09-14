@@ -123,7 +123,7 @@ It means following the algorithm's default setting for compressed operations wit
 
 #### Quantization specific keys
 
-**If you use quantization algorithms, you need to specify more keys. If you use pruning algorithms, you can safely skip these keys**
+Besides the keys explained above, if you use quantization algorithms you need to specify more keys in `config_list`, which are explained below.
 
 * __quant_types__ : list of string. 
 
@@ -147,7 +147,8 @@ when the value is int type, all quantization types share same bits length. eg.
     quant_bits: 8, # weight or output quantization are all 8 bits
 }
 ```
-By using the quantization specific key 'quant_bits' along with the key 'op_names' in configuration specification, we can also quantize layers into different bits. eg.
+
+The following example shows a more complete `config_list`, it uses `op_names` (or `op_types`) to specify the target layers along with the quantization bits for those layers.
 ```
 configure_list = [{
         'quant_types': ['weight'],        
