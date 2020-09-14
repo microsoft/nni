@@ -1,6 +1,6 @@
-# Auto Completion
+# Auto Completion for nnictl Commands
 
-NNI's command line tool __nnictl__ support auto-completion, i.e., you can complete an nnictl command by pressing the `tab` key.
+NNI's command line tool __nnictl__ support auto-completion, i.e., you can complete a nnictl command by pressing the `tab` key.
 
 For example, if the current command is
 ```
