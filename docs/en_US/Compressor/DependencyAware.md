@@ -19,12 +19,12 @@ Take the dependency-aware mode of L1Filter Pruner as an example. Specifically, t
     - First, prune the same 20% of channels for `conv1` and `conv2` according to L1 norm sum of `conv1` and `conv2`. 
     - Second, the pruner will additionally prune 10% channels for `conv1` according to the L1 norm of each channel of `conv1`.
 
-In addition. for the convolutional layers that have more than one filter group, `dependency-aware pruner` will also try to prune the same number of the channels for each filter group. Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains(channel dependency, etc) to improve the final speed gain after the speedup process. 
+In addition, for the convolutional layers that have more than one filter group, `dependency-aware pruner` will also try to prune the same number of the channels for each filter group. Overall, this pruner will prune the model according to the L1 norm of each filter and try to meet the topological constrains(channel dependency, etc) to improve the final speed gain after the speedup process. 
 
 In the dependency-aware mode, the pruner will provide a better speed gain from the model pruning.
 
 ## Usage
-In this section, we will show how to enable the dependency-aware mode for the filter pruner. Currently, only the one-shot pruners such as :FPGM Pruner, L1Filter Pruner, L2Filter Pruner, Activation APoZ Rank Filter Pruner, Activation Mean Rank Filter Pruner, Taylor FO On Weight Pruner, support the dependency-aware mode.
+In this section, we will show how to enable the dependency-aware mode for the filter pruner. Currently, only the one-shot pruners such as FPGM Pruner, L1Filter Pruner, L2Filter Pruner, Activation APoZ Rank Filter Pruner, Activation Mean Rank Filter Pruner, Taylor FO On Weight Pruner, support the dependency-aware mode.
 
 To enable the dependency-aware mode for `L1FilterPruner`:
 ```python
