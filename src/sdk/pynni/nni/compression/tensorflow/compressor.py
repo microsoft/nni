@@ -42,9 +42,15 @@ class Compressor:
     def __init__(self, model, config_list, LayerWrapperClass):
         assert isinstance(model, tf.keras.Model)
         self.validate_config(model, config_list)
-        self._wrappers = {}
-        self.compressed_model = _instrument(model, config_list, LayerWrapperClass, self)
+
+        self._original_model = model
+        self._config_list = config_list
+        self._wrapper_class = LayerWrapperClass
+        self._wrappers = {}  # key: id(layer) , value: Wrapper(layer)
+
+        self.compressed_model = self._instrument(model)
         self.wrappers = list(self._wrappers.values())
+
         if not self.wrappers:
             _logger.warning('Nothing is configured to compress, please check your model and config list')
 
@@ -60,6 +66,67 @@ class Compressor:
         Compression algorithm should overload this function to validate configuration.
         """
         pass
+
+
+    def _instrument(self, layer):
+        if isinstance(layer, tf.keras.Sequential):
+            return self._instrument_sequential(layer)
+        if isinstance(layer, tf.keras.Model):
+            return self._instrument_model(layer)
+
+        # a layer can be referenced in multiple attributes of a model,
+        # but should only be instrumented once
+        if id(layer) in self._wrappers:
+            return self._wrappers[id(layer)]
+
+        config = self._select_config(layer)
+        if config is not None:
+            wrapper = self._wrapper_class(layer, config, self)
+            self._wrappers[id(layer)] = wrapper
+            return wrapper
+
+        return layer
+
+    def _instrument_sequential(self, seq):
+        layers = list(seq.layers)  # seq.layers is read-only property
+        need_rebuild = False
+        for i, layer in enumerate(layers):
+            new_layer = self._instrument(layer)
+            if new_layer is not layer:
+                layers[i] = new_layer
+                need_rebuild = True
+        return tf.keras.Sequential(layers) if need_rebuild else seq
+
+    def _instrument_model(self, model):
+        for key, value in list(model.__dict__.items()):  # avoid "dictionary keys changed during iteration"
+            if isinstance(value, tf.keras.layers.Layer):
+                new_layer = self._instrument(value)
+                if new_layer is not value:
+                    setattr(model, key, new_layer)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, tf.keras.layers.Layer):
+                        value[i] = self._instrument(item)
+        return model
+
+
+    def _select_config(self, layer):
+        # Find the last matching config block for given layer.
+        # Returns None if the layer should not be compressed.
+        layer_type = type(layer).__name__
+        last_match = None
+        for config in self._config_list:
+            if 'op_types' in config:
+                match = layer_type in config['op_types']
+                match_default = 'default' in config['op_types'] and layer_type in default_layers.weighted_modules
+                if not match and not match_default:
+                    continue
+            if 'op_names' in config and layer.name not in config['op_names']:
+                continue
+            last_match = config
+        if last_match is None or 'exclude' in last_match:
+            return None
+        return last_match
 
 
 class Pruner(Compressor):
@@ -187,63 +254,3 @@ class PrunerLayerWrapper(tf.keras.Model):
 #
 #    def on_train_batch_end(self, batch, logs=None):
 #        self._pruner.update_mask()
-
-
-def _instrument(layer, config_list, LayerWrapperClass, compressor):
-    if isinstance(layer, tf.keras.Sequential):
-        return _instrument_sequential(layer, config_list, LayerWrapperClass, compressor)
-    if isinstance(layer, tf.keras.Model):
-        return _instrument_model(layer, config_list, LayerWrapperClass, compressor)
-
-    if id(layer) in compressor._wrappers:
-        return compressor._wrappers[id(layer)]
-
-    config = _select_config(layer.name, type(layer).__name__, config_list)
-    if config is not None:
-        wrapper = LayerWrapperClass(layer, config, compressor)
-        compressor._wrappers[id(layer)] = wrapper
-        return wrapper
-
-    return layer
-
-
-def _instrument_sequential(seq, config_list, LayerWrapperClass, compressor):
-    layers = list(seq.layers)  # seq.layers is read-only property
-    need_rebuild = False
-    for i, layer in enumerate(layers):
-        new_layer = _instrument(layer, config_list, LayerWrapperClass, compressor)
-        if new_layer is not layer:
-            layers[i] = new_layer
-            need_rebuild = True
-    return tf.keras.Sequential(layers) if need_rebuild else seq
-
-
-def _instrument_model(model, config_list, LayerWrapperClass, compressor):
-    for key, value in list(model.__dict__.items()):  # avoid "dictionary keys changed during iteration"
-        if isinstance(value, tf.keras.layers.Layer):
-            new_layer = _instrument(value, config_list, LayerWrapperClass, compressor)
-            if new_layer is not value:
-                setattr(model, key, new_layer)
-        elif isinstance(value, list):
-            for i, item in enumerate(value):
-                if isinstance(item, tf.keras.layers.Layer):
-                    value[i] = _instrument(item, config_list, LayerWrapperClass, compressor)
-    return model
-
-
-def _select_config(layer_name, layer_type, config_list):
-    # Find the last matching config block for given layer.
-    # Returns None if the layer should not be compressed.
-    last_match = None
-    for config in config_list:
-        if 'op_types' in config:
-            match = layer_type in config['op_types']
-            match_default = 'default' in config['op_types'] and layer_type in default_layers.weighted_modules
-            if not match and not match_default:
-                continue
-        if 'op_names' in config and layer_name not in config['op_names']:
-            continue
-        last_match = config
-    if last_match is None or 'exclude' in last_match:
-        return None
-    return last_match
