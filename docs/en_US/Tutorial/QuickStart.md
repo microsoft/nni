@@ -27,6 +27,9 @@ python -m pip install --upgrade nni
 ```eval_rst
 .. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
 ```
+### Auto-Completion (Optional)
+
+After the installation, you may want to enable the auto-completion feature for __nnictl__ commands. Please refer to this [tutorial](../CommunitySharings/AutoCompletion.md).
 
 ## "Hello World" example on MNIST
 
