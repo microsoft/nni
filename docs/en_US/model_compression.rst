@@ -24,4 +24,3 @@ For details, please refer to the following tutorials:
     Compression Utilities <Compressor/CompressionUtils>
     Compression Framework <Compressor/Framework>
     Customize Compression Algorithms <Compressor/CustomizeCompressor>
-    Dependency Aware Mode <Compressor/DependencyAware>
