@@ -248,7 +248,7 @@ class EvolutionTuner(Tuner):
         """
 
         if self.num_running_trials >= self.population_size:
-            logger.debug('Credit added by one in parameters request')
+            logger.warning("No enough trial config, population_size is suggested to be larger than trialConcurrency")
             self.credit += 1
             self.param_ids.append(parameter_id)
             raise nni.NoMoreTrialError('no more parameters now.')
