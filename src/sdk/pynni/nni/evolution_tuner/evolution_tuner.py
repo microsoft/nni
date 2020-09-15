@@ -104,7 +104,8 @@ class EvolutionTuner(Tuner):
 
     def trial_end(self, parameter_id, success, **kwargs):
         """
-        To deal with trial failure. If a trial fails, readd the trial parameters into population.
+        To deal with trial failure. If a trial fails,
+        random generate the parameters and add into the population.
         Parameters
         ----------
         parameter_id : int
@@ -118,8 +119,9 @@ class EvolutionTuner(Tuner):
         logger.info('trial (%d) end', parameter_id)
 
         if not success:
-            indv = self.running_trials[parameter_id]
-            self.population.append(indv)
+            self.running_trials.pop(parameter_id)
+            self._random_generate_individual()
+
         if self.credit > 1:
             param_id = self.param_ids.popleft()
             config = self._generate_individual(param_id)
@@ -161,6 +163,14 @@ class EvolutionTuner(Tuner):
                 result.append(res)
         return result
 
+    def _random_generate_individual(self):
+        is_rand = dict()
+        for item in self.space:
+            is_rand[item] = True
+
+        config = json2parameter(self.searchspace_json, is_rand, self.random_state)
+        self.population.append(Individual(config=config))
+
     def _generate_individual(self, parameter_id):
         """
         This function will generate the config for a trial.
@@ -178,12 +188,13 @@ class EvolutionTuner(Tuner):
             A group of candaidte parameters that evolution tuner generated.
         """
         if not self.population:
-            is_rand = dict()
-            for item in self.space:
-                is_rand[item] = True
+            self._random_generate_individual()
+            # is_rand = dict()
+            # for item in self.space:
+            #     is_rand[item] = True
 
-            config = json2parameter(self.searchspace_json, is_rand, self.random_state)
-            self.population.append(Individual(config=config))
+            # config = json2parameter(self.searchspace_json, is_rand, self.random_state)
+            # self.population.append(Individual(config=config))
 
         pos = -1
 
@@ -211,7 +222,7 @@ class EvolutionTuner(Tuner):
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
 
-            if not self.population:
+            if len(self.population) > 1:
                 self.population.pop(1)
 
             indiv = Individual(config=config)
