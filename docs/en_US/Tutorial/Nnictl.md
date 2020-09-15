@@ -578,7 +578,7 @@ Debug mode will disable version check function in Trialkeeper.
   |--path, -p|  True| |the file path of nni package|
   |--codeDir, -c| True| |the path of codeDir for loaded experiment, this path will also put the code in the loaded experiment package|
   |--logDir, -l| False| |the path of logDir for loaded experiment|
-  |--searchSpacePath, -s| True| |the path of search space file for loaded experiment, this path contains file name.|
+  |--searchSpacePath, -s| True| |the path of search space file for loaded experiment, this path contains file name. Default in $codeDir/search_space.json|
 
   * Examples
 

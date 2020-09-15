@@ -828,14 +828,15 @@ def save_experiment(args):
         shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
 
     # Step4. Copy searchSpace file
-    search_space_path = nni_config.get_config('experimentConfig')['searchSpacePath']
-    if not os.path.exists(search_space_path):
-        print_error('search space %s does not exist!' % search_space_path)
-    else:
-        temp_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
-        os.makedirs(temp_search_space_dir, exist_ok=True)
-        search_space_name = os.path.basename(search_space_path)
-        shutil.copyfile(search_space_path, os.path.join(temp_search_space_dir, search_space_name))
+    search_space_path = nni_config.get_config('experimentConfig').get('searchSpacePath')
+    if search_space_path:
+        if not os.path.exists(search_space_path):
+            print_error('search space %s does not exist!' % search_space_path)
+        else:
+            temp_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
+            os.makedirs(temp_search_space_dir, exist_ok=True)
+            search_space_name = os.path.basename(search_space_path)
+            shutil.copyfile(search_space_path, os.path.join(temp_search_space_dir, search_space_name))
 
     # Step5. Archive folder
     zip_package_name = 'nni_experiment_%s' % args.id
@@ -854,7 +855,7 @@ def load_experiment(args):
     if not os.path.exists(args.path):
         print_error('file path %s does not exist!' % args.path)
         exit(1)
-    if os.path.isdir(args.searchSpacePath):
+    if args.searchSpacePath and os.path.isdir(args.searchSpacePath):
         print_error('search space path should be a full path with filename, not a directory!')
         exit(1)
     temp_root_dir = generate_temp_dir()
@@ -944,7 +945,11 @@ def load_experiment(args):
 
     # Step5. Copy searchSpace file
     archive_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
-    target_path = os.path.expanduser(args.searchSpacePath)
+    if args.searchSpacePath:
+        target_path = os.path.expanduser(args.searchSpacePath)
+    else:
+        # set default path to codeDir
+        target_path = os.path.join(codeDir, 'search_space.json')
     if not os.path.isabs(target_path):
         target_path = os.path.join(os.getcwd(), target_path)
         print_normal('Expand search space path to %s' % target_path)
@@ -960,6 +965,8 @@ def load_experiment(args):
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
                 shutil.copyfile(source_path, target_path)
                 break
+    elif not args.searchSpacePath:
+        print_warning('%s exist, will not load search_space file' % target_path)
 
     # Step6. Create experiment metadata
     nni_config.set_config('experimentConfig', nnictl_exp_config)
