@@ -137,7 +137,6 @@ class EvolutionTuner(Tuner):
         ----------
         parameter_id_list : list of int
             Unique identifiers for each set of requested hyper-parameters.
-            These will later be used in :meth:`receive_trial_result`.
         **kwargs
             Not used
         Returns
