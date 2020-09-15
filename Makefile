@@ -12,12 +12,12 @@ _END := $(shell echo -e '\033[0m')
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
     OS_SPEC := linux
-	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-linux-x64.tar.xz
+    NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-linux-x64.tar.xz
 else ifeq ($(UNAME_S), Darwin)
     OS_SPEC := darwin
-	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-darwin-x64.tar.xz
+    NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.0-darwin-x64.tar.xz
 else
-	$(error platform $(UNAME_S) not supported)
+    $(error platform $(UNAME_S) not supported)
 endif
 
 ## Install directories
