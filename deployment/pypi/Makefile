@@ -34,7 +34,7 @@ build:
 	rm -rf $(CWD)node-$(OS_SPEC)-x64
 	mkdir $(CWD)node-$(OS_SPEC)-x64
 	tar xf $(CWD)node-$(OS_SPEC)-x64.tar.xz -C node-$(OS_SPEC)-x64 --strip-components 1
-	wget -q https://yarnpkg.com/latest.tar.gz -O $(NNI_YARN_TARBALL)
+	wget -q https://github.com/yarnpkg/yarn/releases/download/v1.22.5/yarn-v1.22.5.tar.gz -O $(NNI_YARN_TARBALL)
 	rm -rf $(NNI_YARN_FOLDER)
 	mkdir $(NNI_YARN_FOLDER)
 	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1

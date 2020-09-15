@@ -149,7 +149,7 @@ $(NNI_NODE_TARBALL):
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	wget https://yarnpkg.com/latest.tar.gz -O $(NNI_YARN_TARBALL)
+	wget https://github.com/yarnpkg/yarn/releases/download/v1.22.5/yarn-v1.22.5.tar.gz -O $(NNI_YARN_TARBALL)
 
 .PHONY: install-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)

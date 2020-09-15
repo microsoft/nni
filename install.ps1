@@ -14,7 +14,7 @@ else {
     $nodeUrl = "https://nodejs.org/download/release/v10.22.0/node-v10.22.0-win-x86.zip"
 }
 # nodejs
-$yarnUrl = "https://yarnpkg.com/latest.tar.gz"
+$yarnUrl = "https://github.com/yarnpkg/yarn/releases/download/v1.22.5/yarn-v1.22.5.tar.gz"
 $unzipNodeDir = "node-v*"
 $unzipYarnDir = "yarn-v*"
 
