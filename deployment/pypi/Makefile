@@ -37,7 +37,7 @@ build:
 	mkdir $(NNI_YARN_FOLDER)
 	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1
 	cd $(CWD)../../src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
-	cd $(CWD)../../src/webui && $(NNI_YARN) --ignore-engines && $(NNI_YARN) build
+	cd $(CWD)../../src/webui && $(NNI_YARN) && $(NNI_YARN) build
 	cd $(CWD)../../src/nasui && $(NNI_YARN) && $(NNI_YARN) build
 	rm -rf $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni

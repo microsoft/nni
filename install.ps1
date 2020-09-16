@@ -149,7 +149,7 @@ Copy-Item config -Destination .\dist\ -Recurse -Force
 # Building WebUI
 # office-ui-fabric-react need longer time. the 180000 is in ms, mean 180 seconds, longer than default 30 seconds.
 cd ..\webui
-cmd /c $NNI_YARN --ignore-engines --network-timeout 180000
+cmd /c $NNI_YARN --network-timeout 180000
 cmd /c $NNI_YARN build
 # Building NasUI
 cd ..\nasui

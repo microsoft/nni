@@ -46,7 +46,7 @@ yarn
 yarn build
 Copy-Item config -Destination .\dist\ -Recurse -Force
 cd $CWD\..\..\src\webui
-yarn --ignore-engines
+yarn
 yarn build
 cd $CWD\..\..\src\nasui
 yarn
