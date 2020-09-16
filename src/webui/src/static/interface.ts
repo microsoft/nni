@@ -33,6 +33,7 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
+    intermediates: (MetricDataRecord | undefined)[];
     parameters(axes: MultipleAxes): Map<SingleAxis, any>; 
     metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }

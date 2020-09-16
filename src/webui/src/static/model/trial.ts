@@ -39,7 +39,7 @@ function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: str
 class Trial implements TableObj {
     private metricsInitialized: boolean = false;
     private infoField: TrialJobInfo | undefined;
-    private intermediates: (MetricDataRecord | undefined)[] = [];
+    public intermediates: (MetricDataRecord | undefined)[] = [];
     public final: MetricDataRecord | undefined;
     private finalAcc: number | undefined;
 

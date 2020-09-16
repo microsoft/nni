@@ -160,8 +160,8 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                             <Stack horizontal horizontalAlign="end" className="allList">
                                 <DefaultButton
                                     className="allList-button-gap"
-                                    text="Add column"
-                                    onClick={(): void => { if (this.tableList) { this.tableList.addColumn(); } }}
+                                    text="Customize columns"
+                                    onClick={(): void => { if (this.tableList) { this.tableList.customizeColumn(); } }}
                                 />
                                 <Dropdown
                                     selectedKey={searchType}
@@ -185,7 +185,6 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                         tableSource={source}
                         // columnList={columnList}
                         changeColumn={changeColumn}
-                        searchSpace={EXPERIMENT.searchSpaceNew}
                         trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
                         // TODO: change any to specific type
                         ref={(tabList): any => this.tableList = tabList}
