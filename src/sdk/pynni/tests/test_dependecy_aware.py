@@ -111,12 +111,14 @@ class DependencyawareTest(TestCase):
         for model_name in model_zoo:
             for pruner in pruners:
                 Model = getattr(models, model_name)
-                net = Model(pretrained=True, progress=False)
-                CFGs = []
-                CFGs.append(generate_random_sparsity(net))
-                CFGs.append(generate_random_sparsity_v2(net))
-                for cfg_list in CFGs:
+                cfg_generator = [generate_random_sparsity, generate_random_sparsity_v2]
+                for _generator in cfg_generator:
+                    net = Model(pretrained=True, progress=False)
+                    cfg_list = _generator(net)
 
+                    print('\n\nModel:', model_name)
+                    print('Pruner', pruner)
+                    print('Config_list:', cfg_list)
                     # for the pruners that based on the activations, we need feed
                     # enough data before we call the compress function.
                     optimizer = torch.optim.SGD(net.parameters(), lr=0.0001,
