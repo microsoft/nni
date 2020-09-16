@@ -4,6 +4,7 @@
 import ast
 import astor
 
+from .utils import ast_Num, ast_Str
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -37,13 +38,13 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
                 for call in value.elts:
                     assert type(call) is ast.Call, 'Element in layer_choice should be function call'
                     call_name = astor.to_source(call).strip()
-                    call_funcs_keys.append(ast.Str(s=call_name))
+                    call_funcs_keys.append(ast_Str(s=call_name))
                     call_funcs_values.append(call.func)
                     assert not call.args, 'Number of args without keyword should be zero'
                     kw_args = []
                     kw_values = []
                     for kw in call.keywords:
-                        kw_args.append(ast.Str(s=kw.arg))
+                        kw_args.append(ast_Str(s=kw.arg))
                         kw_values.append(kw.value)
                     call_kwargs_values.append(ast.Dict(keys=kw_args, values=kw_values))
                 call_funcs = ast.Dict(keys=call_funcs_keys, values=call_funcs_values)
@@ -57,12 +58,12 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
             elif k.id == 'optional_inputs':
                 assert not fields['optional_inputs'], 'Duplicated field: optional_inputs'
                 assert type(value) is ast.List, 'Value of optional_inputs should be a list'
-                var_names = [ast.Str(s=astor.to_source(var).strip()) for var in value.elts]
+                var_names = [ast_Str(s=astor.to_source(var).strip()) for var in value.elts]
                 optional_inputs = ast.Dict(keys=var_names, values=value.elts)
                 fields['optional_inputs'] = True
             elif k.id == 'optional_input_size':
                 assert not fields['optional_input_size'], 'Duplicated field: optional_input_size'
-                assert type(value) is ast.Num or type(value) is ast.List, \
+                assert type(value) is ast_Num or type(value) is ast.List, \
                     'Value of optional_input_size should be a number or list'
                 optional_input_size = value
                 fields['optional_input_size'] = True
@@ -79,8 +80,8 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
         mutable_layer_id = 'mutable_layer_' + str(mutable_layer_cnt)
         mutable_layer_cnt += 1
         target_call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='mutable_layer', ctx=ast.Load())
-        target_call_args = [ast.Str(s=mutable_id),
-                            ast.Str(s=mutable_layer_id),
+        target_call_args = [ast_Str(s=mutable_id),
+                            ast_Str(s=mutable_layer_id),
                             call_funcs,
                             call_kwargs]
         if fields['fixed_inputs']:
@@ -93,8 +94,8 @@ def parse_annotation_mutable_layers(code, lineno, nas_mode):
             target_call_args.append(optional_input_size)
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
-            target_call_args.append(ast.Num(n=0))
-        target_call_args.append(ast.Str(s=nas_mode))
+            target_call_args.append(ast_Num(n=0))
+        target_call_args.append(ast_Str(s=nas_mode))
         if nas_mode in ['enas_mode', 'oneshot_mode', 'darts_mode']:
             target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
@@ -151,7 +152,7 @@ def parse_nni_variable(code):
     assert arg.func.value.id == 'nni', 'nni.variable value is not a NNI function'
 
     name_str = astor.to_source(name).strip()
-    keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
+    keyword_arg = ast.keyword(arg='name', value=ast_Str(s=name_str))
     arg.keywords.append(keyword_arg)
     if arg.func.attr == 'choice':
         convert_args_to_dict(arg)
@@ -169,7 +170,7 @@ def parse_nni_function(code):
     convert_args_to_dict(call, with_lambda=True)
 
     name_str = astor.to_source(name).strip()
-    call.keywords[0].value = ast.Str(s=name_str)
+    call.keywords[0].value = ast_Str(s=name_str)
 
     return call, funcs
 
@@ -180,12 +181,12 @@ def convert_args_to_dict(call, with_lambda=False):
     """
     keys, values = list(), list()
     for arg in call.args:
-        if type(arg) in [ast.Str, ast.Num]:
+        if type(arg) in [ast_Str, ast_Num]:
             arg_value = arg
         else:
             # if arg is not a string or a number, we use its source code as the key
             arg_value = astor.to_source(arg).strip('\n"')
-            arg_value = ast.Str(str(arg_value))
+            arg_value = ast_Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
         keys.append(arg_value)
         values.append(arg)
@@ -209,7 +210,7 @@ def test_variable_equal(node1, node2):
         return False
     if isinstance(node1, ast.AST):
         for k, v in vars(node1).items():
-            if k in ('lineno', 'col_offset', 'ctx'):
+            if k in ('lineno', 'col_offset', 'ctx', 'end_lineno', 'end_col_offset'):
                 continue
             if not test_variable_equal(v, getattr(node2, k)):
                 return False
@@ -282,7 +283,7 @@ class Transformer(ast.NodeTransformer):
         annotation = self.stack[-1]
 
         # this is a standalone string, may be an annotation
-        if type(node) is ast.Expr and type(node.value) is ast.Str:
+        if type(node) is ast.Expr and type(node.value) is ast_Str:
             # must not annotate an annotation string
             assert annotation is None, 'Annotating an annotation'
             return self._visit_string(node)
@@ -306,7 +307,7 @@ class Transformer(ast.NodeTransformer):
         if string.startswith('@nni.training_update'):
             expr = parse_annotation(string[1:])
             call_node = expr.value
-            call_node.args.insert(0, ast.Str(s=self.nas_mode))
+            call_node.args.insert(0, ast_Str(s=self.nas_mode))
             return expr
 
         if string.startswith('@nni.report_intermediate_result') \
