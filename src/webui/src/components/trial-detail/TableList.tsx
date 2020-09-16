@@ -11,7 +11,7 @@ import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { SearchSpace, TableObj, TrialJobInfo, MultipleAxes } from '../../static/interface';
-import Details from '../overview/Details';
+import ExpandableDetails from '../public-child/ExpandableDetails';
 import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
 import Compare from '../Modals/Compare';
 import KillJob from '../Modals/Killjob';
@@ -54,6 +54,7 @@ interface SortInfo {
 
 interface TableListState {
     displayedTrials: TableObj[];
+    expandedIds: string[];
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -62,7 +63,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         super(props);
 
         this.state = {
-            displayedTrials: props.tableSource
+            displayedTrials: props.tableSource,  // TODO: pagination and sorting
+            expandedIds: []
         };
     }
 
@@ -111,8 +113,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const columns: IColumn[] = [{
             key: 'expand',
             name: '',
-            onRender: () => {
-                return <Icon aria-hidden={true} iconName="ChevronDown" />
+            onRender: (item, index, column) => {
+                return <Icon aria-hidden={true} iconName="ChevronDown"
+                    onClick={(event) => {
+                        event.preventDefault();
+                        this.setState({
+                            expandedIds: [...this.state.expandedIds, item.id]
+                        });
+                    }} />
             },
             fieldName: 'expand',
             isResizable: false,
@@ -149,6 +157,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: 'all', text: 'All items' },
         ];
         const { tableSource } = this.props;
+        const { expandedIds } = this.state;
 
         const items = this.trialsToTableItems(tableSource);
         const columns = this.buildColumnsFromTableItems(items);
@@ -164,8 +173,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         items={items}
                         compact={true}
                         selectionMode={SelectionMode.multiple}
+                        onRenderRow={(props) => {
+                            return <ExpandableDetails detailsProps={props!}
+                                isExpand={expandedIds.includes(props!.item.id)} />;
+                        }}
                     />
-{/* 
+                    {/* 
                     <Stack horizontal horizontalAlign="end" verticalAlign="baseline" styles={{ root: { padding: 10 } }} tokens={horizontalGapStackTokens}>
                         <Dropdown
                             selectedKey={this.state.perPage === this.props.tableSource.length ? 'all' : String(this.state.perPage)}
