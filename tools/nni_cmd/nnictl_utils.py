@@ -831,7 +831,7 @@ def save_experiment(args):
     search_space_path = nni_config.get_config('experimentConfig').get('searchSpacePath')
     if search_space_path:
         if not os.path.exists(search_space_path):
-            print_error('search space %s does not exist!' % search_space_path)
+            print_warning('search space %s does not exist!' % search_space_path)
         else:
             temp_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
             os.makedirs(temp_search_space_dir, exist_ok=True)
