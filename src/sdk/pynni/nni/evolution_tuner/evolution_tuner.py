@@ -102,6 +102,9 @@ class EvolutionTuner(Tuner):
         self.random_state = np.random.RandomState()
         self.population = []
 
+        for _ in range(self.population_size):
+            self._random_generate_individual()
+
     def trial_end(self, parameter_id, success, **kwargs):
         """
         To deal with trial failure. If a trial fails,
@@ -186,15 +189,6 @@ class EvolutionTuner(Tuner):
         dict
             A group of candaidte parameters that evolution tuner generated.
         """
-        if not self.population:
-            self._random_generate_individual()
-            # is_rand = dict()
-            # for item in self.space:
-            #     is_rand[item] = True
-
-            # config = json2parameter(self.searchspace_json, is_rand, self.random_state)
-            # self.population.append(Individual(config=config))
-
         pos = -1
 
         for i in range(len(self.population)):
@@ -246,6 +240,8 @@ class EvolutionTuner(Tuner):
         dict
             One newly generated configuration.
         """
+        if not self.population:
+            raise RuntimeError('The population is empty')
 
         if self.num_running_trials >= self.population_size:
             logger.warning("No enough trial config, population_size is suggested to be larger than trialConcurrency")
