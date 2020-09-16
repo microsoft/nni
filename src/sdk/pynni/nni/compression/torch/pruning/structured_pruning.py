@@ -556,7 +556,7 @@ class ActivationAPoZRankFilterPrunerMasker(ActivationFilterPrunerMasker):
     https://arxiv.org/abs/1607.03250
     """
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks):
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
         apoz = self.get_channel_sum(wrapper, wrapper_idx)
         if apoz is None:
             # the collected activations are not enough
