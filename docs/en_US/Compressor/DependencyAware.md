@@ -98,3 +98,10 @@ dummy_input = torch.ones(1, 3, 224, 224).cuda()
 pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
 pruner.compress()
 ```
+
+## Evaluation
+In order to compare the performance of the pruner with or without the dependency-aware mode, we use L1FilterPruner to prune the Mobilenet_v2 separately when the dependency-aware mode is turned on and off. To simplify the experiment, we use the uniform pruning which means we allocate the same sparsity for all convolutional layers in the model.
+We trained a Mobilenet_v2 model on the cifar10 dataset and prune the model based on this pretrained checkpoint. The following figure shows the accuracy and FLOPs of the model pruned by different pruners.
+![](../../img/mobilev2_l1_cifar.jpg)
+
+In the figure, the `Dependency-aware` represents the L1FilterPruner with dependency-aware mode enabled. `L1 Filter` is the normal `L1FilterPruner` without the dependency-aware mode, and the `No-Dependency` means  pruner only prunes the layers that has no channel dependency with other layers. As we can see in the figure, when the dependency-aware mode enabled, the pruner can bring higher accuracy under the same Flops.
