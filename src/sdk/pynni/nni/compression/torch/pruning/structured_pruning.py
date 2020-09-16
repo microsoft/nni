@@ -194,6 +194,8 @@ class StructuredWeightMasker(WeightMasker):
         # by the layer with the max groups.
 
         # should use the least common multiple for all the groups
+        # the max_group is lower than the channel_count, because
+        # the number of the filter is always divisible by the number of the group
         max_group = np.lcm.reduce(groups)
         channel_count = wrappers[0].module.weight.data.size(0)
         device = wrappers[0].module.weight.device
