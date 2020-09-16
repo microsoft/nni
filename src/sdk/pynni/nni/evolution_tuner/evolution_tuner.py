@@ -205,6 +205,7 @@ class EvolutionTuner(Tuner):
             if len(self.population) > 1 and self.population[0].result < self.population[1].result:
                 self.population[0] = self.population[1]
 
+            # mutation on the worse individual
             space = json2space(self.searchspace_json,
                                self.population[0].config)
             is_rand = dict()
