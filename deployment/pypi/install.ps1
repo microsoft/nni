@@ -7,12 +7,12 @@ $OS_SPEC = "windows"
 if($version_os -eq 64){
     $OS_VERSION = 'win64'
     $WHEEL_SPEC = 'win_amd64'
-    $NODE_URL = 'https://nodejs.org/download/release/v10.22.0/node-v10.22.0-win-x64.zip'
+    $NODE_URL = 'https://nodejs.org/download/release/v10.22.1/node-v10.22.1-win-x64.zip'
 }
 else{
     $OS_VERSION = 'win32'
     $WHEEL_SPEC = 'win32'
-    $NODE_URL = 'https://nodejs.org/download/release/v10.22.0/node-v10.22.0-win-x86.zip'
+    $NODE_URL = 'https://nodejs.org/download/release/v10.22.1/node-v10.22.1-win-x86.zip'
 }
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
