@@ -177,7 +177,7 @@ class _StructuredFilterPruner(OneshotPruner):
     def update_mask(self):
         if not self.dependency_aware:
             # if we use the normal way to update the mask,
-            # then call the updata_mask of the father class
+            # then call the update_mask of the father class
             super(_StructuredFilterPruner, self).update_mask()
         else:
             # if we update the mask in a dependency-aware way
@@ -201,11 +201,16 @@ class _StructuredFilterPruner(OneshotPruner):
 
         Parameters
         ----------
-        wrappers : list
+        wrappers: list
             The list of the wrappers that in the same channel dependency
             set.
-        wrappers_idx : list
+        wrappers_idx: list
             The list of the indexes of wrapppers.
+        Returns
+        -------
+        masks: dict
+            A dict object that contains the masks of the layers in this
+            dependency group, the key is the name of the convolutional layers.
         """
         # The number of the groups for each conv layers
         # Note that, this number may be different from its
@@ -226,9 +231,9 @@ class _StructuredFilterPruner(OneshotPruner):
     def _dependency_update_mask(self):
         """
         In the original update_mask, the wraper of each layer will update its
-        mask own mask according to the sparsity specified in the config_list. However, in
+        own mask according to the sparsity specified in the config_list. However, in
         the _dependency_update_mask, we may prune several layers at the same
-        time according the sparsities and the channel/group depedencies.
+        time according the sparsities and the channel/group dependencies.
         """
         name2wrapper = {x.name: x for x in self.get_modules_wrapper()}
         wrapper2index = {x: i for i, x in enumerate(self.get_modules_wrapper())}

@@ -68,9 +68,12 @@ class StructuredWeightMasker(WeightMasker):
             # in the dependency-aware way
             return self._dependency_calc_mask(sparsity, wrapper, wrapper_idx, **depen_kwargs)
 
-    def _normal_calc_mask(self, sparsity, wrapper, wrapper_idx=None, channel_masks=None):
+    def _get_current_state(self, sparsity, wrapper, wrapper_idx=None):
         """
-        Calculate the mask of given layer.
+        Some pruner may prune the layers in a iterative way. In each pruning iteration,
+        we may get the current state of this wrapper/layer, and continue to prune this layer
+        based on the current state. This function is to get the current pruning state of the
+        target wrapper/layer.
         Parameters
         ----------
         sparsity: float
@@ -79,15 +82,16 @@ class StructuredWeightMasker(WeightMasker):
             layer wrapper of this layer
         wrapper_idx: int
             index of this wrapper in pruner's all wrappers
-        channel_masks: Tensor
-            channel_mask indicates the channels that we should at least mask.
-            the finnal masked channels should include these channels.             
         Returns
         -------
-        dict
-            dictionary for storing masks, keys of the dict:
-            'weight_mask':  weight mask tensor
-            'bias_mask': bias mask tensor (optional)
+        base_mask: dict
+            dict object that stores the mask of this wrapper in this iteration, if it is the
+            first iteration, then we create a new mask with all ones. If there is already a
+            mask in this wrapper, then we return the existing mask.
+        weight: tensor
+            the current weight of this layer
+        num_prune: int
+            how many filters we should prune
         """
         msg = 'module type {} is not supported!'.format(wrapper.type)
         assert wrapper.type == 'Conv2d', msg
@@ -119,11 +123,34 @@ class StructuredWeightMasker(WeightMasker):
                 num_preserve = int(math.floor(
                     num_total * 1. / self.preserve_round) * self.preserve_round)
             num_prune = num_total - num_preserve
+        # weight*mask_weight: apply base mask for iterative pruning
+        return mask, weight * mask_weight, num_prune
 
+    def _normal_calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        """
+        Calculate the mask of given layer.
+        Parameters
+        ----------
+        sparsity: float
+            pruning ratio,  preserved weight ratio is `1 - sparsity`
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
+        wrapper_idx: int
+            index of this wrapper in pruner's all wrappers
+        Returns
+        -------
+        dict
+            dictionary for storing masks, keys of the dict:
+            'weight_mask':  weight mask tensor
+            'bias_mask': bias mask tensor (optional)
+        """
+        mask, weight, num_prune = self._get_current_state(
+            sparsity, wrapper, wrapper_idx)
+        num_total = weight.size(0)
         if num_total < 2 or num_prune < 1:
             return mask
-        # weight*mask_weight: apply base mask for iterative pruning
-        return self.get_mask(mask, weight*mask_weight, num_prune, wrapper, wrapper_idx, channel_masks)
+
+        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx)
 
     def _common_channel_to_prune(self, sparsities, wrappers, wrappers_idx, channel_dsets, groups):
         """
@@ -165,7 +192,9 @@ class StructuredWeightMasker(WeightMasker):
         # find the max number of the filter groups of the dependent
         # layers. The group constraint of this dependency set is decided
         # by the layer with the max groups.
-        max_group = max(groups)
+
+        # should use the least common multiple for all the groups
+        max_group = np.lcm.reduce(groups)
         channel_count = wrappers[0].module.weight.data.size(0)
         device = wrappers[0].module.weight.device
         channel_sum = torch.zeros(channel_count).to(device)
@@ -228,7 +257,8 @@ class StructuredWeightMasker(WeightMasker):
         wrappers_idx : list
             The indexes of the wrappers
         """
-        channel_masks = self._common_channel_to_prune(sparsities, wrappers, wrappers_idx, channel_dsets, groups)
+        channel_masks = self._common_channel_to_prune(
+            sparsities, wrappers, wrappers_idx, channel_dsets, groups)
         # calculate the mask for each layer based on channel_masks, first
         # every layer will prune the same channels masked in channel_masks.
         # If the sparsity of a layers is larger than min_sparsity, then it
@@ -239,9 +269,17 @@ class StructuredWeightMasker(WeightMasker):
             _w_idx = wrappers_idx[_pos]
             sparsity = sparsities[_pos]
             name = _w.name
-            # _tmp_mask = self.get_mask(_w, _w_idx, channel_masks)
-            _tmp_mask = self._normal_calc_mask(
-                sparsity, _w, _w_idx, channel_masks)
+
+            # _tmp_mask = self._normal_calc_mask(
+            #     sparsity, _w, _w_idx, channel_masks)
+            base_mask, current_weight, num_prune = self._get_current_state(
+                sparsity, _w, _w_idx)
+            num_total = current_weight.size(0)
+            if num_total < 2 or num_prune < 1:
+                return base_mask
+            _tmp_mask = self.get_mask(
+                base_mask, current_weight, num_prune, _w, _w_idx, channel_masks)
+
             if _tmp_mask is None:
                 # if the mask calculation fails
                 return None
