@@ -4,11 +4,11 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
 	WHEEL_SPEC := manylinux1_x86_64
-	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.1-linux-x64.tar.xz
+	NODE_URL := https://nodejs.org/dist/v10.22.1/node-v10.22.1-linux-x64.tar.xz
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 	WHEEL_SPEC := macosx_10_9_x86_64
-	NODE_URL := https://nodejs.org/dist/latest-v10.x/node-v10.22.1-darwin-x64.tar.xz
+	NODE_URL := https://nodejs.org/dist/v10.22.1/node-v10.22.1-darwin-x64.tar.xz
 else
 	$(error platform $(UNAME_S) not supported)
 endif
