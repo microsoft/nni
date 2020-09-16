@@ -110,7 +110,7 @@ nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 
 ### Configure python environment
 
-By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use `preCommand` to specify a python environment on your remote machine. 
+By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use __preCommand__ to specify a python environment on your remote machine. 
 
 Use `examples/trials/mnist-tfv2` as the example. Below is content of `examples/trials/mnist-tfv2/config_remote.yml`:
 
@@ -149,7 +149,7 @@ machineList:
     preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
 ```
 
-The `preCommand` will be executed before the remote machine executes other commands. So you can configure python environment path like this:
+The __preCommand__ will be executed before the remote machine executes other commands. So you can configure python environment path like this:
 
 ```yaml
 # Linux remote machine
@@ -182,4 +182,4 @@ If there are multiple commands want to execute, you can use `&&` to connect thes
 preCommand: command1 && command2 && command3
 ```
 
-
+__Note__: Because __preCommand__ will execute before other commands each time, it is strongly not recommended to set __preCommand__ that will make changes to system, i.e. `mkdir` or `touch`.

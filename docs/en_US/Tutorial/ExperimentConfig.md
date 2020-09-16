@@ -590,6 +590,8 @@ Optional. String.
 
 Specifies the pre-command that will be executed before the remote machine executes other commands. Users can configure the experimental environment on remote machine by setting __preCommand__. If there are multiple commands need to execute, use `&&` to connect them, such as `preCommand: command1 && command2 && ...`.
 
+__Note__: Because __preCommand__ will execute before other commands each time, it is strongly not recommended to set __preCommand__ that will make changes to system, i.e. `mkdir` or `touch`.
+
 ### kubeflowConfig
 
 #### operator
