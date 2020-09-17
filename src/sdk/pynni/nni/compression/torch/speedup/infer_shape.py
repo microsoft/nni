@@ -243,6 +243,10 @@ infer_from_inshape = {
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask),
     'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
     'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
+    # mul has the similar behaviour with add, they both request
+    # the input tesors to have the same shape
+    'aten::mul': lambda module_mask, mask: add_inshape(module_mask, mask),
+    'aten::mul_': lambda module_mask, mask: add_inshape(module_mask, mask),
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
