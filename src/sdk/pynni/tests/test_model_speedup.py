@@ -221,7 +221,7 @@ class SpeedupTestCase(TestCase):
             ms = ModelSpeedup(speedup_model, data, MASK_FILE)
             ms.speedup_model()
 
-            #speedup_model.eval()
+            speedup_model.eval()
 
             ori_out = net(data)
             speeded_out = speedup_model(data)

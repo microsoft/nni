@@ -140,7 +140,10 @@ class ModelSpeedup:
                 raise RuntimeError(
                     "Has not supported infering input shape from output shape for module/function: `{}`, {}"
                     .format(m_type, module_name))
-            input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
+            if m_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape']:
+                input_cmask = infer_from_outshape[m_type](module_masks, out_shape, self.torch_graph.name_to_node[module_name].auxiliary)
+            else:
+                input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
             predecessors = self.torch_graph.find_predecessors(module_name)

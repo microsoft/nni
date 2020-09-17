@@ -294,7 +294,9 @@ infer_from_outshape = {
 
     'aten::add_': lambda module_masks, mask: add_outshape(module_masks, mask),
     'aten::add': lambda module_mask, mask: add_outshape(module_mask, mask),
-    'aten::flatten': lambda module_mask, mask: flatten_outshape(module_mask, mask),
+    'aten::flatten': lambda module_mask, mask, shape: view_outshape(module_mask, mask, shape),
+    'aten::view': lambda module_masks, mask, shape: view_outshape(module_masks, mask, shape),
+    'aten::reshape': lambda module_masks, mask, shape: view_outshape(module_masks, mask, shape),
 }
 
 def dropout_inshape(module_masks, mask):
@@ -418,13 +420,17 @@ def add_inshape(module_masks, mask):
 
 def add_outshape(module_masks, mask):
     """
-    Inference the output mask of the add operation from the
-    input mask.
+    Inference the input mask of the add operation from the
+    output mask.
     """
     assert isinstance(mask, CoarseMask)
 
-    # no conflict for add to infer inshape from outshape
-    module_masks.set_output_mask(mask)
+    if module_masks.output_mask is None:
+        module_masks.set_output_mask(mask)
+        module_masks.set_input_mask(mask)
+        return mask
+    else:
+        assert mask == module_masks.output_mask
     return mask
 
 def batchnorm2d_inshape(module_masks, mask):
@@ -556,7 +562,32 @@ def view_inshape(module_masks, mask, shape):
     module_masks.set_output_mask(output_cmask)
     return output_cmask
 
-def flatten_outshape(module_masks, mask):
+def view_outshape(module_masks, mask, shape):
+    """
+    Parameters
+    ----------
+    module_masks : ModuleMasks
+        The ModuleMasks instance of the ```flatten``` op
+    mask : CoarseMask
+        The mask of its input tensor
+    shape : dict
+        Original shape of its input and output tensors
+    Returns
+    -------
+    CoarseMask
+        The mask of its output tensor
+    """
+    # NOTE: the case constrained by the following four asserts
+    assert shape['in_shape'][0] == shape['out_shape'][0]
+    assert len(shape['in_shape']) == 4
+    assert len(shape['out_shape']) == 2
+    assert shape['out_shape'][1] == shape['in_shape'][1] * \
+        shape['in_shape'][2]*shape['in_shape'][3]
+
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+
     return mask
 
 def size_inshape(module_masks, mask):
@@ -655,8 +686,8 @@ def relu_inshape(module_masks, mask):
     """
     assert isinstance(mask, CoarseMask)
     if module_masks.input_mask is not None:
-        # check if has a mask conflict
-        assert module_masks.input_mask <= mask
+        # mask conflict should be solved before speedup
+        assert module_masks.input_mask == mask
     # assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
@@ -677,6 +708,11 @@ def relu_outshape(module_masks, mask):
         The mask of its output tensor
     """
     assert isinstance(mask, CoarseMask)
+    if module_masks.output_mask is not None:
+        # mask conflict should be solved before speedup
+        assert module_masks.output_mask == mask
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
     return mask
 
 def batchnorm2d_mask(module_masks, mask):
