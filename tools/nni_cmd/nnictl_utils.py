@@ -380,9 +380,9 @@ def log_trial(args):
         if response and check_response(response):
             content = json.loads(response.text)
             for trial in content:
-                trial_id_list.append(trial.get('id'))
+                trial_id_list.append(trial.get('trialJobId'))
                 if trial.get('logPath'):
-                    trial_id_path_dict[trial.get('id')] = trial['logPath']
+                    trial_id_path_dict[trial.get('trialJobId')] = trial['logPath']
     else:
         print_error('Restful server is not running...')
         exit(1)
@@ -664,7 +664,7 @@ def show_experiment_info():
                 content = json.loads(response.text)
                 for index, value in enumerate(content):
                     content[index] = convert_time_stamp_to_date(value)
-                    print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), \
+                    print(TRIAL_MONITOR_CONTENT % (content[index].get('trialJobId'), content[index].get('startTime'), \
                           content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
@@ -737,7 +737,7 @@ def export_trials_data(args):
                 return
             intermediate_results = groupby_trial_id(json.loads(intermediate_results_response.text))
             for record in content:
-                record['intermediate'] = intermediate_results[record['id']]
+                record['intermediate'] = intermediate_results[record['trialJobId']]
         if args.type == 'json':
             with open(args.path, 'w') as file:
                 file.write(json.dumps(content))
@@ -749,9 +749,9 @@ def export_trials_data(args):
                     formated_record['intermediate'] = '[' + ','.join(record['intermediate']) + ']'
                 record_value = json.loads(record['value'])
                 if not isinstance(record_value, (float, int)):
-                    formated_record.update({**record['parameter'], **record_value, **{'id': record['id']}})
+                    formated_record.update({**record['parameter'], **record_value, **{'trialJobId': record['trialJobId']}})
                 else:
-                    formated_record.update({**record['parameter'], **{'reward': record_value, 'id': record['id']}})
+                    formated_record.update({**record['parameter'], **{'reward': record_value, 'trialJobId': record['trialJobId']}})
                 trial_records.append(formated_record)
             if not trial_records:
                 print_error('No trial results collected! Please check your trial log...')
