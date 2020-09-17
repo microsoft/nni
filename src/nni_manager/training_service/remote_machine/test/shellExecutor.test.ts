@@ -106,13 +106,9 @@ describe('ShellExecutor test', () => {
         const executor: ShellExecutor = new ShellExecutor();
         rmMeta.preCommand = isWindows ? "set TEST_PRE_COMMAND=test_pre_command" : "export TEST_PRE_COMMAND=test_pre_command";
         await executor.initialize(rmMeta);
-        const command = isWindows ? "echo %TEST_PRE_COMMAND%" : "echo $TEST_PRE_COMMAND";
-        const result = await executor.executeScript(command, false, false);
-        if (isWindows) {
-            chai.expect(result.stdout).eq("%TEST_PRE_COMMAND%\r\n");
-        } else {
-            chai.expect(result.stdout).eq("test_pre_command\n");
-        }
+        const command = isWindows ? "python -c \"import os; print(os.environ.get(\'TEST_PRE_COMMAND\'))\"" : "python3 -c \"import os; print(os.environ.get(\'TEST_PRE_COMMAND\'))\"";
+        const result = (await executor.executeScript(command, false, false)).stdout.replace(/[\ +\r\n]/g, "");
+        chai.expect(result).eq("test_pre_command");
         await executor.close();
     });
 });

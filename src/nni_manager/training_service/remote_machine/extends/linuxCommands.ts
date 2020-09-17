@@ -123,7 +123,7 @@ class LinuxCommands extends OsCommands {
         if (isFile) {
             command = `bash '${script}'`;
         } else {
-            script = script.replace('"', '\\"');
+            script = script.replace(/"/g, '\\"');
             command = `bash -c "${script}"`;
         }
         return command;
