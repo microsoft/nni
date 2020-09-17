@@ -212,6 +212,5 @@ class ModelSpeedup:
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")
         self.replace_compressed_modules()
-        torch.save(self.bound_model, 'tmp_model.pth')
         self.bound_model.train(training)
         _logger.info("speedup done")
