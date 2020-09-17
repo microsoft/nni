@@ -109,20 +109,14 @@ jobs:
   - script: |
       export PYTHON37_BIN_DIR=/usr/local/Cellar/python@3.7/`ls /usr/local/Cellar/python@3.7`/bin
       echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${PATH}"
-      which python3
-      ls /usr/local/Cellar/python@3.7
-      ls /usr/local/Cellar
-      echo '===>'
-      ls ${HOME}/Library/Python
       python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
-  #- script: |
-  #    echo "network-timeout 600000" >> ${HOME}/.yarnrc
-  #    source install.sh
-  #  displayName: 'Install nni toolkit via source code'
+  - script: |
+      echo "network-timeout 600000" >> ${HOME}/.yarnrc
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
-      which python3
       # pytorch Mac binary does not support CUDA, default is cpu version
       python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
       python3 -m pip install tensorflow==1.15.2 --user
