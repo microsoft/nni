@@ -10,7 +10,7 @@ CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
-RESHAPE_OPS = [CAT_TYPE, 'aten::view', 'aten::reshape', 'aten::flatten']
+RESHAPE_OPS = [CAT_TYPE, 'aten::view', 'aten::reshape', 'aten::flatten', 'aten::mean']
 
 class Dependency:
     def __init__(self, model=None, dummy_input=None, traced_model=None):
@@ -37,7 +37,7 @@ class Dependency:
 class ChannelDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
-        This model analyze the channel dependencis between the conv
+        This model analyze the channel dependencies between the conv
         layers in a model.
 
         Parameters
@@ -214,7 +214,34 @@ def reshape_break_channel_dependency(op_node):
     return in_channel != out_channel
 
 class InputChannelDependency(ChannelDependency):
+    """
+    Some pruners may prune the input channel of the convolutional
+    layers. While pruning the input channel of the convolutional layers,
+    the layers that share the same input tensor should prune the same
+    channels, and we say these layers that share the same input tensor/channel
+    has the input channel dependency. If we only prune the input channel of one
+    layer in the dependency set, there will be a shape conflict for the other
+    layers in the same dependency set, which may trigger a runtime error.
+    Here we judge whether the application will truncate the dependency by analyzing
+    whether the number of channels before and after the operation has changed.
+    If not, the input channel dependency will be passed to the following nodes.
+    """
+
     def __init__(self, model, dummy_input=None, traced_model=None):
+        """
+        This model analyze the input channel dependencies between the conv
+        layers in a model.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to be analyzed.
+        data : torch.Tensor
+            The example input data to trace the network architecture.
+        traced_model : torch._C.Graph
+            if we alreay has the traced graph of the target model, we donnot
+            need to trace the model again.
+        """
         super(InputChannelDependency, self).__init__(model, dummy_input, traced_model)
 
     def _get_following_convs(self, tensor):
