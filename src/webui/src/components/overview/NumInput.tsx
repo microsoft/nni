@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, PrimaryButton } from 'office-ui-fabric-react';
+import { Stack, PrimaryButton } from '@fluentui/react';
 
 interface ConcurrencyInputProps {
     value: number;

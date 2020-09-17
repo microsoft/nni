@@ -2,7 +2,7 @@ import * as React from 'react';
 import { downFile } from '../../static/function';
 import {
     Stack, PrimaryButton, DefaultButton, Panel, StackItem, Pivot, PivotItem
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import { DRAWEROPTION } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';

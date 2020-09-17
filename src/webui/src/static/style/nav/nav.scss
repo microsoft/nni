@@ -42,8 +42,8 @@ $barHeight: 56px;
     }
     &-refresh-num{
         position: absolute;
-        top: -10px;
-        left: 18px;
+        top: -13px;
+        left: 17px;
         color: #fff;
         font-size: 12px;
     }
@@ -56,11 +56,11 @@ a.common-tabs{
     color: #b8c7ce;
     text-decoration: none;
 }
-.common-tabs:visited, .high-light:hover{
+.common-tabs:visited, .selected:hover{
     color: #fff;
     text-decoration: none;
 }
-.common-tabs:hover, .high-light{
+.common-tabs:hover, .selected{
     color: #fff;
     border-bottom: 1px solid #fff;
 }

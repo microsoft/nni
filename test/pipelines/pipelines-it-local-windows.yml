@@ -14,6 +14,11 @@ jobs:
       nnictl package install --name=PPOTuner
     displayName: 'Install dependencies for integration tests'
   - script: |
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl package install ./
+    displayName: 'Install demotuner for customized_tuner test'
+  - script: |
       cd test
       powershell.exe -file scripts/unittest.ps1
     displayName: 'unit test'

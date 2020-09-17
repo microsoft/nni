@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, StackItem, ProgressIndicator } from 'office-ui-fabric-react';
+import { Stack, StackItem, ProgressIndicator } from '@fluentui/react';
 
 interface ProItemProps {
     who: string;
