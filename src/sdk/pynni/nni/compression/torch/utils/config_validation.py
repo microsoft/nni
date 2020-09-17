@@ -24,6 +24,8 @@ def validate_op_types(model, op_types, logger):
 def validate_op_types_op_names(data):
     if not ('op_types' in data or 'op_names' in data):
         raise SchemaError('Either op_types or op_names must be specified.')
+    if 'exclude' not in data and 'sparsity' not in data:
+        raise SchemaError('Sparsity must be specified')
     return True
 
 class CompressorSchema:

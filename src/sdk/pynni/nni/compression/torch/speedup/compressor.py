@@ -5,7 +5,7 @@ import logging
 import torch
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 from .compress_modules import replace_module
-from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
+from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape, set_conv_prune_dim
 
 _logger = logging.getLogger(__name__)
 
@@ -28,16 +28,22 @@ def get_module_by_name(model, module_name):
     """
     name_list = module_name.split(".")
     for name in name_list[:-1]:
-        model = getattr(model, name)
-    leaf_module = getattr(model, name_list[-1])
-    return model, leaf_module
+        if hasattr(model, name):
+            model = getattr(model, name)
+        else:
+            return None, None
+    if hasattr(model, name_list[-1]):
+        leaf_module = getattr(model, name_list[-1])
+        return model, leaf_module
+    else:
+        return None, None
 
 class ModelSpeedup:
     """
     This class is to speedup the model with provided weight mask
     """
 
-    def __init__(self, model, dummy_input, masks_file, map_location=None):
+    def __init__(self, model, dummy_input, masks_file, map_location=None, conv_prune_dim=0):
         """
         Parameters
         ----------
@@ -49,6 +55,13 @@ class ModelSpeedup:
             The path of user provided mask file
         map_location : str
             the device on which masks are placed, same to map_location in ```torch.load```
+        conv_prune_dim: int
+            How the masks of convolutional layers are pruned, this depends on pruning algorithms, please check the
+            pruning algorithms to correctly set this parameter. Set conv_prune_dim=1 for AMCPruner, leave it as 0
+            for the rest NNI builtin pruners.
+            0: filter pruning, prune filters of weights which causes channels of output feature maps are pruned.
+            1: channel pruning, prune kernels corresponding to each input channels which causes channels of
+               input feature maps are pruned.
         """
         from nni._graph_utils import build_module_graph
 
@@ -57,6 +70,8 @@ class ModelSpeedup:
         self.inferred_masks = dict() # key: module_name, value: ModuleMasks
         self.dummy_input = dummy_input
         self.torch_graph = build_module_graph(model, dummy_input)
+        self.conv_prune_dim = conv_prune_dim
+        set_conv_prune_dim(conv_prune_dim)
 
     def infer_module_mask(self, module_name, last_module, mask=None, in_shape=None, out_shape=None):
         """
@@ -87,7 +102,8 @@ class ModelSpeedup:
         if module_name in self.inferred_masks:
             module_masks = self.inferred_masks[module_name]
         else:
-            module_masks = ModuleMasks(module_name)
+            _, m = get_module_by_name(self.bound_model, module_name)
+            module_masks = ModuleMasks(module_name, m)
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.torch_graph.name_to_node[module_name].op_type
@@ -188,10 +204,11 @@ class ModelSpeedup:
         training = self.bound_model.training
         _logger.info("start to speed up the model")
         _logger.info("fix the mask conflict of the interdependent layers")
-        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input, conv_prune_dim=self.conv_prune_dim)
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")
         self.replace_compressed_modules()
+        torch.save(self.bound_model, 'tmp_model.pth')
         self.bound_model.train(training)
         _logger.info("speedup done")

@@ -12,6 +12,7 @@ from torchvision.models.resnet import resnet18
 from unittest import TestCase, main
 
 from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
+from nni.compression.torch.pruning.weight_masker import WeightMasker
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -104,6 +105,60 @@ def zero_bn_bias(model):
                 shape = module.running_mean.data.size()
                 module.running_mean = torch.zeros(shape).to(device)
 
+class NaiveChannelMasker(WeightMasker):
+    def __init__(self, model, pruner):
+        self.model = model
+        self.pruner = pruner
+
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        msg = 'module type {} is not supported!'.format(wrapper.type)
+        assert wrapper.type == 'Conv2d', msg
+        weight = wrapper.module.weight.data
+        bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
+
+        if wrapper.weight_mask is None:
+            mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        else:
+            mask_weight = wrapper.weight_mask.clone()
+        if bias is not None:
+            if wrapper.bias_mask is None:
+                mask_bias = torch.ones(bias.size()).type_as(bias).detach()
+            else:
+                mask_bias = wrapper.bias_mask.clone()
+        else:
+            mask_bias = None
+        base_mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
+        num_total = weight.size(1)
+        num_prune = int(num_total * sparsity)
+
+        if num_total < 2 or num_prune < 1:
+            return base_mask
+        w_abs = weight.abs()
+        w_abs_structured = w_abs.sum((0, 2, 3))
+        threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
+        mask_weight = torch.gt(w_abs_structured, threshold)[None, :, None, None].expand_as(weight).type_as(weight)
+        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
+
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+def channel_prune(model):
+    config_list = [{
+        'sparsity': SPARSITY,
+        'op_types': ['Conv2d']
+    }, {
+        'op_names': ['conv1'],
+        'exclude': True
+    }]
+
+    pruner = L1FilterPruner(model, config_list)
+    masker = NaiveChannelMasker(model, pruner)
+    pruner.masker = masker
+    pruner.compress()
+    pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
+
 class SpeedupTestCase(TestCase):
     def test_speedup_vgg16(self):
         prune_model_l1(vgg16())
@@ -165,6 +220,9 @@ class SpeedupTestCase(TestCase):
             data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
             ms = ModelSpeedup(speedup_model, data, MASK_FILE)
             ms.speedup_model()
+
+            #speedup_model.eval()
+
             ori_out = net(data)
             speeded_out = speedup_model(data)
             ori_sum = torch.sum(ori_out).item()
@@ -173,6 +231,16 @@ class SpeedupTestCase(TestCase):
             print('Sum of the output of %s (after speedup):'%model_name, speeded_sum)
             assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                    (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+
+    def test_channel_prune(self):
+        net = resnet18(num_classes=10)
+        channel_prune(net)
+
+        net = resnet18(num_classes=10)
+        data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
+        ms = ModelSpeedup(net, data, MASK_FILE, conv_prune_dim=1)
+        ms.speedup_model()
+        ms.bound_model(data)
 
     def tearDown(self):
         os.remove(MODEL_FILE)

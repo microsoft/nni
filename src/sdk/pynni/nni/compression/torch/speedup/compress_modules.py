@@ -116,7 +116,7 @@ def replace_conv2d(conv, mask):
         out_channels_index = mask.output_mask.mask_index[1]
         out_channels = out_channels_index.size()[0]
 
-    _logger.debug("replace conv2d with in_channels: %d, out_channels: %d", in_channels, out_channels)
+    _logger.info("replace conv2d %s with in_channels: %d, out_channels: %d", mask.module_name, in_channels, out_channels)
     new_conv = torch.nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
                                kernel_size=conv.kernel_size,
