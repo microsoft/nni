@@ -1,10 +1,10 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Stack, StackItem, PrimaryButton, DefaultButton } from 'office-ui-fabric-react';
-import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Stack, StackItem, PrimaryButton, DefaultButton } from '@fluentui/react';
+import { Dialog, DialogType, DialogFooter } from '@fluentui/react/lib/Dialog';
 import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { warining, errorBadge, completed } from '../Buttons/Icon';
+import { warining, errorBadge, completed } from '../buttons/Icon';
 import './customized.scss';
 
 interface CustomizeProps {

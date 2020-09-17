@@ -3,9 +3,9 @@ import {
     Stack, FocusTrapCallout, DefaultButton,
     FocusZone,
     PrimaryButton, getTheme, mergeStyleSets, FontWeights
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import { killJob } from '../../static/function';
-import { blocked } from '../Buttons/Icon';
+import { blocked } from '../buttons/Icon';
 
 const theme = getTheme();
 const styles = mergeStyleSets({

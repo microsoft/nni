@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
-import { Stack, PrimaryButton, Pivot, PivotItem } from 'office-ui-fabric-react';
+import { Stack, PrimaryButton, Pivot, PivotItem } from '@fluentui/react';
 import { Trial } from '../../static/model/trial';
 import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
-import MessageInfo from '../Modals/MessageInfo';
+import MessageInfo from '../modals/MessageInfo';
 import '../../static/style/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';

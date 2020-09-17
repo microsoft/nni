@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Spinner } from 'office-ui-fabric-react';
+import { Spinner } from '@fluentui/react';
 import { DRAWEROPTION } from '../../static/const';
 import MonacoEditor from 'react-monaco-editor';
 

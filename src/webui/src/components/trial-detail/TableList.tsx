@@ -1,22 +1,22 @@
-import * as React from 'react';
+import React, { lazy } from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import ReactPaginate from 'react-paginate';
-import { LineChart, blocked, copy } from '../Buttons/Icon';
+import { LineChart, blocked, copy } from '../buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord, TrialJobInfo } from '../../static/interface';
-import Details from '../overview/Details';
-import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
-import Compare from '../Modals/Compare';
-import KillJob from '../Modals/Killjob';
-import Customize from '../Modals/CustomizedTrial';
-import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
+const Details = lazy(() => import('../overview/Details'));
+const ChangeColumnComponent = lazy(() => import('../modals/ChangeColumnComponent'));
+const Compare = lazy(() => import('../modals/Compare'));
+const KillJob = lazy(() => import('../modals/Killjob'));
+const Customize = lazy(() => import('../modals/CustomizedTrial'));
+import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
@@ -24,7 +24,6 @@ import '../../static/style/table.scss';
 import '../../static/style/button.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
-
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -36,7 +35,7 @@ echarts.registerTheme('my_theme', {
 
 const horizontalGapStackTokens: IStackTokens = {
     childrenGap: 20,
-    padding: 10,
+    padding: 10
 };
 
 interface TableListProps {
@@ -179,7 +178,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         onColumnClick: this.onColumnClick,
         className: 'tableHead leftTitle'
     };
-
 
     StartTimeColumnConfig: any = {
         name: 'Start time',
