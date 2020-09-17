@@ -155,7 +155,7 @@ class Overview extends React.Component<OverviewProps, OverviewState> {
                             />
                         </div>
                         <div style={{ width: '60%'}}>
-                            <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                            <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
                         </div>
                     </Stack>
                 </Stack>

@@ -121,9 +121,9 @@ class Trial implements TableObj {
         }
 
         return {
-            key: this.info.id,
+            key: this.info.trialJobId,
             sequenceId: this.info.sequenceId,
-            id: this.info.id,
+            id: this.info.trialJobId,
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             startTime: this.info.startTime!,
             endTime: this.info.endTime,
@@ -146,7 +146,7 @@ class Trial implements TableObj {
     }
 
     get id(): string {
-        return this.info.id;
+        return this.info.trialJobId;
     }
 
     get duration(): number {

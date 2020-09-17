@@ -130,7 +130,7 @@ interface MetricDataRecord {
 }
 
 interface TrialJobInfo {
-    id: string;
+    trialJobId: string;
     sequenceId: number;
     status: string;
     startTime?: number;

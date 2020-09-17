@@ -255,7 +255,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
         event.preventDefault();
         event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
+        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.trialJobId}`);
         if (res.status === 200) {
             const intermediateArr: number[] = [];
             // support intermediate result is dict because the last intermediate result is
@@ -285,12 +285,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }
                 }
             });
-            const intermediate = intermediateGraphOption(intermediateArr, record.id);
+            const intermediate = intermediateGraphOption(intermediateArr, record.trialJobId);
             this.setState({
                 intermediateData: res.data, // store origin intermediate data for a trial
                 intermediateOption: intermediate,
                 intermediateOtherKeys: otherkeys,
-                intermediateId: record.id
+                intermediateId: record.trialJobId
             });
         }
         this.setState({ modalVisible: true });

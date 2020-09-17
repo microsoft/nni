@@ -173,11 +173,11 @@ class TrialManager {
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
                 for (const trialInfo of data as TrialJobInfo[]) {
-                    if (this.trials.has(trialInfo.id)) {
+                    if (this.trials.has(trialInfo.trialJobId)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                        updated = this.trials.get(trialInfo.id)!.updateTrialJobInfo(trialInfo) || updated;
+                        updated = this.trials.get(trialInfo.trialJobId)!.updateTrialJobInfo(trialInfo) || updated;
                     } else {
-                        this.trials.set(trialInfo.id, new Trial(trialInfo, undefined));
+                        this.trials.set(trialInfo.trialJobId, new Trial(trialInfo, undefined));
                         updated = true;
                     }
                     this.maxSequenceId = Math.max(this.maxSequenceId, trialInfo.sequenceId);

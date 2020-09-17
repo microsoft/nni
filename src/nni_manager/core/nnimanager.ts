@@ -227,7 +227,7 @@ class NNIManager implements Manager {
         // Check the final status for WAITING and RUNNING jobs
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.trialJobId)));
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -300,7 +300,7 @@ class NNIManager implements Manager {
             // FIXME: can this be undefined?
             trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
         ));
-        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.trialJobId));
 
         const allMetrics = await this.dataStore.getMetricData();
         return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
