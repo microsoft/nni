@@ -108,7 +108,7 @@ jobs:
   steps:
   - script: |
       export PYTHON37_BIN_DIR=/usr/local/Cellar/python@3.7/`ls /usr/local/Cellar/python@3.7`/bin
-      echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${PATH}"
+      echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${HOME}/Library/Python/3.7/bin:${PATH}"
       python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
