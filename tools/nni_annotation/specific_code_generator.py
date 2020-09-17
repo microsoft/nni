@@ -5,6 +5,8 @@ import ast
 import astor
 from nni_cmd.common_utils import print_warning
 
+from .utils import ast_Num, ast_Str
+
 # pylint: disable=unidiomatic-typecheck
 
 para_cfg = None
@@ -134,7 +136,7 @@ def parse_nni_variable(code):
     assert arg.func.value.id == 'nni', 'nni.variable value is not a NNI function'
 
     name_str = astor.to_source(name).strip()
-    keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
+    keyword_arg = ast.keyword(arg='name', value=ast_Str(s=name_str))
     arg.keywords.append(keyword_arg)
     if arg.func.attr == 'choice':
         convert_args_to_dict(arg)
@@ -152,7 +154,7 @@ def parse_nni_function(code):
     convert_args_to_dict(call, with_lambda=True)
 
     name_str = astor.to_source(name).strip()
-    call.keywords[0].value = ast.Str(s=name_str)
+    call.keywords[0].value = ast_Str(s=name_str)
 
     return call, funcs
 
@@ -163,12 +165,12 @@ def convert_args_to_dict(call, with_lambda=False):
     """
     keys, values = list(), list()
     for arg in call.args:
-        if type(arg) in [ast.Str, ast.Num]:
+        if type(arg) in [ast_Str, ast_Num]:
             arg_value = arg
         else:
             # if arg is not a string or a number, we use its source code as the key
             arg_value = astor.to_source(arg).strip('\n"')
-            arg_value = ast.Str(str(arg_value))
+            arg_value = ast_Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
         keys.append(arg_value)
         values.append(arg)
@@ -192,7 +194,7 @@ def test_variable_equal(node1, node2):
         return False
     if isinstance(node1, ast.AST):
         for k, v in vars(node1).items():
-            if k in ('lineno', 'col_offset', 'ctx'):
+            if k in ('lineno', 'col_offset', 'ctx', 'end_lineno', 'end_col_offset'):
                 continue
             if not test_variable_equal(v, getattr(node2, k)):
                 return False
@@ -264,7 +266,7 @@ class Transformer(ast.NodeTransformer):
         annotation = self.stack[-1]
 
         # this is a standalone string, may be an annotation
-        if type(node) is ast.Expr and type(node.value) is ast.Str:
+        if type(node) is ast.Expr and type(node.value) is ast_Str:
             # must not annotate an annotation string
             assert annotation is None, 'Annotating an annotation'
             return self._visit_string(node)
@@ -290,23 +292,23 @@ class Transformer(ast.NodeTransformer):
                                  "Please remove this line in the trial code."
             print_warning(deprecated_message)
             return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
-                                           args=[ast.Str(s='Get next parameter here...')], keywords=[]))
+                                           args=[ast_Str(s='Get next parameter here...')], keywords=[]))
 
         if string.startswith('@nni.training_update'):
             return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
-                                           args=[ast.Str(s='Training update here...')], keywords=[]))
+                                           args=[ast_Str(s='Training update here...')], keywords=[]))
 
         if string.startswith('@nni.report_intermediate_result'):
             module = ast.parse(string[1:])
             arg = module.body[0].value.args[0]
             return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
-                                           args=[ast.Str(s='nni.report_intermediate_result: '), arg], keywords=[]))
+                                           args=[ast_Str(s='nni.report_intermediate_result: '), arg], keywords=[]))
 
         if string.startswith('@nni.report_final_result'):
             module = ast.parse(string[1:])
             arg = module.body[0].value.args[0]
             return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()),
-                                           args=[ast.Str(s='nni.report_final_result: '), arg], keywords=[]))
+                                           args=[ast_Str(s='nni.report_final_result: '), arg], keywords=[]))
 
         if string.startswith('@nni.mutable_layers'):
             return parse_annotation_mutable_layers(string[1:], node.lineno)
