@@ -116,10 +116,10 @@ jobs:
       ls ${HOME}/Library/Python
       python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
-  - script: |
-      echo "network-timeout 600000" >> ${HOME}/.yarnrc
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
+  #- script: |
+  #    echo "network-timeout 600000" >> ${HOME}/.yarnrc
+  #    source install.sh
+  #  displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
       which python3
