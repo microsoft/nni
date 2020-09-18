@@ -200,7 +200,6 @@ class ChannelPruningEnv:
                 self.best_reward = reward
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
-                #torch.save(self.model.state_dict(), os.path.join(self.args.output, 'best_wrapped_model.pth'))
                 best_model = os.path.join(self.args.output, 'best_model.pth')
                 best_mask = os.path.join(self.args.output, 'best_mask.pth')
                 self.pruner.export_model(model_path=best_model, mask_path=best_mask)
