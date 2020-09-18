@@ -21,6 +21,10 @@
 
 #succeTable,
 #tableList {
+    .commonTableStyle .leftTitle div {
+        text-align: left;
+    }
+
     .durationsty {
         width: 80%;
         margin: 0 auto;
@@ -29,10 +33,6 @@
             text-align: right;
             margin-right: 9px;
         }
-    }
-
-    .commonTableStyle .leftTitle div {
-        text-align: left;
     }
 }
 

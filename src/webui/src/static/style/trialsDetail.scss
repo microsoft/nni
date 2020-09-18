@@ -22,6 +22,10 @@
                 background: #999;
             }
         }
+
+        .is-selected::before {
+            border-bottom: none;
+        }
     }
 
     .ms-Pivot-icon {

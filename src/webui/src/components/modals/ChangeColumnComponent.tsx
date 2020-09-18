@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from 'office-ui-fabric-react';
+import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { OPERATION } from '../../static/const';
 
 interface ChangeColumnState {

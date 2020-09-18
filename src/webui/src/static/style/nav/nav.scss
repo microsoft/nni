@@ -50,8 +50,8 @@ $barHeight: 56px;
 
     &-refresh-num {
         position: absolute;
-        top: -10px;
-        left: 18px;
+        top: -13px;
+        left: 17px;
         color: #fff;
         font-size: 12px;
     }
@@ -65,16 +65,16 @@ a.common-tabs {
     text-decoration: none;
 }
 
-.common-tabs:hover,
-.high-light {
-    color: #fff;
-    border-bottom: 1px solid #fff;
-}
-
 .common-tabs:visited,
-.high-light:hover {
+.selected:hover {
     color: #fff;
     text-decoration: none;
+}
+
+.common-tabs:hover,
+.selected {
+    color: #fff;
+    border-bottom: 1px solid #fff;
 }
 
 .left-right-margin {

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MessageBar, MessageBarType } from 'office-ui-fabric-react';
+import { MessageBar, MessageBarType } from '@fluentui/react';
 
 interface MessageInfoProps {
     info: string;

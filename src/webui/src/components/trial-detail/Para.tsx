@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { Dropdown, IDropdownOption, Stack } from 'office-ui-fabric-react';
+import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
 import * as React from 'react';

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Stack, StackItem, Panel, PrimaryButton, DefaultButton, Pivot, PivotItem } from 'office-ui-fabric-react';
-import { infoIcon } from '../Buttons/Icon';
+import { Stack, StackItem, Panel, PrimaryButton, DefaultButton, Pivot, PivotItem } from '@fluentui/react';
+import { infoIcon } from '../buttons/Icon';
 import { DOWNLOAD_IP } from '../../static/const';
 import { downFile } from '../../static/function';
 import MonacoHTML from '../public-child/MonacoEditor';
@@ -45,27 +45,23 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
         }
     };
 
-    dispatcherHTML = (): React.ReactNode => {
-        return (
-            <div>
-                <span>Dispatcher log</span>
-                <span className='refresh' onClick={this.manualRefresh}>
-                    {infoIcon}
-                </span>
-            </div>
-        );
-    };
+    dispatcherHTML = (): React.ReactNode => (
+        <div>
+            <span>Dispatcher log</span>
+            <span className='refresh' onClick={this.manualRefresh}>
+                {infoIcon}
+            </span>
+        </div>
+    );
 
-    nnimanagerHTML = (): React.ReactNode => {
-        return (
-            <div>
-                <span>NNImanager log</span>
-                <span className='refresh' onClick={this.manualRefresh}>
-                    {infoIcon}
-                </span>
-            </div>
-        );
-    };
+    nnimanagerHTML = (): React.ReactNode => (
+        <div>
+            <span>NNImanager log</span>
+            <span className='refresh' onClick={this.manualRefresh}>
+                {infoIcon}
+            </span>
+        </div>
+    );
 
     setLogDrawerHeight = (): void => {
         this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));

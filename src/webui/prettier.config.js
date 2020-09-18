@@ -5,8 +5,8 @@ module.exports = {
     trailingComma: 'none',
     arrowParens: 'avoid',
     bracketSpacing: true,
-    eslintIntegration: true,
     singleQuote: true,
+    eslintIntegration: true,
     jsxSingleQuote: true,
     endOfline: 'lf'
 };

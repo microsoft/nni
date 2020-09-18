@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from 'office-ui-fabric-react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
 import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
-import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
+import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/compare.scss';
 
 const dragOptions: IDragOptions = {

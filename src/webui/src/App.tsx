@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Stack } from 'office-ui-fabric-react';
+import { Stack } from '@fluentui/react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
-import MessageInfo from './components/Modals/MessageInfo';
+import MessageInfo from './components/modals/MessageInfo';
 import './App.scss';
 
 interface AppState {
@@ -18,11 +18,25 @@ interface AppState {
     isUpdate: boolean;
 }
 
+export const AppContext = React.createContext({
+    interval: 10, // sendons
+    columnList: COLUMN,
+    experimentUpdateBroadcast: 0,
+    trialsUpdateBroadcast: 0,
+    metricGraphMode: 'max',
+    bestTrialEntries: '10',
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeColumn: (val: string[]) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeMetricGraphMode: (val: 'max' | 'min') => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeEntries: (val: string) => {}
+});
+
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
     private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
-
     constructor(props: {}) {
         super(props);
         this.state = {
@@ -132,21 +146,6 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
-
-        const reactPropsChildren = React.Children.map(this.props.children, child =>
-            React.cloneElement(child as React.ReactElement<any>, {
-                interval,
-                columnList,
-                changeColumn: this.changeColumn,
-                experimentUpdateBroadcast,
-                trialsUpdateBroadcast,
-                metricGraphMode,
-                changeMetricGraphMode: this.changeMetricGraphMode,
-                bestTrialEntries,
-                changeEntries: this.changeEntries
-            })
-        );
-
         return (
             <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                 <div className='header'>
@@ -170,7 +169,21 @@ class App extends React.Component<{}, AppState> {
                                 <MessageInfo info={expWarningMessage} typeInfo='warning' />
                             </div>
                         )}
-                        {reactPropsChildren}
+                        <AppContext.Provider
+                            value={{
+                                interval,
+                                columnList,
+                                changeColumn: this.changeColumn,
+                                experimentUpdateBroadcast,
+                                trialsUpdateBroadcast,
+                                metricGraphMode,
+                                changeMetricGraphMode: this.changeMetricGraphMode,
+                                bestTrialEntries,
+                                changeEntries: this.changeEntries
+                            }}
+                        >
+                            {this.props.children}
+                        </AppContext.Provider>
                     </Stack>
                 </Stack>
             </Stack>

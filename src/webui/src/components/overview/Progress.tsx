@@ -10,16 +10,16 @@ import {
     getTheme,
     StackItem,
     TooltipHost
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import axios from 'axios';
 import { MANAGER_IP, CONCURRENCYTOOLTIP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { convertTime } from '../../static/function';
 import ConcurrencyInput from './NumInput';
 import ProgressBar from './ProgressItem';
-import LogDrawer from '../Modals/LogPanel';
-import MessageInfo from '../Modals/MessageInfo';
-import { infoIcon } from '../Buttons/Icon';
+import LogDrawer from '../modals/LogPanel';
+import MessageInfo from '../modals/MessageInfo';
+import { infoIcon } from '../buttons/Icon';
 import '../../static/style/progress.scss';
 import '../../static/style/probar.scss';
 interface ProgressProps {

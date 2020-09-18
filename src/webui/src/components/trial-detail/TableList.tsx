@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { lazy } from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
@@ -16,19 +16,19 @@ import {
     IconButton,
     TooltipHost,
     IStackTokens
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import ReactPaginate from 'react-paginate';
-import { LineChart, blocked, copy } from '../Buttons/Icon';
+import { LineChart, blocked, copy } from '../buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord, TrialJobInfo } from '../../static/interface';
-import Details from '../overview/Details';
-import ChangeColumnComponent from '../Modals/ChangeColumnComponent';
-import Compare from '../Modals/Compare';
-import KillJob from '../Modals/Killjob';
-import Customize from '../Modals/CustomizedTrial';
-import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
+const Details = lazy(() => import('../overview/Details'));
+const ChangeColumnComponent = lazy(() => import('../modals/ChangeColumnComponent'));
+const Compare = lazy(() => import('../modals/Compare'));
+const KillJob = lazy(() => import('../modals/Killjob'));
+const Customize = lazy(() => import('../modals/CustomizedTrial'));
+import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';

@@ -9,10 +9,10 @@ import {
     IContextualMenuProps,
     IStackTokens,
     IStackStyles
-} from 'office-ui-fabric-react';
-import LogPanel from './Modals/LogPanel';
-import ExperimentPanel from './Modals/ExperimentPanel';
-import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './Buttons/Icon';
+} from '@fluentui/react';
+import LogPanel from './modals/LogPanel';
+import ExperimentPanel from './modals/ExperimentPanel';
+import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
 import '../static/style/nav/nav.scss';

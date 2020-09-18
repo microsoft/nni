@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DetailsList, IDetailsListProps, IColumn } from 'office-ui-fabric-react';
+import { DetailsList, IDetailsListProps, IColumn } from '@fluentui/react';
 import DefaultMetric from '../public-child/DefaultMetric';
 import Details from './Details';
 import { convertDuration } from '../../static/function';
