@@ -35,6 +35,19 @@ echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
 
+function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
+    const key = columnKey as keyof T;
+    return items.slice(0).sort(function (a: T, b: T): any {
+        if (a[key] === undefined) {
+            return 1;
+        }
+        if (b[key] === undefined) {
+            return -1;
+        }
+        return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+    });
+}
+
 const horizontalGapStackTokens: IStackTokens = {
     childrenGap: 20,
     padding: 10,
@@ -53,8 +66,8 @@ interface SortInfo {
 }
 
 interface TableListState {
-    displayedTrials: TableObj[];
-    expandedIds: string[];
+    displayedItems: any[];
+    columns: IColumn[];
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -63,8 +76,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         super(props);
 
         this.state = {
-            displayedTrials: props.tableSource,  // TODO: pagination and sorting
-            expandedIds: []
+            displayedItems: [],
+            columns: []
         };
     }
 
@@ -72,32 +85,43 @@ class TableList extends React.Component<TableListProps, TableListState> {
     // onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
     // };
 
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
-        const key = columnKey as keyof T;
-        return items.slice(0).sort(function (a: T, b: T): any {
-            if (a[key] === undefined) {
-                return 1;
+
+    private _onColumnClick(ev: React.MouseEvent<HTMLElement>, column: IColumn): void {
+        // handle the click events on table header (do sorting)
+        console.log(this.state);  // eslint-disable-line no-console
+        const { columns, displayedItems } = this.state;
+        const newColumns: IColumn[] = columns.slice();
+        const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
+        newColumns.forEach((newCol: IColumn) => {
+            if (newCol === currColumn) {
+                currColumn.isSortedDescending = !currColumn.isSortedDescending;
+                currColumn.isSorted = true;
+            } else {
+                newCol.isSorted = false;
+                newCol.isSortedDescending = true;
             }
-            if (b[key] === undefined) {
-                return -1;
-            }
-            return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+        });
+        const newItems = _copyAndSort(displayedItems, currColumn.fieldName!, currColumn.isSortedDescending);
+        this.setState({
+            columns: newColumns,
+            displayedItems: newItems,
         });
     }
 
-    private trialsToTableItems(trials: TableObj[]): any[] {
-        // FIXME use search space and metrics space from TRIALS will cause update issues.
+    private _trialsToTableItems(trials: TableObj[]): any[] {
+        // TODO: use search space and metrics space from TRIALS will cause update issues.
         const searchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
         const metricSpace = TRIALS.inferredMetricSpace();
         return trials.map((trial) => {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
-                startTime: formatTimestamp(trial.startTime),
+                startTime: formatTimestamp(trial.startTime, '--'),
                 endTime: formatTimestamp(trial.endTime, '--'),
                 duration: convertDuration(trial.duration),
                 status: trial.status,
-                intermediateCount: trial.intermediates.length
+                intermediateCount: trial.intermediates.length,
+                expandDetails: false
             };
             for (const [k, v] of trial.parameters(searchSpace)) {
                 ret[`space/${k.baseName}`] = v;
@@ -109,26 +133,40 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
-    private buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
+    private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
+        // extra column, for a icon to expand the trial details panel
         const columns: IColumn[] = [{
             key: 'expand',
             name: '',
             onRender: (item, index, column) => {
-                return <Icon aria-hidden={true} iconName="ChevronDown"
+                return <Icon
+                    aria-hidden={true}
+                    iconName='ChevronRight'
+                    styles={{ root: { transition: 'all 0.2s', transform: `rotate(${item.expandDetails ? 90 : 0}deg)` } }}
                     onClick={(event) => {
-                        event.preventDefault();
+                        event.stopPropagation();
+                        const newItem: any = { ...item, expandDetails: !item.expandDetails };
+                        const newItems = [...this.state.displayedItems];
+                        newItems[index!] = newItem;
                         this.setState({
-                            expandedIds: [...this.state.expandedIds, item.id]
+                            displayedItems: newItems
                         });
+                    }}
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                    }}
+                    onMouseUp={(e) => {
+                        e.stopPropagation();
                     }} />
             },
             fieldName: 'expand',
             isResizable: false,
-            minWidth: 30,
-            maxWidth: 30
+            minWidth: 20,
+            maxWidth: 20
         }];
         // looking at the first row only for now
         for (const [k, v] of Object.entries(tableItems[0])) {
+            // TODO: add blacklist
             columns.push({
                 name: k,
                 key: k,
@@ -136,6 +174,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 minWidth: 150,
                 maxWidth: 400,
                 isResizable: true,
+                onColumnClick: this._onColumnClick.bind(this)
             });
         }
         return columns;
@@ -149,6 +188,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         console.log('Customized column clicked'); // eslint-disable-line no-console
     }
 
+    componentDidUpdate(prevProps: TableListProps): void {
+        if (this.props.tableSource !== prevProps.tableSource) {
+            const items = this._trialsToTableItems(this.props.tableSource);
+            const columns = this._buildColumnsFromTableItems(items);
+            this.setState({
+                displayedItems: items,
+                columns: columns
+            });
+        }
+    }
+
     render(): React.ReactNode {
         const perPageOptions = [
             { key: '10', text: '10 items per page' },
@@ -156,13 +206,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: '50', text: '50 items per page' },
             { key: 'all', text: 'All items' },
         ];
-        const { tableSource } = this.props;
-        const { expandedIds } = this.state;
+        const { displayedItems, columns } = this.state;
 
-        const items = this.trialsToTableItems(tableSource);
-        const columns = this.buildColumnsFromTableItems(items);
-
-        console.log(items);  // eslint-disable-line no-console
+        console.log(displayedItems);  // eslint-disable-line no-console
         console.log(columns);  // eslint-disable-line no-console
 
         return (
@@ -170,12 +216,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 <div id="tableList">
                     <DetailsList
                         columns={columns}
-                        items={items}
+                        items={displayedItems}
                         compact={true}
                         selectionMode={SelectionMode.multiple}
                         onRenderRow={(props) => {
                             return <ExpandableDetails detailsProps={props!}
-                                isExpand={expandedIds.includes(props!.item.id)} />;
+                                isExpand={props!.item.expandDetails} />;
                         }}
                     />
                     {/* 
