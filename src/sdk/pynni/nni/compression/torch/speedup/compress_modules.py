@@ -115,7 +115,10 @@ def replace_conv2d(conv, mask):
     else:
         out_channels_index = mask.output_mask.mask_index[1]
         out_channels = out_channels_index.size()[0]
-
+    groups = conv.groups
+    if conv.in_channels == conv.out_channels == conv.groups:
+        assert in_channels == out_channels
+        groups = in_channels
     _logger.debug("replace conv2d %s with in_channels: %d, out_channels: %d", mask.module_name, in_channels, out_channels)
     new_conv = torch.nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
@@ -123,7 +126,7 @@ def replace_conv2d(conv, mask):
                                stride=conv.stride,
                                padding=conv.padding,
                                dilation=conv.dilation,
-                               groups=conv.groups,
+                               groups=groups,
                                bias=conv.bias is not None,
                                padding_mode=conv.padding_mode)
 
@@ -141,13 +144,16 @@ def replace_conv2d(conv, mask):
     # channal is also divided into serveral groups and each group
     # filter may have different input channel indexes.
     input_step = int(conv.in_channels / conv.groups)
-    in_channels_group = int(in_channels / conv.groups)
-    filter_step = int(out_channels / conv.groups)
+    in_channels_group = int(in_channels / groups)
+    filter_step = int(conv.out_channels / conv.groups)
     if mask.input_mask is not None:
         for groupid in range(conv.groups):
             start = groupid * input_step
             end = (groupid + 1) * input_step
             current_input_index = list(filter(lambda x: start <= x and x < end, in_channels_index.tolist()))
+            if not current_input_index:
+                # there is no kept channel in current group
+                continue
             # shift the global index into the group index
             current_input_index = [x-start for x in current_input_index]
             # if the groups is larger than 1, the input channels of each

@@ -297,6 +297,10 @@ infer_from_outshape = {
     'aten::flatten': lambda module_mask, mask, shape: view_outshape(module_mask, mask, shape),
     'aten::view': lambda module_masks, mask, shape: view_outshape(module_masks, mask, shape),
     'aten::reshape': lambda module_masks, mask, shape: view_outshape(module_masks, mask, shape),
+    'aten::mean': lambda module_masks, mask, shape: mean_outshape(module_masks, mask, shape),
+    'Dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
+    'Dropout2d': lambda module_masks, mask: dropout_outshape(module_masks, mask),
+    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask)
 }
 
 def dropout_inshape(module_masks, mask):
@@ -318,7 +322,15 @@ def dropout_inshape(module_masks, mask):
     module_masks.set_output_mask(mask)
     return module_masks.output_mask
 
+def dropout_outshape(module_masks, mask):
+    if module_masks.output_mask is None:
+        module_masks.set_output_mask(mask)
+        module_masks.set_input_mask(mask)
+        return module_masks.input_mask
+    # if alreay visited
+    assert all(module_masks.output_mask.mask_index[1] == mask.mask_index[1])
 
+    return module_masks.output_mask
 
 def cat_inshape(module_masks, mask, cat_info, last_visited):
     """
@@ -430,7 +442,7 @@ def add_outshape(module_masks, mask):
         module_masks.set_input_mask(mask)
         return mask
     else:
-        assert mask == module_masks.output_mask
+        assert all(module_masks.output_mask.mask_index[1] == mask.mask_index[1])
     return mask
 
 def batchnorm2d_inshape(module_masks, mask):
@@ -618,6 +630,26 @@ def mean_inshape(module_masks, mask, shape):
     module_masks.set_output_mask(output_cmask)
     return output_cmask
 
+def mean_outshape(module_masks, mask, shape):
+    """
+    Similar to view operation, currently mask inference only supports
+    the mean operation on the 3rd and 4th dimensions.
+    """
+    assert shape['in_shape'][0] == shape['out_shape'][0]
+    assert shape['out_shape'][1] == shape['in_shape'][1]
+    assert len(shape['in_shape']) == 4
+    assert len(shape['out_shape']) == 2
+
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    module_masks.set_output_mask(mask)
+
+    input_cmask = CoarseMask(num_dim=4)
+    input_cmask.add_index_mask(dim=1, index=mask.mask_index[1])
+    module_masks.set_input_mask(input_cmask)
+    return input_cmask
+
 def maxpool2d_inshape(module_masks, mask):
     """
     Assume only the second dimension is masked
@@ -710,7 +742,7 @@ def relu_outshape(module_masks, mask):
     assert isinstance(mask, CoarseMask)
     if module_masks.output_mask is not None:
         # mask conflict should be solved before speedup
-        assert module_masks.output_mask == mask
+        assert all(module_masks.output_mask.mask_index[1] == mask.mask_index[1])
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
     return mask
@@ -891,6 +923,8 @@ def conv2d_inshape(module_masks, mask):
     # shape changes pass through depths wise conv layers
     m = module_masks.module
     if m.in_channels == m.out_channels == m.groups:
+        module_masks.output_mask = mask
+        module_masks.input_mask = mask
         return mask
     return None
 
@@ -926,5 +960,7 @@ def conv2d_outshape(module_masks, mask):
     # shape changes pass through depths wise conv layers
     m = module_masks.module
     if m.in_channels == m.out_channels == m.groups:
+        module_masks.output_mask = mask
+        module_masks.input_mask = mask
         return mask
     return None
