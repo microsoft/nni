@@ -81,14 +81,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
         };
     }
 
-    // // sort for table column
-    // onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
-    // };
-
-
     private _onColumnClick(ev: React.MouseEvent<HTMLElement>, column: IColumn): void {
         // handle the click events on table header (do sorting)
-        console.log(this.state);  // eslint-disable-line no-console
         const { columns, displayedItems } = this.state;
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
