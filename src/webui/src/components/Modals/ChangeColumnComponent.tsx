@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from 'office-ui-fabric-react';
-import { OPERATION } from '../../static/const';
 
 interface ChangeColumnState {
     // buffer, not saved yet
@@ -61,10 +60,6 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         this.hideDialog();
     }
 
-    hideDialog = (): void => {
-        this.props.onHidden();
-    }
-
     // user exit dialog
     cancelOption = (): void => {
         // reset select column
@@ -73,17 +68,13 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         });
     }
 
+    private hideDialog = (): void => {
+        this.props.onHidden();
+    }
+
     render(): React.ReactNode {
         const { allColumns, hidden } = this.props;
         const { currentSelected } = this.state;
-        const renderOptions: Array<CheckBoxItems> = [];
-        allColumns.map(item => {
-            renderOptions.push({
-                label: item.name,
-                checked: currentSelected.includes(item.key),
-                onChange: this.makeChangeHandler(item.key)
-            });
-        });
         return (
             <div>
                 <Dialog
@@ -98,14 +89,19 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                         styles: { main: { maxWidth: 450 } }
                     }}
                 >
-                    <div className="columns-height">
-                        {renderOptions.map(item => {
-                            return <Checkbox key={item.label} {...item} styles={{ root: { marginBottom: 8 } }} />
-                        })}
+                    <div className='columns-height'>
+                        {allColumns.map(item =>
+                            <Checkbox
+                                key={item.key}
+                                label={item.name}
+                                checked={currentSelected.includes(item.key)}
+                                onChange={this.makeChangeHandler(item.key)}
+                                styles={{ root: { marginBottom: 8 } }}
+                            />)}
                     </div>
                     <DialogFooter>
-                        <PrimaryButton text="Save" onClick={this.saveUserSelectColumn} />
-                        <DefaultButton text="Cancel" onClick={this.cancelOption} />
+                        <PrimaryButton text='Save' onClick={this.saveUserSelectColumn} />
+                        <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
                 </Dialog>
             </div>
