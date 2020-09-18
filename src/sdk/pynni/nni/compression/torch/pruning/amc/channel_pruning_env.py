@@ -245,9 +245,6 @@ class ChannelPruningEnv:
         self.index_buffer = {}
         return obs
 
-    def set_export_path(self, path):
-        self.export_path = path
-
     def prune_kernel(self, op_idx, preserve_ratio, preserve_idx=None):
         m_list = list(self.model.modules())
         op = m_list[op_idx]
@@ -275,66 +272,6 @@ class ChannelPruningEnv:
 
         action = (m == 1).sum().item() / m.numel()
         return action, d_prime, preserve_idx
-
-    def export_model(self):
-        while True:
-            self.export_layer(self.prunable_idx[self.cur_ind])
-            if self._is_final_layer():
-                break
-            self.cur_ind += 1
-
-    #TODO replace this speedup implementation with nni.compression.torch.ModelSpeedup
-    def export_layer(self, op_idx):
-        m_list = list(self.model.modules())
-        op = m_list[op_idx]
-        assert type(op) == PrunerModuleWrapper
-        w = op.module.weight.cpu().data
-        m = op.weight_mask.cpu().data
-        if type(op.module) == nn.Linear:
-            w = w.unsqueeze(-1).unsqueeze(-1)
-            m = m.unsqueeze(-1).unsqueeze(-1)
-
-        d_prime = (m.sum((0, 2, 3)) > 0).sum().item()
-        preserve_idx = np.nonzero((m.sum((0, 2, 3)) > 0).numpy())[0]
-        assert d_prime <= w.size(1)
-
-        if d_prime == w.size(1):
-            return
-
-        mask = np.zeros(w.size(1), bool)
-        mask[preserve_idx] = True
-        rec_weight = torch.zeros((w.size(0), d_prime, w.size(2), w.size(3)))
-        rec_weight = w[:, preserve_idx, :, :]
-        if type(op.module) == nn.Linear:
-            rec_weight = rec_weight.squeeze()
-        # no need to provide bias mask for channel pruning
-        rec_mask = torch.ones_like(rec_weight)
-
-        # assign new weight and mask
-        device = op.module.weight.device
-        op.module.weight.data = rec_weight.to(device)
-        op.weight_mask = rec_mask.to(device)
-        if type(op.module) == nn.Conv2d:
-            op.module.in_channels = d_prime
-        else:
-            # Linear
-            op.module.in_features = d_prime
-
-        # export prev layers
-        prev_idx = self.prunable_idx[self.prunable_idx.index(op_idx) - 1]
-        for idx in range(prev_idx, op_idx):
-            m = m_list[idx]
-            if type(m) == nn.Conv2d:  # depthwise
-                m.weight.data = m.weight.data[mask, :, :, :]
-                if m.groups == m.in_channels:
-                    m.groups = int(np.sum(mask))
-                m.out_channels = d_prime
-            elif type(m) == nn.BatchNorm2d:
-                m.weight.data = m.weight.data[mask]
-                m.bias.data = m.bias.data[mask]
-                m.running_mean.data = m.running_mean.data[mask]
-                m.running_var.data = m.running_var.data[mask]
-                m.num_features = d_prime
 
     def _is_final_layer(self):
         return self.cur_ind == len(self.prunable_idx) - 1

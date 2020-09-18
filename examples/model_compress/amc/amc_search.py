@@ -29,10 +29,6 @@ def parse_args():
     parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
-    parser.add_argument('--job', default='train_export', type=str, choices=['train_export', 'export_only'],
-                        help='search best pruning policy and export or just export model with searched policy')
-    parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
-    parser.add_argument('--searched_model_path', default=None, type=str, help='path for searched best wrapped model')
     parser.add_argument('--suffix', default=None, type=str, help='path for searched best wrapped model')
 
     return parser.parse_args()
@@ -133,12 +129,10 @@ if __name__ == "__main__":
     _, val_loader = init_data(args)
 
     config_list = [{
-        #'op_types': ['Conv2d', 'Linear']
-        'op_types': ['Conv2d']
+        'op_types': ['Conv2d', 'Linear']
     }]
     pruner = AMCPruner(
         model, config_list, validate, val_loader, model_type=args.model_type, dataset=args.dataset,
-        train_episode=args.train_episode, job=args.job, export_path=args.export_path,
-        searched_model_path=args.searched_model_path,
-        flops_ratio=args.flops_ratio, lbound=args.lbound, rbound=args.rbound, suffix=args.suffix)
+        train_episode=args.train_episode, flops_ratio=args.flops_ratio, lbound=args.lbound,
+        rbound=args.rbound, suffix=args.suffix)
     pruner.compress()
