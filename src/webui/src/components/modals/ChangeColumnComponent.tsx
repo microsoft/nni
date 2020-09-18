@@ -21,17 +21,23 @@ interface CheckBoxItems {
     onChange: () => void;
 }
 class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeColumnState> {
-
     constructor(props: ChangeColumnProps) {
         super(props);
-        this.state = { userSelectColumnList: this.props.selectedColumn, originSelectColumnList: this.props.selectedColumn };
+        this.state = {
+            userSelectColumnList: this.props.selectedColumn,
+            originSelectColumnList: this.props.selectedColumn
+        };
     }
 
     makeChangeHandler = (label: string): any => {
         return (ev: any, checked: boolean): void => this.onCheckboxChange(ev, label, checked);
-    }
+    };
 
-    onCheckboxChange = (ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined, label: string, val?: boolean, ): void => {
+    onCheckboxChange = (
+        ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined,
+        label: string,
+        val?: boolean
+    ): void => {
         const source: string[] = JSON.parse(JSON.stringify(this.state.userSelectColumnList));
         if (val === true) {
             if (!source.includes(label)) {
@@ -41,7 +47,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         } else {
             if (source.includes(label)) {
                 // remove from source
-                const result = source.filter((item) => item !== label);
+                const result = source.filter(item => item !== label);
                 this.setState(() => ({ userSelectColumnList: result }));
             }
         }
@@ -88,11 +94,11 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         }
         this.props.changeColumn(sortColumn);
         this.hideDialog(); // hide dialog
-    }
+    };
 
     hideDialog = (): void => {
         this.props.hideShowColumnDialog();
-    }
+    };
 
     // user exit dialog
     cancelOption = (): void => {
@@ -101,7 +107,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         this.setState({ userSelectColumnList: originSelectColumnList }, () => {
             this.hideDialog();
         });
-    }
+    };
 
     render(): React.ReactNode {
         const { showColumn, isHideDialog } = this.props;
@@ -129,14 +135,14 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                         styles: { main: { maxWidth: 450 } }
                     }}
                 >
-                    <div className="columns-height">
+                    <div className='columns-height'>
                         {renderOptions.map(item => {
-                            return <Checkbox key={item.label} {...item} styles={{ root: { marginBottom: 8 } }} />
+                            return <Checkbox key={item.label} {...item} styles={{ root: { marginBottom: 8 } }} />;
                         })}
                     </div>
                     <DialogFooter>
-                        <PrimaryButton text="Save" onClick={this.saveUserSelectColumn} />
-                        <DefaultButton text="Cancel" onClick={this.cancelOption} />
+                        <PrimaryButton text='Save' onClick={this.saveUserSelectColumn} />
+                        <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
                 </Dialog>
             </div>

@@ -13,11 +13,23 @@ const downLoadIcon = { iconName: 'Download' };
 const infoIconAbout = { iconName: 'info' };
 const timeIcon = { iconName: 'Refresh' };
 const disableUpdates = { iconName: 'DisableUpdates' };
-const requency = { iconName: 'Timer' }; 
+const requency = { iconName: 'Timer' };
 const closeTimer = { iconName: 'Blocked2' };
 const LineChart = <Icon iconName='LineChart' />;
 
-export { infoIcon, warining, errorBadge, completed, blocked,
-    infoIconAbout, copy, tableListIcon, downLoadIcon, timeIcon,
-    disableUpdates, requency, closeTimer, LineChart
+export {
+    infoIcon,
+    warining,
+    errorBadge,
+    completed,
+    blocked,
+    infoIconAbout,
+    copy,
+    tableListIcon,
+    downLoadIcon,
+    timeIcon,
+    disableUpdates,
+    requency,
+    closeTimer,
+    LineChart
 };

@@ -8,7 +8,6 @@ interface MessageInfoProps {
 }
 
 class MessageInfo extends React.Component<MessageInfoProps, {}> {
-
     constructor(props: MessageInfoProps) {
         super(props);
     }
@@ -16,11 +15,7 @@ class MessageInfo extends React.Component<MessageInfoProps, {}> {
     render(): React.ReactNode {
         const { info, typeInfo, className } = this.props;
         return (
-            <MessageBar
-                messageBarType={MessageBarType[typeInfo]}
-                isMultiline={true}
-                className={className}
-            >
+            <MessageBar messageBarType={MessageBarType[typeInfo]} isMultiline={true} className={className}>
                 {info}
             </MessageBar>
         );

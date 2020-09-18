@@ -28,7 +28,7 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeColumn: (val: string[]) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeMetricGraphMode: ( val: 'max' | 'min') => {},
+    changeMetricGraphMode: (val: 'max' | 'min') => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeEntries: (val: string) => {}
 });
@@ -54,10 +54,10 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ 
-            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, 
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
-            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
+            metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
         }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
         // final result is legal
@@ -78,7 +78,8 @@ class App extends React.Component<{}, AppState> {
                     // illegal final data
                     this.setState(() => ({
                         isillegalFinal: true,
-                        expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
+                        expWarningMessage:
+                            'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
                     }));
                     window.clearInterval(this.dataFormatimer);
                 }
@@ -86,10 +87,9 @@ class App extends React.Component<{}, AppState> {
                 break;
             }
         }
-    }
+    };
 
     changeInterval = (interval: number): void => {
-
         window.clearTimeout(this.timerId);
         if (interval === 0) {
             return;
@@ -100,22 +100,21 @@ class App extends React.Component<{}, AppState> {
             this.firstLoad = true;
             this.refresh();
         });
-
-    }
+    };
 
     // TODO: use local storage
     changeColumn = (columnList: string[]): void => {
         this.setState({ columnList: columnList });
-    }
+    };
 
     changeMetricGraphMode = (val: 'max' | 'min'): void => {
         this.setState({ metricGraphMode: val });
-    }
+    };
 
     // overview best trial module
     changeEntries = (entries: string): void => {
         this.setState({ bestTrialEntries: entries });
-    }
+    };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
         if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
@@ -126,11 +125,18 @@ class App extends React.Component<{}, AppState> {
     }
 
     render(): React.ReactNode {
-        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
-            metricGraphMode, isillegalFinal, expWarningMessage, bestTrialEntries
+        const {
+            interval,
+            columnList,
+            experimentUpdateBroadcast,
+            trialsUpdateBroadcast,
+            metricGraphMode,
+            isillegalFinal,
+            expWarningMessage,
+            bestTrialEntries
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
-            return null;  // TODO: render a loading page
+            return null; // TODO: render a loading page
         }
         const errorList = [
             { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
@@ -141,38 +147,41 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
         return (
-            <Stack className="nni" style={{ minHeight: window.innerHeight }}>
-                <div className="header">
-                    <div className="headerCon">
+            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                <div className='header'>
+                    <div className='headerCon'>
                         <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                     </div>
                 </div>
-                <Stack className="contentBox">
-                    <Stack className="content">
+                <Stack className='contentBox'>
+                    <Stack className='content'>
                         {/* if api has error field, show error message */}
-                        {
-                            errorList.map((item, key) => {
-                                return (
-                                    item.errorWhere && <div key={key} className="warning">
-                                        <MessageInfo info={item.errorMessage} typeInfo="error" />
+                        {errorList.map(
+                            (item, key) =>
+                                item.errorWhere && (
+                                    <div key={key} className='warning'>
+                                        <MessageInfo info={item.errorMessage} typeInfo='error' />
                                     </div>
-                                );
-                            })
-                        }
-                        {isillegalFinal && <div className="warning">
-                            <MessageInfo info={expWarningMessage} typeInfo="warning" />
-                        </div>}
-                        <AppContext.Provider value={{
-                            interval,
-                            columnList, 
-                            changeColumn: this.changeColumn,
-                            experimentUpdateBroadcast,
-                            trialsUpdateBroadcast,
-                            metricGraphMode, 
-                            changeMetricGraphMode: this.changeMetricGraphMode,
-                            bestTrialEntries, 
-                            changeEntries: this.changeEntries
-                        }}>
+                                )
+                        )}
+                        {isillegalFinal && (
+                            <div className='warning'>
+                                <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                            </div>
+                        )}
+                        <AppContext.Provider
+                            value={{
+                                interval,
+                                columnList,
+                                changeColumn: this.changeColumn,
+                                experimentUpdateBroadcast,
+                                trialsUpdateBroadcast,
+                                metricGraphMode,
+                                changeMetricGraphMode: this.changeMetricGraphMode,
+                                bestTrialEntries,
+                                changeEntries: this.changeEntries
+                            }}
+                        >
                             {this.props.children}
                         </AppContext.Provider>
                     </Stack>
@@ -192,7 +201,6 @@ class App extends React.Component<{}, AppState> {
             if (trialsUpdated) {
                 this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
             }
-
         } else {
             this.firstLoad = false;
         }
@@ -205,13 +213,15 @@ class App extends React.Component<{}, AppState> {
         }
 
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
-
-    }
+    };
 
     public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
+        }));
     }
 }
 

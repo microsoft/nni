@@ -11,7 +11,7 @@ function groupMetricsByTrial(metrics: MetricDataRecord[]): Map<string, MetricDat
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             ret.get(metric.trialJobId)!.push(metric);
         } else {
-            ret.set(metric.trialJobId, [ metric ]);
+            ret.set(metric.trialJobId, [metric]);
         }
     }
     return ret;
@@ -91,7 +91,7 @@ class TrialManager {
         if (succeedTrialsList !== undefined && succeedTrialsList[0] !== undefined) {
             return succeedTrialsList[0].finalKeys();
         } else {
-            return ["default"];
+            return ['default'];
         }
     }
 
@@ -109,7 +109,7 @@ class TrialManager {
             ['FAILED', 0],
             ['USER_CANCELED', 0],
             ['SYS_CANCELED', 0],
-            ['EARLY_STOPPED', 0],
+            ['EARLY_STOPPED', 0]
         ]);
         for (const trial of this.trials.values()) {
             if (trial.initialized()) {
@@ -168,7 +168,6 @@ class TrialManager {
     }
 
     private async updateInfo(): Promise<boolean> {
-
         let updated = false;
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
@@ -235,7 +234,11 @@ class TrialManager {
             return;
         }
         this.doingBatchUpdate = true;
-        for (let i = 0; i < this.maxSequenceId && this.isMetricdataRangeError === false; i += METRIC_GROUP_UPDATE_SIZE) {
+        for (
+            let i = 0;
+            i < this.maxSequenceId && this.isMetricdataRangeError === false;
+            i += METRIC_GROUP_UPDATE_SIZE
+        ) {
             requestAxios(`${MANAGER_IP}/metric-data-range/${i}/${i + METRIC_GROUP_UPDATE_SIZE}`)
                 .then(data => {
                     const updated = this.doUpdateMetrics(data as any, false);

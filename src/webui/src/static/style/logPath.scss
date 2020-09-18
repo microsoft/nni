@@ -1,22 +1,22 @@
-.logpath{
+.logpath {
     margin-left: 10px;
     font-size: 14px;
-    .logName{
-        color: #268BD2;
+
+    .logName {
+        color: #268bd2;
         margin-right: 5px;
     }
 
-    .logContent{
+    .logContent {
         color: #333;
     }
 
-    .error{
-        color: #CB4B16;
+    .error {
+        color: #cb4b16;
     }
 }
 
-.logHref:hover{
+.logHref:hover {
     color: blue;
     text-decoration: underline;
 }
-

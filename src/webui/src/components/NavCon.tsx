@@ -2,15 +2,17 @@ import * as React from 'react';
 import axios from 'axios';
 import { WEBUIDOC, MANAGER_IP } from '../static/const';
 import {
-    Stack, initializeIcons, StackItem, CommandBarButton,
-    IContextualMenuProps, IStackTokens, IStackStyles
+    Stack,
+    initializeIcons,
+    StackItem,
+    CommandBarButton,
+    IContextualMenuProps,
+    IStackTokens,
+    IStackStyles
 } from '@fluentui/react';
 import LogPanel from './modals/LogPanel';
 import ExperimentPanel from './modals/ExperimentPanel';
-import {
-    downLoadIcon, infoIconAbout,
-    timeIcon, disableUpdates, requency, closeTimer
-} from './buttons/Icon';
+import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
 import '../static/style/nav/nav.scss';
@@ -22,7 +24,10 @@ const stackTokens: IStackTokens = {
 };
 const stackStyle: IStackStyles = {
     root: {
-        minWidth: 400, height: 56, display: 'flex', verticalAlign: 'center'
+        minWidth: 400,
+        height: 56,
+        display: 'flex',
+        verticalAlign: 'center'
     }
 };
 
@@ -43,7 +48,6 @@ interface NavProps {
 }
 
 class NavCon extends React.Component<NavProps, NavState> {
-
     constructor(props: NavProps) {
         super(props);
         this.state = {
@@ -61,49 +65,48 @@ class NavCon extends React.Component<NavProps, NavState> {
     // to see & download experiment parameters
     showExpcontent = (): void => {
         this.setState({ isvisibleExperimentDrawer: true });
-    }
+    };
 
     // to see & download dispatcher | nnimanager log
     showDispatcherLog = (): void => {
         this.setState({ isvisibleLogDrawer: true });
-    }
+    };
 
     // close log drawer (nnimanager.dispatcher)
     closeLogDrawer = (): void => {
         this.setState({ isvisibleLogDrawer: false });
-    }
+    };
 
     // close download experiment parameters drawer
     closeExpDrawer = (): void => {
         this.setState({ isvisibleExperimentDrawer: false });
-    }
+    };
 
     getNNIversion = (): void => {
         axios(`${MANAGER_IP}/version`, {
             method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    this.setState({ version: res.data });
-                }
-            });
-    }
+        }).then(res => {
+            if (res.status === 200) {
+                this.setState({ version: res.data });
+            }
+        });
+    };
 
     openGithub = (): void => {
         const { version } = this.state;
         const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
         window.open(feed);
-    }
+    };
 
     openDocs = (): void => {
         window.open(WEBUIDOC);
-    }
+    };
 
     openGithubNNI = (): void => {
         const { version } = this.state;
         const nniLink = `https://github.com/Microsoft/nni/tree/${version}`;
         window.open(nniLink);
-    }
+    };
 
     getInterval = (num: number): void => {
         this.props.changeInterval(num); // notice parent component
@@ -111,15 +114,14 @@ class NavCon extends React.Component<NavProps, NavState> {
             refreshFrequency: num === 0 ? '' : num,
             refreshText: num === 0 ? 'Disable auto' : 'Auto refresh'
         }));
-    }
+    };
 
     componentDidMount(): void {
         this.getNNIversion();
     }
 
     render(): React.ReactNode {
-        const { isvisibleLogDrawer, isvisibleExperimentDrawer, version,
-            refreshText, refreshFrequency } = this.state;
+        const { isvisibleLogDrawer, isvisibleExperimentDrawer, version, refreshText, refreshFrequency } = this.state;
         const aboutProps: IContextualMenuProps = {
             items: [
                 {
@@ -143,14 +145,14 @@ class NavCon extends React.Component<NavProps, NavState> {
             ]
         };
         return (
-            <Stack horizontal className="nav">
+            <Stack horizontal className='nav'>
                 <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                    <span className="desktop-logo">{NNILOGO}</span>
-                    <span className="left-right-margin">{OVERVIEWTABS}</span>
+                    <span className='desktop-logo'>{NNILOGO}</span>
+                    <span className='left-right-margin'>{OVERVIEWTABS}</span>
                     <span>{DETAILTABS}</span>
                 </StackItem>
-                <StackItem grow={70} className="navOptions">
-                    <Stack horizontal horizontalAlign="end" tokens={stackTokens} styles={stackStyle}>
+                <StackItem grow={70} className='navOptions'>
+                    <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
                         {/* refresh button danyi*/}
                         {/* TODO: fix bug */}
                         {/* <CommandBarButton
@@ -158,29 +160,23 @@ class NavCon extends React.Component<NavProps, NavState> {
                             text="Refresh"
                             onClick={this.props.refreshFunction}
                         /> */}
-                        <div className="nav-refresh">
+                        <div className='nav-refresh'>
                             <CommandBarButton
                                 iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
                                 text={refreshText}
                                 menuProps={this.refreshProps}
                             />
-                            <div className="nav-refresh-num">{refreshFrequency}</div>
+                            <div className='nav-refresh-num'>{refreshFrequency}</div>
                         </div>
-                        <CommandBarButton
-                            iconProps={downLoadIcon}
-                            text="Download"
-                            menuProps={this.menuProps}
-                        />
-                        <CommandBarButton
-                            iconProps={infoIconAbout}
-                            text="About"
-                            menuProps={aboutProps}
-                        />
+                        <CommandBarButton iconProps={downLoadIcon} text='Download' menuProps={this.menuProps} />
+                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
                     </Stack>
                 </StackItem>
                 {/* the drawer for dispatcher & nnimanager log message */}
                 {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
-                {isvisibleExperimentDrawer && <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />}
+                {isvisibleExperimentDrawer && (
+                    <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />
+                )}
             </Stack>
         );
     }
@@ -236,8 +232,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                 text: 'Refresh every 1min',
                 iconProps: requency,
                 onClick: this.getInterval.bind(this, 60)
-            },
-
+            }
         ]
     };
 }

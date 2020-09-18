@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Stack, IStackTokens, Dropdown } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
-import { AppContext } from "../App";
+import { AppContext } from '../App';
 import { Title1 } from './overview/Title1';
 import SuccessTable from './overview/SuccessTable';
 import Progressed from './overview/Progress';
@@ -14,7 +14,7 @@ import '../static/style/overview.scss';
 import '../static/style/logPath.scss';
 
 const stackTokens: IStackTokens = {
-    childrenGap: 30,
+    childrenGap: 30
 };
 
 const entriesOption = [
@@ -50,25 +50,24 @@ class Overview extends React.Component<{}, OverviewState> {
         // #999 panel active bgcolor; #b3b3b3 as usual
         const { changeMetricGraphMode } = this.context;
         changeMetricGraphMode('max');
-    }
-
+    };
 
     clickMinTop = (event: React.SyntheticEvent<EventTarget>): void => {
         event.stopPropagation();
         const { changeMetricGraphMode } = this.context;
         changeMetricGraphMode('min');
-    }
+    };
 
     changeConcurrency = (val: number): void => {
         this.setState({ trialConcurrency: val });
-    }
+    };
 
     // updateEntries = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
             this.context.changeEntries(item.key);
         }
-    }
+    };
 
     render(): React.ReactNode {
         const { trialConcurrency } = this.state;
@@ -81,22 +80,22 @@ class Overview extends React.Component<{}, OverviewState> {
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
                     const { experimentUpdateBroadcast, metricGraphMode, bestTrialEntries } = value;
-                    const titleMaxbgcolor = (metricGraphMode === 'max' ? '#333' : '#b3b3b3');
-                    const titleMinbgcolor = (metricGraphMode === 'min' ? '#333' : '#b3b3b3');
+                    const titleMaxbgcolor = metricGraphMode === 'max' ? '#333' : '#b3b3b3';
+                    const titleMinbgcolor = metricGraphMode === 'min' ? '#333' : '#b3b3b3';
                     return (
-                        <div className="overview">
+                        <div className='overview'>
                             {/* status and experiment block */}
-                            <Stack className="bottomDiv bgNNI">
-                                <TitleContext.Provider value={{ text: "Experiment", icon: "11.png", fontColor: '' }}>
+                            <Stack className='bottomDiv bgNNI'>
+                                <TitleContext.Provider value={{ text: 'Experiment', icon: '11.png', fontColor: '' }}>
                                     <Title1 />
                                 </TitleContext.Provider>
                                 <BasicInfo />
                             </Stack>
 
-                            <Stack horizontal className="overMessage bottomDiv">
+                            <Stack horizontal className='overMessage bottomDiv'>
                                 {/* status block */}
-                                <Stack.Item grow className="prograph bgNNI borderRight">
-                                    <TitleContext.Provider value={{ text: "Status", icon: "5.png", fontColor: '' }}>
+                                <Stack.Item grow className='prograph bgNNI borderRight'>
+                                    <TitleContext.Provider value={{ text: 'Status', icon: '5.png', fontColor: '' }}>
                                         <Title1 />
                                     </TitleContext.Provider>
                                     <Progressed
@@ -107,21 +106,27 @@ class Overview extends React.Component<{}, OverviewState> {
                                     />
                                 </Stack.Item>
                                 {/* experiment parameters search space tuner assessor... */}
-                                <Stack.Item grow styles={{ root: { width: 450 } }} className="overviewBoder borderRight bgNNI">
-                                    <TitleContext.Provider value={{ text: "Search space", icon: "10.png", fontColor: '' }}>
+                                <Stack.Item
+                                    grow
+                                    styles={{ root: { width: 450 } }}
+                                    className='overviewBoder borderRight bgNNI'
+                                >
+                                    <TitleContext.Provider
+                                        value={{ text: 'Search space', icon: '10.png', fontColor: '' }}
+                                    >
                                         <Title1 />
                                     </TitleContext.Provider>
-                                    <Stack className="experiment">
+                                    <Stack className='experiment'>
                                         <SearchSpace searchSpace={EXPERIMENT.searchSpace} />
                                     </Stack>
                                 </Stack.Item>
-                                <Stack.Item grow styles={{ root: { width: 450 } }} className="bgNNI">
-                                    <TitleContext.Provider value={{ text: "Config", icon: "4.png", fontColor: '' }}>
+                                <Stack.Item grow styles={{ root: { width: 450 } }} className='bgNNI'>
+                                    <TitleContext.Provider value={{ text: 'Config', icon: '4.png', fontColor: '' }}>
                                         <Title1 />
                                     </TitleContext.Provider>
-                                    <Stack className="experiment">
+                                    <Stack className='experiment'>
                                         {/* the scroll bar all the trial profile in the searchSpace div*/}
-                                        <div className="experiment searchSpace">
+                                        <div className='experiment searchSpace'>
                                             <TrialInfo
                                                 experimentUpdateBroadcast={experimentUpdateBroadcast}
                                                 concurrency={trialConcurrency}
@@ -132,20 +137,26 @@ class Overview extends React.Component<{}, OverviewState> {
                             </Stack>
 
                             <Stack style={{ backgroundColor: '#fff' }}>
-                                <Stack horizontal className="top10bg" style={{ position: 'relative', height: 42 }}>
-                                    <div
-                                        className="title"
-                                        onClick={this.clickMaxTop}
-                                    >
-                                        <TitleContext.Provider value={{ text: "Top maximal trials", icon: "max.png", fontColor: titleMaxbgcolor }}>
+                                <Stack horizontal className='top10bg' style={{ position: 'relative', height: 42 }}>
+                                    <div className='title' onClick={this.clickMaxTop}>
+                                        <TitleContext.Provider
+                                            value={{
+                                                text: 'Top maximal trials',
+                                                icon: 'max.png',
+                                                fontColor: titleMaxbgcolor
+                                            }}
+                                        >
                                             <Title1 />
                                         </TitleContext.Provider>
                                     </div>
-                                    <div
-                                        className="title minTitle"
-                                        onClick={this.clickMinTop}
-                                    >
-                                        <TitleContext.Provider value={{ text: "Top minimal trials", icon: "min.png", fontColor: titleMinbgcolor }}>
+                                    <div className='title minTitle' onClick={this.clickMinTop}>
+                                        <TitleContext.Provider
+                                            value={{
+                                                text: 'Top minimal trials',
+                                                icon: 'min.png',
+                                                fontColor: titleMinbgcolor
+                                            }}
+                                        >
                                             <Title1 />
                                         </TitleContext.Provider>
                                     </div>
@@ -172,9 +183,8 @@ class Overview extends React.Component<{}, OverviewState> {
                                 </Stack>
                             </Stack>
                         </div>
-                    )
-                }
-                }
+                    );
+                }}
             </AppContext.Consumer>
         );
     }
@@ -214,11 +224,13 @@ class Overview extends React.Component<{}, OverviewState> {
                 scale: true,
                 data: ySequence
             },
-            series: [{
-                symbolSize: 6,
-                type: 'scatter',
-                data: ySequence
-            }]
+            series: [
+                {
+                    symbolSize: 6,
+                    type: 'scatter',
+                    data: ySequence
+                }
+            ]
         };
     }
 }

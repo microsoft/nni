@@ -1,7 +1,7 @@
 {
   "name": "nni-webui",
   "version": "0.1.0",
-  "private": true,
+  "license": "MIT",
   "dependencies": {
     "axios": "^0.19.0",
     "babel-eslint": "10.0.1",
@@ -75,15 +75,20 @@
     "@typescript-eslint/parser": "^2.11.0",
     "concurrently": "^5.2.0",
     "eslint": "^5.16.0",
+    "eslint-config-prettier": "^6.1.0",
     "eslint-config-react-app": "^4.0.0",
     "eslint-loader": "2.1.2",
     "eslint-plugin-flowtype": "2.50.1",
     "eslint-plugin-import": "2.16.0",
     "eslint-plugin-jsx-a11y": "6.2.1",
+    "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "7.12.4",
     "eslint-plugin-react-hooks": "^1.5.0",
     "express": "^4.17.1",
     "npx": "^10.2.0",
+    "prettier": "^1.18.2",
+    "stylelint": "^13.7.0",
+    "stylelint-config-standard": "^20.0.0",
     "typescript": "^3.8.0"
   },
   "proxy": "http://localhost:12138",
@@ -92,6 +97,7 @@
     "build": "node --max-old-space-size=3072 scripts/build.js",
     "test": "node --max-old-space-size=3072 scripts/test.js",
     "eslint": "npx eslint ./ --ext .tsx,.ts",
+    "stylelint": "npx stylelint **/*{.css,.scss}",
     "mock": "node scripts/server.js",
     "dev": "concurrently \"yarn mock\" \"yarn start\""
   },

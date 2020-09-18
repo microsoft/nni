@@ -1,8 +1,13 @@
 import * as React from 'react';
 import {
-    Stack, FocusTrapCallout, DefaultButton,
+    Stack,
+    FocusTrapCallout,
+    DefaultButton,
     FocusZone,
-    PrimaryButton, getTheme, mergeStyleSets, FontWeights
+    PrimaryButton,
+    getTheme,
+    mergeStyleSets,
+    FontWeights
 } from '@fluentui/react';
 import { killJob } from '../../static/function';
 import { blocked } from '../buttons/Icon';
@@ -63,7 +68,6 @@ interface KillJobProps {
 }
 
 class KillJob extends React.Component<KillJobProps, KillJobState> {
-
     private menuButtonElement!: HTMLElement | null;
     constructor(props: KillJobProps) {
         super(props);
@@ -72,20 +76,20 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
 
     onDismiss = (): void => {
         this.setState(() => ({ isCalloutVisible: false }));
-    }
+    };
 
     onKill = (): void => {
         this.setState({ isCalloutVisible: false }, () => {
             const { trial } = this.props;
             killJob(trial.key, trial.id, trial.status);
         });
-    }
+    };
 
     openPromot = (event: React.SyntheticEvent<EventTarget>): void => {
         event.preventDefault();
         event.stopPropagation();
         this.setState({ isCalloutVisible: true });
-    }
+    };
 
     render(): React.ReactNode {
         const { isCalloutVisible } = this.state;
@@ -93,12 +97,14 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
         return (
             <div>
                 <div className={styles.buttonArea} ref={(menuButton): any => (this.menuButtonElement = menuButton)}>
-                    <PrimaryButton className="detail-button-operation" onClick={this.openPromot} title="kill">{blocked}</PrimaryButton>
+                    <PrimaryButton className='detail-button-operation' onClick={this.openPromot} title='kill'>
+                        {blocked}
+                    </PrimaryButton>
                 </div>
                 {isCalloutVisible ? (
                     <div>
                         <FocusTrapCallout
-                            role="alertdialog"
+                            role='alertdialog'
                             className={styles.callout}
                             gapSpace={0}
                             target={this.menuButtonElement}
