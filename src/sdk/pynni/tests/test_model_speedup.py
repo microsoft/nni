@@ -238,7 +238,7 @@ class SpeedupTestCase(TestCase):
 
         net = resnet18(num_classes=10)
         data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
-        ms = ModelSpeedup(net, data, MASK_FILE, conv_prune_dim=1)
+        ms = ModelSpeedup(net, data, MASK_FILE)
         ms.speedup_model()
         ms.bound_model(data)
 
