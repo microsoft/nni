@@ -105,7 +105,7 @@ def zero_bn_bias(model):
                 shape = module.running_mean.data.size()
                 module.running_mean = torch.zeros(shape).to(device)
 
-class NaiveChannelMasker(WeightMasker):
+class L1ChannelMasker(WeightMasker):
     def __init__(self, model, pruner):
         self.model = model
         self.pruner = pruner
@@ -154,7 +154,7 @@ def channel_prune(model):
     }]
 
     pruner = L1FilterPruner(model, config_list)
-    masker = NaiveChannelMasker(model, pruner)
+    masker = L1ChannelMasker(model, pruner)
     pruner.masker = masker
     pruner.compress()
     pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)

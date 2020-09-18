@@ -223,7 +223,7 @@ class ChannelMaskConflict(MaskFix):
         super(ChannelMaskConflict, self).__init__(masks, model, dummy_input, traced)
         self.conv_prune_dim = conv_prune_dim
 
-    def fix_mask(self, merge_type='or'):
+    def fix_mask(self):
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
@@ -239,8 +239,8 @@ class ChannelMaskConflict(MaskFix):
         for dset in depen_sets:
             if len(dset) <= 1:
                 continue
-            # channel_masks is a list, each element is None or a vector such as [0, 1, 1, 0, 0], which means
-            # there are total 5 channels, the first and last two channels are pruned. None means no channel
+            # channel_masks is a list, each element is None or a vector, for example:
+            # [[0, 1, 1, 0, 0], [0, 0, 1, 1, 0], None], None means no channel
             # is pruned.
             channel_masks = []
             for name in dset:
@@ -267,10 +267,12 @@ class ChannelMaskConflict(MaskFix):
             for i, dim_mask in enumerate(channel_masks):
                 if dim_mask is None:
                     channel_masks[i] = torch.ones(num_channels).int()
+
+            # merge masks with 'or'
             merged_channel_mask = channel_masks[0].clone()
-            if merge_type == 'or':
-                for i in range(1, len(channel_masks)):
-                    merged_channel_mask = ((merged_channel_mask + channel_masks[i]) != 0).int()
+            for i in range(1, len(channel_masks)):
+                merged_channel_mask = ((merged_channel_mask + channel_masks[i]) != 0).int()
+
             merged_index = torch.nonzero(merged_channel_mask, as_tuple=True)[0]
 
             for name in dset:
@@ -288,6 +290,8 @@ class ChannelMaskConflict(MaskFix):
                     new_mask[:, merged_index] = 1.
                 elif len(orig_mask.size()) == 1:
                     new_mask = merged_index.type_as(orig_mask)
+                else:
+                    raise RuntimeError('unsupported mask shape.')
 
                 self.masks[name]['weight'] = new_mask
                 if hasattr(self.masks[name], 'bias'):
