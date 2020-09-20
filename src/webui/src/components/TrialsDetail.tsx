@@ -16,8 +16,6 @@ import '../static/style/search.scss';
 interface TrialDetailState {
     tablePageSize: number; // table components val
     whichChart: string;
-    searchType: string;
-    searchFilter: (trial: Trial) => boolean;
 }
 
 interface TrialsDetailProps {
@@ -40,39 +38,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
         this.state = {
             tablePageSize: 20,
             whichChart: 'Default metric',
-            searchType: 'id',
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/explicit-function-return-type
-            searchFilter: trial => true
         };
-    }
-
-    // search a trial by trial No. | trial id | Parameters | Status
-    searchTrial = (event: React.ChangeEvent<HTMLInputElement>): void => {
-        const targetValue = event.target.value;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        let filter = (trial: Trial): boolean => true;
-        if (!targetValue.trim()) {
-            this.setState({ searchFilter: filter });
-            return;
-        }
-        switch (this.state.searchType) {
-            case 'id':
-                filter = (trial): boolean => trial.info.id.toUpperCase().includes(targetValue.toUpperCase());
-                break;
-            case 'Trial No.':
-                filter = (trial): boolean => trial.info.sequenceId.toString() === targetValue;
-                break;
-            case 'status':
-                filter = (trial): boolean => trial.info.status.toUpperCase().includes(targetValue.toUpperCase());
-                break;
-            case 'parameters':
-                // TODO: support filters like `x: 2` (instead of `"x": 2`)
-                filter = (trial): boolean => JSON.stringify(trial.info.hyperParameters, null, 4).includes(targetValue);
-                break;
-            default:
-                alert(`Unexpected search filter ${this.state.searchType}`);
-        }
-        this.setState({ searchFilter: filter });
     }
 
     handleTablePageSizeSelect = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
@@ -97,7 +63,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
 
     render(): React.ReactNode {
         const { tablePageSize, whichChart, searchType } = this.state;
-        const { columnList, changeColumn } = this.props;
+        const { columnList, changeColumn, trialsUpdateBroadcast } = this.props;
         const source = TRIALS.filter(this.state.searchFilter);
         const trialIds = TRIALS.filter(this.state.searchFilter).map(trial => trial.id);
         const searchOptions = [
@@ -116,7 +82,7 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                                 <DefaultPoint
                                     trialIds={trialIds}
                                     visible={whichChart === 'Default metric'}
-                                    trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
+                                    trialsUpdateBroadcast={trialsUpdateBroadcast}
                                 />
                             </Stack>
                         </PivotItem>
@@ -142,54 +108,11 @@ class TrialsDetail extends React.Component<TrialsDetailProps, TrialDetailState> 
                     </Pivot>
                 </div>
                 {/* trial table list */}
-                <div style={{ backgroundColor: '#fff' }}>
-                    <Stack horizontal className="panelTitle" style={{ marginTop: 10 }}>
-                        <span style={{ marginRight: 12 }}>{tableListIcon}</span>
-                        <span>Trial jobs</span>
-                    </Stack>
-                    <Stack horizontal className="allList">
-                        <StackItem grow={50}>
-                            <DefaultButton
-                                text="Compare"
-                                className="allList-compare"
-                                // use child-component tableList's function, the function is in child-component.
-                                onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
-                            />
-                        </StackItem>
-                        <StackItem grow={50}>
-                            <Stack horizontal horizontalAlign="end" className="allList">
-                                <DefaultButton
-                                    className="allList-button-gap"
-                                    text="Customize columns"
-                                    onClick={(): void => { if (this.tableList) { this.tableList.customizeColumn(); } }}
-                                />
-                                <Dropdown
-                                    selectedKey={searchType}
-                                    options={searchOptions}
-                                    onChange={this.updateSearchFilterType}
-                                    styles={{ root: { width: 150 } }}
-                                />
-                                <input
-                                    type="text"
-                                    className="allList-search-input"
-                                    placeholder={`Search by ${this.state.searchType}`}
-                                    onChange={this.searchTrial}
-                                    style={{ width: 230 }}
-                                    ref={(text): any => (this.searchInput) = text}
-                                />
-                            </Stack>
-                        </StackItem>
-                    </Stack>
-                    <TableList
-                        pageSize={tablePageSize}
-                        tableSource={source}
-                        // columnList={columnList}
-                        changeColumn={changeColumn}
-                        trialsUpdateBroadcast={this.props.trialsUpdateBroadcast}
-                        // TODO: change any to specific type
-                        ref={(tabList): any => this.tableList = tabList}
-                    />
-                </div>
+                {/* in this version, it will be a separate component with a completely indepedent filter */}
+                <TableList
+                    trialsUpdateBroadcast={trialsUpdateBroadcast}
+                    tableSource={source}
+                />
             </div>
         );
     }

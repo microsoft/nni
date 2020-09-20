@@ -2,7 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
-    Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode, Icon,
+    Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode, Icon, StackItem, DefaultButton,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
 } from 'office-ui-fabric-react';
 import ReactPaginate from 'react-paginate';
@@ -54,10 +54,8 @@ const horizontalGapStackTokens: IStackTokens = {
 };
 
 interface TableListProps {
-    pageSize: number;
     tableSource: TableObj[];
     trialsUpdateBroadcast: number;
-    changeColumn: (val: string[]) => void;
 }
 
 interface SortInfo {
@@ -68,6 +66,8 @@ interface SortInfo {
 interface TableListState {
     displayedItems: any[];
     columns: IColumn[];
+    searchType: string;
+    searchFilter: (trial: TableObj) => boolean;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -77,7 +77,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             displayedItems: [],
-            columns: []
+            columns: [],
+            searchType: 'id',
+            searchFilter: (_: TableObj): boolean => true
         };
     }
 
@@ -132,7 +134,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const columns: IColumn[] = [{
             key: 'expand',
             name: '',
-            onRender: (item, index, column) => {
+            onRender: (item, index) => {
                 return <Icon
                     aria-hidden={true}
                     iconName='ChevronRight'
@@ -193,6 +195,43 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
+    // search a trial by trial No. | trial id | Parameters | Status
+    private _searchTrial(event: React.ChangeEvent<HTMLInputElement>): void {
+        const targetValue = event.target.value;
+        let filter = (_: TableObj): boolean => true;
+        if (!targetValue.trim()) {
+            this.setState({ searchFilter: filter });
+            return;
+        }
+        switch (this.state.searchType) {
+            case 'id':
+                filter = (trial): boolean => trial.id.toUpperCase().includes(targetValue.toUpperCase());
+                break;
+            case 'Trial No.':
+                filter = (trial): boolean => trial.sequenceId.toString() === targetValue;
+                break;
+            case 'status':
+                filter = (trial): boolean => trial.status.toUpperCase().includes(targetValue.toUpperCase());
+                break;
+            case 'parameters':
+                // TODO: support filters like `x: 2` (instead of `"x": 2`)
+                filter = (trial): boolean => JSON.stringify(trial.description.parameters).includes(targetValue);
+                break;
+            default:
+                alert(`Unexpected search filter ${this.state.searchType}`);
+        }
+        this.setState({ searchFilter: filter });
+    }
+
+    private _updateSearchFilterType(
+        _event: React.FormEvent<HTMLDivElement>,
+        item: IDropdownOption | undefined
+    ): void {
+        if (item !== undefined) {
+            this.setState({ searchType: item.key.toString() });
+        }
+    }
+
     render(): React.ReactNode {
         const perPageOptions = [
             { key: '10', text: '10 items per page' },
@@ -200,13 +239,50 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: '50', text: '50 items per page' },
             { key: 'all', text: 'All items' },
         ];
-        const { displayedItems, columns } = this.state;
+        const { displayedItems, columns, searchType } = this.state;
 
         console.log(displayedItems);  // eslint-disable-line no-console
         console.log(columns);  // eslint-disable-line no-console
 
         return (
-            <Stack>
+            <div style={{ backgroundColor: '#fff' }}>
+                <Stack horizontal className="panelTitle" style={{ marginTop: 10 }}>
+                    <span style={{ marginRight: 12 }}>{tableListIcon}</span>
+                    <span>Trial jobs</span>
+                </Stack>
+                <Stack horizontal className="allList">
+                    <StackItem grow={50}>
+                        <DefaultButton
+                            text="Compare"
+                            className="allList-compare"
+                            // use child-component tableList's function, the function is in child-component.
+                            onClick={(): void => { if (this.tableList) { this.tableList.compareBtn(); } }}
+                        />
+                    </StackItem>
+                    <StackItem grow={50}>
+                        <Stack horizontal horizontalAlign="end" className="allList">
+                            <DefaultButton
+                                className="allList-button-gap"
+                                text="Customize columns"
+                                onClick={(): void => { if (this.tableList) { this.tableList.customizeColumn(); } }}
+                            />
+                            <Dropdown
+                                selectedKey={searchType}
+                                options={searchOptions}
+                                onChange={this.updateSearchFilterType}
+                                styles={{ root: { width: 150 } }}
+                            />
+                            <input
+                                type="text"
+                                className="allList-search-input"
+                                placeholder={`Search by ${searchType}`}
+                                onChange={this.searchTrial}
+                                style={{ width: 230 }}
+                                ref={(text): any => (this.searchInput) = text}
+                            />
+                        </Stack>
+                    </StackItem>
+                </Stack>
                 <div id="tableList">
                     <DetailsList
                         columns={columns}
@@ -241,9 +317,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             activeClassName={"active"} />
 
                     </Stack> */}
-
                 </div>
-            </Stack>
+            </div>
         );
     }
 }
