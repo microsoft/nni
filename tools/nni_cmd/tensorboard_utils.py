@@ -126,10 +126,15 @@ def adl_tensorboard_helper(args):
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if not experiment_id:
+        return
     if args.id is None:
         args.id = experiment_id
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
+    if experiment_dict[args.id]["status"] == "STOPPED":
+        print_error("Experiment {} is stopped...".format(args.id))
+        return
     config_file_name = experiment_dict[experiment_id]['fileName']
     nni_config = Config(config_file_name)
     if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
