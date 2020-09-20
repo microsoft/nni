@@ -21,6 +21,7 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     the remained filters according to its mask, which
     not taking the pruned input channels into consideration,
     so the calculated FLOPs will be larger than real number.
+
     Parameters
     ---------
     model : nn.Module
@@ -29,6 +30,9 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
         the input shape of data
     custom_ops: dict
         a mapping of (module: custom operation)
+        the custom operation will overwrite the default operation.
+        
+        
     Returns
     -------
     flops: float
