@@ -33,69 +33,17 @@ config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 # dummy_input is necessary for the dependency_aware mode
 dummy_input = torch.ones(1, 3, 224, 224).cuda()
 pruner = L1FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
-pruner.compress()
-```
+# for L2FilterPruner
+# pruner = L2FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
+# for FPGMPruner
+# pruner = FPGMPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
+# for ActivationAPoZRankFilterPruner
+# pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1, , dependency_aware=True, dummy_input=dummy_input)
+# for ActivationMeanRankFilterPruner
+# pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
+# for TaylorFOWeightFilterPruner
+# pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
 
-To enable the dependency-aware mode for `L2FilterPruner`:
-```python
-from nni.compression.torch import L2FilterPruner
-config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-# dummy_input is necessary for the dependency_aware mode
-dummy_input = torch.ones(1, 3, 224, 224).cuda()
-pruner = L2FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
-pruner.compress()
-```
-
-To enable the dependency-aware mode for `FPGMPruner`:
-```python
-from nni.compression.torch import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-# dummy_input is necessary for the dependency_aware mode
-dummy_input = torch.ones(1, 3, 224, 224).cuda()
-pruner = FPGMPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
-pruner.compress()
-```
-
-To enable the dependency-aware mode for `ActivationAPoZRankFilterPruner`
-```python
-from nni.compression.torch import ActivationAPoZRankFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-# dummy_input is necessary for the dependency_aware mode
-dummy_input = torch.ones(1, 3, 224, 224).cuda()
-pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1, , dependency_aware=True, dummy_input=dummy_input)
-pruner.compress()
-```
-
-To enable the dependency-aware mode for `ActivationMeanRankFilterPruner`:
-
-```python
-from nni.compression.torch import ActivationMeanRankFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-# dummy_input is necessary for the dependency-aware mode and the
-# dummy_input should be on the same device with the model
-dummy_input = torch.ones(1, 3, 224, 224).cuda()
-pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
-pruner.compress()
-```
-
-To enable the dependency-aware mode for `TaylorFOWeightFilterPruner`:
-```python
-from nni.compression.torch import TaylorFOWeightFilterPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2d']
-}]
-dummy_input = torch.ones(1, 3, 224, 224).cuda()
-pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
 pruner.compress()
 ```
 
