@@ -12,8 +12,6 @@ def rest_put(url, data, timeout, show_error=False):
     try:
         response = requests.put(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                 data=data, timeout=timeout)
-        print(response.status_code)
-        print(response)
         return response
     except Exception as exception:
         if show_error:
@@ -25,8 +23,6 @@ def rest_post(url, data, timeout, show_error=False):
     try:
         response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)
-        print(response.status_code)
-        print(response)
         return response
     except Exception as exception:
         if show_error:
@@ -37,8 +33,6 @@ def rest_get(url, timeout, show_error=False):
     '''Call rest get method'''
     try:
         response = requests.get(url, timeout=timeout)
-        print(response.status_code)
-        print(response)
         return response
     except Exception as exception:
         if show_error:
@@ -49,8 +43,6 @@ def rest_delete(url, timeout, show_error=False):
     '''Call rest delete method'''
     try:
         response = requests.delete(url, timeout=timeout)
-        print(response.status_code)
-        print(response)
         return response
     except Exception as exception:
         if show_error:
