@@ -15,6 +15,7 @@ import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
+import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
@@ -146,7 +147,27 @@ class RouterTrainingService implements TrainingService {
                 await this.internalTrainingService.setClusterMetadata(key, value);
 
                 this.metaDataCache.clear();
-            } else {
+            } else if (key === TrialConfigMetadataKey.MACHINE_LIST) {
+                this.internalTrainingService = component.get(TrialDispatcher);
+
+                Container.bind(EnvironmentService)
+                    .to(RemoteEnvironmentService)
+                    .scope(Scope.Singleton);
+                for (const [key, value] of this.metaDataCache) {
+                    if (this.internalTrainingService === undefined) {
+                        throw new Error("TrainingService is not assigned!");
+                    }
+                    await this.internalTrainingService.setClusterMetadata(key, value);
+                }
+
+                if (this.internalTrainingService === undefined) {
+                    throw new Error("TrainingService is not assigned!");
+                }
+                await this.internalTrainingService.setClusterMetadata(key, value);
+
+                this.metaDataCache.clear();
+            }
+            else {
                 this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                 this.metaDataCache.set(key, value);
             }
