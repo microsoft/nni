@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import responses
 
 def mock_check_status():
@@ -26,7 +29,7 @@ def mock_get_experiment_profile():
         "searchSpace":"{\"C\": {\"_type\": \"uniform\", \"_value\": [0.1, 1]}, \
         \"kernel\": {\"_type\": \"choice\", \"_value\": [\"linear\", \"rbf\", \"poly\", \"sigmoid\"]}, \
         \"degree\": {\"_type\": \"choice\", \"_value\": [1, 2, 3, 4]}, \"gamma\": {\"_type\": \"uniform\", \
-        \"_value\": [0.01, 0.1]}, \"coef0 \": {\"_type\": \"uniform\", \"_value\": [0.01, 0.1]}}",
+        \"_value\": [0.01, 0.1]}}", \
         "trainingServicePlatform":"local","tuner":{"builtinTunerName":"TPE","classArgs":{"optimize_mode":"maximize"}, \
         "checkpointDir":"/home/shinyang/nni-experiments/bkfhOdUl/checkpoint"},"versionCheck":"true", \
         "clusterMetaData":[{"key":"codeDir","value":"/home/shinyang/folder/examples/trials/sklearn/classification/."}, \

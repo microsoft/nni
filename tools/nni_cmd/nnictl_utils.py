@@ -213,10 +213,11 @@ def check_rest(args):
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
-    if not running:
+    if running:
         print_normal('Restful server is running...')
     else:
         print_normal('Restful server is not running...')
+    return running
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
@@ -284,10 +285,12 @@ def trial_ls(args):
             for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
+            return content
         else:
             print_error('List trial failed...')
     else:
         print_error('Restful server is not running...')
+    return None
 
 def trial_kill(args):
     '''List trial'''
@@ -302,10 +305,12 @@ def trial_kill(args):
         response = rest_delete(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
+            return True
         else:
             print_error('Kill trial job failed...')
     else:
         print_error('Restful server is not running...')
+    return False
 
 def trial_codegen(args):
     '''Generate code for a specific trial'''
@@ -332,10 +337,12 @@ def list_experiment(args):
         if response and check_response(response):
             content = convert_time_stamp_to_date(json.loads(response.text))
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
+            return content
         else:
             print_error('List experiment failed...')
     else:
         print_error('Restful server is not running...')
+    return None
 
 def experiment_status(args):
     '''Show the status of experiment'''
@@ -346,6 +353,7 @@ def experiment_status(args):
         print_normal('Restful server is not running...')
     else:
         print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+    return result
 
 def log_internal(args, filetype):
     '''internal function to call get_log_content'''
@@ -618,6 +626,7 @@ def experiment_list(args):
                                                               experiment_dict[key]['startTime'],
                                                               experiment_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
+    return experiment_id_list
 
 def get_time_interval(time1, time2):
     '''get the interval of two times'''
