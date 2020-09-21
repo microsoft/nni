@@ -21,7 +21,6 @@ class CommonUtilsTestCase(TestCase):
         init_response()
 
     def test_get_yml(self):
-        print('============current dir:', os.getcwd())
         content = get_yml_content('./tests/config_files/test_files/test_yaml.yml')
         self.assertEqual(content, {'field':'test'})
 
