@@ -1,22 +1,29 @@
 /* all table status font-color */
-.RUNNING,.USER_CANCELED{
-    color: #0071BC;
+.RUNNING,
+.USER_CANCELED {
+    color: #0071bc;
 }
-.FAILED{
+
+.FAILED {
     color: #dd4b39;
 }
-.SUCCEEDED{
-    color: #00A445;
+
+.SUCCEEDED {
+    color: #00a445;
 }
-.UNKNOWN{
-    color:	#FF8C00;
+
+.UNKNOWN {
+    color: #ff8c00;
 }
-.SYS_CANCELED{
-    color:	#EB0716;
+
+.SYS_CANCELED {
+    color: #eb0716;
 }
-.WAITING{
-    color: #FDC401;
+
+.WAITING {
+    color: #fdc401;
 }
-.EARLY_STOPPED{
-    color: 	#FFA500;
+
+.EARLY_STOPPED {
+    color: #ffa500;
 }

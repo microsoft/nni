@@ -290,4 +290,5 @@ class ChannelMaskConflict(MaskFix):
             _logger.info('Pruned Filters after fixing conflict:')
             pruned_filters = set(list(range(ori_channels)))-channel_remain
             _logger.info(str(sorted(pruned_filters)))
+
         return self.masks

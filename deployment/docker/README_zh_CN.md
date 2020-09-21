@@ -1,18 +1,20 @@
-# Dockerfile
+# Dockerfile 
 
 ## 1. 说明
 
 这是 NNI 项目的 Dockerfile 文件。 其中包含了 NNI 以及多个流行的深度学习框架。 在 `Ubuntu 16.04 LTS` 上进行过测试：
 
-    CUDA 9.0, CuDNN 7.0
-    numpy 1.14.3,scipy 1.1.0
-    TensorFlow-gpu 1.10.0
-    Keras 2.1.6
-    PyTorch 0.4.1
-    scikit-learn 0.20.0
+    CUDA 9.0
+    CuDNN 7.0
+    numpy 1.14.3
+    scipy 1.1.0
+    tensorflow-gpu 1.15.0
+    keras 2.1.6
+    torch 1.4.0
+    scikit-learn 0.23.2
     pandas 0.23.4
     lightgbm 2.2.2
-    NNI v0.7
+    nni
     
 
 此 Dockerfile 可作为定制的参考。

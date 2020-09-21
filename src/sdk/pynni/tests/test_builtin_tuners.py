@@ -53,6 +53,10 @@ class BuiltinTunersTestCase(TestCase):
             param_queue.append(tuple(args))
         return receive
 
+    def send_trial_result(self, tuner, parameter_id, parameters, metrics):
+        tuner.receive_trial_result(parameter_id, parameters, metrics)
+        tuner.trial_end(parameter_id, True)
+
     def search_space_test_one(self, tuner_factory, search_space):
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
@@ -66,11 +70,11 @@ class BuiltinTunersTestCase(TestCase):
             logger.debug(parameters)
             self.check_range(parameters, search_space)
             for k in range(min(len(parameters), self.params_each_round)):
-                tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
+                self.send_trial_result(tuner, self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
             while queue:
                 id_, params = queue.popleft()
                 self.check_range([params], search_space)
-                tuner.receive_trial_result(id_, params, random.uniform(-100, 100))
+                self.send_trial_result(tuner, id_, params, random.uniform(-100, 100))
             if not parameters and not self.exhaustive:
                 raise ValueError("No parameters generated")
 

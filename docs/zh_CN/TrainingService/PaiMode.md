@@ -72,8 +72,8 @@ trial:
   memoryMB: 8196
   image: msranni/nni:latest
   virtualCluster: default
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
+  nniManagerNFSMountPath: /local/mnt
+  containerNFSMountPath: /mnt/confignfs-data
   paiStorageConfigName: confignfs-data
 # 配置要访问的 OpenPAI 集群
 paiConfig:
@@ -84,7 +84,7 @@ paiConfig:
   reuse: true
 ```
 
-注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。
+注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。 配置文件中的 host 字段是 OpenPAI 作业提交页面的地址，例如：`10.10.5.1`，NNI 中默认协议是 `http`，如果 OpenPAI 集群启用了 https，则需要使用 `https://10.10.5.1` 的格式。
 
 ### Trial 配置
 
