@@ -29,8 +29,7 @@ function batchFormat(
     width: number,
     keyOrKeys?: string | string[]
 ): string[] {
-
-    let keys: string[];  // dict key as prefix string
+    let keys: string[]; // dict key as prefix string
     if (keyOrKeys === undefined) {
         keys = objects.map(() => '');
     } else if (typeof keyOrKeys === 'string') {
@@ -50,7 +49,7 @@ function batchFormat(
 
     const hasNested = nonNull.some(obj => detectNested(obj));
 
-    if (!hasNested && lines.every(line => (line.length + curIndent.length < width))) {
+    if (!hasNested && lines.every(line => line.length + curIndent.length < width)) {
         return lines;
     }
 
@@ -62,7 +61,15 @@ function batchFormat(
             if (obj === null) {
                 return keys[i] + 'null';
             } else {
-                return keys[i] + createBlock(curIndent, indent, '[]', obj.map(() => iter.next().value));
+                return (
+                    keys[i] +
+                    createBlock(
+                        curIndent,
+                        indent,
+                        '[]',
+                        obj.map(() => iter.next().value)
+                    )
+                );
             }
         });
     }
@@ -79,10 +86,17 @@ function batchFormat(
                 if (obj === null) {
                     return keys[i] + 'null';
                 } else {
-                    return keys[i] + createBlock(curIndent, indent, '{}', Object.keys(obj).map(() => iter.next().value));
+                    return (
+                        keys[i] +
+                        createBlock(
+                            curIndent,
+                            indent,
+                            '{}',
+                            Object.keys(obj).map(() => iter.next().value)
+                        )
+                    );
                 }
             });
-
         } else {
             // these objects look like class instances, so we will try to group their fields
             const uniqueKeys = new Set(childrenKeys);
@@ -90,9 +104,11 @@ function batchFormat(
             for (const key of uniqueKeys) {
                 const fields = nonNull.map(obj => obj[key]).filter(v => v !== undefined);
                 let elements;
-                if (detectBatch(fields)) {  // look like same field of class instances
+                if (detectBatch(fields)) {
+                    // look like same field of class instances
                     elements = batchFormat(fields, curIndent + indent, indent, width, key);
-                } else {  // no idea what these are, fallback to format them independently
+                } else {
+                    // no idea what these are, fallback to format them independently
                     elements = fields.map(field => batchFormat([field], curIndent + indent, indent, width, key));
                 }
                 iters.set(key, elements[Symbol.iterator]());
@@ -138,18 +154,18 @@ function detectBatch(objects: any[]): boolean {
         return sameType(concat(nonNull));
     }
 
-    if (nonNull.every(obj => (typeof obj === 'object' && !Array.isArray(obj)))) {
+    if (nonNull.every(obj => typeof obj === 'object' && !Array.isArray(obj))) {
         const totalKeys = new Set(concat(nonNull.map(obj => Object.keys(obj)))).size;
-        const missKeys = nonNull.map(obj => (totalKeys - Object.keys(obj).length));
+        const missKeys = nonNull.map(obj => totalKeys - Object.keys(obj).length);
         const missSum = missKeys.reduce((a, b) => a + b, 0);
-        return missSum < (totalKeys * nonNull.length) * batchThreshold;
+        return missSum < totalKeys * nonNull.length * batchThreshold;
     }
 
     return sameType(nonNull);
 }
 
 function detectNested(obj: any): boolean {
-    return typeof(obj) == 'object' && Object.values(obj).some(child => typeof(child) == 'object');
+    return typeof obj == 'object' && Object.values(obj).some(child => typeof child == 'object');
 }
 
 function concat(arrays: any[][]): any[] {
@@ -168,7 +184,7 @@ function createBlock(curIndent: string, indent: string, brackets: string, elemen
 
 function sameType(objects: any[]): boolean {
     const nonNull = objects.filter(obj => obj !== undefined);
-    return nonNull.length > 0 ? nonNull.every(obj => (typeof obj === typeof nonNull[0])) : true;
+    return nonNull.length > 0 ? nonNull.every(obj => typeof obj === typeof nonNull[0]) : true;
 }
 
 function stringifySingleLine(obj: any): string {
@@ -179,9 +195,15 @@ function stringifySingleLine(obj: any): string {
     } else if (typeof obj === 'string') {
         return `"${obj}"`;
     } else if (Array.isArray(obj)) {
-        return '[' + obj.map(x => stringifySingleLine(x)).join(', ') + ']'
+        return '[' + obj.map(x => stringifySingleLine(x)).join(', ') + ']';
     } else {
-        return '{' + Object.keys(obj).map(key => `"${key}": ${stringifySingleLine(obj[key])}`).join(', ') + '}';
+        return (
+            '{' +
+            Object.keys(obj)
+                .map(key => `"${key}": ${stringifySingleLine(obj[key])}`)
+                .join(', ') +
+            '}'
+        );
     }
 }
 
