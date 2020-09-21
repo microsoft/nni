@@ -51,8 +51,7 @@ class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):
         model_zoo = ['resnet18']
-        pruners = [L1FilterPruner, L2FilterPruner, FPGMPruner, TaylorFOWeightFilterPruner,
-                   ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner]
+        pruners = [L1FilterPruner, L2FilterPruner, FPGMPruner, TaylorFOWeightFilterPruner]
         sparsity = 0.7
         cfg_list = [{'op_types': ['Conv2d'], 'sparsity':sparsity}]
         dummy_input = torch.ones(1, 3, 224, 224)
