@@ -228,6 +228,7 @@ infer_from_inshape = {
     'aten::hardtanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::hardtanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu_': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::sigmoid': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
