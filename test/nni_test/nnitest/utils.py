@@ -24,6 +24,7 @@ EXPERIMENT_URL = API_ROOT_URL + '/experiment'
 STATUS_URL = API_ROOT_URL + '/check-status'
 TRIAL_JOBS_URL = API_ROOT_URL + '/trial-jobs'
 METRICS_URL = API_ROOT_URL + '/metric-data'
+GET_IMPORTED_DATA_URL = API_ROOT_URL + '/experiment/imported-data'
 
 def read_last_line(file_name):
     '''read last line of a file and return None if file not found'''
