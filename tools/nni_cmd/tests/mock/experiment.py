@@ -24,7 +24,7 @@ def create_mock_experiment():
     nni_config.set_config('experimentId', 'xOpEwA5w')
     nni_config.set_config('restServerPort', 8080)
     nni_config.set_config('webuiUrl', ['http://localhost:8080'])
-    experiment_config = get_yml_content('./config_files/valid/test.yml')
+    experiment_config = get_yml_content('../config_files/valid/test.yml')
     nni_config.set_config('experimentConfig', experiment_config)
     print_green("expriment start success, experiment id: xOpEwA5w")
 
