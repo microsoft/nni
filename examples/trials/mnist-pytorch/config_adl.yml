@@ -1,0 +1,24 @@
+authorName: default
+experimentName: example_mnist_pytorch
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+
+nniManagerIp: 10.20.100.121
+logCollection: http
+trainingServicePlatform: adl
+
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+
+trial:
+  image: registry.petuum.com/dev/train-demo:mnist-pytorch-adl
+  imagePullSecrets:
+    - name: stagingsecret
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 1

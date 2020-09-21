@@ -69,6 +69,8 @@ __pycache__
 build
 *.egg-info
 setup.pye
+**/__init__.pye
+**/.ipynb_checkpoints
 
 # Environments
 .env
