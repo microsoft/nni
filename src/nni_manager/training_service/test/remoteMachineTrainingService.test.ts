@@ -25,8 +25,8 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
     Default/.vscode/rminfo.json,  whose content looks like:
     {
         "ip": "10.172.121.40",
-        "user": "user1",
-        "password": "mypassword"
+        "username": "user1",
+        "passwd": "mypassword"
     }
     */
     let skip: boolean = false;
