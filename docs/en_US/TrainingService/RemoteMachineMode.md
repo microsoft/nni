@@ -176,7 +176,7 @@ preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_
 preCommand: call activate ${replace_to_conda_env_name}
 ```
 
-If there are multiple commands want to execute, you can use `&&` to connect these commands:
+If you want multiple commands to be executed, you can use `&&` to connect these commands:
 
 ```yaml
 preCommand: command1 && command2 && command3
