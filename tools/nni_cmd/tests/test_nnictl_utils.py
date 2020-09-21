@@ -23,10 +23,6 @@ class CommonUtilsTestCase(TestCase):
     @classmethod
     def tearDown(self):
         stop_mock_experiment()
-    
-    @responses.activate
-    def test_get_experiment_time(self):
-        self.assertEqual(get_experiment_time(8080), ('2020/09/17 15:14:55', '2020/09/17 15:15:10'))
         
     @responses.activate
     def test_get_experiment_status(self):
