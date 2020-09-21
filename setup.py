@@ -9,7 +9,7 @@ def read(fname):
 
 setup(
     name = 'nni',
-    version = '999.0.0-developing',
+    version = '1.6-217-g63a9d06e',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
@@ -37,6 +37,7 @@ setup(
         'psutil',
         'ruamel.yaml',
         'requests',
+        'responses',
         'scipy',
         'schema',
         'PythonWebHDFS',
