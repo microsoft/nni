@@ -66,6 +66,18 @@ export class RemoteEnvironmentService extends EnvironmentService {
     constructor() {
         super();
         this.experimentId = getExperimentId();
+        this.metricsEmitter = new EventEmitter();
+        this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
+        this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
+        this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
+        this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
+        this.jobQueue = [];
+        this.sshConnectionPromises = [];
+        this.expRootDir = getExperimentRootDir();
+        this.timer = timer;
+        this.log = getLogger();
+        this.logCollection = 'none';
+        this.log.info('Construct remote machine training service.');
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -192,6 +204,56 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
+
+        if (this.paiClusterConfig === undefined) {
+            throw new Error('PAI Cluster config is not initialized');
+        }
+        if (this.paiToken === undefined) {
+            throw new Error('PAI token is not initialized');
+        }
+        if (this.paiTrialConfig === undefined) {
+            throw new Error('PAI trial config is not initialized');
+        }
+
+        // Step 1. Prepare PAI job configuration
+        const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+        environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
+        environment.command = `cd ${environmentRoot} && ${environment.command}`;
+        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
+        // TODO: add gpu scheduler
+        // environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
+        // environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;
+
+        // Step 2. Generate Job Configuration in yaml format
+        const paiJobConfig = this.generateJobConfigInYamlFormat(environment);
+        this.log.debug(`generated paiJobConfig: ${paiJobConfig}`);
+
+        // Step 3. Submit PAI job via Rest call
+        const submitJobRequest: request.Options = {
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
+            method: 'POST',
+            body: paiJobConfig,
+            followAllRedirects: true,
+            headers: {
+                'Content-Type': 'text/yaml',
+                Authorization: `Bearer ${this.paiToken}`
+            }
+        };
+        request(submitJobRequest, (error, response, body) => {
+            // Status code 202 for success, refer https://github.com/microsoft/pai/blob/master/src/rest-server/docs/swagger.yaml
+            if ((error !== undefined && error !== null) || response.statusCode >= 400) {
+                const errorMessage: string = (error !== undefined && error !== null) ? error.message :
+                    `start environment ${environment.envId} failed, http code:${response.statusCode}, http body: ${body}`;
+
+                this.log.error(errorMessage);
+                environment.status = 'FAILED';
+                deferred.reject(errorMessage);
+            }
+            deferred.resolve();
+        });
+
+        return deferred.promise;
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
