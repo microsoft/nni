@@ -108,6 +108,10 @@ class NNIManager implements Manager {
         return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);
     }
 
+    public getImportedData(): Promise<string[]> {
+        return this.dataStore.getImportedData();
+    }
+
     public async exportData(): Promise<string> {
         return this.dataStore.exportTrialHpConfigs();
     }

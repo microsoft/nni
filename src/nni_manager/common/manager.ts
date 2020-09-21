@@ -87,6 +87,7 @@ abstract class Manager {
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
     public abstract importData(data: string): Promise<void>;
+    public abstract getImportedData(): Promise<string[]>;
     public abstract exportData(): Promise<string>;
 
     public abstract addCustomizedTrialJob(hyperParams: string): Promise<number>;
