@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
-from schema import And, Optional
+from schema import And, Optional, SchemaError
 from .constants import MASKER_DICT
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Pruner
@@ -141,6 +141,9 @@ class _StructuredFilterPruner(OneshotPruner):
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
 class L1FilterPruner(_StructuredFilterPruner):
     """
