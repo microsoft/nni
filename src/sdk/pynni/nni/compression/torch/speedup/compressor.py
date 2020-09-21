@@ -67,8 +67,6 @@ class ModelSpeedup:
             module_masks = self.inferred_masks[module_name]
         else:
             _, m = get_module_by_name(self.bound_model, module_name)
-            if m is None:
-                print('get_module_by_name:', module_name, m)
             module_masks = ModuleMasks(module_name, m)
             self.inferred_masks[module_name] = module_masks
 
