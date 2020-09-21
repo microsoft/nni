@@ -41,6 +41,7 @@ export class AMLClient {
         const deferred: Deferred<string> = new Deferred<string>();
         this.pythonShellClient = new PythonShell('amlUtil.py', {
             scriptPath: './config/aml',
+            pythonPath: process.platform === 'win32' ? 'python' : 'python3',
             pythonOptions: ['-u'], // get print results in real-time
             args: [
                 '--subscription_id', this.subscriptionId,

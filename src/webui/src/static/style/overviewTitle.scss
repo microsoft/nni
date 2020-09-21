@@ -1,54 +1,55 @@
 $iconPaddingVal: 14px;
 
-.panelTitle{
+.panelTitle {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     width: 100%;
     height: 38px;
     padding: 4px $iconPaddingVal;
     box-sizing: border-box;
-    
-    img{
+
+    img {
         height: 22px;
+
         /* (38 - 22 ) / 2 */
         margin-top: 8px;
+
         /* icon right */
         padding: 0 $iconPaddingVal 0 0;
     }
 
-    span{
+    span {
         font-size: 18px;
         font-weight: 600;
         color: #333;
         line-height: 38px;
     }
 
-    i{
+    i {
         font-size: 24px;
         color: #545454;
     }
 }
 
-/* antd icon margin intermediate result style*/
-#tabsty .anticon{
+/* antd icon margin intermediate result style */
+#tabsty .anticon {
     margin-right: 0;
 }
 
-.top10bg{
-
-    .top10Title{
+.top10bg {
+    .top10Title {
         width: 160px;
     }
 
-    .title{
+    .title {
         border-left: 2px solid #fff;
     }
 
-    .minTitle{
+    .minTitle {
         margin-right: $iconPaddingVal;
         border-right: 2px solid #fff;
     }
 
-    .title:hover{
+    .title:hover {
         cursor: pointer;
     }
 }

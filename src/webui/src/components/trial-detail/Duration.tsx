@@ -23,16 +23,13 @@ interface DurationState {
 }
 
 class Duration extends React.Component<DurationProps, DurationState> {
-
     constructor(props: DurationProps) {
-
         super(props);
         this.state = {
             startDuration: 0, // for record data zoom
             endDuration: 100,
-            durationSource: this.initDuration(this.props.source),
+            durationSource: this.initDuration(this.props.source)
         };
-
     }
 
     initDuration = (source: Array<TableObj>): any => {
@@ -50,12 +47,15 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 axisPointer: {
                     type: 'shadow'
                 },
-                formatter: (data: any): React.ReactNode => (
+                formatter: (data: any): React.ReactNode =>
                     '<div>' +
-                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
-                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '<div>Trial No.: ' +
+                    data[0].dataIndex +
+                    '</div>' +
+                    '<div>Duration: ' +
+                    convertDuration(data[0].data) +
+                    '</div>' +
                     '</div>'
-                ),
             },
             grid: {
                 bottom: '3%',
@@ -71,11 +71,11 @@ class Duration extends React.Component<DurationProps, DurationState> {
                     filterMode: 'empty',
                     start: 0,
                     end: 100
-                },
+                }
             ],
             xAxis: {
                 name: 'Time/s',
-                type: 'value',
+                type: 'value'
             },
             yAxis: {
                 name: 'Trial No.',
@@ -85,12 +85,14 @@ class Duration extends React.Component<DurationProps, DurationState> {
                     padding: [0, 0, 0, 30]
                 }
             },
-            series: [{
-                type: 'bar',
-                data: trialTime
-            }]
+            series: [
+                {
+                    type: 'bar',
+                    data: trialTime
+                }
+            ]
         };
-    }
+    };
 
     getOption = (dataObj: Runtrial): any => {
         const { startDuration, endDuration } = this.state;
@@ -100,12 +102,15 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 axisPointer: {
                     type: 'shadow'
                 },
-                formatter: (data: any): React.ReactNode => (
+                formatter: (data: any): React.ReactNode =>
                     '<div>' +
-                    '<div>Trial No.: ' + data[0].dataIndex + '</div>' +
-                    '<div>Duration: ' + convertDuration(data[0].data) + '</div>' +
+                    '<div>Trial No.: ' +
+                    data[0].dataIndex +
+                    '</div>' +
+                    '<div>Duration: ' +
+                    convertDuration(data[0].data) +
+                    '</div>' +
                     '</div>'
-                ),
             },
             grid: {
                 bottom: '3%',
@@ -121,11 +126,11 @@ class Duration extends React.Component<DurationProps, DurationState> {
                     filterMode: 'empty',
                     start: startDuration,
                     end: endDuration
-                },
+                }
             ],
             xAxis: {
                 name: 'Time',
-                type: 'value',
+                type: 'value'
             },
             yAxis: {
                 name: 'Trial',
@@ -135,12 +140,14 @@ class Duration extends React.Component<DurationProps, DurationState> {
                     padding: [0, 0, 0, 30]
                 }
             },
-            series: [{
-                type: 'bar',
-                data: dataObj.trialTime
-            }]
+            series: [
+                {
+                    type: 'bar',
+                    data: dataObj.trialTime
+                }
+            ]
         };
-    }
+    };
 
     drawDurationGraph = (source: Array<TableObj>): void => {
         // why this function run two times when props changed?
@@ -160,7 +167,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
         this.setState({
             durationSource: this.getOption(trialRun[0])
         });
-    }
+    };
 
     componentDidMount(): void {
         const { source } = this.props;
@@ -178,13 +185,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
 
     render(): React.ReactNode {
         const { durationSource } = this.state;
-        const onEvents = { 'dataZoom': this.durationDataZoom };
+        const onEvents = { dataZoom: this.durationDataZoom };
         return (
             <div>
                 <ReactEcharts
                     option={durationSource}
                     style={{ width: '94%', height: 412, margin: '0 auto', marginTop: 15 }}
-                    theme="my_theme"
+                    theme='my_theme'
                     notMerge={true} // update now
                     onEvents={onEvents}
                 />
@@ -195,11 +202,11 @@ class Duration extends React.Component<DurationProps, DurationState> {
     private durationDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
-                startDuration: (e.batch[0].start !== null ? e.batch[0].start : 0),
-                endDuration: (e.batch[0].end !== null ? e.batch[0].end : 100)
+                startDuration: e.batch[0].start !== null ? e.batch[0].start : 0,
+                endDuration: e.batch[0].end !== null ? e.batch[0].end : 100
             }));
         }
-    }
+    };
 }
 
 export default Duration;

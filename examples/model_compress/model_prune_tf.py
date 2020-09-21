@@ -28,31 +28,21 @@ def get_dataset(dataset_name='mnist'):
 
 def create_model(model_name='naive'):
     assert model_name == 'naive'
-    return NaiveModel()
-
-class NaiveModel(tf.keras.Model):
-    def __init__(self):
-        super().__init__()
-        self.seq_layers = [
-            tf.keras.layers.Conv2D(filters=20, kernel_size=5),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.ReLU(),
-            tf.keras.layers.MaxPool2D(pool_size=2),
-            tf.keras.layers.Conv2D(filters=20, kernel_size=5),
-            tf.keras.layers.BatchNormalization(),
-            tf.keras.layers.ReLU(),
-            tf.keras.layers.MaxPool2D(pool_size=2),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(units=500),
-            tf.keras.layers.ReLU(),
-            tf.keras.layers.Dense(units=10),
-            tf.keras.layers.Softmax()
-        ]
-
-    def call(self, x):
-        for layer in self.seq_layers:
-            x = layer(x)
-        return x
+    return tf.keras.Sequential([
+        tf.keras.layers.Conv2D(filters=20, kernel_size=5),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.ReLU(),
+        tf.keras.layers.MaxPool2D(pool_size=2),
+        tf.keras.layers.Conv2D(filters=20, kernel_size=5),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.ReLU(),
+        tf.keras.layers.MaxPool2D(pool_size=2),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(units=500),
+        tf.keras.layers.ReLU(),
+        tf.keras.layers.Dense(units=10),
+        tf.keras.layers.Softmax()
+    ])
 
 
 def create_pruner(model, pruner_name):
