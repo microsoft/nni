@@ -22,10 +22,10 @@ class CommonUtilsTestCase(TestCase):
     
     def test_update_experiment(self):
         experiment = Experiments(HOME_PATH)
-        experiment.add_experiment('testId', 8081, 'N/A', 'test', 'local', 'test', endTime='N/A', status='INITIALIZED')
-        self.assertTrue('testId' in experiment.get_all_experiments())
-        experiment.remove_experiment('testId')
-        self.assertFalse('testId' in experiment.get_all_experiments())
+        experiment.add_experiment('xOpEwA5w', 8081, 'N/A', 'test', 'local', 'aGew0x', endTime='N/A', status='INITIALIZED')
+        self.assertTrue('xOpEwA5w' in experiment.get_all_experiments())
+        experiment.remove_experiment('xOpEwA5w')
+        self.assertFalse('xOpEwA5w' in experiment.get_all_experiments())
     
     def test_get_config(self):
         config = Config('config', HOME_PATH)

@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import os
 import glob
 from unittest import TestCase, main
 from schema import SchemaError
@@ -11,6 +12,7 @@ from nni_cmd.common_utils import print_error, print_green
 class ConfigValidationTestCase(TestCase):
     def test_valid_config(self):
         file_names = glob.glob('./config_files/valid/*.yml')
+        print('============current dir:', os.getcwd())
         for fn in file_names:
             experiment_config = get_yml_content(fn)
             validate_all_content(experiment_config, fn)

@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import requests
+import os
 import responses
 import glob
 import psutil
@@ -21,6 +22,7 @@ class CommonUtilsTestCase(TestCase):
         init_response()
 
     def test_get_yml(self):
+        print('============current dir:', os.getcwd())
         content = get_yml_content('./config_files/test_files/test_yaml.yml')
         self.assertEqual(content, {'field':'test'})
 
