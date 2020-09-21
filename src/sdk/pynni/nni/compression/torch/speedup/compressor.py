@@ -3,40 +3,13 @@
 
 import logging
 import torch
-from nni.compression.torch.utils.mask_conflict import fix_mask_conflict, detect_mask_prune_dim
+from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.torch.utils.utils import get_module_by_name, detect_mask_prune_dim
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape, set_conv_prune_dim
 
 _logger = logging.getLogger(__name__)
 
-
-def get_module_by_name(model, module_name):
-    """
-    Get a module specified by its module name
-
-    Parameters
-    ----------
-    model : pytorch model
-        the pytorch model from which to get its module
-    module_name : str
-        the name of the required module
-
-    Returns
-    -------
-    module, module
-        the parent module of the required module, the required module
-    """
-    name_list = module_name.split(".")
-    for name in name_list[:-1]:
-        if hasattr(model, name):
-            model = getattr(model, name)
-        else:
-            return None, None
-    if hasattr(model, name_list[-1]):
-        leaf_module = getattr(model, name_list[-1])
-        return model, leaf_module
-    else:
-        return None, None
 
 class ModelSpeedup:
     """
