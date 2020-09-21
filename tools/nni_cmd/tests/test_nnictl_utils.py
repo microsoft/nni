@@ -1,8 +1,9 @@
 
 from mock.restful_server import init_response
-from mock.experiment import create_mock_experiment, stop_mock_experiment, generate_args
+from mock.experiment import create_mock_experiment, stop_mock_experiment, generate_args_parser, \
+generate_args
 from nni_cmd.nnictl_utils import get_experiment_time, get_experiment_status, \
-check_experiment_id
+check_experiment_id, parse_ids, get_config_filename
 from unittest import TestCase, main
 import responses
 import glob
@@ -29,8 +30,20 @@ class CommonUtilsTestCase(TestCase):
 
     @responses.activate
     def test_check_experiment_id(self):
+        parser = generate_args_parser()
+        args = parser.parse_args(['xOpEwA5w'])
+        self.assertEqual('xOpEwA5w', check_experiment_id(args))
+
+    @responses.activate
+    def test_parse_ids(self):
+        parser = generate_args_parser()
+        args = parser.parse_args(['xOpEwA5w'])
+        self.assertEqual(['xOpEwA5w'], parse_ids(args))
+
+    def test_get_config_file_name(self):
         args = generate_args()
-        print(check_experiment_id(args))
+        self.assertEqual('aGew0x', get_config_filename(args))
+
         
 
 if __name__ == '__main__':

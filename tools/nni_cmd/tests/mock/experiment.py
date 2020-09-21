@@ -20,16 +20,24 @@ def create_mock_experiment():
     nni_config.set_config('restServerPid', process.pid)
     nni_config.set_config('experimentId', 'xOpEwA5w')
     nni_config.set_config('webuiUrl', ['http://localhost:8080'])
-    experiment_config = get_yml_content('../config_files/valid/test.yml')
+    experiment_config = get_yml_content('./config_files/valid/test.yml')
     nni_config.set_config('experimentConfig', experiment_config)
     print_green("expriment start success, experiment id: xOpEwA5w")
 
 def stop_mock_experiment():
     config = Config('config', HOME_PATH)
     kill_command(config.get_config('restServerPid'))
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.remove_experiment('xOpEwA5w')
 
-def generate_args():
+def generate_args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('id', nargs='?')
+    parser.add_argument('--port', '-p', dest='port')
+    parser.add_argument('--all', '-a', action='store_true')
+    return parser
+
+def generate_args():
+    parser = generate_args_parser()
     args = parser.parse_args(['xOpEwA5w'])
     return args
