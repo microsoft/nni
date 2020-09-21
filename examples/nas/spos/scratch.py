@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import os
 import argparse
 import logging
 import random
@@ -70,12 +71,24 @@ def validate(epoch, model, criterion, loader, writer, args):
     logger.info("Epoch %d validation: top1 = %f, top5 = %f", epoch + 1, meters.acc1.avg, meters.acc5.avg)
 
 
+def dump_checkpoint(model, epoch, checkpoint_dir):
+    if isinstance(model, nn.DataParallel):
+        state_dict = model.module.state_dict()
+    else:
+        state_dict = model.state_dict()
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    dest_path = os.path.join(checkpoint_dir, "epoch_{}.pth.tar".format(epoch))
+    logger.info("Saving model to %s", dest_path)
+    torch.save(state_dict, dest_path)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("SPOS Training From Scratch")
     parser.add_argument("--imagenet-dir", type=str, default="./data/imagenet")
     parser.add_argument("--tb-dir", type=str, default="runs")
     parser.add_argument("--architecture", type=str, default="architecture_final.json")
-    parser.add_argument("--workers", type=int, default=12)
+    parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--batch-size", type=int, default=1024)
     parser.add_argument("--epochs", type=int, default=240)
     parser.add_argument("--learning-rate", type=float, default=0.5)
@@ -96,7 +109,7 @@ if __name__ == "__main__":
     random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
-    model = ShuffleNetV2OneShot()
+    model = ShuffleNetV2OneShot(affine=True)
     model.cuda()
     apply_fixed_architecture(model, args.architecture)
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
@@ -124,5 +137,6 @@ if __name__ == "__main__":
         train(epoch, model, criterion, optimizer, train_loader, writer, args)
         validate(epoch, model, criterion, val_loader, writer, args)
         scheduler.step()
+        dump_checkpoint(model, epoch, "scratch_checkpoints")
 
     writer.close()

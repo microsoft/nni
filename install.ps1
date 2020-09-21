@@ -7,13 +7,14 @@ $install_yarn = $true
 
 if ([Environment]::Is64BitOperatingSystem) {
     $OS_VERSION = 'win64'
+    $nodeUrl = "https://nodejs.org/download/release/v10.22.1/node-v10.22.1-win-x64.zip"
 }
 else {
     $OS_VERSION = 'win32'
+    $nodeUrl = "https://nodejs.org/download/release/v10.22.1/node-v10.22.1-win-x86.zip"
 }
 # nodejs
-$nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
-$yarnUrl = "https://yarnpkg.com/latest.tar.gz"
+$yarnUrl = "https://github.com/yarnpkg/yarn/releases/download/v1.22.5/yarn-v1.22.5.tar.gz"
 $unzipNodeDir = "node-v*"
 $unzipYarnDir = "yarn-v*"
 
