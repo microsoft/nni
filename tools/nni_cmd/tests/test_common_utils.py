@@ -14,7 +14,6 @@ from mock.restful_server import init_response
 from subprocess import Popen, call, check_call, CalledProcessError, PIPE, STDOUT
 from nni_cmd.command_utils import kill_command
 
-HOME_PATH = "./mock/nnictl_metadata"
 class CommonUtilsTestCase(TestCase):
 
     @classmethod
@@ -23,11 +22,11 @@ class CommonUtilsTestCase(TestCase):
 
     def test_get_yml(self):
         print('============current dir:', os.getcwd())
-        content = get_yml_content('./config_files/test_files/test_yaml.yml')
+        content = get_yml_content('./tests/config_files/test_files/test_yaml.yml')
         self.assertEqual(content, {'field':'test'})
 
     def test_get_json(self):
-        content = get_json_content('./config_files/test_files/test_json.json')
+        content = get_json_content('./tests/config_files/test_files/test_json.json')
         self.assertEqual(content, {'field':'test'})
 
     def test_detect_process(self):

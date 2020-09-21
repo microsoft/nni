@@ -13,7 +13,7 @@ from mock.restful_server import init_response
 from subprocess import Popen, call, check_call, CalledProcessError, PIPE, STDOUT
 from nni_cmd.config_utils import Config, Experiments
 
-HOME_PATH = "./mock/nnictl_metadata"
+HOME_PATH = "./tests/mock/nnictl_metadata"
 class CommonUtilsTestCase(TestCase):
 
     def test_get_experiment(self):
