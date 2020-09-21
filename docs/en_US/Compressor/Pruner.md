@@ -114,7 +114,9 @@ FPGMPruner prune filters with the smallest geometric median.
 
  ![](../../img/fpgm_fig1.png)
 
->Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+>Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance. 
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -154,6 +156,8 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 > 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
 >      weights are copied to the new model.
 
+In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference [dependency-aware mode](./DependencyAware.md).
+
 ### Usage
 
 PyTorch code
@@ -189,6 +193,8 @@ The experiments code can be found at [examples/model_compress]( https://github.c
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
 
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
+
 ### Usage
 
 PyTorch code
@@ -200,6 +206,7 @@ pruner = L2FilterPruner(model, config_list)
 pruner.compress()
 ```
 
+
 ### User configuration for L2Filter Pruner
 
 ##### PyTorch
@@ -208,6 +215,7 @@ pruner.compress()
 ```
 ***
 
+
 ## ActivationAPoZRankFilter Pruner
 
 ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
@@ -215,6 +223,8 @@ ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the sm
 The APoZ is defined as:
 
 ![](../../img/apoz.png)
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -234,6 +244,8 @@ Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
+
+
 ### User configuration for ActivationAPoZRankFilter Pruner
 
 ##### PyTorch
@@ -246,6 +258,8 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ## ActivationMeanRankFilter Pruner
 
 ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -265,6 +279,7 @@ Note: ActivationMeanRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
+
 ### User configuration for ActivationMeanRankFilterPruner
 
 ##### PyTorch
@@ -273,6 +288,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ```
 ***
 
+
 ## TaylorFOWeightFilter Pruner
 
 TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
@@ -280,6 +296,8 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 > 
 
 ![](../../img/importance_estimation_sum.png)
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
