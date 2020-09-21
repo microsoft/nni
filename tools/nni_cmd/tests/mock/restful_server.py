@@ -82,7 +82,7 @@ def mock_list_trial_jobs():
         responses.GET, 'http://localhost:8080/api/v1/nni/trial-jobs',
         json=[{"id":"GPInz","status":"SUCCEEDED","hyperParameters":["{\"parameter_id\":0, \
         \"parameter_source\":\"algorithm\",\"parameters\":{\"C\":0.8748364659110364, \
-        \"kernel\":\"linear\",\"degree\":1,\"gamma\":0.040451413392113666,\"coef0 \":0.040353532973662266}, \
+        \"kernel\":\"linear\",\"degree\":1,\"gamma\":0.040451413392113666}, \
         \"parameter_index\":0}"],"logPath":"file://localhost:/home/shinyang/nni-experiments/bkfhOdUl/trials/GPInz",
         "startTime":1600326905581,"sequenceId":0,"endTime":1600326906629,
         "finalMetricData":[{"timestamp":1600326906493,"trialJobId":"GPInz","parameterId":"0",
@@ -96,7 +96,7 @@ def mock_get_trial_job():
         responses.GET, 'http://localhost:8080/api/v1/nni/trial-jobs/:id',
         json={"id":"GPInz","status":"SUCCEEDED","hyperParameters":["{\"parameter_id\":0, \
         \"parameter_source\":\"algorithm\",\"parameters\":{\"C\":0.8748364659110364, \
-        \"kernel\":\"linear\",\"degree\":1,\"gamma\":0.040451413392113666,\"coef0 \":0.040353532973662266}, \
+        \"kernel\":\"linear\",\"degree\":1,\"gamma\":0.040451413392113666}, \
         \"parameter_index\":0}"],"logPath":"file://localhost:/home/shinyang/nni-experiments/bkfhOdUl/trials/GPInz",
         "startTime":1600326905581,"sequenceId":0,"endTime":1600326906629,
         "finalMetricData":[{"timestamp":1600326906493,"trialJobId":"GPInz","parameterId":"0","type":"FINAL",
