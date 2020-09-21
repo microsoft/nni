@@ -57,11 +57,12 @@ class CommonUtilsTestCase(TestCase):
     @responses.activate
     def test_check_rest(self):
         args = generate_args()
-        #self.assertEqual(True, check_rest(args))
+        self.assertEqual(True, check_rest(args))
 
     @responses.activate
     def test_trial_ls(self):
         args = generate_args()
+        trials = trial_ls(args)
         self.assertEqual(trials[0]['id'], 'GPInz')
 
 
