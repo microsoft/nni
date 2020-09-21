@@ -1,39 +1,39 @@
-.parameter{
+.parameter {
     height: 100%;
 }
 
-.para-filter{
+.para-filter {
     width: 97%;
     margin-top: 15px;
 
-    &-text{
+    &-text {
         line-height: 32px;
         margin-right: 10px;
     }
 
-    &-percent{
+    &-percent {
         margin-right: 10px;
     }
 
-    &-middle{
+    &-middle {
         vertical-align: top;
     }
 }
 
-.meline{
+.meline {
     margin-top: 15px;
 
-    span{
+    span {
         font-size: 14px;
         margin-right: 6px;
     }
 }
 
-.searcHyper{
+.searcHyper {
     position: relative;
     margin: 0 19px;
 
-    .noneData{
+    .noneData {
         position: absolute;
         left: 49%;
         top: 2.5%;
@@ -43,31 +43,37 @@
 }
 
 /* Intermediate Result Style */
-.intermediate{
+.intermediate {
     width: 95%;
-   /* border: 1px solid blue; */
-    input{
+
+    /* border: 1px solid blue; */
+    input {
         width: 64px;
         height: 26px;
         padding-left: 8px;
     }
-    .strange{
+
+    .strange {
         margin-right: 15px;
     }
-    .hyphen{
+
+    .hyphen {
         margin-left: 6px;
         margin-right: 6px;
     }
-    .filter-x{
+
+    .filter-x {
         margin-left: 15px;
     }
-    .filter-toggle{
+
+    .filter-toggle {
         line-height: 32px;
     }
 }
 
 .parcoords {
-    text.label, text {
+    text.label,
+    text {
         font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
         font-size: 12px;
     }
@@ -76,7 +82,7 @@
 .nodata {
     font-size: 18px;
     font-weight: 600;
-    color: #666666;
+    color: #666;
     position: absolute;
     margin-left: auto;
     margin-right: auto;

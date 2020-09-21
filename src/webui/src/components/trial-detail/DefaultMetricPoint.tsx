@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Toggle, Stack } from 'office-ui-fabric-react';
+import { Toggle, Stack } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
@@ -14,23 +14,22 @@ const EmptyGraph = {
     },
     xAxis: {
         name: 'Trial',
-        type: 'category',
+        type: 'category'
     },
     yAxis: {
         name: 'Default metric',
-        type: 'value',
+        type: 'value'
     }
 };
 
 interface DefaultPointProps {
     trialIds: string[];
     visible: boolean;
-    trialsUpdateBroadcast: number;
 }
 
 interface DefaultPointState {
     bestCurveEnabled?: boolean | undefined;
-    startY: number;  // dataZoomY
+    startY: number; // dataZoomY
     endY: number;
 }
 
@@ -46,7 +45,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
     loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         this.setState({ bestCurveEnabled: checked });
-    }
+    };
 
     shouldComponentUpdate(nextProps: DefaultPointProps): boolean {
         return nextProps.visible;
@@ -55,31 +54,37 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     metricDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
-                startY: (e.batch[0].start !== null ? e.batch[0].start : 0),
-                endY: (e.batch[0].end !== null ? e.batch[0].end : 100)
+                startY: e.batch[0].start !== null ? e.batch[0].start : 0,
+                endY: e.batch[0].end !== null ? e.batch[0].end : 100
             }));
         }
-    }
+    };
 
     generateGraphConfig(maxSequenceId: number): any {
         const { startY, endY } = this.state;
         return {
             grid: {
-                left: '8%',
+                left: '8%'
             },
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: number[], data: TooltipForAccuracy): number[] => (
-                    [(data.data[0] < maxSequenceId ? point[0] : (point[0] - 300)), 80]
-                ),
-                formatter: (data: TooltipForAccuracy): React.ReactNode => (
+                position: (point: number[], data: TooltipForAccuracy): number[] => [
+                    data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
+                    80
+                ],
+                formatter: (data: TooltipForAccuracy): React.ReactNode =>
                     '<div class="tooldetailAccuracy">' +
-                    '<div>Trial No.: ' + data.data[0] + '</div>' +
-                    '<div>Default metric: ' + data.data[1] + '</div>' +
-                    '<div>Parameters: <pre>' + JSON.stringify(data.data[2], null, 4) + '</pre></div>' +
+                    '<div>Trial No.: ' +
+                    data.data[0] +
+                    '</div>' +
+                    '<div>Default metric: ' +
+                    data.data[1] +
+                    '</div>' +
+                    '<div>Parameters: <pre>' +
+                    JSON.stringify(data.data[2], null, 4) +
+                    '</pre></div>' +
                     '</div>'
-                ),
             },
             dataZoom: [
                 {
@@ -93,27 +98,23 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             ],
             xAxis: {
                 name: 'Trial',
-                type: 'category',
+                type: 'category'
             },
             yAxis: {
                 name: 'Default metric',
                 type: 'value',
-                scale: true,
+                scale: true
             },
-            series: undefined,
+            series: undefined
         };
     }
 
     generateScatterSeries(trials: Trial[]): any {
-        const data = trials.map(trial => [
-            trial.sequenceId,
-            trial.accuracy,
-            trial.description.parameters,
-        ]);
+        const data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.description.parameters]);
         return {
             symbolSize: 6,
             type: 'scatter',
-            data,
+            data
         };
     }
 
@@ -125,7 +126,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             const trial = trials[i];
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const delta = trial.accuracy! - best.accuracy!;
-            const better = (EXPERIMENT.optimizeMode === 'minimize') ? (delta < 0) : (delta > 0);
+            const better = EXPERIMENT.optimizeMode === 'minimize' ? delta < 0 : delta > 0;
             if (better) {
                 data.push([trial.sequenceId, trial.accuracy, trial.description.parameters]);
                 best = trial;
@@ -137,36 +138,33 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         return {
             type: 'line',
             lineStyle: { color: '#FF6600' },
-            data,
+            data
         };
     }
 
     render(): React.ReactNode {
         const graph = this.generateGraph();
-        const accNodata = (graph === EmptyGraph ? 'No data' : '');
-        const onEvents = { 'dataZoom': this.metricDataZoom };
+        const accNodata = graph === EmptyGraph ? 'No data' : '';
+        const onEvents = { dataZoom: this.metricDataZoom };
 
         return (
             <div>
-                <Stack horizontalAlign="end" className="default-metric">
-                    <Toggle label="Optimization curve"
-                        inlineLabel
-                        onChange={this.loadDefault}
-                    />
+                <Stack horizontalAlign='end' className='default-metric'>
+                    <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
                 </Stack>
-                <div className="default-metric-graph">
+                <div className='default-metric-graph'>
                     <ReactEcharts
                         option={graph}
                         style={{
                             width: '100%',
                             height: 402,
-                            margin: '0 auto',
+                            margin: '0 auto'
                         }}
-                        theme="my_theme"
+                        theme='my_theme'
                         notMerge={true} // update now
                         onEvents={onEvents}
                     />
-                    <div className="default-metric-noData">{accNodata}</div>
+                    <div className='default-metric-noData'>{accNodata}</div>
                 </div>
             </div>
         );

@@ -7,14 +7,18 @@ evolution_tuner.py
 
 import copy
 import random
+import logging
 
+from collections import deque
 import numpy as np
 from schema import Schema, Optional
 
+import nni
 from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, split_index, json2parameter, json2space
 
+logger = logging.getLogger(__name__)
 
 class Individual:
     """
@@ -28,11 +32,9 @@ class Individual:
         The str to save information of individual.
     result : float
         The final metric of a individual.
-    store_dir : str
-    save_dir : str
     """
 
-    def __init__(self, config=None, info=None, result=None, save_dir=None):
+    def __init__(self, config=None, info=None, result=None):
         """
         Parameters
         ----------
@@ -45,28 +47,10 @@ class Individual:
         self.config = config
         self.result = result
         self.info = info
-        self.restore_dir = None
-        self.save_dir = save_dir
 
     def __str__(self):
         return "info: " + str(self.info) + \
             ", config :" + str(self.config) + ", result: " + str(self.result)
-
-    def mutation(self, config=None, info=None, save_dir=None):
-        """
-        Mutation by reset state information.
-
-        Parameters
-        ----------
-        config : str
-        info : str
-        save_dir : str
-        """
-        self.result = None
-        self.config = config
-        self.restore_dir = self.save_dir
-        self.save_dir = save_dir
-        self.info = info
 
 class EvolutionClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
@@ -92,13 +76,15 @@ class EvolutionTuner(Tuner):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
 
-        self.trial_result = []
         self.searchspace_json = None
-        self.total_data = {}
+        self.running_trials = {}
+        self.num_running_trials = 0
         self.random_state = None
         self.population = None
         self.space = None
-
+        self.credit = 0 # record the unsatisfied trial requests
+        self.send_trial_callback = None
+        self.param_ids = deque()
 
     def update_search_space(self, search_space):
         """
@@ -115,20 +101,84 @@ class EvolutionTuner(Tuner):
 
         self.random_state = np.random.RandomState()
         self.population = []
-        is_rand = dict()
 
+        for _ in range(self.population_size):
+            self._random_generate_individual()
+
+    def trial_end(self, parameter_id, success, **kwargs):
+        """
+        To deal with trial failure. If a trial fails,
+        random generate the parameters and add into the population.
+        Parameters
+        ----------
+        parameter_id : int
+            Unique identifier for hyper-parameters used by this trial.
+        success : bool
+            True if the trial successfully completed; False if failed or terminated.
+        **kwargs
+            Not used
+        """
+        self.num_running_trials -= 1
+        logger.info('trial (%d) end', parameter_id)
+
+        if not success:
+            self.running_trials.pop(parameter_id)
+            self._random_generate_individual()
+
+        if self.credit > 1:
+            param_id = self.param_ids.popleft()
+            config = self._generate_individual(param_id)
+            logger.debug('Send new trial (%d, %s) for reducing credit', param_id, config)
+            self.send_trial_callback(param_id, config)
+            self.credit -= 1
+            self.num_running_trials += 1
+
+    def generate_multiple_parameters(self, parameter_id_list, **kwargs):
+        """
+        Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
+        Parameters
+        ----------
+        parameter_id_list : list of int
+            Unique identifiers for each set of requested hyper-parameters.
+        **kwargs
+            Not used
+        Returns
+        -------
+        list
+            A list of newly generated configurations
+        """
+
+        result = []
+        if 'st_callback' in kwargs:
+            self.send_trial_callback = kwargs['st_callback']
+        else:
+            logger.warning('Send trial callback is not found in kwargs. Evolution tuner might not work properly.')
+        for parameter_id in parameter_id_list:
+            had_exception = False
+            try:
+                logger.debug("generating param for %s", parameter_id)
+                res = self.generate_parameters(parameter_id, **kwargs)
+                self.num_running_trials += 1
+            except nni.NoMoreTrialError:
+                had_exception = True
+            if not had_exception:
+                result.append(res)
+        return result
+
+    def _random_generate_individual(self):
+        is_rand = dict()
         for item in self.space:
             is_rand[item] = True
 
-        for _ in range(self.population_size):
-            config = json2parameter(
-                self.searchspace_json, is_rand, self.random_state)
-            self.population.append(Individual(config=config))
+        config = json2parameter(self.searchspace_json, is_rand, self.random_state)
+        self.population.append(Individual(config=config))
 
-
-    def generate_parameters(self, parameter_id, **kwargs):
+    def _generate_individual(self, parameter_id):
         """
-        This function will returns a dict of trial (hyper-)parameters, as a serializable object.
+        This function will generate the config for a trial.
+        If at the first generation, randomly generates individuals to satisfy self.population_size.
+        Otherwise, random choose a pair of individuals and compare their fitnesses.
+        The worst of the pair will be removed. Copy the best of the pair and mutate it to generate a new individual.
 
         Parameters
         ----------
@@ -139,9 +189,6 @@ class EvolutionTuner(Tuner):
         dict
             A group of candaidte parameters that evolution tuner generated.
         """
-        if not self.population:
-            raise RuntimeError('The population is empty')
-
         pos = -1
 
         for i in range(len(self.population)):
@@ -152,13 +199,13 @@ class EvolutionTuner(Tuner):
         if pos != -1:
             indiv = copy.deepcopy(self.population[pos])
             self.population.pop(pos)
-            total_config = indiv.config
         else:
             random.shuffle(self.population)
-            if self.population[0].result < self.population[1].result:
+            # avoid only 1 individual has result
+            if len(self.population) > 1 and self.population[0].result < self.population[1].result:
                 self.population[0] = self.population[1]
 
-            # mutation
+            # mutation on the worse individual
             space = json2space(self.searchspace_json,
                                self.population[0].config)
             is_rand = dict()
@@ -168,16 +215,42 @@ class EvolutionTuner(Tuner):
                 is_rand[self.space[i]] = (self.space[i] == mutation_pos)
             config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
-            self.population.pop(1)
-            # remove "_index" from config and save params-id
 
-            total_config = config
+            if len(self.population) > 1:
+                self.population.pop(1)
 
-        self.total_data[parameter_id] = total_config
-        config = split_index(total_config)
+            indiv = Individual(config=config)
 
+        # remove "_index" from config and save params-id
+        self.running_trials[parameter_id] = indiv
+        config = split_index(indiv.config)
         return config
 
+
+    def generate_parameters(self, parameter_id, **kwargs):
+        """
+        This function will returns a dict of trial (hyper-)parameters.
+        If no trial configration for now, self.credit plus 1 to send the config later
+
+        Parameters
+        ----------
+        parameter_id : int
+
+        Returns
+        -------
+        dict
+            One newly generated configuration.
+        """
+        if not self.population:
+            raise RuntimeError('The population is empty')
+
+        if self.num_running_trials >= self.population_size:
+            logger.warning("No enough trial config, population_size is suggested to be larger than trialConcurrency")
+            self.credit += 1
+            self.param_ids.append(parameter_id)
+            raise nni.NoMoreTrialError('no more parameters now.')
+
+        return self._generate_individual(parameter_id)
 
     def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """
@@ -193,15 +266,17 @@ class EvolutionTuner(Tuner):
         """
         reward = extract_scalar_reward(value)
 
-        if parameter_id not in self.total_data:
-            raise RuntimeError('Received parameter_id not in total_data.')
+        if parameter_id not in self.running_trials:
+            raise RuntimeError('Received parameter_id %s not in running_trials.', parameter_id)
+
         # restore the paramsters contains "_index"
-        params = self.total_data[parameter_id]
+        config = self.running_trials[parameter_id].config
+        self.running_trials.pop(parameter_id)
 
         if self.optimize_mode == OptimizeMode.Minimize:
             reward = -reward
 
-        indiv = Individual(config=params, result=reward)
+        indiv = Individual(config=config, result=reward)
         self.population.append(indiv)
 
     def import_data(self, data):

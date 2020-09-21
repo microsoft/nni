@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from 'office-ui-fabric-react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import IntermediateVal from '../public-child/IntermediateVal';
 import { TRIALS } from '../../static/datamodel';
 import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
-import { contentStyles, iconButtonStyles } from '../Buttons/ModalTheme';
+import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/compare.scss';
 
 const dragOptions: IDragOptions = {
@@ -20,7 +20,6 @@ interface CompareProps {
 }
 
 class Compare extends React.Component<CompareProps, {}> {
-
     public _isCompareMount!: boolean;
     constructor(props: CompareProps) {
         super(props);
@@ -41,7 +40,9 @@ class Compare extends React.Component<CompareProps, {}> {
             idsList.push(element.id);
         });
         // find max intermediate number
-        trialIntermediate.sort((a, b) => { return (b.data.length - a.data.length); });
+        trialIntermediate.sort((a, b) => {
+            return b.data.length - a.data.length;
+        });
         const legend: string[] = [];
         // max length
         const length = trialIntermediate[0] !== undefined ? trialIntermediate[0].data.length : 0;
@@ -56,27 +57,35 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: function (point: number[], data: TooltipForIntermediate): number[] {
+                position: function(point: number[], data: TooltipForIntermediate): number[] {
                     if (data.dataIndex < length / 2) {
                         return [point[0], 80];
                     } else {
                         return [point[0] - 300, 80];
                     }
                 },
-                formatter: function (data: TooltipForIntermediate): React.ReactNode {
+                formatter: function(data: TooltipForIntermediate): React.ReactNode {
                     const trialId = data.seriesName;
                     let obj = {};
                     const temp = trialIntermediate.find(key => key.name === trialId);
                     if (temp !== undefined) {
                         obj = temp.hyperPara;
                     }
-                    return '<div class="tooldetailAccuracy">' +
-                        '<div>Trial ID: ' + trialId + '</div>' +
-                        '<div>Intermediate: ' + data.data + '</div>' +
-                        '<div>Parameters: ' +
-                        '<pre>' + JSON.stringify(obj, null, 4) + '</pre>' +
+                    return (
+                        '<div class="tooldetailAccuracy">' +
+                        '<div>Trial ID: ' +
+                        trialId +
                         '</div>' +
-                        '</div>';
+                        '<div>Intermediate: ' +
+                        data.data +
+                        '</div>' +
+                        '<div>Parameters: ' +
+                        '<pre>' +
+                        JSON.stringify(obj, null, 4) +
+                        '</pre>' +
+                        '</div>' +
+                        '</div>'
+                    );
                 }
             },
             grid: {
@@ -110,8 +119,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 notMerge={true} // update now
             />
         );
-
-    }
+    };
 
     // render table column ---
     initColumn = (): React.ReactNode => {
@@ -134,8 +142,7 @@ class Compare extends React.Component<CompareProps, {}> {
         });
         let isComplexSearchSpace;
         if (parameterList.length > 0) {
-            isComplexSearchSpace = (typeof parameterList[0][parameterKeys[0]] === 'object')
-                ? true : false;
+            isComplexSearchSpace = typeof parameterList[0][parameterKeys[0]] === 'object' ? true : false;
         }
         const width = this.getWebUIWidth();
         let scrollClass;
@@ -150,70 +157,59 @@ class Compare extends React.Component<CompareProps, {}> {
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
                     <tr>
-                        <td className="column">Id</td>
-                        {Object.keys(idList).map(key => {
-                            return (
-                                <td className="value idList" key={key}>{idList[key]}</td>
-                            );
-                        })}
+                        <td className='column'>Id</td>
+                        {Object.keys(idList).map(key => (
+                            <td className='value idList' key={key}>
+                                {idList[key]}
+                            </td>
+                        ))}
                     </tr>
                     <tr>
-                        <td className="column">Trial No.</td>
-                        {Object.keys(sequenceIdList).map(key => {
-                            return (
-                                <td className="value idList" key={key}>{sequenceIdList[key]}</td>
-                            );
-                        })}
+                        <td className='column'>Trial No.</td>
+                        {Object.keys(sequenceIdList).map(key => (
+                            <td className='value idList' key={key}>
+                                {sequenceIdList[key]}
+                            </td>
+                        ))}
                     </tr>
                     <tr>
-                        <td className="column">Default metric</td>
-                        {Object.keys(compareStacks).map(index => {
-                            const temp = compareStacks[index];
-                            return (
-                                <td className="value" key={index}>
-                                    <IntermediateVal trialId={temp.id} />
-                                </td>
-                            );
-                        })}
+                        <td className='column'>Default metric</td>
+                        {Object.keys(compareStacks).map(index => (
+                            <td className='value' key={index}>
+                                <IntermediateVal trialId={compareStacks[index].id} />
+                            </td>
+                        ))}
                     </tr>
                     <tr>
-                        <td className="column">duration</td>
-                        {Object.keys(durationList).map(index => {
-                            return (
-                                <td className="value" key={index}>{durationList[index]}</td>
-                            );
-                        })}
+                        <td className='column'>duration</td>
+                        {Object.keys(durationList).map(index => (
+                            <td className='value' key={index}>
+                                {durationList[index]}
+                            </td>
+                        ))}
                     </tr>
-                    {
-                        isComplexSearchSpace
-                            ?
-                            null
-                            :
-                            Object.keys(parameterKeys).map(index => {
-                                return (
-                                    <tr key={index}>
-                                        <td className="column" key={index}>{parameterKeys[index]}</td>
-                                        {
-                                            Object.keys(parameterList).map(key => {
-                                                return (
-                                                    <td key={key} className="value">
-                                                        {parameterList[key][parameterKeys[index]]}
-                                                    </td>
-                                                );
-                                            })
-                                        }
-                                    </tr>
-                                );
-                            })
-                    }
+                    {isComplexSearchSpace
+                        ? null
+                        : Object.keys(parameterKeys).map(index => (
+                              <tr key={index}>
+                                  <td className='column' key={index}>
+                                      {parameterKeys[index]}
+                                  </td>
+                                  {Object.keys(parameterList).map(key => (
+                                      <td key={key} className='value'>
+                                          {parameterList[key][parameterKeys[index]]}
+                                      </td>
+                                  ))}
+                              </tr>
+                          ))}
                 </tbody>
             </table>
         );
-    }
+    };
 
     getWebUIWidth = (): number => {
         return window.innerWidth;
-    }
+    };
 
     componentDidMount(): void {
         this._isCompareMount = true;
@@ -230,7 +226,7 @@ class Compare extends React.Component<CompareProps, {}> {
             <Modal
                 isOpen={true}
                 containerClassName={contentStyles.container}
-                className="compare-modal"
+                className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
             >
@@ -240,13 +236,13 @@ class Compare extends React.Component<CompareProps, {}> {
                         <IconButton
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
-                            ariaLabel="Close popup modal"
+                            ariaLabel='Close popup modal'
                             onClick={cancelFunc}
                         />
                     </div>
-                    <Stack className="compare-modal-intermediate">
+                    <Stack className='compare-modal-intermediate'>
                         {this.intermediate()}
-                        <Stack className="compare-yAxis"># Intermediate result</Stack>
+                        <Stack className='compare-yAxis'># Intermediate result</Stack>
                     </Stack>
                     <Stack>{this.initColumn()}</Stack>
                 </div>

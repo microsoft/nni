@@ -9,15 +9,19 @@ interface TrialInfoProps {
 }
 
 class TrialInfo extends React.Component<TrialInfoProps, {}> {
-
     constructor(props: TrialInfoProps) {
         super(props);
     }
 
     render(): React.ReactNode {
         const blacklist = [
-            'id', 'logDir', 'startTime', 'endTime',
-            'experimentName', 'searchSpace', 'trainingServicePlatform'
+            'id',
+            'logDir',
+            'startTime',
+            'endTime',
+            'experimentName',
+            'searchSpace',
+            'trainingServicePlatform'
         ];
         const filter = (key: string, val: any): any => {
             if (key === 'trialConcurrency') {
@@ -28,12 +32,12 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
 
         return (
-            <div className="profile">
+            <div className='profile'>
                 <MonacoEditor
-                    width="100%"
-                    height="361"
-                    language="json"
-                    theme="vs-light"
+                    width='100%'
+                    height='361'
+                    language='json'
+                    theme='vs-light'
                     value={profile}
                     options={MONACO}
                 />
