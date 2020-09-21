@@ -86,7 +86,7 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**注意：**Tuner 的工作目录是 `<home>/nni/experiments/<experiment_id>/log`，可使用环境变量 `NNI_LOG_DIRECTORY`，因此 ，如果要访问自己 Tuner 目录中的文件（如： `data.txt`）不能直接使用 `open('data.txt', 'r')`。 要使用：
+**注意：**Tuner 的工作目录是 `<home>/nni-experiments/<experiment_id>/log`，可使用环境变量 `NNI_LOG_DIRECTORY`，因此 ，如果要访问自己 Tuner 目录中的文件（如： `data.txt`）不能直接使用 `open('data.txt', 'r')`。 要使用：
 
 ```python
 _pwd = os.path.dirname(__file__)

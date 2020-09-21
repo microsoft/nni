@@ -48,7 +48,7 @@ prune_config = {
         'dataset_name': 'mnist',
         'model_name': 'naive',
         'pruner_class': FPGMPruner,
-        'config_list':[{
+        'config_list': [{
             'sparsity': 0.5,
             'op_types': ['Conv2d']
         }]
@@ -85,6 +85,7 @@ prune_config = {
     }
 }
 
+
 def get_data_loaders(dataset_name='mnist', batch_size=128):
     assert dataset_name in ['cifar10', 'mnist']
 
@@ -98,19 +99,22 @@ def get_data_loaders(dataset_name='mnist', batch_size=128):
     train_loader = DataLoader(
         ds_class(
             './data', train=True, download=True,
-            transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(MEAN, STD)])
+            transform=transforms.Compose(
+                [transforms.ToTensor(), transforms.Normalize(MEAN, STD)])
         ),
         batch_size=batch_size, shuffle=True
     )
     test_loader = DataLoader(
         ds_class(
             './data', train=False, download=True,
-            transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize(MEAN, STD)])
+            transform=transforms.Compose(
+                [transforms.ToTensor(), transforms.Normalize(MEAN, STD)])
         ),
         batch_size=batch_size, shuffle=False
     )
 
     return train_loader, test_loader
+
 
 class NaiveModel(torch.nn.Module):
     def __init__(self):
@@ -132,6 +136,7 @@ class NaiveModel(torch.nn.Module):
         x = self.fc2(x)
         return x
 
+
 def create_model(model_name='naive'):
     assert model_name in ['naive', 'vgg16', 'vgg19']
 
@@ -142,10 +147,18 @@ def create_model(model_name='naive'):
     else:
         return VGG(19)
 
-def create_pruner(model, pruner_name, optimizer=None):
+
+def create_pruner(model, pruner_name, optimizer=None, dependency_aware=False, dummy_input=None):
     pruner_class = prune_config[pruner_name]['pruner_class']
     config_list = prune_config[pruner_name]['config_list']
-    return pruner_class(model, config_list, optimizer)
+    kw_args = {}
+    if dependency_aware:
+        print('Enable the dependency_aware mode')
+        # note that, not all pruners support the dependency_aware mode
+        kw_args['dependency_aware'] = True
+        kw_args['dummy_input'] = dummy_input
+    pruner = pruner_class(model, config_list, optimizer, **kw_args)
+    return pruner
 
 def train(model, device, train_loader, optimizer):
     model.train()
@@ -157,7 +170,9 @@ def train(model, device, train_loader, optimizer):
         loss.backward()
         optimizer.step()
         if batch_idx % 100 == 0:
-            print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
+            print('{:2.0f}%  Loss {}'.format(
+                100 * batch_idx / len(train_loader), loss.item()))
+
 
 def test(model, device, test_loader):
     model.eval()
@@ -167,7 +182,8 @@ def test(model, device, test_loader):
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += F.cross_entropy(output, target, reduction='sum').item()
+            test_loss += F.cross_entropy(output,
+                                         target, reduction='sum').item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
@@ -177,20 +193,25 @@ def test(model, device, test_loader):
         test_loss, acc))
     return acc
 
+
 def main(args):
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device(
+        'cuda') if torch.cuda.is_available() else torch.device('cpu')
     os.makedirs(args.checkpoints_dir, exist_ok=True)
 
     model_name = prune_config[args.pruner_name]['model_name']
     dataset_name = prune_config[args.pruner_name]['dataset_name']
     train_loader, test_loader = get_data_loaders(dataset_name, args.batch_size)
+    dummy_input, _ = next(iter(train_loader))
+    dummy_input = dummy_input.to(device)
     model = create_model(model_name).cuda()
     if args.resume_from is not None and os.path.exists(args.resume_from):
         print('loading checkpoint {} ...'.format(args.resume_from))
         model.load_state_dict(torch.load(args.resume_from))
         test(model, device, test_loader)
     else:
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+        optimizer = torch.optim.SGD(
+            model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
         if args.multi_gpu and torch.cuda.device_count():
             model = nn.DataParallel(model)
 
@@ -204,17 +225,21 @@ def main(args):
 
     print('start model pruning...')
 
-    model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
-    mask_path = os.path.join(args.checkpoints_dir, 'mask_{}_{}_{}.pth'.format(model_name, dataset_name, args.pruner_name))
+    model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(
+        model_name, dataset_name, args.pruner_name))
+    mask_path = os.path.join(args.checkpoints_dir, 'mask_{}_{}_{}.pth'.format(
+        model_name, dataset_name, args.pruner_name))
 
     # pruner needs to be initialized from a model not wrapped by DataParallel
     if isinstance(model, nn.DataParallel):
         model = model.module
 
-    optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
+    optimizer_finetune = torch.optim.SGD(
+        model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
     best_top1 = 0
 
-    pruner = create_pruner(model, args.pruner_name, optimizer_finetune)
+    pruner = create_pruner(model, args.pruner_name,
+                           optimizer_finetune, args.dependency_aware, dummy_input)
     model = pruner.compress()
 
     if args.multi_gpu and torch.cuda.device_count() > 1:
@@ -231,15 +256,23 @@ def main(args):
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path=model_path, mask_path=mask_path)
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pruner_name", type=str, default="level", help="pruner name")
+    parser.add_argument("--pruner_name", type=str,
+                        default="level", help="pruner name")
     parser.add_argument("--batch_size", type=int, default=256)
-    parser.add_argument("--pretrain_epochs", type=int, default=10, help="training epochs before model pruning")
-    parser.add_argument("--prune_epochs", type=int, default=10, help="training epochs for model pruning")
-    parser.add_argument("--checkpoints_dir", type=str, default="./checkpoints", help="checkpoints directory")
-    parser.add_argument("--resume_from", type=str, default=None, help="pretrained model weights")
-    parser.add_argument("--multi_gpu", action="store_true", help="Use multiple GPUs for training")
-
+    parser.add_argument("--pretrain_epochs", type=int,
+                        default=10, help="training epochs before model pruning")
+    parser.add_argument("--prune_epochs", type=int, default=10,
+                        help="training epochs for model pruning")
+    parser.add_argument("--checkpoints_dir", type=str,
+                        default="./checkpoints", help="checkpoints directory")
+    parser.add_argument("--resume_from", type=str,
+                        default=None, help="pretrained model weights")
+    parser.add_argument("--multi_gpu", action="store_true",
+                        help="Use multiple GPUs for training")
+    parser.add_argument("--dependency_aware", action="store_true", default=False,
+                        help="If enable the dependency_aware mode for the pruner")
     args = parser.parse_args()
     main(args)

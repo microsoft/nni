@@ -1,13 +1,15 @@
 /* website theme color */
 $color: #0071bc;
+
 /* bg light grey */
 $bgColor: #f2f2f2;
-.openRow{
+
+.openRow {
     width: 100%;
     background-color: $bgColor;
     margin-bottom: 10px;
 
-    &Content{
+    &Content {
         width: 91%;
         margin: 0 auto;
         min-height: 150px;
@@ -15,33 +17,37 @@ $bgColor: #f2f2f2;
     }
 }
 
-.trialLog{
+.trialLog {
     white-space: normal;
     color: #212121;
 }
-#trialLogContent{
 
-    .logcontent{
+#trialLogContent {
+    .logcontent {
         height: 100%;
     }
 }
 
-#description{
+#description {
     padding: 0 10px;
-    .bgHyper ul{
+
+    .bgHyper ul {
         background-color: #fff !important;
         padding: 3px 0 5px 0 !important;
         font-size: 14px;
     }
-    .copy{
+
+    .copy {
         margin-top: 3px;
-        Button{
+
+        button {
             background-color: #ccc;
             color: #191919;
             border: none;
             outline: none;
         }
-        Button:hover{
+
+        button:hover {
             background-color: #ccc;
             color: #191919;
             border: none;

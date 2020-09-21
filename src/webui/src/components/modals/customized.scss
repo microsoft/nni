@@ -1,86 +1,106 @@
 /* resubmit confirm modal style */
-.resubmit{
-    .title{
+.resubmit {
+    .title {
         font-size: 16px;
         color: #000;
-        .color-warn, .color-error{
+
+        .color-warn,
+        .color-error {
             color: red;
         }
-        i{
+
+        i {
             margin-right: 10px;
         }
     }
-    .hint{
+
+    .hint {
         padding: 15px 0;
         color: #333;
         margin-left: 30px;
     }
-    .color-succ{
+
+    .color-succ {
         color: green;
     }
 }
-.hyper-box{
+
+.hyper-box {
     padding: 16px 18px 16px 16px;
 }
-.hyper-form{
+
+.hyper-form {
     margin-bottom: 10px;
-    .title{
+
+    .title {
         font-size: 14px;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         line-height: 40px;
     }
-    .inputs{
+
+    .inputs {
         height: 32px;
     }
-    input{
+
+    input {
         padding-left: 5px;
         height: 32px;
     }
 }
-.tag-input{
+
+.tag-input {
     margin-top: 25px;
 }
 
-/* submit & cancel buttons style*/
-.modal-button{
+/* submit & cancel buttons style */
+.modal-button {
     text-align: right;
     height: 28px;
-    /* cancel button style*/
-    .cancelSty{
+
+    /* cancel button style */
+    .cancelSty {
         width: 80px;
         background-color: #dadada;
         border: none;
         color: #333;
     }
-    .cancelSty:hover, .cancelSty:active, .cancelSty:focus{
+
+    .cancelSty:hover,
+    .cancelSty:active,
+    .cancelSty:focus {
         background-color: #dadada;
     }
-    .distance{
+
+    .distance {
         margin-right: 8px;
     }
 }
 
-.center{
+.center {
     text-align: center;
 }
 
-.icon-color{
-    i{
+.icon-color {
+    i {
         color: green;
     }
 }
-.icon-error{
-    i{
+
+.icon-error {
+    i {
         color: red;
     }
 }
-.icon-color, .icon-error{
-    i{
+
+.icon-color,
+.icon-error {
+    i {
         margin-right: 10px;
         position: relative;
         top: 5px;
     }
 }
-.ms-Dialog-subText{
+
+.ms-Dialog-subText {
     color: #333;
 }
