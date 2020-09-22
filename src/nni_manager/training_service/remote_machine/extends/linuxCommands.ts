@@ -123,10 +123,18 @@ class LinuxCommands extends OsCommands {
         if (isFile) {
             command = `bash '${script}'`;
         } else {
-            script = script.replace('"', '\\"');
+            script = script.replace(/"/g, '\\"');
             command = `bash -c "${script}"`;
         }
         return command;
+    }
+
+    public addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined{
+        if (command === undefined || command === '' || preCommand === undefined || preCommand === ''){
+            return command;
+        } else {
+            return `${preCommand} && ${command}`;
+        }
     }
 }
 
