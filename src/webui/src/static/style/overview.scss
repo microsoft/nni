@@ -44,9 +44,11 @@
 }
 
 .info {
-    position: relative;
-    top: 15px;
-    left: 10px;
+    position: absolute;
+    top: 32%;
+    left: 8%;
+    width: 84%;
+    z-index: 1000;
 
     span {
         color: #333;

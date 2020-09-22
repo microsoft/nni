@@ -5,11 +5,14 @@ import axios from 'axios';
 import { MANAGER_IP } from '../../../static/const';
 import { Edit, CheckMark, Cancel } from '../../buttons/Icon';
 import '../../../static/style/overview/count.scss';
-import { MessageBar, MessageBarType } from '@fluentui/react';
+import MessageInfo from '../../modals/MessageInfo';
 
 interface EditState {
     isShowPencil: boolean;
+    isShowSucceedInfo: boolean;
     defaultValue: string;
+    info: string;
+    typeInfo: string;
 }
 
 class EditExperimentParam extends React.Component<{}, EditState> {
@@ -22,7 +25,10 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         super(props);
         this.state = {
             isShowPencil: true,
-            defaultValue: ''
+            isShowSucceedInfo: false,
+            defaultValue: '',
+            info: '',
+            typeInfo: '',
         };
     }
 
@@ -42,6 +48,24 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         this.setState({ defaultValue: event.target.value });
     }
 
+    hideSucceedInfo = (): void => {
+        this.setState(() => ({ isShowSucceedInfo: false }));
+    };
+
+    /**
+     * info: message content
+     * typeInfo: message type: success | error...
+     * continuousTime: show time, 2000ms
+     */
+    showMessageInfo = (info: string, typeInfo: string): void => {
+        this.setState(() => ({
+            info,
+            typeInfo,
+            isShowSucceedInfo: true
+        }));
+        setTimeout(this.hideSucceedInfo, 2000);
+    };
+
     componentDidMount() {
         this.initDefaultVal();
     }
@@ -50,7 +74,7 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         this.initDefaultVal();
     }
     render(): React.ReactNode {
-        const { isShowPencil, defaultValue } = this.state;
+        const { isShowPencil, defaultValue, isShowSucceedInfo, typeInfo, info } = this.state;
         console.info(`333: ${defaultValue}`);
         /***
         * const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
@@ -83,6 +107,8 @@ class EditExperimentParam extends React.Component<{}, EditState> {
                                     <span className='confirm' onClick={this.confirmEdit}>{CheckMark}</span>
                                     <span className='cancel' onClick={this.cancleEdit}>{Cancel}</span>
                                 </span>}
+
+                            {isShowSucceedInfo && <MessageInfo className='info' typeInfo={typeInfo} info={info} />}
                         </div>
                     </React.Fragment>
                 )
@@ -108,18 +134,14 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         this.showPencil();
     }
 
-    // editTrialConcurrency = async (userInput: string): Promise<void> => {
     confirmEdit = async (): Promise<void> => {
-        // const { defaultValue } = this.state;
         const {title} = this.context;
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
-        // console.info(`confirm function default: ${defaultValue}`);
         const { field, editType } = this.context;
         const userInput: string = this.DurationInputRef.current!.value;
         console.info(`userInput default: ${userInput}`);
         if (!userInput.match(/^[1-9]\d*$/)) {
-            // this.showMessageInfo('Please enter a positive integer!', 'error');
-            alert('Please enter a positive integer!');
+            this.showMessageInfo('Please enter a positive integer!', 'error');
             return;
         }
         let val = '';
@@ -131,8 +153,7 @@ class EditExperimentParam extends React.Component<{}, EditState> {
             val = EXPERIMENT.profile.params.trialConcurrency.toString();
         }
         if (userInput === val) {
-            // showMessageInfo('Trial concurrency has not changed', 'error');
-            alert(`Trial ${field} has not changed`);
+            this.showMessageInfo(`Trial ${field} has not changed`, 'error');
             return;
         }
         const newValue = parseInt(userInput, 10);
@@ -146,25 +167,20 @@ class EditExperimentParam extends React.Component<{}, EditState> {
                 params: { update_type: editType }
             });
             if (res.status === 200) {
-                // this.showMessageInfo('Successfully updated trial concurrency', 'success');
-                alert('Successfully updated trial concurrency');
-                // NOTE: should we do this earlier in favor of poor networks?
-                // this.props.changeConcurrency(newValue);
+                this.showMessageInfo(`Successfully updated ${field}`, 'success');
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
-                // this.showMessageInfo(`Failed to update trial concurrency\n${error.response.data.error}`, 'error');
-                alert(`Failed to update trial concurrency\n${error.response.data.error}`);
+                this.showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
             }
             else if (error.response) {
-                alert(
-                    `Failed to update trial concurrency\nServer responsed ${error.response.status}`
+                this.showMessageInfo(
+                    `Failed to update trial ${field}\nServer responsed ${error.response.status}`, 'error'
                 );
             } else if (error.message) {
-                // this.showMessageInfo(`Failed to update trial concurrency\n${error.message}`, 'error');
-                alert(`Failed to update trial concurrency\n${error.message}`);
+                this.showMessageInfo(`Failed to update trial ${field}\n${error.message}`, 'error');
             } else {
-                alert(`Failed to update trial concurrency\nUnknown error`);
+                this.showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
             }
         }
         this.showPencil();
