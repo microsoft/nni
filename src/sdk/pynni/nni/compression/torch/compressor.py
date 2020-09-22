@@ -617,7 +617,7 @@ class QuantGrad(torch.autograd.Function):
             return wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
             wrapper.quantizer.quantize_weight(wrapper, **kwargs)
-            return tensor 
+            return tensor
         elif quant_type == QuantType.QUANT_OUTPUT:
             return wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:
