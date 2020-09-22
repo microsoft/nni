@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { DetailsList, IDetailsListProps, IColumn } from '@fluentui/react';
-import DefaultMetric from '../public-child/DefaultMetric';
+import DefaultMetric from '../../public-child/DefaultMetric';
 import Details from './Details';
-import { convertDuration } from '../../static/function';
-import { TRIALS } from '../../static/datamodel';
-import { DETAILTABS } from '../stateless-component/NNItabs';
-import '../../static/style/succTable.scss';
-import '../../static/style/openRow.scss';
+import { convertDuration } from '../../../static/function';
+import { TRIALS } from '../../../static/datamodel';
+import { DETAILTABS } from '../../stateless-component/NNItabs';
+import '../../../static/style/succTable.scss';
+import '../../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];

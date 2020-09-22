@@ -1,29 +1,27 @@
 import * as React from 'react';
-import { Stack, IStackTokens, Dropdown } from '@fluentui/react';
+import { Stack, IStackTokens, Dropdown, ProgressIndicator, TooltipHost, DefaultButton, Icon } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
+import { convertTime } from '../static/function';
 import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
 import { Title1 } from './overview/Title1';
-import SuccessTable from './overview/SuccessTable';
-import Progressed from './overview/Progress';
+import { Title } from './overview/Title';
+import SuccessTable from './overview/table/SuccessTable';
 import Accuracy from './overview/Accuracy';
-import SearchSpace from './overview/SearchSpace';
-import { BasicInfo } from './overview/BasicInfo';
-import TrialInfo from './overview/TrialProfile';
+import { TrialConfigButton } from './overview/config/TrialConfigButton';
+import { ReBasicInfo } from './overview/experiment/ReBasicInfo';
+import { ExpDuration } from './overview/count/ExpDuration';
+import { TrialCount } from './overview/count/TrialCount';
+import { Command } from './overview/experiment/Command';
 import '../static/style/overview.scss';
+import '../static/style/overview/overview1.scss';
 import '../static/style/logPath.scss';
-
-const stackTokens: IStackTokens = {
-    childrenGap: 30
-};
-
-const entriesOption = [
-    { key: '10', text: 'Display top 10 trials' },
-    { key: '20', text: 'Display top 20 trials' },
-    { key: '30', text: 'Display top 30 trials' },
-    { key: '50', text: 'Display top 50 trials' },
-    { key: '100', text: 'Display top 100 trials' }
-];
+import {
+    itemStyle1,
+    itemStyleSucceed,
+    itemStyle2,
+    entriesOption
+} from './overview/overviewConst';
 
 interface OverviewState {
     trialConcurrency: number;
@@ -35,8 +33,17 @@ export const TitleContext = React.createContext({
     fontColor: ''
 });
 
+export const BestMetricContext = React.createContext({
+    bestAccuracy: 0
+});
+
+export const ConcurrencyContext = React.createContext({
+    trialConcurrency: 1
+});
+
 class Overview extends React.Component<{}, OverviewState> {
     static contextType = AppContext;
+    context!: React.ContextType<typeof AppContext>;
 
     constructor(props) {
         super(props);
@@ -56,10 +63,6 @@ class Overview extends React.Component<{}, OverviewState> {
         event.stopPropagation();
         const { changeMetricGraphMode } = this.context;
         changeMetricGraphMode('min');
-    };
-
-    changeConcurrency = (val: number): void => {
-        this.setState({ trialConcurrency: val });
     };
 
     // updateEntries = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
@@ -84,104 +87,103 @@ class Overview extends React.Component<{}, OverviewState> {
                     const titleMinbgcolor = metricGraphMode === 'min' ? '#333' : '#b3b3b3';
                     return (
                         <div className='overview'>
-                            {/* status and experiment block */}
-                            <Stack className='bottomDiv bgNNI'>
-                                <TitleContext.Provider value={{ text: 'Experiment', icon: '11.png', fontColor: '' }}>
-                                    <Title1 />
-                                </TitleContext.Provider>
-                                <BasicInfo />
-                            </Stack>
-
-                            <Stack horizontal className='overMessage bottomDiv'>
-                                {/* status block */}
-                                <Stack.Item grow className='prograph bgNNI borderRight'>
-                                    <TitleContext.Provider value={{ text: 'Status', icon: '5.png', fontColor: '' }}>
-                                        <Title1 />
-                                    </TitleContext.Provider>
-                                    <Progressed
-                                        bestAccuracy={bestAccuracy}
-                                        concurrency={trialConcurrency}
-                                        changeConcurrency={this.changeConcurrency}
-                                        experimentUpdateBroadcast={experimentUpdateBroadcast}
-                                    />
-                                </Stack.Item>
-                                {/* experiment parameters search space tuner assessor... */}
-                                <Stack.Item
-                                    grow
-                                    styles={{ root: { width: 450 } }}
-                                    className='overviewBoder borderRight bgNNI'
-                                >
+                            {/* search space & config */}
+                            <ConcurrencyContext.Provider value={{ trialConcurrency: trialConcurrency }}>
+                                <TrialConfigButton />
+                            </ConcurrencyContext.Provider>
+                            <div className='wrapper'>
+                                {/* exp params */}
+                                <div className='box1'>
                                     <TitleContext.Provider
-                                        value={{ text: 'Search space', icon: '10.png', fontColor: '' }}
+                                        value={{ text: 'Experiment', icon: 'AutoRacing', fontColor: '' }}
                                     >
-                                        <Title1 />
+                                        <Title />
                                     </TitleContext.Provider>
-                                    <Stack className='experiment'>
-                                        <SearchSpace searchSpace={EXPERIMENT.searchSpace} />
-                                    </Stack>
-                                </Stack.Item>
-                                <Stack.Item grow styles={{ root: { width: 450 } }} className='bgNNI'>
-                                    <TitleContext.Provider value={{ text: 'Config', icon: '4.png', fontColor: '' }}>
-                                        <Title1 />
-                                    </TitleContext.Provider>
-                                    <Stack className='experiment'>
-                                        {/* the scroll bar all the trial profile in the searchSpace div*/}
-                                        <div className='experiment searchSpace'>
-                                            <TrialInfo
-                                                experimentUpdateBroadcast={experimentUpdateBroadcast}
-                                                concurrency={trialConcurrency}
-                                            />
+                                    <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
+                                        <ReBasicInfo />
+                                    </BestMetricContext.Provider>
+                                </div>
+                                {/* duration & trial numbers */}
+                                <div className='box2'>
+                                    <div className='box4'>
+                                        <TitleContext.Provider
+                                            value={{ text: 'Duration', icon: 'Timer', fontColor: '' }}
+                                        >
+                                            <Title />
+                                        </TitleContext.Provider>
+                                        <ExpDuration />
+                                    </div>
+                                    <div className='box7'>
+                                        <TitleContext.Provider
+                                            value={{ text: 'Trial numbers', icon: 'NumberSymbol', fontColor: '' }}
+                                        >
+                                            <Title />
+                                        </TitleContext.Provider>
+                                        <TrialCount />
+                                    </div>
+                                </div>
+                                {/* table */}
+                                <div className='box3'>
+                                    <Stack horizontal>
+                                        <div style={itemStyleSucceed}>
+                                            <TitleContext.Provider
+                                                value={{ text: 'Top trials', icon: 'BulletedList', fontColor: '' }}
+                                            >
+                                                <Title />
+                                            </TitleContext.Provider>
+                                        </div>
+                                        <div className='topTrialTitle'>
+                                            {/* <Stack horizontal horizontalAlign='space-between'> */}
+                                            <Stack horizontal horizontalAlign='end'>
+                                                <DefaultButton onClick={this.clickMaxTop} styles={{ root: { minWidth: 70, padding: 0 } }}>
+                                                    <Icon iconName='Market' />
+                                                    <span className='max'>Max</span>
+                                                </DefaultButton>
+                                                <div className='mincenter'>
+                                                    <DefaultButton onClick={this.clickMinTop}>
+                                                        <Icon iconName='MarketDown' />
+                                                        <span className='max'>Min</span>
+                                                    </DefaultButton>
+                                                </div>
+                                                <div>
+                                                    <Stack horizontal>
+                                                        <div className='chooseEntry'>Display top</div>
+                                                        <div>
+                                                            <Dropdown
+                                                                selectedKey={bestTrialEntries}
+                                                                options={entriesOption}
+                                                                onChange={this.updateEntries}
+                                                                styles={{ root: { width: 70 } }}
+                                                            />
+                                                        </div>
+                                                    </Stack>
+                                                </div>
+                                            </Stack>
                                         </div>
                                     </Stack>
-                                </Stack.Item>
-                            </Stack>
+                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                                </div>
+                                <div className='box5'><Command /></div>
+                                <div className='box6'>
+                                    <Stack horizontal>
+                                        <div style={itemStyle1}>
+                                            <TitleContext.Provider
+                                                value={{ text: 'Trial metric chart', icon: 'HomeGroup', fontColor: '' }}
+                                            >
+                                                <Title />
+                                            </TitleContext.Provider>
+                                        </div>
+                                        <div style={itemStyle2}>
+                                            <Stack className="maxmin" horizontal>
+                                                <div className='circle' />
+                                                <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
 
-                            <Stack style={{ backgroundColor: '#fff' }}>
-                                <Stack horizontal className='top10bg' style={{ position: 'relative', height: 42 }}>
-                                    <div className='title' onClick={this.clickMaxTop}>
-                                        <TitleContext.Provider
-                                            value={{
-                                                text: 'Top maximal trials',
-                                                icon: 'max.png',
-                                                fontColor: titleMaxbgcolor
-                                            }}
-                                        >
-                                            <Title1 />
-                                        </TitleContext.Provider>
-                                    </div>
-                                    <div className='title minTitle' onClick={this.clickMinTop}>
-                                        <TitleContext.Provider
-                                            value={{
-                                                text: 'Top minimal trials',
-                                                icon: 'min.png',
-                                                fontColor: titleMinbgcolor
-                                            }}
-                                        >
-                                            <Title1 />
-                                        </TitleContext.Provider>
-                                    </div>
-                                    <div style={{ position: 'absolute', right: '2%', top: 8 }}>
-                                        <Dropdown
-                                            selectedKey={bestTrialEntries}
-                                            options={entriesOption}
-                                            onChange={this.updateEntries}
-                                            styles={{ root: { width: 170 } }}
-                                        />
-                                    </div>
-                                </Stack>
-                                <Stack horizontal tokens={stackTokens}>
-                                    <div style={{ width: '40%', position: 'relative' }}>
-                                        <Accuracy
-                                            accuracyData={accuracyGraphData}
-                                            accNodata={noDataMessage}
-                                            height={404}
-                                        />
-                                    </div>
-                                    <div style={{ width: '60%' }}>
-                                        <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
-                                    </div>
-                                </Stack>
-                            </Stack>
+                                            </Stack>
+                                        </div>
+                                    </Stack>
+                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={380} />
+                                </div>
+                            </div>
                         </div>
                     );
                 }}

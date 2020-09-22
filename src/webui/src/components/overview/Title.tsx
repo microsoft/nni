@@ -1,14 +1,15 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
-import {tableListIcon} from '../buttons/Icon';
 import { TitleContext } from '../Overview';
+import { Icon, initializeIcons } from '@fluentui/react';
 import '../../static/style/overview/overviewTitle.scss';
+initializeIcons();
 
-export const Title1 = (): any => (
+export const Title = (): any => (
     <TitleContext.Consumer>
         {(value): React.ReactNode => (
             <Stack horizontal className='panelTitle'>
-                <img src={require(`../../static/img/icon/${value.icon}`)} alt='icon' />
+                <Icon iconName={value.icon} />
                 <span style={{ color: value.fontColor }}>{value.text}</span>
             </Stack>
         )}
@@ -20,7 +21,7 @@ export const Title1 = (): any => (
  * Duration: Timer
  * Trial numbers: NumberSymbol
  * Trial metric chart: HomeGroup
- * Top trials: BulletedList
+ * Top trials: BulletedList  | tableListIcon
  * succeed table button: MarketDown Market
  * 
  * 

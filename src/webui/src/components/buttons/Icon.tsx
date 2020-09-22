@@ -16,6 +16,9 @@ const disableUpdates = { iconName: 'DisableUpdates' };
 const requency = { iconName: 'Timer' };
 const closeTimer = { iconName: 'Blocked2' };
 const LineChart = <Icon iconName='LineChart' />;
+const Edit = <Icon iconName='Edit' />;
+const CheckMark = <Icon iconName='CheckMark' />;
+const Cancel = <Icon iconName='Cancel' />;
 
 export {
     infoIcon,
@@ -31,5 +34,8 @@ export {
     disableUpdates,
     requency,
     closeTimer,
-    LineChart
+    LineChart,
+    Edit,
+    CheckMark,
+    Cancel
 };

@@ -2,6 +2,7 @@
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
+// const MANAGER_IP = `http://13.77.78.63:8080/api/v1/nni`;
 const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
@@ -15,7 +16,7 @@ const trialJobStatus = [
     'SYS_CANCELED',
     'EARLY_STOPPED'
 ];
-const CONTROLTYPE = ['SEARCH_SPACE', 'TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION'];
+const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
 const MONACO = {
     readOnly: true,
     automaticLayout: true,

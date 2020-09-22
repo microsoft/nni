@@ -1,0 +1,93 @@
+.wrapper {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-auto-rows: 84px;
+    grid-gap: 18px;
+
+    >div{
+        background: #fff;
+        padding: 0 42px;
+    }
+
+    .box2 {
+        grid-column: 2 / 5;
+        grid-row: 1 / 5;
+        display: grid;
+        grid-auto-rows: 70px;
+        grid-gap: 18px;
+    
+        .box4{
+            grid-row: 1 / 3;
+        }
+    
+        .box7{
+            height: 214px;
+
+        }
+    }
+}
+
+.box1 {
+    grid-column-start: 1;
+    grid-row: 1 / 5;
+    z-index: 2;
+    
+    
+}
+
+.basic {
+    line-height: 24px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    p {
+      font-size: 14px;
+      color: #8f8f8f;
+      margin-top: 20px;
+    }
+    div {
+      font-size: 16px;
+      color: #484848;
+    }
+  }
+  
+.box3 {
+    grid-column: 5 / 9;
+    grid-row: 1 / 10;
+    overflow: hidden;
+    .topTrialTitle{
+        width: 75%;
+        margin-top: 6px;
+    }
+    .max{
+        margin-left: 7px;
+    }
+    .mincenter{
+        margin: 0 13px 0 10px;
+    }
+    .chooseEntry{
+        margin-right: 10px;
+        line-height: 30px;
+    }
+}
+.box5, .box6{
+    grid-column: 1 / 5;
+}
+.box5{
+    grid-row: 5 / 7;
+    overflow: hidden;
+}
+$circle: 10px;
+$bgblue: #0071bc;
+.box6{
+    grid-row: 7 / 11;
+    .maxmin{
+        line-height: 46px;
+    }
+    .circle{
+        width: $circle;
+        height: $circle;
+        border-radius: 50%;
+        background-color: $bgblue;
+        margin-top: 19px;
+        margin-right: 18px;
+    }
+}

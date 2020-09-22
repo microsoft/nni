@@ -1,0 +1,42 @@
+$seriesIconMargin: 13px;
+.ExpDuration{
+    margin-top: 28px;
+    span:hover{
+        cursor: pointer;
+    }
+}
+
+.durationInput {
+    width: 40px;
+    height: 32px;
+    padding-left: 8px;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid #ccc;
+  }
+
+  .series{
+      i{
+          font-size: 20px;
+          font-weight: 700;
+      }
+      .confirm{
+          margin: 0 $seriesIconMargin;
+          i{
+              color: green;
+          }
+      }
+  }
+
+  .cancel i{
+    color: red;
+  }
+
+  .edit i{
+      margin-left: 4px;
+  }
+
+  .overview input:disabled{
+    background: transparent;
+    border: none;
+}

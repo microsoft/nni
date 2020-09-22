@@ -21,7 +21,8 @@
         "prettier"
     ],
     "rules": {
-        "prettier/prettier": 2,
+        "prettier/prettier": 0,
+        "no-console": "off",
         "@typescript-eslint/no-explicit-any": 0,
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,

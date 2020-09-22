@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { DetailsRow, IDetailsRowBaseProps } from '@fluentui/react';
-import OpenRow from '../public-child/OpenRow';
+import OpenRow from '../../public-child/OpenRow';
 
 interface DetailsProps {
     detailsProps: IDetailsRowBaseProps;
