@@ -33,6 +33,10 @@ export class MockedNNIManager extends Manager {
     public importData(data: string): Promise<void> {
         return Promise.resolve();
     }
+    public getImportedData(): Promise<string[]> {
+        const ret: string[] = ["1", "2"];
+        return Promise.resolve(ret);
+    }
     public async exportData(): Promise<string> {
         const ret: string = '';
         return Promise.resolve(ret);

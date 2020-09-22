@@ -114,6 +114,7 @@ class MsgDispatcher(MsgDispatcherBase):
         data: a list of dictionaries, each of which has at least two keys, 'parameter' and 'value'
         """
         for entry in data:
+            entry['value'] = entry['value']  if type(entry['value']) is str else json_tricks.dumps(entry['value'])
             entry['value'] = json_tricks.loads(entry['value'])
         self.tuner.import_data(data)
 
