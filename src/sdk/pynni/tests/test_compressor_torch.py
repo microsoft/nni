@@ -236,6 +236,7 @@ class CompressorTestCase(TestCase):
         quantizer.compress()
 
         # test ema
+        eps = 1e-7
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         out = model.relu(x)
         assert math.isclose(model.relu.module.tracked_min_biased, 0, abs_tol=eps)
