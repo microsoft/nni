@@ -148,7 +148,7 @@ class EvoNasTuner(Tuner):
 
     def _mutate_model(self, model):
         new_individual = copy.deepcopy(model.parameters)
-        mutate_key = random.choice(new_individual.keys())
+        mutate_key = random.choice(list(new_individual.keys()))
         mutate_val = self.search_space[mutate_key]
         if mutate_val['_type'] == 'layer_choice':
             idx = random.randint(0, len(mutate_val['_value']) - 1)
