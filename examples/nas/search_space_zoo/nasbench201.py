@@ -188,7 +188,6 @@ if __name__ == '__main__':
               torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
         exit(0)
 
-    mutator = enas.EnasMutator(model, tanh_constant=1.1, cell_exit_extra_step=True)
     trainer = enas.EnasTrainer(model,
                                loss=criterion,
                                metrics=lambda output, target: accuracy(output, target, topk=(1,)),
@@ -199,8 +198,7 @@ if __name__ == '__main__':
                                num_epochs=args.epochs,
                                dataset_train=dataset_train,
                                dataset_valid=dataset_valid,
-                               log_frequency=args.log_frequency,
-                               mutator=mutator)
+                               log_frequency=args.log_frequency)
 
     if args.visualization:
         trainer.enable_visualization()
