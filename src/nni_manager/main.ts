@@ -43,7 +43,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService)
-            .to(RemoteMachineTrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)
