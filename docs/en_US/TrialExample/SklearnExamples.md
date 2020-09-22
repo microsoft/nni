@@ -67,7 +67,7 @@ It is easy to use NNI in your scikit-learn code, there are only a few steps.
     "kernel": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
     "degree": {"_type":"choice","_value":[1, 2, 3, 4]},
     "gamma": {"_type":"uniform","_value":[0.01, 0.1]},
-    "coef0 ": {"_type":"uniform","_value":[0.01, 0.1]}
+    "coef0": {"_type":"uniform","_value":[0.01, 0.1]}
   }
   ```
 

@@ -1,4 +1,4 @@
-# NAS 基准测试（测试版）
+# NAS 基准测试
 
 ```eval_rst
 ..  toctree::
@@ -7,40 +7,28 @@
     用法示例 <BenchmarksExample>
 ```
 
+## 介绍
+
+为了提高 NAS 算法的可复现性并降低对计算资源的需求，研究者们提出了一系列 NAS 基准测试如[NAS-Bench-101](https://arxiv.org/abs/1902.09635), [NAS-Bench-201](https://arxiv.org/abs/2001.00326), [NDS](https://arxiv.org/abs/1905.13214)等等。 NNI 为用户提供了查询接口来获取这些基准测试。 只需要几行代码，研究者就可以通过使用这些基准测试容易且公平地评估他们的 NAS 算法。
+
 ## 先决条件
 
-* 准备目录来保存基准测试的数据库。 默认情况下，目录为 `${HOME}/.nni/nasbenchmark`。 可将其设置为任何位置，并在 import nni 前，通过 `NASBENCHMARK_DIR` 指定。
-* 通过 `pip install peewee` 命令安装 `peewee`，NNI 用其连接数据库。
+* 准备目录来保存基准测试的数据库。 默认情况下，目录为 `${HOME}/.nni/nasbenchmark`。 可以将其放在任意位置, 并在导入 NNI 之前指定 `NASBENCHMARK_DIR` 通过 `export NASBENCHMARK_DIR=/path/to/your/nasbenchmark`.
+* 通过 `pip3 install peewee` 命令安装 `peewee`，NNI 用其连接数据库。
 
 ## 准备数据
 
-为了避免存储和法规问题，NNI 不提供数据库。 强烈建议通过 Docker 来运行生成的脚本，减少安装依赖项的时间。 步骤：
+为了避免存储和法规问题，NNI 不提供数据库。 步骤：
 
-**步骤 1.** 克隆 NNI 存储库。 将 `${NNI_VERSION}` 替换为发布的版本或分支名称，例如：`v1.6`。
-
-```bash
+1. 将 NNI 克隆到机器上并进入 `examples/nas/benchmarks` 目录。
+```
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
+cd nni/examples/nas/benchmarks
 ```
+将 `${NNI_VERSION}` 替换为发布的版本或分支名称，例如：`v1.8`。
 
-**步骤 2.** 运行 Docker。
-
-对于 NAS-Bench-101,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni tensorflow/tensorflow:1.15.2-py3 /bin/bash /nni/examples/nas/benchmarks/nasbench101.sh
-```
-
-对于 NAS-Bench-201,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni ufoym/deepo:pytorch-cpu /bin/bash /nni/examples/nas/benchmarks/nasbench201.sh
-```
-
-对于 NDS,
-
-```bash
-docker run -v ${HOME}/.nni/nasbenchmark:/outputs -v /path/to/your/nni:/nni python:3.7 /bin/bash /nni/examples/nas/benchmarks/nds.sh
-```
+2. 通过 `pip3 install -r xxx.requirements.txt` 安装依赖。 `xxx` 可以为 `nasbench101`, `nasbench201` 或 `nds`.
+3. 通过 `./xxx.sh`生成数据库。 存储数据库的目录可以通过环境变量 `NASBENCHMARK_DIR` 设置，默认为 `~/.nni/nasbenchmark`。 注意 NAS-Bench-201 数据库将从 google drive 被下载。
 
 确保至少有 10GB 的可用磁盘空间，运行过程可能需要几个小时。
 

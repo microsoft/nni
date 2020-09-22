@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, PrimaryButton } from 'office-ui-fabric-react';
+import { Stack, PrimaryButton } from '@fluentui/react';
 
 interface ConcurrencyInputProps {
     value: number;
@@ -23,32 +23,29 @@ class ConcurrencyInput extends React.Component<ConcurrencyInputProps, Concurrenc
             this.props.updateValue(this.input.current.value);
             this.setState({ editting: false });
         }
-    }
+    };
 
     cancel = (): void => {
         this.setState({ editting: false });
-    }
+    };
 
     edit = (): void => {
         this.setState({ editting: true });
-    }
+    };
 
     render(): React.ReactNode {
         if (this.state.editting) {
             return (
-                <Stack horizontal className="inputBox">
+                <Stack horizontal className='inputBox'>
                     <input
-                        type="number"
-                        className="concurrencyInput"
+                        type='number'
+                        className='concurrencyInput'
                         defaultValue={this.props.value.toString()}
                         ref={this.input}
                     />
+                    <PrimaryButton text='Save' onClick={this.save} />
                     <PrimaryButton
-                        text="Save"
-                        onClick={this.save}
-                    />
-                    <PrimaryButton
-                        text="Cancel"
+                        text='Cancel'
                         style={{ display: 'inline-block', marginLeft: 1 }}
                         onClick={this.cancel}
                     />
@@ -56,17 +53,9 @@ class ConcurrencyInput extends React.Component<ConcurrencyInputProps, Concurrenc
             );
         } else {
             return (
-                <Stack horizontal className="inputBox">
-                    <input
-                        type="number"
-                        className="concurrencyInput"
-                        disabled={true}
-                        value={this.props.value}
-                    />
-                    <PrimaryButton
-                        text="Edit"
-                        onClick={this.edit}
-                    />
+                <Stack horizontal className='inputBox'>
+                    <input type='number' className='concurrencyInput' disabled={true} value={this.props.value} />
+                    <PrimaryButton text='Edit' onClick={this.edit} />
                 </Stack>
             );
         }

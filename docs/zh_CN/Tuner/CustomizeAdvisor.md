@@ -33,7 +33,7 @@ advisor:
     arg1: value1
 ```
 
-**注意：**Advisor 的工作目录是`<home>/nni/experiments/<experiment_id>/log` 可从环境变量 `NNI_LOG_DIRECTORY` 中获取。
+**注意：**Advisor 的工作目录是`<home>/nni-experiments/<experiment_id>/log` 可从环境变量 `NNI_LOG_DIRECTORY` 中获取。
 
 ## 示例
 

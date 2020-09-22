@@ -1,6 +1,23 @@
 import * as JSON5 from 'json5';
-import { MetricDataRecord, TrialJobInfo, TableObj, TableRecord, Parameters, FinalType, MultipleAxes, SingleAxis } from '../interface';
-import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType, isNaNorInfinity, formatComplexTypeValue } from '../function';
+import {
+    MetricDataRecord,
+    TrialJobInfo,
+    TableObj,
+    TableRecord,
+    Parameters,
+    FinalType,
+    MultipleAxes,
+    SingleAxis
+} from '../interface';
+import {
+    getFinal,
+    formatAccuracy,
+    metricAccuracy,
+    parseMetrics,
+    isArrayType,
+    isNaNorInfinity,
+    formatComplexTypeValue
+} from '../function';
 
 /**
  * Get a structured representation of parameters
@@ -9,14 +26,17 @@ import { getFinal, formatAccuracy, metricAccuracy, parseMetrics, isArrayType, is
  * @param prefix Current namespace (to make full name for unexpected entries)
  * @returns Parsed structured parameters and unexpected entries
  */
-function inferTrialParameters(paramObj: object, space: MultipleAxes, prefix: string = ''): [Map<SingleAxis, any>, Map<string, any>] {
+function inferTrialParameters(
+    paramObj: object,
+    space: MultipleAxes,
+    prefix: string = ''
+): [Map<SingleAxis, any>, Map<string, any>] {
     const parameters = new Map<SingleAxis, any>();
     const unexpectedEntries = new Map<string, any>();
     for (const [k, v] of Object.entries(paramObj)) {
         // prefix can be a good fallback when corresponding item is not found in namespace
         const axisKey = space.axes.get(k);
-        if (prefix && k === '_name')
-            continue;
+        if (prefix && k === '_name') continue;
         if (axisKey !== undefined) {
             if (typeof v === 'object' && v._name !== undefined && axisKey.nested) {
                 // nested entry
@@ -93,7 +113,10 @@ class Trial implements TableObj {
             if (temp !== undefined) {
                 if (isArrayType(parseMetrics(temp.data))) {
                     return undefined;
-                } else if (typeof parseMetrics(temp.data) === 'object' && parseMetrics(temp.data).hasOwnProperty('default')) {
+                } else if (
+                    typeof parseMetrics(temp.data) === 'object' &&
+                    parseMetrics(temp.data).hasOwnProperty('default')
+                ) {
                     return parseMetrics(temp.data).default;
                 } else if (typeof parseMetrics(temp.data) === 'number') {
                     return parseMetrics(temp.data);
@@ -112,14 +135,14 @@ class Trial implements TableObj {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const duration = (endTime - this.info.startTime!) / 1000;
         let accuracy;
-        if(this.acc !== undefined && this.acc.default !== undefined){
-            if(typeof this.acc.default === 'number'){
+        if (this.acc !== undefined && this.acc.default !== undefined) {
+            if (typeof this.acc.default === 'number') {
                 accuracy = JSON5.parse(this.acc.default);
-            }else {
+            } else {
                 accuracy = this.acc.default;
             }
         }
-        
+
         return {
             key: this.info.id,
             sequenceId: this.info.sequenceId,
@@ -182,7 +205,7 @@ class Trial implements TableObj {
                 ret.parameters = getPara;
             }
         } else {
-            ret.parameters = { error: 'This trial\'s parameters are not available.' };
+            ret.parameters = { error: "This trial's parameters are not available." };
         }
         if (this.info.logPath !== undefined) {
             ret.logPath = this.info.logPath;
@@ -227,7 +250,7 @@ class Trial implements TableObj {
         Object.entries(acc).forEach(item => {
             const [k, v] = item;
             const column = space.axes.get(k);
-            
+
             if (column !== undefined) {
                 ret.set(column, v);
             } else {
@@ -245,7 +268,7 @@ class Trial implements TableObj {
     }
 
     public finalKeys(): string[] {
-        if(this.acc !== undefined){
+        if (this.acc !== undefined) {
             return Object.keys(this.acc);
         } else {
             return [];
@@ -294,7 +317,7 @@ class Trial implements TableObj {
     }
 
     public updateTrialJobInfo(trialJobInfo: TrialJobInfo): boolean {
-        const same = (this.infoField && this.infoField.status === trialJobInfo.status);
+        const same = this.infoField && this.infoField.status === trialJobInfo.status;
         this.infoField = trialJobInfo;
         if (trialJobInfo.finalMetricData) {
             this.final = trialJobInfo.finalMetricData[trialJobInfo.finalMetricData.length - 1];
@@ -304,11 +327,15 @@ class Trial implements TableObj {
     }
 
     private renderNumber(val: any): string {
-        if(typeof val === 'number'){
+        if (typeof val === 'number') {
             if (isNaNorInfinity(val)) {
                 return `${val}`; // show 'NaN' or 'Infinity'
             } else {
-                return `${formatAccuracy(val)} (FINAL)`;
+                if (this.accuracy === undefined) {
+                    return `${formatAccuracy(val)} (LATEST)`;
+                } else {
+                    return `${formatAccuracy(val)} (FINAL)`;
+                }
             }
         } else {
             // show other types, such as {tensor: {data: }}
@@ -316,9 +343,10 @@ class Trial implements TableObj {
         }
     }
 
-    public formatLatestAccuracy(): string {  // TODO: this should be private
-        if(this.status === 'SUCCEEDED'){
-            return (this.accuracy === undefined ? '--': this.renderNumber(this.accuracy));
+    public formatLatestAccuracy(): string {
+        // TODO: this should be private
+        if (this.status === 'SUCCEEDED') {
+            return this.accuracy === undefined ? '--' : this.renderNumber(this.accuracy);
         } else {
             if (this.accuracy !== undefined) {
                 return this.renderNumber(this.accuracy);
@@ -330,7 +358,6 @@ class Trial implements TableObj {
                 return this.renderNumber(metricAccuracy(latest));
             }
         }
-        
     }
 }
 

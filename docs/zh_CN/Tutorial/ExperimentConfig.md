@@ -293,7 +293,7 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 ### logDir
 
-可选。 目录的路径。 默认值：`<user home directory>/nni/experiment`。
+可选。 目录的路径。 默认值：`<user home directory>/nni-experiments`。
 
 配置目录以存储 Experiment 的日志和数据。
 
@@ -575,7 +575,7 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### maxTrialNumPerGpu
 
-可选。 整数。 默认值：99999。
+可选。 整数。 默认值： 1。
 
 用于指定 GPU 设备上的最大并发 Trial 的数量。
 

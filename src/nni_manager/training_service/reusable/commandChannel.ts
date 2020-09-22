@@ -65,8 +65,8 @@ export abstract class CommandChannel {
     protected abstract sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void>;
     protected abstract createRunnerConnection(environment: EnvironmentInformation): RunnerConnection;
 
-    public async sendCommand(environment: EnvironmentInformation, commantType: string, data: any): Promise<void> {
-        const command = encodeCommand(commantType, JSON.stringify(data));
+    public async sendCommand(environment: EnvironmentInformation, commandType: string, data: any): Promise<void> {
+        const command = encodeCommand(commandType, JSON.stringify(data));
         this.log.debug(`CommandChannel: env ${environment.id} sending command: ${command}`);
         await this.sendCommandInternal(environment, command.toString("utf8"));
     }

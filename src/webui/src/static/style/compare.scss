@@ -1,42 +1,57 @@
-.compare-modal{
+.compare-modal {
     /* decide modal size */
-    .ms-Dialog-main{
+    .ms-Dialog-main {
         width: 50%;
-        overflow: hidden;
+        min-width: 450px;
+    }
+
+    .ms-Modal-scrollableContent {
+        overflow-x: hidden;
     }
 
     /* compare-md: table style */
-    &-table{
+    .flex {
+        display: flex;
+    }
+
+    &-table {
         width: 92%;
         margin: 0 auto;
         margin-bottom: 20px;
         border: 1px solid transparent;
-        overflow: auto;
+        overflow: auto hidden;
         color: #333;
-        tr{
+
+        tr {
             line-height: 30px;
         }
-        tr:nth-of-type(even){
+
+        tr:nth-of-type(even) {
             background-color: gainsboro;
         }
-        .column{
+
+        .column {
             max-width: 124px;
             padding-left: 18px;
             font-weight: 600;
         }
-        .value{
+
+        .value {
             max-width: 152px;
             padding-right: 18px;
             text-align: left;
         }
-        .idList{
+
+        .idList {
             font-weight: 600;
         }
     }
+
     /* compare-md: intermediate graph style */
-    &-intermediate{
+    &-intermediate {
         position: relative;
-        .compare-yAxis{
+
+        .compare-yAxis {
             color: #333;
             position: absolute;
             top: 87%;

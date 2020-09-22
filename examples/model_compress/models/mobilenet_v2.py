@@ -108,7 +108,10 @@ class MobileNetV2(nn.Module):
 
     def forward(self, x):
         x = self.features(x)
-        x = x.mean(3).mean(2)
+        # it's same with .mean(3).mean(2), but
+        # speedup only suport the mean option
+        # whose output only have two dimensions
+        x = x.mean([2, 3])
         x = self.classifier(x)
         return x
 

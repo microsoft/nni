@@ -1,25 +1,25 @@
 
 /* new style */
-.overMessage{
+.overMessage {
     height: 446px;
 }
 
-.blockPadding{
+.blockPadding {
     padding: 10px 20px;
 }
 
-.commonTableStyle{
+.commonTableStyle {
     padding: 15px 20px;
     height: 100%;
     min-width: 500px;
     overflow-y: auto;
 }
 
-.padItem{
+.padItem {
     padding: 10px 20px 0 20px;
 }
 
-.searchSpace{
+.searchSpace {
     line-height: 22px;
     font-size: 14px;
     padding: 15px 0;
@@ -27,38 +27,39 @@
     width: 95%;
 }
 
-.nowrap{
+.nowrap {
     overflow: hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.main{
+.main {
     margin: 9px 0;
 }
 
-.profile{
-    pre{
+.profile {
+    pre {
         overflow: inherit;
     }
 }
 
-.link{
+.link {
     margin-bottom: 10px;
 }
 
-.info{
+.info {
     position: relative;
     top: 15px;
     left: 10px;
-    span{
+
+    span {
         color: #333;
         font-size: 14px;
     }
 }
 
 /* overview-succeed-graph */
-.showMess{
+.showMess {
     position: absolute;
     top: 50%;
     left: 50%;

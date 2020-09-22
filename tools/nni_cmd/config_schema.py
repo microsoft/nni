@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import json
+import logging
+import os
 import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
 from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
@@ -78,6 +79,7 @@ class AlgoSchema:
         if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
             raise SchemaError('classArgs is not allowed.')
 
+        logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain
         validator = create_validator_instance(algo_type+'s', builtin_name)
         if validator:
             try:
@@ -380,7 +382,8 @@ machine_list_schema = {
             Optional('passphrase'): setType('passphrase', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+            Optional('useActiveGpu'): setType('useActiveGpu', bool),
+            Optional('preCommand'): setType('preCommand', str)
         },
         {
             'ip': setType('ip', str),
@@ -389,7 +392,8 @@ machine_list_schema = {
             'passwd': setType('passwd', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+            Optional('useActiveGpu'): setType('useActiveGpu', bool),
+            Optional('preCommand'): setType('preCommand', str)
         })]
 }
 

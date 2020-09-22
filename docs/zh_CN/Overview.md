@@ -10,7 +10,7 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 下图显示了 NNI 的体系结构。
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="绘图" width="700"/>
+<img src="https://user-images.githubusercontent.com/16907603/92089316-94147200-ee00-11ea-9944-bf3c4544257f.png" alt="绘图" width="700"/>
 </p>
 
 ## 主要概念
