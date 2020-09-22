@@ -251,7 +251,7 @@ testCases:
   configFile: test/config/tuners/metis.yml
 
 - name: tuner-evolutionNas
-  configName: test/config/tuners/evolutionNas.yml
+  configFile: test/config/tuners/evolutionNas.yml
 
 #########################################################################
 # nni customized-tuners test
