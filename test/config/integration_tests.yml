@@ -242,3 +242,6 @@ testCases:
 
 - name: tuner-metis
   configFile: test/config/tuners/metis.yml
+
+- name: tuner-evolutionNas
+  configName: test/config/tuners/evolutionNas.yml
