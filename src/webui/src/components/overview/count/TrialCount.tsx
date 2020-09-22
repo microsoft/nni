@@ -3,22 +3,26 @@ import { Stack, TooltipHost, ProgressIndicator } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
 import { CONTROLTYPE } from '../../../static/const';
 import EditExperimentParam from './EditExperimentParam';
-import { EditExpeParamContext} from './context';
+import { EditExpeParamContext } from './context';
 
 const itemStyles: React.CSSProperties = {
     height: 80,
-    width: '45%'
+    width: '62%'
 };
 
 const itemStyle2: React.CSSProperties = {
     height: 80,
-    width: '55%',
+    width: '63%',
     textAlign: 'right'
 };
 
 const itemStyle1: React.CSSProperties = {
-    height: 50,
-    width: 76
+    width: '30%',
+    height: 50
+};
+const itemRunning: React.CSSProperties = {
+    width: '42%',
+    height: 50
 };
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
@@ -35,26 +39,26 @@ export const TrialCount = (): any => {
                     <TooltipHost content={bar2.toString()}>
                         <ProgressIndicator percentComplete={bar2Percent} barHeight={15} />
                     </TooltipHost>
-                    <Stack horizontal horizontalAlign='space-between' className='mess'>
-                        <div style={itemStyle1} className='basic colorOfbasic'>
+                    <Stack horizontal className='mess'>
+                        <div style={itemRunning} className='basic colorOfbasic'>
                             <p>Running</p>
                             <div>{count.get('RUNNING')}</div>
                         </div>
-                        <div style={itemStyle1} className='basic colorOfbasic'>
-                            <p>Succeeded</p>
-                            <div>{count.get('SUCCEEDED')}</div>
+                        <div style={itemStyle1} className='basic'>
+                            <p>Failed</p>
+                            <div>{count.get('FAILED')}</div>
                         </div>
                         <div style={itemStyle1} className='basic'>
                             <p>Stopped</p>
                             <div>{stoppedCount}</div>
                         </div>
-                        
                     </Stack>
                     <Stack horizontal horizontalAlign='space-between' className='mess'>
-                    <div style={itemStyle1} className='basic'>
-                            <p>Failed</p>
-                            <div>{count.get('FAILED')}</div>
+                        <div style={itemStyle1} className='basic colorOfbasic'>
+                            <p>Succeeded</p>
+                            <div>{count.get('SUCCEEDED')}</div>
                         </div>
+
                         <div style={itemStyle1} className='basic'>
                             <p>Waiting</p>
                             <div>{count.get('WAITING')}</div>
@@ -64,10 +68,10 @@ export const TrialCount = (): any => {
                 </div>
                 <div style={itemStyle2}>
 
-                    <EditExpeParamContext.Provider value={{title: 'Max trial numbers', field: 'maxTrialNum', unit: '', editType: CONTROLTYPE[1]}}>
+                    <EditExpeParamContext.Provider value={{ title: 'Max trial numbers', field: 'maxTrialNum', unit: '', editType: CONTROLTYPE[1] }}>
                         <EditExperimentParam />
                     </EditExpeParamContext.Provider>
-                    <EditExpeParamContext.Provider value={{title: 'Concurrency',field: 'trialConcurrency', unit: '', editType: CONTROLTYPE[2]}}>
+                    <EditExpeParamContext.Provider value={{ title: 'Concurrency', field: 'trialConcurrency', unit: '', editType: CONTROLTYPE[2] }}>
                         <EditExperimentParam />
                     </EditExpeParamContext.Provider>
                 </div>

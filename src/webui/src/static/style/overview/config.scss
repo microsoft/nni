@@ -2,6 +2,7 @@
     .config{
         position: fixed;
         right: 0;
+        z-index: 1000;
         .ms-Button--default{
             padding: 0;
             border: none;

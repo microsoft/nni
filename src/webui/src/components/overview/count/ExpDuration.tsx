@@ -7,11 +7,11 @@ import EditExperimentParam from './EditExperimentParam';
 import {EditExpeParamContext} from './context';
 import '../../../static/style/overview/count.scss';
 const itemStyle1: React.CSSProperties = {
-    width: '45%',
+    width: '62%',
     height: 80
 };
 const itemStyle2: React.CSSProperties = {
-    width: '55%',
+    width: '63%',
     height: 80,
     textAlign: 'right',
     

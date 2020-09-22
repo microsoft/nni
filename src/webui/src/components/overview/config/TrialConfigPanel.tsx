@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Stack, Panel, Pivot, PivotItem, PrimaryButton } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
-import { ConcurrencyContext } from '../../Overview';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../../static/const';
+import { prettyStringify } from '../../../static/json_util';
 import '../../../static/style/logDrawer.scss';
 
 interface LogDrawerProps {
@@ -39,7 +39,21 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
     render(): React.ReactNode {
         const { hideConfigPanel, activeTab } = this.props;
         const { logDrawerHeight } = this.state;
+        const blacklist = [
+            'id',
+            'logDir',
+            'startTime',
+            'endTime',
+            'experimentName',
+            'searchSpace',
+            'trainingServicePlatform'
+        ];
+        const filter = (key: string, val: any): any => {
+            return blacklist.includes(key) ? undefined : val;
+        };
 
+        const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
+        // const profile = prettyStringify(EXPERIMENT.profile, 300, 2);
         return (
             <Stack>
                 <Panel
@@ -56,45 +70,21 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                                     height={logDrawerHeight - 92 - 45}
                                     language='json'
                                     theme='vs-light'
-                                    value={JSON.stringify(EXPERIMENT.searchSpace, null, 2)}
+                                    value={prettyStringify(EXPERIMENT.searchSpace, 300, 2)}
                                     options={MONACO}
                                 />
                             </PivotItem>
                             <PivotItem headerText='Config' itemKey='config'>
-                                <ConcurrencyContext.Consumer>
-                                    {(value): React.ReactNode => {
-                                        const blacklist = [
-                                            'id',
-                                            'logDir',
-                                            'startTime',
-                                            'endTime',
-                                            'experimentName',
-                                            'searchSpace',
-                                            'trainingServicePlatform'
-                                        ];
-                                        const filter = (key: string, val: any): any => {
-                                            if (key === 'trialConcurrency') {
-                                                return value.trialConcurrency;
-                                            }
-                                            return blacklist.includes(key) ? undefined : val;
-                                        };
-                                        const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
-
-                                        return (
-                                            <div className='profile'>
-                                                <MonacoEditor
-                                                    width='100%'
-                                                    height={logDrawerHeight - 92 - 45}
-                                                    language='json'
-                                                    theme='vs-light'
-                                                    value={profile}
-                                                    options={MONACO}
-                                                />
-                                            </div>
-                                        );
-                                    }
-                                    }
-                                </ConcurrencyContext.Consumer>
+                                <div className='profile'>
+                                    <MonacoEditor
+                                        width='100%'
+                                        height={logDrawerHeight - 92 - 45}
+                                        language='json'
+                                        theme='vs-light'
+                                        value={profile}
+                                        options={MONACO}
+                                    />
+                                </div>
                             </PivotItem>
                         </Pivot>
                     </div>

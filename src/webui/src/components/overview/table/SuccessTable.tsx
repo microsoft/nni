@@ -15,12 +15,18 @@ interface SuccessTableProps {
 interface SuccessTableState {
     columns: IColumn[];
     source: Array<any>;
+    innerWidth: number;
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
+    
     constructor(props: SuccessTableProps) {
         super(props);
-        this.state = { columns: this.columns, source: TRIALS.table(this.props.trialIds) };
+        this.state = { 
+            columns: this.columns,
+            source: TRIALS.table(this.props.trialIds),
+            innerWidth: window.innerWidth
+        };
     }
 
     private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
@@ -70,8 +76,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 60,
-            maxWidth: 120,
+            minWidth: (window.innerWidth * 0.333 - 150) / 5,
+            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick
@@ -80,8 +86,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 80,
-            maxWidth: 100,
+            minWidth: (window.innerWidth * 0.333 - 150) / 5,
+            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -90,8 +96,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 100,
-            maxWidth: 210,
+            minWidth: (window.innerWidth * 0.333 - 150) / 5,
+            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
@@ -105,8 +111,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: 140,
-            maxWidth: 210,
+            minWidth: (window.innerWidth * 0.333 - 150) / 5,
+            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {
@@ -117,8 +123,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 120,
-            maxWidth: 360,
+            minWidth: (window.innerWidth * 0.333 - 200) / 5,
+            // maxWidth: (window.innerWidth * 0.333 - 150) / 5,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -127,6 +133,17 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             }
         }
     ];
+
+    setInnerWidth = (): void => {
+        this.setState(() => ({ innerWidth: window.innerWidth }));
+    };
+
+    componentDidMount() {
+        window.addEventListener('resize', this.setInnerWidth);
+    }
+    componentWillUnmount(): void {
+        window.removeEventListener('resize', this.setInnerWidth);
+    }
 
     componentDidUpdate(prevProps: SuccessTableProps): void {
         if (this.props.trialIds !== prevProps.trialIds) {
@@ -138,7 +155,6 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     render(): React.ReactNode {
         const { columns, source } = this.state;
         const isNoneData = source.length === 0 ? true : false;
-
         return (
             <div id='succTable'>
                 <DetailsList

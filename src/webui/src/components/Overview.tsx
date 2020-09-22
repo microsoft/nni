@@ -37,10 +37,6 @@ export const BestMetricContext = React.createContext({
     bestAccuracy: 0
 });
 
-export const ConcurrencyContext = React.createContext({
-    trialConcurrency: 1
-});
-
 class Overview extends React.Component<{}, OverviewState> {
     static contextType = AppContext;
     context!: React.ContextType<typeof AppContext>;
@@ -88,9 +84,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     return (
                         <div className='overview'>
                             {/* search space & config */}
-                            <ConcurrencyContext.Provider value={{ trialConcurrency: trialConcurrency }}>
-                                <TrialConfigButton />
-                            </ConcurrencyContext.Provider>
+                            <TrialConfigButton />
                             <div className='wrapper'>
                                 {/* exp params */}
                                 <div className='box1'>
@@ -113,6 +107,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </TitleContext.Provider>
                                         <ExpDuration />
                                     </div>
+                                    <div className='empty'/>
                                     <div className='box7'>
                                         <TitleContext.Provider
                                             value={{ text: 'Trial numbers', icon: 'NumberSymbol', fontColor: '' }}
@@ -177,7 +172,6 @@ class Overview extends React.Component<{}, OverviewState> {
                                             <Stack className="maxmin" horizontal>
                                                 <div className='circle' />
                                                 <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
-
                                             </Stack>
                                         </div>
                                     </Stack>

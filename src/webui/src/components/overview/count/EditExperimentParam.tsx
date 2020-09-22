@@ -7,7 +7,7 @@ import { Edit, CheckMark, Cancel } from '../../buttons/Icon';
 import '../../../static/style/overview/count.scss';
 import { MessageBar, MessageBarType } from '@fluentui/react';
 
-interface EditState{
+interface EditState {
     isShowPencil: boolean;
     defaultValue: string;
 }
@@ -27,64 +27,73 @@ class EditExperimentParam extends React.Component<{}, EditState> {
     }
 
     showPencil = () => {
-        this.setState({isShowPencil: true});
+        this.setState({ isShowPencil: true });
     }
 
     hidePencil = () => {
         this.setState({ isShowPencil: false });
+        console.info('***********');
+        console.info(this.DurationInputRef.current!.value);
     }
-    
+
     setInputVal = (event: any) => {
+
+        console.info('%%%%%%%');
         this.setState({ defaultValue: event.target.value });
     }
 
-    componentDidMount(){
+    componentDidMount() {
+        this.initDefaultVal();
+    }
+
+    componentDidUpdate(){
         this.initDefaultVal();
     }
     render(): React.ReactNode {
-        const {isShowPencil, defaultValue} = this.state;
+        const { isShowPencil, defaultValue } = this.state;
+        console.info(`333: ${defaultValue}`);
         /***
         * const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
         * [0], 'MAX_EXEC_DURATION', params.maxExecDuration
         * [1], 'MAX_TRIAL_NUM', params.maxTrialNum
         * [2], 'TRIAL_CONCURRENCY', params.trialConcurrency 
         */
-     
+
         return (
             <EditExpeParamContext.Consumer>
                 {(value): React.ReactNode => (
-                        <React.Fragment>
-                            <p>{value.title}</p>
-                            <div>
-                                <input
-                                    // type='number'
-                                    className='durationInput'
-                                    // defaultValue={defaultValue}
-                                    ref={this.DurationInputRef}
-                                    disabled={isShowPencil ? true : false}
-                                    value={defaultValue}
-                                    onChange={this.setInputVal}
-                                />{value.unit}
-                                {isShowPencil &&
-                                    <span className='edit' onClick={this.hidePencil
-                                    }>{Edit}</span>}
+                    <React.Fragment>
+                        <p>{value.title}</p>
+                        <div>
+                            <input
+                                // type='number'
+                                className='durationInput'
+                                // defaultValue={defaultValue}
+                                ref={this.DurationInputRef}
+                                disabled={isShowPencil ? true : false}
+                                value={defaultValue}
+                                onChange={this.setInputVal}
+                            />{value.unit}
+                            {isShowPencil &&
+                                <span className='edit' onClick={this.hidePencil
+                                }>{Edit}</span>}
 
-                                {!isShowPencil &&
-                                    <span className='series'>
-                                        <span className='confirm' onClick={this.confirmEdit}>{CheckMark}</span>
-                                        <span className='cancel' onClick={this.cancleEdit}>{Cancel}</span>
-                                    </span>}
-                            </div>
-                        </React.Fragment>
-                    )
+                            {!isShowPencil &&
+                                <span className='series'>
+                                    <span className='confirm' onClick={this.confirmEdit}>{CheckMark}</span>
+                                    <span className='cancel' onClick={this.cancleEdit}>{Cancel}</span>
+                                </span>}
+                        </div>
+                    </React.Fragment>
+                )
                 }
             </EditExpeParamContext.Consumer>
-        
+
         );
     }
 
     initDefaultVal = () => {
-        const { title  } = this.context;
+        const { title } = this.context;
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         if (title === 'Max duration') {
             this.DurationInputRef.current!.value = maxExecDuration.toString();
@@ -96,21 +105,32 @@ class EditExperimentParam extends React.Component<{}, EditState> {
     }
 
     cancleEdit = (): void => {
-        
         this.showPencil();
     }
 
     // editTrialConcurrency = async (userInput: string): Promise<void> => {
     confirmEdit = async (): Promise<void> => {
-        const {defaultValue} = this.state;
-        const {field, editType} = this.context;
+        // const { defaultValue } = this.state;
+        const {title} = this.context;
+        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
+        // console.info(`confirm function default: ${defaultValue}`);
+        const { field, editType } = this.context;
         const userInput: string = this.DurationInputRef.current!.value;
+        console.info(`userInput default: ${userInput}`);
         if (!userInput.match(/^[1-9]\d*$/)) {
             // this.showMessageInfo('Please enter a positive integer!', 'error');
             alert('Please enter a positive integer!');
             return;
         }
-        if (userInput === defaultValue) {
+        let val = '';
+        if (title === 'Max duration') {
+            val = maxExecDuration.toString();
+        } else if (title === 'Max trial numbers') {
+            val = EXPERIMENT.profile.params.maxTrialNum.toString();
+        } else {
+            val = EXPERIMENT.profile.params.trialConcurrency.toString();
+        }
+        if (userInput === val) {
             // showMessageInfo('Trial concurrency has not changed', 'error');
             alert(`Trial ${field} has not changed`);
             return;

@@ -7,6 +7,7 @@
     >div{
         background: #fff;
         padding: 0 42px;
+        border-radius: 20px;
     }
 
     .box2 {
@@ -14,15 +15,23 @@
         grid-row: 1 / 5;
         display: grid;
         grid-auto-rows: 70px;
-        grid-gap: 18px;
+        padding: 0;
+        background: transparent;
     
         .box4{
-            grid-row: 1 / 3;
+            // grid-row: 1 / 3;
+            height: 136px;
+            background: #fff;
+            padding: 0 42px;
+            border-radius: 20px;
         }
-    
-        .box7{
-            height: 214px;
 
+        .box7{
+            margin-top: 15px;
+            height: 235px;
+            background: #fff;
+            padding: 0 42px;
+            border-radius: 20px;
         }
     }
 }
@@ -36,7 +45,7 @@
 }
 
 .basic {
-    line-height: 24px;
+    line-height: 21px;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     p {
       font-size: 14px;

@@ -7,6 +7,7 @@ import { useId } from '@uifabric/react-hooks';
 import { BestMetricContext } from '../../Overview';
 import { styles } from './basicInfoStyles';
 import '../../../static/style/progress/progress.scss';
+import '../../../static/style/progress/probar.scss';
 
 export const ReBasicInfo = (): any => {
     const labelId: string = useId('callout-label');

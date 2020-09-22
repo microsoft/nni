@@ -1,5 +1,5 @@
 const itemStyle1: React.CSSProperties = {
-    width: '76%',
+    width: '75%',
     height: 38
 };
 const itemStyleSucceed: React.CSSProperties = {
