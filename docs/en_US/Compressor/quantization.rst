@@ -8,6 +8,9 @@ format for model weights is 32-bit float, or FP32. Many research works have demo
 can be represented using 8-bit integers without significant loss in accuracy. Even lower bit-widths, such as 4/2/1 bits,
 is an active field of research.
 
+A quntizer is a quantization algorithm implementation in NNI, NNI provides multiple quntizers as below. You can also
+create you own quntizer using NNI model compression inteface.
+
 ..  toctree::
     :maxdepth: 2
 

@@ -12,7 +12,7 @@ Coase-grained pruning or structured pruning is pruning entire group of elements,
 NNI provides multiple fine-grained pruning and structured pruning algorithms.
 It supports Tensorflow and PyTorch with unified interface.
 For users to prune their models, they only need to add several lines in their code.
-For the structural filter pruning, NNI also provides a dependency-aware mode. In the dependency-aware mode, the
+For the structured filter pruning, NNI also provides a dependency-aware mode. In the dependency-aware mode, the
 filter pruner will get better speed gain after the speedup.
 
 For details, please refer to the following tutorials:
