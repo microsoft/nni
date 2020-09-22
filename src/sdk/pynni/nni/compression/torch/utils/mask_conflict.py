@@ -3,7 +3,6 @@
 import os
 import logging
 import torch
-import torch.nn as nn
 import numpy as np
 from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDependency, InputChannelDependency
 from .utils import get_module_by_name
