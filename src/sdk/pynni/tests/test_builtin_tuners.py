@@ -19,7 +19,6 @@ from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
 from nni.msg_dispatcher import _pack_parameter, MsgDispatcher
 from nni.pbt_tuner.pbt_tuner import PBTTuner
-from nni.evo_nas_tuner.evo_nas_tuner import EvoNasTuner
 
 try:
     from nni.smac_tuner.smac_tuner import SMACTuner
@@ -319,11 +318,6 @@ class BuiltinTunersTestCase(TestCase):
         # Needs enough population size, otherwise it will throw a runtime error
         tuner_fn = lambda: EvolutionTuner(population_size=100)
         self.search_space_test_all(tuner_fn)
-        self.import_data_test(tuner_fn)
-
-    def test_evolution_nas_tuner(self):
-        tuner_fn = lambda: EvoNasTuner()
-        self.search_space_test_all(tuner_fn, supported_types=["choice"])
         self.import_data_test(tuner_fn)
 
     def test_gp(self):
