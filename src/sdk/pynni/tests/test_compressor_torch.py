@@ -234,18 +234,6 @@ class CompressorTestCase(TestCase):
         model.relu = torch.nn.ReLU()
         quantizer = torch_compressor.QAT_Quantizer(model, config_list)
         quantizer.compress()
-        # test quantize
-        # range not including 0
-        eps = 1e-7
-        weight = torch.tensor([[1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, model.conv2)
-        assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
-        assert model.conv2.module.zero_point == 0
-        # range including 0
-        weight = torch.tensor([[-1, 2], [3, 5]]).float()
-        quantize_weight = quantizer.quantize_weight(weight, model.conv2)
-        assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
-        assert model.conv2.module.zero_point in (42, 43)
 
         # test ema
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
