@@ -38,7 +38,7 @@ class EvolutionClassArgsValidator(ClassArgsValidator):
         }).validate(kwargs)
 
 
-class EvoNasTuner(Tuner):
+class RegularizedEvolutionTuner(Tuner):
     """
     EvoNasTuner is tuner using Evolution NAS Tuner.
     See ``Regularized Evolution for Image Classifier Architecture Search`` for details.
@@ -53,7 +53,7 @@ class EvoNasTuner(Tuner):
         the number of models chosen from population each time when evolution
     """
     def __init__(self, optimize_mode="maximize", population_size=100, sample_size=25):
-        super(EvoNasTuner, self).__init__()
+        super(RegularizedEvolutionTuner, self).__init__()
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
         self.sample_size = sample_size

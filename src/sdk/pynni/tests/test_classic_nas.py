@@ -12,7 +12,7 @@ from collections import deque
 from unittest import TestCase, main
 
 from nni.tuner import Tuner
-from nni.evo_nas_tuner.evo_nas_tuner import EvoNasTuner
+from nni.regularized_evolution_tuner.regularized_evolution_tuner import RegularizedEvolutionTuner
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')

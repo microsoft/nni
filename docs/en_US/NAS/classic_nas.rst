@@ -8,4 +8,4 @@ Classic NAS algorithms use a controller to ensemble a model from search space. T
     :maxdepth: 1
 
     Overview <ClassicNas>
-    Evolution NAS Tuner <EvolutionNasTuner>
+    Regularized Evolution Tuner <RegularizedEvolutionTuner>

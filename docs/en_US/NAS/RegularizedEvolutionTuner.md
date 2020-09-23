@@ -1,6 +1,6 @@
 # Evolution NAS Tuner on NNI
 
-## EvoNasTuner
+## Regularized Evolution Tuner
 
 This is a tuner geared for NNI’s Neural Architecture Search (NAS) interface. It uses the [evolution algorithm](https://arxiv.org/pdf/1802.01548.pdf).
 
