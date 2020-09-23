@@ -145,7 +145,7 @@ def replace_conv2d(conv, mask):
     # filter may have different input channel indexes.
     input_step = int(conv.in_channels / conv.groups)
     in_channels_group = int(in_channels / groups)
-    filter_step = int(conv.out_channels / conv.groups)
+    filter_step = int(out_channels / groups)
     if mask.input_mask is not None:
         for groupid in range(conv.groups):
             start = groupid * input_step

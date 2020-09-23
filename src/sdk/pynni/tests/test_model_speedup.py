@@ -200,10 +200,21 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
 
     def test_speedup_integration(self):
-        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3']:
+        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3', 'resnet50']:
+            groups, pretrained = 1, True
+            kwargs = {
+                'pretrained': True
+            }
+            if model_name == 'resnet50':
+                # testing multiple groups
+                kwargs = {
+                    'pretrained': False,
+                    'groups': 4
+                }
+
             Model = getattr(models, model_name)
-            net = Model(pretrained=True, progress=False).to(device)
-            speedup_model = Model().to(device)
+            net = Model(**kwargs).to(device)
+            speedup_model = Model(**kwargs).to(device)
             net.eval() # this line is necessary
             speedup_model.eval()
             # random generate the prune config for the pruner
