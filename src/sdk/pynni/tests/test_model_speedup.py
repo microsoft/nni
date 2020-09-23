@@ -201,7 +201,6 @@ class SpeedupTestCase(TestCase):
 
     def test_speedup_integration(self):
         for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3', 'resnet50']:
-            groups, pretrained = 1, True
             kwargs = {
                 'pretrained': True
             }
