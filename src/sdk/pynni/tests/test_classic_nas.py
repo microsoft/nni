@@ -80,8 +80,8 @@ class ClassicNasTestCase(TestCase):
         logger.info("Full supported search space: %s", full_supported_search_space)
         self.search_space_test_one(tuner_factory, full_supported_search_space)
 
-    def test_evo_nas_tuner(self):
-        tuner_fn = lambda: EvoNasTuner()
+    def test_regularized_evolution_tuner(self):
+        tuner_fn = lambda: RegularizedEvolutionTuner()
         self.search_space_test_all(tuner_fn)
 
 
