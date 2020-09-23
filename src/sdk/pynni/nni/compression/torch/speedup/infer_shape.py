@@ -597,6 +597,7 @@ def view_outshape(module_masks, mask, shape):
     assert mask.mask_index[1] is not None
     assert mask.mask_index[0] is None
 
+    module_masks.set_output_mask(mask)
     input_cmask = CoarseMask(num_dim=4)
     index = []
     step_size = shape['in_shape'][2] * shape['in_shape'][3]
