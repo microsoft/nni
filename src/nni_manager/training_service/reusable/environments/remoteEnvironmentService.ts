@@ -4,8 +4,6 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as yaml from 'js-yaml';
-import * as request from 'request';
 import * as path from 'path';
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
@@ -13,18 +11,11 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { StorageService } from '../storageService';
-import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../../common/errors';
+import { NNIError, NNIErrorNames } from '../../../common/errors';
 import { ObservableTimer } from '../../../common/observableTimer';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType
-} from '../../../common/trainingService';
-import {
-    delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
-    getVersion, uniqueString
+    getExperimentRootDir,
 } from '../../../common/utils';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { GPUSummary, ScheduleResultType } from '../../common/gpuData';
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
@@ -32,9 +23,8 @@ import { execMkdir, validateCodeDir } from '../../common/util';
 import { GPUScheduler } from '../../remote_machine/gpuScheduler';
 import {
     ExecutorManager, RemoteMachineMeta,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
+    RemoteMachineScheduleInfo, RemoteMachineScheduleResult
 } from '../../remote_machine/remoteMachineData';
-import { RemoteMachineJobRestServer } from '../../remote_machine/remoteMachineJobRestServer';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation, RemoteMachineMetaDetail } from '../remote/remoteConfig';
 
@@ -43,9 +33,9 @@ import { RemoteMachineEnvironmentInformation, RemoteMachineMetaDetail } from '..
 export class RemoteEnvironmentService extends EnvironmentService {
 
     private readonly initExecutorId = "initConnection";
-    private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
+    private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>;
     private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
-    private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>; //trial excutor map
+    private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
     private readonly environmentJobsMap: Map<string, RemoteMachineEnvironmentInformation>;
     private readonly expRootDir: string;
     private trialConfig: TrialConfig | undefined;
@@ -85,13 +75,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    /**
-     * Set culster metadata
-     * @param key metadata key
-     * //1. MACHINE_LIST -- create executor of machine list
-     * //2. TRIAL_CONFIG -- trial configuration
-     * @param value metadata value
-     */
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.MACHINE_LIST:
@@ -120,8 +103,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                 break;
             }
             default:
-                //Reject for unknown keys
-                throw new Error(`Uknown key: ${key}`);
+                this.log.debug(`Remote not support metadata key: '${key}', value: '${value}'`);
         }
     }
 
@@ -185,11 +167,49 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        environments.forEach(async (environment) => {
+            const executor = await this.getExecutor(environment.id);
+            const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
+            const trialReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
+            /* eslint-disable require-atomic-updates */
+            try {
+                const isAlive = await executor.isProcessAlive(jobpidPath);
+                // if the process of jobpid is not alive any more
+                if (!isAlive) {
+                    const trialReturnCode: string = await executor.getRemoteFileContent(trialReturnCodeFilePath);
+                    const match: RegExpMatchArray | null = trialReturnCode.trim()
+                        .match(/^-?(\d+)\s+(\d+)$/);
+                    if (match !== null) {
+                        const { 1: code, 2: timestamp } = match;
+                        // Update trial job's status based on result code
+                        if (parseInt(code, 10) === 0) {
+                            environment.setStatus('SUCCEEDED');
+                        } else {
+                            environment.setStatus('FAILED');
+                        }
+                        this.releaseTrialResource(environment);
+                    }
+                }
+            } catch (error) {
+                this.log.error(`(Ignorable mostly)Update job status exception, error is ${error.message}`);
+            }
+        });
+    }
+
+    /**
+     * If a trial is finished, release the connection resource
+     * @param trial remote machine trial job detail
+     */
+    public releaseTrialResource(environment: EnvironmentInformation): void {
+        const executorManager = this.environmentExecutorManagerMap.get(environment.id);
+        if (executorManager === undefined) {
+            throw new Error(`ExecutorManager is not assigned for trial ${environment.id}`);
+        }
+        // Note, it still keep reference in trialExecutorManagerMap, as there may be following requests from nni manager.
+        executorManager.releaseExecutor(environment.id);
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
         if (this.sshConnectionPromises.length > 0) {
             await Promise.all(this.sshConnectionPromises);
             this.log.info('ssh connection initialized!');
@@ -198,17 +218,17 @@ export class RemoteEnvironmentService extends EnvironmentService {
             if (this.trialConfig ===  undefined) {
                 throw new Error("trial config not initialized!");
             }
-            const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+            this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
         }
-
-        await this.prepareEnvironment(environment);
-        await this.launchEnvironmentOnScheduledMachine(environment);
-        return deferred.promise;
+        const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
+        remoteEnvironment.status = 'WAITING';
+        remoteEnvironment.rmMachineMetaDetail = new RemoteMachineMetaDetail();
+        await this.prepareEnvironment(remoteEnvironment);
+        await this.launchEnvironmentOnScheduledMachine(remoteEnvironment);
     }
 
     private async prepareEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
@@ -220,11 +240,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, 
                 `Invalid rmMachineMetaDetail for environment ${environment.id}`);
         }
-        // If job is not WATIING, Don't prepare and resolve true immediately
-        if (environment.status !== 'WAITING') {
-            deferred.resolve(true);
-            return deferred.promise;
-        }
+
         // get an executor from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = 
         this.gpuScheduler.scheduleMachine(0, environment.rmMachineMetaDetail);
@@ -243,18 +259,19 @@ export class RemoteEnvironmentService extends EnvironmentService {
             if (copyExpCodeDirPromise !== undefined) {
                 await copyExpCodeDirPromise;
             }
-
             this.allocateExecutorManagerForEnvironment(environment);
             const executor = await this.getExecutor(environment.id);
             environment.runnerWorkingFolder = 
                 executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
                 'envs', environment.id)
+            environment.command = `cd ${environment.runnerWorkingFolder} && \
+            ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+            echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
 
             await this.launchEnvironmentOnScheduledMachine(environment);
 
             environment.status = 'RUNNING';
             environment.trackingUrl = `file://${rmScheduleInfo.rmMeta.ip}:${environment.runnerWorkingFolder}`;
-
             this.environmentJobsMap.set(environment.id, environment);
             deferred.resolve(true);
         } else if (rmScheduleResult.resultType === ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
@@ -271,7 +288,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
      * give environment an executor
      * @param environment RemoteMachineEnvironmentDetail
      */
-    public allocateExecutorManagerForEnvironment(environment: RemoteMachineEnvironmentInformation): void {
+    private allocateExecutorManagerForEnvironment(environment: RemoteMachineEnvironmentInformation): void {
         if (environment.rmMachineMetaDetail === undefined) {
             throw new Error(`rmMeta not set in trial ${environment.id}`);
         }
@@ -294,6 +311,21 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        const executor = await this.getExecutor(environment.id);
+
+        if (environment.status === 'UNKNOWN') {
+            environment.status = 'USER_CANCELED';
+            this.releaseTrialResource(environment);
+            return
+        }
+
+        const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
+        try {
+            await executor.killChildProcesses(jobpidPath);
+            this.releaseTrialResource(environment);
+        } catch (error) {
+            this.log.error(`remoteTrainingService.cancelTrialJob: ${error}`);
+        }
     }
 
     private async launchEnvironmentOnScheduledMachine(environment: RemoteMachineEnvironmentInformation): Promise<void> {
@@ -302,7 +334,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, this.experimentId, environment.id);
+            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
@@ -310,6 +342,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
         // Execute command in remote machine
-        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder, executor.getScriptName("run")), true, true);
+        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
+            executor.getScriptName("run")), true, false);
     }
 }

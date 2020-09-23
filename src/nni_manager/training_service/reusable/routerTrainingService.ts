@@ -12,6 +12,7 @@ import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
+import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
@@ -19,6 +20,7 @@ import { RemoteEnvironmentService } from './environments/remoteEnvironmentServic
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
+import { RemoteConfig } from './remote/remoteConfig';
 
 
 /**
@@ -147,27 +149,19 @@ class RouterTrainingService implements TrainingService {
                 await this.internalTrainingService.setClusterMetadata(key, value);
 
                 this.metaDataCache.clear();
-            } else if (key === TrialConfigMetadataKey.MACHINE_LIST) {
-                this.internalTrainingService = component.get(TrialDispatcher);
-
-                Container.bind(EnvironmentService)
-                    .to(RemoteEnvironmentService)
-                    .scope(Scope.Singleton);
-                for (const [key, value] of this.metaDataCache) {
-                    if (this.internalTrainingService === undefined) {
-                        throw new Error("TrainingService is not assigned!");
-                    }
-                    await this.internalTrainingService.setClusterMetadata(key, value);
+            } else if (key === TrialConfigMetadataKey.REMOTE_CONFIG) {
+                const config = <RemoteConfig>JSON.parse(value);
+                if (config.reuse === true) {
+                    this.log.info(`reuse flag enabled, use EnvironmentManager.`);
+                    this.internalTrainingService = component.get(TrialDispatcher);
+                    Container.bind(EnvironmentService)
+                        .to(RemoteEnvironmentService)
+                        .scope(Scope.Singleton);
+                } else {
+                    this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
+                    this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
-
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("TrainingService is not assigned!");
-                }
-                await this.internalTrainingService.setClusterMetadata(key, value);
-
-                this.metaDataCache.clear();
-            }
-            else {
+            } else {
                 this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                 this.metaDataCache.set(key, value);
             }

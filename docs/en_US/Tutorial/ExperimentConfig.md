@@ -592,6 +592,14 @@ Specifies the pre-command that will be executed before the remote machine execut
 
 __Note__: Because __preCommand__ will execute before other commands each time, it is strongly not recommended to set __preCommand__ that will make changes to system, i.e. `mkdir` or `touch`.
 
+### remoteConfig
+
+Optional field in remote mode. Set remote machine related configuration.
+
+#### reuse
+
+Optional. Set if use trial_runner to maintan multiple trial.  
+
 ### kubeflowConfig
 
 #### operator
