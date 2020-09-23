@@ -23,9 +23,6 @@ def set_conv_prune_dim(dim):
     global conv_prune_dim
     conv_prune_dim = dim
 
-def get_conv_prune_dim():
-    return conv_prune_dim
-
 class CoarseMask:
     """
     Coarse grained mask for a given tensor, here tensor could be weights,
@@ -600,7 +597,15 @@ def view_outshape(module_masks, mask, shape):
     assert mask.mask_index[1] is not None
     assert mask.mask_index[0] is None
 
-    return mask
+    input_cmask = CoarseMask(num_dim=4)
+    index = []
+    step_size = shape['in_shape'][2] * shape['in_shape'][3]
+    for loc in mask.mask_index[1]:
+        index.extend([loc * step_size + i for i in range(step_size)])
+    input_cmask.add_index_mask(dim=1, index=torch.tensor(index))  # pylint: disable=not-callable
+    module_masks.set_input_mask(input_cmask)
+
+    return input_cmask
 
 def size_inshape(module_masks, mask):
     """
@@ -719,7 +724,7 @@ def relu_inshape(module_masks, mask):
     assert isinstance(mask, CoarseMask)
     if module_masks.input_mask is not None:
         # mask conflict should be solved before speedup
-        assert module_masks.input_mask == mask
+        assert module_masks.input_mask <= mask
     # assert module_masks.input_mask is None, "A relu op can only be processed once"
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)

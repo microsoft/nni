@@ -33,14 +33,16 @@ def get_module_by_name(model, module_name):
     else:
         return None, None
 
-def detect_mask_prune_dim(masks):
+def detect_mask_prune_dim(masks, model):
     """
     Detect how the masks of convolutional layers are pruned.
 
     Parameters
     ----------
-    masks : dict
+    masks: dict
         A dict object that stores the masks.
+    model: nn.Module
+        Model object which the mask can be applied on.
 
     Returns:
     -------
@@ -54,17 +56,17 @@ def detect_mask_prune_dim(masks):
     dim0_preserved, dim1_preserved = 0., 0.
     dim0_num, dim1_num = 0., 0.
     for module_name in masks:
+        _, m = get_module_by_name(model, module_name)
+        if m is None or type(m).__name__ != 'Conv2d':
+            continue
+
         mask = masks[module_name]['weight'].clone()
         assert (mask >= 0).sum() == mask.numel(), \
             "mask values should be greater than or equal to 0."
         mask = (mask > 0).int()
-        if len(mask.shape) == 1:
-            # count only multi dimension masks
-            continue
-        else:
-            mask = mask.view(mask.shape[0], mask.shape[1], -1)
-            dim0_mask = (mask.sum((1, 2)) > 0).int()
-            dim1_mask = (mask.sum((0, 2)) > 0).int()
+        mask = mask.view(mask.shape[0], mask.shape[1], -1)
+        dim0_mask = (mask.sum((1, 2)) > 0).int()
+        dim1_mask = (mask.sum((0, 2)) > 0).int()
         dim0_preserved += dim0_mask.sum().item()
         dim1_preserved += dim1_mask.sum().item()
         dim0_num += len(dim0_mask)
