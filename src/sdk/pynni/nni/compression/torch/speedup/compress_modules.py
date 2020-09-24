@@ -117,6 +117,7 @@ def replace_conv2d(conv, mask):
         out_channels = out_channels_index.size()[0]
     groups = conv.groups
     if conv.in_channels == conv.out_channels == conv.groups:
+        # remove groups for depthwise layers
         assert in_channels == out_channels
         groups = in_channels
     _logger.debug("replace conv2d %s with in_channels: %d, out_channels: %d", mask.module_name, in_channels, out_channels)
