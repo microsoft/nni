@@ -3,6 +3,7 @@
 Currently, we have several filter pruning algorithm for the convolutional layers: FPGM Pruner, L1Filter Pruner, L2Filter Pruner, Activation APoZ Rank Filter Pruner, Activation Mean Rank Filter Pruner, Taylor FO On Weight Pruner. In these filter pruning algorithms, the pruner will prune each convolutional layer separately. While pruning a convolution layer, the algorithm will quantify the importance of each filter based on some specific rules(such as l1-norm), and prune the less important filters.
 
 As [dependency analysis utils](./CompressionUtils.md) shows, if the output channels of two convolutional layers(conv1, conv2) are added together, then these two conv layers have channel dependency with each other(more details please see [Compression Utils](./CompressionUtils.md)). Take the following figure as an example.
+
 ![](../../img/mask_conflict.jpg)
 
 If we prune the first 50% of output channels(filters) for conv1, and prune the last 50% of output channels for conv2. Although both layers have pruned 50% of the filters, the speedup module still needs to add zeros to align the output channels. In this case, we cannot harvest the speed benefit from the model pruning.
@@ -50,6 +51,7 @@ pruner.compress()
 ## Evaluation
 In order to compare the performance of the pruner with or without the dependency-aware mode, we use L1FilterPruner to prune the Mobilenet_v2 separately when the dependency-aware mode is turned on and off. To simplify the experiment, we use the uniform pruning which means we allocate the same sparsity for all convolutional layers in the model.
 We trained a Mobilenet_v2 model on the cifar10 dataset and prune the model based on this pretrained checkpoint. The following figure shows the accuracy and FLOPs of the model pruned by different pruners.
+
 ![](../../img/mobilev2_l1_cifar.jpg)
 
 In the figure, the `Dependency-aware` represents the L1FilterPruner with dependency-aware mode enabled. `L1 Filter` is the normal `L1FilterPruner` without the dependency-aware mode, and the `No-Dependency` means  pruner only prunes the layers that has no channel dependency with other layers. As we can see in the figure, when the dependency-aware mode enabled, the pruner can bring higher accuracy under the same Flops.
