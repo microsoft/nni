@@ -243,10 +243,10 @@ class SpeedupTestCase(TestCase):
                    (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def test_channel_prune(self):
-        net = resnet18(num_classes=10)
+        net = resnet18(num_classes=10).to(device)
         channel_prune(net)
 
-        net = resnet18(num_classes=10)
+        net = resnet18(num_classes=10).to(device)
         data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
         ms = ModelSpeedup(net, data, MASK_FILE)
         ms.speedup_model()
