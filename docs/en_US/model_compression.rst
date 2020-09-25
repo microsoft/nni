@@ -21,11 +21,11 @@ For details, please refer to the following tutorials:
 ..  toctree::
     :maxdepth: 2
 
-    Overview <Compressor/Overview>
-    Quick Start <Compressor/QuickStart>
-    Pruning <Compressor/pruning>
-    Quantization <Compressor/quantization>
-    Utilities <Compressor/CompressionUtils>
-    Framework <Compressor/Framework>
-    Customize Model Compression Algorithms <Compressor/CustomizeCompressor>
-    Automatic Model Compression <Compressor/AutoCompression>
+    Overview <Compression/Overview>
+    Quick Start <Compression/QuickStart>
+    Pruning <Compression/pruning>
+    Quantization <Compression/quantization>
+    Utilities <Compression/CompressionUtils>
+    Framework <Compression/Framework>
+    Customize Model Compression Algorithms <Compression/CustomizeCompressor>
+    Automatic Model Compression <Compression/AutoCompression>
