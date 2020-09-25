@@ -49,7 +49,7 @@ def mock_import_data():
     responses.add(
         responses.POST, 'http://localhost:8080/api/v1/nni/experiment/import-data',
         json={"result":"data"},
-        status=200,
+        status=201,
         content_type='application/json',
     )
 
@@ -57,7 +57,7 @@ def mock_start_experiment():
     responses.add(
         responses.POST, 'http://localhost:8080/api/v1/nni/experiment',
         json={"status":"RUNNING","errors":[]},
-        status=200,
+        status=201,
         content_type='application/json',
     )
 
@@ -73,7 +73,7 @@ def mock_set_cluster_metadata():
     responses.add(
         responses.PUT, 'http://localhost:8080/api/v1/nni/experiment/cluster-metadata',
         json=[{"trialJobStatus":"SUCCEEDED","trialJobNumber":1}],
-        status=200,
+        status=201,
         content_type='application/json',
     )
 
@@ -109,7 +109,7 @@ def mock_add_trial_job():
     responses.add(
         responses.POST, 'http://localhost:8080/api/v1/nni/trial-jobs',
         json=[{"trialJobStatus":"SUCCEEDED","trialJobNumber":1}],
-        status=200,
+        status=201,
         content_type='application/json',
     )
 

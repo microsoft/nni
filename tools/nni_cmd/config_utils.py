@@ -9,7 +9,7 @@ from .command_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, file_path, home_dir = NNICTL_HOME_DIR):
+    def __init__(self, file_path, home_dir=NNICTL_HOME_DIR):
         config_path = os.path.join(home_dir, str(file_path))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
