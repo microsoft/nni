@@ -237,6 +237,7 @@ class ChannelMaskConflict(MaskFix):
             channel_depen = InputChannelDependency(self.model, self.dummy_input, self.traced)
         depen_sets = channel_depen.dependency_sets
         sum_idx = (1, 2, 3) if self.conv_prune_dim == 0 else (0, 2, 3)
+        fine_grained = False
         for dset in depen_sets:
             if len(dset) <= 1:
                 continue
@@ -248,18 +249,24 @@ class ChannelMaskConflict(MaskFix):
                 if name in self.masks:
                     _, m = get_module_by_name(self.model, name)
                     assert m is not None
+                    mask = self.masks[name]['weight']
                     if type(m).__name__ == 'Conv2d':
-                        channel_masks.append((self.masks[name]['weight'].abs().sum(sum_idx) != 0).int())
+                        channel_mask = (mask.abs().sum(sum_idx) != 0).int()
+                        channel_masks.append(channel_mask)
+                        if (channel_mask.sum() * (mask.numel() / mask.shape[self.conv_prune_dim])).item() != (mask > 0).sum().item():
+                            fine_grained = True
                     elif type(m).__name__ == 'Linear':
-                        channel_masks.append((self.masks[name]['weight'].abs().sum(0) != 0).int())
+                        channel_masks.append((mask.abs().sum(0) != 0).int())
                     elif type(m).__name__ == 'BatchNorm2d':
-                        channel_masks.append((self.masks[name]['weight']).int())
+                        channel_masks.append(mask.int())
                     else:
                         raise RuntimeError(f'unsupported module type: {type(m).__name__}')
                 else:
                     # no mask means not pruned, equivlent to full masks
                     channel_masks.append(None)
-
+            if fine_grained:
+                _logger.info('fine-grained mask detected, no mask conflict need to be fixed!')
+                break
             if all(x is None for x in channel_masks):
                 continue
             num_channels_list = [len(x) for x in channel_masks if x is not None]
