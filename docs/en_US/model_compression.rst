@@ -6,7 +6,9 @@ Deep neural networks (DNNs) have achieved great success in many tasks. However, 
 computationally expensive and energy intensive, can be difficult to be deployed on devices with low computation
 resources or with strict latency requirements. Therefore, a natural thought is to perform model compression to
 reduce model size and accelarete model training/inference without losing performance significantly. Model compression
-techniques can be divided into two categories: pruning and quantization.
+techniques can be divided into two categories: pruning and quantization. The pruning methods explore the redundancy
+in the model weights and try to remove/prune the redundant and uncritical weights. Quantization refers to compressing
+models by reducing the number of bits required to represent weights or activations.
 
 NNI provides an easy-to-use toolkit to help user design and use model pruning and quantization algorithms.
 It supports Tensorflow and PyTorch with unified interface.
@@ -28,4 +30,3 @@ For details, please refer to the following tutorials:
     Utilities <Compression/CompressionUtils>
     Framework <Compression/Framework>
     Customize Model Compression Algorithms <Compression/CustomizeCompressor>
-    Automatic Model Compression <Compression/AutoCompression>

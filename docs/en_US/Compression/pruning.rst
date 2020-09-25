@@ -23,3 +23,4 @@ For details, please refer to the following tutorials:
     Pruners <Pruner>
     Dependency Aware Mode <DependencyAware>
     Model Speedup <ModelSpeedup>
+    Automatic Model Pruning with NNI Tuners <AutoPruningUsingTuners>
