@@ -40,7 +40,7 @@ class EvolutionClassArgsValidator(ClassArgsValidator):
 
 class RegularizedEvolutionTuner(Tuner):
     """
-    EvoNasTuner is tuner using Evolution NAS Tuner.
+    RegularizedEvolutionTuner is tuner using Evolution NAS Tuner.
     See ``Regularized Evolution for Image Classifier Architecture Search`` for details.
 
     Parameters

@@ -1,7 +1,7 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 10m
-maxTrialNum: 2
+maxTrialNum: 1
 trialConcurrency: 1
 searchSpacePath: seach_space_classic_nas.json
 tuner:
