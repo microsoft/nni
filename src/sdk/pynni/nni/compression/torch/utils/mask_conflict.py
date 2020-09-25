@@ -237,7 +237,6 @@ class ChannelMaskConflict(MaskFix):
             channel_depen = InputChannelDependency(self.model, self.dummy_input, self.traced)
         depen_sets = channel_depen.dependency_sets
         sum_idx = (1, 2, 3) if self.conv_prune_dim == 0 else (0, 2, 3)
-        fine_grained = False
         for dset in depen_sets:
             if len(dset) <= 1:
                 continue
@@ -245,6 +244,7 @@ class ChannelMaskConflict(MaskFix):
             # [[0, 1, 1, 0, 0], [0, 0, 1, 1, 0], None], None means no channel
             # is pruned.
             channel_masks = []
+            fine_grained = False
             for name in dset:
                 if name in self.masks:
                     _, m = get_module_by_name(self.model, name)
