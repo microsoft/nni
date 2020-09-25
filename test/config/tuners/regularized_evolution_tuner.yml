@@ -10,7 +10,7 @@ tuner:
     optimize_mode: maximize
 trial:
   codeDir: ../../../examples/nas/classic_nas
-  command: python3 mnist.py --batch_num 100
+  command: python3 mnist.py --epochs 1
   gpuNum: 0
 
 useAnnotation: false
