@@ -6,7 +6,7 @@ This is a tuner geared for NNI’s Neural Architecture Search (NAS) interface. I
 
 The tuner first randomly initializes the number of `population` models and evaluates them. After that, every time to produce a new architecture, the tuner randomly chooses the number of `sample` architectures from `population`, then mutates the best model in `sample`, the parent model, to produce the child model. The mutation includes the hidden mutation and the op mutation. The hidden state mutation consists of replacing a hidden state with another hidden state from within the cell, subject to the constraint that no loops are formed. The op mutation behaves like the hidden state mutation as far as replacing one op with another op from the op set. Note that keeping the child model the same as its parent is not allowed. After evaluating the child model, it is added to the tail of the `population`, then pops the front one.
 
-Note that **trial concurrency should be lsee than the population of the model**, otherwise NO_MORE_TRIAL exception will be raised.
+Note that **trial concurrency should be less than the population of the model**, otherwise NO_MORE_TRIAL exception will be raised.
 
 The whole procedure is summarized by the pseudocode below.
 

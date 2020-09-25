@@ -48,7 +48,7 @@ class RegularizedEvolutionTuner(Tuner):
     optimize_mode: str
         whether to maximize metric or not. default: 'maximize'
     population_size: int
-        the maximum number of keeping models
+        the maximum number of kept models
     sample_size: int
         the number of models chosen from population each time when evolution
     """
