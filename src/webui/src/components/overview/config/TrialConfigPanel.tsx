@@ -3,7 +3,9 @@ import { Stack, Panel, Pivot, PivotItem, PrimaryButton } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../../static/const';
+import { convertDuration } from '../../../static/function';
 import { prettyStringify } from '../../../static/json_util';
+import lodash from 'lodash';
 import '../../../static/style/logDrawer.scss';
 
 interface LogDrawerProps {
@@ -51,9 +53,10 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
         const filter = (key: string, val: any): any => {
             return blacklist.includes(key) ? undefined : val;
         };
-
-        const profile = JSON.stringify(EXPERIMENT.profile, filter, 2);
-        // const profile = prettyStringify(EXPERIMENT.profile, 300, 2);
+        const profile = lodash.cloneDeep(EXPERIMENT.profile);
+        profile.execDuration = convertDuration(profile.execDuration);
+        profile.params.maxExecDuration = convertDuration(profile.params.maxExecDuration);
+        const showProfile = JSON.stringify(profile, filter, 2);
         return (
             <Stack>
                 <Panel
@@ -81,7 +84,7 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                                         height={logDrawerHeight - 92 - 45}
                                         language='json'
                                         theme='vs-light'
-                                        value={profile}
+                                        value={showProfile}
                                         options={MONACO}
                                     />
                                 </div>

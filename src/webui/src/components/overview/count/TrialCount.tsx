@@ -6,12 +6,10 @@ import EditExperimentParam from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 
 const itemStyles: React.CSSProperties = {
-    height: 80,
     width: '62%'
 };
 
 const itemStyle2: React.CSSProperties = {
-    height: 80,
     width: '63%',
     textAlign: 'right'
 };
@@ -22,8 +20,9 @@ const itemStyle1: React.CSSProperties = {
 };
 const itemRunning: React.CSSProperties = {
     width: '42%',
-    height: 50
+    height: 56
 };
+
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -68,16 +67,29 @@ export const TrialCount = (): any => {
                 </div>
                 <div style={itemStyle2}>
 
-                    <EditExpeParamContext.Provider value={{ title: 'Max trial numbers', field: 'maxTrialNum', unit: '', editType: CONTROLTYPE[1] }}>
+                    <EditExpeParamContext.Provider value={{
+                        title: 'Max trial numbers',
+                        field: 'maxTrialNum',
+                        editType: CONTROLTYPE[1],
+                        maxExecDuration: '',
+                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                        trialConcurrency: EXPERIMENT.profile.params.trialConcurrency
+                    }}>
                         <EditExperimentParam />
                     </EditExpeParamContext.Provider>
-                    <EditExpeParamContext.Provider value={{ title: 'Concurrency', field: 'trialConcurrency', unit: '', editType: CONTROLTYPE[2] }}>
+                    <EditExpeParamContext.Provider value={{
+                        title: 'Concurrency',
+                        field: 'trialConcurrency',
+                        editType: CONTROLTYPE[2],
+                        // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
+                        maxExecDuration: '',
+                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                        trialConcurrency: EXPERIMENT.profile.params.trialConcurrency
+                    }}>
                         <EditExperimentParam />
                     </EditExpeParamContext.Provider>
                 </div>
-
             </Stack>
         </React.Fragment>
-
     );
 }

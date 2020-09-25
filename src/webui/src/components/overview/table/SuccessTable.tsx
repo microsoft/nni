@@ -138,7 +138,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         this.setState(() => ({ innerWidth: window.innerWidth }));
     };
 
-    componentDidMount() {
+    componentDidMount(): void {
         window.addEventListener('resize', this.setInnerWidth);
     }
     componentWillUnmount(): void {

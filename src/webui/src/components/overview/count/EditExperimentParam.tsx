@@ -1,8 +1,9 @@
 import React from 'react';
+import axios from 'axios';
 import { EXPERIMENT } from '../../../static/datamodel';
 import { EditExpeParamContext } from './context';
-import axios from 'axios';
 import { MANAGER_IP } from '../../../static/const';
+import { convertDuration, convertTimeToSecond } from '../../../static/function';
 import { Edit, CheckMark, Cancel } from '../../buttons/Icon';
 import '../../../static/style/overview/count.scss';
 import MessageInfo from '../../modals/MessageInfo';
@@ -32,19 +33,17 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         };
     }
 
-    showPencil = () => {
+    showPencil = (): void => {
         this.setState({ isShowPencil: true });
     }
 
-    hidePencil = () => {
+    hidePencil = (): void => {
         this.setState({ isShowPencil: false });
-        console.info('***********');
-        console.info(this.DurationInputRef.current!.value);
+        // console.info(this.DurationInputRef.current!.value);
     }
 
-    setInputVal = (event: any) => {
+    setInputVal = (event: any): void => {
 
-        console.info('%%%%%%%');
         this.setState({ defaultValue: event.target.value });
     }
 
@@ -66,16 +65,15 @@ class EditExperimentParam extends React.Component<{}, EditState> {
         setTimeout(this.hideSucceedInfo, 2000);
     };
 
-    componentDidMount() {
+    componentDidMount(): void {
         this.initDefaultVal();
     }
 
-    componentDidUpdate(){
-        this.initDefaultVal();
+    componentDidUpdate(): void {
+        this.updateDefaultVal();
     }
     render(): React.ReactNode {
         const { isShowPencil, defaultValue, isShowSucceedInfo, typeInfo, info } = this.state;
-        console.info(`333: ${defaultValue}`);
         /***
         * const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
         * [0], 'MAX_EXEC_DURATION', params.maxExecDuration
@@ -97,7 +95,7 @@ class EditExperimentParam extends React.Component<{}, EditState> {
                                 disabled={isShowPencil ? true : false}
                                 value={defaultValue}
                                 onChange={this.setInputVal}
-                            />{value.unit}
+                            />
                             {isShowPencil &&
                                 <span className='edit' onClick={this.hidePencil
                                 }>{Edit}</span>}
@@ -114,51 +112,81 @@ class EditExperimentParam extends React.Component<{}, EditState> {
                 )
                 }
             </EditExpeParamContext.Consumer>
-
         );
     }
 
-    initDefaultVal = () => {
-        const { title } = this.context;
-        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
+    initDefaultVal = (): void => {
+        const { title, maxExecDuration, maxTrialNum, trialConcurrency } = this.context;
         if (title === 'Max duration') {
-            this.DurationInputRef.current!.value = maxExecDuration.toString();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = maxExecDuration;
         } else if (title === 'Max trial numbers') {
-            this.DurationInputRef.current!.value = EXPERIMENT.profile.params.maxTrialNum.toString();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = maxTrialNum.toString();
         } else {
-            this.DurationInputRef.current!.value = EXPERIMENT.profile.params.trialConcurrency.toString();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = trialConcurrency.toString();
+        }
+    }
+
+    updateDefaultVal = (): void => {
+        const { title } = this.context;
+        const maxExecDuration = convertDuration(EXPERIMENT.profile.params.maxExecDuration);
+
+        console.info('EXPERIMENT.profile.params.maxExecDuration', EXPERIMENT.profile.params.maxExecDuration);
+        console.info('maxExpc', maxExecDuration);
+        const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
+        const trialConcurrency = EXPERIMENT.profile.params.trialConcurrency;
+        if (title === 'Max duration') {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = maxExecDuration;
+        } else if (title === 'Max trial numbers') {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = maxTrialNum.toString();
+        } else {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.DurationInputRef.current!.value = trialConcurrency.toString();
         }
     }
 
     cancleEdit = (): void => {
+        this.initDefaultVal();
         this.showPencil();
     }
 
     confirmEdit = async (): Promise<void> => {
-        const {title} = this.context;
-        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
-        const { field, editType } = this.context;
+        const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency } = this.context;
+        // const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const userInput: string = this.DurationInputRef.current!.value;
-        console.info(`userInput default: ${userInput}`);
-        if (!userInput.match(/^[1-9]\d*$/)) {
+        console.info('--------------');
+        console.info(userInput);
+        const isMaxDuration = (title === 'Max duration');
+        if (!isMaxDuration && !userInput.match(/^[1-9]\d*$/)) {
             this.showMessageInfo('Please enter a positive integer!', 'error');
             return;
         }
         let val = '';
-        if (title === 'Max duration') {
-            val = maxExecDuration.toString();
+        if (isMaxDuration) {
+            val = maxExecDuration;
         } else if (title === 'Max trial numbers') {
-            val = EXPERIMENT.profile.params.maxTrialNum.toString();
+            val = maxTrialNum.toString();
         } else {
-            val = EXPERIMENT.profile.params.trialConcurrency.toString();
+            val = trialConcurrency.toString();
         }
         if (userInput === val) {
             this.showMessageInfo(`Trial ${field} has not changed`, 'error');
             return;
         }
-        const newValue = parseInt(userInput, 10);
         const newProfile = Object.assign({}, EXPERIMENT.profile);
-        newProfile.params[field] = newValue;
+        if (isMaxDuration) {
+            // 吧 1h 30min 20s 转换成 s 单位
+            const newValue = convertTimeToSecond(userInput);
+            newProfile.params[field] = newValue;
+        } else {
+            const newValue = parseInt(userInput, 10);
+            newProfile.params[field] = newValue;
+        }
 
         // rest api, modify trial concurrency value
         try {

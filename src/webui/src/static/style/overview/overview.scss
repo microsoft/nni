@@ -1,13 +1,15 @@
+$boxPadding: 20px 42px;
 .wrapper {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    grid-auto-rows: 84px;
+    grid-auto-rows: 82px;
     grid-gap: 18px;
 
-    >div{
+    >div {
         background: #fff;
-        padding: 0 42px;
+        padding: $boxPadding;
         border-radius: 20px;
+        box-sizing: border-box;
     }
 
     .box2 {
@@ -17,21 +19,23 @@
         grid-auto-rows: 70px;
         padding: 0;
         background: transparent;
-    
-        .box4{
+
+        .box4 {
             // grid-row: 1 / 3;
             height: 136px;
             background: #fff;
-            padding: 0 42px;
+            padding: $boxPadding;
             border-radius: 20px;
+            box-sizing: border-box;
         }
 
-        .box7{
-            margin-top: 15px;
-            height: 235px;
+        .box7 {
+            margin-top: 14px;
+            height: 228px;
             background: #fff;
-            padding: 0 42px;
+            padding: $boxPadding;
             border-radius: 20px;
+            box-sizing: border-box;
         }
     }
 }
@@ -40,63 +44,72 @@
     grid-column-start: 1;
     grid-row: 1 / 5;
     z-index: 2;
-    
-    
 }
 
 .basic {
     line-height: 21px;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
     p {
-      font-size: 14px;
-      color: #8f8f8f;
-      margin-top: 20px;
+        font-size: 14px;
+        color: #8f8f8f;
+        margin-top: 20px;
     }
+
     div {
-      font-size: 16px;
-      color: #484848;
+        font-size: 16px;
+        color: #484848;
     }
-  }
-  
+}
+
 .box3 {
     grid-column: 5 / 9;
     grid-row: 1 / 10;
     overflow: hidden;
-    .topTrialTitle{
-        width: 75%;
-        margin-top: 6px;
+
+    .topTrialTitle {
+        width: 72%;
     }
-    .max{
+
+    .active {
+        background: #f3f2f1;
+    }
+
+    .max {
         margin-left: 7px;
     }
-    .mincenter{
+
+    .mincenter {
         margin: 0 13px 0 10px;
     }
-    .chooseEntry{
+
+    .chooseEntry {
         margin-right: 10px;
         line-height: 30px;
     }
 }
-.box5, .box6{
+
+.box5,
+.box6 {
     grid-column: 1 / 5;
 }
-.box5{
+
+.box5 {
     grid-row: 5 / 7;
     overflow: hidden;
 }
 $circle: 10px;
 $bgblue: #0071bc;
-.box6{
+
+.box6 {
     grid-row: 7 / 11;
-    .maxmin{
-        line-height: 46px;
-    }
-    .circle{
+
+    .circle {
         width: $circle;
         height: $circle;
         border-radius: 50%;
         background-color: $bgblue;
-        margin-top: 19px;
+        margin-top: 6px;
         margin-right: 18px;
     }
 }

@@ -19,20 +19,25 @@
 //   }
 // }
 .command {
-  width: 100%;
-  >div{
-    display: inline-block;
-  }
-  .command1{
-    width: 25%;
-  }
-  .command2{
-    width: 37.5%;
-  }
-  .command3{
-    width: 37.5%;
-  }
-  .lineMargin{
-    margin-top: 32px;
-  }
+    width: 100%;
+
+    >div {
+        display: inline-block;
+    }
+
+    .command1 {
+        width: 25%;
+    }
+
+    .command2 {
+        width: 37.5%;
+    }
+
+    .command3 {
+        width: 37.5%;
+    }
+
+    .lineMargin {
+        margin-top: 32px;
+    }
 }

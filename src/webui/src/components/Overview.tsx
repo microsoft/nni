@@ -1,10 +1,8 @@
 import * as React from 'react';
-import { Stack, IStackTokens, Dropdown, ProgressIndicator, TooltipHost, DefaultButton, Icon } from '@fluentui/react';
+import { Stack, Icon, Dropdown, DefaultButton } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { convertTime } from '../static/function';
 import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
-import { Title1 } from './overview/Title1';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
 import Accuracy from './overview/Accuracy';
@@ -13,8 +11,8 @@ import { ReBasicInfo } from './overview/experiment/ReBasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { TrialCount } from './overview/count/TrialCount';
 import { Command } from './overview/experiment/Command';
-import '../static/style/overview.scss';
-import '../static/style/overview/overview1.scss';
+// import '../static/style/overview.scss';
+import '../static/style/overview/overview.scss';
 import '../static/style/logPath.scss';
 import {
     itemStyle1,
@@ -69,7 +67,6 @@ class Overview extends React.Component<{}, OverviewState> {
     };
 
     render(): React.ReactNode {
-        const { trialConcurrency } = this.state;
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
@@ -78,9 +75,9 @@ class Overview extends React.Component<{}, OverviewState> {
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
-                    const { experimentUpdateBroadcast, metricGraphMode, bestTrialEntries } = value;
-                    const titleMaxbgcolor = metricGraphMode === 'max' ? '#333' : '#b3b3b3';
-                    const titleMinbgcolor = metricGraphMode === 'min' ? '#333' : '#b3b3b3';
+                    const { metricGraphMode, bestTrialEntries } = value;
+                    const maxActive = metricGraphMode === 'max' ? 'active' : '';
+                    const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
                         <div className='overview'>
                             {/* search space & config */}
@@ -130,12 +127,12 @@ class Overview extends React.Component<{}, OverviewState> {
                                         <div className='topTrialTitle'>
                                             {/* <Stack horizontal horizontalAlign='space-between'> */}
                                             <Stack horizontal horizontalAlign='end'>
-                                                <DefaultButton onClick={this.clickMaxTop} styles={{ root: { minWidth: 70, padding: 0 } }}>
+                                                <DefaultButton onClick={this.clickMaxTop} className={maxActive} styles={{ root: { minWidth: 70, padding: 0} }}>
                                                     <Icon iconName='Market' />
                                                     <span className='max'>Max</span>
                                                 </DefaultButton>
                                                 <div className='mincenter'>
-                                                    <DefaultButton onClick={this.clickMinTop}>
+                                                    <DefaultButton onClick={this.clickMinTop} className={minActive} styles={{ root: { minWidth: 70, padding: 0} }}>
                                                         <Icon iconName='MarketDown' />
                                                         <span className='max'>Min</span>
                                                     </DefaultButton>
@@ -175,7 +172,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </Stack>
                                         </div>
                                     </Stack>
-                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={380} />
+                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={344} />
                                 </div>
                             </div>
                         </div>

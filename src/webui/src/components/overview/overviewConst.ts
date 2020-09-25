@@ -1,16 +1,15 @@
 const itemStyle1: React.CSSProperties = {
     width: '75%',
-    height: 38
 };
 const itemStyleSucceed: React.CSSProperties = {
-    width: '25%',
-    height: 38
+    width: '28%',
 };
 
 const itemStyle2: React.CSSProperties = {
     height: 38,
 };
 
+// top trials entries
 const entriesOption = [
     { key: '10', text: '10' },
     { key: '20', text: '20' },

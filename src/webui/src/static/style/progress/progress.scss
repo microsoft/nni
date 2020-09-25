@@ -1,83 +1,82 @@
 
-  .status {
+.status {
     color: #0573bc;
     font-size: 20px;
     font-weight: 600;
     margin-top: 5px;
-    .status-text{
-      display: inline-block;
-      line-height: 30px;
-    }
-  }
 
-  .probar {
+    .status-text {
+        display: inline-block;
+        line-height: 30px;
+    }
+}
+
+.probar {
     width: 100%;
     height: 34px;
     margin-top: 15px;
 
-    .showProgress{
+    .showProgress {
         width: 300px;
         height: 30px;
     }
-    
+
     .name {
-      width: 178px;
-      box-sizing: border-box;
-      line-height: 30px;
-      text-align: center;
-      color: #fff;
-      background-color: #999;
-      border: 2px solid #e6e6e6;
-      border-top-left-radius: 12px;
-      border-bottom-left-radius: 12px;
+        width: 178px;
+        box-sizing: border-box;
+        line-height: 30px;
+        text-align: center;
+        color: #fff;
+        background-color: #999;
+        border: 2px solid #e6e6e6;
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
     }
 
     .boundary {
-      width: 100%;
-      line-height: 24px;
-      font-size: 12px;
-      color: #212121;
-      .right {
-        text-align: right;
-      }
+        width: 100%;
+        line-height: 24px;
+        font-size: 12px;
+        color: #212121;
+
+        .right {
+            text-align: right;
+        }
     }
 
-    .description{
-      line-height: 34px;
-      margin-left: 6px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    .description {
+        line-height: 34px;
+        margin-left: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-  }
-
-.colorOfbasic {
-  div {
-    color: #0573bc;
-  }
-  .time {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
 }
 
-.mess {
-  margin: 10px 0;
+.colorOfbasic {
+    div {
+        color: #0573bc;
+    }
+
+    .time {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 }
 
 .inputBox {
-  height: 32px;
-  margin-top: 5px;
-  
+    height: 32px;
+    margin-top: 5px;
 }
 
-/* office-fabric-ui progressIndicator*/
+/* office-fabric-ui progressIndicator */
 .ms-ProgressIndicator-itemProgress {
     padding: 0;
     border: 2px solid #e6e6e6;
 }
 
-.cursor, .cursor:hover{
-  cursor: pointer;
+.cursor,
+.cursor:hover {
+    cursor: pointer;
 }

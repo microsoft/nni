@@ -1,23 +1,26 @@
-.overview{
-    .config{
+.overview {
+    .config {
         position: fixed;
         right: 0;
         z-index: 1000;
-        .ms-Button--default{
+
+        .ms-Button--default {
             padding: 0;
-            border: none;
-            border-radius: 18px 0 0 18px;
             margin: 0 0 15px 0;
+            border-radius: 18px 0 0 18px;
+            border: 1px solid #ccc;
             color: #0573bc;
         }
-        .ms-Button--default:hover{
+
+        .ms-Button--default:hover {
             background-color: orangered;
             color: #fff;
         }
     }
 }
-.ms-Fabric{
-    .ms-Panel-commands{
+
+.ms-Fabric {
+    .ms-Panel-commands {
         margin: 0;
     }
 }

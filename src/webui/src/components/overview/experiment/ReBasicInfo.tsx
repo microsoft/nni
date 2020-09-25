@@ -24,8 +24,8 @@ export const ReBasicInfo = (): any => {
     return (
         <div>
             <div className='basic'>
-                <p>ID</p>
-                <div>{EXPERIMENT.profile.id}</div>
+                <p>ID: {EXPERIMENT.profile.id}</p>
+                <div>{EXPERIMENT.profile.params.experimentName}</div>
             </div>
             <div className='basic'>
                 <Stack className='basic'>
