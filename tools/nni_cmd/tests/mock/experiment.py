@@ -1,14 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import argparse
-from subprocess import Popen, call, check_call, CalledProcessError, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT
 from nni_cmd.config_utils import Config, Experiments
-from nni_cmd.common_utils import detect_process, print_green
+from nni_cmd.common_utils import print_green
 from nni_cmd.command_utils import kill_command
 from nni_cmd.nnictl_utils import get_yml_content
-import json
 
 def create_mock_experiment():
     nnictl_experiment_config = Experiments()

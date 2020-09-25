@@ -7,12 +7,8 @@ generate_args
 from nni_cmd.nnictl_utils import get_experiment_time, get_experiment_status, \
 check_experiment_id, parse_ids, get_config_filename, get_experiment_port, check_rest, \
 trial_ls, list_experiment
-from nni_cmd.rest_utils import check_rest_server_quick
 from unittest import TestCase, main
 import responses
-import glob
-import psutil
-import requests
 
 class CommonUtilsTestCase(TestCase):
     @classmethod

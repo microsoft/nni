@@ -1,17 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import requests
-import os
-import responses
-import glob
-import psutil
 from unittest import TestCase, main
-from nni_cmd.common_utils import get_yml_content, get_json_content, \
- detect_process, detect_port, get_user, check_tensorboard_version, generate_temp_dir, \
- print_error, print_green
+from nni_cmd.common_utils import get_yml_content, get_json_content, detect_process
 from mock.restful_server import init_response
-from subprocess import Popen, call, check_call, CalledProcessError, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT
 from nni_cmd.command_utils import kill_command
 
 class CommonUtilsTestCase(TestCase):

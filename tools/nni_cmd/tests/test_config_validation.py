@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
-import glob
 from unittest import TestCase, main
 from schema import SchemaError
 from nni_cmd.launcher_utils import validate_all_content
