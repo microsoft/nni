@@ -265,8 +265,8 @@ class ChannelMaskConflict(MaskFix):
                     # no mask means not pruned, equivlent to full masks
                     channel_masks.append(None)
             if fine_grained:
-                _logger.info('fine-grained mask detected, no mask conflict need to be fixed!')
-                break
+                _logger.info('fine-grained mask detected, skip solving conflict for this set: %s', dset)
+                continue
             if all(x is None for x in channel_masks):
                 continue
             num_channels_list = [len(x) for x in channel_masks if x is not None]
