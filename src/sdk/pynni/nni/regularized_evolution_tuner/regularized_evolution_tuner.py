@@ -142,7 +142,7 @@ class RegularizedEvolutionTuner(Tuner):
             vals = [candidates[k] for k in idxs]
             individual[key] = {'_value': vals, '_idx': idxs}
         else:
-            raise KeyError 
+            raise KeyError
 
     def _random_model(self):
         individual = {}
