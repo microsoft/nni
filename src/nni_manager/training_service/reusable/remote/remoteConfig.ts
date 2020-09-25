@@ -2,16 +2,8 @@
 // Licensed under the MIT license.
 
 import { EnvironmentInformation } from '../environment';
-import { GPUInfo, GPUSummary, ScheduleResultType } from '../../common/gpuData';
-import { RemoteMachineMeta } from '../../remote_machine/remoteMachineData';
-import {
-    ExecutorManager,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
-} from '../../remote_machine/remoteMachineData';
-import {
-    HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType
-} from '../../../common/trainingService';
+import { RemoteMachineTrialJobDetail } from '../../remote_machine/remoteMachineData';
+import { TrialJobApplicationForm } from '../../../common/trainingService';
 
 
 /**

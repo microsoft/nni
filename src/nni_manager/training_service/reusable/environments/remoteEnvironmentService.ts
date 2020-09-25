@@ -180,7 +180,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                     const match: RegExpMatchArray | null = trialReturnCode.trim()
                         .match(/^-?(\d+)\s+(\d+)$/);
                     if (match !== null) {
-                        const { 1: code, 2: timestamp } = match;
+                        const { 1: code } = match;
                         // Update trial job's status based on result code
                         if (parseInt(code, 10) === 0) {
                             environment.setStatus('SUCCEEDED');
