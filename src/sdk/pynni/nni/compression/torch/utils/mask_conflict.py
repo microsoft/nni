@@ -305,7 +305,7 @@ class ChannelMaskConflict(MaskFix):
                     raise RuntimeError(f'unsupported module type: {type(m).__name__}')
 
                 self.masks[name]['weight'] = new_mask
-                if hasattr(self.masks[name], 'bias'):
+                if 'bias' in self.masks[name] and self.masks[name]['bias'] is not None:
                     assert self.conv_prune_dim == 0
                     self.masks[name]['bias'] = merged_channel_mask.type_as(self.masks[name]['bias'])
 
