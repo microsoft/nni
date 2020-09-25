@@ -130,37 +130,30 @@ class RegularizedEvolutionTuner(Tuner):
 
         self._generate_initial_population()
 
-    def _random_model(self):
-        individual = {}
-        for key, val in self.search_space.items():
-            if val['_type'] == 'layer_choice':
-                idx = random.randint(0, len(val['_value']) - 1)
-                individual[key] = {'_value': val['_value'][idx], '_idx': idx}
-            elif val['_type'] == 'input_choice':
-                candidates = val['_value']['candidates']
-                n_chosen = val['_value']['n_chosen']
-                if n_chosen == None:
-                    raise RuntimeError('Key n_chosen must be set in InputChoice.')
-                idxs = [random.randint(0, len(candidates) - 1) for _ in range(n_chosen)]
-                vals = [candidates[k] for k in idxs]
-                individual[key] = {'_value': vals, '_idx': idxs}
-        return individual
-
-    def _mutate_model(self, model):
-        new_individual = copy.deepcopy(model.parameters)
-        mutate_key = random.choice(list(new_individual.keys()))
-        mutate_val = self.search_space[mutate_key]
+    def _mutate(self, key, individual):
+        mutate_val = self.search_space[key]
         if mutate_val['_type'] == 'layer_choice':
             idx = random.randint(0, len(mutate_val['_value']) - 1)
-            new_individual[mutate_key] = {'_value': mutate_val['_value'][idx], '_idx': idx}
+            individual[key] = {'_value': mutate_val['_value'][idx], '_idx': idx}
         elif mutate_val['_type'] == 'input_choice':
             candidates = mutate_val['_value']['candidates']
             n_chosen = mutate_val['_value']['n_chosen']
             idxs = [random.randint(0, len(candidates) - 1) for _ in range(n_chosen)]
             vals = [candidates[k] for k in idxs]
-            new_individual[mutate_key] = {'_value': vals, '_idx': idxs}
+            individual[key] = {'_value': vals, '_idx': idxs}
         else:
-            raise KeyError
+            raise KeyError 
+
+    def _random_model(self):
+        individual = {}
+        for key in self.search_space.keys():
+            self._mutate(key, individual)
+        return individual
+
+    def _mutate_model(self, model):
+        new_individual = copy.deepcopy(model.parameters)
+        mutate_key = random.choice(list(new_individual.keys()))
+        self._mutate(mutate_key, new_individual)
         return new_individual
 
     def _generate_initial_population(self):
