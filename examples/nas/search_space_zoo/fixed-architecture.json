@@ -1,0 +1,8 @@
+{
+    "0_1": "avg_pool_3x3",
+    "0_2": "conv_1x1",
+    "1_2": "skip_connect",
+    "0_3": "conv_1x1",
+    "1_3": "skip_connect",
+    "2_3": "skip_connect"
+}

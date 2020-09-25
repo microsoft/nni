@@ -221,12 +221,14 @@ Infer output and weight shape of a module/function from its input shape
 infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'ReLU6': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'Sigmoid': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::tanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::tanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::hardtanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::hardtanh_': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu_': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'aten::sigmoid': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_inshape(module_masks, mask),
     'MaxPool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
     'aten::max_pool2d': lambda module_masks, mask: maxpool2d_inshape(module_masks, mask),
@@ -243,6 +245,10 @@ infer_from_inshape = {
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_inshape(module_masks, mask),
     'aten::add_': lambda module_masks, mask: add_inshape(module_masks, mask),
     'aten::add': lambda module_mask, mask: add_inshape(module_mask, mask),
+    # mul has the similar behaviour with add, they both request
+    # the input tesors to have the same shape
+    'aten::mul': lambda module_mask, mask: add_inshape(module_mask, mask),
+    'aten::mul_': lambda module_mask, mask: add_inshape(module_mask, mask),
     'aten::cat': lambda module_mask, mask, cat_info, last_visited: cat_inshape(module_mask, mask, cat_info, last_visited),
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
