@@ -284,7 +284,7 @@ class ChannelMaskConflict(MaskFix):
                 ori_channels = w_shape[0]
                 for i in channel_remain:
                     mask['weight'][i] = torch.ones(w_shape[1:])
-                    if hasattr(mask, 'bias'):
+                    if 'bias' in mask and mask['bias'] is not None:
                         mask['bias'][i] = 1
             _logger.info(','.join(dset))
             _logger.info('Pruned Filters after fixing conflict:')
