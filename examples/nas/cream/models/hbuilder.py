@@ -6,9 +6,9 @@ from collections.__init__ import OrderedDict
 from copy import deepcopy
 import torch.nn as nn
 
-from models.utils import *
-from models.units import *
-from models.utils import _parse_ksize
+from timm.models.layers import CondConv2d, get_condconv_initializer
+from timm.models.layers.activations import HardSwish, Swish
+from timm.models.efficientnet_blocks import *
 
 from nni.nas.pytorch import mutables
 

@@ -16,15 +16,15 @@ except ImportError:
     from torch.nn.parallel import DistributedDataParallel as DDP
     has_apex = False
 
-from dataset import Dataset, create_loader, resolve_data_config
+from timm.data import Dataset, create_loader, resolve_data_config, FastCollateMixup, DatasetTar
+from timm.models import create_model, resume_checkpoint
+
+from timm.utils import *
+from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
+from timm.scheduler import create_scheduler
+    
 from models.hypernet import _gen_supernet
-from utils.flops_table import LatencyEst
-from utils.helpers import *
-from utils.EMA import ModelEma
-from utils.saver import CheckpointSaver
-from utils.loss import LabelSmoothingCrossEntropy
-from utils.scheduler import create_scheduler
-from torch.utils.tensorboard import SummaryWriter
+from flops_table import LatencyEst
 
 from nni.nas.pytorch.cream import CreamSupernetTrainer
 from nni.nas.pytorch.random import RandomMutator
