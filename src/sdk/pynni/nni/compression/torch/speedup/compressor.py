@@ -174,8 +174,6 @@ class ModelSpeedup:
         """
         training = self.bound_model.training
         _logger.info("start to speed up the model")
-        #conv_prune_dim = detect_mask_prune_dim(self.masks, self.bound_model)
-        #set_conv_prune_dim(conv_prune_dim)
 
         _logger.info("fix the mask conflict of the interdependent layers")
         _, conv_prune_dim = fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
