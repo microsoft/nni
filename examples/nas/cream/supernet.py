@@ -27,7 +27,7 @@ from utils.scheduler import create_scheduler
 from torch.utils.tensorboard import SummaryWriter
 
 from nni.nas.pytorch.cream import CreamSupernetTrainer
-from nni.nas.pytorch.cream import CreamSupernetTrainingMutator
+from nni.nas.pytorch.random import RandomMutator
 
 logger = logging.getLogger("nni.cream.supernet")
 
@@ -372,7 +372,7 @@ def main():
     criterion = LabelSmoothingCrossEntropy(smoothing=args.smoothing).cuda()
     val_loss = nn.CrossEntropyLoss().cuda()
 
-    mutator = CreamSupernetTrainingMutator(model, args.how_to_prob, args.pre_prob, choice_num, sta_num)
+    mutator = RandomMutator(model)
 
     trainer = CreamSupernetTrainer(model, criterion, optimizer, args.epochs,
                                    train_loader=loader_train, valid_loader=loader_eval,
