@@ -90,7 +90,7 @@ TUNERS_SUPPORTING_IMPORT_DATA = {
     'BOHB',
     'SMAC',
     'BatchTuner',
-    'EvolutionNasTuner'
+    'RegularizedEvolutionTuner'
 }
 
 TUNERS_NO_NEED_TO_IMPORT_DATA = {
