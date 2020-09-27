@@ -115,7 +115,7 @@ class AnalysisUtilsTest(TestCase):
             pruner.export_model(ck_file, mask_file)
             pruner._unwrap_model()
             # Fix the mask conflict
-            fixed_mask = fix_mask_conflict(mask_file, net, dummy_input)
+            fixed_mask, _ = fix_mask_conflict(mask_file, net, dummy_input)
 
             # use the channel dependency groud truth to check if
             # fix the mask conflict successfully
