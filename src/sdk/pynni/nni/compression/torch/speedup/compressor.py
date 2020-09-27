@@ -4,7 +4,7 @@
 import logging
 import torch
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
-from nni.compression.torch.utils.utils import get_module_by_name, detect_mask_prune_dim
+from nni.compression.torch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape, set_conv_prune_dim
 
@@ -78,7 +78,12 @@ class ModelSpeedup:
                 raise RuntimeError(
                     "Has not supported infering input/output shape from mask for module/function: `{}`, {}"
                     .format(m_type, module_name))
-            input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
+            if m_type in ['Linear']:
+                input_cmask, output_cmask = infer_from_mask[m_type](
+                    module_masks, mask, self.torch_graph.name_to_node[module_name].auxiliary
+                )
+            else:
+                input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
             _logger.debug("in_shape is not None")
             if not m_type in infer_from_inshape:
@@ -169,11 +174,13 @@ class ModelSpeedup:
         """
         training = self.bound_model.training
         _logger.info("start to speed up the model")
-        conv_prune_dim = detect_mask_prune_dim(self.masks, self.bound_model)
-        set_conv_prune_dim(conv_prune_dim)
+        #conv_prune_dim = detect_mask_prune_dim(self.masks, self.bound_model)
+        #set_conv_prune_dim(conv_prune_dim)
 
         _logger.info("fix the mask conflict of the interdependent layers")
-        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input, conv_prune_dim=conv_prune_dim)
+        _, conv_prune_dim = fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        set_conv_prune_dim(conv_prune_dim)
+
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")

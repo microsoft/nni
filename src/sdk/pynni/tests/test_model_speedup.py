@@ -13,6 +13,7 @@ from unittest import TestCase, main
 
 from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
 from nni.compression.torch.pruning.weight_masker import WeightMasker
+from nni.compression.torch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -112,7 +113,7 @@ class L1ChannelMasker(WeightMasker):
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         msg = 'module type {} is not supported!'.format(wrapper.type)
-        assert wrapper.type == 'Conv2d', msg
+        #assert wrapper.type == 'Conv2d', msg
         weight = wrapper.module.weight.data
         bias = None
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -137,23 +138,37 @@ class L1ChannelMasker(WeightMasker):
         if num_total < 2 or num_prune < 1:
             return base_mask
         w_abs = weight.abs()
-        w_abs_structured = w_abs.sum((0, 2, 3))
-        threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
-        mask_weight = torch.gt(w_abs_structured, threshold)[None, :, None, None].expand_as(weight).type_as(weight)
-        mask_bias = torch.gt(w_abs_structured, threshold).type_as(weight).detach() if base_mask['bias_mask'] is not None else None
+        if wrapper.type == 'Conv2d':
+            w_abs_structured = w_abs.sum((0, 2, 3))
+            threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
+            mask_weight = torch.gt(w_abs_structured, threshold)[None, :, None, None].expand_as(weight).type_as(weight)
+        else:
+            # Linear
+            assert wrapper.type == 'Linear'
+            w_abs_structured = w_abs.sum((0))
+            threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
+            mask_weight = torch.gt(w_abs_structured, threshold)[None, :].expand_as(weight).type_as(weight)
 
-        return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+        return {'weight_mask': mask_weight.detach(), 'bias_mask': None}
+
+class L1ChannelPruner(_StructuredFilterPruner):
+    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
+                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+    def validate_config(self, model, config_list):
+        pass
+
 
 def channel_prune(model):
     config_list = [{
         'sparsity': SPARSITY,
-        'op_types': ['Conv2d']
+        'op_types': ['Conv2d', 'Linear']
     }, {
         'op_names': ['conv1'],
         'exclude': True
     }]
 
-    pruner = L1FilterPruner(model, config_list)
+    pruner = L1ChannelPruner(model, config_list)
     masker = L1ChannelMasker(model, pruner)
     pruner.masker = masker
     pruner.compress()
