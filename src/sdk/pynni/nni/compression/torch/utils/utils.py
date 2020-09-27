@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
-
-_logger = logging.getLogger(__name__)
-
 def get_module_by_name(model, module_name):
     """
     Get a module specified by its module name
