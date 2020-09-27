@@ -22,31 +22,42 @@ class CreamSupernetTrainer(Trainer):
     ----------
     model : nn.Module
         Model with mutables.
-    mutator : Mutator
-        A mutator object that has been initialized with the model.
     loss : callable
         Called with logits and targets. Returns a loss tensor.
-    metrics : callable
-        Returns a dict that maps metrics keys to metrics data.
     optimizer : Optimizer
         Optimizer that optimizes the model.
     num_epochs : int
         Number of epochs of training.
-    train_loader : iterable
+    train_loader : iterablez
         Data loader of training. Raise ``StopIteration`` when one epoch is exhausted.
-    dataset_valid : iterable
+    valid_loader : iterablez
         Data loader of validation. Raise ``StopIteration`` when one epoch is exhausted.
+    mutator : Mutator
+        A mutator object that has been initialized with the model.
     batch_size : int
         Batch size.
-    workers: int
-        Number of threads for data preprocessing. Not used for this trainer. Maybe removed in future.
-    device : torch.device
-        Device object. Either ``torch.device("cuda")`` or ``torch.device("cpu")``. When ``None``, trainer will
-        automatic detects GPU and selects GPU first.
     log_frequency : int
         Number of mini-batches to log metrics.
-    callbacks : list of Callback
-        Callbacks to plug into the trainer. See Callbacks.
+    est : object
+        look-up table of flops and parameters
+    meta_sta_epoch : int
+        starting epoch of using meta picking
+    update_iter : int
+        interval of updating meta networks
+    slices : int
+        batch size of mini slices
+    pool_size : int
+        board size
+    pick_method : basestring
+        how to pick teacher network
+    lr_scheduler : scheduler
+        Learning rate scheduler
+    distributed : bool
+        whether to use distributed training
+    local_rank : int
+        index of current rank
+    val_loss : callable
+        calculate validation loss
     """
 
     def __init__(self, model, loss,
@@ -130,14 +141,14 @@ class CreamSupernetTrainer(Trainer):
                     elif self.pick_method == 'meta':
                         meta_value, cand_idx, cand = -1000000000, -1, None
                         for now_idx, item in enumerate(self.best_children_pool):
-                            inputx = item[3]
+                            inputx = item['input']
                             output = F.softmax(self.model(inputx), dim=1)
-                            weight = get_model(self.model).forward_meta(output - item[4])
+                            weight = get_model(self.model).forward_meta(output - item['feature_map'])
                             if weight > meta_value:
                                 meta_value = weight  # deepcopy(torch.nn.functional.sigmoid(weight))
                                 cand_idx = now_idx
-                                cand = self.arch_dict[(self.best_children_pool[cand_idx][0],
-                                                       self.best_children_pool[cand_idx][2])]
+                                cand = self.arch_dict[(self.best_children_pool[cand_idx]['acc'],
+                                                       self.best_children_pool[cand_idx]['arch_list'])]
                         assert cand is not None
                         meta_value = torch.nn.functional.sigmoid(-weight)
                     else:
@@ -173,7 +184,7 @@ class CreamSupernetTrainer(Trainer):
                     for weight, grad_item in zip(get_model(self.model).rand_parameters(self.mutator._cache), grad_1):
                         del weight.grad
 
-                    held_out_x = input_data[slice_ind:slice_ind * 2].clone()
+                    held_out_x = deepcopy(input_data[slice_ind:slice_ind * 2].clone().detach())
                     output_2 = self.model(held_out_x)
                     valid_loss = self.loss(output_2, target[slice_ind:slice_ind * 2])
                     self.optimizer.zero_grad()
@@ -215,35 +226,34 @@ class CreamSupernetTrainer(Trainer):
                 elif self.pick_method == 'meta':
                     meta_value, cand_idx, cand = -1000000000, -1, None
                     for now_idx, item in enumerate(self.best_children_pool):
-                        inputx = item[3]
+                        inputx = item['input']
                         output = F.softmax(self.model(inputx), dim=1)
-                        weight = get_model(self.model).forward_meta(output - item[4])
+                        weight = get_model(self.model).forward_meta(output - item['feature_map'])
                         if weight > meta_value:
                             meta_value = weight
                             cand_idx = now_idx
-                            cand = self.arch_dict[(self.best_children_pool[cand_idx][0],
-                                                   self.best_children_pool[cand_idx][2])]
+                            cand = self.arch_dict[(self.best_children_pool[cand_idx]['acc'],
+                                                   self.best_children_pool[cand_idx]['arch_list'])]
                     assert cand is not None
                     meta_value = torch.nn.functional.sigmoid(-weight)
                 else:
                     raise ValueError('Method Not supported')
-
             if not self.best_children_pool:
-                output = self.model(input)
+                output = self.model(input_data)
                 loss = self.loss(output, target)
                 kd_loss = loss
             elif epoch <= self.meta_sta_epoch:
-                output = self.model(input)
+                output = self.model(input_data)
                 loss = self.loss(output, target)
             else:
-                output = self.model(input)
+                output = self.model(input_data)
                 with torch.no_grad():
                     # save student arch
                     saved_cache = self.mutator._cache
                     self.mutator._cache = cand
 
                     # forward
-                    teacher_output = self.model(input).detach()
+                    teacher_output = self.model(input_data).detach()
 
                     # restore student arch
                     self.mutator._cache = saved_cache
@@ -262,8 +272,8 @@ class CreamSupernetTrainer(Trainer):
             meters.update(metrics)
 
             if epoch > self.meta_sta_epoch and (
-                    (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1][1] + 5) or
-                    (prec1 > self.best_children_pool[-1][1] and cand_flops < self.best_children_pool[-1][2])):
+                    (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1]['acc'] + 5) or
+                    (prec1 > self.best_children_pool[-1]['acc'] and cand_flops < self.best_children_pool[-1]['flops'])):
                 val_prec1 = prec1
                 training_data = deepcopy(input_data[:self.slices].detach())
                 if not self.best_children_pool:
@@ -271,12 +281,13 @@ class CreamSupernetTrainer(Trainer):
                 else:
                     features = deepcopy(teacher_output[:self.slices].detach())
                 self.best_children_pool.append(
-                    (val_prec1, prec1, cand_flops, training_data, F.softmax(features, dim=1)))
+                    {'acc': val_prec1, 'accu': prec1, 'flops': cand_flops, 'input': training_data,
+                     'feature_map': F.softmax(features, dim=1)})
                 self.arch_dict[(val_prec1, cand_flops)] = self.mutator._cache
-                self.best_children_pool = sorted(self.best_children_pool, reverse=True)
+                self.best_children_pool = sorted(self.best_children_pool, key=lambda x: x['acc'], reverse=True)
 
             if len(self.best_children_pool) > self.pool_size:
-                self.best_children_pool = sorted(self.best_children_pool, reverse=True)
+                self.best_children_pool = sorted(self.best_children_pool, key=lambda x: x['acc'], reverse=True)
                 del self.best_children_pool[-1]
 
             if self.lr_scheduler is not None:
