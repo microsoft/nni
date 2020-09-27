@@ -9,7 +9,7 @@ from .utils import get_module_by_name
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger(__name__)
 
-def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None, conv_prune_dim=0):
+def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     """
     MaskConflict fix the mask conflict for the channel dependencies
     and group dependency.
