@@ -89,8 +89,7 @@ TUNERS_SUPPORTING_IMPORT_DATA = {
     'MetisTuner',
     'BOHB',
     'SMAC',
-    'BatchTuner',
-    'EvolutionNasTuner'
+    'BatchTuner'
 }
 
 TUNERS_NO_NEED_TO_IMPORT_DATA = {
