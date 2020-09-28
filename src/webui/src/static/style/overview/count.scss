@@ -9,12 +9,17 @@ $seriesIconMargin: 13px;
 }
 
 .durationInput {
-    width: 74px;
+    width: 42px;
     height: 32px;
-    padding-left: 8px;
+    padding-right: 5px;
+    text-align: right;
     outline: none;
     border: none;
     border-bottom: 1px solid #ccc;
+}
+
+.maxExecDuration {
+    width: 74px;
 }
 
 .series {

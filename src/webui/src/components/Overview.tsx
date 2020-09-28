@@ -9,27 +9,17 @@ import Accuracy from './overview/Accuracy';
 import { TrialConfigButton } from './overview/config/TrialConfigButton';
 import { ReBasicInfo } from './overview/experiment/ReBasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
+import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
 import { Command } from './overview/experiment/Command';
-// import '../static/style/overview.scss';
+import { TitleContext } from './overview/TitleContext';
 import '../static/style/overview/overview.scss';
 import '../static/style/logPath.scss';
-import {
-    itemStyle1,
-    itemStyleSucceed,
-    itemStyle2,
-    entriesOption
-} from './overview/overviewConst';
+import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
 
 interface OverviewState {
     trialConcurrency: number;
 }
-
-export const TitleContext = React.createContext({
-    text: '',
-    icon: '',
-    fontColor: ''
-});
 
 export const BestMetricContext = React.createContext({
     bestAccuracy: 0
@@ -72,10 +62,13 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
         const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
         const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
+
+        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
+        const execDuration = EXPERIMENT.profile.execDuration;
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
-                    const { metricGraphMode, bestTrialEntries } = value;
+                    const { metricGraphMode, bestTrialEntries, updateOverviewPage } = value;
                     const maxActive = metricGraphMode === 'max' ? 'active' : '';
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
@@ -85,9 +78,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             <div className='wrapper'>
                                 {/* exp params */}
                                 <div className='box1'>
-                                    <TitleContext.Provider
-                                        value={{ text: 'Experiment', icon: 'AutoRacing', fontColor: '' }}
-                                    >
+                                    <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
                                         <Title />
                                     </TitleContext.Provider>
                                     <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
@@ -97,42 +88,52 @@ class Overview extends React.Component<{}, OverviewState> {
                                 {/* duration & trial numbers */}
                                 <div className='box2'>
                                     <div className='box4'>
-                                        <TitleContext.Provider
-                                            value={{ text: 'Duration', icon: 'Timer', fontColor: '' }}
-                                        >
+                                        <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
                                             <Title />
                                         </TitleContext.Provider>
-                                        <ExpDuration />
+                                        <ExpDurationContext.Provider
+                                            value={{ maxExecDuration, execDuration, updateOverviewPage }}
+                                        >
+                                            <ExpDuration />
+                                        </ExpDurationContext.Provider>
                                     </div>
-                                    <div className='empty'/>
+                                    <div className='empty' />
                                     <div className='box7'>
-                                        <TitleContext.Provider
-                                            value={{ text: 'Trial numbers', icon: 'NumberSymbol', fontColor: '' }}
-                                        >
+                                        <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
                                             <Title />
                                         </TitleContext.Provider>
-                                        <TrialCount />
+                                        <ExpDurationContext.Provider
+                                            value={{ maxExecDuration, execDuration, updateOverviewPage }}
+                                        >
+                                            <TrialCount />
+                                        </ExpDurationContext.Provider>
                                     </div>
                                 </div>
                                 {/* table */}
                                 <div className='box3'>
                                     <Stack horizontal>
                                         <div style={itemStyleSucceed}>
-                                            <TitleContext.Provider
-                                                value={{ text: 'Top trials', icon: 'BulletedList', fontColor: '' }}
-                                            >
+                                            <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
                                                 <Title />
                                             </TitleContext.Provider>
                                         </div>
                                         <div className='topTrialTitle'>
                                             {/* <Stack horizontal horizontalAlign='space-between'> */}
                                             <Stack horizontal horizontalAlign='end'>
-                                                <DefaultButton onClick={this.clickMaxTop} className={maxActive} styles={{ root: { minWidth: 70, padding: 0} }}>
+                                                <DefaultButton
+                                                    onClick={this.clickMaxTop}
+                                                    className={maxActive}
+                                                    styles={{ root: { minWidth: 70, padding: 0 } }}
+                                                >
                                                     <Icon iconName='Market' />
                                                     <span className='max'>Max</span>
                                                 </DefaultButton>
                                                 <div className='mincenter'>
-                                                    <DefaultButton onClick={this.clickMinTop} className={minActive} styles={{ root: { minWidth: 70, padding: 0} }}>
+                                                    <DefaultButton
+                                                        onClick={this.clickMinTop}
+                                                        className={minActive}
+                                                        styles={{ root: { minWidth: 70, padding: 0 } }}
+                                                    >
                                                         <Icon iconName='MarketDown' />
                                                         <span className='max'>Min</span>
                                                     </DefaultButton>
@@ -155,18 +156,20 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </Stack>
                                     <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
                                 </div>
-                                <div className='box5'><Command /></div>
+                                <div className='box5'>
+                                    <Command />
+                                </div>
                                 <div className='box6'>
                                     <Stack horizontal>
                                         <div style={itemStyle1}>
                                             <TitleContext.Provider
-                                                value={{ text: 'Trial metric chart', icon: 'HomeGroup', fontColor: '' }}
+                                                value={{ text: 'Trial metric chart', icon: 'HomeGroup' }}
                                             >
                                                 <Title />
                                             </TitleContext.Provider>
                                         </div>
                                         <div style={itemStyle2}>
-                                            <Stack className="maxmin" horizontal>
+                                            <Stack className='maxmin' horizontal>
                                                 <div className='circle' />
                                                 <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
                                             </Stack>

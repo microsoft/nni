@@ -1,18 +1,32 @@
 import React from 'react';
-import { TooltipHost } from '@fluentui/react';
+import { TooltipHost, Stack } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
 import '../../../static/style/overview/command.scss';
 
 export const Command = (): any => {
     const clusterMetaData = EXPERIMENT.profile.params.clusterMetaData;
     const tuner = EXPERIMENT.profile.params.tuner;
-    let builtTunerName = 'unknown';
+    const advisor = EXPERIMENT.profile.params.advisor;
+    const assessor = EXPERIMENT.profile.params.assessor;
+    let title = '';
+    let builtinName = '';
     let trialCommand = 'unknown';
-    let tunerCheckpoint = 'unknown';
     if (tuner !== undefined) {
-        tunerCheckpoint = tuner.checkpointDir;
+        title = title.concat('Tuner');
         if (tuner.builtinTunerName !== undefined) {
-            builtTunerName = tuner.builtinTunerName;
+            builtinName = builtinName.concat(tuner.builtinTunerName);
+        }
+    }
+    if (advisor !== undefined) {
+        title = title.concat('/ Assessor');
+        if (advisor.builtinAdvisorName !== undefined) {
+            builtinName = builtinName.concat(advisor.builtinAdvisorName);
+        }
+    }
+    if (assessor !== undefined) {
+        title = title.concat('/ Addvisor');
+        if (assessor.builtinAssessorName !== undefined) {
+            builtinName = builtinName.concat(assessor.builtinAssessorName);
         }
     }
     if (clusterMetaData !== undefined) {
@@ -25,63 +39,29 @@ export const Command = (): any => {
     return (
         <div className='command basic'>
             <div className='command1'>
-                <p>Trial command</p>
+                <p>Training platform</p>
+                <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
+                <p className='lineMargin'>{title}</p>
+                <div className='nowrap'>{builtinName}</div>
+            </div>
+            <Stack className='command2'>
+                <p>Log directory</p>
+                <div className='nowrap'>
+                    <TooltipHost content={EXPERIMENT.profile.logDir || 'unknown'}>
+                        {EXPERIMENT.profile.logDir || 'unknown'}
+                    </TooltipHost>
+                </div>
+                <p className='lineMargin'>Trial command</p>
                 <div className='nowrap'>
                     <TooltipHost
-                        // Tooltip message content
                         content={trialCommand || 'unknown'}
                         calloutProps={{ gapSpace: 0 }}
                         styles={{ root: { display: 'inline-block' } }}
                     >
-                        {/* show logDir */}
                         {trialCommand || 'unknown'}
                     </TooltipHost>
                 </div>
-                <p className="lineMargin">Training platform</p>
-                <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
-            </div>
-            <div className='command2'>
-                <p>Log directory</p>
-                <div className='nowrap'>
-                    <TooltipHost
-                        content={EXPERIMENT.profile.logDir || 'unknown'}
-                    >
-                        {/* show logDir */}
-                        {EXPERIMENT.profile.logDir || 'unknown'}
-                    </TooltipHost>
-                </div>
-                {/* tuner checkpointDir */}
-                <p className="lineMargin">Tuner</p>
-                <div className='nowrap'>
-                    <TooltipHost
-                        // Tooltip message content
-                        content={tunerCheckpoint}
-                    >
-                        {builtTunerName}
-                    </TooltipHost>
-                </div>
-            </div>
-            <div className='command3'>
-                {/* tuner checkpointDir */}
-                <p>Tuner working directory</p>
-                <div className='nowrap'>
-                    <TooltipHost
-                        content={tunerCheckpoint || 'unknown'}
-                    >
-                        {/* show logDir */}
-                        {tunerCheckpoint || 'unknown'}
-                    </TooltipHost>
-                </div>
-                {/* tuner checkpointDir */}
-                <p className="lineMargin">Output directory</p>
-                <div className='nowrap'>
-                    <TooltipHost
-                        content={builtTunerName}
-                    >
-                        {builtTunerName}
-                    </TooltipHost>
-                </div>
-            </div>
+            </Stack>
         </div>
     );
 };

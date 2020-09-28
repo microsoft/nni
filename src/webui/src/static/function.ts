@@ -33,44 +33,45 @@ const convertTimeToSecond = (str: string): number => {
     const day = str.indexOf('day') !== -1;
     const hour = str.indexOf('h') !== -1;
     const min = str.indexOf('min') !== -1;
-    const sencond = str.indexOf('s') !== -1;
-    // day h min s最全的
     const durationArr = str.trim().split(/\s+/);
-    console.info('convert', durationArr);
     let result = 0;
     switch (durationArr.length) {
         // day h min s
         case 4:
-            result = parseInt(durationArr[0]) * 3600 * 24 + parseInt(durationArr[1]) * 3600 + parseInt(durationArr[2]) * 60 + parseInt(durationArr[3]);
+            result =
+                parseInt(durationArr[0]) * 3600 * 24 +
+                parseInt(durationArr[1]) * 3600 +
+                parseInt(durationArr[2]) * 60 +
+                parseInt(durationArr[3]);
             break;
         case 3:
-            if(day === true){
-                result = parseInt(durationArr[0]) * 3600 * 24 + parseInt(durationArr[1]) * 3600 + parseInt(durationArr[2]) * 60;
+            if (day === true) {
+                result =
+                    parseInt(durationArr[0]) * 3600 * 24 +
+                    parseInt(durationArr[1]) * 3600 +
+                    parseInt(durationArr[2]) * 60;
             } else {
                 result = parseInt(durationArr[0]) * 3600 + parseInt(durationArr[1]) * 60 + parseInt(durationArr[2]);
             }
             break;
         case 2:
-            if(day === true){
+            if (day === true) {
                 result = parseInt(durationArr[0]) * 24 * 3600 + parseInt(durationArr[1]) * 3600;
-            } else if(hour === true) {
+            } else if (hour === true) {
                 result = parseInt(durationArr[0]) * 3600 + parseInt(durationArr[1]) * 60;
-            } else{
+            } else {
                 result = parseInt(durationArr[0]) * 60 + parseInt(durationArr[1]);
             }
             break;
         case 1:
-            if(day === true){
+            if (day === true) {
                 result = parseInt(durationArr[0]) * 24 * 3600;
-            } else if(hour === true){
+            } else if (hour === true) {
                 result = parseInt(durationArr[0]) * 3600;
-                
-            } else if(min === true){
+            } else if (min === true) {
                 result = parseInt(durationArr[0]) * 60;
-                
             } else {
                 result = parseInt(durationArr[0]);
-
             }
             break;
         default:
@@ -248,7 +249,7 @@ const downFile = (content: string, fileName: string): void => {
     }
     if (navigator.userAgent.indexOf('Firefox') > -1) {
         const downTag = document.createElement('a');
-        downTag.addEventListener('click', function () {
+        downTag.addEventListener('click', function() {
             downTag.download = fileName;
             downTag.href = URL.createObjectURL(file);
         });

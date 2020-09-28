@@ -1,12 +1,12 @@
 const itemStyle1: React.CSSProperties = {
-    width: '75%',
+    width: '75%'
 };
 const itemStyleSucceed: React.CSSProperties = {
-    width: '28%',
+    width: '28%'
 };
 
 const itemStyle2: React.CSSProperties = {
-    height: 38,
+    height: 38
 };
 
 // top trials entries
@@ -18,9 +18,4 @@ const entriesOption = [
     { key: '100', text: '100' }
 ];
 
-export {
-    itemStyle1,
-    itemStyleSucceed,
-    itemStyle2,
-    entriesOption
-};
+export { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption };

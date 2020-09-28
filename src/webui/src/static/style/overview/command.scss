@@ -26,18 +26,25 @@
     }
 
     .command1 {
-        width: 25%;
+        width: 46%;
+
+        p {
+            margin-top: 0;
+        }
     }
 
     .command2 {
-        width: 37.5%;
+        width: 54%;
+
+        p {
+            margin-top: 0;
+        }
     }
 
-    .command3 {
-        width: 37.5%;
-    }
-
-    .lineMargin {
-        margin-top: 32px;
+    .command1,
+    .command2 {
+        .lineMargin {
+            margin-top: 20px;
+        }
     }
 }

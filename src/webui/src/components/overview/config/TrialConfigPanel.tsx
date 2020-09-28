@@ -68,7 +68,7 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                 >
                     <div className='log-tab-body'>
                         <Pivot initialSelectedKey={activeTab} style={{ minHeight: 190, paddingTop: '16px' }}>
-                            <PivotItem headerText='Search space' itemKey="search space">
+                            <PivotItem headerText='Search space' itemKey='search space'>
                                 <MonacoEditor
                                     height={logDrawerHeight - 92 - 45}
                                     language='json'
@@ -91,7 +91,7 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                             </PivotItem>
                         </Pivot>
                     </div>
-                    <PrimaryButton text='Close' className="configClose" onClick={hideConfigPanel} />
+                    <PrimaryButton text='Close' className='configClose' onClick={hideConfigPanel} />
                 </Panel>
             </Stack>
         );

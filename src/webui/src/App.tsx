@@ -30,7 +30,9 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeMetricGraphMode: (val: 'max' | 'min') => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeEntries: (val: string) => {}
+    changeEntries: (val: string) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    updateOverviewPage: () => {}
 });
 
 class App extends React.Component<{}, AppState> {
@@ -116,6 +118,12 @@ class App extends React.Component<{}, AppState> {
         this.setState({ bestTrialEntries: entries });
     };
 
+    updateOverviewPage = (): void => {
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1
+        }));
+    };
+
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
         if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
             nextState.isUpdate = true;
@@ -179,7 +187,8 @@ class App extends React.Component<{}, AppState> {
                                 metricGraphMode,
                                 changeMetricGraphMode: this.changeMetricGraphMode,
                                 bestTrialEntries,
-                                changeEntries: this.changeEntries
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
                             }}
                         >
                             {this.props.children}

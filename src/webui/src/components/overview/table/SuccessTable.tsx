@@ -19,10 +19,9 @@ interface SuccessTableState {
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
-    
     constructor(props: SuccessTableProps) {
         super(props);
-        this.state = { 
+        this.state = {
             columns: this.columns,
             source: TRIALS.table(this.props.trialIds),
             innerWidth: window.innerWidth

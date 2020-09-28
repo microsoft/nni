@@ -11,7 +11,7 @@ const copy = <Icon iconName='Copy' />;
 const tableListIcon = <Icon iconName='BulletedList' />;
 const downLoadIcon = { iconName: 'Download' };
 const infoIconAbout = { iconName: 'info' };
-const timeIcon = { iconName: 'Refresh' };
+const timeIcon = { iconName: 'ReminderTime' };
 const disableUpdates = { iconName: 'DisableUpdates' };
 const requency = { iconName: 'Timer' };
 const closeTimer = { iconName: 'Blocked2' };

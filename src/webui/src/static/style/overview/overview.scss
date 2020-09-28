@@ -1,4 +1,5 @@
 $boxPadding: 20px 42px;
+
 .wrapper {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -95,7 +96,7 @@ $boxPadding: 20px 42px;
 }
 
 .box5 {
-    grid-row: 5 / 7;
+    height: 144px;
     overflow: hidden;
 }
 $circle: 10px;
@@ -103,6 +104,7 @@ $bgblue: #0071bc;
 
 .box6 {
     grid-row: 7 / 11;
+    margin-top: -38px;
 
     .circle {
         width: $circle;
