@@ -51,7 +51,7 @@ class Config:
 
 class Experiments:
     '''Maintain experiment list'''
-    def __init__(self, home_dir = NNICTL_HOME_DIR):
+    def __init__(self, home_dir=NNICTL_HOME_DIR):
         os.makedirs(home_dir, exist_ok=True)
         self.experiment_file = os.path.join(home_dir, '.experiment')
         self.experiments = self.read_file()
