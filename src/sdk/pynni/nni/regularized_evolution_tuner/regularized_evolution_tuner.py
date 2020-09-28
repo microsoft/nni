@@ -61,6 +61,7 @@ class RegularizedEvolutionTuner(Tuner):
         self.population = deque()
         self.history = {}
         self.search_space = None
+        self._from = {}
 
     def generate_parameters(self, parameter_id, **kwargs):
         """
@@ -74,6 +75,7 @@ class RegularizedEvolutionTuner(Tuner):
         if self.initial_population:
             arch = self.initial_population.popleft()
             self.history[parameter_id] = arch
+            self._from[parameter_id] = True
             return arch
         elif self.population:
             sample = []
@@ -83,6 +85,7 @@ class RegularizedEvolutionTuner(Tuner):
             candidate = max(sample, key=lambda x: x.result)
             arch = self._mutate_model(candidate)
             self.history[parameter_id] = arch
+            self._from[parameter_id] = False
             return arch
         else:
             raise nni.NoMoreTrialError
@@ -129,6 +132,13 @@ class RegularizedEvolutionTuner(Tuner):
                 raise ValueError('Unsupported search space type: %s' % (val['_type']))
 
         self._generate_initial_population()
+
+    def trial_end(self, parameter_id, success, **kwargs):
+        if not success:
+            del self.history[parameter_id]
+            if self._from[parameter_id]:
+                self.initial_population.append(self._random_model())
+            del self._from[parameter_id]
 
     def _mutate(self, key, individual):
         mutate_val = self.search_space[key]
