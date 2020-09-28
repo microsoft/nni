@@ -61,6 +61,12 @@ $boxPadding: 20px 42px;
         font-size: 16px;
         color: #484848;
     }
+
+    .nowrap {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 }
 
 .box3 {

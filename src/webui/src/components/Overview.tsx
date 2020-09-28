@@ -7,7 +7,7 @@ import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
 import Accuracy from './overview/Accuracy';
 import { TrialConfigButton } from './overview/config/TrialConfigButton';
-import { ReBasicInfo } from './overview/experiment/ReBasicInfo';
+import { ReBasicInfo } from './overview/experiment/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
@@ -174,7 +174,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </Stack>
                                         </div>
                                     </Stack>
-                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={344} />
+                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={380} />
                                 </div>
                             </div>
                         </div>

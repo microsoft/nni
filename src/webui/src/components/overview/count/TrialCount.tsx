@@ -44,7 +44,7 @@ export const TrialCount = (): any => {
                                     <ProgressIndicator percentComplete={bar2Percent} barHeight={15} />
                                 </TooltipHost>
                                 <Stack horizontal className='mess'>
-                                    <div style={itemRunning} className='basic colorOfbasic'>
+                                    <div style={itemRunning} className='basic'>
                                         <p>Running</p>
                                         <div>{count.get('RUNNING')}</div>
                                     </div>
@@ -58,7 +58,7 @@ export const TrialCount = (): any => {
                                     </div>
                                 </Stack>
                                 <Stack horizontal horizontalAlign='space-between' className='mess'>
-                                    <div style={itemStyle1} className='basic colorOfbasic'>
+                                    <div style={itemStyle1} className='basic'>
                                         <p>Succeeded</p>
                                         <div>{count.get('SUCCEEDED')}</div>
                                     </div>

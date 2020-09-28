@@ -6,6 +6,7 @@ import { convertDuration } from '../../../static/function';
 import { TRIALS } from '../../../static/datamodel';
 import { DETAILTABS } from '../../stateless-component/NNItabs';
 import '../../../static/style/succTable.scss';
+import '../../../static/style/tableStatus.css';
 import '../../../static/style/openRow.scss';
 
 interface SuccessTableProps {
