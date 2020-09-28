@@ -9,7 +9,7 @@ can be represented using 8-bit integers without significant loss in accuracy. Ev
 is an active field of research.
 
 A quntizer is a quantization algorithm implementation in NNI, NNI provides multiple quntizers as below. You can also
-create you own quntizer using NNI model compression inteface.
+create your own quntizer using NNI model compression interface.
 
 ..  toctree::
     :maxdepth: 2

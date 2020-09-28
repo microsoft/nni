@@ -6,10 +6,10 @@ A common technique to increase sparsity in neural network model weights and acti
 The pruning methods explore the redundancy in the model weights(parameters) and try to remove/prune the redundant and uncritical weights.
 The redundant elements are pruned from the model, their values are zeroed and we make sure they don't take part in the back-propagation process.
 
-From pruning granularity perspective, fine-grained pruning refers to pruning each individual weights seperately. 
-Coase-grained pruning or structured pruning is pruning entire group of elements, such as convolutional filter.
+From pruning granularity perspective, fine-grained pruning or unstructured pruning refers to pruning each individual weights seperately.
+Coarse-grained pruning or structured pruning is pruning entire group of weights, such as convolutional filter.
 
-NNI provides multiple fine-grained pruning and structured pruning algorithms.
+NNI provides multiple unstructured pruning and structured pruning algorithms.
 It supports Tensorflow and PyTorch with unified interface.
 For users to prune their models, they only need to add several lines in their code.
 For the structured filter pruning, NNI also provides a dependency-aware mode. In the dependency-aware mode, the
