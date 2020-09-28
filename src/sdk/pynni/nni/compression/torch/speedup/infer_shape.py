@@ -800,7 +800,7 @@ def linear_mask(module_masks, mask, shape):
     Parameters
     ----------
     module_masks : ModuleMasks
-        The ModuleMasks instance of the batchnorm2d
+        The ModuleMasks instance of the Linear
     mask : dict
         The mask of its weights, from the user provided mask file
     shape: dict
@@ -814,6 +814,8 @@ def linear_mask(module_masks, mask, shape):
     assert 'weight' in mask
     num_input_dim = len(shape['in_shape'])
 
+    # Input data of Linear module can have multiple dimensions.
+    # here we only support infer coarse mask on the first dimension (dimension 0)
     nonzero_index = torch.nonzero(mask['weight'].sum(0), as_tuple=True)[0]
 
     # infer shape of input tensor
