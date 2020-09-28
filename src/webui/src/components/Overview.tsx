@@ -49,7 +49,6 @@ class Overview extends React.Component<{}, OverviewState> {
         changeMetricGraphMode('min');
     };
 
-    // updateEntries = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
     updateEntries = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
             this.context.changeEntries(item.key);
