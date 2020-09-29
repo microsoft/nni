@@ -243,7 +243,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
         // get an executor from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = 
-        this.gpuScheduler.scheduleMachine(0, environment.rmMachineMetaDetail);
+        this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, environment.rmMachineMetaDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
             const errorMessage: string = `Required GPU number 0 is too large, no machine can meet`;
             this.log.error(errorMessage);
