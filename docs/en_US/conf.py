@@ -49,6 +49,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'nbsphinx',
+    'myst_parser'
 ]
 
 # Add mock modules
@@ -60,9 +61,9 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_parsers = {
-    '.md': CommonMarkParser
-}
+# source_parsers = {
+#     '.md': CommonMarkParser
+# }
 
 source_suffix = ['.rst', '.md']
 
