@@ -249,6 +249,16 @@ class CompressorTestCase(TestCase):
         quantizer.quantize_weight(model.conv2)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
+        # test value of weight and bias after quantization
+        weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
+        weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])
+        bias = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
+        bias_valid = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
+        model.conv2.module.weight.data = weight
+        model.conv2.module.bias.data = bias
+        quantizer.quantize_weight(model.conv2)
+        assert torch.all(torch.isclose(model.conv2.module.weight.data, weight_valid, rtol=1e-4))
+        assert torch.all(torch.isclose(model.conv2.module.bias.data, bias_valid, rtol=1e-7))
 
         # test ema
         eps = 1e-7
