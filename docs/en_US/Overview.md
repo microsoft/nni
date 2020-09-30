@@ -63,9 +63,11 @@ NNI has support for many one-shot NAS algorithms such as ENAS and DARTS through 
 Other than one-shot NAS, NAS can also run in a classic mode where each candidate architecture runs as an independent trial job. In this mode, similar to hyperparameter tuning, users have to start an NNI experiment and choose a tuner for NAS.
 
 ### Model Compression
-Model Compression on NNI includes pruning algorithms and quantization algorithms. These algorithms are provided through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. A detailed description of model compression and its usage can be found [here](Compression/Overview.md).
+NNI provides an easy-to-use model compression framework to compress deep neural networks, the compressed networks typically have much smaller model size and much faster
+inference speed without losing performance significally. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and
+quantization algorithms through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. Users can also use NNI model compression framework to customize their own pruning and quantization algorithms.
 
-There are different types of hyperparameters in model compression. One type is the hyperparameters in input configuration (e.g., sparsity, quantization bits) to a compression algorithm. The other type is the hyperparameters in compression algorithms. Here, Hyperparameter tuning of NNI can help a lot in finding the best compressed model automatically. A simple example can be found [here](Compression/AutoPruningUsingTuners.md).
+A detailed description of model compression and its usage can be found [here](Compression/Overview.md).
 
 ### Automatic Feature Engineering
 Automatic feature engineering is for users to find the best features for their tasks. A detailed description of automatic feature engineering and its usage can be found [here](FeatureEngineering/Overview.md). It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code. 
