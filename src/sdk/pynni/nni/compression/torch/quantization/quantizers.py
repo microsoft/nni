@@ -229,11 +229,6 @@ class QAT_Quantizer(Quantizer):
 
         if quant_start_step > self.steps:
             return
-        rmin, rmax = torch.min(weight), torch.max(weight)
-        module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
-        weight = self._quantize(weight_bits, module, weight)
-        weight = self._dequantize(module, weight)
-        wrapper.module.weight.data = weight
 
         # if bias exists, quantize bias to uint32
         if not hasattr(wrapper.module, 'bias') or wrapper.module.bias is None:
@@ -245,6 +240,13 @@ class QAT_Quantizer(Quantizer):
         bias = self._quantize(bias_bits, module, bias)
         bias = self._dequantize(module, bias)
         wrapper.module.bias.data = bias
+
+        # quantize weight
+        rmin, rmax = torch.min(weight), torch.max(weight)
+        module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
+        weight = self._quantize(weight_bits, module, weight)
+        weight = self._dequantize(module, weight)
+        wrapper.module.weight.data = weight
 
     def quantize_output(self, output, wrapper, **kwargs):
         config = wrapper.config
