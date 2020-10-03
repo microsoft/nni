@@ -1,6 +1,6 @@
 ## GradientFeatureSelector
 
-GradinetFeatureSelector 的算法来源于 ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf)。
+GradientFeatureSelector 的算法来源于 ["Feature Gradients: Scalable Feature Selection via Discrete Relaxation"](https://arxiv.org/pdf/1908.10382.pdf)。
 
 GradientFeatureSelector，基于梯度搜索算法的特征选择。
 

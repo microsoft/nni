@@ -15,6 +15,7 @@ replace_module = {
     'AdaptiveAvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
     'ReLU6': lambda module, mask: no_replace(module, mask),
+    'Sigmoid': lambda module, mask: no_replace(module, mask),
     'Linear': lambda module, mask: replace_linear(module, mask),
     'Dropout': lambda module, mask: no_replace(module, mask),
     'Dropout2d': lambda module, mask: no_replace(module, mask),

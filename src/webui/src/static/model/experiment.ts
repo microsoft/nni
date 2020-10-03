@@ -58,7 +58,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/experiment`)
             .then(data => {
-                updated = updated || compareProfiles(this.profileField, data);
+                updated = updated || !compareProfiles(this.profileField, data);
                 this.profileField = data;
             })
             .catch(error => {
@@ -69,7 +69,7 @@ class Experiment {
 
         await requestAxios(`${MANAGER_IP}/check-status`)
             .then(data => {
-                updated = JSON.stringify(this.statusField) === JSON.stringify(data);
+                updated = JSON.stringify(this.statusField) !== JSON.stringify(data);
                 this.statusField = data;
             })
             .catch(error => {
@@ -87,17 +87,33 @@ class Experiment {
             // set initProfile to prevent page broken
             const initProfile = {
                 data: {
-                    "id": "", "revision": 0, "execDuration": 0,
-                    "logDir": "", "nextSequenceId": 0,
-                    "params": {
-                        "authorName": "", "experimentName": "", "trialConcurrency": 0, "maxExecDuration": 0, "maxTrialNum": 0, "searchSpace": "null",
-                        "trainingServicePlatform": "", "tuner": {
-                            "builtinTunerName": "TPE",
-                            "classArgs": { "optimize_mode": "" }, "checkpointDir": ""
+                    id: '',
+                    revision: 0,
+                    execDuration: 0,
+                    logDir: '',
+                    nextSequenceId: 0,
+                    params: {
+                        authorName: '',
+                        experimentName: '',
+                        trialConcurrency: 0,
+                        maxExecDuration: 0,
+                        maxTrialNum: 0,
+                        searchSpace: 'null',
+                        trainingServicePlatform: '',
+                        tuner: {
+                            builtinTunerName: 'TPE',
+                            // eslint-disable-next-line @typescript-eslint/camelcase
+                            classArgs: { optimize_mode: '' },
+                            checkpointDir: ''
                         },
-                        "versionCheck": true, "clusterMetaData": [{ "key": "", "value": "" },
-                        { "key": "", "value": "" }]
-                    }, "startTime": 0, "endTime": 0
+                        versionCheck: true,
+                        clusterMetaData: [
+                            { key: '', value: '' },
+                            { key: '', value: '' }
+                        ]
+                    },
+                    startTime: 0,
+                    endTime: 0
                 }
             };
             this.profileField = initProfile.data as any;
@@ -112,7 +128,7 @@ class Experiment {
 
     get optimizeMode(): string {
         const tuner = this.profile.params.tuner;
-        return (tuner && tuner.classArgs && tuner.classArgs.optimize_mode) ? tuner.classArgs.optimize_mode : 'unknown';
+        return tuner && tuner.classArgs && tuner.classArgs.optimize_mode ? tuner.classArgs.optimize_mode : 'unknown';
     }
 
     get trainingServicePlatform(): string {

@@ -16,7 +16,7 @@ import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { CommandChannel } from "../commandChannel";
-import { EnvironmentInformation, EnvironmentService, EnvironmentStatus } from '../environment';
+import { EnvironmentInformation, EnvironmentService } from '../environment';
 
 
 /**
@@ -45,7 +45,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         return new AMLCommandChannel(commandEmitter);
     }
 
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+    public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new AMLEnvironmentInformation(envId, envName);
     }
 
@@ -74,7 +74,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         environments.forEach(async (environment) => {
             const amlClient = (environment as AMLEnvironmentInformation).amlClient;
             if (!amlClient) {
-                throw new Error('AML client not initialized!');
+                return Promise.reject('AML client not initialized!');
             }
             const newStatus = await amlClient.updateStatus(environment.status);
             switch (newStatus.toUpperCase()) {
@@ -90,8 +90,8 @@ export class AMLEnvironmentService extends EnvironmentService {
                     environment.setStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
-                    environment.setStatus(newStatus.toUpperCase() as EnvironmentStatus);
-                    break;
+                    environment.setStatus('FAILED');
+                    return Promise.reject(`AML: job ${environment.envId} is failed!`);
                 case 'STOPPED':
                 case 'STOPPING':
                     environment.setStatus('USER_CANCELED');
@@ -112,13 +112,15 @@ export class AMLEnvironmentService extends EnvironmentService {
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
         environment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
+        environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,
             this.amlClusterConfig.resourceGroup,
             this.amlClusterConfig.workspaceName,
             this.experimentId,
-            this.amlTrialConfig.computeTarget,
+            this.amlClusterConfig.computeTarget,
             this.amlTrialConfig.image,
             'nni_script.py',
             environmentLocalTempFolder

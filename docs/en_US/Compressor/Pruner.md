@@ -20,6 +20,8 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
 * [ADMM Pruner](#admm-pruner)
@@ -37,7 +39,7 @@ Tensorflow code
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -112,20 +114,11 @@ FPGMPruner prune filters with the smallest geometric median.
 
  ![](../../img/fpgm_fig1.png)
 
->Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance.
+>Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance. 
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
-
-Tensorflow code
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
 
 PyTorch code
 ```python
@@ -145,11 +138,6 @@ pruner.compress()
 ..  autoclass:: nni.compression.torch.FPGMPruner
 ```
 
-##### Tensorflow
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.FPGMPruner
-```
-
 ## L1Filter Pruner
 
 This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https://arxiv.org/abs/1608.08710), authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
@@ -167,6 +155,8 @@ This is an one-shot pruner, In ['PRUNING FILTERS FOR EFFICIENT CONVNETS'](https:
 >        removed.
 > 4. A new kernel matrix is created for both the ![](http://latex.codecogs.com/gif.latex?i)th and ![](http://latex.codecogs.com/gif.latex?i+1)th layers, and the remaining kernel
 >      weights are copied to the new model.
+
+In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference [dependency-aware mode](./DependencyAware.md).
 
 ### Usage
 
@@ -203,6 +193,8 @@ The experiments code can be found at [examples/model_compress]( https://github.c
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
 
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
+
 ### Usage
 
 PyTorch code
@@ -214,6 +206,7 @@ pruner = L2FilterPruner(model, config_list)
 pruner.compress()
 ```
 
+
 ### User configuration for L2Filter Pruner
 
 ##### PyTorch
@@ -222,6 +215,7 @@ pruner.compress()
 ```
 ***
 
+
 ## ActivationAPoZRankFilter Pruner
 
 ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the smallest importance criterion `APoZ` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `APoZ` is explained in the paper [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250).
@@ -229,6 +223,8 @@ ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the sm
 The APoZ is defined as:
 
 ![](../../img/apoz.png)
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -248,6 +244,8 @@ Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
+
+
 ### User configuration for ActivationAPoZRankFilter Pruner
 
 ##### PyTorch
@@ -260,6 +258,8 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ## ActivationMeanRankFilter Pruner
 
 ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion `mean activation` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion `mean activation` is explained in section 2.2 of the paper[Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440). Other pruning criteria mentioned in this paper will be supported in future release.
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -279,6 +279,7 @@ Note: ActivationMeanRankFilterPruner is used to prune convolutional layers withi
 
 You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
 
+
 ### User configuration for ActivationMeanRankFilterPruner
 
 ##### PyTorch
@@ -287,6 +288,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ```
 ***
 
+
 ## TaylorFOWeightFilter Pruner
 
 TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based on estimated importance calculated from the first order taylor expansion on weights to achieve a preset level of network sparsity. The estimated importance of filters is defined as the paper [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf). Other pruning criteria mentioned in this paper will be supported in future release.
@@ -294,6 +296,8 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 > 
 
 ![](../../img/importance_estimation_sum.png)
+
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference [dependency-aware](./DependencyAware.md) for more details.
 
 ### Usage
 
@@ -380,12 +384,6 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.AGPPruner
-```
-
-##### Tensorflow
-
-```eval_rst
-..  autoclass:: nni.compression.tensorflow.AGPPruner
 ```
 
 ***
@@ -497,6 +495,39 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
+## AutoML for Model Compression Pruner
+
+AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+![](../../img/amc_pruner.jpg)
+
+For more details, please refer to [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf).
+
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import AMCPruner
+config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }]
+pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
+pruner.compress()
+```
+
+You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+
+#### User configuration for AutoCompress Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AMCPruner
+```
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -588,3 +619,35 @@ We try to reproduce the experiment result of the fully connected network on MNIS
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 The above figure shows the result of the fully connected network. `round0-sparsity-0.0` is the performance without pruning. Consistent with the paper, pruning around 80% also obtain similar performance compared to non-pruning, and converges a little faster. If pruning too much, e.g., larger than 94%, the accuracy becomes lower and convergence becomes a little slower. A little different from the paper, the trend of the data in the paper is relatively more clear.
+
+
+## Sensitivity Pruner
+For each round, SensitivityPruner prunes the model based on the sensitivity to the accuracy of each layer until meeting the final configured sparsity of the whole model:
+        1. Analyze the sensitivity of each layer in the current state of the model.
+        2. Prune each layer according to the sensitivity.
+
+For more details, please refer to [Learning both Weights and Connections for Efficient Neural Networks ](https://arxiv.org/abs/1506.02626).
+
+#### Usage
+
+PyTorch code
+
+```python
+from nni.compression.torch import SensitivityPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = SensitivityPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+# eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+pruner.compress(eval_args=[model], finetune_args=[model])
+```
+
+
+#### User configuration for Sensitivity Pruner
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```

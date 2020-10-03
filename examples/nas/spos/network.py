@@ -21,7 +21,7 @@ class ShuffleNetV2OneShot(nn.Module):
     ]
 
     def __init__(self, input_size=224, first_conv_channels=16, last_conv_channels=1024, n_classes=1000,
-                 op_flops_path="./data/op_flops_dict.pkl"):
+                 op_flops_path="./data/op_flops_dict.pkl", affine=False):
         super().__init__()
 
         assert input_size % 32 == 0
@@ -36,11 +36,12 @@ class ShuffleNetV2OneShot(nn.Module):
         self._first_conv_channels = first_conv_channels
         self._last_conv_channels = last_conv_channels
         self._n_classes = n_classes
+        self._affine = affine
 
         # building first layer
         self.first_conv = nn.Sequential(
             nn.Conv2d(3, first_conv_channels, 3, 2, 1, bias=False),
-            nn.BatchNorm2d(first_conv_channels, affine=False),
+            nn.BatchNorm2d(first_conv_channels, affine=affine),
             nn.ReLU(inplace=True),
         )
         self._feature_map_size //= 2
@@ -54,7 +55,7 @@ class ShuffleNetV2OneShot(nn.Module):
 
         self.conv_last = nn.Sequential(
             nn.Conv2d(p_channels, last_conv_channels, 1, 1, 0, bias=False),
-            nn.BatchNorm2d(last_conv_channels, affine=False),
+            nn.BatchNorm2d(last_conv_channels, affine=affine),
             nn.ReLU(inplace=True),
         )
         self.globalpool = nn.AvgPool2d(self._feature_map_size)
@@ -75,10 +76,10 @@ class ShuffleNetV2OneShot(nn.Module):
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
             choice_block = mutables.LayerChoice([
-                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride),
-                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride),
-                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride),
-                ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride)
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
+                ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
             ])
             result.append(choice_block)
 

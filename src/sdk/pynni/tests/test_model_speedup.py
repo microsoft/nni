@@ -145,18 +145,18 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
 
     def test_speedup_integration(self):
-        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2']:
+        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3']:
             Model = getattr(models, model_name)
             net = Model(pretrained=True, progress=False).to(device)
+            speedup_model = Model().to(device)
             net.eval() # this line is necessary
+            speedup_model.eval()
             # random generate the prune config for the pruner
             cfgs = generate_random_sparsity(net)
             pruner = L1FilterPruner(net, cfgs)
             pruner.compress()
             pruner.export_model(MODEL_FILE, MASK_FILE)
             pruner._unwrap_model()
-            speedup_model = Model().to(device)
-            speedup_model.eval()
             state_dict = torch.load(MODEL_FILE)
             speedup_model.load_state_dict(state_dict)
             zero_bn_bias(net)

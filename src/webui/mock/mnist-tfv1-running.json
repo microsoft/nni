@@ -7,7 +7,7 @@
         "id": "GD5MnU8G",
         "revision": 22,
         "execDuration": 172,
-        "logDir": "/home/user/nni/experiments/GD5MnU8G",
+        "logDir": "/home/user/nni-experiments/GD5MnU8G",
         "nextSequenceId": 3,
         "params": {
             "authorName": "default",

@@ -12,10 +12,12 @@ _END := $(shell echo -e '\033[0m')
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
     OS_SPEC := linux
+    NODE_URL := https://nodejs.org/dist/v10.22.1/node-v10.22.1-linux-x64.tar.xz
 else ifeq ($(UNAME_S), Darwin)
     OS_SPEC := darwin
+    NODE_URL := https://nodejs.org/dist/v10.22.1/node-v10.22.1-darwin-x64.tar.xz
 else
-	$(error platform $(UNAME_S) not supported)
+    $(error platform $(UNAME_S) not supported)
 endif
 
 ## Install directories
@@ -143,11 +145,11 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
+	wget $(NODE_URL) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
+	wget https://github.com/yarnpkg/yarn/releases/download/v1.22.5/yarn-v1.22.5.tar.gz -O $(NNI_YARN_TARBALL)
 
 .PHONY: install-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)

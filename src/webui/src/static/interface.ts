@@ -34,7 +34,7 @@ interface TableObj {
     startTime?: number;
     endTime?: number;
     intermediates: (MetricDataRecord | undefined)[];
-    parameters(axes: MultipleAxes): Map<SingleAxis, any>; 
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
     metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
@@ -44,12 +44,10 @@ interface TableRecord {
     startTime: number;
     endTime?: number;
     id: string;
-    jobId: string;
-    parameterId: string;
     duration: number;
     status: string;
     intermediateCount: number;
-    accuracy?: number;
+    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
     accDictionary: FinalType | undefined;
@@ -127,8 +125,6 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
-    trialId: string;
-    parameterId: string;
     type: string;
     sequence: number;
     data: string;
@@ -136,8 +132,6 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
-    jobId: string;
-    parameterId: string;
     sequenceId: number;
     status: string;
     startTime?: number;
@@ -215,8 +209,25 @@ interface EventMap {
 }
 
 export {
-    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
-    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
-    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap, SingleAxis, MultipleAxes
+    TableObj,
+    TableRecord,
+    SearchSpace,
+    FinalType,
+    ErrorParameter,
+    Parameters,
+    AccurPoint,
+    DetailAccurPoint,
+    TooltipForIntermediate,
+    TooltipForAccuracy,
+    Dimobj,
+    ParaObj,
+    Intermedia,
+    MetricDataRecord,
+    TrialJobInfo,
+    ExperimentParams,
+    ExperimentProfile,
+    NNIManagerStatus,
+    EventMap,
+    SingleAxis,
+    MultipleAxes
 };

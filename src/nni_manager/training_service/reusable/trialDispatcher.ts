@@ -9,10 +9,10 @@ import * as path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
+import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, uniqueString } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { ScheduleResultType } from '../../training_service/common/gpuData';
@@ -21,7 +21,7 @@ import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings, TrialGpuSummary } from './environment';
+import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -109,6 +109,10 @@ class TrialDispatcher implements TrainingService {
         }
 
         return trial;
+    }
+
+    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+        throw new MethodNotImplementedError();
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialDetail> {
@@ -583,7 +587,7 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const envId = uniqueString(5);
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
-        const environment = environmentService.createEnviornmentInfomation(envId, envName);
+        const environment = environmentService.createEnvironmentInformation(envId, envName);
 
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
@@ -733,7 +737,7 @@ class TrialDispatcher implements TrainingService {
                     if (environment.nodeCount > 1) {
                         let node = environment.nodes.get(nodeId);
                         if (node === undefined) {
-                            node = new NodeInfomation(nodeId);
+                            node = new NodeInformation(nodeId);
                             environment.nodes.set(nodeId, node);
                         }
                         const oldNodeStatus = node.status;
@@ -792,7 +796,7 @@ class TrialDispatcher implements TrainingService {
 
                     let node = environment.nodes.get(nodeId);
                     if (node === undefined) {
-                        node = new NodeInfomation(nodeId);
+                        node = new NodeInformation(nodeId);
                         trial.nodes.set(nodeId, node);
                     }
                     if (undefined === node) {

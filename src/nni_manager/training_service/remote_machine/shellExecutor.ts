@@ -32,6 +32,7 @@ class ShellExecutor {
     private tempPath: string = "";
     private isWindows: boolean = false;
     private channelDefaultOutputs: string[] = [];
+    private preCommand: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -47,6 +48,7 @@ class ShellExecutor {
             username: rmMeta.username,
             tryKeyboard: true,
         };
+        this.preCommand = rmMeta.preCommand;
         this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
         if (rmMeta.passwd !== undefined) {
             connectConfig.password = rmMeta.passwd;
@@ -175,7 +177,7 @@ class ShellExecutor {
     }
 
     public getRemoteExperimentRootDir(experimentId: string): string {
-        return this.joinPath(this.tempPath, 'nni', 'experiments', experimentId);
+        return this.joinPath(this.tempPath, 'nni-experiments', experimentId);
     }
 
     public joinPath(...paths: string[]): string {
@@ -349,6 +351,9 @@ class ShellExecutor {
         let exitCode: number;
 
         const commandIndex = randomInt(10000);
+        if(this.osCommands !== undefined){
+            command = this.osCommands.addPreCommand(this.preCommand, command);
+        }
         this.log.debug(`remoteExeCommand(${commandIndex}): [${command}]`);
 
         // Windows always uses shell, and it needs to disable to get it works.

@@ -1,12 +1,12 @@
-import * as React from 'react';
+import React, { lazy } from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
     Stack, Dropdown, DetailsList, IDetailsListProps, DetailsListLayoutMode, Icon, StackItem, DefaultButton,
     PrimaryButton, Modal, IDropdownOption, IColumn, Selection, SelectionMode, IconButton, TooltipHost, IStackTokens
-} from 'office-ui-fabric-react';
+} from '@fluentui/react';
 import ReactPaginate from 'react-paginate';
-import { LineChart, blocked, copy } from '../Buttons/Icon';
+import { LineChart, blocked, copy } from '../buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
@@ -25,7 +25,6 @@ import '../../static/style/button.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
 import { TrialManager } from '../../static/model/trialmanager';
-
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -50,7 +49,7 @@ function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boo
 
 const horizontalGapStackTokens: IStackTokens = {
     childrenGap: 20,
-    padding: 10,
+    padding: 10
 };
 
 interface TableListProps {
@@ -127,7 +126,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
             return ret;
         });
-    }
+    };
 
     private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
         // extra column, for a icon to expand the trial details panel

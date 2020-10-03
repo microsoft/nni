@@ -11,19 +11,21 @@ NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算�
 * [FPGM Pruner](#fpgm-pruner)
 * [L1Filter Pruner](#l1filter-pruner)
 * [L2Filter Pruner](#l2filter-pruner)
-* [APoZ Rank Pruner](#activationapozrankfilterpruner)
-* [Activation Mean Rank Pruner](#activationmeanrankfilterpruner)
-* [Taylor FO On Weight Pruner](#taylorfoweightfilterpruner)
+* [Activation APoZ Rank Filter Pruner](#activationAPoZRankFilter-pruner)
+* [Activation Mean Rank Filter Pruner](#activationmeanrankfilter-pruner)
+* [Taylor FO On Weight Pruner](#taylorfoweightfilter-pruner)
 
 **剪枝计划**
 * [AGP Pruner](#agp-pruner)
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
+* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [Sensitivity Pruner](#sensitivity-pruner)
 
 **其它**
 * [ADMM Pruner](#admm-pruner)
-* [Lottery Ticket 假设](#lottery-ticket-hypothesis)
+* [Lottery Ticket 假设](#Lottery-Ticket-假设)
 
 ## Level Pruner
 
@@ -37,7 +39,7 @@ TensorFlow 代码
 ```python
 from nni.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-pruner = LevelPruner(model_graph, config_list)
+pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
@@ -50,9 +52,19 @@ pruner.compress()
 ```
 
 #### Level Pruner 的用户配置
-* **sparsity:**，指定压缩的稀疏度。
 
-***
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.LevelPruner
+```
+
+##### Tensorflow
+
+```eval_rst
+..  autoclass:: nni.compression.tensorflow.LevelPruner
+```
+
 
 ## Slim Pruner
 
@@ -75,8 +87,11 @@ pruner.compress()
 
 #### Slim Pruner 的用户配置
 
-- **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 Slim Pruner 中仅支持 BatchNorm2d。
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SlimPruner
+```
 
 ### 重现实验
 
@@ -95,23 +110,13 @@ pruner.compress()
 
 这是一种一次性的 Pruner，FPGM Pruner 是论文 [Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration](https://arxiv.org/pdf/1811.00250.pdf) 的实现
 
-具有最小几何中位数的 FPGMPruner 修剪滤波器
+具有最小几何中位数的 FPGMPruner 修剪过滤器。
 
  ![](../../img/fpgm_fig1.png)
 > 以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 滤波器的规范偏差应该较大；(2) 滤波器的最小规范化值应该很小。 为了解决此问题，提出了新的滤波器修剪方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。
 
 ### 用法
 
-TensorFlow 代码
-```python
-from nni.compression.tensorflow import FPGMPruner
-config_list = [{
-    'sparsity': 0.5,
-    'op_types': ['Conv2D']
-}]
-pruner = FPGMPruner(model, config_list)
-pruner.compress()
-```
 PyTorch 代码
 ```python
 from nni.compression.torch import FPGMPruner
@@ -124,10 +129,11 @@ pruner.compress()
 ```
 
 #### FPGM Pruner 的用户配置
-- **sparsity:** 卷积滤波器要修剪的百分比。
-- **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
 
-***
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.FPGMPruner
+```
 
 ## L1Filter Pruner
 
@@ -157,8 +163,10 @@ pruner.compress()
 
 #### L1Filter Pruner 的用户配置
 
-- **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 L1Filter Pruner 中仅支持 Conv2d。
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.L1FilterPruner
+```
 
 ### 重现实验
 
@@ -190,14 +198,15 @@ pruner.compress()
 
 ### L2Filter Pruner 的用户配置
 
-- **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 在 L2Filter Pruner 中仅支持 Conv2d。
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.L2FilterPruner
+```
 ***
 
-## ActivationAPoZRankFilterPruner
+## ActivationAPoZRankFilter Pruner
 
-ActivationAPoZRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 `APoZ` 修剪滤波器，来达到预设的网络稀疏度。 剪枝标准 `APoZ` 的解释在论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250) 中。
+ActivationAPoZRankFilter Pruner 是从卷积层激活的输出，用最小的重要性标准 `APoZ` 修剪滤波器，来达到预设的网络稀疏度。 剪枝标准 `APoZ` 的解释在论文 [Network Trimming: A Data-Driven Neuron Pruning Approach towards Efficient Deep Architectures](https://arxiv.org/abs/1607.03250) 中。
 
 APoZ 定义为：
 
@@ -219,18 +228,20 @@ pruner.compress()
 
 注意：ActivationAPoZRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-查看示例进一步了解
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py)了解更多信息。
 
 ### ActivationAPoZRankFilterPruner 的用户配置
 
-- **sparsity:** 卷积滤波器要修剪的百分比。
-- **op_types:** 在 ActivationAPoZRankFilterPruner 中仅支持 Conv2d。
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.ActivationAPoZRankFilterPruner
+```
 ***
 
-## ActivationMeanRankFilterPruner
 
-ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准`平均激活`来修剪滤波器，来达到预设的网络稀疏度。 剪枝标准`平均激活`，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
+## ActivationMeanRankFilter Pruner
+
+ActivationMeanRankFilter Pruner 是从卷积层激活的输出，用最小的重要性标准`平均激活`来修剪滤波器，来达到预设的网络稀疏度。 剪枝标准`平均激活`，在论文 [Pruning Convolutional Neural Networks for Resource Efficient Inference](https://arxiv.org/abs/1611.06440) 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
 
 ### 用法
 
@@ -248,18 +259,19 @@ pruner.compress()
 
 注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 `op_types` 字段仅支持卷积层。
 
-查看示例进一步了解
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py)了解更多信息。
 
 ### ActivationMeanRankFilterPruner 的用户配置
 
-- **sparsity:** 卷积滤波器要修剪的百分比。
-- **op_types:** 在 ActivationMeanRankFilterPruner 中仅支持 Conv2d。
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.ActivationMeanRankFilterPruner
+```
 ***
 
-## TaylorFOWeightFilterPruner
+## TaylorFOWeightFilter Pruner
 
-TaylorFOWeightFilterPruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 滤波器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
+TaylorFOWeightFilter Pruner 根据权重上的一阶泰勒展开式，来估计重要性并进行剪枝，从而达到预设的网络稀疏度。 过滤器的估计重要性在论文 [Importance Estimation for Neural Network Pruning](http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf) 中有定义。 本文中提到的其他修剪标准将在以后的版本中支持。
 >
 
 ![](../../img/importance_estimation_sum.png)
@@ -278,25 +290,29 @@ pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
 pruner.compress()
 ```
 
-查看示例进一步了解
 
-### TaylorFOWeightFilterPruner 的用户配置
+#### TaylorFOWeightFilter Pruner 的用户配置
 
-- **sparsity:** 卷积滤波器要修剪的百分比。
-- **op_types:** 当前 TaylorFOWeightFilterPruner 中仅支持 Conv2d。
-
+##### PyTorch
+```eval_rst
+..  autoclass:: nni.compression.torch.TaylorFOWeightFilterPruner
+```
 ***
 
+
 ## AGP Pruner
+
 这是一种迭代的 Pruner，在 [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/abs/1710.01878)中，作者 Michael Zhu 和 Suyog Gupta 提出了一种逐渐修建权重的算法。
-> 我们引入了一种新的自动梯度剪枝算法。这种算法从初始的稀疏度值 si（一般为 0）开始，通过 n 步的剪枝操作，增加到最终所需的稀疏度 sf。从训练步骤 t0 开始，以 ∆t 为剪枝频率： ![](../../img/agp_pruner.png) 在神经网络训练时‘逐步增加网络稀疏度时，每训练  ∆t 步更新一次权重剪枝的二进制掩码。同时也允许训练步骤恢复因为剪枝而造成的精度损失。 根据我们的经验，∆t 设为 100 到 1000 个训练步骤之间时，对于模型最终精度的影响可忽略不计。 一旦模型达到了稀疏度目标 sf，权重掩码将不再更新。 公式背后的稀疏函数直觉。
+> 引入了一种新的自动逐步剪枝算法，在 n 个剪枝步骤中，稀疏度从初始的稀疏度值 si（通常为 0）增加到最终的稀疏度值 sf，从训练步骤 t0 开始，剪枝频率 ∆t：  ![](../../img/agp_pruner.png)
+> 在训练网络时，每隔 ∆t 步更新二值权重掩码，以逐渐增加网络的稀疏性，同时允许网络训练步骤从任何剪枝导致的精度损失中恢复。 根据我们的经验，∆t 设为 100 到 1000 个训练步骤之间时，对于模型最终精度的影响可忽略不计。 一旦模型达到了稀疏度目标 sf，权重掩码将不再更新。 背后的稀疏函数直觉在公式（1）。
 
 ### 用法
+
 通过下列代码，可以在 10 个 Epoch 中将权重稀疏度从 0% 剪枝到 80%。
 
 PyTorch 代码
 ```python
-from nni.compression.torch import AGP_Pruner
+from nni.compression.torch import AGPPruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
@@ -314,7 +330,7 @@ config_list = [{
 # 因此，必须要有 optimizer 才能完成模型剪枝。
 optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
-pruner = AGP_Pruner(model, config_list, optimizer, pruning_algorithm='level')
+pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm='level')
 pruner.compress()
 ```
 
@@ -334,14 +350,15 @@ PyTorch 代码
 ```python
 pruner.update_epoch(epoch)
 ```
-查看示例进一步了解
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py)了解更多信息。
 
 #### AGP Pruner 的用户配置
-* **initial_sparsity:** 指定了 Compressor 开始压缩的稀疏度。
-* **final_sparsity:** 指定了 Compressor 压缩结束时的稀疏度。
-* **start_epoch:** 指定了 Compressor 开始压缩时的 Epoch 数值，默认为 0。
-* **end_epoch:** 指定了 Compressor 结束压缩时的 Epoch 数值。
-* **frequency:** 指定了 Compressor 每过多少个 Epoch 进行一次剪枝，默认 frequency=1。
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AGPPruner
+```
 
 ***
 
@@ -370,50 +387,11 @@ pruner.compress()
 
 #### NetAdapt Pruner 的用户配置
 
-- **sparsity:** 整体的稀疏度目标。
-- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
-- **short_term_fine_tuner:** 用于快速微调掩码模型。 此函数只有 `model` 参数，在每次剪枝迭代后，对模型进行快速微调。
+##### PyTorch
 
-    示例：
-    ```python
-    >>> def short_term_fine_tuner(model, epoch=3):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     criterion = torch.nn.CrossEntropyLoss()
-    >>>     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-    >>>     model.train()
-    >>>     for _ in range(epoch):
-    >>>         for batch_idx, (data, target) in enumerate(train_loader):
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             optimizer.zero_grad()
-    >>>             output = model(data)
-    >>>             loss = criterion(output, target)
-    >>>             loss.backward()
-    >>>             optimizer.step()
-    ```
-- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。
-
-    示例::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # 获得最大 log 概率分布的索引
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
-- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **sparsity_per_iteration:** 每次迭代要剪枝的稀疏度。 NetAdapt Pruner 在每次迭代时，按相同水平对模型进行剪枝，以便逐步满足计算资源预算。
-- **experiment_data_dir:** 保存实验数据的路径，包括为基本剪枝算法生成的 config_list，以及剪枝后模型的性能。
+```eval_rst
+..  autoclass:: nni.compression.torch.NetAdaptPruner
+```
 
 
 ## SimulatedAnnealing Pruner
@@ -447,38 +425,17 @@ pruner.compress()
 
 #### SimulatedAnnealing Pruner 的用户配置
 
-- **sparsity:** 整体的稀疏度目标。
-- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
-- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。 示例::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # 获得最大 log 概率分布的索引
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
-- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **start_temperature:** 模拟退火算法相关参数。
-- **stop_temperature:** 模拟退火算法相关参数。
-- **cool_down_rate:** 模拟退火算法相关参数。
-- **perturbation_magnitude:** 初始化对稀疏度的扰动幅度。 幅度会随着当前温度变小。
-- **experiment_data_dir:** 保存实验数据的路径，包括为基本剪枝算法生成的 config_list，剪枝后模型的性能，以及剪枝历史。
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SimulatedAnnealingPruner
+```
 
 
 ## AutoCompress Pruner
 每一轮中，AutoCompressPruner 会用相同的稀疏度对模型进行剪枝，从而达到总体的稀疏度：
 
-        1. 使用 SimualtedAnnealingPruner 生成稀疏度分布
+        1. 使用 SimulatedAnnealingPruner 生成稀疏度分布
         2. 执行基于 ADMM 的结构化剪枝，为下一轮生成剪枝结果。
            这里会使用 `speedup` 来执行真正的剪枝。
 
@@ -505,54 +462,43 @@ pruner.compress()
 
 #### AutoCompress Pruner 的用户配置
 
-- **sparsity:** 整体的稀疏度目标。
-- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
-- **trainer:** 用于第一个子问题的函数。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 `callback` 的逻辑在 Pruner 中实现，用户只需要在 `loss.backward()` 和 `optimizer.step()` 之间插入 `callback()` 即可。 示例：
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # 在 loss.backward() 和 optimizer.step() 中插入 callback
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **evaluator:** 用于评估掩码模型。 此函数只有 `model` 参数，会返回一个标量值。 示例::
-    ```python
-    >>> def evaluator(model):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     val_loader = ...
-    >>>     model.eval()
-    >>>     correct = 0
-    >>>     with torch.no_grad():
-    >>>         for data, target in val_loader:
-    >>>             data, target = data.to(device), target.to(device)
-    >>>             output = model(data)
-    >>>             # 获得最大 log 概率分布的索引
-    >>>             pred = output.argmax(dim=1, keepdim=True)
-    >>>             correct += pred.eq(target.view_as(pred)).sum().item()
-    >>>     accuracy = correct / len(val_loader.dataset)
-    >>>     return accuracy
-    ```
-- **dummy_input:** 用于模型加速的模拟输入，在传入前应该复制到正确的设备上。
-- **iterations:** 总共的迭代次数。
-- **optimize_mode:** 优化模式，`maximize` 或 `minimize`，默认为`maximize`。
-- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
-- **start_temperature:** 模拟退火算法相关参数。
-- **stop_temperature:** 模拟退火算法相关参数。
-- **cool_down_rate:** 模拟退火算法相关参数。
-- **perturbation_magnitude:** 初始化对稀疏度的扰动幅度。 幅度会随着当前温度变小。
-- **admm_num_iterations:** ADMM Pruner 的迭代次数。
-- **admm_training_epochs:** ADMMPruner 的第一个优化子问题训练的 Epoch 数量。
-- **experiment_data_dir:** 存储临时实验数据的目录。
+##### PyTorch
 
+```eval_rst
+..  autoclass:: nni.compression.torch.AutoCompressPruner
+```
+
+## AutoML for Model Compression Pruner
+
+自动机器学习用于模型压缩剪枝器（AMCPruner）借助强化学习来提供模型压缩策略。 这种基于学习的压缩策略比传统的基于规则的压缩策略有更高的压缩比，更好地保存了精度，节省了人力。
+
+![](../../img/amc_pruner.jpg)
+
+更多详细信息，参考 [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf)。
+
+
+#### 用法
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import AMCPruner
+config_list = [{
+        'op_types': ['Conv2d', 'Linear']
+    }]
+pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
+pruner.compress()
+```
+
+参考[示例](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/)了解更多信息。
+
+#### AutoCompress Pruner 的用户配置
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.AMCPruner
+```
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) 是一种数学优化技术，它将原始的非凸问题分解为两个可以迭代解决的子问题。 在权重修剪问题中，这两个子问题分别通过 1) 梯度下降算法和 2) 欧几里得投影来解决。
@@ -586,37 +532,17 @@ pruner.compress()
 
 #### ADMM Pruner 的用户配置
 
-- **sparsity:**，指定压缩的稀疏度。
-- **op_types:** 要剪枝的操作类型。 如果 `base_algo` 是 `l1` 或 `l2`，那么 `op_types` 仅支持 `Conv2d`。
-- **trainer:** 用于 ADMM 优化中第一个子问题的函数。注意，微调中不会使用它。 用户需要实现此函数，来训练 PyTorch 模型，其参数包括：`model, optimizer, criterion, epoch, callback`。 这里的 `callback` 是 L2 规范化，参考原始论文中的公式 (7)。 `callback` 的逻辑在 Pruner 中实现，用户只需要在 `loss.backward()` 和 `optimizer.step()` 之间插入 `callback()` 即可。
+##### PyTorch
 
-    示例：
-    ```python
-    >>> def trainer(model, criterion, optimizer, epoch, callback):
-    >>>     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    >>>     train_loader = ...
-    >>>     model.train()
-    >>>     for batch_idx, (data, target) in enumerate(train_loader):
-    >>>         data, target = data.to(device), target.to(device)
-    >>>         optimizer.zero_grad()
-    >>>         output = model(data)
-    >>>         loss = criterion(output, target)
-    >>>         loss.backward()
-    >>>         # 在 loss.backward() 和 optimizer.step() 中插入 callback
-    >>>         if callback:
-    >>>             callback()
-    >>>         optimizer.step()
-    ```
-- **num_iterations:** 迭代次数。
-- **training_epochs:** 第一个子问题训练的 Epoch 数量。
-- **row:** ADMM 训练的惩罚参数。
-- **base_algo:** 基础的剪枝算法。 `level`，`l1` 或 `l2`，默认为 `l1`。 给定不同运算符的系数分布，指定的 `base_algo` 会决定对哪个滤波器、通道、权重进行剪枝。
+```eval_rst
+..  autoclass:: nni.compression.torch.ADMMPruner
+```
 
 
 ## Lottery Ticket 假设
 [The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks](https://arxiv.org/abs/1803.03635), 作者 Jonathan Frankle 和 Michael Carbin，提供了全面的测量和分析，并阐明了 *lottery ticket 假设*: 密集的、随机初始化的、包含子网络的前馈网络 (*winning tickets*) -- 在单独训练时 -- 在相似的迭代次数后达到了与原始网络相似的准确度。
 
-本文中，作者使用叫做*迭代剪枝*的方法：
+本文中，作者使用叫做*迭代*修剪的方法：
 > 1. 随机初始化一个神经网络 f(x;theta_0) (其中 theta_0 为 D_{theta}).
 > 2. 将网络训练 j 次，得出参数 theta_j。
 > 3. 在 theta_j 修剪参数的 p%，创建掩码 m。
@@ -648,15 +574,51 @@ for _ in pruner.get_prune_iterations():
 
 *稍后支持 TensorFlow 版本。*
 
-#### LotteryTicketPruner 的用户配置
+#### LotteryTicket Pruner 的用户配置
 
-* **prune_iterations:** 迭代修剪的次数。
-* **sparsity:** 压缩完成后的最终稀疏度。
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.LotteryTicketPruner
+```
 
 ### 重现实验
 
-在重现时，在 MNIST 使用了与论文相同的配置。 [此处](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py)为实现代码。 在此实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
+在重现时，在 MNIST 使用了与论文相同的配置。 [此处](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py)为实现代码。 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
 
 ![](../../img/lottery_ticket_mnist_fc.png)
 
 上图展示了全连接网络的结果。 `round0-sparsity-0.0` 是没有剪枝的性能。 与论文一致，修剪约 80% 也能获得与不修剪时相似的性能，收敛速度也会更快。 如果修剪过多（例如，大于 94%），则精度会降低，收敛速度会稍慢。 与本文稍有不同，论文中数据的趋势比较明显。
+
+
+## Sensitivity Pruner
+在每一轮，SensitivityPruner 根据对每一层准确率的敏感度对模型进行剪枝，直到满足整个模型最终配置的稀疏度：
+
+        1. 分析模型当前状态下各层的敏感度。
+        2. 根据敏感度对每一层剪枝。
+
+更多详细信息，参考 [Learning both Weights and Connections for Efficient Neural Networks ](https://arxiv.org/abs/1506.02626)。
+
+#### 用法
+
+PyTorch 代码
+
+```python
+from nni.compression.torch import SensitivityPruner
+config_list = [{
+        'sparsity': 0.5,
+        'op_types': ['Conv2d']
+    }]
+pruner = SensitivityPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+# eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+pruner.compress(eval_args=[model], finetune_args=[model])
+```
+
+
+#### Sensitivity Pruner 的用户配置
+
+##### PyTorch
+
+```eval_rst
+..  autoclass:: nni.compression.torch.SensitivityPruner
+```

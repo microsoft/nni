@@ -3,12 +3,14 @@
 
 import os
 import json
+import shutil
 from .constants import NNICTL_HOME_DIR
+from .command_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, file_path):
-        config_path = os.path.join(NNICTL_HOME_DIR, str(file_path))
+    def __init__(self, file_path, home_dir=NNICTL_HOME_DIR):
+        config_path = os.path.join(home_dir, str(file_path))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
@@ -49,18 +51,18 @@ class Config:
 
 class Experiments:
     '''Maintain experiment list'''
-    def __init__(self):
-        os.makedirs(NNICTL_HOME_DIR, exist_ok=True)
-        self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
+    def __init__(self, home_dir=NNICTL_HOME_DIR):
+        os.makedirs(home_dir, exist_ok=True)
+        self.experiment_file = os.path.join(home_dir, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, expId, port, time, file_name, platform, experiment_name):
+    def add_experiment(self, expId, port, startTime, file_name, platform, experiment_name, endTime='N/A', status='INITIALIZED'):
         '''set {key:value} paris to self.experiment'''
         self.experiments[expId] = {}
         self.experiments[expId]['port'] = port
-        self.experiments[expId]['startTime'] = time
-        self.experiments[expId]['endTime'] = 'N/A'
-        self.experiments[expId]['status'] = 'INITIALIZED'
+        self.experiments[expId]['startTime'] = startTime
+        self.experiments[expId]['endTime'] = endTime
+        self.experiments[expId]['status'] = status
         self.experiments[expId]['fileName'] = file_name
         self.experiments[expId]['platform'] = platform
         self.experiments[expId]['experimentName'] = experiment_name
@@ -77,7 +79,13 @@ class Experiments:
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
         if expId in self.experiments:
-            self.experiments.pop(expId)
+            fileName = self.experiments.pop(expId).get('fileName')
+            if fileName:
+                logPath = os.path.join(NNICTL_HOME_DIR, fileName)
+                try:
+                    shutil.rmtree(logPath)
+                except FileNotFoundError:
+                    print_error('{0} does not exist.'.format(logPath))
         self.write_file()
 
     def get_all_experiments(self):

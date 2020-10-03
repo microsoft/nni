@@ -26,7 +26,7 @@
     "stream-buffers": "^3.0.2",
     "tail-stream": "^0.3.4",
     "tar": "^6.0.2",
-    "tree-kill": "^1.2.0",
+    "tree-kill": "^1.2.2",
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.4",
     "typescript-string-operations": "^1.3.1",
@@ -72,7 +72,9 @@
     "hoek": "^4.2.1",
     "js-yaml": "^3.13.1",
     "npm": "^6.13.4",
-    "acorn": ">=7.1.1"
+    "acorn": ">=7.1.1",
+    "node-forge": "^0.10.0",
+    "dot-prop": "^4.2.1"
   },
   "engines": {
     "node": ">=10.0.0"

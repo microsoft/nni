@@ -7,14 +7,14 @@ from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, 
 from .url_utils import experiment_url, import_data_url
 from .config_utils import Config
 from .common_utils import get_json_content, print_normal, print_error, print_warning
-from .nnictl_utils import get_experiment_port, get_config_filename
+from .nnictl_utils import get_experiment_port, get_config_filename, detect_process
 from .launcher_utils import parse_time
 from .constants import REST_TIME_OUT, TUNERS_SUPPORTING_IMPORT_DATA, TUNERS_NO_NEED_TO_IMPORT_DATA
 
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
     if not str(value).isdigit() or int(value) < start or int(value) > end:
-        raise ValueError('%s must be a digit from %s to %s' % (value, start, end))
+        raise ValueError('value (%s) must be a digit from %s to %s' % (value, start, end))
 
 def validate_file(path):
     '''validate if a file exist'''
@@ -115,7 +115,19 @@ def import_data(args):
     validate_file(args.filename)
     validate_dispatcher(args)
     content = load_search_space(args.filename)
-    args.port = get_experiment_port(args)
+
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, _ = check_rest_server_quick(rest_port)
+    if not running:
+        print_error('Restful server is not running')
+        return
+
+    args.port = rest_port
     if args.port is not None:
         if import_data_to_restful_server(args, content):
             pass

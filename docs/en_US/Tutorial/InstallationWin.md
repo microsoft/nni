@@ -2,7 +2,7 @@
 
 ## Prerequires
 
-* Python 3.5 (or above) 64-bit. [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is highly recommended to manage multiple Python environments on Windows.
+* Python 3.6 (or above) 64-bit. [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html) is highly recommended to manage multiple Python environments on Windows.
 
 * If it's a newly installed Python environment, it needs to install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) to support build NNI dependencies like `scikit-learn`.
 
@@ -29,7 +29,7 @@ If you want to contribute to NNI, refer to [setup development environment](Setup
 * From source code
 
     ```bat
-    git clone -b v1.7 https://github.com/Microsoft/nni.git
+    git clone -b v1.8 https://github.com/Microsoft/nni.git
     cd nni
     powershell -ExecutionPolicy Bypass -file install.ps1
     ```
@@ -41,7 +41,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Clone examples within source code.
 
     ```bat
-    git clone -b v1.7 https://github.com/Microsoft/nni.git
+    git clone -b v1.8 https://github.com/Microsoft/nni.git
     ```
 
 * Run the MNIST example.
