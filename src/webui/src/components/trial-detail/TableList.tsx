@@ -18,6 +18,7 @@ import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { SearchSpace, TableObj, TrialJobInfo, MultipleAxes } from '../../static/interface';
 import ExpandableDetails from '../public-child/ExpandableDetails';
+import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
@@ -42,6 +43,8 @@ const searchOptionLiterals = {
     status: 'Status',
     parameters: 'Parameters'
 };
+
+const defaultDisplayedColumns = ['sequenceId', 'id', 'startTime', 'endTime', 'duration', 'status', 'metrics/default'];
 
 function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
     const key = columnKey as keyof T;
@@ -73,10 +76,12 @@ interface SortInfo {
 
 interface TableListState {
     displayedItems: any[];
+    displayedColumns: string[];
     columns: IColumn[];
     searchType: SearchOptionType;
     searchText: string;
     tablePageSize: number;
+    customizeColumnsDialogVisible: boolean;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -85,10 +90,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             displayedItems: [],
+            displayedColumns: defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
             searchText: '',
-            tablePageSize: 20
+            tablePageSize: 20,
+            customizeColumnsDialogVisible: false
         };
     }
 
@@ -135,7 +142,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 duration: convertDuration(trial.duration),
                 status: trial.status,
                 intermediateCount: trial.intermediates.length,
-                expandDetails: false
+                _expandDetails: false // hidden field names should start with `_`
             };
             for (const [k, v] of trial.parameters(searchSpace)) {
                 ret[`space/${k.baseName}`] = v;
@@ -151,7 +158,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         // extra column, for a icon to expand the trial details panel
         const columns: IColumn[] = [
             {
-                key: 'expand',
+                key: '_expand',
                 name: '',
                 onRender: (item, index) => {
                     return (
@@ -159,11 +166,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             aria-hidden={true}
                             iconName='ChevronRight'
                             styles={{
-                                root: { transition: 'all 0.2s', transform: `rotate(${item.expandDetails ? 90 : 0}deg)` }
+                                root: {
+                                    transition: 'all 0.2s',
+                                    transform: `rotate(${item._expandDetails ? 90 : 0}deg)`
+                                }
                             }}
                             onClick={event => {
                                 event.stopPropagation();
-                                const newItem: any = { ...item, expandDetails: !item.expandDetails };
+                                const newItem: any = { ...item, _expandDetails: !item._expandDetails };
                                 const newItems = [...this.state.displayedItems];
                                 newItems[index!] = newItem;
                                 this.setState({
@@ -205,10 +215,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         console.log('Compare button clicked'); // eslint-disable-line no-console
     }
 
-    private _showCustomizeColumnDialog(): void {
-        console.log('Customized column clicked'); // eslint-disable-line no-console
-    }
-
     private _updateTableSource(): void {
         // call this method when trials or the computation of trial filter has changed
         const items = this._trialsToTableItems(this._filterTrials(this.props.tableSource));
@@ -224,6 +230,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 columns: []
             });
         }
+    }
+
+    private _updateDisplayedColumns(displayedColumns: string[]): void {
+        this.setState({
+            displayedColumns: displayedColumns
+        });
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
@@ -276,7 +288,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             { key: '50', text: '50 items per page' },
             { key: 'all', text: 'All items' }
         ];
-        const { displayedItems, columns, searchType } = this.state;
+        const { displayedItems, columns, searchType, customizeColumnsDialogVisible, displayedColumns } = this.state;
 
         console.log(displayedItems); // eslint-disable-line no-console
         console.log(columns); // eslint-disable-line no-console
@@ -296,7 +308,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             <DefaultButton
                                 className='allList-button-gap'
                                 text='Customize columns'
-                                onClick={this._showCustomizeColumnDialog.bind(this)}
+                                onClick={() => {
+                                    this.setState({ customizeColumnsDialogVisible: true });
+                                }}
                             />
                             <Dropdown
                                 selectedKey={searchType}
@@ -319,12 +333,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </Stack>
                 {columns && (
                     <DetailsList
-                        columns={columns}
+                        columns={columns.filter(column => displayedColumns.includes(column.key))}
                         items={displayedItems}
                         compact={true}
                         selectionMode={SelectionMode.multiple}
                         onRenderRow={props => {
-                            return <ExpandableDetails detailsProps={props!} isExpand={props!.item.expandDetails} />;
+                            return <ExpandableDetails detailsProps={props!} isExpand={props!.item._expandDetails} />;
                         }}
                     />
                 )}
@@ -351,6 +365,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             activeClassName={'active'} />
 
                     </Stack> */}
+                <ChangeColumnComponent
+                    hidden={!customizeColumnsDialogVisible}
+                    selectedColumns={displayedColumns}
+                    allColumns={columns
+                        .filter(column => !column.key.startsWith('_'))
+                        .map(column => ({ key: column.key, name: column.fieldName! }))}
+                    onSelectedChange={this._updateDisplayedColumns.bind(this)}
+                    onHideDialog={() => {
+                        this.setState({ customizeColumnsDialogVisible: false });
+                    }}
+                />
             </div>
         );
     }

@@ -8,14 +8,14 @@ interface ChangeColumnState {
 
 interface ChangeColumnProps {
     hidden: boolean;
-    allColumns: SimpleColumn[];  // all column List
-    selectedColumns: string[];  // user selected column list
-    changeColumn: (val: string[]) => void;
-    onHidden: () => void;
+    allColumns: SimpleColumn[]; // all column List
+    selectedColumns: string[]; // user selected column list
+    onSelectedChange: (val: string[]) => void;
+    onHideDialog: () => void;
 }
 
 interface SimpleColumn {
-    key: string;  // key for management
+    key: string; // key for management
     name: string; // name to display
 }
 
@@ -37,7 +37,11 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         return (ev: any, checked: boolean): void => this.onCheckboxChange(ev, label, checked);
     };
 
-    onCheckboxChange = (ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined, label: string, val?: boolean): void => {
+    onCheckboxChange = (
+        ev: React.FormEvent<HTMLElement | HTMLInputElement> | undefined,
+        label: string,
+        val?: boolean
+    ): void => {
         const source: string[] = [...this.state.currentSelected];
         if (val === true) {
             if (!source.includes(label)) {
@@ -46,18 +50,18 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
             }
         } else {
             // remove from source
-            const result = source.filter((item) => item !== label);
+            const result = source.filter(item => item !== label);
             this.setState({ currentSelected: result });
         }
     };
 
     saveUserSelectColumn = (): void => {
         const { currentSelected } = this.state;
-        const { allColumns } = this.props;
+        const { allColumns, onSelectedChange } = this.props;
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
-        this.props.changeColumn(selectedColumns);
+        onSelectedChange(selectedColumns);
         this.hideDialog();
-    }
+    };
 
     // user exit dialog
     cancelOption = (): void => {
@@ -68,8 +72,8 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     };
 
     private hideDialog = (): void => {
-        this.props.onHidden();
-    }
+        this.props.onHideDialog();
+    };
 
     render(): React.ReactNode {
         const { allColumns, hidden } = this.props;
@@ -89,17 +93,22 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                     }}
                 >
                     <div className='columns-height'>
-                        {allColumns.map(item =>
+                        {allColumns.map(item => (
                             <Checkbox
                                 key={item.key}
                                 label={item.name}
                                 checked={currentSelected.includes(item.key)}
                                 onChange={this.makeChangeHandler(item.key)}
                                 styles={{ root: { marginBottom: 8 } }}
-                            />)}
+                            />
+                        ))}
                     </div>
                     <DialogFooter>
-                        <PrimaryButton text='Save' onClick={this.saveUserSelectColumn} />
+                        <PrimaryButton
+                            text='Save'
+                            onClick={this.saveUserSelectColumn}
+                            disabled={currentSelected.length === 0}
+                        />
                         <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
                 </Dialog>
