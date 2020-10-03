@@ -12,7 +12,6 @@ interface ExpandableDetailsState {
 }
 
 class ExpandableDetails extends React.Component<ExpandableDetailsProps, ExpandableDetailsState> {
-
     constructor(props: ExpandableDetailsProps) {
         super(props);
         this.state = { isExpand: false };
