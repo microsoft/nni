@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { DetailsRow, IDetailsRowBaseProps } from 'office-ui-fabric-react';
+import { DetailsRow, IDetailsRowBaseProps } from '@fluentui/react';
 import OpenRow from '../public-child/OpenRow';
 
 interface ExpandableDetailsProps {

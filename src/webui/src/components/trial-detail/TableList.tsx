@@ -27,6 +27,7 @@ import '../../static/style/button.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
 import { TrialManager } from '../../static/model/trialmanager';
+import PaginationTable from '../public-child/PaginationTable';
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -59,28 +60,18 @@ function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boo
     });
 }
 
-const horizontalGapStackTokens: IStackTokens = {
-    childrenGap: 20,
-    padding: 10
-};
-
 interface TableListProps {
     tableSource: TableObj[];
     trialsUpdateBroadcast: number;
 }
 
-interface SortInfo {
-    field: string;
-    isDescend?: boolean;
-}
-
 interface TableListState {
+    unpaginatedDisplayedItems: any[];
     displayedItems: any[];
     displayedColumns: string[];
     columns: IColumn[];
     searchType: SearchOptionType;
     searchText: string;
-    tablePageSize: number;
     customizeColumnsDialogVisible: boolean;
 }
 
@@ -89,24 +80,52 @@ class TableList extends React.Component<TableListProps, TableListState> {
         super(props);
 
         this.state = {
+            unpaginatedDisplayedItems: [],
             displayedItems: [],
             displayedColumns: defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
             searchText: '',
-            tablePageSize: 20,
             customizeColumnsDialogVisible: false
         };
     }
 
-    private _onTablePageSizeSelect = (
-        event: React.FormEvent<HTMLDivElement>,
-        item: IDropdownOption | undefined
-    ): void => {
-        if (item !== undefined) {
-            this.setState({ tablePageSize: item.text === 'all' ? -1 : parseInt(item.text, 10) });
+    /* Search related methods */
+
+    // This functions as the filter for the final trials displayed in the current table
+    private _filterTrials(trials: TableObj[]): TableObj[] {
+        const { searchText, searchType } = this.state;
+        // search a trial by Trial No. | Trial ID | Parameters | Status
+        let searchFilter = (_: TableObj): boolean => true;
+        if (searchText.trim()) {
+            if (searchType === 'id') {
+                searchFilter = (trial): boolean => trial.id.toUpperCase().includes(searchText.toUpperCase());
+            } else if (searchType === 'trialnum') {
+                searchFilter = (trial): boolean => trial.sequenceId.toString() === searchText;
+            } else if (searchType === 'status') {
+                searchFilter = (trial): boolean => trial.status.toUpperCase().includes(searchText.toUpperCase());
+            } else if (searchType === 'parameters') {
+                // TODO: support filters like `x: 2` (instead of `'x': 2`)
+                searchFilter = (trial): boolean => JSON.stringify(trial.description.parameters).includes(searchText);
+            }
         }
-    };
+        return trials.filter(searchFilter);
+    }
+
+    private _updateSearchFilterType(_event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void {
+        if (item !== undefined) {
+            const value = item.key.toString();
+            if (searchOptionLiterals.hasOwnProperty(value)) {
+                this.setState({ searchType: value as SearchOptionType }, this._updateTableSource);
+            }
+        }
+    }
+
+    private _updateSearchText(ev: React.ChangeEvent<HTMLInputElement>): void {
+        this.setState({ searchText: ev.target.value }, this._updateTableSource);
+    }
+
+    /* Table basic function related methods */
 
     private _onColumnClick(ev: React.MouseEvent<HTMLElement>, column: IColumn): void {
         // handle the click events on table header (do sorting)
@@ -248,46 +267,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         this._updateTableSource();
     }
 
-    // This functions as the filter for the final trials displayed in the current table
-    private _filterTrials(trials: TableObj[]): TableObj[] {
-        const { searchText, searchType } = this.state;
-        // search a trial by Trial No. | Trial ID | Parameters | Status
-        let searchFilter = (_: TableObj): boolean => true;
-        if (searchText.trim()) {
-            if (searchType === 'id') {
-                searchFilter = (trial): boolean => trial.id.toUpperCase().includes(searchText.toUpperCase());
-            } else if (searchType === 'trialnum') {
-                searchFilter = (trial): boolean => trial.sequenceId.toString() === searchText;
-            } else if (searchType === 'status') {
-                searchFilter = (trial): boolean => trial.status.toUpperCase().includes(searchText.toUpperCase());
-            } else if (searchType === 'parameters') {
-                // TODO: support filters like `x: 2` (instead of `'x': 2`)
-                searchFilter = (trial): boolean => JSON.stringify(trial.description.parameters).includes(searchText);
-            }
-        }
-        return trials.filter(searchFilter);
-    }
-
-    private _updateSearchFilterType(_event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void {
-        if (item !== undefined) {
-            const value = item.key.toString();
-            if (searchOptionLiterals.hasOwnProperty(value)) {
-                this.setState({ searchType: value as SearchOptionType }, this._updateTableSource);
-            }
-        }
-    }
-
-    private _updateSearchText(ev: React.ChangeEvent<HTMLInputElement>): void {
-        this.setState({ searchText: ev.target.value }, this._updateTableSource);
-    }
-
     render(): React.ReactNode {
-        const perPageOptions = [
-            { key: '10', text: '10 items per page' },
-            { key: '20', text: '20 items per page' },
-            { key: '50', text: '50 items per page' },
-            { key: 'all', text: 'All items' }
-        ];
         const { displayedItems, columns, searchType, customizeColumnsDialogVisible, displayedColumns } = this.state;
 
         console.log(displayedItems); // eslint-disable-line no-console
@@ -331,8 +311,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         </Stack>
                     </StackItem>
                 </Stack>
-                {columns && (
-                    <DetailsList
+                {columns && displayedItems && (
+                    <PaginationTable
                         columns={columns.filter(column => displayedColumns.includes(column.key))}
                         items={displayedItems}
                         compact={true}
@@ -342,29 +322,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         }}
                     />
                 )}
-                {/* 
-                    <Stack horizontal horizontalAlign='end' verticalAlign='baseline' styles={{ root: { padding: 10 } }} tokens={horizontalGapStackTokens}>
-                        <Dropdown
-                            selectedKey={this.state.perPage === this.props.tableSource.length ? 'all' : String(this.state.perPage)}
-                            options={perPageOptions}
-                            onChange={this.updatePerPage}
-                            styles={{ dropdown: { width: 150 } }} />
-
-                        <ReactPaginate
-                            previousLabel={'<'}
-                            nextLabel={'>'}
-                            breakLabel={'...'}
-                            breakClassName={'break'}
-                            pageCount={this.state.pageCount}
-                            marginPagesDisplayed={2}
-                            pageRangeDisplayed={2}
-                            onPageChange={this.handlePageClick}
-                            containerClassName={(this.props.tableSource.length == 0 ? 'pagination hidden' : 'pagination')}
-                            subContainerClassName={'pages pagination'}
-                            disableInitialCallback={false}
-                            activeClassName={'active'} />
-
-                    </Stack> */}
                 <ChangeColumnComponent
                     hidden={!customizeColumnsDialogVisible}
                     selectedColumns={displayedColumns}
