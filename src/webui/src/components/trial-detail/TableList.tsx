@@ -8,6 +8,7 @@ import {
     DefaultButton,
     IDropdownOption,
     IColumn,
+    Selection,
     SelectionMode,
     IStackTokens
 } from '@fluentui/react';
@@ -60,6 +61,26 @@ function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boo
     });
 }
 
+function _inferColumnTitle(columnKey: string): string {
+    if (columnKey === 'sequenceId') {
+        return 'Trial No.';
+    } else if (columnKey === 'id') {
+        return 'ID';
+    } else if (columnKey === 'intermediateCount') {
+        return 'Intermediate results (#)';
+    } else if (columnKey.startsWith('space/')) {
+        return 'Space: ' + columnKey.split('/', 2)[1];
+    } else if (columnKey.startsWith('metric/')) {
+        return 'Metric: ' + columnKey.split('/', 2)[1];
+    } else if (columnKey.startsWith('_')) {
+        return columnKey;
+    } else {
+        // camel case to verbose form
+        const withSpace = columnKey.replace(/[A-Z]/g, letter => ` ${letter.toLowerCase()}`);
+        return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
+    }
+}
+
 interface TableListProps {
     tableSource: TableObj[];
     trialsUpdateBroadcast: number;
@@ -71,11 +92,14 @@ interface TableListState {
     columns: IColumn[];
     searchType: SearchOptionType;
     searchText: string;
+    selectedRowIds: string[];
     customizeColumnsDialogVisible: boolean;
     compareDialogVisible: boolean;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
+    private _selection: Selection;
+
     constructor(props: TableListProps) {
         super(props);
 
@@ -86,8 +110,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchType: 'id',
             searchText: '',
             customizeColumnsDialogVisible: false,
-            compareDialogVisible: false
+            compareDialogVisible: false,
+            selectedRowIds: []
         };
+
+        this._selection = new Selection({
+            onSelectionChanged: () => {
+                console.log(this._selection.getSelection().map(s => (s as any).id)); // eslint-disable-line no-console
+                // this.setState({
+                //     selectedRowIds: []
+                // });
+                this.setState({
+                    selectedRowIds: this._selection.getSelection().map(s => (s as any).id)
+                });
+            }
+        });
     }
 
     /* Search related methods */
@@ -156,8 +193,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
-                startTime: formatTimestamp(trial.startTime, '--'),
-                endTime: formatTimestamp(trial.endTime, '--'),
+                startTime: formatTimestamp((trial as any).info.startTime, '--'), // FIXME: why do we need info here?
+                endTime: formatTimestamp((trial as any).info.endTime, '--'),
                 duration: convertDuration(trial.duration),
                 status: trial.status,
                 intermediateCount: trial.intermediates.length,
@@ -215,14 +252,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
         ];
         // looking at the first row only for now
-        for (const [k, v] of Object.entries(tableItems[0])) {
+        for (const k of Object.keys(tableItems[0])) {
+            const lengths = tableItems.map(item => `${item[k]}`.length);
+            const avgLengths = lengths.reduce((a, b) => a + b) / lengths.length;
+            const columnTitle = _inferColumnTitle(k);
+            const columnWidth = Math.max(columnTitle.length, avgLengths);
             // TODO: add blacklist
             columns.push({
-                name: k,
+                name: columnTitle,
                 key: k,
                 fieldName: k,
-                minWidth: 150,
-                maxWidth: 400,
+                minWidth: columnWidth * 4,
+                maxWidth: columnWidth * 10,
                 isResizable: true,
                 onColumnClick: this._onColumnClick.bind(this)
             });
@@ -270,7 +311,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchType,
             customizeColumnsDialogVisible,
             compareDialogVisible,
-            displayedColumns
+            displayedColumns,
+            selectedRowIds
         } = this.state;
 
         console.log(displayedItems); // eslint-disable-line no-console
@@ -284,13 +326,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </Stack>
                 <Stack horizontal className='allList'>
                     <StackItem grow={50}>
-                        <DefaultButton
-                            text='Compare'
-                            className='allList-compare'
-                            onClick={() => {
-                                this.setState({ compareDialogVisible: true });
-                            }}
-                        />
+                        {selectedRowIds.length > 0 && (
+                            <DefaultButton
+                                text='Compare'
+                                className='allList-compare'
+                                onClick={() => {
+                                    this.setState({ compareDialogVisible: true });
+                                }}
+                            />
+                        )}
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -327,7 +371,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         )}
                         items={displayedItems}
                         compact={true}
+                        selection={this._selection}
                         selectionMode={SelectionMode.multiple}
+                        selectionPreservedOnEmptyClick={true}
                         onRenderRow={props => {
                             return <ExpandableDetails detailsProps={props!} isExpand={props!.item._expandDetails} />;
                         }}
@@ -335,7 +381,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 )}
                 {compareDialogVisible && (
                     <Compare
-                        trials={this.props.tableSource}
+                        trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
                         onHideDialog={() => {
                             this.setState({ compareDialogVisible: false });
                         }}

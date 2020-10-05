@@ -80,7 +80,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         return (
             <div>
                 <Dialog
-                    hidden={true}
+                    hidden={false}
                     dialogContentProps={{
                         type: DialogType.largeHeader,
                         title: 'Customize columns',

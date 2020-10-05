@@ -239,6 +239,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
+                onDismiss={onHideDialog}
             >
                 <div>
                     <div className={contentStyles.header}>

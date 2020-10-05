@@ -5,6 +5,7 @@ import ReactPaginate from 'react-paginate';
 interface PaginationTableState {
     itemsPerPage: number;
     currentPage: number;
+    itemsOnPage: any[]; // this needs to be stored in state to prevent re-rendering
 }
 
 const horizontalGapStackTokens: IStackTokens = {
@@ -21,16 +22,17 @@ function _obtainPaginationSlice(perPage: number, currentPage: number, source: an
         return source;
     } else {
         const offset = _currentTableOffset(perPage, currentPage, source);
-        return perPage === -1 ? source : source.slice(offset, offset + perPage);
+        return source.slice(offset, offset + perPage);
     }
 }
 
-class PaginationTable extends React.Component<IDetailsListProps, PaginationTableState> {
+class PaginationTable extends React.PureComponent<IDetailsListProps, PaginationTableState> {
     constructor(props: IDetailsListProps) {
         super(props);
         this.state = {
             itemsPerPage: 20,
-            currentPage: 0
+            currentPage: 0,
+            itemsOnPage: []
         };
     }
 
@@ -39,35 +41,45 @@ class PaginationTable extends React.Component<IDetailsListProps, PaginationTable
             const { items } = this.props;
             // use current offset to calculate the next `current_page`
             const currentOffset = _currentTableOffset(this.state.itemsPerPage, this.state.currentPage, items);
-            const itemsPerPage = item.text === 'all' ? -1 : parseInt(item.text, 10);
+            const itemsPerPage = item.key as number;
             const currentPage = Math.floor(currentOffset / itemsPerPage);
             this.setState({
                 itemsPerPage: itemsPerPage,
-                currentPage: currentPage
+                currentPage: currentPage,
+                itemsOnPage: _obtainPaginationSlice(itemsPerPage, currentPage, this.props.items)
             });
         }
     }
 
     private _onPageSelect(event: any): void {
-        console.log(event); // eslint-disable-line no-console
+        const currentPage = event.selected;
         this.setState({
-            currentPage: event.selected
+            currentPage: currentPage,
+            itemsOnPage: _obtainPaginationSlice(this.state.itemsPerPage, currentPage, this.props.items)
         });
     }
 
+    componentDidUpdate(prevProps: IDetailsListProps): void {
+        if (prevProps.items !== this.props.items) {
+            this.setState({
+                itemsOnPage: _obtainPaginationSlice(this.state.itemsPerPage, this.state.currentPage, this.props.items)
+            });
+        }
+    }
+
     render(): React.ReactNode {
-        const { itemsPerPage } = this.state;
+        const { itemsPerPage, itemsOnPage } = this.state;
         const detailListProps = {
             ...this.props,
-            items: _obtainPaginationSlice(itemsPerPage, this.state.currentPage, this.props.items)
+            items: itemsOnPage
         };
         const itemsCount = this.props.items.length;
         const pageCount = itemsPerPage === -1 ? 1 : Math.ceil(itemsCount / itemsPerPage);
         const perPageOptions = [
-            { key: '10', text: '10 items per page' },
-            { key: '20', text: '20 items per page' },
-            { key: '50', text: '50 items per page' },
-            { key: 'all', text: 'All items' }
+            { key: 10, text: '10 items per page' },
+            { key: 20, text: '20 items per page' },
+            { key: 50, text: '50 items per page' },
+            { key: -1, text: 'All items' }
         ];
         return (
             <div>
@@ -80,7 +92,7 @@ class PaginationTable extends React.Component<IDetailsListProps, PaginationTable
                     tokens={horizontalGapStackTokens}
                 >
                     <Dropdown
-                        selectedKey={itemsPerPage === -1 ? 'all' : String(itemsPerPage)}
+                        selectedKey={itemsPerPage}
                         options={perPageOptions}
                         onChange={this._onItemsPerPageSelect.bind(this)}
                         styles={{ dropdown: { width: 150 } }}
