@@ -224,24 +224,29 @@ class Trial implements TableObj {
     }
 
     public parameters(axes: MultipleAxes): Map<SingleAxis, any> {
+        const ret = new Map<SingleAxis, any>(Array.from(axes.axes.values()).map(k => [k, null]));
         if (this.info === undefined || this.info.hyperParameters === undefined) {
-            throw new Map();
+            throw ret;
         } else {
             const tempHyper = this.info.hyperParameters;
             let params = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
             if (typeof params === 'string') {
                 params = JSON.parse(params);
             }
-            const [result, unexpectedEntries] = inferTrialParameters(params, axes);
+            const [updated, unexpectedEntries] = inferTrialParameters(params, axes);
             if (unexpectedEntries.size) {
                 throw unexpectedEntries;
             }
-            return result;
+            for (const [k, v] of updated) {
+                ret.set(k, v);
+            }
+            return ret;
         }
     }
 
     public metrics(space: MultipleAxes): Map<SingleAxis, any> {
-        const ret = new Map<SingleAxis, any>();
+        // set default value: null
+        const ret = new Map<SingleAxis, any>(Array.from(space.axes.values()).map(k => [k, null]));
         const unexpectedEntries = new Map<string, any>();
         if (this.acc === undefined) {
             return ret;

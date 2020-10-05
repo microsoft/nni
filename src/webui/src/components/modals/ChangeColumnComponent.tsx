@@ -7,7 +7,6 @@ interface ChangeColumnState {
 }
 
 interface ChangeColumnProps {
-    hidden: boolean;
     allColumns: SimpleColumn[]; // all column List
     selectedColumns: string[]; // user selected column list
     onSelectedChange: (val: string[]) => void;
@@ -76,12 +75,12 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     };
 
     render(): React.ReactNode {
-        const { allColumns, hidden } = this.props;
+        const { allColumns } = this.props;
         const { currentSelected } = this.state;
         return (
             <div>
                 <Dialog
-                    hidden={hidden} // required field!
+                    hidden={true}
                     dialogContentProps={{
                         type: DialogType.largeHeader,
                         title: 'Customize columns',

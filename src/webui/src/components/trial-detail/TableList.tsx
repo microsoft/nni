@@ -11,7 +11,6 @@ import {
     SelectionMode,
     IStackTokens
 } from '@fluentui/react';
-import ReactPaginate from 'react-paginate';
 import { LineChart, blocked, copy, tableListIcon } from '../buttons/Icon';
 import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
@@ -28,6 +27,7 @@ import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
 import { TrialManager } from '../../static/model/trialmanager';
 import PaginationTable from '../public-child/PaginationTable';
+import Compare from '../modals/Compare';
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -45,7 +45,7 @@ const searchOptionLiterals = {
     parameters: 'Parameters'
 };
 
-const defaultDisplayedColumns = ['sequenceId', 'id', 'startTime', 'endTime', 'duration', 'status', 'metrics/default'];
+const defaultDisplayedColumns = ['sequenceId', 'id', 'startTime', 'endTime', 'duration', 'status', 'metric/default'];
 
 function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
     const key = columnKey as keyof T;
@@ -66,13 +66,13 @@ interface TableListProps {
 }
 
 interface TableListState {
-    unpaginatedDisplayedItems: any[];
     displayedItems: any[];
     displayedColumns: string[];
     columns: IColumn[];
     searchType: SearchOptionType;
     searchText: string;
     customizeColumnsDialogVisible: boolean;
+    compareDialogVisible: boolean;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -80,13 +80,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
         super(props);
 
         this.state = {
-            unpaginatedDisplayedItems: [],
             displayedItems: [],
             displayedColumns: defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
             searchText: '',
-            customizeColumnsDialogVisible: false
+            customizeColumnsDialogVisible: false,
+            compareDialogVisible: false
         };
     }
 
@@ -167,7 +167,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ret[`space/${k.baseName}`] = v;
             }
             for (const [k, v] of trial.metrics(metricSpace)) {
-                ret[`metrics/${k.baseName}`] = v;
+                ret[`metric/${k.baseName}`] = v;
             }
             return ret;
         });
@@ -230,10 +230,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         return columns;
     }
 
-    private _showCompareDialog(): void {
-        console.log('Compare button clicked'); // eslint-disable-line no-console
-    }
-
     private _updateTableSource(): void {
         // call this method when trials or the computation of trial filter has changed
         const items = this._trialsToTableItems(this._filterTrials(this.props.tableSource));
@@ -268,7 +264,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     render(): React.ReactNode {
-        const { displayedItems, columns, searchType, customizeColumnsDialogVisible, displayedColumns } = this.state;
+        const {
+            displayedItems,
+            columns,
+            searchType,
+            customizeColumnsDialogVisible,
+            compareDialogVisible,
+            displayedColumns
+        } = this.state;
 
         console.log(displayedItems); // eslint-disable-line no-console
         console.log(columns); // eslint-disable-line no-console
@@ -281,7 +284,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </Stack>
                 <Stack horizontal className='allList'>
                     <StackItem grow={50}>
-                        <DefaultButton text='Compare' className='allList-compare' onClick={this._showCompareDialog} />
+                        <DefaultButton
+                            text='Compare'
+                            className='allList-compare'
+                            onClick={() => {
+                                this.setState({ compareDialogVisible: true });
+                            }}
+                        />
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -313,7 +322,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </Stack>
                 {columns && displayedItems && (
                     <PaginationTable
-                        columns={columns.filter(column => displayedColumns.includes(column.key))}
+                        columns={columns.filter(
+                            column => displayedColumns.includes(column.key) || column.key === '_expand'
+                        )}
                         items={displayedItems}
                         compact={true}
                         selectionMode={SelectionMode.multiple}
@@ -322,17 +333,26 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         }}
                     />
                 )}
-                <ChangeColumnComponent
-                    hidden={!customizeColumnsDialogVisible}
-                    selectedColumns={displayedColumns}
-                    allColumns={columns
-                        .filter(column => !column.key.startsWith('_'))
-                        .map(column => ({ key: column.key, name: column.fieldName! }))}
-                    onSelectedChange={this._updateDisplayedColumns.bind(this)}
-                    onHideDialog={() => {
-                        this.setState({ customizeColumnsDialogVisible: false });
-                    }}
-                />
+                {compareDialogVisible && (
+                    <Compare
+                        trials={this.props.tableSource}
+                        onHideDialog={() => {
+                            this.setState({ compareDialogVisible: false });
+                        }}
+                    />
+                )}
+                {customizeColumnsDialogVisible && (
+                    <ChangeColumnComponent
+                        selectedColumns={displayedColumns}
+                        allColumns={columns
+                            .filter(column => !column.key.startsWith('_'))
+                            .map(column => ({ key: column.key, name: column.name }))}
+                        onSelectedChange={this._updateDisplayedColumns.bind(this)}
+                        onHideDialog={() => {
+                            this.setState({ customizeColumnsDialogVisible: false });
+                        }}
+                    />
+                )}
             </div>
         );
     }
