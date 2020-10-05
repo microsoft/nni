@@ -66,6 +66,8 @@ interface Item {
 
 interface CompareProps {
     trials: TableObj[];
+    title: string;
+    showDetails: boolean;
     onHideDialog: () => void;
 }
 
@@ -111,6 +113,7 @@ class Compare extends React.Component<CompareProps, {}> {
                     }
                 },
                 formatter: (data: TooltipForIntermediate): string => {
+                    console.log(data); // eslint-disable-line no-console
                     const item = items.find(k => k.id === data.seriesName)!;
                     return this._generateTooltipSummary(item, metricKey);
                 }
@@ -216,7 +219,7 @@ class Compare extends React.Component<CompareProps, {}> {
     }
 
     render(): React.ReactNode {
-        const { onHideDialog, trials } = this.props;
+        const { onHideDialog, trials, title, showDetails } = this.props;
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -243,7 +246,7 @@ class Compare extends React.Component<CompareProps, {}> {
             >
                 <div>
                     <div className={contentStyles.header}>
-                        <span>Compare trials</span>
+                        <span>{title}</span>
                         <IconButton
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
@@ -255,7 +258,7 @@ class Compare extends React.Component<CompareProps, {}> {
                         {this._intermediates(items, defaultMetricKey)}
                         <Stack className='compare-yAxis'># Intermediate result</Stack>
                     </Stack>
-                    <Stack>{this._columns(items)}</Stack>
+                    {showDetails && <Stack>{this._columns(items)}</Stack>}
                 </div>
             </Modal>
         );

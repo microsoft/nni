@@ -1,34 +1,33 @@
-import React, { lazy } from 'react';
 import {
-    Stack,
-    Dropdown,
-    DetailsList,
-    Icon,
-    StackItem,
     DefaultButton,
-    IDropdownOption,
+    Dropdown,
     IColumn,
+    Icon,
+    IDropdownOption,
+    PrimaryButton,
     Selection,
     SelectionMode,
-    IStackTokens
+    Stack,
+    StackItem
 } from '@fluentui/react';
-import { LineChart, blocked, copy, tableListIcon } from '../buttons/Icon';
-import { MANAGER_IP, COLUMNPro } from '../../static/const';
-import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
+import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { SearchSpace, TableObj, TrialJobInfo, MultipleAxes } from '../../static/interface';
-import ExpandableDetails from '../public-child/ExpandableDetails';
-import ChangeColumnComponent from '../modals/ChangeColumnComponent';
-import '../../static/style/search.scss';
-import '../../static/style/tableStatus.css';
-import '../../static/style/logPath.scss';
-import '../../static/style/table.scss';
+import { convertDuration, formatTimestamp } from '../../static/function';
+import { TableObj } from '../../static/interface';
 import '../../static/style/button.scss';
+import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
-import { TrialManager } from '../../static/model/trialmanager';
-import PaginationTable from '../public-child/PaginationTable';
+import '../../static/style/search.scss';
+import '../../static/style/table.scss';
+import '../../static/style/tableStatus.css';
+import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
+import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
+import Customize from '../modals/CustomizedTrial';
+import KillJob from '../modals/Killjob';
+import ExpandableDetails from '../public-child/ExpandableDetails';
+import PaginationTable from '../public-child/PaginationTable';
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -95,6 +94,8 @@ interface TableListState {
     selectedRowIds: string[];
     customizeColumnsDialogVisible: boolean;
     compareDialogVisible: boolean;
+    intermediateDialogTrial: TableObj | undefined;
+    copiedTrialId: string | undefined;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -111,7 +112,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchText: '',
             customizeColumnsDialogVisible: false,
             compareDialogVisible: false,
-            selectedRowIds: []
+            selectedRowIds: [],
+            intermediateDialogTrial: undefined,
+            copiedTrialId: undefined
         };
 
         this._selection = new Selection({
@@ -268,6 +271,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 onColumnClick: this._onColumnClick.bind(this)
             });
         }
+        // operations column
+        columns.push({
+            name: 'Operation',
+            key: '_operation',
+            fieldName: 'operation',
+            minWidth: 160,
+            maxWidth: 200,
+            isResizable: true,
+            className: 'detail-table',
+            onRender: this._renderOperationColumn.bind(this)
+        });
         return columns;
     }
 
@@ -294,6 +308,43 @@ class TableList extends React.Component<TableListProps, TableListState> {
         });
     }
 
+    private _renderOperationColumn(record: any): React.ReactNode {
+        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
+        return (
+            <Stack className='detail-button' horizontal>
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Intermediate'
+                    onClick={() => {
+                        const { tableSource } = this.props;
+                        const trial = tableSource.find(trial => trial.id === record.id)!;
+                        this.setState({ intermediateDialogTrial: trial });
+                    }}
+                >
+                    {LineChart}
+                </PrimaryButton>
+                {runningTrial ? (
+                    <PrimaryButton className='detail-button-operation' disabled={true} title='kill'>
+                        {blocked}
+                    </PrimaryButton>
+                ) : (
+                    <KillJob trial={record} />
+                )}
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Customized trial'
+                    onClick={() => {
+                        this.setState({ copiedTrialId: record.id });
+                    }}
+                    disabled={disabledAddCustomizedTrial}
+                >
+                    {copy}
+                </PrimaryButton>
+            </Stack>
+        );
+    }
+
     componentDidUpdate(prevProps: TableListProps): void {
         if (this.props.tableSource !== prevProps.tableSource) {
             this._updateTableSource();
@@ -312,7 +363,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             customizeColumnsDialogVisible,
             compareDialogVisible,
             displayedColumns,
-            selectedRowIds
+            selectedRowIds,
+            intermediateDialogTrial,
+            copiedTrialId
         } = this.state;
 
         console.log(displayedItems); // eslint-disable-line no-console
@@ -326,15 +379,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </Stack>
                 <Stack horizontal className='allList'>
                     <StackItem grow={50}>
-                        {selectedRowIds.length > 0 && (
-                            <DefaultButton
-                                text='Compare'
-                                className='allList-compare'
-                                onClick={() => {
-                                    this.setState({ compareDialogVisible: true });
-                                }}
-                            />
-                        )}
+                        <DefaultButton
+                            text='Compare'
+                            className='allList-compare'
+                            onClick={() => {
+                                this.setState({ compareDialogVisible: true });
+                            }}
+                            disabled={selectedRowIds.length === 0}
+                        />
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -367,7 +419,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 {columns && displayedItems && (
                     <PaginationTable
                         columns={columns.filter(
-                            column => displayedColumns.includes(column.key) || column.key === '_expand'
+                            column =>
+                                displayedColumns.includes(column.key) || ['_expand', '_operation'].includes(column.key)
                         )}
                         items={displayedItems}
                         compact={true}
@@ -381,9 +434,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 )}
                 {compareDialogVisible && (
                     <Compare
+                        title='Compare trials'
+                        showDetails={true}
                         trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
                         onHideDialog={() => {
                             this.setState({ compareDialogVisible: false });
+                        }}
+                    />
+                )}
+                {intermediateDialogTrial !== undefined && (
+                    <Compare
+                        title='Intermediate results'
+                        showDetails={false}
+                        trials={[intermediateDialogTrial]}
+                        onHideDialog={() => {
+                            this.setState({ intermediateDialogTrial: undefined });
                         }}
                     />
                 )}
@@ -396,6 +461,16 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onSelectedChange={this._updateDisplayedColumns.bind(this)}
                         onHideDialog={() => {
                             this.setState({ customizeColumnsDialogVisible: false });
+                        }}
+                    />
+                )}
+                {/* Clone a trial and customize a set of new parameters */}
+                {copiedTrialId !== undefined && (
+                    <Customize
+                        visible={true}
+                        copyTrialId={copiedTrialId}
+                        closeCustomizeModal={() => {
+                            this.setState({ copiedTrialId: undefined });
                         }}
                     />
                 )}
