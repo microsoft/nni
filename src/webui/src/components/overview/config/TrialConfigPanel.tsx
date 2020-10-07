@@ -14,7 +14,7 @@ interface LogDrawerProps {
 }
 
 interface LogDrawerState {
-    logDrawerHeight: number;
+    panelInnerHeight: number;
 }
 
 class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
@@ -22,12 +22,12 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
         super(props);
 
         this.state = {
-            logDrawerHeight: window.innerHeight - 48
+            panelInnerHeight: window.innerHeight
         };
     }
 
     setLogDrawerHeight = (): void => {
-        this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
+        this.setState(() => ({ panelInnerHeight: window.innerHeight }));
     };
 
     async componentDidMount(): Promise<void> {
@@ -40,7 +40,10 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
 
     render(): React.ReactNode {
         const { hideConfigPanel, activeTab } = this.props;
-        const { logDrawerHeight } = this.state;
+        const { panelInnerHeight } = this.state;
+        // [marginTop 16px] + [Search space 46px] +
+        // button[height: 32px, marginTop: 45px, marginBottom: 25px] + [padding-bottom: 20px]
+        const monacoEditorHeight = panelInnerHeight - 184;
         const blacklist = [
             'id',
             'logDir',
@@ -70,7 +73,7 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                         <Pivot initialSelectedKey={activeTab} style={{ minHeight: 190, paddingTop: '16px' }}>
                             <PivotItem headerText='Search space' itemKey='search space'>
                                 <MonacoEditor
-                                    height={logDrawerHeight - 92 - 45}
+                                    height={monacoEditorHeight}
                                     language='json'
                                     theme='vs-light'
                                     value={prettyStringify(EXPERIMENT.searchSpace, 300, 2)}
@@ -81,7 +84,7 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                                 <div className='profile'>
                                     <MonacoEditor
                                         width='100%'
-                                        height={logDrawerHeight - 92 - 45}
+                                        height={monacoEditorHeight}
                                         language='json'
                                         theme='vs-light'
                                         value={showProfile}

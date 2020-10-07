@@ -144,8 +144,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             </Pivot>
                         </div>
                         {/* trial table list */}
-                        <div style={{ backgroundColor: '#fff', marginTop: 18 }}>
-                            <Stack style={{ marginTop: 18, marginLeft: 14 }}>
+                        <div className='bulletedList' style={{ marginTop: 18 }}>
+                            <Stack className='title'>
                                 <TitleContext.Provider value={{ text: 'Trial jobs', icon: 'BulletedList' }}>
                                     <Title />
                                 </TitleContext.Provider>

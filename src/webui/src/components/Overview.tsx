@@ -13,9 +13,9 @@ import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
 import { Command } from './overview/experiment/Command';
 import { TitleContext } from './overview/TitleContext';
+import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
 import '../static/style/overview/overview.scss';
 import '../static/style/logPath.scss';
-import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
 
 interface OverviewState {
     trialConcurrency: number;
