@@ -27,7 +27,7 @@ export class MachineScheduler {
     }
 
     public scheduleMachine(): RemoteMachineMeta | undefined {
-        for (let [rmMeta, occupied] of this.remoteMachineMetaOccupiedMap) {
+        for (const [rmMeta, occupied] of this.remoteMachineMetaOccupiedMap) {
             if (!occupied) {
                 this.remoteMachineMetaOccupiedMap.set(rmMeta, true);
                 return rmMeta;
@@ -36,7 +36,7 @@ export class MachineScheduler {
         return undefined;
     }
 
-    public recycleMachineReservation(rmMeta: RemoteMachineMeta) {
+    public recycleMachineReservation(rmMeta: RemoteMachineMeta): void {
         if (!this.remoteMachineMetaOccupiedMap.has(rmMeta)) {
             throw new Error(`${rmMeta} not initialized!`);
         }

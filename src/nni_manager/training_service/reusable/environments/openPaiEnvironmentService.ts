@@ -37,7 +37,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.experimentId = getExperimentId();
     }
 
-    public getInitializeEnvironmentNumber() {
+    public getInitializeEnvironmentNumber(): number {
         return 0;
     }
 

@@ -40,7 +40,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private experimentRootDir: string;
     private experimentId: string;
 
-    constructor(@component.Inject timer: ObservableTimer) {
+    constructor() {
         super();
         this.experimentId = getExperimentId();
         this.environmentJobsMap = new Map<string, RemoteMachineEnvironmentInformation>();
@@ -54,12 +54,16 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.log.info('Construct remote machine training service.');
     }
 
-    public getInitializeEnvironmentNumber() {
+    public getInitializeEnvironmentNumber(): number {
         return this.machineExecutorManagerMap.size;
     }
 
     public get environmentMaintenceLoopInterval(): number {
         return 5000;
+    }
+
+    public get hasMoreEnvironments(): boolean {
+        return false;
     }
 
     public get hasStorageService(): boolean {
@@ -134,29 +138,33 @@ export class RemoteEnvironmentService extends EnvironmentService {
             const executor = await this.getExecutor(environment.id);
             const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
             const trialReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
-            /* eslint-disable require-atomic-updates */
-            try {
-                const isAlive = await executor.isProcessAlive(jobpidPath);
-                // if the process of jobpid is not alive any more
-                if (!isAlive) {
-                    this.log.info(`pid in ${jobpidPath} is not alive!`);
-                    const trialReturnCode: string = await executor.getRemoteFileContent(trialReturnCodeFilePath);
-                    const match: RegExpMatchArray | null = trialReturnCode.trim()
-                        .match(/^-?(\d+)\s+(\d+)$/);
-                    if (match !== null) {
-                        const { 1: code } = match;
-                        // Update trial job's status based on result code
-                        if (parseInt(code, 10) === 0) {
-                            environment.setStatus('SUCCEEDED');
-                        } else {
-                            environment.setStatus('FAILED');
+            if (fs.existsSync(jobpidPath)) {
+                /* eslint-disable require-atomic-updates */
+                try {
+                    const isAlive = await executor.isProcessAlive(jobpidPath);
+                    // if the process of jobpid is not alive any more
+                    if (!isAlive) {
+                        this.log.info(`pid in ${jobpidPath} is not alive!`);
+                        if (fs.existsSync(trialReturnCodeFilePath)) {
+                            const trialReturnCode: string = await executor.getRemoteFileContent(trialReturnCodeFilePath);
+                            const match: RegExpMatchArray | null = trialReturnCode.trim()
+                                .match(/^-?(\d+)\s+(\d+)$/);
+                            if (match !== null) {
+                                const { 1: code } = match;
+                                // Update trial job's status based on result code
+                                if (parseInt(code, 10) === 0) {
+                                    environment.setStatus('SUCCEEDED');
+                                } else {
+                                    environment.setStatus('FAILED');
+                                }
+                                this.releaseTrialResource(environment);
+                            }
                         }
-                        this.releaseTrialResource(environment);
                     }
+                } catch (error) {
+                    this.releaseTrialResource(environment);
+                    this.log.error(`Update job status exception, error is ${error.message}`);
                 }
-            } catch (error) {
-                this.releaseTrialResource(environment);
-                this.log.error(`(Ignorable mostly)Update job status exception, error is ${error.message}`);
             }
         });
     }

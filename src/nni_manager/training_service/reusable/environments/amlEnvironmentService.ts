@@ -37,7 +37,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         this.experimentRootDir = getExperimentRootDir();
     }
 
-    public getInitializeEnvironmentNumber() {
+    public getInitializeEnvironmentNumber(): number {
         return 0;
     }
 

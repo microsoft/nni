@@ -589,6 +589,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async requestEnvironment(): Promise<void> {
+        this.log.info('---------------request environment--------------');
         if (this.commandChannel === undefined) {
             throw new Error(`TrialDispatcher: commandChannel shouldn't be undefined in requestEnvironment.`);
         }
