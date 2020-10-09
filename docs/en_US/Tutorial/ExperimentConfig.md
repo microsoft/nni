@@ -598,7 +598,9 @@ Optional field in remote mode. Set remote machine related configuration.
 
 #### reuse
 
-Optional. Set if use trial_runner to maintan multiple trial.  
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse remote jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials. 
 
 ### kubeflowConfig
 
