@@ -8,7 +8,8 @@ import {
     Selection,
     SelectionMode,
     Stack,
-    StackItem
+    StackItem,
+    TooltipHost
 } from '@fluentui/react';
 import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
@@ -28,6 +29,7 @@ import Customize from '../modals/CustomizedTrial';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
+import { Trial } from '../../static/model/trial';
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -68,9 +70,11 @@ function _inferColumnTitle(columnKey: string): string {
     } else if (columnKey === 'intermediateCount') {
         return 'Intermediate results (#)';
     } else if (columnKey.startsWith('space/')) {
-        return 'Space: ' + columnKey.split('/', 2)[1];
+        return columnKey.split('/', 2)[1] + ' (space)';
+    } else if (columnKey === 'metric/default') {
+        return 'Default metric'; // to align with the original design
     } else if (columnKey.startsWith('metric/')) {
-        return 'Metric: ' + columnKey.split('/', 2)[1];
+        return columnKey.split('/', 2)[1] + ' (metric)';
     } else if (columnKey.startsWith('_')) {
         return columnKey;
     } else {
@@ -119,10 +123,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this._selection = new Selection({
             onSelectionChanged: () => {
-                console.log(this._selection.getSelection().map(s => (s as any).id)); // eslint-disable-line no-console
-                // this.setState({
-                //     selectedRowIds: []
-                // });
                 this.setState({
                     selectedRowIds: this._selection.getSelection().map(s => (s as any).id)
                 });
@@ -209,6 +209,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             for (const [k, v] of trial.metrics(metricSpace)) {
                 ret[`metric/${k.baseName}`] = v;
             }
+            ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy(); // FIXME: this is bad
             return ret;
         });
     }
@@ -270,7 +271,24 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 isResizable: true,
                 onColumnClick: this._onColumnClick.bind(this),
                 ...(k === 'status' && {
+                    // color status
                     onRender: record => <span className={`${record.status} commonStyle`}>{record.status}</span>
+                }),
+                ...((k.startsWith('metric/') || k.startsWith('space/')) && {
+                    // show tooltip
+                    onRender: (record): React.ReactNode => (
+                        <TooltipHost content={record[k]}>
+                            <div className='ellipsis'>{record[k]}</div>
+                        </TooltipHost>
+                    )
+                }),
+                ...(k === 'metric/default' && {
+                    // FIXME: this is ad-hoc
+                    onRender: (record): React.ReactNode => (
+                        <TooltipHost content={record._formattedLatestAccuracy}>
+                            <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
+                        </TooltipHost>
+                    )
                 })
             });
         }
@@ -370,9 +388,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             intermediateDialogTrial,
             copiedTrialId
         } = this.state;
-
-        console.log(displayedItems); // eslint-disable-line no-console
-        console.log(columns); // eslint-disable-line no-console
 
         return (
             <div id='tableList'>
