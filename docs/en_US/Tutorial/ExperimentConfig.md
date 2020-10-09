@@ -594,7 +594,7 @@ __Note__: Because __preCommand__ will execute before other commands each time, i
 
 ### remoteConfig
 
-Optional field in remote mode. Set remote machine related configuration.
+Optional field in remote mode. Users could set per machine information in `machineList` field, and set global configuration for remote mode in this field.
 
 #### reuse
 
