@@ -307,7 +307,8 @@ class ChannelMaskConflict(MaskFix):
 
                 self.masks[name]['weight'] = new_mask
                 if 'bias' in self.masks[name] and self.masks[name]['bias'] is not None:
-                    assert self.conv_prune_dim == 0
+                    if type(m).__name__ == 'Conv2d':
+                        assert self.conv_prune_dim == 0
                     self.masks[name]['bias'] = merged_channel_mask.type_as(self.masks[name]['bias'])
 
         return self.masks

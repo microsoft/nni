@@ -142,14 +142,14 @@ class L1ChannelMasker(WeightMasker):
             w_abs_structured = w_abs.sum((0, 2, 3))
             threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
             mask_weight = torch.gt(w_abs_structured, threshold)[None, :, None, None].expand_as(weight).type_as(weight)
+            return {'weight_mask': mask_weight.detach()}
         else:
             # Linear
             assert wrapper.type == 'Linear'
             w_abs_structured = w_abs.sum((0))
             threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
             mask_weight = torch.gt(w_abs_structured, threshold)[None, :].expand_as(weight).type_as(weight)
-
-        return {'weight_mask': mask_weight.detach(), 'bias_mask': None}
+            return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 class L1ChannelPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
@@ -258,16 +258,35 @@ class SpeedupTestCase(TestCase):
                    (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def test_channel_prune(self):
-        net = resnet18(num_classes=10).to(device)
-        channel_prune(net)
+        orig_net = resnet18(num_classes=10).to(device)
+        channel_prune(orig_net)
+        state_dict = torch.load(MODEL_FILE)
+
+        orig_net = resnet18(num_classes=10).to(device)
+        orig_net.load_state_dict(state_dict)
+        apply_compression_results(orig_net, MASK_FILE)
+        orig_net.eval()
 
         net = resnet18(num_classes=10).to(device)
-        data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
+
+        net.load_state_dict(state_dict)
+        net.eval()
+
+        data = torch.randn(BATCH_SIZE, 3, 224, 224).to(device)
         ms = ModelSpeedup(net, data, MASK_FILE)
         ms.speedup_model()
         ms.bound_model(data)
 
-    def tearDown(self):
+        net.eval()
+
+        ori_sum = orig_net(data).abs().sum().item()
+        speeded_sum = net(data).abs().sum().item()
+
+        print(ori_sum, speeded_sum)
+        assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
+            (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+
+    def _tearDown(self):
         os.remove(MODEL_FILE)
         os.remove(MASK_FILE)
 
