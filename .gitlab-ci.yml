@@ -21,10 +21,12 @@ azure_pipeline:
     - docker
     - 1.0.8
   before_script:
+    - 'curl "$CI_API_V4_URL/projects/$CI_PROJECT_ID/snippets/$SNIPPET_ID_KUBECONFIG/raw" --header "PRIVATE-TOKEN: $GITLAB_API_READ_TOKEN" > ci_kubeconfig'
+    - cat ci_kubeconfig
     - apt-get update
     - apt-get install -y sudo apt-utils git curl unzip wget build-essential
   script:
-    - export KUBECONFIG="`pwd`/kubeconfig"
+    - export KUBECONFIG="`pwd`/ci_kubeconfig"
     - curl -o aws-iam-authenticator https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.7/2020-07-08/bin/linux/amd64/aws-iam-authenticator
     - chmod +x ./aws-iam-authenticator
     - mkdir -p $HOME/bin
