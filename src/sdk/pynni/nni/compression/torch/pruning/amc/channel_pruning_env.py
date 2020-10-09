@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import logging
 import time
 import math
 import copy
@@ -10,8 +11,9 @@ import torch
 import torch.nn as nn
 
 from nni.compression.torch.compressor import PrunerModuleWrapper
-from .lib.utils import prGreen
 from .. import AMCWeightMasker
+
+_logger = logging.getLogger(__name__)
 
 # for pruning
 def acc_reward(net, acc, flops):
@@ -139,13 +141,13 @@ class ChannelPruningEnv:
         # build reward
         self.reset()  # restore weight
         self.org_acc = self._validate(self._val_loader, self.model)
-        print('=> original acc: {:.3f}%'.format(self.org_acc))
+        _logger.info('=> original acc: {:.3f}%'.format(self.org_acc))
         self.org_model_size = sum(self.wsize_list)
-        print('=> original weight size: {:.4f} M param'.format(self.org_model_size * 1. / 1e6))
+        _logger.info('=> original weight size: {:.4f} M param'.format(self.org_model_size * 1. / 1e6))
         self.org_flops = sum(self.flops_list)
-        print('=> FLOPs:')
-        print([self.layer_info_dict[idx]['flops']/1e6 for idx in sorted(self.layer_info_dict.keys())])
-        print('=> original FLOPs: {:.4f} M'.format(self.org_flops * 1. / 1e6))
+        _logger.info('=> FLOPs:')
+        _logger.info([self.layer_info_dict[idx]['flops']/1e6 for idx in sorted(self.layer_info_dict.keys())])
+        _logger.info('=> original FLOPs: {:.4f} M'.format(self.org_flops * 1. / 1e6))
 
         self.expected_preserve_computation = self.preserve_ratio * self.org_flops
 
@@ -203,9 +205,9 @@ class ChannelPruningEnv:
                 best_model = os.path.join(self.args.output, 'best_model.pth')
                 best_mask = os.path.join(self.args.output, 'best_mask.pth')
                 self.pruner.export_model(model_path=best_model, mask_path=best_mask)
-                prGreen('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
-                prGreen('New best policy: {}'.format(self.best_strategy))
-                prGreen('New best d primes: {}'.format(self.best_d_prime_list))
+                _logger.info('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
+                _logger.info('New best policy: {}'.format(self.best_strategy))
+                _logger.info('New best d primes: {}'.format(self.best_d_prime_list))
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
             return obs, reward, done, info_set
@@ -395,7 +397,7 @@ class ChannelPruningEnv:
                 else:  # same group
                     share_group.append(c_idx)
             self.shared_idx.append(share_group)
-            print('=> Conv layers to share channels: {}'.format(self.shared_idx))
+            _logger.info('=> Conv layers to share channels: {}'.format(self.shared_idx))
 
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)
 
@@ -403,10 +405,10 @@ class ChannelPruningEnv:
         for _, v in self.buffer_dict.items():
             self.buffer_idx += v
 
-        print('=> Prunable layer idx: {}'.format(self.prunable_idx))
-        print('=> Buffer layer idx: {}'.format(self.buffer_idx))
-        print('=> Shared idx: {}'.format(self.shared_idx))
-        print('=> Initial min strategy dict: {}'.format(self.min_strategy_dict))
+        _logger.info('=> Prunable layer idx: {}'.format(self.prunable_idx))
+        _logger.info('=> Buffer layer idx: {}'.format(self.buffer_idx))
+        _logger.info('=> Shared idx: {}'.format(self.shared_idx))
+        _logger.info('=> Initial min strategy dict: {}'.format(self.min_strategy_dict))
 
         # added for supporting residual connections during pruning
         self.visited = [False] * len(self.prunable_idx)
@@ -443,7 +445,7 @@ class ChannelPruningEnv:
                 device = m.module.weight.device
 
         # now let the image flow
-        print('=> Extracting information...')
+        _logger.info('=> Extracting information...')
         with torch.no_grad():
             for i_b, (inputs, target) in enumerate(self._val_loader):  # use image from train set
                 if i_b == self.n_calibration_batches:
@@ -461,7 +463,7 @@ class ChannelPruningEnv:
                         self.layer_info_dict[idx]['flops'] = m_list[idx].flops
                         self.wsize_list.append(m_list[idx].params)
                         self.flops_list.append(m_list[idx].flops)
-                    print('flops:', self.flops_list)
+                    _logger.info('flops: %s', self.flops_list)
                 for idx in self.prunable_idx:
                     f_in_np = m_list[idx].input_feat.data.cpu().numpy()
                     f_out_np = m_list[idx].output_feat.data.cpu().numpy()
@@ -498,7 +500,7 @@ class ChannelPruningEnv:
 
     def _build_state_embedding(self):
         # build the static part of the state embedding
-        print('Building state embedding...')
+        _logger.info('Building state embedding...')
         layer_embedding = []
         module_list = list(self.model.modules())
         for i, ind in enumerate(self.prunable_idx):
@@ -529,7 +531,7 @@ class ChannelPruningEnv:
 
         # normalize the state
         layer_embedding = np.array(layer_embedding, 'float')
-        print('=> shape of embedding (n_layer * n_dim): {}'.format(layer_embedding.shape))
+        _logger.info('=> shape of embedding (n_layer * n_dim): {}'.format(layer_embedding.shape))
         assert len(layer_embedding.shape) == 2, layer_embedding.shape
         for i in range(layer_embedding.shape[1]):
             fmin = min(layer_embedding[:, i])

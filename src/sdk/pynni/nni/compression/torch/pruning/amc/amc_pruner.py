@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import logging
 from copy import deepcopy
 from argparse import Namespace
 import numpy as np
@@ -14,6 +15,8 @@ from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
 torch.backends.cudnn.deterministic = True
+
+_logger = logging.getLogger(__name__)
 
 class AMCPruner(Pruner):
     """
@@ -171,16 +174,16 @@ class AMCPruner(Pruner):
         )
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint, args=self.env_args)
-        print('=> Saving logs to {}'.format(self.output_dir))
+        _logger.info('=> Saving logs to {}'.format(self.output_dir))
         self.tfwriter = SummaryWriter(log_dir=self.output_dir)
         self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
-        print('=> Output path: {}...'.format(self.output_dir))
+        _logger.info('=> Output path: {}...'.format(self.output_dir))
 
         nb_states = self.env.layer_embedding.shape[1]
         nb_actions = 1  # just 1 action here
 
         rmsize = rmsize * len(self.env.prunable_idx)  # for each layer
-        print('** Actual replay buffer size: {}'.format(rmsize))
+        _logger.info('** Actual replay buffer size: {}'.format(rmsize))
 
         self.ddpg_args = Namespace(
             hidden1=hidden1,
@@ -245,7 +248,7 @@ class AMCPruner(Pruner):
             observation = deepcopy(observation2)
 
             if done:  # end of episode
-                print(
+                _logger.info(
                     '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}'.format(
                         episode, episode_reward,
                         info['accuracy'],
