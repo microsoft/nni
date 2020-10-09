@@ -286,7 +286,7 @@ class SpeedupTestCase(TestCase):
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
             (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
-    def _tearDown(self):
+    def tearDown(self):
         os.remove(MODEL_FILE)
         os.remove(MASK_FILE)
 
