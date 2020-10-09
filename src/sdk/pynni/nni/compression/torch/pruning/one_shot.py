@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
-from schema import And, Optional
+from schema import And, Optional, SchemaError
 from nni._graph_utils import TorchModuleGraph
 from nni.compression.torch.utils.shape_dependency import ChannelDependency, GroupDependency
 from .constants import MASKER_DICT
@@ -186,12 +186,16 @@ class _StructuredFilterPruner(OneshotPruner):
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            'op_types': ['Conv2d'],
-            Optional('op_names'): [str]
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): ['Conv2d'],
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _dependency_calc_mask(self, wrappers, channel_dsets, wrappers_idx=None):
         """
