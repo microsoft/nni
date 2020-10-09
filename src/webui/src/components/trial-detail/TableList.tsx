@@ -268,7 +268,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 minWidth: columnWidth * 4,
                 maxWidth: columnWidth * 10,
                 isResizable: true,
-                onColumnClick: this._onColumnClick.bind(this)
+                onColumnClick: this._onColumnClick.bind(this),
+                ...(k === 'status' && {
+                    onRender: record => <span className={`${record.status} commonStyle`}>{record.status}</span>
+                })
             });
         }
         // operations column
