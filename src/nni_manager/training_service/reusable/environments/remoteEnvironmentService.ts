@@ -139,6 +139,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                 const isAlive = await executor.isProcessAlive(jobpidPath);
                 // if the process of jobpid is not alive any more
                 if (!isAlive) {
+                    this.log.info(`pid in ${jobpidPath} is not alive!`);
                     const trialReturnCode: string = await executor.getRemoteFileContent(trialReturnCodeFilePath);
                     const match: RegExpMatchArray | null = trialReturnCode.trim()
                         .match(/^-?(\d+)\s+(\d+)$/);
@@ -154,6 +155,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                     }
                 }
             } catch (error) {
+                this.releaseTrialResource(environment);
                 this.log.error(`(Ignorable mostly)Update job status exception, error is ${error.message}`);
             }
         });
@@ -224,8 +226,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
                 executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
                 'envs', environment.id)
             environment.command = `cd ${environment.runnerWorkingFolder} && \
-            ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-            echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
 
             await this.launchEnvironmentOnScheduledMachine(environment);
 
