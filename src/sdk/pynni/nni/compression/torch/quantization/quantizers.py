@@ -231,15 +231,15 @@ class QAT_Quantizer(Quantizer):
             return
 
         # if bias exists, quantize bias to uint32
-        if not hasattr(wrapper.module, 'bias') or wrapper.module.bias is None:
-            return
-        bias = wrapper.module.bias.data
-        bias_bits = 32
-        rmin, rmax = torch.min(bias), torch.max(bias)
-        module.scale, module.zero_point = update_quantization_param(bias_bits, rmin, rmax)
-        bias = self._quantize(bias_bits, module, bias)
-        bias = self._dequantize(module, bias)
-        wrapper.module.bias.data = bias
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
+            bias_bits = 32
+            rmin, rmax = torch.min(bias), torch.max(bias)
+            module.scale, module.zero_point = update_quantization_param(bias_bits, rmin, rmax)
+            bias = self._quantize(bias_bits, module, bias)
+            bias = self._dequantize(module, bias)
+            wrapper.module.bias.data = bias
+
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -247,6 +247,7 @@ class QAT_Quantizer(Quantizer):
         weight = self._quantize(weight_bits, module, weight)
         weight = self._dequantize(module, weight)
         wrapper.module.weight.data = weight
+        return wrapper.module.weight
 
     def quantize_output(self, output, wrapper, **kwargs):
         config = wrapper.config
@@ -316,6 +317,7 @@ class DoReFaQuantizer(Quantizer):
         weight = self.quantize(weight, weight_bits)
         weight = 2 * weight - 1
         wrapper.module.weight.data = weight
+        return wrapper.module.weight
 
     def quantize(self, input_ri, q_bits):
         scale = pow(2, q_bits) - 1
@@ -368,6 +370,7 @@ class BNNQuantizer(Quantizer):
         # remove zeros
         weight[weight == 0] = 1
         wrapper.module.weight.data = weight
+        return wrapper.module.weight
 
     def quantize_output(self, output, wrapper, **kwargs):
         out = torch.sign(output)
