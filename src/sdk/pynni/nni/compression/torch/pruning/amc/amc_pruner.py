@@ -174,16 +174,16 @@ class AMCPruner(Pruner):
         )
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint, args=self.env_args)
-        _logger.info('=> Saving logs to {}'.format(self.output_dir))
+        _logger.info('=> Saving logs to %s', self.output_dir)
         self.tfwriter = SummaryWriter(log_dir=self.output_dir)
         self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
-        _logger.info('=> Output path: {}...'.format(self.output_dir))
+        _logger.info('=> Output path: %s...', self.output_dir)
 
         nb_states = self.env.layer_embedding.shape[1]
         nb_actions = 1  # just 1 action here
 
         rmsize = rmsize * len(self.env.prunable_idx)  # for each layer
-        _logger.info('** Actual replay buffer size: {}'.format(rmsize))
+        _logger.info('** Actual replay buffer size: %d', rmsize)
 
         self.ddpg_args = Namespace(
             hidden1=hidden1,
@@ -249,11 +249,10 @@ class AMCPruner(Pruner):
 
             if done:  # end of episode
                 _logger.info(
-                    '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}'.format(
+                    '#%d: episode_reward: %.4f acc: %.4f, ratio: %.4f', 
                         episode, episode_reward,
                         info['accuracy'],
                         info['compress_ratio']
-                    )
                 )
                 self.text_writer.write(
                     '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}\n'.format(

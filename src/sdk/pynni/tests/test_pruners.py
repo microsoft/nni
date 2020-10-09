@@ -285,5 +285,11 @@ class PrunerTestCase(TestCase):
         pruner = AMCPruner(model, config_list, validate, val_loader, train_episode=1)
         pruner.compress()
 
+        pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=(2,3,32,32), device=device)
+        filePaths = ['./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth']
+        for f in filePaths:
+            if os.path.exists(f):
+                os.remove(f)
+
 if __name__ == '__main__':
     main()

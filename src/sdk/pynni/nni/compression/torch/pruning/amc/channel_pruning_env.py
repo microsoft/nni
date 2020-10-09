@@ -141,13 +141,13 @@ class ChannelPruningEnv:
         # build reward
         self.reset()  # restore weight
         self.org_acc = self._validate(self._val_loader, self.model)
-        _logger.info('=> original acc: {:.3f}%'.format(self.org_acc))
+        _logger.info('=> original acc: %.3f', self.org_acc)
         self.org_model_size = sum(self.wsize_list)
-        _logger.info('=> original weight size: {:.4f} M param'.format(self.org_model_size * 1. / 1e6))
+        _logger.info('=> original weight size: %.4f M param', self.org_model_size * 1. / 1e6)
         self.org_flops = sum(self.flops_list)
         _logger.info('=> FLOPs:')
         _logger.info([self.layer_info_dict[idx]['flops']/1e6 for idx in sorted(self.layer_info_dict.keys())])
-        _logger.info('=> original FLOPs: {:.4f} M'.format(self.org_flops * 1. / 1e6))
+        _logger.info('=> original FLOPs: %.4f M', self.org_flops * 1. / 1e6)
 
         self.expected_preserve_computation = self.preserve_ratio * self.org_flops
 
@@ -205,9 +205,9 @@ class ChannelPruningEnv:
                 best_model = os.path.join(self.args.output, 'best_model.pth')
                 best_mask = os.path.join(self.args.output, 'best_mask.pth')
                 self.pruner.export_model(model_path=best_model, mask_path=best_mask)
-                _logger.info('New best reward: {:.4f}, acc: {:.4f}, compress: {:.4f}'.format(self.best_reward, acc, compress_ratio))
-                _logger.info('New best policy: {}'.format(self.best_strategy))
-                _logger.info('New best d primes: {}'.format(self.best_d_prime_list))
+                _logger.info('New best reward: %.4f, acc: %.4f, compress: %.4f', self.best_reward, acc, compress_ratio)
+                _logger.info('New best policy: %s', self.best_strategy)
+                _logger.info('New best d primes: %s', self.best_d_prime_list)
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
             return obs, reward, done, info_set
@@ -397,7 +397,7 @@ class ChannelPruningEnv:
                 else:  # same group
                     share_group.append(c_idx)
             self.shared_idx.append(share_group)
-            _logger.info('=> Conv layers to share channels: {}'.format(self.shared_idx))
+            _logger.info('=> Conv layers to share channels: %s', self.shared_idx)
 
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)
 
@@ -405,10 +405,10 @@ class ChannelPruningEnv:
         for _, v in self.buffer_dict.items():
             self.buffer_idx += v
 
-        _logger.info('=> Prunable layer idx: {}'.format(self.prunable_idx))
-        _logger.info('=> Buffer layer idx: {}'.format(self.buffer_idx))
-        _logger.info('=> Shared idx: {}'.format(self.shared_idx))
-        _logger.info('=> Initial min strategy dict: {}'.format(self.min_strategy_dict))
+        _logger.info('=> Prunable layer idx: %s', self.prunable_idx)
+        _logger.info('=> Buffer layer idx: %s', self.buffer_idx)
+        _logger.info('=> Shared idx: %s', self.shared_idx)
+        _logger.info('=> Initial min strategy dict: %s', self.min_strategy_dict)
 
         # added for supporting residual connections during pruning
         self.visited = [False] * len(self.prunable_idx)
@@ -531,7 +531,7 @@ class ChannelPruningEnv:
 
         # normalize the state
         layer_embedding = np.array(layer_embedding, 'float')
-        _logger.info('=> shape of embedding (n_layer * n_dim): {}'.format(layer_embedding.shape))
+        _logger.info('=> shape of embedding (n_layer * n_dim): %s', layer_embedding.shape)
         assert len(layer_embedding.shape) == 2, layer_embedding.shape
         for i in range(layer_embedding.shape[1]):
             fmin = min(layer_embedding[:, i])

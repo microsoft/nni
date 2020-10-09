@@ -16,6 +16,7 @@ from tensorboardX import SummaryWriter
 
 from nni.compression.torch.pruning.amc.lib.net_measure import measure_model
 from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
+from nni.compression.torch import ModelSpeedup
 
 from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar
@@ -39,6 +40,8 @@ def parse_args():
     parser.add_argument('--data_root', default='./data', type=str, help='dataset path')
     # resume
     parser.add_argument('--ckpt_path', default=None, type=str, help='checkpoint path to fine tune')
+    parser.add_argument('--mask_path', default=None, type=str, help='mask path for speedup')
+
     # run eval
     parser.add_argument('--eval', action='store_true', help='Simply run eval')
     parser.add_argument('--calc_flops', action='store_true', help='Calculate flops')
@@ -56,20 +59,21 @@ def get_model(args):
         raise NotImplementedError
 
     if args.model_type == 'mobilenet':
-        net = MobileNet(n_class=n_class).cuda()
+        net = MobileNet(n_class=n_class)
     elif args.model_type == 'mobilenetv2':
-        net = MobileNetV2(n_class=n_class).cuda()
+        net = MobileNetV2(n_class=n_class)
     else:
         raise NotImplementedError
 
     if args.ckpt_path is not None:
-        # the checkpoint can be a saved whole model object exported by amc_search.py, or a state_dict
+        # the checkpoint can be state_dict exported by amc_search.py or saved by amc_train.py
         print('=> Loading checkpoint {} ..'.format(args.ckpt_path))
-        ckpt = torch.load(args.ckpt_path)
-        if type(ckpt) == dict:
-            net.load_state_dict(ckpt['state_dict'])
-        else:
-            net = ckpt
+        net.load_state_dict(torch.load(args.ckpt_path))
+        if args.mask_path is not None:
+            SZ = 224 if args.dataset == 'imagenet' else 32
+            data = torch.randn(2, 3, SZ, SZ)
+            ms = ModelSpeedup(net, data, args.mask_path)
+            ms.speedup_model()
 
     net.to(args.device)
     if torch.cuda.is_available() and args.n_gpu > 1:
@@ -204,7 +208,7 @@ if __name__ == '__main__':
 
     if args.calc_flops:
         IMAGE_SIZE = 224 if args.dataset == 'imagenet' else 32
-        n_flops, n_params = measure_model(net, IMAGE_SIZE, IMAGE_SIZE)
+        n_flops, n_params = measure_model(net, IMAGE_SIZE, IMAGE_SIZE, args.device)
         print('=> Model Parameter: {:.3f} M, FLOPs: {:.3f}M'.format(n_params / 1e6, n_flops / 1e6))
         exit(0)
 
