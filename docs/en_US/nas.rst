@@ -19,7 +19,7 @@ For details, please refer to the following tutorials:
 
     Overview <NAS/Overview>
     Write A Search Space <NAS/WriteSearchSpace>
-    Classic NAS <NAS/classic_nas>
+    Classic NAS <NAS/ClassicNas>
     One-shot NAS <NAS/one_shot_nas>
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
