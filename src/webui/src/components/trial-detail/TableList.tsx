@@ -392,7 +392,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <Stack horizontal horizontalAlign='end' className='allList'>
                             <DefaultButton
                                 className='allList-button-gap'
-                                text='Customize columns'
+                                text='Add/remove columns'
                                 onClick={() => {
                                     this.setState({ customizeColumnsDialogVisible: true });
                                 }}

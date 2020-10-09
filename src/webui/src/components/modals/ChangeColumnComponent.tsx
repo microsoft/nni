@@ -11,6 +11,7 @@ interface ChangeColumnProps {
     selectedColumns: string[]; // user selected column list
     onSelectedChange: (val: string[]) => void;
     onHideDialog: () => void;
+    minSelected?: number;
 }
 
 interface SimpleColumn {
@@ -75,7 +76,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
     };
 
     render(): React.ReactNode {
-        const { allColumns } = this.props;
+        const { allColumns, minSelected } = this.props;
         const { currentSelected } = this.state;
         return (
             <div>
@@ -106,7 +107,7 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                         <PrimaryButton
                             text='Save'
                             onClick={this.saveUserSelectColumn}
-                            disabled={currentSelected.length === 0}
+                            disabled={currentSelected.length < (minSelected === undefined ? 1 : minSelected)}
                         />
                         <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
