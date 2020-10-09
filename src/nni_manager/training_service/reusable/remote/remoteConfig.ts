@@ -2,32 +2,14 @@
 // Licensed under the MIT license.
 
 import { EnvironmentInformation } from '../environment';
-import { RemoteMachineTrialJobDetail } from '../../remote_machine/remoteMachineData';
-import { TrialJobApplicationForm } from '../../../common/trainingService';
+import { RemoteMachineMeta } from '../../remote_machine/remoteMachineData';
 
-
-/**
- * work around here, need RemoteMachineTrialJobDetail data structure to schedule machines
- */
-export class RemoteMachineMetaDetail extends RemoteMachineTrialJobDetail {
-    constructor() {
-        // work around, the form data is a placeholder
-        const form: TrialJobApplicationForm = {
-            sequenceId: 0,
-            hyperParameters: {
-                value: '',
-                index: 0
-            }
-        };
-        super('', 'WAITING', 1, '', form);
-    }
-}
 
 /**
  * RemoteMachineEnvironmentInformation
  */
 export class RemoteMachineEnvironmentInformation extends EnvironmentInformation {
-    public rmMachineMetaDetail?: RemoteMachineMetaDetail;
+    public rmMachineMeta?: RemoteMachineMeta;
 }
 
 export class RemoteConfig {

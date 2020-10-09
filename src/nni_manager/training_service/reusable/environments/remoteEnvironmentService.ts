@@ -5,28 +5,24 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { NNIError, NNIErrorNames } from '../../../common/errors';
 import { ObservableTimer } from '../../../common/observableTimer';
 import {
     getExperimentRootDir,
 } from '../../../common/utils';
-import { GPUSummary, ScheduleResultType } from '../../common/gpuData';
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../../common/util';
-import { GPUScheduler } from '../../remote_machine/gpuScheduler';
+import { MachineScheduler } from '../remote/machineScheduler';
 import {
     ExecutorManager, RemoteMachineMeta,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
-import { RemoteMachineEnvironmentInformation, RemoteMachineMetaDetail } from '../remote/remoteConfig';
+import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 
 
 @component.Singleton
@@ -37,13 +33,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
     private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
     private readonly environmentJobsMap: Map<string, RemoteMachineEnvironmentInformation>;
-    private readonly expRootDir: string;
     private trialConfig: TrialConfig | undefined;
-    private gpuScheduler?: GPUScheduler;
-    private readonly jobQueue: string[];
-    private readonly timer: ObservableTimer;
-    private stopping: boolean = false;
-    private readonly metricsEmitter: EventEmitter;
+    private machineScheduler?: MachineScheduler;
     private readonly log: Logger;
     private sshConnectionPromises: any[];
     private experimentRootDir: string;
@@ -52,19 +43,19 @@ export class RemoteEnvironmentService extends EnvironmentService {
     constructor(@component.Inject timer: ObservableTimer) {
         super();
         this.experimentId = getExperimentId();
-        this.metricsEmitter = new EventEmitter();
         this.environmentJobsMap = new Map<string, RemoteMachineEnvironmentInformation>();
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
-        this.jobQueue = [];
         this.sshConnectionPromises = [];
-        this.expRootDir = getExperimentRootDir();
         this.experimentRootDir = getExperimentRootDir();
         this.experimentId = getExperimentId();
-        this.timer = timer;
         this.log = getLogger();
         this.log.info('Construct remote machine training service.');
+    }
+
+    public getInitializeEnvironmentNumber() {
+        return this.machineExecutorManagerMap.size;
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -113,7 +104,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
 
         for (const rmMeta of rmMetaList) {
-            this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta));
+            this.sshConnectionPromises.push(await this.initRemoteMachineOnConnected(rmMeta));
         }
     }
 
@@ -136,34 +127,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
         // clean up previous result.
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
         await executor.allowPermission(true, nniRootDir);
-
-        //Begin to execute gpu_metrics_collection scripts
-        const script = executor.generateGpuStatsScript(getExperimentId());
-        executor.executeScript(script, false, true);
-        // the timer is trigger in 1 second, it causes multiple runs on server.
-        // So reduce it's freqeunce, only allow one of it run.
-        const collectingCount: boolean[] = [];
-
-        const disposable: Rx.IDisposable = this.timer.subscribe(
-            async () => {
-                if (collectingCount.length == 0) {
-                    collectingCount.push(true);
-                    const cmdresult = await executor.readLastLines(executor.joinPath(remoteGpuScriptCollectorDir, 'gpu_metrics'));
-                    if (cmdresult !== "") {
-                        rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
-                        if (rmMeta.gpuSummary.gpuCount === 0) {
-                            this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
-                            this.timer.unsubscribe(disposable);
-                        }
-                    }
-                    if (this.stopping) {
-                        this.timer.unsubscribe(disposable);
-                        this.log.debug(`Stopped GPU collector on ${rmMeta.ip}, since experiment is exiting.`);
-                    }
-                    collectingCount.pop();
-                }
-            }
-        );
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -203,10 +166,18 @@ export class RemoteEnvironmentService extends EnvironmentService {
     public releaseTrialResource(environment: EnvironmentInformation): void {
         const executorManager = this.environmentExecutorManagerMap.get(environment.id);
         if (executorManager === undefined) {
-            throw new Error(`ExecutorManager is not assigned for trial ${environment.id}`);
+            throw new Error(`ExecutorManager is not assigned for environment ${environment.id}`);
+        }
+        if (this.machineScheduler === undefined) {
+            throw new Error(`machineScheduler is not initialized!`);
         }
         // Note, it still keep reference in trialExecutorManagerMap, as there may be following requests from nni manager.
         executorManager.releaseExecutor(environment.id);
+        const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
+        if (remoteEnvironment.rmMachineMeta === undefined) {
+            throw new Error(`${remoteEnvironment.id} rmMachineMeta not initialized!`);
+        }
+        this.machineScheduler.recycleMachineReservation(remoteEnvironment.rmMachineMeta);
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
@@ -218,11 +189,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
             if (this.trialConfig ===  undefined) {
                 throw new Error("trial config not initialized!");
             }
-            this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
+            this.machineScheduler = new MachineScheduler(Array.from(this.machineExecutorManagerMap.keys()));
         }
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         remoteEnvironment.status = 'WAITING';
-        remoteEnvironment.rmMachineMetaDetail = new RemoteMachineMetaDetail();
         await this.prepareEnvironment(remoteEnvironment);
         await this.launchEnvironmentOnScheduledMachine(remoteEnvironment);
     }
@@ -232,30 +202,19 @@ export class RemoteEnvironmentService extends EnvironmentService {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        if (this.gpuScheduler === undefined) {
-            throw new Error('gpuScheduler is not initialized');
-        }
-
-        if (environment.rmMachineMetaDetail === undefined) {
-            throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, 
-                `Invalid rmMachineMetaDetail for environment ${environment.id}`);
+        if (this.machineScheduler === undefined) {
+            throw new Error('machineScheduler is not initialized');
         }
 
         // get an executor from scheduler
-        const rmScheduleResult: RemoteMachineScheduleResult = 
-        this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, environment.rmMachineMetaDetail);
-        if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
-            const errorMessage: string = `Required GPU number 0 is too large, no machine can meet`;
-            this.log.error(errorMessage);
-            deferred.reject();
-            throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
-        } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED
-            && rmScheduleResult.scheduleInfo !== undefined) {
-            const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
-
-            environment.rmMachineMetaDetail.rmMeta = rmScheduleInfo.rmMeta;
+        const rmMachineMeta: RemoteMachineMeta | undefined = this.machineScheduler.scheduleMachine();
+        if (rmMachineMeta === undefined) {
+            this.log.warning(`No available machine!`);
+            deferred.resolve(false);
+        } else {
+            environment.rmMachineMeta = rmMachineMeta;
             const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(
-                environment.rmMachineMetaDetail.rmMeta);
+                environment.rmMachineMeta);
             if (copyExpCodeDirPromise !== undefined) {
                 await copyExpCodeDirPromise;
             }
@@ -271,14 +230,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
             await this.launchEnvironmentOnScheduledMachine(environment);
 
             environment.status = 'RUNNING';
-            environment.trackingUrl = `file://${rmScheduleInfo.rmMeta.ip}:${environment.runnerWorkingFolder}`;
+            environment.trackingUrl = `file://${rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
             this.environmentJobsMap.set(environment.id, environment);
             deferred.resolve(true);
-        } else if (rmScheduleResult.resultType === ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
-            this.log.info(`Right now no available GPU can be allocated for trial ${environment.id}, will try to schedule later`);
-            deferred.resolve(false);
-        } else {
-            deferred.reject(`Invalid schedule resutl type: ${rmScheduleResult.resultType}`);
         }
 
         return deferred.promise;
@@ -289,13 +243,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
      * @param environment RemoteMachineEnvironmentDetail
      */
     private allocateExecutorManagerForEnvironment(environment: RemoteMachineEnvironmentInformation): void {
-        if (environment.rmMachineMetaDetail === undefined) {
+        if (environment.rmMachineMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${environment.id}`);
         }
-        if (environment.rmMachineMetaDetail.rmMeta === undefined) {
-            throw new Error(`rmMeta not set in trial ${environment.id}`);
-        }
-        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMetaDetail.rmMeta);
+        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMeta);
         if (executorManager === undefined) {
             throw new Error(`executorManager not initialized`);
         }

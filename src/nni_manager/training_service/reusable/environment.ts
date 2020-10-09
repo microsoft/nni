@@ -125,8 +125,9 @@ export abstract class EnvironmentService {
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
-    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract getInitializeEnvironmentNumber(): number;
 
     // It depends on environment pressure and settings
     // for example, OpenPAI relies on API calls, and there is an limitation for frequence, so it need to be bigger.
@@ -148,6 +149,7 @@ export abstract class EnvironmentService {
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new EnvironmentInformation(envId, envName);
     }
+
 }
 
 export class NodeInformation {
