@@ -201,7 +201,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         remoteEnvironment.status = 'WAITING';
         await this.prepareEnvironment(remoteEnvironment);
-        await this.launchEnvironmentOnScheduledMachine(remoteEnvironment);
+        await this.launchEnvironment(remoteEnvironment);
     }
 
     private async prepareEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<boolean> {
@@ -234,7 +234,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
 
-            await this.launchEnvironmentOnScheduledMachine(environment);
+            await this.launchEnvironment(environment);
 
             environment.status = 'RUNNING';
             environment.trackingUrl = `file://${rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
@@ -285,7 +285,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         }
     }
 
-    private async launchEnvironmentOnScheduledMachine(environment: RemoteMachineEnvironmentInformation): Promise<void> {
+    private async launchEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<void> {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
