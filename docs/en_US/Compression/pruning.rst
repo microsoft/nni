@@ -2,7 +2,7 @@
 Pruning
 #################
 
-A common technique to increase sparsity in neural network model weights and activations is pruning.
+Pruning is a common technique to compress neural network models.
 The pruning methods explore the redundancy in the model weights(parameters) and try to remove/prune the redundant and uncritical weights.
 The redundant elements are pruned from the model, their values are zeroed and we make sure they don't take part in the back-propagation process.
 
