@@ -17,7 +17,6 @@ import {
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../../common/util';
-import { MachineScheduler } from '../remote/machineScheduler';
 import {
     ExecutorManager, RemoteMachineMeta,
 } from '../../remote_machine/remoteMachineData';
@@ -32,8 +31,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>;
     private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
     private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
+    private readonly remoteMachineMetaOccupiedMap: Map<RemoteMachineMeta, boolean>;
     private trialConfig: TrialConfig | undefined;
-    private machineScheduler?: MachineScheduler;
     private readonly log: Logger;
     private sshConnectionPromises: any[];
     private experimentRootDir: string;
@@ -45,6 +44,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
+        this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineMeta, boolean>();
         this.sshConnectionPromises = [];
         this.experimentRootDir = getExperimentRootDir();
         this.experimentId = getExperimentId();
@@ -97,6 +97,23 @@ export class RemoteEnvironmentService extends EnvironmentService {
             default:
                 this.log.debug(`Remote not support metadata key: '${key}', value: '${value}'`);
         }
+    }
+
+    private scheduleMachine(): RemoteMachineMeta | undefined {
+        for (const [rmMeta, occupied] of this.remoteMachineMetaOccupiedMap) {
+            if (!occupied) {
+                this.remoteMachineMetaOccupiedMap.set(rmMeta, true);
+                return rmMeta;
+            }
+        }
+        return undefined;
+    }
+
+    private recycleMachineReservation(rmMeta: RemoteMachineMeta): void {
+        if (!this.remoteMachineMetaOccupiedMap.has(rmMeta)) {
+            throw new Error(`${rmMeta} not initialized!`);
+        }
+        this.remoteMachineMetaOccupiedMap.set(rmMeta, false);
     }
 
     private async setupConnections(machineList: string): Promise<void> {
@@ -175,16 +192,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
         if (executorManager === undefined) {
             throw new Error(`ExecutorManager is not assigned for environment ${environment.id}`);
         }
-        if (this.machineScheduler === undefined) {
-            throw new Error(`machineScheduler is not initialized!`);
-        }
+
         // Note, it still keep reference in trialExecutorManagerMap, as there may be following requests from nni manager.
         executorManager.releaseExecutor(environment.id);
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         if (remoteEnvironment.rmMachineMeta === undefined) {
             throw new Error(`${remoteEnvironment.id} rmMachineMeta not initialized!`);
         }
-        this.machineScheduler.recycleMachineReservation(remoteEnvironment.rmMachineMeta);
+        this.recycleMachineReservation(remoteEnvironment.rmMachineMeta);
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
@@ -196,7 +211,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
             if (this.trialConfig ===  undefined) {
                 throw new Error("trial config not initialized!");
             }
-            this.machineScheduler = new MachineScheduler(Array.from(this.machineExecutorManagerMap.keys()));
+            Array.from(this.machineExecutorManagerMap.keys()).forEach(rmMeta => {
+                // initialize remoteMachineMetaOccupiedMap, false means not occupied
+                this.remoteMachineMetaOccupiedMap.set(rmMeta, false);
+            });
         }
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         remoteEnvironment.status = 'WAITING';
@@ -209,12 +227,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        if (this.machineScheduler === undefined) {
-            throw new Error('machineScheduler is not initialized');
-        }
 
         // get an executor from scheduler
-        const rmMachineMeta: RemoteMachineMeta | undefined = this.machineScheduler.scheduleMachine();
+        const rmMachineMeta: RemoteMachineMeta | undefined = this.scheduleMachine();
         if (rmMachineMeta === undefined) {
             this.log.warning(`No available machine!`);
             deferred.resolve(false);
