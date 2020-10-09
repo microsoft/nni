@@ -37,10 +37,6 @@ export class AMLEnvironmentService extends EnvironmentService {
         this.experimentRootDir = getExperimentRootDir();
     }
 
-    public getInitializeEnvironmentNumber(): number {
-        return 0;
-    }
-
     public get hasStorageService(): boolean {
         return false;
     }

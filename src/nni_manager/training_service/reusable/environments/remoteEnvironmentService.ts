@@ -32,7 +32,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>;
     private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
     private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
-    private readonly environmentJobsMap: Map<string, RemoteMachineEnvironmentInformation>;
     private trialConfig: TrialConfig | undefined;
     private machineScheduler?: MachineScheduler;
     private readonly log: Logger;
@@ -43,7 +42,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     constructor() {
         super();
         this.experimentId = getExperimentId();
-        this.environmentJobsMap = new Map<string, RemoteMachineEnvironmentInformation>();
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
         this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
@@ -51,10 +49,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.experimentRootDir = getExperimentRootDir();
         this.experimentId = getExperimentId();
         this.log = getLogger();
-        this.log.info('Construct remote machine training service.');
     }
 
-    public getInitializeEnvironmentNumber(): number {
+    public get prefetchedEnvironmentCount(): number {
         return this.machineExecutorManagerMap.size;
     }
 
@@ -157,12 +154,12 @@ export class RemoteEnvironmentService extends EnvironmentService {
                                 } else {
                                     environment.setStatus('FAILED');
                                 }
-                                this.releaseTrialResource(environment);
+                                this.releaseEnvironmentResource(environment);
                             }
                         }
                     }
                 } catch (error) {
-                    this.releaseTrialResource(environment);
+                    this.releaseEnvironmentResource(environment);
                     this.log.error(`Update job status exception, error is ${error.message}`);
                 }
             }
@@ -170,10 +167,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     /**
-     * If a trial is finished, release the connection resource
-     * @param trial remote machine trial job detail
+     * If a environment is finished, release the connection resource
+     * @param environment remote machine environment job detail
      */
-    public releaseTrialResource(environment: EnvironmentInformation): void {
+    public releaseEnvironmentResource(environment: EnvironmentInformation): void {
         const executorManager = this.environmentExecutorManagerMap.get(environment.id);
         if (executorManager === undefined) {
             throw new Error(`ExecutorManager is not assigned for environment ${environment.id}`);
@@ -241,7 +238,6 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 
             environment.status = 'RUNNING';
             environment.trackingUrl = `file://${rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
-            this.environmentJobsMap.set(environment.id, environment);
             deferred.resolve(true);
         }
 
@@ -276,14 +272,14 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
-            this.releaseTrialResource(environment);
+            this.releaseEnvironmentResource(environment);
             return
         }
 
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         try {
             await executor.killChildProcesses(jobpidPath);
-            this.releaseTrialResource(environment);
+            this.releaseEnvironmentResource(environment);
         } catch (error) {
             this.log.error(`remoteTrainingService.cancelTrialJob: ${error}`);
         }

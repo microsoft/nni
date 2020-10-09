@@ -235,7 +235,7 @@ class TrialDispatcher implements TrainingService {
             }
             await storageService.copyDirectory(trialToolsPath, envDir, true);
         }
-        await this.initEnvironments();
+        await this.prefetchEnvironments();
         this.log.info(`TrialDispatcher: run loop started.`);
         await Promise.all([
             this.environmentMaintenanceLoop(),
@@ -579,9 +579,9 @@ class TrialDispatcher implements TrainingService {
         }
     }
     
-    private async initEnvironments(): Promise<void> {
+    private async prefetchEnvironments (): Promise<void> {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
-        const number = environmentService.getInitializeEnvironmentNumber();
+        const number = environmentService.prefetchedEnvironmentCount;
         this.log.info(`Initialize environments total number: ${number}`);
         for (let index = 0; index < number; index++) {
             await this.requestEnvironment();

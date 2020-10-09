@@ -37,10 +37,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.experimentId = getExperimentId();
     }
 
-    public getInitializeEnvironmentNumber(): number {
-        return 0;
-    }
-
     public get environmentMaintenceLoopInterval(): number {
         return 5000;
     }

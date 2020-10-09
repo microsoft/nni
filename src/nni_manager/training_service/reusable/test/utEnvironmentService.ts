@@ -15,10 +15,6 @@ export class UtEnvironmentService extends EnvironmentService {
         super();
     }
 
-    public getInitializeEnvironmentNumber() {
-        return 0;
-    }
-
     public get hasStorageService(): boolean {
         // storage service is tested by integration testing.
         return false;
