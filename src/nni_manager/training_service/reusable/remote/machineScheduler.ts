@@ -8,7 +8,7 @@ import { RemoteMachineMeta } from '../../remote_machine/remoteMachineData';
 import { getLogger, Logger } from '../../../common/log';
 
 /**
- * A simple GPU scheduler implementation
+ * A simple remote machine scheduler implementation
  */
 export class MachineScheduler {
 

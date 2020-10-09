@@ -149,7 +149,6 @@ export abstract class EnvironmentService {
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new EnvironmentInformation(envId, envName);
     }
-
 }
 
 export class NodeInformation {
