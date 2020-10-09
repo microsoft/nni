@@ -49,13 +49,30 @@ const searchOptionLiterals = {
 
 const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'metric/default'];
 
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
+}
+
 function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
     const key = columnKey as keyof T;
     return items.slice(0).sort(function(a: T, b: T): any {
-        if (a[key] === undefined) {
+        if (
+            a[key] === undefined ||
+            Object.is(a[key], NaN) ||
+            Object.is(a[key], Infinity) ||
+            Object.is(a[key], -Infinity) ||
+            typeof a[key] === 'object'
+        ) {
             return 1;
         }
-        if (b[key] === undefined) {
+        if (
+            b[key] === undefined ||
+            Object.is(b[key], NaN) ||
+            Object.is(b[key], Infinity) ||
+            Object.is(b[key], -Infinity) ||
+            typeof b[key] === 'object'
+        ) {
             return -1;
         }
         return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
@@ -100,6 +117,7 @@ interface TableListState {
     compareDialogVisible: boolean;
     intermediateDialogTrial: TableObj | undefined;
     copiedTrialId: string | undefined;
+    sortInfo: SortInfo;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -118,7 +136,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             compareDialogVisible: false,
             selectedRowIds: [],
             intermediateDialogTrial: undefined,
-            copiedTrialId: undefined
+            copiedTrialId: undefined,
+            sortInfo: { field: '', isDescend: true }
         };
 
         this._selection = new Selection({
@@ -169,31 +188,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     private _onColumnClick(ev: React.MouseEvent<HTMLElement>, column: IColumn): void {
         // handle the click events on table header (do sorting)
-        const { columns, displayedItems } = this.state;
+        const { columns } = this.state;
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
-        newColumns.forEach((newCol: IColumn) => {
-            if (newCol === currColumn) {
-                currColumn.isSortedDescending = !currColumn.isSortedDescending;
-                currColumn.isSorted = true;
-            } else {
-                newCol.isSorted = false;
-                newCol.isSortedDescending = true;
-            }
-        });
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = _copyAndSort(displayedItems, currColumn.fieldName!, currColumn.isSortedDescending);
-        this.setState({
-            columns: newColumns,
-            displayedItems: newItems
-        });
+        const isSortedDescending = !currColumn.isSortedDescending;
+        this.setState(
+            {
+                sortInfo: { field: column.key, isDescend: isSortedDescending }
+            },
+            this._updateTableSource
+        );
     }
 
     private _trialsToTableItems(trials: TableObj[]): any[] {
         // TODO: use search space and metrics space from TRIALS will cause update issues.
         const searchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
         const metricSpace = TRIALS.inferredMetricSpace();
-        return trials.map(trial => {
+        const items = trials.map(trial => {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
@@ -213,6 +224,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy(); // FIXME: this is bad
             return ret;
         });
+
+        const { sortInfo } = this.state;
+        if (sortInfo.field !== '') {
+            return _copyAndSort(items, sortInfo.field, sortInfo.isDescend);
+        } else {
+            return items;
+        }
     }
 
     private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
@@ -306,6 +324,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
             className: 'detail-table',
             onRender: this._renderOperationColumn.bind(this)
         });
+
+        const { sortInfo } = this.state;
+        for (const column of columns) {
+            if (column.key === sortInfo.field) {
+                column.isSorted = true;
+                column.isSortedDescending = sortInfo.isDescend;
+            } else {
+                column.isSorted = false;
+                column.isSortedDescending = true;
+            }
+        }
         return columns;
     }
 
