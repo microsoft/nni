@@ -45,7 +45,7 @@ const convertTimeToSecond = (str: string): number => {
                 parseInt(durationArr[3]);
             break;
         case 3:
-            if (day === true) {
+            if (day) {
                 result =
                     parseInt(durationArr[0]) * 3600 * 24 +
                     parseInt(durationArr[1]) * 3600 +
@@ -55,20 +55,20 @@ const convertTimeToSecond = (str: string): number => {
             }
             break;
         case 2:
-            if (day === true) {
+            if (day) {
                 result = parseInt(durationArr[0]) * 24 * 3600 + parseInt(durationArr[1]) * 3600;
-            } else if (hour === true) {
+            } else if (hour) {
                 result = parseInt(durationArr[0]) * 3600 + parseInt(durationArr[1]) * 60;
             } else {
                 result = parseInt(durationArr[0]) * 60 + parseInt(durationArr[1]);
             }
             break;
         case 1:
-            if (day === true) {
+            if (day) {
                 result = parseInt(durationArr[0]) * 24 * 3600;
-            } else if (hour === true) {
+            } else if (hour) {
                 result = parseInt(durationArr[0]) * 3600;
-            } else if (min === true) {
+            } else if (min) {
                 result = parseInt(durationArr[0]) * 60;
             } else {
                 result = parseInt(durationArr[0]);
