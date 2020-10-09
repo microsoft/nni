@@ -1,28 +1,10 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import {
-    Stack,
-    Modal,
-    IconButton,
-    IDragOptions,
-    ContextualMenu,
-    IColumn,
-    elementContains,
-    IActivityItemStyles
-} from '@fluentui/react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
-import IntermediateVal from '../public-child/IntermediateVal';
-import {
-    TableRecord,
-    Intermedia,
-    TooltipForIntermediate,
-    TableObj,
-    SingleAxis,
-    MultipleAxes
-} from '../../static/interface';
+import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/compare.scss';
-import { Trial } from '../../static/model/trial';
 import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 
@@ -38,7 +20,7 @@ const dragOptions: IDragOptions = {
 
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
-function _parseIntermediates(trial: TableObj) {
+function _parseIntermediates(trial: TableObj): number[] {
     const intermediates: number[] = [];
     for (const metric of trial.intermediates) {
         if (metric === undefined) {
@@ -97,10 +79,6 @@ class Compare extends React.Component<CompareProps, {}> {
             type: 'line'
         }));
         const legend = dataForEchart.map(item => item.name);
-        console.log(items); // eslint-disable-line no-console
-        console.log(xAxis); // eslint-disable-line no-console
-        console.log(dataForEchart); // eslint-disable-line no-console
-        console.log(legend); // eslint-disable-line no-console
         const option = {
             tooltip: {
                 trigger: 'item',
@@ -113,8 +91,7 @@ class Compare extends React.Component<CompareProps, {}> {
                     }
                 },
                 formatter: (data: TooltipForIntermediate): string => {
-                    console.log(data); // eslint-disable-line no-console
-                    const item = items.find(k => k.id === data.seriesName)!;
+                    const item = items.find(k => k.id === data.seriesName) as Item;
                     return this._generateTooltipSummary(item, metricKey);
                 }
             },
@@ -208,10 +185,10 @@ class Compare extends React.Component<CompareProps, {}> {
                     {this._renderRow('trialnum', 'Trial No.', 'value', items, item => item.sequenceId.toString())}
                     {this._renderRow('duration', 'Duration', 'value', items, item => item.duration)}
                     {parameterKeys.map(k =>
-                        this._renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k)!)
+                        this._renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k))
                     )}
                     {metricKeys.map(k =>
-                        this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item => item.metrics.get(k)!)
+                        this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item => item.metrics.get(k))
                     )}
                 </tbody>
             </table>

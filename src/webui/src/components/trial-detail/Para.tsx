@@ -101,8 +101,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             <div className='parameter'>
                 <Stack horizontal className='para-filter' horizontalAlign='end'>
                     <DefaultButton
-                        text='Add/remove axes'
-                        onClick={() => {
+                        text='Add/Remove axes'
+                        onClick={(): void => {
                             this.setState({ customizeColumnsDialogVisible: true });
                         }}
                         styles={{ root: { marginRight: 10 } }}
@@ -125,12 +125,12 @@ class Para extends React.Component<ParaProps, ParaState> {
                     <ChangeColumnComponent
                         selectedColumns={chosenDimensions}
                         allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
-                        onSelectedChange={(selected: string[]) => {
+                        onSelectedChange={(selected: string[]): void => {
                             this.setState({ chosenDimensions: selected }, () => {
                                 this.renderParallelCoordinates();
                             });
                         }}
-                        onHideDialog={() => {
+                        onHideDialog={(): void => {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
                         minSelected={2}

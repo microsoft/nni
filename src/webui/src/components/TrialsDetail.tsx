@@ -1,7 +1,6 @@
 import * as React from 'react';
-import { Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultButton } from '@fluentui/react';
+import { Stack, Pivot, PivotItem } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
-import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
@@ -41,7 +40,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
         return (
             <AppContext.Consumer>
-                {(value): React.ReactNode => (
+                {(_value): React.ReactNode => (
                     <React.Fragment>
                         <div className='trial' id='tabsty'>
                             <Pivot
