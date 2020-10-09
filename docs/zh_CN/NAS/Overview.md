@@ -54,6 +54,17 @@ One-shot 算法**不需要 nnictl，可单独运行**。 NNI 支持 PyTorch 和 
 One-Shot NAS 可以通过可视化工具来查看。 点击[这里](./Visualization.md)，了解详情。
 
 
+
+## 搜索空间集合
+
+NNI 提供了一些预定义的、可被重用的搜索空间。 通过堆叠这些抽取出的单元，用户可以快速复现 NAS 模型。
+
+搜索空间集合包含了以下 NAS 单元：
+
+* [DartsCell](./SearchSpaceZoo.md#DartsCell)
+* [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
+* [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+
 ## 使用 NNI API 来编写搜索空间
 
 在两种场景下需要用于设计和搜索模型的编程接口。

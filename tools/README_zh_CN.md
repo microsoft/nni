@@ -5,7 +5,7 @@ NNI CTL 模块用来控制 Neural Network Intelligence，包括开始新 Experim
 ## 环境
 
     Ubuntu 16.04 或其它 Linux 操作系统。
-    python >= 3.5
+    python >= 3.6
     
 
 ## 安装

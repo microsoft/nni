@@ -54,6 +54,7 @@ setuptools.setup(
         'ruamel.yaml',
         'psutil',
         'requests',
+        'responses',
         'astor',
         'PythonWebHDFS',
         'hyperopt==0.1.2',

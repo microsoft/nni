@@ -295,7 +295,7 @@ Debug mode will disable version check function in Trialkeeper.
     > update experiment's trial num
 
     ```bash
-    nnictl update trialnum --id [experiment_id] --value [trial_num]
+    nnictl update trialnum [experiment_id] --value [trial_num]
     ```
 
 <a name="trial"></a>
@@ -347,7 +347,7 @@ Debug mode will disable version check function in Trialkeeper.
     > kill trail job
 
     ```bash
-    nnictl trial [trial_id] --experiment [experiment_id]
+    nnictl trial kill [experiment_id] --trial_id [trial_id]
     ```
 
 <a name="top"></a>
@@ -578,6 +578,7 @@ Debug mode will disable version check function in Trialkeeper.
   |--path, -p|  True| |the file path of nni package|
   |--codeDir, -c| True| |the path of codeDir for loaded experiment, this path will also put the code in the loaded experiment package|
   |--logDir, -l| False| |the path of logDir for loaded experiment|
+  |--searchSpacePath, -s| True| |the path of search space file for loaded experiment, this path contains file name. Default in $codeDir/search_space.json|
 
   * Examples
 
@@ -704,6 +705,21 @@ Debug mode will disable version check function in Trialkeeper.
 ### Manage webui
 
 * __nnictl webui url__
+  * Description
+
+    Show an experiment's webui url
+
+  * Usage
+
+    ```bash
+    nnictl webui url [options]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |Experiment ID|
 
 <a name="tensorboard"></a>
 ### Manage tensorboard

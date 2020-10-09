@@ -5,7 +5,7 @@
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
-import { EnvironmentInformation, NodeInfomation } from "./environment";
+import { EnvironmentInformation, NodeInformation } from "./environment";
 
 export class TrialDetail implements TrialJobDetail {
     public id: string;
@@ -23,7 +23,7 @@ export class TrialDetail implements TrialJobDetail {
     // init settings of trial
     public settings = {};
     // it's used to aggregate node status for multiple node trial
-    public nodes: Map<string, NodeInfomation>;
+    public nodes: Map<string, NodeInformation>;
     // assigned GPUs for multi-trial scheduled.
     public assignedGpus: GPUInfo[] | undefined;
 
@@ -37,6 +37,6 @@ export class TrialDetail implements TrialJobDetail {
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.tags = [];
-        this.nodes = new Map<string, NodeInfomation>();
+        this.nodes = new Map<string, NodeInformation>();
     }
 }

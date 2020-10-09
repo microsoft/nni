@@ -1,25 +1,26 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { Router, Route, browserHistory, IndexRedirect } from 'react-router';
-import Overview from './components/Overview';
-import TrialsDetail from './components/TrialsDetail';
+import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
+const Overview = lazy(() => import('./components/Overview'));
+const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
-  (
-    <Router history={browserHistory}>
-      <Route path="/" component={App}>
-        <IndexRedirect to="/oview" />
-        <Route path="/oview" component={Overview} />
-        <Route path="/detail" component={TrialsDetail} />
-        {/* test branch */}
-      </Route>
-    </Router>
+    <Router>
+        <App>
+            <Switch>
+                <Suspense fallback={null}>
+                    <Route path='/oview' component={Overview} />
+                    <Route path='/detail' component={TrialsDetail} />
+                    <Route path='/' render={(): React.ReactNode => <Redirect to={{ pathname: '/oview' }} />} />
+                </Suspense>
+            </Switch>
+        </App>
+    </Router>,
 
-  ),
-  document.getElementById('root')
+    document.getElementById('root')
 );
 
 // If you want your app to work offline and load faster, you can change

@@ -15,6 +15,7 @@ replace_module = {
     'AdaptiveAvgPool2d': lambda module, mask: no_replace(module, mask),
     'ReLU': lambda module, mask: no_replace(module, mask),
     'ReLU6': lambda module, mask: no_replace(module, mask),
+    'Sigmoid': lambda module, mask: no_replace(module, mask),
     'Linear': lambda module, mask: replace_linear(module, mask),
     'Dropout': lambda module, mask: no_replace(module, mask),
     'Dropout2d': lambda module, mask: no_replace(module, mask),
@@ -115,15 +116,19 @@ def replace_conv2d(conv, mask):
     else:
         out_channels_index = mask.output_mask.mask_index[1]
         out_channels = out_channels_index.size()[0]
-
-    _logger.debug("replace conv2d with in_channels: %d, out_channels: %d", in_channels, out_channels)
+    groups = conv.groups
+    if conv.in_channels == conv.out_channels == conv.groups:
+        # remove groups for depthwise layers
+        assert in_channels == out_channels
+        groups = in_channels
+    _logger.debug("replace conv2d %s with in_channels: %d, out_channels: %d", mask.module_name, in_channels, out_channels)
     new_conv = torch.nn.Conv2d(in_channels=in_channels,
                                out_channels=out_channels,
                                kernel_size=conv.kernel_size,
                                stride=conv.stride,
                                padding=conv.padding,
                                dilation=conv.dilation,
-                               groups=conv.groups,
+                               groups=groups,
                                bias=conv.bias is not None,
                                padding_mode=conv.padding_mode)
 
@@ -141,13 +146,16 @@ def replace_conv2d(conv, mask):
     # channal is also divided into serveral groups and each group
     # filter may have different input channel indexes.
     input_step = int(conv.in_channels / conv.groups)
-    in_channels_group = int(in_channels / conv.groups)
-    filter_step = int(out_channels / conv.groups)
-    if mask.input_mask is not None:
+    in_channels_group = int(in_channels / groups)
+    filter_step = int(out_channels / groups)
+    if mask.input_mask is not None and not (in_channels == out_channels == groups):
         for groupid in range(conv.groups):
             start = groupid * input_step
             end = (groupid + 1) * input_step
             current_input_index = list(filter(lambda x: start <= x and x < end, in_channels_index.tolist()))
+            if not current_input_index:
+                # there is no kept channel in current group
+                continue
             # shift the global index into the group index
             current_input_index = [x-start for x in current_input_index]
             # if the groups is larger than 1, the input channels of each

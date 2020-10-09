@@ -11,7 +11,7 @@ This is the PyPI build and upload tool for NNI project.
   Ubuntu 16.04 LTS
   make
   wget
-  Python >= 3.5
+  Python >= 3.6
   Pip
   Node.js
   Yarn
@@ -45,7 +45,7 @@ This is the PyPI build and upload tool for NNI project.
   ```
   Windows 10
   powershell
-  Python >= 3.5
+  Python >= 3.6
   Pip
   Yarn
   ```

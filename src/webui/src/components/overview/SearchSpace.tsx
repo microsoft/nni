@@ -7,20 +7,18 @@ interface SearchspaceProps {
 }
 
 class SearchSpace extends React.Component<SearchspaceProps, {}> {
-
     constructor(props: SearchspaceProps) {
         super(props);
-
     }
 
     render(): React.ReactNode {
         const { searchSpace } = this.props;
         return (
-            <div className="searchSpace">
+            <div className='searchSpace'>
                 <MonacoEditor
-                    height="361"
-                    language="json"
-                    theme="vs-light"
+                    height='361'
+                    language='json'
+                    theme='vs-light'
                     value={JSON.stringify(searchSpace, null, 2)}
                     options={MONACO}
                 />

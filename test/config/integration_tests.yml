@@ -135,6 +135,13 @@ testCases:
   validator:
     class: ExportValidator 
 
+- name: experiment-import
+  configFile: test/config/nnictl_experiment/sklearn-classification.yml
+  validator:
+    class: ImportValidator
+    kwargs:
+      import_data_file_path: config/nnictl_experiment/test_import.json
+
 - name: nnicli
   configFile: test/config/examples/sklearn-regression.yml
   config:
@@ -242,3 +249,9 @@ testCases:
 
 - name: tuner-metis
   configFile: test/config/tuners/metis.yml
+
+#########################################################################
+# nni customized-tuners test
+#########################################################################
+- name: customized-tuners-demotuner
+  configFile: test/config/customized_tuners/demotuner-sklearn-classification.yml

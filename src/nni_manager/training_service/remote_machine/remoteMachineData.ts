@@ -23,6 +23,7 @@ export class RemoteMachineMeta {
     //TODO: initialize varialbe in constructor
     public occupiedGpuIndexMap?: Map<number, number>;
     public readonly useActiveGpu?: boolean = false;
+    public readonly preCommand?: string;
 }
 
 /**
