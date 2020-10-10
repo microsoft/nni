@@ -232,7 +232,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const rmMachineMeta: RemoteMachineMeta | undefined = this.scheduleMachine();
         if (rmMachineMeta === undefined) {
             this.log.warning(`No available machine!`);
-            return Deferred.resolve(false);
+            return Promise.resolve(false);
         } else {
             environment.rmMachineMeta = rmMachineMeta;
             const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMeta);
@@ -247,7 +247,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
             environment.command = `cd ${environment.runnerWorkingFolder} && \
 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-            return Deferred.resolve(true);
+            return Promise.resolve(true);
         }
     }
 
