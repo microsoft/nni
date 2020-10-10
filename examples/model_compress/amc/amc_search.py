@@ -7,7 +7,7 @@ import time
 
 import torch
 import torch.nn as nn
-
+from torchvision.models import resnet
 from nni.compression.torch import AMCPruner
 from data import get_split_dataset
 from utils import AverageMeter, accuracy
@@ -16,7 +16,8 @@ sys.path.append('../models')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')
-    parser.add_argument('--model_type', default='mobilenet', type=str, choices=['mobilenet', 'mobilenetv2'], help='model to prune')
+    parser.add_argument('--model_type', default='mobilenet', type=str, choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50'],
+        help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'imagenet'], help='dataset to use (cifar/imagenet)')
     parser.add_argument('--batch_size', default=50, type=int, help='number of data batch size')
     parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
@@ -28,27 +29,29 @@ def parse_args():
     parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
-    parser.add_argument('--job', default='train_export', type=str, choices=['train_export', 'export_only'],
-                        help='search best pruning policy and export or just export model with searched policy')
-    parser.add_argument('--export_path', default=None, type=str, help='path for exporting models')
-    parser.add_argument('--searched_model_path', default=None, type=str, help='path for searched best wrapped model')
+    parser.add_argument('--suffix', default=None, type=str, help='suffix of auto-generated log directory')
 
     return parser.parse_args()
 
 
 def get_model_and_checkpoint(model, dataset, checkpoint_path, n_gpu=1):
-    if model == 'mobilenet' and dataset == 'imagenet':
+    if dataset == 'imagenet':
+        n_class = 1000
+    elif dataset == 'cifar10':
+        n_class = 10
+    else:
+        raise ValueError('unsupported dataset')
+
+    if model == 'mobilenet':
         from mobilenet import MobileNet
-        net = MobileNet(n_class=1000)
-    elif model == 'mobilenetv2' and dataset == 'imagenet':
+        net = MobileNet(n_class=n_class)
+    elif model == 'mobilenetv2':
         from mobilenet_v2 import MobileNetV2
-        net = MobileNetV2(n_class=1000)
-    elif model == 'mobilenet' and dataset == 'cifar10':
-        from mobilenet import MobileNet
-        net = MobileNet(n_class=10)
-    elif model == 'mobilenetv2' and dataset == 'cifar10':
-        from mobilenet_v2 import MobileNetV2
-        net = MobileNetV2(n_class=10)
+        net = MobileNetV2(n_class=n_class)
+    elif model.startswith('resnet'):
+        net = resnet.__dict__[model](pretrained=True)
+        in_features = net.fc.in_features
+        net.fc = nn.Linear(in_features, n_class)
     else:
         raise NotImplementedError
     if checkpoint_path:
@@ -130,7 +133,6 @@ if __name__ == "__main__":
     }]
     pruner = AMCPruner(
         model, config_list, validate, val_loader, model_type=args.model_type, dataset=args.dataset,
-        train_episode=args.train_episode, job=args.job, export_path=args.export_path,
-        searched_model_path=args.searched_model_path,
-        flops_ratio=args.flops_ratio, lbound=args.lbound, rbound=args.rbound)
+        train_episode=args.train_episode, flops_ratio=args.flops_ratio, lbound=args.lbound,
+        rbound=args.rbound, suffix=args.suffix)
     pruner.compress()
