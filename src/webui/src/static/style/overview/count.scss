@@ -49,3 +49,9 @@ $seriesIconMargin: 13px;
     background: transparent;
     border: none;
 }
+
+.info {
+    position: absolute;
+    z-index: 999;
+    left: 0;
+}

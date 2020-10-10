@@ -76,7 +76,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             <TrialConfigButton />
                             <div className='wrapper'>
                                 {/* exp params */}
-                                <div className='box1'>
+                                <div className='overviewBasicInfo'>
                                     <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
                                         <Title />
                                     </TitleContext.Provider>
@@ -85,8 +85,8 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </BestMetricContext.Provider>
                                 </div>
                                 {/* duration & trial numbers */}
-                                <div className='box2'>
-                                    <div className='box4'>
+                                <div className='overviewProgress'>
+                                    <div className='duration'>
                                         <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
                                             <Title />
                                         </TitleContext.Provider>
@@ -97,7 +97,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </ExpDurationContext.Provider>
                                     </div>
                                     <div className='empty' />
-                                    <div className='box7'>
+                                    <div className='trialCount'>
                                         <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
                                             <Title />
                                         </TitleContext.Provider>
@@ -109,7 +109,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </div>
                                 </div>
                                 {/* table */}
-                                <div className='box3'>
+                                <div className='overviewTable'>
                                     <Stack horizontal>
                                         <div style={itemStyleSucceed}>
                                             <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
@@ -155,10 +155,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </Stack>
                                     <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
                                 </div>
-                                <div className='box5'>
+                                <div className='overviewCommand'>
                                     <Command />
                                 </div>
-                                <div className='box6'>
+                                <div className='overviewChart'>
                                     <Stack horizontal>
                                         <div style={itemStyle1}>
                                             <TitleContext.Provider

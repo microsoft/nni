@@ -5,8 +5,8 @@ import { EditExpeParamContext } from './context';
 import { MANAGER_IP } from '../../../static/const';
 import { convertTimeToSecond } from '../../../static/function';
 import { Edit, CheckMark, Cancel } from '../../buttons/Icon';
-import '../../../static/style/overview/count.scss';
 import MessageInfo from '../../modals/MessageInfo';
+import '../../../static/style/overview/count.scss';
 
 const DurationInputRef = React.createRef<HTMLInputElement>();
 

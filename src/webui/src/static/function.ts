@@ -30,74 +30,52 @@ const convertTime = (num: number): string => {
 };
 
 const convertTimeToSecond = (str: string): number => {
-    const day = str.indexOf('day') !== -1;
-    const hour = str.indexOf('h') !== -1;
-    const min = str.indexOf('min') !== -1;
-    const durationArr = str.trim().split(/\s+/);
-    let result = 0;
-    switch (durationArr.length) {
-        // day h min s
-        case 4:
-            result =
-                parseInt(durationArr[0]) * 3600 * 24 +
-                parseInt(durationArr[1]) * 3600 +
-                parseInt(durationArr[2]) * 60 +
-                parseInt(durationArr[3]);
-            break;
-        case 3:
-            if (day) {
-                result =
-                    parseInt(durationArr[0]) * 3600 * 24 +
-                    parseInt(durationArr[1]) * 3600 +
-                    parseInt(durationArr[2]) * 60;
-            } else {
-                result = parseInt(durationArr[0]) * 3600 + parseInt(durationArr[1]) * 60 + parseInt(durationArr[2]);
-            }
-            break;
-        case 2:
-            if (day) {
-                result = parseInt(durationArr[0]) * 24 * 3600 + parseInt(durationArr[1]) * 3600;
-            } else if (hour) {
-                result = parseInt(durationArr[0]) * 3600 + parseInt(durationArr[1]) * 60;
-            } else {
-                result = parseInt(durationArr[0]) * 60 + parseInt(durationArr[1]);
-            }
-            break;
-        case 1:
-            if (day) {
-                result = parseInt(durationArr[0]) * 24 * 3600;
-            } else if (hour) {
-                result = parseInt(durationArr[0]) * 3600;
-            } else if (min) {
-                result = parseInt(durationArr[0]) * 60;
-            } else {
-                result = parseInt(durationArr[0]);
-            }
-            break;
-        default:
+    let seconds = 0;
+    let d, h, m;
+    if (str.includes('d')) {
+        [d, str] = str.split('d');
+        seconds += parseInt(d) * 24 * 3600;
     }
-    return result;
+    if (str.includes('h')) {
+        [h, str] = str.split('h');
+        seconds += parseInt(h) * 3600;
+    }
+    if (str.includes('m')) {
+        [m, str] = str.split('m');
+        seconds += parseInt(m) * 60;
+    }
+    if (str) {
+        seconds += parseInt(str.split('s')[0]);
+    }
+    return seconds;
 };
 
 // trial's duration, accurate to seconds for example 10min 30s
-const convertDuration = (num: number): string => {
-    if (num < 1) {
-        return '0s';
+const convertDuration = (seconds: number): string => {
+    let str = '';
+
+    const d = Math.floor(seconds / (24 * 3600));
+    if (d > 0) {
+        str += `${d}d `;
     }
-    const hour = Math.floor(num / 3600);
-    const minute = Math.floor((num / 60) % 60);
-    const second = Math.floor(num % 60);
-    const result: string[] = [];
-    if (hour > 0) {
-        result.push(`${hour}h`);
+    seconds -= d * 24 * 3600;
+
+    const h = Math.floor(seconds / 3600);
+    if (h > 0) {
+        str += `${h}h `;
     }
-    if (minute > 0) {
-        result.push(`${minute}min`);
+    seconds -= h * 3600;
+
+    const m = Math.floor(seconds / 60);
+    if (m > 0) {
+        str += `${m}m `;
     }
-    if (second > 0) {
-        result.push(`${second}s`);
+    seconds -= m * 60;
+
+    if (seconds > 0) {
+        str += `${Math.floor(seconds)}s`;
     }
-    return result.join(' ');
+    return str ? str : '0s';
 };
 
 function parseMetrics(metricData: string): any {

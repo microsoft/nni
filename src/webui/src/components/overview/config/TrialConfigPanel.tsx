@@ -26,9 +26,9 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
         };
     }
 
-    setLogDrawerHeight = (): void => {
+    setLogDrawerHeight(): void {
         this.setState(() => ({ panelInnerHeight: window.innerHeight }));
-    };
+    }
 
     async componentDidMount(): Promise<void> {
         window.addEventListener('resize', this.setLogDrawerHeight);

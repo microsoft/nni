@@ -47,17 +47,13 @@ export const Command = (): any => {
             <Stack className='command2'>
                 <p>Log directory</p>
                 <div className='nowrap'>
-                    <TooltipHost content={EXPERIMENT.profile.logDir || 'unknown'}>
+                    <TooltipHost content={EXPERIMENT.profile.logDir || 'unknown'} className='nowrap'>
                         {EXPERIMENT.profile.logDir || 'unknown'}
                     </TooltipHost>
                 </div>
                 <p className='lineMargin'>Trial command</p>
                 <div className='nowrap'>
-                    <TooltipHost
-                        content={trialCommand || 'unknown'}
-                        calloutProps={{ gapSpace: 0 }}
-                        styles={{ root: { display: 'inline-block' } }}
-                    >
+                    <TooltipHost content={trialCommand || 'unknown'} className='nowrap'>
                         {trialCommand || 'unknown'}
                     </TooltipHost>
                 </div>
