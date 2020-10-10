@@ -23,7 +23,7 @@ The experiments are performed with the following pruners/datasets/models:
     
     For the pruners with scheduling, `L1Filter Pruner` is used as the base algorithm. That is to say, after the sparsities distribution is decided by the scheduling algorithm, `L1Filter Pruner` is used to performn real pruning.
 
-    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/Overview.md).
+    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/Overview.md).
 
 ## Experiment Result
 
@@ -60,7 +60,7 @@ From the experiment result, we get the following conclusions:
 
 * The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
-* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/master/docs/en_US/Compressor/ModelSpeedup.md).
+* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/ModelSpeedup.md).
 This avoids potential issues of counting them of masked models.
 
 * The experiment code can be found [here]( https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py).
