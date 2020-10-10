@@ -249,7 +249,7 @@ class AMCPruner(Pruner):
 
             if done:  # end of episode
                 _logger.info(
-                    '#%d: episode_reward: %.4f acc: %.4f, ratio: %.4f', 
+                    '#%d: episode_reward: %.4f acc: %.4f, ratio: %.4f',
                         episode, episode_reward,
                         info['accuracy'],
                         info['compress_ratio']
