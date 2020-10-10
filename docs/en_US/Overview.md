@@ -64,7 +64,7 @@ Other than one-shot NAS, NAS can also run in a classic mode where each candidate
 
 ### Model Compression
 NNI provides an easy-to-use model compression framework to compress deep neural networks, the compressed networks typically have much smaller model size and much faster
-inference speed without losing performance significally. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and
+inference speed without losing performance significantlly. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and
 quantization algorithms through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. Users can also use NNI model compression framework to customize their own pruning and quantization algorithms.
 
 A detailed description of model compression and its usage can be found [here](Compression/Overview.md).

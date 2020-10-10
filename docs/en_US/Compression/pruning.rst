@@ -6,8 +6,8 @@ Pruning is a common technique to compress neural network models.
 The pruning methods explore the redundancy in the model weights(parameters) and try to remove/prune the redundant and uncritical weights.
 The redundant elements are pruned from the model, their values are zeroed and we make sure they don't take part in the back-propagation process.
 
-From pruning granularity perspective, fine-grained pruning or unstructured pruning refers to pruning each individual weights seperately.
-Coarse-grained pruning or structured pruning is pruning entire group of weights, such as convolutional filter.
+From pruning granularity perspective, fine-grained pruning or unstructured pruning refers to pruning each individual weights separately.
+Coarse-grained pruning or structured pruning is pruning entire group of weights, such as a convolutional filter.
 
 NNI provides multiple unstructured pruning and structured pruning algorithms.
 It supports Tensorflow and PyTorch with unified interface.
