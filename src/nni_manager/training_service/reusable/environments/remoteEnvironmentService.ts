@@ -211,8 +211,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
         }
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         remoteEnvironment.status = 'WAITING';
+        // schedule machine for environment, generate command
         await this.prepareEnvironment(remoteEnvironment);
-        await this.launchRunner(remoteEnvironment);
+        // launch runner process in machine
+        await this.launchRunner(environment);
     }
 
     private async prepareEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<boolean> {
@@ -228,7 +230,11 @@ export class RemoteEnvironmentService extends EnvironmentService {
             deferred.resolve(false);
         } else {
             environment.rmMachineMeta = rmMachineMeta;
-            this.allocateExecutorManagerForEnvironment(environment);
+            const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMeta);
+            if (executorManager === undefined) {
+                throw new Error(`executorManager not initialized`);
+            }
+            this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
             environment.runnerWorkingFolder = 
                 executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
@@ -236,30 +242,33 @@ export class RemoteEnvironmentService extends EnvironmentService {
             environment.command = `cd ${environment.runnerWorkingFolder} && \
 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-
-            await this.launchRunner(environment);
-
-            environment.status = 'RUNNING';
-            environment.trackingUrl = `file://${rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
             deferred.resolve(true);
         }
 
         return deferred.promise;
     }
 
-    /**
-     * give environment an executor
-     * @param environment RemoteMachineEnvironmentDetail
-     */
-    private allocateExecutorManagerForEnvironment(environment: RemoteMachineEnvironmentInformation): void {
+    private async launchRunner(environment: RemoteMachineEnvironmentInformation): Promise<void> {
+        if (this.trialConfig === undefined) {
+            throw new Error('trial config is not initialized');
+        }
+        const executor = await this.getExecutor(environment.id);
+        const environmentLocalTempFolder: string =  
+            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
+        await executor.createFolder(environment.runnerWorkingFolder);
+        await execMkdir(environmentLocalTempFolder);
+        await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
+        environment.command, { encoding: 'utf8' });
+        // Copy files in codeDir to remote working directory
+        await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
+        // Execute command in remote machine
+        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
+            executor.getScriptName("run")), true, false);
+        environment.status = 'RUNNING';
         if (environment.rmMachineMeta === undefined) {
-            throw new Error(`rmMeta not set in trial ${environment.id}`);
+            throw new Error(`${environment.id} rmMachineMeta not initialized!`);
         }
-        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMeta);
-        if (executorManager === undefined) {
-            throw new Error(`executorManager not initialized`);
-        }
-        this.environmentExecutorManagerMap.set(environment.id, executorManager);
+        environment.trackingUrl = `file://${environment.rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
     }
 
     private async getExecutor(environmentId: string): Promise<ShellExecutor> {
@@ -286,23 +295,5 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         } catch (error) {
             this.log.error(`remoteTrainingService.cancelTrialJob: ${error}`);
         }
-    }
-
-    private async launchRunner(environment: RemoteMachineEnvironmentInformation): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
-        const executor = await this.getExecutor(environment.id);
-        const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
-        await executor.createFolder(environment.runnerWorkingFolder);
-        await execMkdir(environmentLocalTempFolder);
-        await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
-        environment.command, { encoding: 'utf8' });
-        // Copy files in codeDir to remote working directory
-        await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
-        // Execute command in remote machine
-        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
-            executor.getScriptName("run")), true, false);
     }
 }
