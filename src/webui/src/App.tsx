@@ -4,6 +4,7 @@ import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
+import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
 import './App.scss';
 
 interface AppState {
@@ -135,6 +136,8 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className='contentBox'>
                     <Stack className='content'>
+                        {/* search space & config */}
+                        <TrialConfigButton />
                         {/* if api has error field, show error message */}
                         {errorList.map(
                             (item, key) =>

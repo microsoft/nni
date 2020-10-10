@@ -6,7 +6,6 @@ import { AppContext } from '../App';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
 import Accuracy from './overview/Accuracy';
-import { TrialConfigButton } from './overview/config/TrialConfigButton';
 import { ReBasicInfo } from './overview/experiment/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
@@ -72,8 +71,6 @@ class Overview extends React.Component<{}, OverviewState> {
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
                         <div className='overview'>
-                            {/* search space & config */}
-                            <TrialConfigButton />
                             <div className='wrapper'>
                                 {/* exp params */}
                                 <div className='overviewBasicInfo'>
