@@ -6,6 +6,7 @@ import torch
 from schema import Schema, And, Or, Optional
 from ..utils.config_validation import CompressorSchema
 from ..compressor import Quantizer, QuantGrad, QuantType
+import copy
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 
@@ -31,14 +32,14 @@ class NaiveQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = wrapper.module.weight.data
+        weight = copy.deepcopy(wrapper.module.old_weight.data)
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
         self.layer_scale[wrapper.name] = scale
         orig_type = weight.type()  # TODO: user layer
-        wrapper.module.weight.data = weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
-        return wrapper.module.weight
-
+        weight = weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
+        wrapper.module.weight = weight
+        return weight
 
 def update_ema(biased_ema, value, decay, step):
     """
@@ -223,13 +224,13 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
-        weight = wrapper.module.weight.data
+        weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
         if quant_start_step > self.steps:
-            return
+            return weight
 
         # if bias exists, quantize bias to uint32
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -247,8 +248,8 @@ class QAT_Quantizer(Quantizer):
         module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
         weight = self._quantize(weight_bits, module, weight)
         weight = self._dequantize(module, weight)
-        wrapper.module.weight.data = weight
-        return wrapper.module.weight
+        wrapper.module.weight = weight
+        return weight
 
     def quantize_output(self, output, wrapper, **kwargs):
         config = wrapper.config
@@ -311,14 +312,15 @@ class DoReFaQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = wrapper.module.weight.data
+        weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
         weight = weight / (2 * weight.abs().max()) + 0.5
         weight = self.quantize(weight, weight_bits)
         weight = 2 * weight - 1
-        wrapper.module.weight.data = weight
-        return wrapper.module.weight
+        wrapper.module.weight = weight
+        # wrapper.module.weight.data = weight
+        return weight
 
     def quantize(self, input_ri, q_bits):
         scale = pow(2, q_bits) - 1
@@ -366,12 +368,12 @@ class BNNQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = wrapper.module.weight.data
+        weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight = torch.sign(weight)
         # remove zeros
         weight[weight == 0] = 1
-        wrapper.module.weight.data = weight
-        return wrapper.module.weight
+        wrapper.module.weight = weight
+        return weight
 
     def quantize_output(self, output, wrapper, **kwargs):
         out = torch.sign(output)
