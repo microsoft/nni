@@ -135,10 +135,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
         await executor.allowPermission(true, nniRootDir);
     }
-
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        environments.forEach(async (environment) => {
-            const executor = await this.getExecutor(environment.id);
+    
+    private async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+        const executor = await this.getExecutor(environment.id);
             const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
             const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
             if (fs.existsSync(jobpidPath)) {
@@ -173,7 +172,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
                     this.log.error(`Update job status exception, error is ${error.message}`);
                 }
             }
+    }
+
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        const tasks: Promise<void>[] = [];
+        environments.forEach(async (environment) => {
+            tasks.push(this.refreshEnvironment(environment));
         });
+        await Promise.all(tasks);
     }
 
     /**
@@ -218,7 +224,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     private async prepareEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<boolean> {
-        const deferred: Deferred<boolean> = new Deferred<boolean>();
         if (this.trialConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
@@ -227,7 +232,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const rmMachineMeta: RemoteMachineMeta | undefined = this.scheduleMachine();
         if (rmMachineMeta === undefined) {
             this.log.warning(`No available machine!`);
-            deferred.resolve(false);
+            return Deferred.resolve(false);
         } else {
             environment.rmMachineMeta = rmMachineMeta;
             const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(environment.rmMachineMeta);
@@ -242,10 +247,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
             environment.command = `cd ${environment.runnerWorkingFolder} && \
 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-            deferred.resolve(true);
+            return Deferred.resolve(true);
         }
-
-        return deferred.promise;
     }
 
     private async launchRunner(environment: RemoteMachineEnvironmentInformation): Promise<void> {
@@ -293,7 +296,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
             await executor.killChildProcesses(jobpidPath);
             this.releaseEnvironmentResource(environment);
         } catch (error) {
-            this.log.error(`remoteTrainingService.cancelTrialJob: ${error}`);
+            this.log.error(`stopEnvironment: ${error}`);
         }
     }
 }
