@@ -5,7 +5,6 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
