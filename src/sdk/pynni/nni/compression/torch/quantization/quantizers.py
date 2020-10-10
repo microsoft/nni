@@ -37,6 +37,7 @@ class NaiveQuantizer(Quantizer):
         self.layer_scale[wrapper.name] = scale
         orig_type = weight.type()  # TODO: user layer
         wrapper.module.weight.data = weight.div(scale).type(torch.int8).type(orig_type).mul(scale)
+        return wrapper.module.weight
 
 
 def update_ema(biased_ema, value, decay, step):
