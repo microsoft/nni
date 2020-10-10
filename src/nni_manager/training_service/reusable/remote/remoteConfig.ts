@@ -4,7 +4,6 @@
 import { EnvironmentInformation } from '../environment';
 import { RemoteMachineMeta } from '../../remote_machine/remoteMachineData';
 
-
 /**
  * RemoteMachineEnvironmentInformation
  */
