@@ -1,6 +1,6 @@
-# Automatic Model Compression on NNI
+# Automatic Model Pruning using NNI Tuners
 
-It's convenient to implement auto model compression with NNI compression and NNI tuners
+It's convenient to implement auto model pruning with NNI compression and NNI tuners
 
 ## First, model compression with NNI
 
