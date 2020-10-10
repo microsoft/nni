@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--train_episode', default=800, type=int, help='number of training episode')
     parser.add_argument('--n_gpu', default=1, type=int, help='number of gpu to use')
     parser.add_argument('--n_worker', default=16, type=int, help='number of data loader worker')
-    parser.add_argument('--suffix', default=None, type=str, help='path for searched best wrapped model')
+    parser.add_argument('--suffix', default=None, type=str, help='suffix of auto-generated log directory')
 
     return parser.parse_args()
 
