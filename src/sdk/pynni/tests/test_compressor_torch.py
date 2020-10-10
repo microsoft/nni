@@ -239,13 +239,13 @@ class CompressorTestCase(TestCase):
         # range not including 0
         eps = 1e-7
         weight = torch.tensor([[1, 2], [3, 5]]).float()
-        model.conv2.module.weight.data = weight
+        model.conv2.module.old_weight.data = weight
         quantizer.quantize_weight(model.conv2)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
-        model.conv2.module.weight.data = weight
+        model.conv2.module.old_weight.data = weight
         quantizer.quantize_weight(model.conv2)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
@@ -254,7 +254,7 @@ class CompressorTestCase(TestCase):
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])
         bias = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
         bias_valid = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
-        model.conv2.module.weight.data = weight
+        model.conv2.module.old_weight.data = weight
         model.conv2.module.bias.data = bias
         quantizer.quantize_weight(model.conv2)
         assert torch.all(torch.isclose(model.conv2.module.weight.data, weight_valid, rtol=1e-4))
