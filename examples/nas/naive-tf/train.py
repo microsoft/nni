@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import tensorflow as tf
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (AveragePooling2D, BatchNormalization, Conv2D, Dense, MaxPool2D)
@@ -6,8 +9,6 @@ from tensorflow.keras.optimizers import SGD
 
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice
 from nni.nas.tensorflow.enas import EnasTrainer
-
-tf.get_logger().setLevel('ERROR')
 
 
 class Net(Model):
@@ -53,11 +54,15 @@ class Net(Model):
         return x
 
 
-def accuracy(output, target):
-    bs = target.shape[0]
-    predicted = tf.cast(tf.argmax(output, 1), target.dtype)
-    target = tf.reshape(target, [-1])
-    return sum(tf.cast(predicted == target, tf.float32)) / bs
+def accuracy(truth, logits):
+    truth = tf.reshape(truth, -1)
+    predicted = tf.cast(tf.math.argmax(logits, axis=1), truth.dtype)
+    equal = tf.cast(predicted == truth, tf.int32)
+    return tf.math.reduce_sum(equal).numpy() / equal.shape[0]
+
+def accuracy_metrics(truth, logits):
+    acc = accuracy(truth, logits)
+    return {'accuracy': acc}
 
 
 if __name__ == '__main__':
@@ -71,8 +76,8 @@ if __name__ == '__main__':
 
     trainer = EnasTrainer(
         net,
-        loss=SparseCategoricalCrossentropy(reduction=Reduction.SUM),
-        metrics=accuracy,
+        loss=SparseCategoricalCrossentropy(from_logits=True, reduction=Reduction.NONE),
+        metrics=accuracy_metrics,
         reward_function=accuracy,
         optimizer=SGD(learning_rate=0.001, momentum=0.9),
         batch_size=64,
