@@ -62,14 +62,13 @@ def accuracy(output, target):
 
 if __name__ == '__main__':
     cifar10 = tf.keras.datasets.cifar10
-    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-    split = int(len(x_train) * 0.9)
-    dataset_train = tf.data.Dataset.from_tensor_slices((x_train[:split], y_train[:split])).batch(64)
-    dataset_valid = tf.data.Dataset.from_tensor_slices((x_train[split:], y_train[split:])).batch(64)
-    dataset_test = tf.data.Dataset.from_tensor_slices((x_test, y_test)).batch(64)
+    (x_train, y_train), (x_valid, y_valid) = cifar10.load_data()
+    x_train, x_valid = x_train / 255.0, x_valid / 255.0
+    train_set = (x_train, y_train)
+    valid_set = (x_valid, y_valid)
 
     net = Net()
+
     trainer = EnasTrainer(
         net,
         loss=SparseCategoricalCrossentropy(reduction=Reduction.SUM),
@@ -78,10 +77,8 @@ if __name__ == '__main__':
         optimizer=SGD(learning_rate=0.001, momentum=0.9),
         batch_size=64,
         num_epochs=2,
-        dataset_train=dataset_train,
-        dataset_valid=dataset_valid,
-        dataset_test=dataset_test
+        dataset_train=train_set,
+        dataset_valid=valid_set
     )
 
     trainer.train()
-    #trainer.export('checkpoint')
