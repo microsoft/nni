@@ -1,14 +1,8 @@
-$iconPaddingVal: 14px;
+$iconPaddingVal: 20px;
 
 .panelTitle {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    width: 100%;
-    height: 38px;
-    padding: 4px $iconPaddingVal;
-    box-sizing: border-box;
-
     img {
-        height: 22px;
+        height: 23px;
 
         /* (38 - 22 ) / 2 */
         margin-top: 8px;
@@ -21,11 +15,11 @@ $iconPaddingVal: 14px;
         font-size: 18px;
         font-weight: 600;
         color: #333;
-        line-height: 38px;
     }
 
     i {
         font-size: 24px;
+        margin-right: 20px;
         color: #545454;
     }
 }
@@ -45,7 +39,7 @@ $iconPaddingVal: 14px;
     }
 
     .minTitle {
-        margin-right: $iconPaddingVal;
+        // margin-right: $iconPaddingVal;
         border-right: 2px solid #fff;
     }
 

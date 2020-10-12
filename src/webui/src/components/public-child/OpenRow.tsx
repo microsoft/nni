@@ -8,7 +8,7 @@ import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../modals/MessageInfo';
-import '../../static/style/overview.scss';
+import '../../static/style/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
 

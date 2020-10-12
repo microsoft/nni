@@ -4,6 +4,7 @@ import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
+import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
 import './App.scss';
 
 interface AppState {
@@ -30,12 +31,13 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeMetricGraphMode: (val: 'max' | 'min') => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeEntries: (val: string) => {}
+    changeEntries: (val: string) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    updateOverviewPage: () => {}
 });
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
-    private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
     constructor(props: {}) {
         super(props);
@@ -60,34 +62,7 @@ class App extends React.Component<{}, AppState> {
             metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
         }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
-        // final result is legal
-        // get a succeed trial，see final result data's format
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.dataFormatimer = window.setInterval(this.getFinalDataFormat, this.state.interval * 1000);
     }
-
-    getFinalDataFormat = (): void => {
-        for (let i = 0; this.state.isillegalFinal === false; i++) {
-            if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
-                if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
-                    window.clearInterval(this.dataFormatimer);
-                    break;
-                } else {
-                    // illegal final data
-                    this.setState(() => ({
-                        isillegalFinal: true,
-                        expWarningMessage:
-                            'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
-                    }));
-                    window.clearInterval(this.dataFormatimer);
-                }
-            } else {
-                break;
-            }
-        }
-    };
 
     changeInterval = (interval: number): void => {
         window.clearTimeout(this.timerId);
@@ -114,6 +89,12 @@ class App extends React.Component<{}, AppState> {
     // overview best trial module
     changeEntries = (entries: string): void => {
         this.setState({ bestTrialEntries: entries });
+    };
+
+    updateOverviewPage = (): void => {
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1
+        }));
     };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
@@ -155,6 +136,8 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className='contentBox'>
                     <Stack className='content'>
+                        {/* search space & config */}
+                        <TrialConfigButton />
                         {/* if api has error field, show error message */}
                         {errorList.map(
                             (item, key) =>
@@ -179,7 +162,8 @@ class App extends React.Component<{}, AppState> {
                                 metricGraphMode,
                                 changeMetricGraphMode: this.changeMetricGraphMode,
                                 bestTrialEntries,
-                                changeEntries: this.changeEntries
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
                             }}
                         >
                             {this.props.children}

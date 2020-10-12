@@ -1,0 +1,57 @@
+$seriesIconMargin: 13px;
+
+.ExpDuration {
+    margin-top: 28px;
+
+    span:hover {
+        cursor: pointer;
+    }
+}
+
+.durationInput {
+    width: 42px;
+    height: 32px;
+    padding-right: 5px;
+    text-align: right;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid #ccc;
+}
+
+.maxExecDuration {
+    width: 74px;
+}
+
+.series {
+    i {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .confirm {
+        margin: 0 $seriesIconMargin;
+
+        i {
+            color: green;
+        }
+    }
+}
+
+.cancel i {
+    color: red;
+}
+
+.edit i {
+    margin-left: 4px;
+}
+
+.overview input:disabled {
+    background: transparent;
+    border: none;
+}
+
+.info {
+    position: absolute;
+    z-index: 999;
+    left: 0;
+}

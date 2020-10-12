@@ -3,7 +3,8 @@ import { Stack, StackItem, Pivot, PivotItem, Dropdown, IDropdownOption, DefaultB
 import { EXPERIMENT, TRIALS } from '../static/datamodel';
 import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
-import { tableListIcon } from './buttons/Icon';
+import { Title } from './overview/Title';
+import { TitleContext } from './overview/TitleContext';
 import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Para from './trial-detail/Para';
@@ -28,6 +29,7 @@ interface TrialDetailState {
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
     static contextType = AppContext;
+    context!: React.ContextType<typeof AppContext>;
     public interAccuracy = 0;
     public interAllTableList = 2;
 
@@ -142,10 +144,11 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             </Pivot>
                         </div>
                         {/* trial table list */}
-                        <div style={{ backgroundColor: '#fff' }}>
-                            <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
-                                <span style={{ marginRight: 12 }}>{tableListIcon}</span>
-                                <span>Trial jobs</span>
+                        <div className='bulletedList' style={{ marginTop: 18 }}>
+                            <Stack className='title'>
+                                <TitleContext.Provider value={{ text: 'Trial jobs', icon: 'BulletedList' }}>
+                                    <Title />
+                                </TitleContext.Provider>
                             </Stack>
                             <Stack horizontal className='allList'>
                                 <StackItem grow={50}>
