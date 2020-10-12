@@ -115,12 +115,12 @@ def adl_tensorboard_helper(args):
     import subprocess
     if args.trial_id is not None:
         print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
-    cmd = "kubectl port-forward deployment/{} {}:{}".format(
+    cmd = "kubectl port-forward --address 0.0.0.0 deployment/{} {}:{}".format(
         "adaptdl-tensorboard" + "-" + args.id.lower(),
         args.port,
         6006
     )
-    print_green('Tensorboard is launched on localhost:{}'.format(args.port))
+    print_green('Tensorboard is accessible at 0.0.0.0:{port} or localhost:{port}'.format(port=args.port))
     subprocess.run(args=cmd, shell=True)
 
 def start_tensorboard(args):
