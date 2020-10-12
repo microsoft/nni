@@ -812,25 +812,20 @@ class AMCWeightMasker(WeightMasker):
         masked_X = X[:, mask]
         if w.shape[2] == 1:  # 1x1 conv or fc
             rec_weight = least_square_sklearn(X=masked_X, Y=Y)
-            # (C_out, K_h, K_w, C_in')
-            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)
-            # (C_out, C_in', K_h, K_w)
-            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))
-        else:
-            raise NotImplementedError(
-                'Current code only supports 1x1 conv now!')
-        rec_weight_pad = np.zeros_like(w)
-        # pylint: disable=all
-        rec_weight_pad[:, mask, :, :] = rec_weight
-        rec_weight = rec_weight_pad
+            rec_weight = rec_weight.reshape(-1, 1, 1, d_prime)  # (C_out, K_h, K_w, C_in')
+            rec_weight = np.transpose(rec_weight, (0, 3, 1, 2))  # (C_out, C_in', K_h, K_w)
 
-        if wrapper.type == 'Linear':
-            rec_weight = rec_weight.squeeze()
-            assert len(rec_weight.shape) == 2
+            rec_weight_pad = np.zeros_like(w)
+            # pylint: disable=all
+            rec_weight_pad[:, mask, :, :] = rec_weight
+            rec_weight = rec_weight_pad
 
-        # now assign
-        wrapper.module.weight.data = torch.from_numpy(
-            rec_weight).to(weight.device)
+            if wrapper.type == 'Linear':
+                rec_weight = rec_weight.squeeze()
+                assert len(rec_weight.shape) == 2
+
+            # now assign
+            wrapper.module.weight.data = torch.from_numpy(rec_weight).to(weight.device)
 
         mask_weight = torch.zeros_like(weight)
         if wrapper.type == 'Linear':

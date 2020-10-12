@@ -529,6 +529,16 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AMCPruner
 ```
 
+### Reproduced Experiment
+
+We implemented one of the experiments in [AMC: AutoML for Model Compression and Acceleration on Mobile Devices](https://arxiv.org/pdf/1802.03494.pdf), we pruned **MobileNet** to 50% FLOPS for ImageNet in the paper. Our experiments results are as follows:
+
+| Model         | Top 1 acc.(paper/ours) | Top 5 acc. (paper/ours) | FLOPS |
+| ------------- | --------------| -------------- | ----- |
+| MobileNet     | 70.5% / 69.9% | 89.3% / 89.1%  | 50%   |
+
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/amc/)
+
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
 by decomposing the original nonconvex problem into two subproblems that can be solved iteratively. In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 

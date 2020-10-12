@@ -23,9 +23,6 @@ import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
-import {
-    RemoteMachineTrainingService
-} from './training_service/remote_machine/remoteMachineTrainingService';
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
@@ -43,7 +40,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService)
-            .to(RemoteMachineTrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService)

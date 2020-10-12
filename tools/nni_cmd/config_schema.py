@@ -372,6 +372,12 @@ frameworkcontroller_config_schema = {
     })
 }
 
+remote_config_schema = {
+    Optional('remoteConfig'): {
+        'reuse': setType('reuse', bool)
+    }
+}
+
 machine_list_schema = {
     'machineList': [Or(
         {
@@ -399,7 +405,7 @@ machine_list_schema = {
 
 training_service_schema_dict = {
     'local': Schema({**common_schema, **common_trial_schema}),
-    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema}),
+    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema, **remote_config_schema}),
     'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
     'paiYarn': Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema}),
     'kubeflow': Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema}),
