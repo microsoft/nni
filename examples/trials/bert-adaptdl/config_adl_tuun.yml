@@ -1,0 +1,57 @@
+# this is configuration for using TUUN tuner
+authorName: default
+experimentName: bert_adl
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 30
+nniManagerIp: 10.20.41.120
+trainingServicePlatform: adl
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  codeDir: /home/zeya.wang/ers/tuun/tuun-dev/tuun
+  classFileName: nni_tuner.py
+  className: TuunTuner
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example
+  classArgs:
+    tuun_config: {
+        'seed': 11,
+        'model_config': {
+            'name': 'simpleproductkernelgp',
+            'ls': 3.0,
+            'alpha': 1.5,
+            'sigma': 1e-5,
+            'domain_spec': ['list', 'real'],
+        },
+        'acqfunction_config': {'name': 'default', 'acq_str': 'ucb', 'n_gen': 500},
+        'acqoptimizer_config': {
+            'name': 'product',
+            'n_iter_bcd': 3,
+            'n_init_rs': 3,
+            'pao_config_list': [
+                {'name': 'default'},
+                {'name': 'cobyla', 'init_str': 'init_opt'},
+            ],
+        },
+        'domain_config': {
+            'name': 'product',
+            'dom_config_list': [
+                {'name': 'list', 'domain_list': ["bert-base-uncased", "bert-base-cased", "bert-base-multilingual-cased", "bert-base-multilingual-uncased", "bert-base-chinese"]},
+                {'name': 'real', 'min_max': [[1e-5, 5e-4]]},
+            ],
+        },
+    } 
+
+
+
+trial:
+  command: python3 /root/examples/bert-adaptdl/run_classifier_nni_tuun.py
+  codeDir: .
+  gpuNum: 1
+  image: registry.petuum.com/dev/nni:tmp-test-bert
+  imagePullSecrets:
+    - name: stagingsecret
+  checkpoint:
+    storageClass: aws-efs
+    storageSize: 1Gi

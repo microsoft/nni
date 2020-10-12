@@ -1,0 +1,4 @@
+{
+    "bert_model":{"_type":"choice","_value":["bert-base-uncased", "bert-base-cased", "bert-base-multilingual-cased", "bert-base-multilingual-uncased", "bert-base-chinese"]},
+    "learning_rate":{"_type":"uniform","_value":[1e-5, 1e-4]}
+}
