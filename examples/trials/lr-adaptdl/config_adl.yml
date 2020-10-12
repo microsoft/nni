@@ -19,6 +19,7 @@ trial:
   command: python3 /root/apps/lr-adaptdl/linear_regression.py
   codeDir: .
   gpuNum: 1
+  adaptive: true
   image: registry.petuum.com/dev/nni:tmp-test
   imagePullSecrets:
     - name: stagingsecret

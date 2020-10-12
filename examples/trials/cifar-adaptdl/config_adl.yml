@@ -18,6 +18,7 @@ trial:
   image: registry.petuum.com/dev/nni:tmp-nni-cifar-1.8
   imagePullSecrets:
     - name: stagingsecret
+  adaptive: true
   checkpoint:
     storageClass: dfs
     storageSize: 1Gi

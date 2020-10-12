@@ -140,6 +140,9 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         job.metadata.labels.app = this.NNI_KUBERNETES_TRIAL_LABEL
         job.metadata.labels.expId = this.experimentId
         job.metadata.labels.trialId = trialJobId
+        if (this.adlTrialConfig.adaptive !== undefined){
+            job.spec.preemptible = this.adlTrialConfig.adaptive
+        }
         job.spec.template.spec.containers[0]
             .image = this.adlTrialConfig.image;
         job.spec.template.spec.volumes[0]

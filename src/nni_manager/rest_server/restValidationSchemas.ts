@@ -100,6 +100,8 @@ export namespace ValidationSchemas {
                 imagePullSecrets: joi.array({
                     name: joi.string().min(1).required()
                 }),
+                // ############## adl ###############
+                adaptive: joi.boolean(),
                 checkpoint: joi.object({
                     storageClass: joi.string().min(1).required(),
                     storageSize: joi.string().min(1).required()

@@ -64,7 +64,7 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
                 case 'Running':
                 case 'Stopping':
                     kubernetesTrialJob.status = 'RUNNING';
-                    kubernetesTrialJob.message = undefined;  //TODO(Petuum)
+                    kubernetesTrialJob.message = `Use 'nnictl log trial --trial_id ${kubernetesTrialJob.id}' to check the log stream.`;
                     if (kubernetesTrialJob.startTime === undefined) {
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.metadata.creationTimestamp);
                     }
@@ -74,7 +74,7 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
                     kubernetesTrialJob.message = kubernetesJobInfo.status.message;
                     if (kubernetesPodsInfo.items.length > 0) {
                         kubernetesTrialJob.message += " ; ";
-                        kubernetesTrialJob.message += `Use 'nnictl logs --trial_id ${kubernetesTrialJob.id}' to get pod failure log.`;
+                        kubernetesTrialJob.message += `Use 'nnictl log trial --trial_id ${kubernetesTrialJob.id}' for the path of the collected logs.`;
                     }
                     // undefined => NaN as endTime here
                     kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTimestamp);

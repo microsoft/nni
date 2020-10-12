@@ -27,7 +27,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
                 kubernetesJobName: string, url: string) {
         this.id = id;
         this.status = status;
-        this.message = 'Creating the trial job.';
+        this.message = 'Pending for creating the trial job.';
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;

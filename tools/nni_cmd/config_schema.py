@@ -276,6 +276,7 @@ adl_trial_schema = {
             'path': setType('path', str),
             'containerMountPath': setType('containerMountPath', str)
         },
+        Optional('adaptive'): setType('adaptive', bool),
         Optional('checkpoint'): {
             'storageClass': setType('storageClass', str),
             'storageSize': setType('storageSize', str)

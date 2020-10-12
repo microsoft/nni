@@ -48,6 +48,7 @@ describe('Unit Test for AdlTrainingService', () => {
                 "name": "stagingsecrets"
             }
         ],
+        "adaptive": true,
         "checkpoint": {
             "storageClass": "aws-efs",
             "storageSize": "1Gi"

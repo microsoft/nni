@@ -67,11 +67,15 @@ export class AdlTrialConfig {
 
     public readonly memorySize?: string;
 
+    public readonly adaptive?: boolean; // adaptive == preemptible
+
     constructor(codeDir: string,
                 command: string, gpuNum: number,
                 image: string, imagePullSecrets?: ImagePullSecretConfig[],
                 nfs?: NFSConfig, checkpoint?: CheckpointConfig,
-                cpuNum?: number, memorySize?: string) {
+                cpuNum?: number, memorySize?: string,
+                adaptive?: boolean
+    ) {
         this.codeDir = codeDir;
         this.command = command;
         this.gpuNum = gpuNum;
@@ -81,6 +85,7 @@ export class AdlTrialConfig {
         this.checkpoint = checkpoint;
         this.cpuNum = cpuNum;
         this.memorySize = memorySize;
+        this.adaptive = adaptive;
     }
 }
 
