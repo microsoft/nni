@@ -870,7 +870,7 @@ def conv2d_mask(module_masks, mask):
         if index is None:
             return None, None, None
         else:
-            index = torch.LongTensor(index).to(weight_mask.device)
+            index = index.long().to(weight_mask.device)
             weight_cmask = CoarseMask(num_dim=4)
             weight_cmask.add_index_mask(dim=dim, index=index)
             bias_cmask = None
