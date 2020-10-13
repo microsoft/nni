@@ -142,7 +142,7 @@ class Trial:
                     for child in psutil.Process(self.process.pid).children(True):
                         child.kill()
                     self.process.kill()
-                except Exception as ex:
+                except:
                     nni_log(LogType.Error, "kill trial %s failed!" % trial_id)
             self.cleanup()
 
