@@ -87,7 +87,7 @@ def update_training_service_config(args):
         if args.remote_pwd is not None:
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
         if args.remote_reuse is not None:
-            config[args.ts]['remoteConfig'] = {'reuse': args.remote_reuse.lower() == 'true'}
+            config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
