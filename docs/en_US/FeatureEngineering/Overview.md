@@ -267,5 +267,5 @@ The code could be refenrence `/examples/feature_engineering/gradient_feature_sel
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
 * To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
 * To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compression/Overview.md);
 * To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);

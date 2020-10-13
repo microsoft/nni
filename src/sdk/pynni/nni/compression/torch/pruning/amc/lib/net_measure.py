@@ -85,11 +85,11 @@ def measure_layer(layer, x):
     return
 
 
-def measure_model(model, H, W):
+def measure_model(model, H, W, device):
     global count_ops, count_params
     count_ops = 0
     count_params = 0
-    data = torch.zeros(2, 3, H, W).cuda()
+    data = torch.zeros(2, 3, H, W).to(device)
 
     def should_measure(x):
         return is_leaf(x)

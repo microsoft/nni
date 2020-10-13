@@ -15,7 +15,7 @@ const trialJobStatus = [
     'SYS_CANCELED',
     'EARLY_STOPPED'
 ];
-const CONTROLTYPE = ['SEARCH_SPACE', 'TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION'];
+const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
 const MONACO = {
     readOnly: true,
     automaticLayout: true,

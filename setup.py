@@ -37,6 +37,7 @@ setup(
         'psutil',
         'ruamel.yaml',
         'requests',
+        'responses',
         'scipy',
         'schema',
         'PythonWebHDFS',

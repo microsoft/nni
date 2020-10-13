@@ -23,7 +23,7 @@ import { MANAGER_IP, COLUMNPro } from '../../static/const';
 import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TableRecord, TrialJobInfo } from '../../static/interface';
-const Details = lazy(() => import('../overview/Details'));
+const Details = lazy(() => import('../overview/table/Details'));
 const ChangeColumnComponent = lazy(() => import('../modals/ChangeColumnComponent'));
 const Compare = lazy(() => import('../modals/Compare'));
 const KillJob = lazy(() => import('../modals/Killjob'));

@@ -1,0 +1,30 @@
+.command {
+    width: 100%;
+
+    >div {
+        display: inline-block;
+    }
+
+    .command1 {
+        width: 46%;
+
+        p {
+            margin-top: 0;
+        }
+    }
+
+    .command2 {
+        width: 54%;
+
+        p {
+            margin-top: 0;
+        }
+    }
+
+    .command1,
+    .command2 {
+        .lineMargin {
+            margin-top: 20px;
+        }
+    }
+}

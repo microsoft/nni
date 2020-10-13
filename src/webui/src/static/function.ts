@@ -29,25 +29,53 @@ const convertTime = (num: number): string => {
     }
 };
 
+const convertTimeToSecond = (str: string): number => {
+    let seconds = 0;
+    let d, h, m;
+    if (str.includes('d')) {
+        [d, str] = str.split('d');
+        seconds += parseInt(d) * 24 * 3600;
+    }
+    if (str.includes('h')) {
+        [h, str] = str.split('h');
+        seconds += parseInt(h) * 3600;
+    }
+    if (str.includes('m')) {
+        [m, str] = str.split('m');
+        seconds += parseInt(m) * 60;
+    }
+    if (str) {
+        seconds += parseInt(str.split('s')[0]);
+    }
+    return seconds;
+};
+
 // trial's duration, accurate to seconds for example 10min 30s
-const convertDuration = (num: number): string => {
-    if (num < 1) {
-        return '0s';
+const convertDuration = (seconds: number): string => {
+    let str = '';
+
+    const d = Math.floor(seconds / (24 * 3600));
+    if (d > 0) {
+        str += `${d}d `;
     }
-    const hour = Math.floor(num / 3600);
-    const minute = Math.floor((num / 60) % 60);
-    const second = Math.floor(num % 60);
-    const result: string[] = [];
-    if (hour > 0) {
-        result.push(`${hour}h`);
+    seconds -= d * 24 * 3600;
+
+    const h = Math.floor(seconds / 3600);
+    if (h > 0) {
+        str += `${h}h `;
     }
-    if (minute > 0) {
-        result.push(`${minute}min`);
+    seconds -= h * 3600;
+
+    const m = Math.floor(seconds / 60);
+    if (m > 0) {
+        str += `${m}m `;
     }
-    if (second > 0) {
-        result.push(`${second}s`);
+    seconds -= m * 60;
+
+    if (seconds > 0) {
+        str += `${Math.floor(seconds)}s`;
     }
-    return result.join(' ');
+    return str ? str : '0s';
 };
 
 function parseMetrics(metricData: string): any {
@@ -246,6 +274,7 @@ function formatComplexTypeValue(value: any): string | number {
 export {
     convertTime,
     convertDuration,
+    convertTimeToSecond,
     getFinalResult,
     getFinal,
     downFile,
