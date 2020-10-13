@@ -47,7 +47,7 @@ const searchOptionLiterals = {
     parameters: 'Parameters'
 };
 
-const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'metric/default'];
+const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
 
 interface SortInfo {
     field: string;
@@ -88,7 +88,7 @@ function _inferColumnTitle(columnKey: string): string {
         return 'Intermediate results (#)';
     } else if (columnKey.startsWith('space/')) {
         return columnKey.split('/', 2)[1] + ' (space)';
-    } else if (columnKey === 'metric/default') {
+    } else if (columnKey === 'latestAccuracy') {
         return 'Default metric'; // to align with the original design
     } else if (columnKey.startsWith('metric/')) {
         return columnKey.split('/', 2)[1] + ' (metric)';
@@ -122,6 +122,7 @@ interface TableListState {
 
 class TableList extends React.Component<TableListProps, TableListState> {
     private _selection: Selection;
+    private _expandedTrialIds: Set<string>;
 
     constructor(props: TableListProps) {
         super(props);
@@ -147,6 +148,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 });
             }
         });
+
+        this._expandedTrialIds = new Set<string>();
     }
 
     /* Search related methods */
@@ -208,12 +211,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
-                startTime: formatTimestamp((trial as any).info.startTime, '--'), // FIXME: why do we need info here?
-                endTime: formatTimestamp((trial as any).info.endTime, '--'),
-                duration: convertDuration(trial.duration),
+                startTime: (trial as Trial).info.startTime, // FIXME: why do we need info here?
+                endTime: (trial as Trial).info.endTime,
+                duration: trial.duration,
                 status: trial.status,
                 intermediateCount: trial.intermediates.length,
-                _expandDetails: false // hidden field names should start with `_`
+                _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
             };
             for (const [k, v] of trial.parameters(searchSpace)) {
                 ret[`space/${k.baseName}`] = v;
@@ -221,7 +224,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             for (const [k, v] of trial.metrics(metricSpace)) {
                 ret[`metric/${k.baseName}`] = v;
             }
-            ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy(); // FIXME: this is bad
+            ret['latestAccuracy'] = (trial as Trial).latestAccuracy;
+            ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy();
             return ret;
         });
 
@@ -253,6 +257,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             onClick={(event): void => {
                                 event.stopPropagation();
                                 const newItem: any = { ...item, _expandDetails: !item._expandDetails };
+                                if (newItem._expandDetails) {
+                                    // preserve to be restored when refreshed
+                                    this._expandedTrialIds.add(newItem.id);
+                                } else {
+                                    this._expandedTrialIds.delete(newItem.id);
+                                }
                                 const newItems = [...this.state.displayedItems];
                                 newItems[index as number] = newItem;
                                 this.setState({
@@ -276,6 +286,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         ];
         // looking at the first row only for now
         for (const k of Object.keys(tableItems[0])) {
+            if (k === 'metric/default') {
+                // FIXME: default metric is hacked as latestAccuracy currently
+                continue;
+            }
             const lengths = tableItems.map(item => `${item[k]}`.length);
             const avgLengths = lengths.reduce((a, b) => a + b) / lengths.length;
             const columnTitle = _inferColumnTitle(k);
@@ -303,12 +317,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         </TooltipHost>
                     )
                 }),
-                ...(k === 'metric/default' && {
+                ...(k === 'latestAccuracy' && {
                     // FIXME: this is ad-hoc
                     onRender: (record): React.ReactNode => (
                         <TooltipHost content={record._formattedLatestAccuracy}>
                             <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
                         </TooltipHost>
+                    )
+                }),
+                ...(['startTime', 'endTime'].includes(k) && {
+                    onRender: (record): React.ReactNode => <span>{formatTimestamp(record[k], '--')}</span>
+                }),
+                ...(k === 'duration' && {
+                    onRender: (record): React.ReactNode => (
+                        <span className='durationsty'>{convertDuration(record[k])}</span>
                     )
                 })
             });
@@ -520,15 +542,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     />
                 )}
                 {/* Clone a trial and customize a set of new parameters */}
-                {copiedTrialId !== undefined && (
-                    <Customize
-                        visible={true}
-                        copyTrialId={copiedTrialId}
-                        closeCustomizeModal={(): void => {
-                            this.setState({ copiedTrialId: undefined });
-                        }}
-                    />
-                )}
+                {/* visible is done inside because prompt is needed even when the dialog is closed */}
+                <Customize
+                    visible={copiedTrialId !== undefined}
+                    copyTrialId={copiedTrialId || ''}
+                    closeCustomizeModal={(): void => {
+                        this.setState({ copiedTrialId: undefined });
+                    }}
+                />
             </div>
         );
     }
