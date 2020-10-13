@@ -245,6 +245,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                 'envs', environment.id)
             environment.command = `cd ${environment.runnerWorkingFolder} && \
 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
             return Promise.resolve(true);
         }
