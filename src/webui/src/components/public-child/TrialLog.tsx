@@ -7,10 +7,8 @@ interface TrialLogProps {
 }
 
 class TrialLog extends React.Component<TrialLogProps, {}> {
-
     constructor(props: TrialLogProps) {
         super(props);
-
     }
 
     render(): React.ReactNode {
@@ -18,10 +16,7 @@ class TrialLog extends React.Component<TrialLogProps, {}> {
 
         return (
             <div>
-                <LogPathChild
-                    eachLogpath={logStr}
-                    logName="Log path:"
-                />
+                <LogPathChild eachLogpath={logStr} logName='Log path:' />
             </div>
         );
     }

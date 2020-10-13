@@ -65,7 +65,7 @@ export class EnvironmentInformation {
     public nodeCount: number = 1;
 
     // it's used to aggregate node status for multiple node trial
-    public nodes: Map<string, NodeInfomation>;
+    public nodes: Map<string, NodeInformation>;
     public gpuSummaries: Map<string, TrialGpuSummary> = new Map<string, TrialGpuSummary>();
 
     // use can specify which gpus can be used by NNI.
@@ -80,7 +80,7 @@ export class EnvironmentInformation {
         this.id = id;
         this.name = name;
         this.envId = envId ? envId : name;
-        this.nodes = new Map<string, NodeInfomation>();
+        this.nodes = new Map<string, NodeInformation>();
     }
 
     public setStatus(status: EnvironmentStatus): void {
@@ -125,8 +125,14 @@ export abstract class EnvironmentService {
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
-    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    
+    // It is used to set prefetched environment count, default value is 0 for OpenPAI and AML mode,
+    // in remote mode, this value is set to the length of machine list.
+    public get prefetchedEnvironmentCount(): number {
+        return 0;
+    }
 
     // It depends on environment pressure and settings
     // for example, OpenPAI relies on API calls, and there is an limitation for frequence, so it need to be bigger.
@@ -145,12 +151,12 @@ export abstract class EnvironmentService {
         return new WebCommandChannel(commandEmitter);
     }
 
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+    public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new EnvironmentInformation(envId, envName);
     }
 }
 
-export class NodeInfomation {
+export class NodeInformation {
     public id: string;
     public status: TrialJobStatus = "UNKNOWN";
     public endTime?: number;

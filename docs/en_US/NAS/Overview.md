@@ -64,6 +64,7 @@ Search Space Zoo contains the following NAS cells:
 * [DartsCell](./SearchSpaceZoo.md#DartsCell)
 * [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
 * [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+* [NAS Bench 201](./SearchSpaceZoo.md#nas-bench-201)
 
 ## Using NNI API to Write Your Search Space
 

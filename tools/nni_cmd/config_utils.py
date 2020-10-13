@@ -9,8 +9,8 @@ from .command_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, file_path):
-        config_path = os.path.join(NNICTL_HOME_DIR, str(file_path))
+    def __init__(self, file_path, home_dir=NNICTL_HOME_DIR):
+        config_path = os.path.join(home_dir, str(file_path))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
@@ -51,9 +51,9 @@ class Config:
 
 class Experiments:
     '''Maintain experiment list'''
-    def __init__(self):
-        os.makedirs(NNICTL_HOME_DIR, exist_ok=True)
-        self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
+    def __init__(self, home_dir=NNICTL_HOME_DIR):
+        os.makedirs(home_dir, exist_ok=True)
+        self.experiment_file = os.path.join(home_dir, '.experiment')
         self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, file_name, platform, experiment_name, endTime='N/A', status='INITIALIZED'):

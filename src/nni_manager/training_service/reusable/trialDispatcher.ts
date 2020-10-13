@@ -21,7 +21,7 @@ import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, NodeInfomation, RunnerSettings, TrialGpuSummary } from './environment';
+import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -235,7 +235,7 @@ class TrialDispatcher implements TrainingService {
             }
             await storageService.copyDirectory(trialToolsPath, envDir, true);
         }
-
+        await this.prefetchEnvironments();
         this.log.info(`TrialDispatcher: run loop started.`);
         await Promise.all([
             this.environmentMaintenanceLoop(),
@@ -578,6 +578,15 @@ class TrialDispatcher implements TrainingService {
 
         }
     }
+    
+    private async prefetchEnvironments (): Promise<void> {
+        const environmentService = component.get<EnvironmentService>(EnvironmentService);
+        const number = environmentService.prefetchedEnvironmentCount;
+        this.log.info(`Initialize environments total number: ${number}`);
+        for (let index = 0; index < number; index++) {
+            await this.requestEnvironment();
+        }
+    }
 
     private async requestEnvironment(): Promise<void> {
         if (this.commandChannel === undefined) {
@@ -587,7 +596,7 @@ class TrialDispatcher implements TrainingService {
         const environmentService = component.get<EnvironmentService>(EnvironmentService);
         const envId = uniqueString(5);
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
-        const environment = environmentService.createEnviornmentInfomation(envId, envName);
+        const environment = environmentService.createEnvironmentInformation(envId, envName);
 
         environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
 
@@ -737,7 +746,7 @@ class TrialDispatcher implements TrainingService {
                     if (environment.nodeCount > 1) {
                         let node = environment.nodes.get(nodeId);
                         if (node === undefined) {
-                            node = new NodeInfomation(nodeId);
+                            node = new NodeInformation(nodeId);
                             environment.nodes.set(nodeId, node);
                         }
                         const oldNodeStatus = node.status;
@@ -796,7 +805,7 @@ class TrialDispatcher implements TrainingService {
 
                     let node = environment.nodes.get(nodeId);
                     if (node === undefined) {
-                        node = new NodeInfomation(nodeId);
+                        node = new NodeInformation(nodeId);
                         trial.nodes.set(nodeId, node);
                     }
                     if (undefined === node) {

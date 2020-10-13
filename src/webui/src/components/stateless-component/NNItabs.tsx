@@ -1,26 +1,22 @@
 import * as React from 'react';
-import { Link } from 'react-router';
+import { NavLink } from 'react-router-dom';
 
 const OVERVIEWTABS = (
-    <Link to={'/oview'} activeClassName="high-light" className="common-tabs">
+    <NavLink to={'/oview'} activeClassName='selected' className='common-tabs'>
         Overview
-    </Link>
+    </NavLink>
 );
 
 const DETAILTABS = (
-    <Link to={'/detail'} activeClassName="high-light" className="common-tabs">
+    <NavLink to={'/detail'} activeClassName='selected' className='common-tabs'>
         Trials detail
-    </Link>
+    </NavLink>
 );
 
 const NNILOGO = (
-    <Link to={'/oview'}>
-        <img
-            src={require('../../static/img/logo2.png')}
-            alt="NNI logo"
-            style={{height: 40}}
-        />
-    </Link>
+    <NavLink to={'/oview'}>
+        <img src={require('../../static/img/logo.png')} alt='NNI logo' style={{ height: 40 }} />
+    </NavLink>
 );
 
 export { OVERVIEWTABS, DETAILTABS, NNILOGO };

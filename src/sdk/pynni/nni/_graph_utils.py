@@ -426,6 +426,36 @@ class TorchModuleGraph(TorchGraph):
         cat_info['in_shape'] = input_shapes
         return cat_info
 
+    def _extract_linear_shape_info(self, node_group):
+        """
+        Extract linear shape input/output tensor shape info from its aten::addmm op.
+
+        Parameters
+        ----------
+        node_group : NodePyGroup
+            NodePyGroup object associated with the linear module.
+
+        Returns
+        -------
+        dict
+            Include shape of input tensor and shape of output tensor
+        """
+        for cpp_node in node_group.node_cpps:
+            if cpp_node.kind() == 'aten::addmm':
+                # https://github.com/pytorch/pytorch/blob/1.6/torch/nn/functional.py#L1682
+                # inputs of aten::addmm:
+                # inputs[0] is bias
+                # inputs[1] is input data
+                # inputs[2] is weight
+                t_input = list(cpp_node.inputs())[1]
+                t_output = cpp_node.output()
+                assert isinstance(t_input.type(), torch._C.TensorType)
+                assert isinstance(t_output.type(), torch._C.TensorType)
+                in_shape = t_input.type().sizes()
+                out_shape = t_output.type().sizes()
+                return {'in_shape': in_shape, 'out_shape': out_shape}
+        return None
+
     def _extract_shape_info(self, node):
         """
         Extract the shape information of ```aten::view``` node
@@ -701,6 +731,8 @@ class TorchModuleGraph(TorchGraph):
                 cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,
                                        node_group.node_cpps))[0]
                 node_group.auxiliary = self._extract_shape_info(cpp_node)
+            elif node_group.op_type == 'Linear':
+                node_group.auxiliary = self._extract_linear_shape_info(node_group)
             elif node_group.op_type == CAT_KIND:
                 # get the detail information for cat func
                 cpp_node = list(filter(lambda x: x.kind() == node_group.op_type,

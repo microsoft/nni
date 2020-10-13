@@ -1,63 +1,63 @@
-.nni{
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #212121;
-  font-size: 14px;
-  background: #f2f2f2;
+.nni {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #212121;
+    font-size: 14px;
+    background: #f2f2f2;
 }
 
-.header{
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 56px;
-  background: #0071BC;
-  border-right: 1px solid #ccc;
-  z-index: 1000;
+.header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 56px;
+    background: #0071bc;
+    border-right: 1px solid #ccc;
+    z-index: 1000;
 }
 
-.headerCon{
-  width: 90%;
-  margin: 0 auto;
+.headerCon {
+    width: 90%;
+    margin: 0 auto;
 }
 
-.contentBox{
-  width: 100%;
+.contentBox {
+    width: 100%;
 }
 
-.content{
-  width: 89%;
-  min-width: 1024px;
-  margin: 0 auto;
-  margin-top: 74px;
-  margin-bottom: 30px;
+.content {
+    width: 87%;
+    margin: 0 auto;
+    min-width: 1200px;
+    margin-top: 74px;
+    margin-bottom: 30px;
 }
 
-.bottomDiv{
-  margin-bottom: 10px;
+.bottomDiv {
+    margin-bottom: 10px;
 }
 
-.bgNNI{
-  background-color: #fff;
+.bgNNI {
+    background-color: #fff;
 }
 
-.borderRight{
-  margin-right: 10px;
+.borderRight {
+    margin-right: 10px;
 }
 
 /* office-fabric-ui */
-.ms-Pivot-linkContent{
-  height: 44px;
+.ms-Pivot-linkContent {
+    height: 44px;
 }
 
-.ms-Callout-main{
-  p{
-    font-weight: 500;
-    color: #333;
-  }
+.ms-Callout-main {
+    p {
+        font-weight: 500;
+        color: #333;
+    }
 }
 
-.warning{
-  padding-bottom: 15px;
-  background-color: #f2f2f2;
+.warning {
+    padding-bottom: 15px;
+    background-color: #f2f2f2;
 }

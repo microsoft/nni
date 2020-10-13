@@ -6,10 +6,8 @@ interface LogpathChildProps {
 }
 
 class LogPathChild extends React.Component<LogpathChildProps, {}> {
-
     constructor(props: LogpathChildProps) {
         super(props);
-
     }
 
     render(): React.ReactNode {
@@ -17,16 +15,15 @@ class LogPathChild extends React.Component<LogpathChildProps, {}> {
         const isLink = /^http/gi.test(eachLogpath);
 
         return (
-            <div className="logpath">
-                <span className="logName">{logName}</span>
-                {
-                    isLink
-                        ?
-                        <a className="logContent logHref" rel="noopener noreferrer" href={eachLogpath} target="_blank">{eachLogpath}</a>
-                        :
-                        <span className="logContent">{eachLogpath}</span>
-
-                }
+            <div className='logpath'>
+                <span className='logName'>{logName}</span>
+                {isLink ? (
+                    <a className='logContent logHref' rel='noopener noreferrer' href={eachLogpath} target='_blank'>
+                        {eachLogpath}
+                    </a>
+                ) : (
+                    <span className='logContent'>{eachLogpath}</span>
+                )}
             </div>
         );
     }

@@ -15,25 +15,23 @@ interface AccuracyProps {
 }
 
 class Accuracy extends React.Component<AccuracyProps, {}> {
-
     constructor(props: AccuracyProps) {
         super(props);
-
     }
 
     render(): React.ReactNode {
         const { accNodata, accuracyData, height } = this.props;
         return (
-            <div>
+            <div style={{ position: 'relative' }}>
                 <ReactEcharts
                     option={accuracyData}
                     style={{
                         height: height,
-                        margin: '0 auto',
+                        margin: '0 auto'
                     }}
-                    theme="my_theme"
+                    theme='my_theme'
                 />
-                <div className="showMess">{accNodata}</div>
+                <div className='showMess'>{accNodata}</div>
             </div>
         );
     }

@@ -19,6 +19,7 @@ from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.metis_tuner.metis_tuner import MetisTuner
 from nni.msg_dispatcher import _pack_parameter, MsgDispatcher
 from nni.pbt_tuner.pbt_tuner import PBTTuner
+from nni.regularized_evolution_tuner.regularized_evolution_tuner import RegularizedEvolutionTuner
 
 try:
     from nni.smac_tuner.smac_tuner import SMACTuner
@@ -53,7 +54,12 @@ class BuiltinTunersTestCase(TestCase):
             param_queue.append(tuple(args))
         return receive
 
-    def search_space_test_one(self, tuner_factory, search_space):
+    def send_trial_result(self, tuner, parameter_id, parameters, metrics):
+        tuner.receive_trial_result(parameter_id, parameters, metrics)
+        tuner.trial_end(parameter_id, True)
+
+    def search_space_test_one(self, tuner_factory, search_space, nas=False):
+        # nas: whether the test checks classic nas tuner
         tuner = tuner_factory()
         self.assertIsInstance(tuner, Tuner)
         tuner.update_search_space(search_space)
@@ -64,13 +70,15 @@ class BuiltinTunersTestCase(TestCase):
                                                                        (i + 1) * self.params_each_round)),
                                                             st_callback=self.send_trial_callback(queue))
             logger.debug(parameters)
-            self.check_range(parameters, search_space)
+            check_range = lambda parameters, search_space: self.nas_check_range(parameters, search_space) \
+                                                           if nas else self.check_range(parameters, search_space)
+            check_range(parameters, search_space)
             for k in range(min(len(parameters), self.params_each_round)):
-                tuner.receive_trial_result(self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
+                self.send_trial_result(tuner, self.params_each_round * i + k, parameters[k], random.uniform(-100, 100))
             while queue:
                 id_, params = queue.popleft()
-                self.check_range([params], search_space)
-                tuner.receive_trial_result(id_, params, random.uniform(-100, 100))
+                check_range([params], search_space)
+                self.send_trial_result(tuner, id_, params, random.uniform(-100, 100))
             if not parameters and not self.exhaustive:
                 raise ValueError("No parameters generated")
 
@@ -119,6 +127,19 @@ class BuiltinTunersTestCase(TestCase):
                     for layer_name in item["_value"].keys():
                         self.assertIn(v[layer_name]["chosen_layer"], item["layer_choice"])
 
+    def nas_check_range(self, generated_params, search_space):
+        for params in generated_params:
+            for k in params:
+                v = params[k]
+                items = search_space[k]
+                if items['_type'] == 'layer_choice':
+                    self.assertIn(v['_value'], items['_value'])
+                elif items['_type'] == 'input_choice':
+                    for choice in v['_value']:
+                        self.assertIn(choice, items['_value']['candidates'])
+                else:
+                    raise KeyError
+
     def search_space_test_all(self, tuner_factory, supported_types=None, ignore_types=None, fail_types=None):
         # Three types: 1. supported; 2. ignore; 3. fail.
         # NOTE(yuge): ignore types
@@ -158,6 +179,20 @@ class BuiltinTunersTestCase(TestCase):
             # grid search fails for too many combinations
             logger.info("Full supported search space: %s", full_supported_search_space)
             self.search_space_test_one(tuner_factory, full_supported_search_space)
+
+    def nas_search_space_test_all(self, tuner_factory):
+        # Since classic tuner should support only LayerChoice and InputChoice,
+        # ignore type and fail type are dismissed here. 
+        with open(os.path.join(os.path.dirname(__file__), "assets/classic_nas_search_space.json"), "r") as fp:
+            search_space_all = json.load(fp)
+        full_supported_search_space = dict()
+        for single in search_space_all:
+            space = search_space_all[single]
+            single_search_space = {single: space}
+            self.search_space_test_one(tuner_factory, single_search_space, nas=True)
+            full_supported_search_space.update(single_search_space)
+        logger.info("Full supported search space: %s", full_supported_search_space)
+        self.search_space_test_one(tuner_factory, full_supported_search_space, nas=True)
 
     def import_data_test_for_pbt(self):
         """
@@ -363,6 +398,10 @@ class BuiltinTunersTestCase(TestCase):
                     shutil.rmtree(file)
                 else:
                     os.remove(file)
+
+    def test_regularized_evolution_tuner(self):
+        tuner_fn = lambda: RegularizedEvolutionTuner()
+        self.nas_search_space_test_all(tuner_fn)
 
 
 if __name__ == '__main__':

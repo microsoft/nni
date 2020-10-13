@@ -27,6 +27,7 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
+      python3 -m pip install pygments --user --upgrade
       python3 -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python3 -m pip install tensorflow==2.2.0 --user
       python3 -m pip install keras==2.4.2 --user
@@ -57,7 +58,7 @@ jobs:
   - script: |
       set -e
       python3 -m pip install --upgrade pip setuptools --user
-      python3 -m pip install pylint==2.3.1 astroid==2.2.5 --user
+      python3 -m pip install pylint==2.6.0 astroid==2.4.2 --user
       python3 -m pip install coverage --user
       python3 -m pip install thop --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
@@ -100,13 +101,14 @@ jobs:
     displayName: 'Simple test'
 
 
-- job: 'macos_1015_python37'
+- job: 'macos_latest_python37'
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-latest'
 
   steps:
   - script: |
-      echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${HOME}/Library/Python/3.7/bin:${PATH}"
+      export PYTHON37_BIN_DIR=/usr/local/Cellar/python@3.7/`ls /usr/local/Cellar/python@3.7`/bin
+      echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${HOME}/Library/Python/3.7/bin:${PATH}"
       python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |

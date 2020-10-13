@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Stack } from 'office-ui-fabric-react';
+import { Stack } from '@fluentui/react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
-import MessageInfo from './components/Modals/MessageInfo';
+import MessageInfo from './components/modals/MessageInfo';
+import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
 import './App.scss';
 
 interface AppState {
@@ -18,9 +19,25 @@ interface AppState {
     isUpdate: boolean;
 }
 
+export const AppContext = React.createContext({
+    interval: 10, // sendons
+    columnList: COLUMN,
+    experimentUpdateBroadcast: 0,
+    trialsUpdateBroadcast: 0,
+    metricGraphMode: 'max',
+    bestTrialEntries: '10',
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeColumn: (val: string[]) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeMetricGraphMode: (val: 'max' | 'min') => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeEntries: (val: string) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    updateOverviewPage: () => {}
+});
+
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
-    private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
     constructor(props: {}) {
         super(props);
@@ -39,42 +56,15 @@ class App extends React.Component<{}, AppState> {
 
     async componentDidMount(): Promise<void> {
         await Promise.all([EXPERIMENT.init(), TRIALS.init()]);
-        this.setState(state => ({ 
-            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, 
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
             trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1,
-            metricGraphMode: (EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max')
+            metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
         }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
-        // final result is legal
-        // get a succeed trial，see final result data's format
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.dataFormatimer = window.setInterval(this.getFinalDataFormat, this.state.interval * 1000);
-    }
-
-    getFinalDataFormat = (): void => {
-        for (let i = 0; this.state.isillegalFinal === false; i++) {
-            if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
-                if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
-                    window.clearInterval(this.dataFormatimer);
-                    break;
-                } else {
-                    // illegal final data
-                    this.setState(() => ({
-                        isillegalFinal: true,
-                        expWarningMessage: 'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
-                    }));
-                    window.clearInterval(this.dataFormatimer);
-                }
-            } else {
-                break;
-            }
-        }
     }
 
     changeInterval = (interval: number): void => {
-
         window.clearTimeout(this.timerId);
         if (interval === 0) {
             return;
@@ -85,26 +75,30 @@ class App extends React.Component<{}, AppState> {
             this.firstLoad = true;
             this.refresh();
         });
-
-    }
+    };
 
     // TODO: use local storage
     changeColumn = (columnList: string[]): void => {
         this.setState({ columnList: columnList });
-    }
+    };
 
     changeMetricGraphMode = (val: 'max' | 'min'): void => {
         this.setState({ metricGraphMode: val });
-    }
+    };
 
     // overview best trial module
     changeEntries = (entries: string): void => {
         this.setState({ bestTrialEntries: entries });
-    }
+    };
+
+    updateOverviewPage = (): void => {
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1
+        }));
+    };
 
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
-        
-        if(!(nextState.isUpdate || nextState.isUpdate === undefined)){
+        if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
             nextState.isUpdate = true;
             return false;
         }
@@ -112,11 +106,18 @@ class App extends React.Component<{}, AppState> {
     }
 
     render(): React.ReactNode {
-        const { interval, columnList, experimentUpdateBroadcast, trialsUpdateBroadcast,
-            metricGraphMode, isillegalFinal, expWarningMessage, bestTrialEntries
+        const {
+            interval,
+            columnList,
+            experimentUpdateBroadcast,
+            trialsUpdateBroadcast,
+            metricGraphMode,
+            isillegalFinal,
+            expWarningMessage,
+            bestTrialEntries
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
-            return null;  // TODO: render a loading page
+            return null; // TODO: render a loading page
         }
         const errorList = [
             { errorWhere: TRIALS.jobListError(), errorMessage: TRIALS.getJobErrorMessage() },
@@ -126,42 +127,47 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
-
-        const reactPropsChildren = React.Children.map(this.props.children, child =>
-            React.cloneElement(
-                child as React.ReactElement<any>, {
-                interval,
-                columnList, changeColumn: this.changeColumn,
-                experimentUpdateBroadcast,
-                trialsUpdateBroadcast,
-                metricGraphMode, changeMetricGraphMode: this.changeMetricGraphMode,
-                bestTrialEntries, changeEntries: this.changeEntries
-            })
-        );
-
         return (
-            <Stack className="nni" style={{ minHeight: window.innerHeight }}>
-                <div className="header">
-                    <div className="headerCon">
+            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                <div className='header'>
+                    <div className='headerCon'>
                         <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                     </div>
                 </div>
-                <Stack className="contentBox">
-                    <Stack className="content">
+                <Stack className='contentBox'>
+                    <Stack className='content'>
+                        {/* search space & config */}
+                        <TrialConfigButton />
                         {/* if api has error field, show error message */}
-                        {
-                            errorList.map((item, key) => {
-                                return (
-                                    item.errorWhere && <div key={key} className="warning">
-                                        <MessageInfo info={item.errorMessage} typeInfo="error" />
+                        {errorList.map(
+                            (item, key) =>
+                                item.errorWhere && (
+                                    <div key={key} className='warning'>
+                                        <MessageInfo info={item.errorMessage} typeInfo='error' />
                                     </div>
-                                );
-                            })
-                        }
-                        {isillegalFinal && <div className="warning">
-                            <MessageInfo info={expWarningMessage} typeInfo="warning" />
-                        </div>}
-                        {reactPropsChildren}
+                                )
+                        )}
+                        {isillegalFinal && (
+                            <div className='warning'>
+                                <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                            </div>
+                        )}
+                        <AppContext.Provider
+                            value={{
+                                interval,
+                                columnList,
+                                changeColumn: this.changeColumn,
+                                experimentUpdateBroadcast,
+                                trialsUpdateBroadcast,
+                                metricGraphMode,
+                                changeMetricGraphMode: this.changeMetricGraphMode,
+                                bestTrialEntries,
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
+                            }}
+                        >
+                            {this.props.children}
+                        </AppContext.Provider>
                     </Stack>
                 </Stack>
             </Stack>
@@ -179,7 +185,6 @@ class App extends React.Component<{}, AppState> {
             if (trialsUpdated) {
                 this.setState(state => ({ trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
             }
-
         } else {
             this.firstLoad = false;
         }
@@ -192,16 +197,16 @@ class App extends React.Component<{}, AppState> {
         }
 
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 1000);
-
-    }
+    };
 
     public async lastRefresh(): Promise<void> {
         await EXPERIMENT.update();
         await TRIALS.update(true);
-        this.setState(state => ({ experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1, trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1 }));
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1,
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
+        }));
     }
 }
 
 export default App;
-
-

@@ -24,30 +24,58 @@ const convertTime = (num: number): string => {
         return num / 3600 + 'h';
     } else {
         const hour = Math.floor(num / 3600);
-        const min = Math.floor(num / 60 % 60);
+        const min = Math.floor((num / 60) % 60);
         return hour > 0 ? `${hour}h ${min}min` : `${min}min`;
     }
 };
 
+const convertTimeToSecond = (str: string): number => {
+    let seconds = 0;
+    let d, h, m;
+    if (str.includes('d')) {
+        [d, str] = str.split('d');
+        seconds += parseInt(d) * 24 * 3600;
+    }
+    if (str.includes('h')) {
+        [h, str] = str.split('h');
+        seconds += parseInt(h) * 3600;
+    }
+    if (str.includes('m')) {
+        [m, str] = str.split('m');
+        seconds += parseInt(m) * 60;
+    }
+    if (str) {
+        seconds += parseInt(str.split('s')[0]);
+    }
+    return seconds;
+};
+
 // trial's duration, accurate to seconds for example 10min 30s
-const convertDuration = (num: number): string => {
-    if (num < 1) {
-        return '0s';
+const convertDuration = (seconds: number): string => {
+    let str = '';
+
+    const d = Math.floor(seconds / (24 * 3600));
+    if (d > 0) {
+        str += `${d}d `;
     }
-    const hour = Math.floor(num / 3600);
-    const minute = Math.floor(num / 60 % 60);
-    const second = Math.floor(num % 60);
-    const result: string[] = [];
-    if (hour > 0) {
-        result.push(`${hour}h`);
+    seconds -= d * 24 * 3600;
+
+    const h = Math.floor(seconds / 3600);
+    if (h > 0) {
+        str += `${h}h `;
     }
-    if (minute > 0) {
-        result.push(`${minute}min`);
+    seconds -= h * 3600;
+
+    const m = Math.floor(seconds / 60);
+    if (m > 0) {
+        str += `${m}m `;
     }
-    if (second > 0) {
-        result.push(`${second}s`);
+    seconds -= m * 60;
+
+    if (seconds > 0) {
+        str += `${Math.floor(seconds)}s`;
     }
-    return result.join(' ');
+    return str ? str : '0s';
 };
 
 function parseMetrics(metricData: string): any {
@@ -60,7 +88,7 @@ function parseMetrics(metricData: string): any {
 
 const isArrayType = (list: any): boolean | undefined => {
     return Array.isArray(list);
-}
+};
 
 // get final result value
 // draw Accuracy point graph
@@ -69,11 +97,11 @@ const getFinalResult = (final?: MetricDataRecord[]): number => {
     let showDefault = 0;
     if (final) {
         acc = parseMetrics(final[final.length - 1].data);
-        if (typeof (acc) === 'object' && !isArrayType(acc)) {
+        if (typeof acc === 'object' && !isArrayType(acc)) {
             if (acc.default) {
                 showDefault = acc.default;
             }
-        } else if (typeof (acc) === 'number') {
+        } else if (typeof acc === 'number') {
             showDefault = acc;
         } else {
             showDefault = NaN;
@@ -94,7 +122,7 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
     if (final) {
         showDefault = parseMetrics(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
-            if(!isNaNorInfinity(showDefault)){
+            if (!isNaNorInfinity(showDefault)) {
                 return { default: showDefault };
             }
         } else if (isArrayType(showDefault)) {
@@ -121,7 +149,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             left: 'center',
             textStyle: {
                 fontSize: 16,
-                color: '#333',
+                color: '#333'
             }
         },
         tooltip: {
@@ -137,11 +165,13 @@ const intermediateGraphOption = (intermediateArr: number[], id: string): any => 
             data: intermediateArr,
             scale: true
         },
-        series: [{
-            symbolSize: 6,
-            type: 'scatter',
-            data: intermediateArr
-        }]
+        series: [
+            {
+                symbolSize: 6,
+                type: 'scatter',
+                data: intermediateArr
+            }
+        ]
     };
 };
 
@@ -159,7 +189,7 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
                 alert('Cancel the job successfully');
                 // render the table
                 if (updateList) {
-                    updateList();  // FIXME
+                    updateList(); // FIXME
                 }
             } else {
                 alert('fail to cancel the job');
@@ -180,7 +210,7 @@ const filterByStatus = (item: TableObj): boolean => {
     return item.status === 'SUCCEEDED';
 };
 
-// a waittiong trial may havn't start time 
+// a waittiong trial may havn't start time
 const filterDuration = (item: TableObj): boolean => {
     return item.status !== 'WAITING';
 };
@@ -197,7 +227,7 @@ const downFile = (content: string, fileName: string): void => {
     }
     if (navigator.userAgent.indexOf('Firefox') > -1) {
         const downTag = document.createElement('a');
-        downTag.addEventListener('click', function () {
+        downTag.addEventListener('click', function() {
             downTag.download = fileName;
             downTag.href = URL.createObjectURL(file);
         });
@@ -227,7 +257,10 @@ function metricAccuracy(metric: MetricDataRecord): number {
 
 function formatAccuracy(accuracy: number): string {
     // TODO: how to format NaN?
-    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+    return accuracy
+        .toFixed(6)
+        .replace(/0+$/, '')
+        .replace(/\.$/, '');
 }
 
 function formatComplexTypeValue(value: any): string | number {
@@ -239,8 +272,22 @@ function formatComplexTypeValue(value: any): string | number {
 }
 
 export {
-    convertTime, convertDuration, getFinalResult, getFinal, downFile,
-    intermediateGraphOption, killJob, filterByStatus, filterDuration,
-    formatAccuracy, formatTimestamp, metricAccuracy, parseMetrics,
-    isArrayType, requestAxios, isNaNorInfinity, formatComplexTypeValue
+    convertTime,
+    convertDuration,
+    convertTimeToSecond,
+    getFinalResult,
+    getFinal,
+    downFile,
+    intermediateGraphOption,
+    killJob,
+    filterByStatus,
+    filterDuration,
+    formatAccuracy,
+    formatTimestamp,
+    metricAccuracy,
+    parseMetrics,
+    isArrayType,
+    requestAxios,
+    isNaNorInfinity,
+    formatComplexTypeValue
 };

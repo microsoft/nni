@@ -3,7 +3,7 @@ import { SUPPORTED_SEARCH_SPACE_TYPE } from '../const';
 import { formatComplexTypeValue } from '../function';
 
 function fullNameJoin(prefix: string, name: string): string {
-    return prefix ? (prefix + '/' + name) : name;
+    return prefix ? prefix + '/' + name : name;
 }
 
 class NumericAxis implements SingleAxis {
@@ -86,17 +86,24 @@ export class SearchSpace implements MultipleAxes {
         if (searchSpaceSpec === undefined) {
             return;
         }
-        Object.entries(searchSpaceSpec).forEach((item) => {
-            const key = item[0], spec = item[1] as any;
+        Object.entries(searchSpaceSpec).forEach(item => {
+            const key = item[0],
+                spec = item[1] as any;
             if (key === '_name') {
                 return;
             } else if (['choice', 'layer_choice', 'input_choice'].includes(spec._type)) {
                 // ordinal types
                 if (spec._value && typeof spec._value[0] === 'object') {
                     // nested dimension
-                    this.axes.set(key, new NestedOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value));
+                    this.axes.set(
+                        key,
+                        new NestedOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value)
+                    );
                 } else {
-                    this.axes.set(key, new SimpleOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value));
+                    this.axes.set(
+                        key,
+                        new SimpleOrdinalAxis(key, fullNameJoin(fullName, key), spec._type, spec._value)
+                    );
                 }
             } else if (SUPPORTED_SEARCH_SPACE_TYPE.includes(spec._type)) {
                 this.axes.set(key, new NumericAxis(key, fullName + key, spec._type, spec._value));
@@ -129,7 +136,10 @@ export class SearchSpace implements MultipleAxes {
         }
         addingColumns.forEach((value, key) => {
             if (value.every(v => typeof v === 'number')) {
-                newSearchSpace.axes.set(key, new NumericAxis(key, key, 'uniform', [Math.min(...value), Math.max(...value)]));
+                newSearchSpace.axes.set(
+                    key,
+                    new NumericAxis(key, key, 'uniform', [Math.min(...value), Math.max(...value)])
+                );
             } else {
                 newSearchSpace.axes.set(key, new SimpleOrdinalAxis(key, key, 'choice', new Set(value).values()));
             }

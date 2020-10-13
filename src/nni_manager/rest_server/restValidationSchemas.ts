@@ -17,7 +17,8 @@ export namespace ValidationSchemas {
                 passphrase: joi.string(),
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
-                useActiveGpu: joi.boolean()
+                useActiveGpu: joi.boolean(),
+                preCommand: joi.string()
             })),
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
@@ -165,6 +166,9 @@ export namespace ValidationSchemas {
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
+            }),
+            remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                reuse: joi.boolean()
             })
         }
     };
