@@ -17,10 +17,6 @@ jobs:
 - job: 'pip_install_macOS_python36'
   pool:
     vmImage: 'macOS-latest'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
 
   steps:
   - script: |
