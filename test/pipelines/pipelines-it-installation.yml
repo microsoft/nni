@@ -14,7 +14,7 @@ jobs:
       python3 -m pip install --upgrade nni --user
     displayName: 'Install nni'
 
-- job: 'pip_install_macOS_python36'
+- job: 'pip_install_macOS_python3'
   pool:
     vmImage: 'macOS-latest'
 
