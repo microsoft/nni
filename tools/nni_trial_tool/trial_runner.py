@@ -27,6 +27,10 @@ def main_loop(args):
     gpu_refresh_last_time = datetime.now() - timedelta(minutes=1)
 
     try:
+        if args.job_pid_file:
+            with open(args.job_pid_file, 'w') as job_file:
+                job_file.write("%d" % os.getpid())
+
         trials = dict()
 
         command_channel = args.command_channel
@@ -143,6 +147,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--nni_manager_version', type=str, help='the nni version transmitted from nniManager')
     PARSER.add_argument('--log_collection', type=str, help='set the way to collect log in trial runner')
     PARSER.add_argument('--node_count', type=int, help='number of nodes, it determines how to consume command and save code file')
+    PARSER.add_argument('--job_pid_file', type=str, help='save trial runner process pid')
     args, unknown = PARSER.parse_known_args()
 
     setting_file = "settings.json"

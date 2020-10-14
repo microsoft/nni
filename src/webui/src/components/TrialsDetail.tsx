@@ -16,6 +16,7 @@ interface TrialDetailState {
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
     static contextType = AppContext;
+    context!: React.ContextType<typeof AppContext>;
     public interAccuracy = 0;
     public interAllTableList = 2;
 

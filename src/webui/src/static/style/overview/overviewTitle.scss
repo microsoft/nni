@@ -1,0 +1,49 @@
+$iconPaddingVal: 20px;
+
+.panelTitle {
+    img {
+        height: 23px;
+
+        /* (38 - 22 ) / 2 */
+        margin-top: 8px;
+
+        /* icon right */
+        padding: 0 $iconPaddingVal 0 0;
+    }
+
+    span {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    i {
+        font-size: 24px;
+        margin-right: 20px;
+        color: #545454;
+    }
+}
+
+/* antd icon margin intermediate result style */
+#tabsty .anticon {
+    margin-right: 0;
+}
+
+.top10bg {
+    .top10Title {
+        width: 160px;
+    }
+
+    .title {
+        border-left: 2px solid #fff;
+    }
+
+    .minTitle {
+        // margin-right: $iconPaddingVal;
+        border-right: 2px solid #fff;
+    }
+
+    .title:hover {
+        cursor: pointer;
+    }
+}
