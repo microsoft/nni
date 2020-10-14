@@ -293,7 +293,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         try {
-            await executor.killChildProcesses(jobpidPath);
+            await executor.killChildProcesses(jobpidPath, true);
             this.releaseEnvironmentResource(environment);
         } catch (error) {
             this.log.error(`stopEnvironment: ${error}`);

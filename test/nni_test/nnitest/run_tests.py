@@ -246,7 +246,7 @@ def run(args):
             continue
         # remote mode need more time to cleanup 
         if args.ts == 'remote':
-            wait_for_port_available(8080, 600)
+            wait_for_port_available(8080, 180)
         else:
             wait_for_port_available(8080, 30)
         print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
