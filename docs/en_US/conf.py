@@ -12,8 +12,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from recommonmark.transform import AutoStructify
-from recommonmark.parser import CommonMarkParser
+
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
@@ -60,9 +59,6 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-source_parsers = {
-    '.md': CommonMarkParser
-}
 
 source_suffix = ['.rst', '.md']
 
@@ -200,9 +196,4 @@ epub_exclude_files = ['search.html']
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_config_value('recommonmark_config', {
-        'enable_eval_rst': True,
-        'enable_auto_toc_tree': False,
-    }, True)
-    app.add_transform(AutoStructify)
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')
