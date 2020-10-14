@@ -7,19 +7,9 @@ interface ExpandableDetailsProps {
     isExpand: boolean;
 }
 
-interface ExpandableDetailsState {
-    isExpand: boolean;
-}
-
-class ExpandableDetails extends React.Component<ExpandableDetailsProps, ExpandableDetailsState> {
-    constructor(props: ExpandableDetailsProps) {
-        super(props);
-        this.state = { isExpand: false };
-    }
-
+class ExpandableDetails extends React.Component<ExpandableDetailsProps, {}> {
     render(): React.ReactNode {
         const { detailsProps, isExpand } = this.props;
-        // const { isExpand } = this.state;
         return (
             <div>
                 <DetailsRow {...detailsProps} />
