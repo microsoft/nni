@@ -1,4 +1,43 @@
-# Contributing
+# Contributing to NNI
+
+Welcome, and thank you for your interest in contributing to NNI!
+
+There are many ways in which you can contribute, beyond writing code. The goal of this document is to provide a high-level overview of how you can get involved.
+
+# Provide feedback or ask a question
+
+* [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
+* Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
+
+Join IM discussion groups:
+|Gitter||WeChat|
+|----|----|----|
+|![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png)| OR |![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png)|
+
+
+# Look for an existing issue
+Before you create a new issue, please do a search in [open issues](https://github.com/microsoft/nni/issues) to see if the issue or feature request has already been filed.
+
+Be sure to scan through the [most popular](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3AFAQ+sort%3Areactions-%2B1-desc) feature requests.
+
+If you find your issue already exists, make relevant comments and add your [reaction](https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments). Use a reaction in place of a "+1" comment:
+
+* 👍 - upvote
+* 👎 - downvote
+
+If you cannot find an existing issue that describes your bug or feature, create a new issue using the guidelines below.
+
+# Writing good bug reports or feature requests
+File a single issue per problem and feature request. Do not enumerate multiple bugs or feature requests in the same issue.
+
+Provide as many information as you think might relevant to the context (thinking the issue is assigning to you, what kinds of info you will need to debug it!!!). To give you a general idea about what kinds of info are useful for developers to dig out the issue, we had provided issue template for you.
+
+Once you had submitted an issue, be sure to follow it for questions and discussions. 
+
+Once the bug is fixed or feature is addressed, be sure to close the issue.
+
+# Contributing fixes or examples
 
 This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
