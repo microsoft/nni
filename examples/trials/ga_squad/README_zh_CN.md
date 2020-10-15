@@ -30,19 +30,19 @@
 
     chmod +x ./download.sh
     ./download.sh
-    
+
 
 ### 手动下载
 
 1. 在 https://rajpurkar.github.io/SQuAD-explorer/ 下载 "dev-v1.1.json" 和 "train-v1.1.json"。
-    
+
     ```bash
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
     ```
 
 2. 在 https://nlp.stanford.edu/projects/glove/ 下载 "glove.840B.300d.txt"。
-    
+
     ```bash
     wget http://nlp.stanford.edu/data/glove.840B.300d.zip
     unzip glove.840B.300d.zip
@@ -71,7 +71,7 @@
       command: python3 trial.py
       codeDir: ~/nni/examples/trials/ga_squad
       gpuNum: 0
-    
+
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
@@ -80,7 +80,7 @@
 ### 提交任务
 
     nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
-    
+
 
 ## 在 OpenPAI 上运行此示例
 
@@ -122,7 +122,7 @@
       passWord: password
       # OpenPAI 的 RestFUL 服务器地址
       host: 10.10.10.10
-    
+
 
 将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `userName`, `passWord` 和 `host`.
 
@@ -133,7 +133,7 @@
 ### 提交任务
 
     nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
-    
+
 
 # 关于此 Trial 的技术细节
 
@@ -184,17 +184,17 @@ Trial 有大量的文件、函数和类。 这里只简单介绍最重要的文�
             elif graph.layers[topo_i].graph_type == LayerType.attention.value:
                 # ......
             # 处理更多层
-    
+
 
 正如我们看到的，这个函数实际上是个编译器。它将内部模型的 DAG 配置`图`（在`模型配置格式`章节介绍）转换为 Tensorflow 的计算图。
 
     topology = graph.is_topology()
-    
+
 
 将内部图表示进行拓扑排序，代码在下列循环中：
 
     for _, topo_i in enumerate(topology):
-    
+
 
 执行实际转换，将每层映射为 TensorFlow 计算图中的一部分。
 
@@ -204,7 +204,7 @@ Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此
 
     class CustomerTuner(Tuner):
         # ......
-    
+
         def generate_parameters(self, parameter_id):
             """将一组 Trial 图配置作为序列化对象返回。
             parameter_id : int
@@ -230,16 +230,16 @@ Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此
                 indiv.mutation()
                 graph = indiv.config
                 temp =  json.loads(graph_dumps(graph))
-    
+
         # ......
-    
+
 
 重载函数 `generate_parameters` 实现了简单的变异算法。 代码如下：
 
                 if self.population[0].result > self.population[1].result:
                     self.population[0] = self.population[1]
                 indiv = copy.deepcopy(self.population[0])
-    
+
 
 控制突变过程。 它会在种群中随机取出两个个体，对更好结果的一个保留数据，并突变另一个。
 
@@ -289,7 +289,7 @@ Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此
             {"Comment": "More layers will be here for actual graphs."}
         ]
     }
-    
+
 
 每个模型配置都有一个 "layers" 部分，这是层定义的 JSON 列表。 每层的定义也是一个 JSON 对象：
 

@@ -473,34 +473,34 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 - **codeDir** 指定了代码文件的本机路径。
 
 - **ps**: Kubeflow 的 tensorflow-operator 的可选配置，包括：
-  
+
       * __replicas__: __ps__ 角色的副本数量。
-      
+
       * __command__: __ps__ 容器的运行脚本。
-      
+
       * __gpuNum__: 在 __ps__ 容器中使用的 GPU 数量。
-      
+
       * __cpuNum__: 在 __ps__ 容器中使用的 CPU 数量。
-      
+
       * __memoryMB__：容器的内存大小。
-      
+
       * __image__: 在 __ps__ 中使用的 Docker 映像。
-      
+
 
 - **worker** 是 Kubeflow 的 tensorflow-operator 的可选配置。
-  
+
       * __replicas__: __worker__ 角色的副本数量。
-      
+
       * __command__: __worker__ 容器的运行脚本。
-      
+
       * __gpuNum__: 在 __worker__ 容器中使用的 GPU 数量。
-      
+
       * __cpuNum__: 在 __worker__ 容器中使用的 CPU 数量。
-      
+
       * __memoryMB__：容器的内存大小。
-      
+
       * __image__: 在 __worker__ 中使用的 Docker 映像。
-      
+
 
 ### localConfig
 
@@ -709,7 +709,7 @@ If users want to run trial jobs in local machine, and use annotation to generate
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    
+
 
 You can add assessor configuration.
 
@@ -739,7 +739,7 @@ You can add assessor configuration.
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    
+
 
 Or you could specify your own tuner and assessor file as following,
 
@@ -771,7 +771,7 @@ Or you could specify your own tuner and assessor file as following,
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    
+
 
 ### Remote mode
 
@@ -820,7 +820,7 @@ If run trial jobs in remote machine, users could specify the remote machine info
         # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
         preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
     ```
-    
+
 
 ### PAI mode
 
@@ -856,12 +856,12 @@ If run trial jobs in remote machine, users could specify the remote machine info
       passWord: test
       # OpenPAI 的 RestFUL 服务器地址
       host: 10.10.10.10
-    
+
 
 ### Kubeflow mode
 
     使用 NFS 存储。
-    
+
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
@@ -892,8 +892,8 @@ If run trial jobs in remote machine, users could specify the remote machine info
       nfs:
         server: 10.10.10.10
         path: /var/nfs/general
-    
-    
+
+
 
 ### Kubeflow with azure storage
 

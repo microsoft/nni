@@ -33,17 +33,17 @@ nnictl create --config ./config.yml
 只需要如下几步，即可在 scikit-learn 代码中使用 NNI。
 
 * **第一步**
-    
+
     准备 search_space.json 文件来存储选择的搜索空间。 例如，如果要在不同的模型中选择：
-    
+
     ```json
     {
     "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]}
     }
     ```
-    
+
     如果要选择不同的模型和参数，可以将它们放到同一个 search_space.json 文件中。
-    
+
     ```json
     {
     "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]},
@@ -51,15 +51,15 @@ nnictl create --config ./config.yml
     "knr_weights": {"_type":"choice","_value":["uniform", "distance"]}
     }
     ```
-    
+
     在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
 
 * **第二步**
-    
+
     在代码最前面，加上 `import nni` 来导入 NNI 包。
-    
+
     首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
-    
+
     ```json
     {
     "C": {"_type":"uniform","_value":[0.1, 1]},
@@ -69,9 +69,9 @@ nnictl create --config ./config.yml
     "coef0": {"_type":"uniform","_value":[0.01, 0.1]}
     }
     ```
-    
+
     就会获得像下面一样的 dict：
-    
+
     ```python
     params = {
         'C': 1.0,
@@ -81,11 +81,11 @@ nnictl create --config ./config.yml
         'coef0': 0.01
     }
     ```
-    
+
     就可以使用这些变量来实现 scikit-learn 的代码。
 
 * **第三步**
-    
+
     完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 需要将分数传入 Tuner 算法，并生成下一组参数，将结果回传给 NNI，并开始下一个 Trial 任务。
-    
+
     在运行完 scikit-learn 代码后，只需要使用 `nni.report_final_result(score)` 来与 NNI 通信即可。 或者在每一步中都有多个分值，可使用 `nni.report_intemediate_result(score)` 来将它们回传给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
