@@ -1,18 +1,22 @@
 import * as React from 'react';
 import { Dialog, DialogType, DialogFooter, Checkbox, PrimaryButton, DefaultButton } from '@fluentui/react';
-import { OPERATION } from '../../static/const';
 
 interface ChangeColumnState {
-    userSelectColumnList: string[];
-    originSelectColumnList: string[];
+    // buffer, not saved yet
+    currentSelected: string[];
 }
 
 interface ChangeColumnProps {
-    isHideDialog: boolean;
-    showColumn: string[]; // all column List
-    selectedColumn: string[]; // user selected column list
-    changeColumn: (val: string[]) => void;
-    hideShowColumnDialog: () => void;
+    allColumns: SimpleColumn[]; // all column List
+    selectedColumns: string[]; // user selected column list
+    onSelectedChange: (val: string[]) => void;
+    onHideDialog: () => void;
+    minSelected?: number;
+}
+
+interface SimpleColumn {
+    key: string; // key for management
+    name: string; // name to display
 }
 
 interface CheckBoxItems {
@@ -20,12 +24,12 @@ interface CheckBoxItems {
     checked: boolean;
     onChange: () => void;
 }
+
 class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeColumnState> {
     constructor(props: ChangeColumnProps) {
         super(props);
         this.state = {
-            userSelectColumnList: this.props.selectedColumn,
-            originSelectColumnList: this.props.selectedColumn
+            currentSelected: this.props.selectedColumns
         };
     }
 
@@ -38,97 +42,50 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         label: string,
         val?: boolean
     ): void => {
-        const source: string[] = JSON.parse(JSON.stringify(this.state.userSelectColumnList));
+        const source: string[] = [...this.state.currentSelected];
         if (val === true) {
             if (!source.includes(label)) {
                 source.push(label);
-                this.setState(() => ({ userSelectColumnList: source }));
+                this.setState({ currentSelected: source });
             }
         } else {
-            if (source.includes(label)) {
-                // remove from source
-                const result = source.filter(item => item !== label);
-                this.setState(() => ({ userSelectColumnList: result }));
-            }
+            // remove from source
+            const result = source.filter(item => item !== label);
+            this.setState({ currentSelected: result });
         }
     };
 
     saveUserSelectColumn = (): void => {
-        const { userSelectColumnList } = this.state;
-        const { showColumn } = this.props;
-        // sort by Trial No. | ID | Duration | Start Time | End Time | ...
-        const sortColumn: string[] = [];
-        /**
-         * 
-         * TODO: use this function to refactor sort column
-         * search space might orderless
-            showColumn.map(item => {
-                userSelectColumnList.map(key => {
-                    if (item === key || key.includes('search space')) {
-                        if (!sortColumn.includes(key)) {
-                            sortColumn.push(key);
-                        }
-                    }
-                });
-            });
-         */
-        // push ![Operation] ![search space] column
-        showColumn.map(item => {
-            userSelectColumnList.map(key => {
-                if (item === key && item !== OPERATION) {
-                    sortColumn.push(key);
-                }
-            });
-        });
-        // push search space key
-        userSelectColumnList.map(index => {
-            if (index.includes('search space')) {
-                if (!sortColumn.includes(index)) {
-                    sortColumn.push(index);
-                }
-            }
-        });
-        // push Operation
-        if (userSelectColumnList.includes(OPERATION)) {
-            sortColumn.push(OPERATION);
-        }
-        this.props.changeColumn(sortColumn);
-        this.hideDialog(); // hide dialog
-    };
-
-    hideDialog = (): void => {
-        this.props.hideShowColumnDialog();
+        const { currentSelected } = this.state;
+        const { allColumns, onSelectedChange } = this.props;
+        const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
+        onSelectedChange(selectedColumns);
+        this.hideDialog();
     };
 
     // user exit dialog
     cancelOption = (): void => {
         // reset select column
-        const { originSelectColumnList } = this.state;
-        this.setState({ userSelectColumnList: originSelectColumnList }, () => {
+        this.setState({ currentSelected: this.props.selectedColumns }, () => {
             this.hideDialog();
         });
     };
 
+    private hideDialog = (): void => {
+        this.props.onHideDialog();
+    };
+
     render(): React.ReactNode {
-        const { showColumn, isHideDialog } = this.props;
-        const { userSelectColumnList } = this.state;
-        const renderOptions: Array<CheckBoxItems> = [];
-        showColumn.map(item => {
-            if (userSelectColumnList.includes(item)) {
-                // selected column name
-                renderOptions.push({ label: item, checked: true, onChange: this.makeChangeHandler(item) });
-            } else {
-                renderOptions.push({ label: item, checked: false, onChange: this.makeChangeHandler(item) });
-            }
-        });
+        const { allColumns, minSelected } = this.props;
+        const { currentSelected } = this.state;
         return (
             <div>
                 <Dialog
-                    hidden={isHideDialog} // required field!
+                    hidden={false}
                     dialogContentProps={{
                         type: DialogType.largeHeader,
-                        title: 'Change table column',
-                        subText: 'You can chose which columns you want to see in the table.'
+                        title: 'Customize columns',
+                        subText: 'You can choose which columns you wish to see.'
                     }}
                     modalProps={{
                         isBlocking: false,
@@ -136,12 +93,22 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
                     }}
                 >
                     <div className='columns-height'>
-                        {renderOptions.map(item => {
-                            return <Checkbox key={item.label} {...item} styles={{ root: { marginBottom: 8 } }} />;
-                        })}
+                        {allColumns.map(item => (
+                            <Checkbox
+                                key={item.key}
+                                label={item.name}
+                                checked={currentSelected.includes(item.key)}
+                                onChange={this.makeChangeHandler(item.key)}
+                                styles={{ root: { marginBottom: 8 } }}
+                            />
+                        ))}
                     </div>
                     <DialogFooter>
-                        <PrimaryButton text='Save' onClick={this.saveUserSelectColumn} />
+                        <PrimaryButton
+                            text='Save'
+                            onClick={this.saveUserSelectColumn}
+                            disabled={currentSelected.length < (minSelected === undefined ? 1 : minSelected)}
+                        />
                         <DefaultButton text='Cancel' onClick={this.cancelOption} />
                     </DialogFooter>
                 </Dialog>

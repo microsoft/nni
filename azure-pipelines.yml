@@ -101,9 +101,9 @@ jobs:
     displayName: 'Simple test'
 
 
-- job: 'macos_1015_python37'
+- job: 'macos_latest_python37'
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: 'macOS-latest'
 
   steps:
   - script: |

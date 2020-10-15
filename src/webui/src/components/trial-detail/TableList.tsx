@@ -1,41 +1,39 @@
-import React, { lazy } from 'react';
-import axios from 'axios';
-import ReactEcharts from 'echarts-for-react';
 import {
-    Stack,
+    DefaultButton,
     Dropdown,
-    DetailsList,
-    IDetailsListProps,
-    DetailsListLayoutMode,
-    PrimaryButton,
-    Modal,
-    IDropdownOption,
     IColumn,
+    Icon,
+    IDropdownOption,
+    PrimaryButton,
     Selection,
     SelectionMode,
-    IconButton,
-    TooltipHost,
-    IStackTokens
+    Stack,
+    StackItem,
+    TooltipHost
 } from '@fluentui/react';
-import ReactPaginate from 'react-paginate';
-import { LineChart, blocked, copy } from '../buttons/Icon';
-import { MANAGER_IP, COLUMNPro } from '../../static/const';
-import { convertDuration, formatTimestamp, intermediateGraphOption, parseMetrics } from '../../static/function';
+import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { TableRecord, TrialJobInfo } from '../../static/interface';
-const Details = lazy(() => import('../overview/Details'));
-const ChangeColumnComponent = lazy(() => import('../modals/ChangeColumnComponent'));
-const Compare = lazy(() => import('../modals/Compare'));
-const KillJob = lazy(() => import('../modals/Killjob'));
-const Customize = lazy(() => import('../modals/CustomizedTrial'));
-import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
+import { convertDuration, formatTimestamp } from '../../static/function';
+import { TableObj } from '../../static/interface';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
 import '../../static/style/table.scss';
 import '../../static/style/button.scss';
+import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
+import '../../static/style/search.scss';
+import '../../static/style/table.scss';
+import '../../static/style/tableStatus.css';
+import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
+import ChangeColumnComponent from '../modals/ChangeColumnComponent';
+import Compare from '../modals/Compare';
+import Customize from '../modals/CustomizedTrial';
+import KillJob from '../modals/Killjob';
+import ExpandableDetails from '../public-child/ExpandableDetails';
+import PaginationTable from '../public-child/PaginationTable';
+import { Trial } from '../../static/model/trial';
 
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
@@ -45,749 +43,518 @@ echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
 
-const horizontalGapStackTokens: IStackTokens = {
-    childrenGap: 20,
-    padding: 10
+type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
+const searchOptionLiterals = {
+    id: 'ID',
+    trialnum: 'Trial No.',
+    status: 'Status',
+    parameters: 'Parameters'
 };
 
-interface TableListProps {
-    pageSize: number;
-    tableSource: Array<TableRecord>;
-    columnList: string[]; // user select columnKeys
-    changeColumn: (val: string[]) => void;
-    trialsUpdateBroadcast: number;
-}
+const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
 
 interface SortInfo {
     field: string;
     isDescend?: boolean;
 }
 
+function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
+    const key = columnKey as keyof T;
+    return items.slice(0).sort(function(a: T, b: T): any {
+        if (
+            a[key] === undefined ||
+            Object.is(a[key], NaN) ||
+            Object.is(a[key], Infinity) ||
+            Object.is(a[key], -Infinity) ||
+            typeof a[key] === 'object'
+        ) {
+            return 1;
+        }
+        if (
+            b[key] === undefined ||
+            Object.is(b[key], NaN) ||
+            Object.is(b[key], Infinity) ||
+            Object.is(b[key], -Infinity) ||
+            typeof b[key] === 'object'
+        ) {
+            return -1;
+        }
+        return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+    });
+}
+
+function _inferColumnTitle(columnKey: string): string {
+    if (columnKey === 'sequenceId') {
+        return 'Trial No.';
+    } else if (columnKey === 'id') {
+        return 'ID';
+    } else if (columnKey === 'intermediateCount') {
+        return 'Intermediate results (#)';
+    } else if (columnKey.startsWith('space/')) {
+        return columnKey.split('/', 2)[1] + ' (space)';
+    } else if (columnKey === 'latestAccuracy') {
+        return 'Default metric'; // to align with the original design
+    } else if (columnKey.startsWith('metric/')) {
+        return columnKey.split('/', 2)[1] + ' (metric)';
+    } else if (columnKey.startsWith('_')) {
+        return columnKey;
+    } else {
+        // camel case to verbose form
+        const withSpace = columnKey.replace(/[A-Z]/g, letter => ` ${letter.toLowerCase()}`);
+        return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
+    }
+}
+
+interface TableListProps {
+    tableSource: TableObj[];
+    trialsUpdateBroadcast: number;
+}
+
 interface TableListState {
-    intermediateOption: object;
-    modalVisible: boolean;
-    isObjFinal: boolean;
-    isShowColumn: boolean;
-    selectRows: Array<any>;
-    isShowCompareModal: boolean;
-    selectedRowKeys: string[] | number[];
-    intermediateData: Array<object>; // a trial's intermediate results (include dict)
-    intermediateId: string;
-    intermediateOtherKeys: string[];
-    isShowCustomizedModal: boolean;
-    copyTrialId: string; // user copy trial to submit a new customized trial
-    isCalloutVisible: boolean; // kill job button callout [kill or not kill job window]
-    intermediateKey: string; // intermeidate modal: which key is choosed.
-    isExpand: boolean;
-    modalIntermediateWidth: number;
-    modalIntermediateHeight: number;
-    tableColumns: IColumn[];
-    allColumnList: string[];
-    tableSourceForSort: Array<TableRecord>;
-    sortMessage: SortInfo;
-    offset: number;
-    tablePerPage: Array<TableRecord>;
-    perPage: number;
-    currentPage: number;
-    pageCount: number;
+    displayedItems: any[];
+    displayedColumns: string[];
+    columns: IColumn[];
+    searchType: SearchOptionType;
+    searchText: string;
+    selectedRowIds: string[];
+    customizeColumnsDialogVisible: boolean;
+    compareDialogVisible: boolean;
+    intermediateDialogTrial: TableObj | undefined;
+    copiedTrialId: string | undefined;
+    sortInfo: SortInfo;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
-    public intervalTrialLog = 10;
-    public trialId!: string;
+    private _selection: Selection;
+    private _expandedTrialIds: Set<string>;
 
     constructor(props: TableListProps) {
         super(props);
 
         this.state = {
-            intermediateOption: {},
-            modalVisible: false,
-            isObjFinal: false,
-            isShowColumn: false,
-            isShowCompareModal: false,
-            selectRows: [],
-            selectedRowKeys: [], // close selected trial message after modal closed
-            intermediateData: [],
-            intermediateId: '',
-            intermediateOtherKeys: [],
-            isShowCustomizedModal: false,
-            isCalloutVisible: false,
-            copyTrialId: '',
-            intermediateKey: 'default',
-            isExpand: false,
-            modalIntermediateWidth: window.innerWidth,
-            modalIntermediateHeight: window.innerHeight,
-            tableColumns: this.initTableColumnList(this.props.columnList),
-            allColumnList: this.getAllColumnKeys(),
-            sortMessage: { field: '', isDescend: false },
-            offset: 0,
-            tablePerPage: [],
-            perPage: 20,
-            currentPage: 0,
-            pageCount: 0,
-            tableSourceForSort: this.props.tableSource
+            displayedItems: [],
+            displayedColumns: defaultDisplayedColumns,
+            columns: [],
+            searchType: 'id',
+            searchText: '',
+            customizeColumnsDialogVisible: false,
+            compareDialogVisible: false,
+            selectedRowIds: [],
+            intermediateDialogTrial: undefined,
+            copiedTrialId: undefined,
+            sortInfo: { field: '', isDescend: true }
         };
+
+        this._selection = new Selection({
+            onSelectionChanged: (): void => {
+                this.setState({
+                    selectedRowIds: this._selection.getSelection().map(s => (s as any).id)
+                });
+            }
+        });
+
+        this._expandedTrialIds = new Set<string>();
     }
 
-    // sort for table column
-    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
-        const { tableColumns } = this.state;
-        const newColumns: IColumn[] = tableColumns.slice();
-        const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
-        newColumns.forEach((newCol: IColumn) => {
-            if (newCol === currColumn) {
-                currColumn.isSortedDescending = !currColumn.isSortedDescending;
-                currColumn.isSorted = true;
-            } else {
-                newCol.isSorted = false;
-                newCol.isSortedDescending = true;
-            }
-        });
+    /* Search related methods */
 
+    // This functions as the filter for the final trials displayed in the current table
+    private _filterTrials(trials: TableObj[]): TableObj[] {
+        const { searchText, searchType } = this.state;
+        // search a trial by Trial No. | Trial ID | Parameters | Status
+        let searchFilter = (_: TableObj): boolean => true; // eslint-disable-line no-unused-vars
+        if (searchText.trim()) {
+            if (searchType === 'id') {
+                searchFilter = (trial): boolean => trial.id.toUpperCase().includes(searchText.toUpperCase());
+            } else if (searchType === 'trialnum') {
+                searchFilter = (trial): boolean => trial.sequenceId.toString() === searchText;
+            } else if (searchType === 'status') {
+                searchFilter = (trial): boolean => trial.status.toUpperCase().includes(searchText.toUpperCase());
+            } else if (searchType === 'parameters') {
+                // TODO: support filters like `x: 2` (instead of `'x': 2`)
+                searchFilter = (trial): boolean => JSON.stringify(trial.description.parameters).includes(searchText);
+            }
+        }
+        return trials.filter(searchFilter);
+    }
+
+    private _updateSearchFilterType(_event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void {
+        if (item !== undefined) {
+            const value = item.key.toString();
+            if (searchOptionLiterals.hasOwnProperty(value)) {
+                this.setState({ searchType: value as SearchOptionType }, this._updateTableSource);
+            }
+        }
+    }
+
+    private _updateSearchText(ev: React.ChangeEvent<HTMLInputElement>): void {
+        this.setState({ searchText: ev.target.value }, this._updateTableSource);
+    }
+
+    /* Table basic function related methods */
+
+    private _onColumnClick(ev: React.MouseEvent<HTMLElement>, column: IColumn): void {
+        // handle the click events on table header (do sorting)
+        const { columns } = this.state;
+        const newColumns: IColumn[] = columns.slice();
+        const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
+        const isSortedDescending = !currColumn.isSortedDescending;
         this.setState(
             {
-                tableColumns: newColumns,
-                sortMessage: { field: getColumn.key, isDescend: currColumn.isSortedDescending }
+                sortInfo: { field: column.key, isDescend: isSortedDescending }
             },
-            () => {
-                this.updateData();
-            }
+            this._updateTableSource
         );
-    };
+    }
 
-    AccuracyColumnConfig: any = {
-        name: 'Default metric',
-        className: 'leftTitle',
-        key: 'latestAccuracy',
-        fieldName: 'latestAccuracy',
-        minWidth: 200,
-        maxWidth: 300,
-        isResizable: true,
-        data: 'number',
-        onColumnClick: this.onColumnClick,
-        onRender: (item): React.ReactNode => (
-            <TooltipHost content={item.formattedLatestAccuracy}>
-                <div className='ellipsis'>{item.formattedLatestAccuracy}</div>
-            </TooltipHost>
-        )
-    };
-
-    SequenceIdColumnConfig: any = {
-        name: 'Trial No.',
-        key: 'sequenceId',
-        fieldName: 'sequenceId',
-        minWidth: 80,
-        maxWidth: 240,
-        className: 'tableHead',
-        data: 'number',
-        onColumnClick: this.onColumnClick
-    };
-
-    IdColumnConfig: any = {
-        name: 'ID',
-        key: 'id',
-        fieldName: 'id',
-        minWidth: 150,
-        maxWidth: 200,
-        isResizable: true,
-        data: 'string',
-        onColumnClick: this.onColumnClick,
-        className: 'tableHead leftTitle'
-    };
-
-    StartTimeColumnConfig: any = {
-        name: 'Start time',
-        key: 'startTime',
-        fieldName: 'startTime',
-        minWidth: 150,
-        maxWidth: 400,
-        isResizable: true,
-        data: 'number',
-        onColumnClick: this.onColumnClick,
-        onRender: (record): React.ReactNode => <span>{formatTimestamp(record.startTime)}</span>
-    };
-
-    EndTimeColumnConfig: any = {
-        name: 'End time',
-        key: 'endTime',
-        fieldName: 'endTime',
-        minWidth: 200,
-        maxWidth: 400,
-        isResizable: true,
-        data: 'number',
-        onColumnClick: this.onColumnClick,
-        onRender: (record): React.ReactNode => <span>{formatTimestamp(record.endTime, '--')}</span>
-    };
-
-    DurationColumnConfig: any = {
-        name: 'Duration',
-        key: 'duration',
-        fieldName: 'duration',
-        minWidth: 150,
-        maxWidth: 300,
-        isResizable: true,
-        data: 'number',
-        onColumnClick: this.onColumnClick,
-        onRender: (record): React.ReactNode => <span className='durationsty'>{convertDuration(record.duration)}</span>
-    };
-
-    StatusColumnConfig: any = {
-        name: 'Status',
-        key: 'status',
-        fieldName: 'status',
-        className: 'tableStatus',
-        minWidth: 150,
-        maxWidth: 250,
-        isResizable: true,
-        data: 'string',
-        onColumnClick: this.onColumnClick,
-        onRender: (record): React.ReactNode => <span className={`${record.status} commonStyle`}>{record.status}</span>
-    };
-
-    IntermediateCountColumnConfig: any = {
-        name: 'Intermediate result',
-        dataIndex: 'intermediateCount',
-        fieldName: 'intermediateCount',
-        minWidth: 150,
-        maxWidth: 200,
-        isResizable: true,
-        data: 'number',
-        onColumnClick: this.onColumnClick,
-        onRender: (record): React.ReactNode => <span>{`#${record.intermediateCount}`}</span>
-    };
-
-    showIntermediateModal = async (record: TrialJobInfo, event: React.SyntheticEvent<EventTarget>): Promise<void> => {
-        event.preventDefault();
-        event.stopPropagation();
-        const res = await axios.get(`${MANAGER_IP}/metric-data/${record.id}`);
-        if (res.status === 200) {
-            const intermediateArr: number[] = [];
-            // support intermediate result is dict because the last intermediate result is
-            // final result in a succeed trial, it may be a dict.
-            // get intermediate result dict keys array
-            const { intermediateKey } = this.state;
-            const otherkeys: string[] = [];
-            const metricDatas = res.data;
-            if (metricDatas.length !== 0) {
-                // just add type=number keys
-                const intermediateMetrics = parseMetrics(metricDatas[0].data);
-                for (const key in intermediateMetrics) {
-                    if (typeof intermediateMetrics[key] === 'number') {
-                        otherkeys.push(key);
-                    }
-                }
+    private _trialsToTableItems(trials: TableObj[]): any[] {
+        // TODO: use search space and metrics space from TRIALS will cause update issues.
+        const searchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
+        const metricSpace = TRIALS.inferredMetricSpace();
+        const items = trials.map(trial => {
+            const ret = {
+                sequenceId: trial.sequenceId,
+                id: trial.id,
+                startTime: (trial as Trial).info.startTime, // FIXME: why do we need info here?
+                endTime: (trial as Trial).info.endTime,
+                duration: trial.duration,
+                status: trial.status,
+                intermediateCount: trial.intermediates.length,
+                _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
+            };
+            for (const [k, v] of trial.parameters(searchSpace)) {
+                ret[`space/${k.baseName}`] = v;
             }
-            // intermediateArr just store default val
-            metricDatas.map(item => {
-                if (item.type === 'PERIODICAL') {
-                    const temp = parseMetrics(item.data);
-                    if (typeof temp === 'object') {
-                        intermediateArr.push(temp[intermediateKey]);
-                    } else {
-                        intermediateArr.push(temp);
-                    }
-                }
-            });
-            const intermediate = intermediateGraphOption(intermediateArr, record.id);
-            this.setState({
-                intermediateData: res.data, // store origin intermediate data for a trial
-                intermediateOption: intermediate,
-                intermediateOtherKeys: otherkeys,
-                intermediateId: record.id
-            });
-        }
-        this.setState({ modalVisible: true });
-    };
-
-    // intermediate button click -> intermediate graph for each trial
-    // support intermediate is dict
-    selectOtherKeys = (event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
-        if (item !== undefined) {
-            const value = item.text;
-            const isShowDefault: boolean = value === 'default' ? true : false;
-            const { intermediateData, intermediateId } = this.state;
-            const intermediateArr: number[] = [];
-            // just watch default key-val
-            if (isShowDefault === true) {
-                Object.keys(intermediateData).map(item => {
-                    if (intermediateData[item].type === 'PERIODICAL') {
-                        const temp = parseMetrics(intermediateData[item].data);
-                        if (typeof temp === 'object') {
-                            intermediateArr.push(temp[value]);
-                        } else {
-                            intermediateArr.push(temp);
-                        }
-                    }
-                });
-            } else {
-                Object.keys(intermediateData).map(item => {
-                    const temp = parseMetrics(intermediateData[item].data);
-                    if (typeof temp === 'object') {
-                        intermediateArr.push(temp[value]);
-                    }
-                });
+            for (const [k, v] of trial.metrics(metricSpace)) {
+                ret[`metric/${k.baseName}`] = v;
             }
-            const intermediate = intermediateGraphOption(intermediateArr, intermediateId);
-            // re-render
-            this.setState({
-                intermediateKey: value,
-                intermediateOption: intermediate
-            });
-        }
-    };
-
-    hideIntermediateModal = (): void => {
-        this.setState({
-            modalVisible: false
+            ret['latestAccuracy'] = (trial as Trial).latestAccuracy;
+            ret['_formattedLatestAccuracy'] = (trial as Trial).formatLatestAccuracy();
+            return ret;
         });
-    };
 
-    hideShowColumnModal = (): void => {
-        this.setState(() => ({ isShowColumn: false }));
-    };
-
-    // click add column btn, just show the modal of addcolumn
-    addColumn = (): void => {
-        // show user select check button
-        this.setState(() => ({ isShowColumn: true }));
-    };
-
-    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableRecord>): void => {
-        this.setState({ selectRows: selectedRows, selectedRowKeys: selected });
-    };
-
-    // open Compare-modal
-    compareBtn = (): void => {
-        const { selectRows } = this.state;
-        if (selectRows.length === 0) {
-            alert('Please select datas you want to compare!');
+        const { sortInfo } = this.state;
+        if (sortInfo.field !== '') {
+            return _copyAndSort(items, sortInfo.field, sortInfo.isDescend);
         } else {
-            this.setState({ isShowCompareModal: true });
+            return items;
         }
-    };
+    }
 
-    // close Compare-modal
-    hideCompareModal = (): void => {
-        // close modal. clear select rows data, clear selected track
-        this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
-    };
-
-    // open customized trial modal
-    private setCustomizedTrial = (trialId: string, event: React.SyntheticEvent<EventTarget>): void => {
-        event.preventDefault();
-        event.stopPropagation();
-        this.setState({
-            isShowCustomizedModal: true,
-            copyTrialId: trialId
+    private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
+        // extra column, for a icon to expand the trial details panel
+        const columns: IColumn[] = [
+            {
+                key: '_expand',
+                name: '',
+                onRender: (item, index): any => {
+                    return (
+                        <Icon
+                            aria-hidden={true}
+                            iconName='ChevronRight'
+                            styles={{
+                                root: {
+                                    transition: 'all 0.2s',
+                                    transform: `rotate(${item._expandDetails ? 90 : 0}deg)`
+                                }
+                            }}
+                            onClick={(event): void => {
+                                event.stopPropagation();
+                                const newItem: any = { ...item, _expandDetails: !item._expandDetails };
+                                if (newItem._expandDetails) {
+                                    // preserve to be restored when refreshed
+                                    this._expandedTrialIds.add(newItem.id);
+                                } else {
+                                    this._expandedTrialIds.delete(newItem.id);
+                                }
+                                const newItems = [...this.state.displayedItems];
+                                newItems[index as number] = newItem;
+                                this.setState({
+                                    displayedItems: newItems
+                                });
+                            }}
+                            onMouseDown={(e): void => {
+                                e.stopPropagation();
+                            }}
+                            onMouseUp={(e): void => {
+                                e.stopPropagation();
+                            }}
+                        />
+                    );
+                },
+                fieldName: 'expand',
+                isResizable: false,
+                minWidth: 20,
+                maxWidth: 20
+            }
+        ];
+        // looking at the first row only for now
+        for (const k of Object.keys(tableItems[0])) {
+            if (k === 'metric/default') {
+                // FIXME: default metric is hacked as latestAccuracy currently
+                continue;
+            }
+            const lengths = tableItems.map(item => `${item[k]}`.length);
+            const avgLengths = lengths.reduce((a, b) => a + b) / lengths.length;
+            const columnTitle = _inferColumnTitle(k);
+            const columnWidth = Math.max(columnTitle.length, avgLengths);
+            // TODO: add blacklist
+            columns.push({
+                name: columnTitle,
+                key: k,
+                fieldName: k,
+                minWidth: columnWidth * 13,
+                maxWidth: columnWidth * 18,
+                isResizable: true,
+                onColumnClick: this._onColumnClick.bind(this),
+                ...(k === 'status' && {
+                    // color status
+                    onRender: (record): React.ReactNode => (
+                        <span className={`${record.status} commonStyle`}>{record.status}</span>
+                    )
+                }),
+                ...((k.startsWith('metric/') || k.startsWith('space/')) && {
+                    // show tooltip
+                    onRender: (record): React.ReactNode => (
+                        <TooltipHost content={record[k]}>
+                            <div className='ellipsis'>{record[k]}</div>
+                        </TooltipHost>
+                    )
+                }),
+                ...(k === 'latestAccuracy' && {
+                    // FIXME: this is ad-hoc
+                    onRender: (record): React.ReactNode => (
+                        <TooltipHost content={record._formattedLatestAccuracy}>
+                            <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
+                        </TooltipHost>
+                    )
+                }),
+                ...(['startTime', 'endTime'].includes(k) && {
+                    onRender: (record): React.ReactNode => <span>{formatTimestamp(record[k], '--')}</span>
+                }),
+                ...(k === 'duration' && {
+                    onRender: (record): React.ReactNode => (
+                        <span className='durationsty'>{convertDuration(record[k])}</span>
+                    )
+                })
+            });
+        }
+        // operations column
+        columns.push({
+            name: 'Operation',
+            key: '_operation',
+            fieldName: 'operation',
+            minWidth: 160,
+            maxWidth: 200,
+            isResizable: true,
+            className: 'detail-table',
+            onRender: this._renderOperationColumn.bind(this)
         });
-    };
 
-    private closeCustomizedTrial = (): void => {
-        this.setState({
-            isShowCustomizedModal: false,
-            copyTrialId: ''
-        });
-    };
-
-    private onWindowResize = (): void => {
-        this.setState(() => ({
-            modalIntermediateHeight: window.innerHeight,
-            modalIntermediateWidth: window.innerWidth
-        }));
-    };
-
-    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
-        if (props) {
-            return <Details detailsProps={props} />;
-        }
-        return null;
-    };
-
-    private getSelectedRows = new Selection({
-        onSelectionChanged: (): void => {
-            this.setState(() => ({ selectRows: this.getSelectedRows.getSelection() }));
-        }
-    });
-
-    // trial parameters & dict final keys & Trial No. Id ...
-    private getAllColumnKeys = (): string[] => {
-        const tableSource: Array<TableRecord> = JSON.parse(JSON.stringify(this.props.tableSource));
-        // parameter as table column
-        const parameterStr: string[] = [];
-        if (!EXPERIMENT.isNestedExp()) {
-            if (tableSource.length > 0) {
-                const trialMess = TRIALS.getTrial(tableSource[0].id);
-                const trial = trialMess.description.parameters;
-                const parameterColumn: string[] = Object.keys(trial);
-                parameterColumn.forEach(value => {
-                    parameterStr.push(`${value} (search space)`);
-                });
+        const { sortInfo } = this.state;
+        for (const column of columns) {
+            if (column.key === sortInfo.field) {
+                column.isSorted = true;
+                column.isSortedDescending = sortInfo.isDescend;
+            } else {
+                column.isSorted = false;
+                column.isSortedDescending = true;
             }
         }
-        // concat trial all final keys and remove dup "default" val, return list
-        const finalKeysList = TRIALS.finalKeys().filter(item => item !== 'default');
-        return COLUMNPro.concat(parameterStr).concat(finalKeysList);
-    };
+        return columns;
+    }
 
-    // get IColumn[]
-    // when user click [Add Column] need to use the function
-    private initTableColumnList = (columnList: string[]): IColumn[] => {
-        // const { columnList } = this.props;
+    private _updateTableSource(): void {
+        // call this method when trials or the computation of trial filter has changed
+        const items = this._trialsToTableItems(this._filterTrials(this.props.tableSource));
+        if (items.length > 0) {
+            const columns = this._buildColumnsFromTableItems(items);
+            this.setState({
+                displayedItems: items,
+                columns: columns
+            });
+        } else {
+            this.setState({
+                displayedItems: [],
+                columns: []
+            });
+        }
+    }
+
+    private _updateDisplayedColumns(displayedColumns: string[]): void {
+        this.setState({
+            displayedColumns: displayedColumns
+        });
+    }
+
+    private _renderOperationColumn(record: any): React.ReactNode {
+        const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
         const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
-        const showColumn: IColumn[] = [];
-        for (const item of columnList) {
-            const paraColumn = item.match(/ \(search space\)$/);
-            let result;
-            if (paraColumn !== null) {
-                result = paraColumn.input;
-            }
-            switch (item) {
-                case 'Trial No.':
-                    showColumn.push(this.SequenceIdColumnConfig);
-                    break;
-                case 'ID':
-                    showColumn.push(this.IdColumnConfig);
-                    break;
-                case 'Start time':
-                    showColumn.push(this.StartTimeColumnConfig);
-                    break;
-                case 'End time':
-                    showColumn.push(this.EndTimeColumnConfig);
-                    break;
-                case 'Duration':
-                    showColumn.push(this.DurationColumnConfig);
-                    break;
-                case 'Status':
-                    showColumn.push(this.StatusColumnConfig);
-                    break;
-                case 'Intermediate result':
-                    showColumn.push(this.IntermediateCountColumnConfig);
-                    break;
-                case 'Default':
-                    showColumn.push(this.AccuracyColumnConfig);
-                    break;
-                case 'Operation':
-                    showColumn.push({
-                        name: 'Operation',
-                        key: 'operation',
-                        fieldName: 'operation',
-                        minWidth: 160,
-                        maxWidth: 200,
-                        isResizable: true,
-                        className: 'detail-table',
-                        onRender: (record: any) => {
-                            const trialStatus = record.status;
-                            const flag: boolean = trialStatus === 'RUNNING' || trialStatus === 'UNKNOWN' ? false : true;
-                            return (
-                                <Stack className='detail-button' horizontal>
-                                    {/* see intermediate result graph */}
-                                    <PrimaryButton
-                                        className='detail-button-operation'
-                                        title='Intermediate'
-                                        onClick={this.showIntermediateModal.bind(this, record)}
-                                    >
-                                        {LineChart}
-                                    </PrimaryButton>
-                                    {/* kill job */}
-                                    {flag ? (
-                                        <PrimaryButton className='detail-button-operation' disabled={true} title='kill'>
-                                            {blocked}
-                                        </PrimaryButton>
-                                    ) : (
-                                        <KillJob trial={record} />
-                                    )}
-                                    {/* Add a new trial-customized trial */}
-                                    <PrimaryButton
-                                        className='detail-button-operation'
-                                        title='Customized trial'
-                                        onClick={this.setCustomizedTrial.bind(this, record.id)}
-                                        disabled={disabledAddCustomizedTrial}
-                                    >
-                                        {copy}
-                                    </PrimaryButton>
-                                </Stack>
-                            );
-                        }
-                    });
-                    break;
-                case result:
-                    // remove SEARCH_SPACE title
-                    // const realItem = item.replace(' (search space)', '');
-                    showColumn.push({
-                        name: item.replace(' (search space)', ''),
-                        key: item,
-                        fieldName: item,
-                        minWidth: 150,
-                        onRender: (record: TableRecord) => {
-                            const eachTrial = TRIALS.getTrial(record.id);
-                            return <span>{eachTrial.description.parameters[item.replace(' (search space)', '')]}</span>;
-                        }
-                    });
-                    break;
-                default:
-                    showColumn.push({
-                        name: item,
-                        key: item,
-                        fieldName: item,
-                        minWidth: 100,
-                        onRender: (record: TableRecord) => {
-                            const accDictionary = record.accDictionary;
-                            let other = '';
-                            if (accDictionary !== undefined) {
-                                other = accDictionary[item].toString();
-                            }
-                            return (
-                                <TooltipHost content={other}>
-                                    <div className='ellipsis'>{other}</div>
-                                </TooltipHost>
-                            );
-                        }
-                    });
-            }
-        }
-        return showColumn;
-    };
-
-    componentDidMount(): void {
-        window.addEventListener('resize', this.onWindowResize);
-        this.updateData();
+        return (
+            <Stack className='detail-button' horizontal>
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Intermediate'
+                    onClick={(): void => {
+                        const { tableSource } = this.props;
+                        const trial = tableSource.find(trial => trial.id === record.id) as TableObj;
+                        this.setState({ intermediateDialogTrial: trial });
+                    }}
+                >
+                    {LineChart}
+                </PrimaryButton>
+                {runningTrial ? (
+                    <PrimaryButton className='detail-button-operation' disabled={true} title='kill'>
+                        {blocked}
+                    </PrimaryButton>
+                ) : (
+                    <KillJob trial={record} />
+                )}
+                <PrimaryButton
+                    className='detail-button-operation'
+                    title='Customized trial'
+                    onClick={(): void => {
+                        this.setState({ copiedTrialId: record.id });
+                    }}
+                    disabled={disabledAddCustomizedTrial}
+                >
+                    {copy}
+                </PrimaryButton>
+            </Stack>
+        );
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
-        if (
-            this.props.columnList !== prevProps.columnList ||
-            this.props.tableSource !== prevProps.tableSource ||
-            prevProps.trialsUpdateBroadcast !== this.props.trialsUpdateBroadcast
-        ) {
-            const { columnList } = this.props;
-            this.setState(
-                {
-                    tableColumns: this.initTableColumnList(columnList),
-                    allColumnList: this.getAllColumnKeys()
-                },
-                () => {
-                    this.updateData();
-                }
-            );
+        if (this.props.tableSource !== prevProps.tableSource) {
+            this._updateTableSource();
         }
     }
 
-    // slice all table data into current page data
-    updateData(): void {
-        const tableSource: Array<TableRecord> = this.props.tableSource;
-        const { offset, perPage, sortMessage } = this.state;
-
-        if (sortMessage.field !== '') {
-            tableSource.sort(function(a, b): any {
-                if (
-                    a[sortMessage.field] === undefined ||
-                    Object.is(a[sortMessage.field], NaN) ||
-                    Object.is(a[sortMessage.field], Infinity) ||
-                    Object.is(a[sortMessage.field], -Infinity) ||
-                    typeof a[sortMessage.field] === 'object'
-                ) {
-                    return 1;
-                }
-                if (
-                    b[sortMessage.field] === undefined ||
-                    Object.is(b[sortMessage.field], NaN) ||
-                    Object.is(b[sortMessage.field], Infinity) ||
-                    Object.is(b[sortMessage.field], -Infinity) ||
-                    typeof b[sortMessage.field] === 'object'
-                ) {
-                    return -1;
-                }
-                return (sortMessage.isDescend
-                  ? a[sortMessage.field] < b[sortMessage.field]
-                  : a[sortMessage.field] > b[sortMessage.field])
-                    ? 1
-                    : -1;
-            });
-        }
-
-        const tableSlice = tableSource.slice(offset, offset + perPage);
-        const curPageCount = Math.ceil(tableSource.length / perPage);
-        this.setState({
-            tablePerPage: tableSlice,
-            pageCount: curPageCount
-        });
+    componentDidMount(): void {
+        this._updateTableSource();
     }
-
-    // update data when click the page index of pagination
-    handlePageClick = (evt: any): void => {
-        const selectedPage = evt.selected;
-        const offset = selectedPage * this.state.perPage;
-
-        this.setState(
-            {
-                currentPage: selectedPage,
-                offset: offset
-            },
-            () => {
-                this.updateData();
-            }
-        );
-    };
-
-    // update per page items when click the dropdown of pagination
-    updatePerPage = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void => {
-        const { pageCount } = this.state;
-
-        if (item !== undefined) {
-            const currentPerPage = item.key === 'all' ? this.props.tableSource.length : Number(item.key);
-            const currentPageCount = this.props.tableSource.length <= currentPerPage ? 1 : pageCount;
-
-            this.setState(
-                {
-                    perPage: currentPerPage,
-                    offset: 0,
-                    currentPage: 0,
-                    pageCount: currentPageCount
-                },
-                () => {
-                    this.updateData();
-                }
-            );
-        }
-    };
 
     render(): React.ReactNode {
         const {
-            intermediateKey,
-            modalIntermediateWidth,
-            modalIntermediateHeight,
-            tableColumns,
-            allColumnList,
-            isShowColumn,
-            modalVisible,
-            selectRows,
-            isShowCompareModal,
-            intermediateOtherKeys,
-            isShowCustomizedModal,
-            copyTrialId,
-            intermediateOption,
-            tablePerPage
+            displayedItems,
+            columns,
+            searchType,
+            customizeColumnsDialogVisible,
+            compareDialogVisible,
+            displayedColumns,
+            selectedRowIds,
+            intermediateDialogTrial,
+            copiedTrialId
         } = this.state;
-        const { columnList } = this.props;
-        const perPageOptions = [
-            { key: '10', text: '10 items per page' },
-            { key: '20', text: '20 items per page' },
-            { key: '50', text: '50 items per page' },
-            { key: 'all', text: 'All items' }
-        ];
 
         return (
-            <Stack>
-                <div id='tableList'>
-                    <DetailsList
-                        columns={tableColumns}
-                        items={tablePerPage}
-                        setKey='set'
-                        compact={true}
-                        onRenderRow={this.onRenderRow}
-                        layoutMode={DetailsListLayoutMode.justified}
-                        selectionMode={SelectionMode.multiple}
-                        selection={this.getSelectedRows}
-                    />
-
-                    <Stack
-                        horizontal
-                        horizontalAlign='end'
-                        verticalAlign='baseline'
-                        styles={{ root: { padding: 10 } }}
-                        tokens={horizontalGapStackTokens}
-                    >
-                        <Dropdown
-                            selectedKey={
-                                this.state.perPage === this.props.tableSource.length
-                                    ? 'all'
-                                    : String(this.state.perPage)
-                            }
-                            options={perPageOptions}
-                            onChange={this.updatePerPage}
-                            styles={{ dropdown: { width: 150 } }}
+            <div id='tableList'>
+                <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
+                    <span style={{ marginRight: 12 }}>{tableListIcon}</span>
+                    <span>Trial jobs</span>
+                </Stack>
+                <Stack horizontal className='allList'>
+                    <StackItem grow={50}>
+                        <DefaultButton
+                            text='Compare'
+                            className='allList-compare'
+                            onClick={(): void => {
+                                this.setState({ compareDialogVisible: true });
+                            }}
+                            disabled={selectedRowIds.length === 0}
                         />
-
-                        <ReactPaginate
-                            previousLabel={'<'}
-                            nextLabel={'>'}
-                            breakLabel={'...'}
-                            breakClassName={'break'}
-                            pageCount={this.state.pageCount}
-                            marginPagesDisplayed={2}
-                            pageRangeDisplayed={2}
-                            onPageChange={this.handlePageClick}
-                            containerClassName={this.props.tableSource.length == 0 ? 'pagination hidden' : 'pagination'}
-                            subContainerClassName={'pages pagination'}
-                            disableInitialCallback={false}
-                            activeClassName={'active'}
-                            forcePage={this.state.currentPage}
-                        />
-                    </Stack>
-                </div>
-                {/* Intermediate Result Modal */}
-                <Modal
-                    isOpen={modalVisible}
-                    onDismiss={this.hideIntermediateModal}
-                    containerClassName={contentStyles.container}
-                >
-                    <div className={contentStyles.header}>
-                        <span>Intermediate result</span>
-                        <IconButton
-                            styles={iconButtonStyles}
-                            iconProps={{ iconName: 'Cancel' }}
-                            ariaLabel='Close popup modal'
-                            onClick={this.hideIntermediateModal as any}
-                        />
-                    </div>
-                    {intermediateOtherKeys.length > 1 ? (
-                        <Stack horizontalAlign='end' className='selectKeys'>
+                    </StackItem>
+                    <StackItem grow={50}>
+                        <Stack horizontal horizontalAlign='end' className='allList'>
+                            <DefaultButton
+                                className='allList-button-gap'
+                                text='Add/Remove columns'
+                                onClick={(): void => {
+                                    this.setState({ customizeColumnsDialogVisible: true });
+                                }}
+                            />
                             <Dropdown
-                                className='select'
-                                selectedKey={intermediateKey}
-                                options={intermediateOtherKeys.map((key, item) => {
-                                    return {
-                                        key: key,
-                                        text: intermediateOtherKeys[item]
-                                    };
-                                })}
-                                onChange={this.selectOtherKeys}
+                                selectedKey={searchType}
+                                options={Object.entries(searchOptionLiterals).map(([k, v]) => ({
+                                    key: k,
+                                    text: v
+                                }))}
+                                onChange={this._updateSearchFilterType.bind(this)}
+                                styles={{ root: { width: 150 } }}
+                            />
+                            <input
+                                type='text'
+                                className='allList-search-input'
+                                placeholder={`Search by ${
+                                    ['id', 'trialnum'].includes(searchType)
+                                        ? searchOptionLiterals[searchType]
+                                        : searchType
+                                }`}
+                                onChange={this._updateSearchText.bind(this)}
+                                style={{ width: 230 }}
                             />
                         </Stack>
-                    ) : null}
-                    <div className='intermediate-graph'>
-                        <ReactEcharts
-                            option={intermediateOption}
-                            style={{
-                                width: 0.5 * modalIntermediateWidth,
-                                height: 0.7 * modalIntermediateHeight,
-                                maxHeight: 534,
-                                padding: 20
-                            }}
-                            theme='my_theme'
-                        />
-                        <div className='xAxis'>#Intermediate result</div>
-                    </div>
-                </Modal>
-                {/* Add Column Modal */}
-                {isShowColumn && (
-                    <ChangeColumnComponent
-                        hideShowColumnDialog={this.hideShowColumnModal}
-                        isHideDialog={!isShowColumn}
-                        showColumn={allColumnList}
-                        selectedColumn={columnList}
-                        changeColumn={this.props.changeColumn}
+                    </StackItem>
+                </Stack>
+                {columns && displayedItems && (
+                    <PaginationTable
+                        columns={columns.filter(
+                            column =>
+                                displayedColumns.includes(column.key) || ['_expand', '_operation'].includes(column.key)
+                        )}
+                        items={displayedItems}
+                        compact={true}
+                        selection={this._selection}
+                        selectionMode={SelectionMode.multiple}
+                        selectionPreservedOnEmptyClick={true}
+                        onRenderRow={(props): any => {
+                            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                            return <ExpandableDetails detailsProps={props!} isExpand={props!.item._expandDetails} />;
+                        }}
                     />
                 )}
-                {/* compare trials based message */}
-                {isShowCompareModal && <Compare compareStacks={selectRows} cancelFunc={this.hideCompareModal} />}
-                {/* clone trial parameters and could submit a customized trial */}
+                {compareDialogVisible && (
+                    <Compare
+                        title='Compare trials'
+                        showDetails={true}
+                        trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
+                        onHideDialog={(): void => {
+                            this.setState({ compareDialogVisible: false });
+                        }}
+                    />
+                )}
+                {intermediateDialogTrial !== undefined && (
+                    <Compare
+                        title='Intermediate results'
+                        showDetails={false}
+                        trials={[intermediateDialogTrial]}
+                        onHideDialog={(): void => {
+                            this.setState({ intermediateDialogTrial: undefined });
+                        }}
+                    />
+                )}
+                {customizeColumnsDialogVisible && (
+                    <ChangeColumnComponent
+                        selectedColumns={displayedColumns}
+                        allColumns={columns
+                            .filter(column => !column.key.startsWith('_'))
+                            .map(column => ({ key: column.key, name: column.name }))}
+                        onSelectedChange={this._updateDisplayedColumns.bind(this)}
+                        onHideDialog={(): void => {
+                            this.setState({ customizeColumnsDialogVisible: false });
+                        }}
+                    />
+                )}
+                {/* Clone a trial and customize a set of new parameters */}
+                {/* visible is done inside because prompt is needed even when the dialog is closed */}
                 <Customize
-                    visible={isShowCustomizedModal}
-                    copyTrialId={copyTrialId}
-                    closeCustomizeModal={this.closeCustomizedTrial}
+                    visible={copiedTrialId !== undefined}
+                    copyTrialId={copiedTrialId || ''}
+                    closeCustomizeModal={(): void => {
+                        this.setState({ copiedTrialId: undefined });
+                    }}
                 />
-            </Stack>
+            </div>
         );
     }
 }

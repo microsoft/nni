@@ -5,13 +5,20 @@ import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-d
 const Overview = lazy(() => import('./components/Overview'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
 import './index.css';
+import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
     <Router>
         <App>
             <Switch>
-                <Suspense fallback={null}>
+                <Suspense
+                    fallback={
+                        <div className='loading'>
+                            <img src={require('./static/img/loading.gif')} />
+                        </div>
+                    }
+                >
                     <Route path='/oview' component={Overview} />
                     <Route path='/detail' component={TrialsDetail} />
                     <Route path='/' render={(): React.ReactNode => <Redirect to={{ pathname: '/oview' }} />} />
