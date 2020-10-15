@@ -25,10 +25,11 @@ gbdt_selector.py including:
 
 import random
 from sklearn.model_selection import train_test_split
-from nni.feature_engineering.feature_selector import FeatureSelector
 
 # pylint: disable=E0401
 import lightgbm as lgb
+
+from nni.feature_engineering.feature_selector import FeatureSelector
 
 
 class GBDTSelector(FeatureSelector):

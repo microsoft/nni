@@ -3,7 +3,6 @@
 
 import os
 from pathlib import Path
-import site
 import sys
 from collections import defaultdict
 from pathlib import Path
