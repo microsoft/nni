@@ -2,31 +2,52 @@
 # Licensed under the MIT license.
 
 import os
-from setuptools import setup, find_packages
+from setuptools import setup
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
+
+version = '999.0.0-developing'
+
+
+def _find_python_packages():
+    packages = []
+    for dirpath, dirnames, filenames in os.walk('nni'):
+        if '/__pycache__' not in dirpath:
+            packages.append(dirpath.replace('/', '.'))
+    return sorted(packages) + ['nni_node']
+
+def _find_node_files():
+    files = ['node', 'nasui/server.js']  # TODO: windows should be `node.exe`
+    dirs = [
+        'nni_manager/dist',
+        'nni_manager/node_modules',
+        'webui/build',
+        'nasui/build',
+        'build'  # TODO: this is temporary solution to minimize changes
+    ]
+
+    for node_dir in dirs:
+        for dirpath, dirnames, filenames in os.walk('nni_node/' + node_dir):
+            for filename in filenames:
+                files.append(dirpath[len('nni_node/'):] + '/' + filename)
+    return sorted(files)
+
 
 setup(
     name = 'nni',
-    version = '999.0.0-developing',
+    version = version,
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
-    long_description = read('README.md'),
+    long_description = open('README.md', encoding='utf-8').read(),
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
-    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('src/sdk/pycli') + find_packages('tools'),
-    package_dir = {
-        'nni': 'src/sdk/pynni/nni',
-        'nnicli': 'src/sdk/pycli/nnicli',
-        'nni_annotation': 'tools/nni_annotation',
-        'nni_cmd': 'tools/nni_cmd',
-        'nni_trial_tool':'tools/nni_trial_tool',
-        'nni_gpu_tool':'tools/nni_gpu_tool'
+    packages = _find_python_packages(),
+    package_data = {
+        'nni': ['**/requirements.txt'],
+        'nni_node': _find_node_files()
     },
-    package_data = {'nni': ['**/requirements.txt']},
+
     python_requires = '>=3.6',
     install_requires = [
         'astor',
@@ -49,7 +70,7 @@ setup(
 
     entry_points = {
         'console_scripts' : [
-            'nnictl = nni_cmd.nnictl:parse_args'
+            'nnictl = nni.nni_cmd.nnictl:parse_args'
         ]
     }
 )

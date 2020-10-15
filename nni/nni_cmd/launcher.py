@@ -9,8 +9,9 @@ import random
 import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
-from nni_annotation import expand_annotations, generate_search_space
-from nni.package_utils import get_builtin_module_class_name, get_nni_installation_path
+from nni.nni_annotation import expand_annotations, generate_search_space
+from nni.package_utils import get_builtin_module_class_name
+import nni_node
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
@@ -52,15 +53,16 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
 
     print_normal('Starting restful server...')
 
-    entry_dir = get_nni_installation_path()
+    entry_dir = os.path.join(nni_node.__path__[0], 'build')
     if (not entry_dir) or (not os.path.exists(entry_dir)):
         print_error('Fail to find nni under python library')
         exit(1)
     entry_file = os.path.join(entry_dir, 'main.js')
 
-    node_command = 'node'
     if sys.platform == 'win32':
-        node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
+        node_command = os.path.join(nni_node.__path__[0], 'node.exe')
+    else:
+        node_command = '../node'
     cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']

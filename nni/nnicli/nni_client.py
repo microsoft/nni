@@ -5,7 +5,7 @@
 
 Example:
 
-from nnicli import Experiment
+from nni.nnicli import Experiment
 
 exp = Experiment()
 exp.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')

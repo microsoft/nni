@@ -13,8 +13,8 @@ from functools import cmp_to_key
 from datetime import datetime, timezone
 from subprocess import Popen
 from pyhdfs import HdfsClient
-from nni.package_utils import get_nni_installation_path
-from nni_annotation import expand_annotations
+from nni.nni_annotation import expand_annotations
+import nni_node
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
@@ -424,13 +424,14 @@ def webui_nas(args):
     '''launch nas ui'''
     print_normal('Starting NAS UI...')
     try:
-        entry_dir = get_nni_installation_path()
+        entry_dir = os.path.join(nni_node.__path__[0], 'build')
         entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
-        node_command = 'node'
         if sys.platform == 'win32':
-            node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
+            node_command = os.path.join(nni_node.__path__[0], 'node.exe')
+        else:
+            node_command = '../node'
         cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
-        subprocess.run(cmds)
+        subprocess.run(cmds, cwd=entry_dir)
     except KeyboardInterrupt:
         pass
 
