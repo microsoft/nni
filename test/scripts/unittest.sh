@@ -7,7 +7,7 @@ CWD=${PWD}
 ## ------Run annotation test------
 echo ""
 echo "===========================Testing: nni_annotation==========================="
-#cd ${CWD}/../tools/
+cd ${CWD}/../tools/
 #python3 -m unittest -v nni_annotation/test_annotation.py
 
 ## Export certain environment variables for unittest code to work
@@ -17,23 +17,23 @@ export NNI_PLATFORM=unittest
 ## ------Run sdk test------
 echo ""
 echo "===========================Testing: nni_sdk==========================="
-#cd ${CWD}/../src/sdk/pynni/
+cd ${CWD}/../src/sdk/pynni/
 #python3 -m unittest discover -v tests
 
 # -------------For typescript unittest-------------
 cd ${CWD}/../nni_node/nni_manager
 echo ""
 echo "===========================Testing: nni_manager==========================="
-npm run test
+#npm run test
 
 # -------------For NASUI unittest-------------
 cd ${CWD}/../nni_node/nasui
 echo ""
 echo "===========================Testing: nasui==========================="
-CI=true npm test
+#CI=true npm test
 
 ## ------Run nnictl unit test------
 echo ""
 echo "===========================Testing: nnictl==========================="
-#cd ${CWD}/../tools/nni_cmd/
+cd ${CWD}/../tools/nni_cmd/
 #python3 -m unittest discover -v tests
