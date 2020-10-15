@@ -2,7 +2,15 @@
 模型压缩
 #################
 
-NNI 提供了易于使用的工具包来帮助用户设计并使用压缩算法。
+Deep neural networks (DNNs) have achieved great success in many tasks. However, typical neural networks are both
+computationally expensive and energy intensive, can be difficult to be deployed on devices with low computation
+resources or with strict latency requirements. Therefore, a natural thought is to perform model compression to
+reduce model size and accelerate model training/inference without losing performance significantly. Model compression
+techniques can be divided into two categories: pruning and quantization. The pruning methods explore the redundancy
+in the model weights and try to remove/prune the redundant and uncritical weights. Quantization refers to compressing
+models by reducing the number of bits required to represent weights or activations.
+
+NNI provides an easy-to-use toolkit to help user design and use model pruning and quantization algorithms.
 其使用了统一的接口来支持 TensorFlow 和 PyTorch。
 只需要添加几行代码即可压缩模型。
 NNI 中也内置了一些流程的模型压缩算法。
@@ -15,12 +23,10 @@ NNI 中也内置了一些流程的模型压缩算法。
 ..  toctree::
     :maxdepth: 2
 
-    概述 <Compressor/Overview>
-    快速入门 <Compressor/QuickStart>
-    Pruners <Compressor/Pruner>
-    Quantizers <Compressor/Quantizer>
-    自动模型压缩 <Compressor/AutoCompression>
-    模型加速 <Compressor/ModelSpeedup>
-    模型压缩 <Compressor/CompressionUtils>
-    压缩框架 <Compressor/Framework>
-    自定义压缩算法 <Compressor/CustomizeCompressor>
+    Overview <Compression/Overview>
+    Quick Start <Compression/QuickStart>
+    Pruning <Compression/pruning>
+    Quantization <Compression/quantization>
+    Utilities <Compression/CompressionUtils>
+    Framework <Compression/Framework>
+    Customize Model Compression Algorithms <Compression/CustomizeCompressor>

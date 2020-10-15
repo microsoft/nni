@@ -11,7 +11,7 @@
         Ubuntu 16.04 LTS
         make
         wget
-        Python >= 3.5
+        Python >= 3.6
         Pip
         Node.js
         Yarn
@@ -49,7 +49,7 @@
     
         Windows 10
         powershell
-        Python >= 3.5
+        Python >= 3.6
         Pip
         Yarn
         
