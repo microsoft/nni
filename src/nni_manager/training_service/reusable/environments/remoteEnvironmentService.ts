@@ -20,6 +20,7 @@ import {
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from 'training_service/common/containerJobData';
 
 
 @component.Singleton
@@ -137,40 +138,37 @@ export class RemoteEnvironmentService extends EnvironmentService {
     
     private async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
-            const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
-            const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
-            if (fs.existsSync(jobpidPath)) {
-                /* eslint-disable require-atomic-updates */
-                try {
-                    const isAlive = await executor.isProcessAlive(jobpidPath);
-                    // if the process of jobpid is not alive any more
-                    if (!isAlive) {
-                        const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
-                        if (remoteEnvironment.rmMachineMeta === undefined) {
-                            throw new Error(`${remoteEnvironment.id} machine meta not initialized!`);
+        const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
+        const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
+        /* eslint-disable require-atomic-updates */
+        try {
+            const isAlive = await executor.isProcessAlive(jobpidPath);
+            // if the process of jobpid is not alive any more
+            if (!isAlive) {
+                const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
+                if (remoteEnvironment.rmMachineMeta === undefined) {
+                    throw new Error(`${remoteEnvironment.id} machine meta not initialized!`);
+                }
+                this.log.info(`pid in ${remoteEnvironment.rmMachineMeta.ip}:${jobpidPath} is not alive!`);
+                if (fs.existsSync(runnerReturnCodeFilePath)) {
+                    const runnerReturnCode: string = await executor.getRemoteFileContent(runnerReturnCodeFilePath);
+                    const match: RegExpMatchArray | null = runnerReturnCode.trim()
+                        .match(/^-?(\d+)\s+(\d+)$/);
+                    if (match !== null) {
+                        const { 1: code } = match;
+                        // Update trial job's status based on result code
+                        if (parseInt(code, 10) === 0) {
+                            environment.setStatus('SUCCEEDED');
+                        } else {
+                            environment.setStatus('FAILED');
                         }
-                        this.log.info(`pid in ${remoteEnvironment.rmMachineMeta.ip}:${jobpidPath} is not alive!`);
-                        if (fs.existsSync(runnerReturnCodeFilePath)) {
-                            const runnerReturnCode: string = await executor.getRemoteFileContent(runnerReturnCodeFilePath);
-                            const match: RegExpMatchArray | null = runnerReturnCode.trim()
-                                .match(/^-?(\d+)\s+(\d+)$/);
-                            if (match !== null) {
-                                const { 1: code } = match;
-                                // Update trial job's status based on result code
-                                if (parseInt(code, 10) === 0) {
-                                    environment.setStatus('SUCCEEDED');
-                                } else {
-                                    environment.setStatus('FAILED');
-                                }
-                                this.releaseEnvironmentResource(environment);
-                            }
-                        }
+                        //this.releaseEnvironmentResource(environment);
                     }
-                } catch (error) {
-                    this.releaseEnvironmentResource(environment);
-                    this.log.error(`Update job status exception, error is ${error.message}`);
                 }
             }
+        } catch (error) {
+            this.log.error(`Update job status exception, error is ${error.message}`);
+        }
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -266,7 +264,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
         // Execute command in remote machine
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
-            executor.getScriptName("run")), true, false);
+            executor.getScriptName("run")), true, true);
         environment.status = 'RUNNING';
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
@@ -284,7 +282,6 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
-
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
             this.releaseEnvironmentResource(environment);
