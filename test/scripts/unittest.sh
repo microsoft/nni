@@ -21,13 +21,13 @@ echo "===========================Testing: nni_sdk==========================="
 #python3 -m unittest discover -v tests
 
 # -------------For typescript unittest-------------
-cd ${CWD}/../src/nni_manager
+cd ${CWD}/../nni_node/nni_manager
 echo ""
 echo "===========================Testing: nni_manager==========================="
 npm run test
 
 # -------------For NASUI unittest-------------
-cd ${CWD}/../src/nasui
+cd ${CWD}/../nni_node/nasui
 echo ""
 echo "===========================Testing: nasui==========================="
 CI=true npm test
