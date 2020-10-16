@@ -10,8 +10,8 @@ from schema import And, Optional
 from nni.utils import OptimizeMode
 from nni.compression.torch import ModelSpeedup
 
-from ..compressor import Pruner
-from ..utils.config_validation import CompressorSchema
+from nni.compression.torch.compressor import Pruner
+from nni.compression.torch.utils.config_validation import CompressorSchema
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
 from .admm_pruner import ADMMPruner
 

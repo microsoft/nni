@@ -10,9 +10,9 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from ..compressor import Pruner
-from ..utils.config_validation import CompressorSchema
-from ..utils.num_param_counter import get_total_num_weights
+from nni.compression.torch.compressor import Pruner
+from nni.compression.torch.utils.config_validation import CompressorSchema
+from nni.compression.torch.utils.num_param_counter import get_total_num_weights
 from .constants_pruner import PRUNER_DICT
 
 

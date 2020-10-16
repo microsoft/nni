@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from ..compressor import Pruner
+from nni.compression.tensorflow import Pruner
 
 __all__ = [
     'OneshotPruner',

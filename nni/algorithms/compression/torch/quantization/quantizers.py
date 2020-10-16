@@ -5,8 +5,8 @@ import logging
 import copy
 import torch
 from schema import Schema, And, Or, Optional
-from ..utils.config_validation import CompressorSchema
-from ..compressor import Quantizer, QuantGrad, QuantType
+from nni.compression.torch.utils.config_validation import CompressorSchema
+from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
 

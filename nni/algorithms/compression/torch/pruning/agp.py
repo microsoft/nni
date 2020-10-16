@@ -13,8 +13,8 @@ import logging
 import torch
 from schema import And, Optional
 from .constants import MASKER_DICT
-from ..utils.config_validation import CompressorSchema
-from ..compressor import Pruner
+from nni.compression.torch.utils.config_validation import CompressorSchema
+from nni.compression.torch.compressor import Pruner
 
 __all__ = ['AGPPruner']
 

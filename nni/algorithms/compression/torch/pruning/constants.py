@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 
-from ..pruning import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, \
+from . import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, \
     L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
     ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker
 
