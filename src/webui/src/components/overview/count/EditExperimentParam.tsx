@@ -2,7 +2,7 @@ import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { EXPERIMENT } from '../../../static/datamodel';
 import { EditExpeParamContext } from './context';
-import { MANAGER_IP } from '../../../static/const';
+import { MANAGER_IP, MAX_TRIAL_NUMBERS } from '../../../static/const';
 import { convertTimeToSecond } from '../../../static/function';
 import { Edit, CheckMark, Cancel } from '../../buttons/Icon';
 import MessageInfo from '../../modals/MessageInfo';
@@ -33,7 +33,7 @@ export const EditExperimentParam = (): any => {
     if (title === 'Max duration') {
         defaultVal = maxExecDuration;
         editVal = maxExecDuration;
-    } else if (title === 'Max trial numbers') {
+    } else if (title === MAX_TRIAL_NUMBERS) {
         defaultVal = maxTrialNum.toString();
         editVal = maxTrialNum.toString();
     } else {
@@ -61,7 +61,7 @@ export const EditExperimentParam = (): any => {
         }
         if (isMaxDuration) {
             beforeParam = maxExecDuration;
-        } else if (title === 'Max trial numbers') {
+        } else if (title === MAX_TRIAL_NUMBERS) {
             beforeParam = maxTrialNum.toString();
         } else {
             beforeParam = trialConcurrency.toString();
@@ -87,12 +87,16 @@ export const EditExperimentParam = (): any => {
         } catch (error) {
             if (error.response && error.response.data.error) {
                 showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
+                setEditValInput(defaultVal);
             } else if (error.response) {
                 showMessageInfo(`Failed to update trial ${field}\nServer responsed ${error.response.status}`, 'error');
+                setEditValInput(defaultVal);
             } else if (error.message) {
                 showMessageInfo(`Failed to update trial ${field}\n${error.message}`, 'error');
+                setEditValInput(defaultVal);
             } else {
                 showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
+                setEditValInput(defaultVal);
             }
         }
         showPencil();
@@ -111,8 +115,8 @@ export const EditExperimentParam = (): any => {
             {(value): React.ReactNode => {
                 return (
                     <React.Fragment>
-                        <p>{value.title}</p>
                         <div>
+                            <span>{value.title}</span>
                             <input
                                 className={`${value.field} durationInput`}
                                 ref={DurationInputRef}

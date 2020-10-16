@@ -1,21 +1,13 @@
 import React from 'react';
-import { Stack, TooltipHost, ProgressIndicator } from '@fluentui/react';
+import { Stack, ProgressIndicator, TooltipHost, DirectionalHint } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
-import { CONTROLTYPE } from '../../../static/const';
+import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import { convertDuration } from '../../../static/function';
 import { EditExperimentParam } from './EditExperimentParam';
 import { ExpDurationContext } from './ExpDurationContext';
 import { EditExpeParamContext } from './context';
+import { itemStyle1, itemStyle2 } from './commonStyle';
 import '../../../static/style/overview/count.scss';
-const itemStyle1: React.CSSProperties = {
-    width: '62%',
-    height: 80
-};
-const itemStyle2: React.CSSProperties = {
-    width: '63%',
-    height: 80,
-    textAlign: 'right'
-};
 
 export const ExpDuration = (): any => (
     <ExpDurationContext.Consumer>
@@ -24,15 +16,33 @@ export const ExpDuration = (): any => (
             const tooltip = maxExecDuration - execDuration;
             const maxExecDurationStr = convertDuration(maxExecDuration);
             const percent = execDuration / maxExecDuration;
+            const execDurationStr = convertDuration(execDuration);
             return (
                 <Stack horizontal className='ExpDuration'>
                     <div style={itemStyle1}>
-                        <TooltipHost content={`${convertDuration(tooltip)} remaining`}>
-                            <ProgressIndicator percentComplete={percent} barHeight={15} />
+                        <TooltipHost
+                            content={`${convertDuration(tooltip)} remaining`}
+                            directionalHint={DirectionalHint.bottomCenter}
+                            tooltipProps={{
+                                calloutProps: {
+                                    styles: {
+                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                    }
+                                }
+                            }}
+                        >
+                            <ProgressIndicator className={EXPERIMENT.status} percentComplete={percent} barHeight={15} />
                         </TooltipHost>
+                        {/* execDuration / maxDuration: 20min / 1h */}
+                        <div className='exp-progress'>
+                            <span className={`${EXPERIMENT.status} bold`}>{execDurationStr}</span>
+                            <span className='joiner'>/</span>
+                            <span>{maxExecDurationStr}</span>
+                        </div>
                     </div>
                     <div style={itemStyle2}>
-                        <Stack horizontal></Stack>
                         <EditExpeParamContext.Provider
                             value={{
                                 editType: CONTROLTYPE[0],

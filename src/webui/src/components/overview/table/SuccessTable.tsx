@@ -70,14 +70,13 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             </div>
         </div>
     );
-
     columns = [
         {
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 70,
+            maxWidth: 87,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick
@@ -86,8 +85,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 75,
+            maxWidth: 87,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -96,8 +95,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 85,
+            maxWidth: 160,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
@@ -111,8 +110,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 80,
+            maxWidth: 140,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {
@@ -123,8 +122,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: (window.innerWidth * 0.333 - 200) / 5,
-            // maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 100,
+            maxWidth: 160,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,

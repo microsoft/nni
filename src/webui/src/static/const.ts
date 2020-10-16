@@ -2,7 +2,7 @@
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-const MANAGER_IP = `/api/v1/nni`;
+const MANAGER_IP = `http://13.77.78.63:8080/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
 const trialJobStatus = [
@@ -57,6 +57,9 @@ const SUPPORTED_SEARCH_SPACE_TYPE = [
     'qlognormal'
 ];
 
+const TOOLTIP_BACKGROUND_COLOR = '#484848';
+const MAX_TRIAL_NUMBERS = 'Max trial No.';
+
 export {
     MANAGER_IP,
     DOWNLOAD_IP,
@@ -71,5 +74,7 @@ export {
     METRIC_GROUP_UPDATE_THRESHOLD,
     METRIC_GROUP_UPDATE_SIZE,
     CONCURRENCYTOOLTIP,
-    SUPPORTED_SEARCH_SPACE_TYPE
+    SUPPORTED_SEARCH_SPACE_TYPE,
+    TOOLTIP_BACKGROUND_COLOR,
+    MAX_TRIAL_NUMBERS
 };

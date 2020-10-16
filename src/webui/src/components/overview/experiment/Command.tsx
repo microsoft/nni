@@ -1,6 +1,7 @@
 import React from 'react';
-import { TooltipHost, Stack } from '@fluentui/react';
+import { Stack, TooltipHost, DirectionalHint } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import '../../../static/style/overview/command.scss';
 
 export const Command = (): any => {
@@ -47,13 +48,39 @@ export const Command = (): any => {
             <Stack className='command2'>
                 <p>Log directory</p>
                 <div className='nowrap'>
-                    <TooltipHost content={EXPERIMENT.profile.logDir || 'unknown'} className='nowrap'>
+                    <TooltipHost
+                        content={EXPERIMENT.profile.logDir || 'unknown'}
+                        className='nowrap'
+                        directionalHint={DirectionalHint.bottomCenter}
+                        tooltipProps={{
+                            calloutProps: {
+                                styles: {
+                                    beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                    beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                    calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                }
+                            }
+                        }}
+                    >
                         {EXPERIMENT.profile.logDir || 'unknown'}
                     </TooltipHost>
                 </div>
                 <p className='lineMargin'>Trial command</p>
                 <div className='nowrap'>
-                    <TooltipHost content={trialCommand || 'unknown'} className='nowrap'>
+                    <TooltipHost
+                        content={trialCommand || 'unknown'}
+                        className='nowrap'
+                        directionalHint={DirectionalHint.bottomCenter}
+                        tooltipProps={{
+                            calloutProps: {
+                                styles: {
+                                    beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                    beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                    calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                }
+                            }
+                        }}
+                    >
                         {trialCommand || 'unknown'}
                     </TooltipHost>
                 </div>
