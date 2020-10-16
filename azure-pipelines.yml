@@ -14,7 +14,9 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
+      set -e
       source install.sh
+      test -z "$(git diff)"
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
