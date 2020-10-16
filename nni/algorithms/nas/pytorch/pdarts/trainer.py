@@ -5,7 +5,7 @@ import json
 import logging
 
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
-from nni.nas.pytorch.darts import DartsTrainer
+from nni.algorithms.nas.pytorch.darts import DartsTrainer
 from nni.nas.pytorch.trainer import BaseTrainer, TorchTensorEncoder
 
 from .mutator import PdartsMutator

@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch import nn
 
-from nni.nas.pytorch.darts import DartsMutator
+from nni.algorithms.nas.pytorch.darts import DartsMutator
 from nni.nas.pytorch.mutables import LayerChoice
 
 
