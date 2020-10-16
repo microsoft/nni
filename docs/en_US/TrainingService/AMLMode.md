@@ -72,7 +72,7 @@ amlConfig:
 * workspaceName
     * required key, the workspaceName of your account
 * computeTarget
-    * required key, the compute cluster name you want to use in your AML workspace. See Step 6.
+    * required key, the compute cluster name you want to use in your AML workspace. [refer](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target) See Step 6.
 * maxTrialNumPerGpu
     * optional key, used to specify the max concurrency trial number on a GPU device.
 * useActiveGpu
