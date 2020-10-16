@@ -9,7 +9,7 @@ import subprocess
 
 from ..common import init_logger
 from ..env_vars import trial_env_vars
-from ..utils import to_json
+from nni.utils import to_json
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):

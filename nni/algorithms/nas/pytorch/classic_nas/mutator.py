@@ -9,7 +9,7 @@ import sys
 import torch
 
 import nni
-from nni.env_vars import trial_env_vars
+from nni.runtime.env_vars import trial_env_vars
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice, MutableScope
 from nni.nas.pytorch.mutator import Mutator
 

@@ -3,7 +3,7 @@
 branch = True
 parallel = True
 data_file = ${COVERAGE_DATA_FILE}
-source = nni, nni_cmd, nni_trial_tool
+source = nni, nni_cmd, nni.tools.trial_tool
 
 concurrency = multiprocessing
 

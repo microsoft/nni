@@ -6,7 +6,7 @@ from collections import defaultdict
 import json
 import pkginfo
 import nni
-from nni.package_utils import read_installed_package_meta, get_installed_package_meta, \
+from nni.tools.package_utils import read_installed_package_meta, get_installed_package_meta, \
     write_package_meta, get_builtin_algo_meta, get_not_installable_builtin_names, ALGO_TYPES
 
 from .constants import INSTALLABLE_PACKAGE_META

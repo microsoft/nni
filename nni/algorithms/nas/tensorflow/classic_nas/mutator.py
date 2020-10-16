@@ -9,7 +9,7 @@ import sys
 import tensorflow as tf
 
 import nni
-from nni.env_vars import trial_env_vars
+from nni.runtime.env_vars import trial_env_vars
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice, MutableScope
 from nni.nas.tensorflow.mutator import Mutator
 

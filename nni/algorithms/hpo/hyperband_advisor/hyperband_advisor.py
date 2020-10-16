@@ -15,9 +15,9 @@ import numpy as np
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
-from nni.common import multi_phase_enabled
-from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.protocol import CommandType, send
+from nni.runtime.common import multi_phase_enabled
+from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
+from nni.runtime.protocol import CommandType, send
 from nni.utils import NodeType, OptimizeMode, MetricType, extract_scalar_reward
 from nni import parameter_expressions
 

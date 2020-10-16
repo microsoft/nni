@@ -6,7 +6,7 @@ import logging
 import os
 import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
+from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
 from .common_utils import get_yml_content, print_warning
 

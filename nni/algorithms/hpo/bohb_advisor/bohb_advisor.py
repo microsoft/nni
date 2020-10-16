@@ -14,10 +14,10 @@ import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
 from nni import ClassArgsValidator
-from nni.protocol import CommandType, send
-from nni.msg_dispatcher_base import MsgDispatcherBase
+from nni.runtime.protocol import CommandType, send
+from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.utils import OptimizeMode, MetricType, extract_scalar_reward
-from nni.common import multi_phase_enabled
+from nni.runtime.common import multi_phase_enabled
 
 from .config_generator import CG_BOHB
 
