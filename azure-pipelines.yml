@@ -15,7 +15,11 @@ jobs:
     displayName: 'Install python tools'
   - script: |
       set -e
+      echo '## git diff ##'
+      git diff
       source install.sh
+      echo '## git diff ##'
+      git diff
       test -z "$(git diff)"
     displayName: 'Install nni toolkit via source code'
   - script: |
