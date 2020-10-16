@@ -74,9 +74,9 @@ amlConfig:
 * computeTarget
     * required key, the compute cluster name you want to use in your AML workspace. [refer](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target) See Step 6.
 * maxTrialNumPerGpu
-    * optional key, used to specify the max concurrency trial number on a GPU device.
+    * optional key, default 1. Used to specify the max concurrency trial number on a GPU device.
 * useActiveGpu
-    * optional key, used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
+    * optional key, default false. Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
 
 The required information of amlConfig could be found in the downloaded `config.json` in Step 5.
 
