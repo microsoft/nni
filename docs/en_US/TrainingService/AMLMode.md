@@ -62,7 +62,7 @@ Note: You should set `trainingServicePlatform: aml` in NNI config YAML file if y
 
 Compared with [LocalMode](LocalMode.md) trial configuration in aml mode have these additional keys:
 * image
-    * required key. The docker image name used in job. The image `msranni/nni` of this example only support GPU computeTargets.
+    * required key. The docker image name used in job. The image `msranni/nni` of this example only support GPU [computeTargets](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target).
 
 amlConfig:
 * subscriptionId
