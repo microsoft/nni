@@ -21,7 +21,7 @@
     "kubernetes-client": "^6.5.0",
     "python-shell": "^2.0.1",
     "rx": "^4.1.0",
-    "sqlite3": "^4.0.2",
+    "sqlite3": "^5.0.0",
     "ssh2": "^0.6.1",
     "stream-buffers": "^3.0.2",
     "tail-stream": "^0.3.4",
