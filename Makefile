@@ -20,12 +20,12 @@ YARN ?= PATH=$(_PWD)/nni_node:$${PATH} $(PWD)/toolchain/yarn/bin/yarn
 .PHONY: build
 build: nni_node/node create-symlinks
 	#$(_INFO) Building NNI Manager $(_END)
-	cd nni_node/nni_manager && $(YARN) && $(YARN) build
-	cp -rf nni_node/nni_manager/config nni_node/nni_manager/dist/
+	cd ts/nni_manager && $(YARN) && $(YARN) build
+	cp -rf ts/nni_manager/config ts/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
-	cd nni_node/webui && $(YARN) && $(YARN) build
+	cd ts/webui && $(YARN) && $(YARN) build
 	#$(_INFO) Building NAS UI $(_END)
-	cd nni_node/nasui && $(YARN) && $(YARN) build
+	cd ts/nasui && $(YARN) && $(YARN) build
 
 
 nni_node/node:
@@ -42,31 +42,33 @@ nni_node/node:
 
 .PHONY: create-symlinks
 create-symlinks:
-	mkdir -p nni_node/build
-	ln -sfT ../nni_manager/dist/common nni_node/build/common
-	ln -sfT ../nni_manager/dist/config nni_node/build/config
-	ln -sfT ../nni_manager/dist/core nni_node/build/core
-	ln -sfT ../nni_manager/dist/rest_server nni_node/build/rest_server
-	ln -sfT ../nni_manager/dist/training_service nni_node/build/training_service
-	ln -sfT ../nni_manager/dist/main.js nni_node/build/main.js
-	ln -sfT ../nni_manager/dist/package.json nni_node/build/package.json
-	ln -sfT ../nni_manager/node_modules nni_node/build/node_modules
+	ln -sfT ../ts/nni_manager/dist/common nni_node/common
+	ln -sfT ../ts/nni_manager/dist/config nni_node/config
+	ln -sfT ../ts/nni_manager/dist/core nni_node/core
+	ln -sfT ../ts/nni_manager/dist/rest_server nni_node/rest_server
+	ln -sfT ../ts/nni_manager/dist/training_service nni_node/training_service
+	ln -sfT ../ts/nni_manager/dist/main.js nni_node/main.js
+	ln -sfT ../ts/nni_manager/package.json nni_node/package.json
+	ln -sfT ../ts/nni_manager/node_modules nni_node/node_modules
 	
-	ln -sfT ../webui/build nni_node/build/static
+	ln -sfT ../ts/webui/build nni_node/static
 	
-	mkdir -p nni_node/build/nasui
-	ln -sfT ../nasui/build nni_node/build/nasui/build
-	ln -sfT ../nasui/server.js nni_node/build/nasui/server.js
+	mkdir -p nni_node/nasui
+	ln -sfT ../../ts/nasui/build nni_node/nasui/build
+	ln -sfT ../../ts/nasui/server.js nni_node/nasui/server.js
 
 
 .PHONY: clean
 clean:
 	-rm nni_node/node
 	-rm -rf toolchain
-	-rm -rf nni_node/build
-	-rm -rf nni_node/nni_manager/dist
-	-rm -rf nni_node/nni_manager/node_modules
-	-rm -rf nni_node/webui/build
-	-rm -rf nni_node/webui/node_modules
-	-rm -rf nni_node/nasui/build
-	-rm -rf nni_node/nasui/node_modules
+	-rm -rf nni_node/common
+	-rm -rf nni_node/config
+	-rm -rf nni_node/core
+	-rm -rf nni_node/rest_server
+	-rm -rf nni_node/training_service
+	-rm -rf nni_node/main.js
+	-rm -rf nni_node/package.json
+	-rm -rf nni_node/node_modules
+	-rm -rf nni_node/nasui
+	-rm -rf nni_node/static

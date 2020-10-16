@@ -53,16 +53,16 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
 
     print_normal('Starting restful server...')
 
-    entry_dir = os.path.join(nni_node.__path__[0], 'build')
+    entry_dir = nni_node.__path__[0]
     if (not entry_dir) or (not os.path.exists(entry_dir)):
         print_error('Fail to find nni under python library')
         exit(1)
     entry_file = os.path.join(entry_dir, 'main.js')
 
     if sys.platform == 'win32':
-        node_command = os.path.join(nni_node.__path__[0], 'node.exe')
+        node_command = os.path.join(entry_dir, 'node.exe')
     else:
-        node_command = '../node'
+        node_command = 'node'
     cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']

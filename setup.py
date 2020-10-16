@@ -16,19 +16,11 @@ def _find_python_packages():
     return sorted(packages) + ['nni_node']
 
 def _find_node_files():
-    files = ['node', 'nasui/server.js']  # TODO: windows should be `node.exe`
-    dirs = [
-        'nni_manager/dist',
-        'nni_manager/node_modules',
-        'webui/build',
-        'nasui/build',
-        'build'  # TODO: this is temporary solution to minimize changes
-    ]
-
-    for node_dir in dirs:
-        for dirpath, dirnames, filenames in os.walk('nni_node/' + node_dir):
-            for filename in filenames:
-                files.append(dirpath[len('nni_node/'):] + '/' + filename)
+    files = []
+    for dirpath, dirnames, filenames in os.walk('nni_node'):
+        for filename in filenames:
+            files.append((dirpath + '/' + filename)[len('nni_node/'):])
+    files.remove('__init__.py')
     return sorted(files)
 
 
