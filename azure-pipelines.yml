@@ -19,7 +19,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
-      cd nni_node/nni_manager
+      cd ts/nni_manager
       yarn eslint
       # uncomment following 2 lines to enable webui eslint
       cd ../webui
