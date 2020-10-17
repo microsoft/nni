@@ -168,6 +168,8 @@ def copy_nni_node(version):
             shutil.copytree(path, Path('nni_node', path.name))
 
     package_json = json.load(open('ts/nni_manager/package.json'))
+    if version.count('.') == 1:  # node.js semver requires at least three parts
+        version = version + '.0'
     package_json['version'] = version
     json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
 

@@ -6,7 +6,7 @@ Script for installation and distribution.
 
 You can use environment variable `NNI_RELEASE` to set release version.
 
-If release version is not set, default to a development build whose version string will be `999.0.0`.
+If release version is not set, default to a development build whose version string will be `999.dev0`.
 
 
 ## Development ##
@@ -79,7 +79,7 @@ dependencies = [
 def _setup():
     setuptools.setup(
         name = 'nni',
-        version = release or '999.0.0',
+        version = release or '999.dev0',
         description = 'Neural Network Intelligence project',
         long_description = open('README.md', encoding='utf-8').read(),
         long_description_content_type = 'text/markdown',
