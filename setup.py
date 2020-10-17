@@ -27,25 +27,19 @@ Build TypeScript modules without install:
 
   $ python setup.py build_ts
 
-The version string of development build will be "999.0.0".
-
 
 ## Release ##
 
 Build wheel package:
 
-  $ python setup.py clean
-  $ NNI_RELEASE=2.0 python setup.py build
-  $ NNI_RELEASE=2.0 python setup.py bdist_wheel -p <platform>
+  $ NNI_RELEASE=2.0 python setup.py build_ts
+  $ NNI_RELEASE=2.0 python setup.py bdist_wheel -p manylinux1_x86_64
 
-Where <platform> should be one of:
+Where "2.0" is version string and "manylinux1_x86_64" is platform.
+The platform may also be "macosx_10_9_x86_64" or "win_amd64".
 
-  - manylinux1_x86_64
-  - macosx_10_9_x86_64
-  - win_amd64
-
-Remember to invoke `build` explicitly before `bdist_wheel`,
-or it cannot find out JavaScript files.
+`build_ts` must be manually invoked before `bdist_wheel`,
+or setuptools cannot locate JS files which should be packed into wheel.
 """
 
 from distutils.cmd import Command
@@ -159,8 +153,9 @@ class BuildTs(Command):
 
 class Build(build):
     def run(self):
-        assert release, 'Please set environment variable `NNI_RELEASE=<release_version>`'
-        build_ts.build(release)
+        assert release, 'Please set environment variable "NNI_RELEASE=<release_version>"'
+        assert os.path.isfile('nni_node/main.js'), 'Please run "build_ts" before "build"'
+        assert not os.path.islink('nni_node/main.js'), 'This is a development build'
         super().run()
 
 class Develop(develop):

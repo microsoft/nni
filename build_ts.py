@@ -49,8 +49,12 @@ def clean():
     Python intermediate files are not touched here.
     """
     clear_nni_node()
-    for path in generated_directories:
-        shutil.rmtree(path, ignore_errors=True)
+    for path in generated_files:
+        path = Path(path)
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        else:
+            shutil.rmtree(path, ignore_errors=True)
 
 
 if sys.platform == 'linux' or sys.platform == 'darwin':
@@ -196,9 +200,9 @@ _yarn_path = Path('toolchain/yarn/bin', yarn_executable).resolve()
 
 def _yarn(path, *args):
     if os.environ.get('GLOBAL_TOOLCHAIN'):
-        proc = subprocess.run(['yarn', *args], cwd=path, check=True)
+        subprocess.run(['yarn', *args], cwd=path, check=True)
     else:
-        proc = subprocess.run([_yarn_path, *args], cwd=path, check=True, env=_yarn_env)
+        subprocess.run([_yarn_path, *args], cwd=path, check=True, env=_yarn_env)
 
 
 def _symlink(target_file, link_location):
@@ -214,7 +218,10 @@ def _print(*args):
     print('\033[0m')
 
 
-generated_directories = [
+generated_files = [
+    'toolchain',
+    'nni_node/node', 'nni_node/node.exe',
+
     'ts/nni_manager/dist',
     'ts/nni_manager/node_modules',
     'ts/webui/build',
