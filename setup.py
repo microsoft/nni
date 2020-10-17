@@ -45,6 +45,7 @@ or setuptools cannot locate JS files which should be packed into wheel.
 from distutils.cmd import Command
 from distutils.command.build import build
 from distutils.command.clean import clean
+import glob
 import os
 import shutil
 
@@ -176,9 +177,26 @@ class Clean(clean):
     def run(self):
         super().run()
         build_ts.clean(self._all)
+        _clean_temp_files()
         shutil.rmtree('nni.egg-info', ignore_errors=True)
         if self._all:
             shutil.rmtree('dist', ignore_errors=True)
+
+
+def _clean_temp_files():
+    for pattern in _temp_files:
+        for path in glob.glob(pattern):
+            if os.path.islink(path) or os.path.isfile(path):
+                os.remove(path)
+            else:
+                shutil.rmtree(path)
+
+_temp_files = [
+    # unit test
+    'test/model_path/',
+    'test/temp.json',
+    'test/ut/sdk/*.pth'
+]
 
 
 _setup()
