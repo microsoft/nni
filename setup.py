@@ -4,7 +4,7 @@
 import os
 import setuptools
 
-from . import make
+import make
 
 
 version = '999.0.0-developing'
@@ -33,12 +33,21 @@ def _setup():
     setuptools.setup(
         name = 'nni',
         version = version,
-        author = 'Microsoft NNI Team',
-        author_email = 'nni@microsoft.com',
         description = 'Neural Network Intelligence project',
         long_description = open('README.md', encoding='utf-8').read(),
-        license = 'MIT',
+        long_description_content_type = 'text/markdown',
         url = 'https://github.com/Microsoft/nni',
+        author = 'Microsoft NNI Team',
+        author_email = 'nni@microsoft.com',
+        license = 'MIT',
+        classifiers = [
+            'License :: OSI Approved :: MIT License',
+            'Operating System :: MacOS :: MacOS X',
+            'Operating System :: Microsoft :: Windows :: Windows 10',
+            'Operating System :: POSIX :: Linux',
+            'Programming Language :: Python :: 3 :: Only',
+            'Topic :: Scientific/Engineering :: Artificial Intelligence',
+        ],
 
         packages = _find_python_packages(),
         package_data = {
@@ -48,6 +57,7 @@ def _setup():
 
         python_requires = '>=3.6',
         install_requires = dependencies,
+        setup_requires = ['requests'],
 
         entry_points = {
             'console_scripts' : [

@@ -21,8 +21,6 @@ import sys
 import tarfile
 from zipfile import ZipFile
 
-import requests
-
 
 node_version = 'v10.22.1'
 yarn_version = 'v1.22.10'
@@ -53,7 +51,7 @@ def clean():
     """
     clear_nni_node()
     for path in generated_directories:
-        shutil.rmtree(path, ignore_erros=True)
+        shutil.rmtree(path, ignore_errors=True)
 
 
 if sys.platform == 'linux' or sys.platform == 'darwin':
@@ -85,6 +83,7 @@ def download_toolchain():
     if Path('nni_node', node_executable).is_file():
         return
     Path('toolchain').mkdir(exist_ok=True)
+    import requests  # place it here so setup.py can install it before importing
 
     _print(f'Downloading node.js from {node_download_url}')
     resp = requests.get(node_download_url)
