@@ -9,11 +9,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.models.vgg import vgg16
 from torchvision.models.resnet import resnet18
+import unittest
 from unittest import TestCase, main
 
-from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
-from nni.compression.torch.pruning.weight_masker import WeightMasker
-from nni.compression.torch.pruning.one_shot import _StructuredFilterPruner
+from nni.compression.torch import ModelSpeedup
+from nni.algorithms.compression.torch.pruning import L1FilterPruner, apply_compression_results
+from nni.algorithms.compression.torch.pruning.weight_masker import WeightMasker
+from nni.algorithms.compression.torch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -174,6 +176,7 @@ def channel_prune(model):
     pruner.compress()
     pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
 
+@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class SpeedupTestCase(TestCase):
     def test_speedup_vgg16(self):
         prune_model_l1(vgg16())

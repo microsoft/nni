@@ -8,12 +8,12 @@ from unittest import TestCase, main
 
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
-from nni.nas.pytorch.darts import DartsMutator
-from nni.nas.pytorch.enas import EnasMutator
+from nni.algorithms.nas.pytorch.classic_nas import get_and_apply_next_architecture
+from nni.algorithms.nas.pytorch.darts import DartsMutator
+from nni.algorithms.nas.pytorch.enas import EnasMutator
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.mutables import LayerChoice
-from nni.nas.pytorch.random import RandomMutator
+from nni.algorithms.nas.pytorch.random import RandomMutator
 from nni.nas.pytorch.utils import _reset_global_mutable_counting
 
 

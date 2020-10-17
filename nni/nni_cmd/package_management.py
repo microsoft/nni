@@ -19,7 +19,7 @@ def install_by_name(package_name):
     if package_name not in INSTALLABLE_PACKAGE_META:
         raise RuntimeError('{} is not found in installable packages!'.format(package_name))
 
-    requirements_path = os.path.join(nni.__path__[0], INSTALLABLE_PACKAGE_META[package_name]['code_sub_dir'], 'requirements.txt')
+    requirements_path = os.path.join(nni.__path__[0], 'algorithms/hpo', INSTALLABLE_PACKAGE_META[package_name]['code_sub_dir'], 'requirements.txt')
     assert os.path.exists(requirements_path)
 
     return install_requirements_command(requirements_path)

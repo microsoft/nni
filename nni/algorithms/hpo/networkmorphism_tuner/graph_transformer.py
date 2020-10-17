@@ -5,8 +5,8 @@ from copy import deepcopy
 
 from random import randrange, sample
 
-from nni.networkmorphism_tuner.graph import NetworkDescriptor
-from nni.networkmorphism_tuner.layers import (
+from .graph import NetworkDescriptor
+from .layers import (
     StubDense,
     StubReLU,
     get_batch_norm_class,
@@ -15,7 +15,7 @@ from nni.networkmorphism_tuner.layers import (
     get_pooling_class,
     is_layer,
 )
-from nni.networkmorphism_tuner.utils import Constant
+from .utils import Constant
 
 
 def to_wider_graph(graph):

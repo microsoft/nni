@@ -13,9 +13,9 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
 from nni.utils import OptimizeMode
-from nni.networkmorphism_tuner.graph_transformer import transform
-from nni.networkmorphism_tuner.utils import Constant
-from nni.networkmorphism_tuner.layers import is_layer
+from .graph_transformer import transform
+from .utils import Constant
+from .layers import is_layer
 
 
 def layer_distance(a, b):

@@ -5,9 +5,10 @@ import json
 from io import BytesIO
 from unittest import TestCase, main
 
-import nni.protocol
-from nni.msg_dispatcher import MsgDispatcher
-from nni.protocol import CommandType, send, receive
+from nni.runtime import protocol
+from nni.runtime import msg_dispatcher_base
+from nni.runtime.msg_dispatcher import MsgDispatcher
+from nni.runtime.protocol import CommandType, send, receive
 from nni.tuner import Tuner
 from nni.utils import extract_scalar_reward
 
@@ -44,15 +45,15 @@ _out_buf = BytesIO()
 def _reverse_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
-    nni.protocol._out_file = _in_buf
-    nni.protocol._in_file = _out_buf
+    protocol._out_file = _in_buf
+    protocol._in_file = _out_buf
 
 
 def _restore_io():
     _in_buf.seek(0)
     _out_buf.seek(0)
-    nni.protocol._in_file = _in_buf
-    nni.protocol._out_file = _out_buf
+    protocol._in_file = _in_buf
+    protocol._out_file = _out_buf
 
 
 class MsgDispatcherTestCase(TestCase):
@@ -68,7 +69,7 @@ class MsgDispatcherTestCase(TestCase):
 
         tuner = NaiveTuner()
         dispatcher = MsgDispatcher(tuner)
-        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
+        msg_dispatcher_base._worker_fast_exit_on_terminate = False
 
         dispatcher.run()
         e = dispatcher.worker_exceptions[0]

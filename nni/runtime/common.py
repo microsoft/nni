@@ -4,6 +4,7 @@
 from datetime import datetime
 from io import TextIOBase
 import logging
+import os
 import sys
 import time
 
@@ -33,6 +34,9 @@ def init_logger(logger_file_path, log_level_name='info'):
     This will redirect anything from logging.getLogger() as well as stdout to specified file.
     logger_file_path: path of logger file (path-like object).
     """
+    if os.environ.get('NNI_PLATFORM') == 'unittest':
+        return  # fixme: launching logic needs refactor
+
     log_level = log_level_map.get(log_level_name, logging.INFO)
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'

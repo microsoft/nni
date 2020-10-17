@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from nni.networkmorphism_tuner.layers import (
+from .layers import (
     StubDense,
     StubReLU,
     get_batch_norm_class,

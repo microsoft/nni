@@ -6,15 +6,15 @@ from unittest import TestCase, main
 from copy import deepcopy
 import torch
 
-from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
-from nni.networkmorphism_tuner.graph_transformer import (
+from nni.algorithms.hpo.networkmorphism_tuner.graph import graph_to_json, json_to_graph
+from nni.algorithms.hpo.networkmorphism_tuner.graph_transformer import (
     to_deeper_graph,
     to_skip_connection_graph,
     to_wider_graph,
 )
-from nni.networkmorphism_tuner.layers import layer_description_extractor
-from nni.networkmorphism_tuner.networkmorphism_tuner import NetworkMorphismTuner
-from nni.networkmorphism_tuner.nn import CnnGenerator
+from nni.algorithms.hpo.networkmorphism_tuner.layers import layer_description_extractor
+from nni.algorithms.hpo.networkmorphism_tuner.networkmorphism_tuner import NetworkMorphismTuner
+from nni.algorithms.hpo.networkmorphism_tuner.nn import CnnGenerator
 
 
 class NetworkMorphismTestCase(TestCase):

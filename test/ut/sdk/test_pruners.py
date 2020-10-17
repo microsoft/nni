@@ -7,11 +7,15 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data
 import math
+import sys
+import unittest
 from unittest import TestCase, main
-from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
+from nni.algorithms.compression.torch.pruning import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, \
     AutoCompressPruner, AMCPruner
+
+sys.path.append(os.path.dirname(__file__))
 from models.pytorch_models.mobilenet import MobileNet
 
 def validate_sparsity(wrapper, sparsity, bias=False):
@@ -229,7 +233,7 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         if os.path.exists(f):
             os.remove(f)
 
-def test_agp(pruning_algorithm):
+def _test_agp(pruning_algorithm):
         model = Model()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config['agp']['config_list']
@@ -260,6 +264,7 @@ class SimpleDataset:
     def __len__(self):
         return 1000
 
+@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
@@ -269,11 +274,11 @@ class PrunerTestCase(TestCase):
 
     def test_agp_pruner(self):
         for pruning_algorithm in ['l1', 'l2', 'taylorfo', 'apoz']:
-            test_agp(pruning_algorithm)
+            _test_agp(pruning_algorithm)
 
         for pruning_algorithm in ['level']:
             prune_config['agp']['config_list'][0]['op_types'] = ['default']
-            test_agp(pruning_algorithm)
+            _test_agp(pruning_algorithm)
 
     def testAMC(self):
         model = MobileNet(n_class=10)

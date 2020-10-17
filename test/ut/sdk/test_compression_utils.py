@@ -9,7 +9,7 @@ import torch.nn as nn
 import torchvision.models as models
 import numpy as np
 
-from nni.compression.torch import L1FilterPruner
+from nni.algorithms.compression.torch.pruning import L1FilterPruner
 from nni.compression.torch.utils.shape_dependency import ChannelDependency
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
 
@@ -60,6 +60,7 @@ channel_dependency_ground_truth = {
 unittest.TestLoader.sortTestMethodsUsing = None
 
 
+@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class AnalysisUtilsTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_channel_dependency(self):

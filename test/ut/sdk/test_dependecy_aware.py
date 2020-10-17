@@ -10,7 +10,7 @@ import torch.nn as nn
 import torchvision.models as models
 import numpy as np
 
-from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner, \
+from nni.algorithms.compression.torch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner, \
     TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, \
     ActivationMeanRankFilterPruner
 from nni.compression.torch import ModelSpeedup
@@ -47,6 +47,7 @@ def generate_random_sparsity_v2(model):
     return cfg_list
 
 
+@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):

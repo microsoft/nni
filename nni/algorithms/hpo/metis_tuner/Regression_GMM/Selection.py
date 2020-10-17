@@ -5,8 +5,8 @@ import os
 import random
 import sys
 
-import nni.metis_tuner.lib_acquisition_function as lib_acquisition_function
-import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
+from .. import lib_acquisition_function
+from .. import lib_constraint_summation
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 

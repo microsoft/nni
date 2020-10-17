@@ -4,8 +4,8 @@
 import numpy as np
 import unittest
 
-from nni.curvefitting_assessor import CurvefittingAssessor
-from nni.curvefitting_assessor.model_factory import CurveModel
+from nni.algorithms.hpo.curvefitting_assessor import CurvefittingAssessor
+from nni.algorithms.hpo.curvefitting_assessor.model_factory import CurveModel
 from nni.assessor import AssessResult
 
 class TestCurveFittingAssessor(unittest.TestCase):

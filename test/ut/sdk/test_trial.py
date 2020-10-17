@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import nni
-import nni.platform.test as test_platform
+import nni.runtime.platform.test as test_platform
 import nni.trial
 
 import numpy as np

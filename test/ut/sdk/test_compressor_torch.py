@@ -6,7 +6,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import schema
-import nni.compression.torch as torch_compressor
+import nni.algorithms.compression.torch.pruning as torch_pruner
+import nni.algorithms.compression.torch.quantization as torch_quantizer
 import math
 
 
@@ -47,7 +48,7 @@ class CompressorTestCase(TestCase):
         }]
 
         model.relu = torch.nn.ReLU()
-        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
         quantizer.compress()
         modules_to_compress = quantizer.get_modules_to_compress()
         modules_to_compress_name = [t[0].name for t in modules_to_compress]
@@ -62,7 +63,7 @@ class CompressorTestCase(TestCase):
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
-        torch_compressor.LevelPruner(model, configure_list, optimizer).compress()
+        torch_pruner.LevelPruner(model, configure_list, optimizer).compress()
 
     def test_torch_naive_quantizer(self):
         model = TorchModel()
@@ -73,7 +74,7 @@ class CompressorTestCase(TestCase):
             },
             'op_types': ['Conv2d', 'Linear']
         }]
-        torch_compressor.NaiveQuantizer(model, configure_list).compress()
+        torch_quantizer.NaiveQuantizer(model, configure_list).compress()
 
     def test_torch_fpgm_pruner(self):
         """
@@ -92,7 +93,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
-        pruner = torch_compressor.FPGMPruner(model, config_list, torch.optim.SGD(model.parameters(), lr=0.01))
+        pruner = torch_pruner.FPGMPruner(model, config_list, torch.optim.SGD(model.parameters(), lr=0.01))
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(model.conv2)
@@ -123,7 +124,7 @@ class CompressorTestCase(TestCase):
         model = TorchModel()
         config_list = [{'sparsity': 0.2, 'op_types': ['Conv2d'], 'op_names': ['conv1']},
                        {'sparsity': 0.6, 'op_types': ['Conv2d'], 'op_names': ['conv2']}]
-        pruner = torch_compressor.L1FilterPruner(model, config_list)
+        pruner = torch_pruner.L1FilterPruner(model, config_list)
 
         model.conv1.module.weight.data = torch.tensor(w1).float()
         model.conv2.module.weight.data = torch.tensor(w2).float()
@@ -151,7 +152,7 @@ class CompressorTestCase(TestCase):
         config_list = [{'sparsity': 0.2, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(-w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list)
+        pruner = torch_pruner.SlimPruner(model, config_list)
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -164,7 +165,7 @@ class CompressorTestCase(TestCase):
         config_list = [{'sparsity': 0.6, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(w).float()
-        pruner = torch_compressor.SlimPruner(model, config_list)
+        pruner = torch_pruner.SlimPruner(model, config_list)
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -201,7 +202,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        pruner = torch_compressor.TaylorFOWeightFilterPruner(model, config_list, optimizer, statistics_batch_num=1)
+        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, statistics_batch_num=1)
         
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
         model.conv1.module.weight.data = torch.tensor(w1).float()
@@ -232,7 +233,7 @@ class CompressorTestCase(TestCase):
             'op_types': ['ReLU']
         }]
         model.relu = torch.nn.ReLU()
-        quantizer = torch_compressor.QAT_Quantizer(model, config_list)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
         quantizer.compress()
 
         # test quantize
@@ -275,7 +276,7 @@ class CompressorTestCase(TestCase):
 
     def test_torch_pruner_validation(self):
         # test bad configuraiton
-        pruner_classes = [torch_compressor.__dict__[x] for x in \
+        pruner_classes = [torch_pruner.__dict__[x] for x in \
             ['LevelPruner', 'SlimPruner', 'FPGMPruner', 'L1FilterPruner', 'L2FilterPruner', 'AGPPruner',\
             'ActivationMeanRankFilterPruner', 'ActivationAPoZRankFilterPruner']]
 
@@ -313,7 +314,7 @@ class CompressorTestCase(TestCase):
 
     def test_torch_quantizer_validation(self):
         # test bad configuraiton
-        quantizer_classes = [torch_compressor.__dict__[x] for x in \
+        quantizer_classes = [torch_quantizer.__dict__[x] for x in \
             ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']]
 
         bad_configs = [

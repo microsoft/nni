@@ -15,14 +15,14 @@ import numpy as np
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
-import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
-import nni.metis_tuner.lib_data as lib_data
-import nni.metis_tuner.Regression_GMM.CreateModel as gmm_create_model
-import nni.metis_tuner.Regression_GMM.Selection as gmm_selection
-import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
-import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
-import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
-import nni.metis_tuner.Regression_GP.Selection as gp_selection
+from . import lib_constraint_summation
+from . import lib_data
+from .Regression_GMM import CreateModel as gmm_create_model
+from .Regression_GMM import Selection as gmm_selection
+from .Regression_GP import CreateModel as gp_create_model
+from .Regression_GP import OutlierDetection as gp_outlier_detection
+from .Regression_GP import Prediction as gp_prediction
+from .Regression_GP import Selection as gp_selection
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 

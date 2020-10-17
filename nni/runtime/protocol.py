@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import os
 import threading
 from enum import Enum
 
@@ -27,8 +28,9 @@ class CommandType(Enum):
 
 _lock = threading.Lock()
 try:
-    _in_file = open(3, 'rb')
-    _out_file = open(4, 'wb')
+    if os.environ.get('NNI_PLATFORM') != 'unittest':
+        _in_file = open(3, 'rb')
+        _out_file = open(4, 'wb')
 except OSError:
     _msg = 'IPC pipeline not exists, maybe you are importing tuner/assessor from trial code?'
     logging.getLogger(__name__).warning(_msg)

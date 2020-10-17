@@ -7,7 +7,7 @@ from collections.abc import Iterable
 import torch
 from torch import nn
 from torch.nn import functional
-from nni.networkmorphism_tuner.utils import Constant
+from .utils import Constant
 
 
 class AvgPool(nn.Module):

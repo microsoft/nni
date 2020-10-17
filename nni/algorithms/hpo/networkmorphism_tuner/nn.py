@@ -3,14 +3,14 @@
 
 from abc import abstractmethod
 
-from nni.networkmorphism_tuner.graph import Graph
-from nni.networkmorphism_tuner.layers import (StubDense, StubDropout1d,
+from .graph import Graph
+from .layers import (StubDense, StubDropout1d,
                                               StubReLU, get_batch_norm_class,
                                               get_conv_class,
                                               get_dropout_class,
                                               get_global_avg_pooling_class,
                                               get_pooling_class)
-from nni.networkmorphism_tuner.utils import Constant
+from .utils import Constant
 
 
 class NetworkGenerator:

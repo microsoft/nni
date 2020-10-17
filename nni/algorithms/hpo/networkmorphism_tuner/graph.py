@@ -9,7 +9,7 @@ from queue import Queue
 import numpy as np
 import torch
 
-from nni.networkmorphism_tuner.layer_transformer import (
+from .layer_transformer import (
     add_noise,
     wider_bn,
     wider_next_conv,
@@ -20,7 +20,7 @@ from nni.networkmorphism_tuner.layer_transformer import (
     init_conv_weight,
     init_bn_weight,
 )
-from nni.networkmorphism_tuner.layers import (
+from .layers import (
     StubAdd,
     StubConcatenate,
     StubReLU,
@@ -36,7 +36,7 @@ from nni.networkmorphism_tuner.layers import (
     layer_description_extractor,
     layer_description_builder,
 )
-from nni.networkmorphism_tuner.utils import Constant
+from .utils import Constant
 
 
 class NetworkDescriptor:

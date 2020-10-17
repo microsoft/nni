@@ -54,7 +54,7 @@ try:
     from tensorflow.keras import Model, Sequential
     from tensorflow.keras.layers import (Conv2D, Dense, Flatten, MaxPool2D)
 
-    from nni.compression.tensorflow import LevelPruner
+    from nni.algorithms.compression.tensorflow.pruning import LevelPruner
 
     pruners = {
         'level': (lambda model: LevelPruner(model, [{'sparsity': 0.9, 'op_types': ['default']}])),

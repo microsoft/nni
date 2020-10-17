@@ -11,7 +11,7 @@ import numpy
 from scipy.stats import norm
 from scipy.optimize import minimize
 
-import nni.metis_tuner.lib_data as lib_data
+from . import lib_data
 
 
 def next_hyperparameter_expected_improvement(fun_prediction,

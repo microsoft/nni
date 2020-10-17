@@ -9,8 +9,8 @@ import os
 import sys
 from multiprocessing.dummy import Pool as ThreadPool
 
-import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
-import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
+from . import CreateModel as gp_create_model
+from . import Prediction as gp_prediction
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 

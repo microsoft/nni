@@ -1,19 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import nni.protocol
-from nni.protocol import CommandType, send, receive
+from nni.runtime import protocol
+from nni.runtime.protocol import CommandType, send, receive
 
 from io import BytesIO
 from unittest import TestCase, main
 
 
 def _prepare_send():
-    nni.protocol._out_file = BytesIO()
-    return nni.protocol._out_file
+    protocol._out_file = BytesIO()
+    return protocol._out_file
 
 def _prepare_receive(data):
-    nni.protocol._in_file = BytesIO(data)
+    protocol._in_file = BytesIO(data)
 
 
 class ProtocolTestCase(TestCase):
