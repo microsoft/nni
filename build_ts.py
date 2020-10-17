@@ -43,18 +43,17 @@ def build(release):
     else:
         symlink_nni_node()
 
-def clean():
+def clean(clean_all=False):
     """
     Remove TypeScript-related intermediate files.
     Python intermediate files are not touched here.
     """
     clear_nni_node()
-    for path in generated_files:
-        path = Path(path)
-        if path.is_symlink() or path.is_file():
-            path.unlink()
-        else:
-            shutil.rmtree(path, ignore_errors=True)
+    for path in generated_directories:
+        shutil.rmtree(path, ignore_errors=True)
+    if clean_all:
+        shutil.rmtree('toolchain', ignore_errors=True)
+        Path('nni_node', node_executable).unlink()
 
 
 if sys.platform == 'linux' or sys.platform == 'darwin':
@@ -218,10 +217,7 @@ def _print(*args):
     print('\033[0m')
 
 
-generated_files = [
-    'toolchain',
-    'nni_node/node', 'nni_node/node.exe',
-
+generated_directories = [
     'ts/nni_manager/dist',
     'ts/nni_manager/node_modules',
     'ts/webui/build',

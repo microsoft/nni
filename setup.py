@@ -19,9 +19,9 @@ Uninstall:
 
   $ pip uninstall nni
 
-Remove generated files:
+Remove generated files: (use "--all" to remove toolchain and built wheel)
 
-  $ python setup.py clean
+  $ python setup.py clean [--all]
 
 Build TypeScript modules without install:
 
@@ -169,13 +169,16 @@ class Develop(develop):
 
 class Clean(clean):
     def finalize_options(self):
+        self._all = self.all
         self.all = True  # always use `clean --all`
         super().finalize_options()
 
     def run(self):
         super().run()
-        build_ts.clean()
+        build_ts.clean(self._all)
         shutil.rmtree('nni.egg-info', ignore_errors=True)
+        if self._all:
+            shutil.rmtree('dist', ignore_errors=True)
 
 
 _setup()
