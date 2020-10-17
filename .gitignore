@@ -1,6 +1,5 @@
-/nni_node/node
-/nni_node/node.exe
-/toolchain
+/nni_node/
+/toolchain/
 
 
 # Logs

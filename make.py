@@ -1,0 +1,226 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+"""
+Script for building TypeScript modules.
+This script is called by `setup.py` and common users should avoid using this directly.
+
+It compiles TypeScript source files in `ts` directory,
+and copies (or links) JavaScript output as well as dependencies to `nni_node`.
+
+You can set environment `GLOBAL_TOOLCHAIN=1` to use global node and yarn, if you know what you are doing.
+"""
+
+from io import BytesIO
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tarfile
+from zipfile import ZipFile
+
+import requests
+
+
+node_version = 'v10.22.1'
+yarn_version = 'v1.22.10'
+
+
+def develop_build():
+    """
+    Compile a development build.
+    """
+    if not os.environ.get('GLOBAL_TOOLCHAIN'):
+        download_toolchain()
+    compile_ts()
+    symlink_nni_node()
+
+def release_build(version):
+    """
+    Compile a release build.
+    The `version` should not contains leading letter `v`.
+    """
+    download_toolchain()
+    compile_ts()
+    copy_nni_node(version)
+
+def clean():
+    """
+    Remove TypeScript-related intermediate files.
+    Python intermediate files are not touched here.
+    """
+    clear_nni_node()
+    for path in generated_directories:
+        shutil.rmtree(path, ignore_erros=True)
+
+
+if sys.platform == 'linux' or sys.platform == 'darwin':
+    node_executable = 'node'
+    node_spec = f'node-{node_version}-{sys.platform}-x64'
+    node_download_url = f'https://nodejs.org/dist/latest-v10.x/{node_spec}.tar.xz'
+    node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
+    node_executable_in_tarball = 'bin/node'
+
+elif sys.platform == 'win32':
+    node_executable = 'node.exe'
+    node_spec = f'node-{node_version}-win-x64'
+    node_download_url = f'https://nodejs.org/dist/latest-v10.x/{node_spec}.zip'
+    node_extractor = lambda data: ZipFile(BytesIO(data))
+    node_executable_in_tarball = 'node.exe'
+
+else:
+    raise RuntimeError('Unsupported system')
+
+yarn_executable = 'yarn' if sys.platform != 'win32' else 'yarn.cmd'
+yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
+
+
+def download_toolchain():
+    """
+    Download and extract node and yarn,
+    then copy node executable to nni_node directory.
+    """
+    if Path('nni_node', node_executable).is_file():
+        return
+    Path('toolchain').mkdir(exist_ok=True)
+
+    _print(f'Downloading node.js from {node_download_url}')
+    resp = requests.get(node_download_url)
+    resp.raise_for_status()
+    _print('Extracting node.js')
+    tarball = node_extractor(resp.content)
+    tarball.extractall('toolchain')
+    shutil.rmtree('toolchain/node', ignore_errors=True)
+    Path('toolchain', node_spec).rename('toolchain/node')
+
+    _print(f'Downloading yarn from {yarn_download_url}')
+    resp = requests.get(yarn_download_url)
+    resp.raise_for_status()
+    _print('Extracting yarn')
+    tarball = tarfile.open(fileobj=BytesIO(resp.content), mode='r:gz')
+    tarball.extractall('toolchain')
+    shutil.rmtree('toolchain/yarn', ignore_errors=True)
+    Path(f'toolchain/yarn-{yarn_version}').rename('toolchain/yarn')
+
+    src = Path('toolchain/node', node_executable_in_tarball)
+    dst = Path('nni_node', node_executable)
+    shutil.copyfile(src, dst)
+
+
+def compile_ts():
+    """
+    Use yarn to download dependencies and compile TypeScript code.
+    """
+    _print('Building NNI manager')
+    _yarn('ts/nni_manager')
+    _yarn('ts/nni_manager', 'build')
+    # todo: I don't think these should be here
+    shutil.rmtree('ts/nni_manager/dist/config', ignore_errors=True)
+    shutil.copytree('ts/nni_manager/config', 'ts/nni_manager/dist/config')
+
+    _print('Building web UI')
+    _yarn('ts/webui')
+    _yarn('ts/webui', 'build')
+
+    _print('Building NAS UI')
+    _yarn('ts/nasui')
+    _yarn('ts/nasui', 'build')
+
+
+def symlink_nni_node():
+    """
+    Create symlinks to compiled JS files.
+    If you manually modify and compile TS source files you don't need to install again.
+    """
+    _print('Creating symlinks')
+    clear_nni_node()
+
+    for path in Path('ts/nni_manager/dist').iterdir():
+        _symlink(path, Path('nni_node', path.name))
+    _symlink('ts/nni_manager/package.json', 'nni_node/package.json')
+    _symlink('ts/nni_manager/node_modules', 'nni_node/node_modules')
+
+    _symlink('ts/webui/build', 'nni_node/static')
+
+    Path('nni_node/nasui').mkdir(exist_ok=True)
+    _symlink('ts/nasui/build', 'nni_node/nasui/build')
+    _symlink('ts/nasui/server.js', 'nni_node/nasui/server.js')
+
+
+def copy_nni_node(version):
+    """
+    Copy compiled JS files to nni_node.
+    This is meant for building release package, so you need to provide version string.
+    The version will written to `package.json` in nni_node directory,
+    while `package.json` in ts directory will be left unchanged.
+    """
+    _print('Copying files')
+    clear_nni_node()
+
+    # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
+    for path in Path('ts/nni_manager/dist').iterdir():
+        if path.is_file():
+            shutil.copyfile(path, Path('nni_node', path.name))
+        else:
+            shutil.copytree(path, Path('nni_node', path.name))
+
+    package_json = json.load(open('ts/nni_manager/package.json'))
+    package_json['version'] = version
+    json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
+
+    _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
+
+    shutil.copytree('ts/webui/build', 'nni_node/static')
+
+    Path('nni_node/nasui').mkdir(exist_ok=True)
+    shutil.copytree('ts/nasui/build', 'nni_node/nasui/build')
+    shutil.copyfile('ts/nasui/server.js', 'nni_node/nasui/server.js')
+
+
+def clear_nni_node():
+    """
+    Remove compiled files in nni_node.
+    Use `clean()` if you what to remove files in ts as well.
+    """
+    for path in Path('nni_node').iterdir():
+        if path.name not in ('__init__.py', 'node', 'node.exe'):
+            if path.is_symlink() or path.is_file():
+                path.unlink()
+            else:
+                shutil.rmtree(path)
+
+
+_yarn_env = dict(os.environ)
+_yarn_env['PATH'] = str(Path('nni_node').resolve()) + ':' + os.environ['PATH']
+_yarn_path = Path('toolchain/yarn/bin', yarn_executable).resolve()
+
+def _yarn(path, *args):
+    if os.environ.get('GLOBAL_TOOLCHAIN'):
+        proc = subprocess.run(['yarn', *args], cwd=path, check=True)
+    else:
+        proc = subprocess.run([_yarn_path, *args], cwd=path, check=True, env=_yarn_env)
+
+
+def _symlink(target_file, link_location):
+    target = Path(target_file)
+    link = Path(link_location)
+    relative = os.path.relpath(target, link.parent)
+    link.symlink_to(relative, target.is_dir())
+
+
+def _print(*args):
+    print('\033[1;36m# ', end='')
+    print(*args, end='')
+    print('\033[0m')
+
+
+generated_directories = [
+    'ts/nni_manager/dist',
+    'ts/nni_manager/node_modules',
+    'ts/webui/build',
+    'ts/webui/node_modules',
+    'ts/nasui/build',
+    'ts/nasui/node_modules',
+]

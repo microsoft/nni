@@ -2,10 +2,59 @@
 # Licensed under the MIT license.
 
 import os
-from setuptools import setup
+import setuptools
+
+from . import make
 
 
 version = '999.0.0-developing'
+
+dependencies = [
+    'astor',
+    'hyperopt==0.1.2',
+    'json_tricks',
+    'netifaces',
+    'numpy',
+    'psutil',
+    'ruamel.yaml',
+    'requests',
+    'responses',
+    'scipy',
+    'schema',
+    'PythonWebHDFS',
+    'colorama',
+    'scikit-learn>=0.23.2',
+    'pkginfo',
+    'websockets'
+]
+
+
+def _setup():
+    setuptools.setup(
+        name = 'nni',
+        version = version,
+        author = 'Microsoft NNI Team',
+        author_email = 'nni@microsoft.com',
+        description = 'Neural Network Intelligence project',
+        long_description = open('README.md', encoding='utf-8').read(),
+        license = 'MIT',
+        url = 'https://github.com/Microsoft/nni',
+
+        packages = _find_python_packages(),
+        package_data = {
+            'nni': ['**/requirements.txt'],
+            'nni_node': _find_node_files()
+        },
+
+        python_requires = '>=3.6',
+        install_requires = dependencies,
+
+        entry_points = {
+            'console_scripts' : [
+                'nnictl = nni.nni_cmd.nnictl:parse_args'
+            ]
+        }
+    )
 
 
 def _find_python_packages():
@@ -24,45 +73,4 @@ def _find_node_files():
     return sorted(files)
 
 
-setup(
-    name = 'nni',
-    version = version,
-    author = 'Microsoft NNI Team',
-    author_email = 'nni@microsoft.com',
-    description = 'Neural Network Intelligence project',
-    long_description = open('README.md', encoding='utf-8').read(),
-    license = 'MIT',
-    url = 'https://github.com/Microsoft/nni',
-
-    packages = _find_python_packages(),
-    package_data = {
-        'nni': ['**/requirements.txt'],
-        'nni_node': _find_node_files()
-    },
-
-    python_requires = '>=3.6',
-    install_requires = [
-        'astor',
-        'hyperopt==0.1.2',
-        'json_tricks',
-        'netifaces',
-        'numpy',
-        'psutil',
-        'ruamel.yaml',
-        'requests',
-        'responses',
-        'scipy',
-        'schema',
-        'PythonWebHDFS',
-        'colorama',
-        'scikit-learn>=0.23.2',
-        'pkginfo',
-        'websockets'
-    ],
-
-    entry_points = {
-        'console_scripts' : [
-            'nnictl = nni.nni_cmd.nnictl:parse_args'
-        ]
-    }
-)
+_setup()
