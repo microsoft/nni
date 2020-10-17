@@ -26,23 +26,22 @@ node_version = 'v10.22.1'
 yarn_version = 'v1.22.10'
 
 
-def develop_build():
+def build(release):
     """
-    Compile a development build.
+    Compile TypeScript modules and copy or symlink to nni_node directory.
+
+    `release` is the version number without leading letter "v".
+
+    If `release` is None or empty, this is a development build and uses symlinks;
+    otherwise this is a release build and copies files instead.
     """
-    if not os.environ.get('GLOBAL_TOOLCHAIN'):
+    if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
     compile_ts()
-    symlink_nni_node()
-
-def release_build(version):
-    """
-    Compile a release build.
-    The `version` should not contains leading letter `v`.
-    """
-    download_toolchain()
-    compile_ts()
-    copy_nni_node(version)
+    if release:
+        copy_nni_node(release)
+    else:
+        symlink_nni_node()
 
 def clean():
     """
