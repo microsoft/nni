@@ -20,7 +20,6 @@ import {
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from 'training_service/common/containerJobData';
 
 
 @component.Singleton
