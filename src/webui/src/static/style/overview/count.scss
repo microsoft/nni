@@ -1,4 +1,4 @@
-$seriesIconMargin: 13px;
+$seriesIconMargin: 8px;
 
 .ExpDuration {
     margin-top: 28px;
@@ -24,22 +24,52 @@ $seriesIconMargin: 13px;
         padding: 0 3px;
     }
 }
-
-.durationInput {
-    width: 42px;
-    height: 32px;
-    padding-right: 5px;
-    text-align: right;
-    outline: none;
-    border: none;
-    border-bottom: 1px solid #ccc;
+.maxTrialNum{
+    .editparam{
+        position: relative;
+        top: -7px;
+    }
 }
 
-.maxExecDuration {
-    width: 74px;
+.noEditDuration{
+    position: relative;
+    top: -7px;
+}
+
+.editDuration{
+    position: relative;
+    top: -17px;
+
+}
+
+.editparam {
+
+    &-Input{
+        width: 42px;
+        height: 32px;
+        padding-right: 5px;
+        text-align: right;
+        outline: none;
+        border: none;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .maxExecDuration{
+        width: 44px;
+    }
+
+    &-dropdown{
+        width: 51px;
+        display: inline-block;
+        position: relative;
+        top: 13px;
+        left: 4px;
+    }
 }
 
 .series {
+    position: relative;
+    top: 5px;
     i {
         font-size: 20px;
         font-weight: 700;
@@ -56,6 +86,7 @@ $seriesIconMargin: 13px;
 
 .cancel i {
     color: red;
+    font-size: 16px;
 }
 
 .edit i {

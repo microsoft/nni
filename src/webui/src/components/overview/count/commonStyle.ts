@@ -1,9 +1,17 @@
-const itemStyle1: React.CSSProperties = {
-    width: '39%'
+const durationItem1: React.CSSProperties = {
+    width: '37%',
+    marginRight: '25px'
 };
-const itemStyle2: React.CSSProperties = {
+const durationItem2: React.CSSProperties = {
     width: '60%'
-    // paddingLeft: '10px'
 };
 
-export { itemStyle1, itemStyle2 };
+const trialCountItem1: React.CSSProperties = {
+    width: '37%',
+    marginRight: '50px'
+};
+const trialCountItem2: React.CSSProperties = {
+    width: '60%'
+};
+
+export { durationItem1, durationItem2, trialCountItem1, trialCountItem2 };

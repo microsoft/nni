@@ -5,7 +5,7 @@ import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../
 import { EditExperimentParam } from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
-import { itemStyle1, itemStyle2 } from './commonStyle';
+import { trialCountItem1, trialCountItem2 } from './commonStyle';
 
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
@@ -23,7 +23,7 @@ export const TrialCount = (): any => {
                 return (
                     <React.Fragment>
                         <Stack horizontal horizontalAlign='space-between' className='ExpDuration'>
-                            <div style={itemStyle1}>
+                            <div style={trialCountItem1}>
                                 <TooltipHost
                                     content={bar2.toString()}
                                     directionalHint={DirectionalHint.bottomCenter}
@@ -49,7 +49,7 @@ export const TrialCount = (): any => {
                                     <span>{maxTrialNum}</span>
                                 </div>
                             </div>
-                            <div style={itemStyle2}>
+                            <div style={trialCountItem2}>
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,
@@ -87,16 +87,16 @@ export const TrialCount = (): any => {
                                 <div>{count.get('RUNNING')}</div>
                             </div>
                             <div className='basic'>
-                                <p>Failed</p>
-                                <div>{count.get('FAILED')}</div>
+                                <p>Succeeded</p>
+                                <div>{count.get('SUCCEEDED')}</div>
                             </div>
                             <div className='basic'>
                                 <p>Stopped</p>
                                 <div>{stoppedCount}</div>
                             </div>
                             <div className='basic'>
-                                <p>Succeeded</p>
-                                <div>{count.get('SUCCEEDED')}</div>
+                                <p>Failed</p>
+                                <div>{count.get('FAILED')}</div>
                             </div>
                             <div className='basic'>
                                 <p>Waiting</p>

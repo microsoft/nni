@@ -75,7 +75,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 70,
+            minWidth: 50,
             maxWidth: 87,
             isResizable: true,
             data: 'number',
@@ -85,7 +85,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 75,
+            minWidth: 50,
             maxWidth: 87,
             isResizable: true,
             className: 'tableHead leftTitle',
@@ -95,8 +95,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 85,
-            maxWidth: 160,
+            minWidth: 65,
+            maxWidth: 150,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
@@ -111,7 +111,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Status',
             key: 'status',
             minWidth: 80,
-            maxWidth: 140,
+            maxWidth: 150,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => {

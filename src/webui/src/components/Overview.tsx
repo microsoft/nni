@@ -66,7 +66,13 @@ class Overview extends React.Component<{}, OverviewState> {
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
-                    const { metricGraphMode, bestTrialEntries, updateOverviewPage } = value;
+                    const {
+                        metricGraphMode,
+                        bestTrialEntries,
+                        maxDurationUnit,
+                        updateOverviewPage,
+                        changeMaxDurationUnit
+                    } = value;
                     const maxActive = metricGraphMode === 'max' ? 'active' : '';
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
@@ -88,18 +94,29 @@ class Overview extends React.Component<{}, OverviewState> {
                                             <Title />
                                         </TitleContext.Provider>
                                         <ExpDurationContext.Provider
-                                            value={{ maxExecDuration, execDuration, updateOverviewPage }}
+                                            value={{
+                                                maxExecDuration,
+                                                execDuration,
+                                                updateOverviewPage,
+                                                maxDurationUnit,
+                                                changeMaxDurationUnit
+                                            }}
                                         >
                                             <ExpDuration />
                                         </ExpDurationContext.Provider>
                                     </div>
-                                    <div className='empty' />
                                     <div className='trialCount'>
                                         <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
                                             <Title />
                                         </TitleContext.Provider>
                                         <ExpDurationContext.Provider
-                                            value={{ maxExecDuration, execDuration, updateOverviewPage }}
+                                            value={{
+                                                maxExecDuration,
+                                                execDuration,
+                                                updateOverviewPage,
+                                                maxDurationUnit,
+                                                changeMaxDurationUnit
+                                            }}
                                         >
                                             <TrialCount />
                                         </ExpDurationContext.Provider>
