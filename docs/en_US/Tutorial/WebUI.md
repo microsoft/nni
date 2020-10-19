@@ -82,7 +82,7 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 * If you run on the OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](../../img/webui-img/detail-pai.png)
-* Intermediate Result Graph: you can see the default and other keys in this graph by clicking the operation column button.
+* Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
 
 ![](../../img/webui-img/intermediate-btn.png)
 ![](../../img/webui-img/intermediate.png)
