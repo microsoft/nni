@@ -17,7 +17,6 @@ export const EditExperimentParam = (): any => {
     const [isShowSucceedInfo, setShowSucceedInfo] = useState(false);
     const [typeInfo, setTypeInfo] = useState('');
     const [info, setInfo] = useState('');
-    const [unit, setUnit] = useState('m');
     const showPencil = useCallback(() => {
         setShowPencil(true);
     }, []);
@@ -31,6 +30,8 @@ export const EditExperimentParam = (): any => {
     const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
         EditExpeParamContext
     );
+    const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
+    const [unit, setUnit] = useState(maxDurationUnit);
     let defaultVal = '';
     let editVal = '';
     if (title === 'Max duration') {
@@ -62,91 +63,88 @@ export const EditExperimentParam = (): any => {
         }
     }
 
+    async function confirmEdit(): Promise<void> {
+        const isMaxDuration = title === 'Max duration';
+        const newProfile = Object.assign({}, EXPERIMENT.profile);
+        let beforeParam = '';
+        if (isMaxDuration) {
+            if (!editInputVal.match(/^\d+(?=\.{0,1}\d+$|$)/)) {
+                showMessageInfo('Please enter a number!', 'error');
+                setEditValInput(defaultVal);
+                return;
+            }
+        } else {
+            if (!editInputVal.match(/^[1-9]\d*$/)) {
+                showMessageInfo('Please enter a positive integer!', 'error');
+                setEditValInput(defaultVal);
+                return;
+            }
+        }
+        if (isMaxDuration) {
+            beforeParam = maxExecDuration;
+        } else if (title === MAX_TRIAL_NUMBERS) {
+            beforeParam = maxTrialNum.toString();
+        } else {
+            beforeParam = trialConcurrency.toString();
+        }
+
+        if (editInputVal === beforeParam) {
+            if (isMaxDuration) {
+                if (maxDurationUnit === unit) {
+                    showMessageInfo(`Trial ${field} has not changed`, 'error');
+                    return;
+                }
+            } else {
+                showMessageInfo(`Trial ${field} has not changed`, 'error');
+                return;
+            }
+        }
+        if (isMaxDuration) {
+            const maxDura = JSON.parse(editInputVal);
+            if (unit === 'm') {
+                newProfile.params[field] = maxDura * 60;
+            } else if (unit === 'h') {
+                newProfile.params[field] = maxDura * 3600;
+            } else {
+                newProfile.params[field] = maxDura * 24 * 60 * 60;
+            }
+        } else {
+            newProfile.params[field] = parseInt(editInputVal, 10);
+        }
+        // rest api, modify trial concurrency value
+        try {
+            const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                params: { update_type: editType }
+            });
+            if (res.status === 200) {
+                showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
+                changeMaxDurationUnit(unit);
+            }
+        } catch (error) {
+            if (error.response && error.response.data.error) {
+                showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
+            } else if (error.response) {
+                showMessageInfo(`Failed to update trial ${field}\nServer responsed ${error.response.status}`, 'error');
+            } else if (error.message) {
+                showMessageInfo(`Failed to update trial ${field}\n${error.message}`, 'error');
+            } else {
+                showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
+            }
+            setEditValInput(defaultVal);
+        }
+        showPencil();
+        updateOverviewPage();
+    }
+
+    function cancelEdit(): void {
+        setEditValInput(defaultVal);
+        showPencil();
+        setUnit(maxDurationUnit);
+    }
     return (
         <AppContext.Consumer>
             {(values): React.ReactNode => {
-                async function confirmEdit(): Promise<void> {
-                    const isMaxDuration = title === 'Max duration';
-                    const newProfile = Object.assign({}, EXPERIMENT.profile);
-                    let beforeParam = '';
-                    if (isMaxDuration) {
-                        if (!editInputVal.match(/^\d+(?=\.{0,1}\d+$|$)/)) {
-                            showMessageInfo('Please enter a number!', 'error');
-                            setEditValInput(defaultVal);
-                            return;
-                        }
-                    } else {
-                        if (!editInputVal.match(/^[1-9]\d*$/)) {
-                            showMessageInfo('Please enter a positive integer!', 'error');
-                            setEditValInput(defaultVal);
-                            return;
-                        }
-                    }
-                    if (isMaxDuration) {
-                        beforeParam = maxExecDuration;
-                    } else if (title === MAX_TRIAL_NUMBERS) {
-                        beforeParam = maxTrialNum.toString();
-                    } else {
-                        beforeParam = trialConcurrency.toString();
-                    }
-
-                    if (editInputVal === beforeParam) {
-                        if (isMaxDuration) {
-                            if (values.maxDurationUnit === unit) {
-                                showMessageInfo(`Trial ${field} has not changed`, 'error');
-                                return;
-                            }
-                        } else {
-                            showMessageInfo(`Trial ${field} has not changed`, 'error');
-                            return;
-                        }
-                    }
-                    if (isMaxDuration) {
-                        const maxDura = JSON.parse(editInputVal);
-                        if (unit === 'm') {
-                            newProfile.params[field] = maxDura * 60;
-                        } else if (unit === 'h') {
-                            newProfile.params[field] = maxDura * 3600;
-                        } else {
-                            newProfile.params[field] = maxDura * 24 * 60 * 60;
-                        }
-                    } else {
-                        newProfile.params[field] = parseInt(editInputVal, 10);
-                    }
-                    // rest api, modify trial concurrency value
-                    try {
-                        const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                            // eslint-disable-next-line @typescript-eslint/camelcase
-                            params: { update_type: editType }
-                        });
-                        if (res.status === 200) {
-                            showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
-                            values.changeMaxDurationUnit(unit);
-                        }
-                    } catch (error) {
-                        if (error.response && error.response.data.error) {
-                            showMessageInfo(`Failed to update trial ${field}\n${error.response.data.error}`, 'error');
-                        } else if (error.response) {
-                            showMessageInfo(
-                                `Failed to update trial ${field}\nServer responsed ${error.response.status}`,
-                                'error'
-                            );
-                        } else if (error.message) {
-                            showMessageInfo(`Failed to update trial ${field}\n${error.message}`, 'error');
-                        } else {
-                            showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
-                        }
-                        setEditValInput(defaultVal);
-                    }
-                    showPencil();
-                    updateOverviewPage();
-                }
-
-                function cancelEdit(): void {
-                    setEditValInput(defaultVal);
-                    showPencil();
-                    setUnit(values.maxDurationUnit);
-                }
                 return (
                     <EditExpeParamContext.Consumer>
                         {(value): React.ReactNode => {
@@ -165,7 +163,9 @@ export const EditExperimentParam = (): any => {
                                             value={editInputVal}
                                             onChange={setInputVal}
                                         />
-                                        {isShowPencil && title === 'Max duration' && <span>{unit}</span>}
+                                        {isShowPencil && title === 'Max duration' && (
+                                            <span>{values.maxDurationUnit}</span>
+                                        )}
                                         {!isShowPencil && title === 'Max duration' && (
                                             <Dropdown
                                                 selectedKey={unit}
