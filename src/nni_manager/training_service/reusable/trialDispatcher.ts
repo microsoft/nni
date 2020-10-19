@@ -728,7 +728,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleCommand(command: Command): Promise<void> {
-        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}. ${command.data["msg"]}`);
+        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}.}`);
         const environment = command.environment;
         const data = command.data;
         const nodeId = data["node"];
