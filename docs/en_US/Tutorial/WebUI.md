@@ -4,22 +4,26 @@
 
 Click the tab "Overview".
 
-* On the overview tab, you can see the experiment trial profile/search space and the performance of top trials.
+* On the overview tab, you can see the experiment params and the performance of top trials. If you want to see config and search space, please click the right button "Config" and "Search space".
 
-![](../../img/webui-img/over1.png)
-![](../../img/webui-img/over2.png)
+![](../../img/webui-img/full-oview.png)
 * If your experiment has many trials, you can change the refresh interval here.
 
 ![](../../img/webui-img/refresh-interval.png)
-* You can review and download the experiment results and nni-manager/dispatcher log files from the "View" button.
+* You can review and download the experiment results and nni-manager/dispatcher log files from the "Download" button.
 
 ![](../../img/webui-img/download.png)
+
+* You can change experiment param such as maxExecDuration, maxTrialNum and trial concurrency on here.
+
+![](../../img/webui-img/edit-experiment-param.png)
+
 * You can click the exclamation point in the error box to see a log message if the experiment's status is an error.
 
 ![](../../img/webui-img/log-error.png)
 ![](../../img/webui-img/review-log.png)
 
-* You can click "Feedback" to report any questions.
+* You can click "About" to see the version and report any questions.
 
 ## View job default metric
 
@@ -35,15 +39,15 @@ Click the tab "Overview".
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
+* You can add/remove axes and drag to swap axes on the chart.
 * You can select the percentage to see top trials.
-* Choose two axis to swap its positions
 
-![](../../img/hyperPara.png)
+![](../../img/webui-img/hyperPara.png)
 ## View Trial Duration
 
 Click the tab "Trial Duration" to see the bar graph.
 
-![](../../img/trial_duration.png)
+![](../../img/webui-img/trial_duration.png)
 ## View Trial Intermediate Result Graph
 
 Click the tab "Intermediate Result" to see the line graph.
