@@ -5,7 +5,7 @@
 
 Example:
 
-from nni.nnicli import Experiment
+from nni.experiment import Experiment
 
 exp = Experiment()
 exp.start_experiment('../../../../examples/trials/mnist-pytorch/config.yml')
@@ -196,16 +196,16 @@ class TrialJob:
         Trial job id.
     status: str
         Job status.
-    hyperParameters: list of `nnicli.TrialHyperParameters`
-        See `nnicli.TrialHyperParameters`.
+    hyperParameters: list of `nni.experiment.TrialHyperParameters`
+        See `nni.experiment.TrialHyperParameters`.
     logPath: str
         Log path.
     startTime: int
         Job start time (timestamp).
     endTime: int
         Job end time (timestamp).
-    finalMetricData: list of `nnicli.TrialMetricData`
-        See `nnicli.TrialMetricData`.
+    finalMetricData: list of `nni.experiment.TrialMetricData`
+        See `nni.experiment.TrialMetricData`.
     parameter_index: int
         Parameter index.
     """

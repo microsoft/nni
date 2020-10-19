@@ -55,8 +55,6 @@ from setuptools.command.develop import develop
 import build_ts
 
 
-release = os.environ.get('NNI_RELEASE')
-
 dependencies = [
     'astor',
     'hyperopt==0.1.2',
@@ -76,6 +74,8 @@ dependencies = [
     'websockets'
 ]
 
+
+release = os.environ.get('NNI_RELEASE')
 
 def _setup():
     setuptools.setup(
@@ -109,7 +109,7 @@ def _setup():
 
         entry_points = {
             'console_scripts' : [
-                'nnictl = nni.nni_cmd.nnictl:parse_args'
+                'nnictl = nni.tools.cmd.nnictl:parse_args'
             ]
         },
 

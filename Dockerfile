@@ -1,87 +1,57 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-FROM nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04
+FROM nvidia/cuda:11.1-cudnn8-runtime-ubuntu18.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
 ENV DEBIAN_FRONTEND=noninteractive 
 
-RUN apt-get -y update && \
-    apt-get -y install sudo \
-    apt-utils \
-    git \
-    curl \
-    vim \
-    unzip \
-    wget \
+RUN apt-get update
+RUN apt-get -y install \
     build-essential \
-    cmake \
-    libopenblas-dev \
-    automake \
-    openssh-client \
+    git \
     openssh-server \
-    lsof \
-    python3.6 \
-    python3-dev \
     python3-pip \
-    python3-tk \
-    libcupti-dev && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    python3.8 \
+    python3.8-dev \
+    wget
 
-#
-# generate python script
-#
-RUN cp /usr/bin/python3 /usr/bin/python
+# candidate packages:
+#   apt-utils
+#   automake
+#   cmake
+#   curl
+#   sudo
+#   libcupti-dev
+#   libopenblas-dev
+#   lsof
+#   python3-tk
+#   unzip
+#   vim
 
-#
-# update pip
-#
-RUN python3 -m pip install --upgrade pip==20.0.2 setuptools==41.0.0
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
-# numpy 1.14.3  scipy 1.1.0
-RUN python3 -m pip --no-cache-dir install \
-    numpy==1.14.3 scipy==1.1.0
+RUN ln -sf python3.8 /usr/bin/python
+RUN ln -sf python3.8 /usr/bin/python3
 
-#
-# Tensorflow 1.15
-#
-RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.15.0
+RUN python -m pip --no-cache-dir install --upgrade pip==20.2.4 setuptools==50.3.2
 
-#
-# Keras 2.1.6
-#
-RUN python3 -m pip --no-cache-dir install Keras==2.1.6
+RUN python -m pip --no-cache-dir install \
+    azureml==0.2.7 \
+    azureml-sdk==1.16.0 \
+    lightgbm==3.0.0 \
+    numpy==1.19.2 \
+    pandas==1.1.3 \
+    scikit-learn==0.23.2 \
+    scipy==1.5.3 \
+    tensorflow==2.3.1 \
+    torch==1.6.0 \
+    torchvision==0.7.0
 
-#
-# PyTorch
-#
-RUN python3 -m pip --no-cache-dir install torch==1.4.0
-RUN python3 -m pip install torchvision==0.5.0
-
-#
-# sklearn 0.23.2
-#
-RUN python3 -m pip --no-cache-dir install scikit-learn==0.23.2
-
-#
-# pandas==0.23.4 lightgbm==2.2.2
-#
-RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
-
-#
-# Install NNI
-#
 RUN python3 -m pip --no-cache-dir install nni
 
-#
-# install aml package
-#
-RUN python3 -m pip --no-cache-dir install azureml
-RUN python3 -m pip --no-cache-dir install azureml-sdk
-
-
-ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
+ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/sbin:/bin
 
 WORKDIR /root

@@ -3,7 +3,7 @@
 
 import ast
 import astor
-from nni.nni_cmd.common_utils import print_warning
+from nni.tools.cmd.common_utils import print_warning
 
 from .utils import ast_Num, ast_Str
 
