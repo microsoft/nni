@@ -141,7 +141,13 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
         /* eslint-disable require-atomic-updates */
         try {
+            // check if pid file exist
+            const pidExist = await executor.fileExist(jobpidPath);
+            if (!pidExist) {
+                return;
+            }
             const isAlive = await executor.isProcessAlive(jobpidPath);
+            environment.status = 'RUNNING';
             // if the process of jobpid is not alive any more
             if (!isAlive) {
                 const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
@@ -264,7 +270,6 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         // Execute command in remote machine
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
             executor.getScriptName("run")), true, false);
-        environment.status = 'RUNNING';
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
         }

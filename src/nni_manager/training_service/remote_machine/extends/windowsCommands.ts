@@ -130,6 +130,10 @@ class WindowsCommands extends OsCommands {
             return `${preCommand} && set prePath=%path% && ${command}`;
         }
     }
+
+    public fileExistCommand(filePath: string): string {
+        return `powershell Test-Path ${filePath} -PathType Leaf`;
+    }
 }
 
 export { WindowsCommands };
