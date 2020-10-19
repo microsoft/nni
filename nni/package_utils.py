@@ -2,13 +2,14 @@
 # Licensed under the MIT license.
 
 import os
-import site
+from pathlib import Path
 import sys
 from collections import defaultdict
 from pathlib import Path
 import importlib
 import ruamel.yaml as yaml
 
+import nni
 from .constants import BuiltinAlgorithms
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
@@ -286,50 +287,9 @@ def create_customized_class_instance(class_params):
 
     return instance
 
-def get_nni_installation_parent_dir():
-    ''' Find nni installation parent directory
-    '''
-    if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
-        # Note that conda venv will not have VIRTUAL_ENV
-        python_dir = os.getenv('VIRTUAL_ENV')
-    else:
-        python_sitepackage = site.getsitepackages()[0]
-        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given
-        # that nni exists there
-        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = _try_installation_path_sequentially(site.getusersitepackages(), *site.getsitepackages())
-        else:
-            python_dir = _try_installation_path_sequentially(*site.getsitepackages(), site.getusersitepackages())
-    return python_dir
-
-def _try_installation_path_sequentially(*sitepackages):
-    '''Try different installation path sequentially util nni is found.
-    Return None if nothing is found
-    '''
-    for sitepackage in sitepackages:
-        path = Path(sitepackage)
-        if len(path.parents) > 2 and (path.parents[2] / 'nni' / 'main.js').is_file():
-            return str(path.parents[2])
-        if (path / 'nni' / 'main.js').is_file():
-            return str(path)
-    return None
-
-def get_nni_installation_path():
-    ''' Find nni installation directory
-    '''
-    parent_dir = get_nni_installation_parent_dir()
-    if parent_dir:
-        entry_file = os.path.join(parent_dir, 'nni', 'main.js')
-        if os.path.isfile(entry_file):
-            return os.path.join(parent_dir, 'nni')
-    return None
-
-def get_nni_config_dir():
-    return os.path.join(get_nni_installation_path(), 'config')
-
 def get_package_config_path():
-    config_dir = get_nni_config_dir()
+    # FIXME: this might not be the desired location
+    config_dir = Path(nni.__path__[0]).parent / 'nni_config'
     if not os.path.exists(config_dir):
         os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, 'installed_packages.yml')

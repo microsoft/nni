@@ -3,8 +3,8 @@ import logging
 import random
 from collections import deque
 
-import nni
 from schema import Schema, Optional
+import nni
 from nni.tuner import Tuner
 from nni import ClassArgsValidator
 from nni.utils import OptimizeMode, extract_scalar_reward
