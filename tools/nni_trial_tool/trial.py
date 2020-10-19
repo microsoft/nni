@@ -142,6 +142,8 @@ class Trial:
                     for child in psutil.Process(self.process.pid).children(True):
                         child.kill()
                     self.process.kill()
+                except psutil.NoSuchProcess:
+                    nni_log(LogType.Info, "kill trial %s failed: %s does not exist!" % (trial_id, self.process.pid))
                 except Exception as ex:
                     nni_log(LogType.Error, "kill trial %s failed: %s " % (trial_id, str(ex)))
             self.cleanup()
