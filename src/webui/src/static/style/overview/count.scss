@@ -7,44 +7,42 @@ $seriesIconMargin: 8px;
         cursor: pointer;
     }
 
-    .maxTrialNum{
+    .maxTrialNum {
         margin-bottom: 10px;
     }
 }
 
-.exp-progress{
-
+.exp-progress {
     margin-top: 10px;
 
-    .bold{
+    .bold {
         font-weight: 500;
     }
 
-    .joiner{
+    .joiner {
         padding: 0 3px;
     }
 }
-.maxTrialNum{
-    .editparam{
+
+.maxTrialNum {
+    .editparam {
         position: relative;
         top: -7px;
     }
 }
 
-.noEditDuration{
+.noEditDuration {
     position: relative;
     top: -7px;
 }
 
-.editDuration{
+.editDuration {
     position: relative;
     top: -17px;
-
 }
 
 .editparam {
-
-    &-Input{
+    &-Input {
         width: 42px;
         height: 32px;
         padding-right: 5px;
@@ -54,11 +52,11 @@ $seriesIconMargin: 8px;
         border-bottom: 1px solid #ccc;
     }
 
-    .maxExecDuration{
-        width: 44px;
+    .maxExecDuration {
+        width: 36px;
     }
 
-    &-dropdown{
+    &-dropdown {
         width: 51px;
         display: inline-block;
         position: relative;
@@ -70,6 +68,7 @@ $seriesIconMargin: 8px;
 .series {
     position: relative;
     top: 5px;
+
     i {
         font-size: 20px;
         font-weight: 700;
@@ -104,10 +103,10 @@ $seriesIconMargin: 8px;
     left: 0;
 }
 
-.mess{
+.mess {
     margin-top: 20px;
 
-    .basic p{
+    .basic p {
         margin-top: 0;
     }
 }

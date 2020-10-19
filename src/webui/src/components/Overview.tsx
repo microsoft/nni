@@ -10,7 +10,8 @@ import { ReBasicInfo } from './overview/experiment/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
-import { Command } from './overview/experiment/Command';
+import { Command1 } from './overview/command/Command1';
+import { Command2 } from './overview/command/Command2';
 import { TitleContext } from './overview/TitleContext';
 import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
 import '../static/style/overview/overview.scss';
@@ -169,8 +170,11 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </Stack>
                                     <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
                                 </div>
-                                <div className='overviewCommand'>
-                                    <Command />
+                                <div className='overviewCommand1'>
+                                    <Command1 />
+                                </div>
+                                <div className='overviewCommand2'>
+                                    <Command2 />
                                 </div>
                                 <div className='overviewChart'>
                                     <Stack horizontal>

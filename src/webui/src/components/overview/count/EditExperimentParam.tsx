@@ -13,7 +13,7 @@ import '../../../static/style/overview/count.scss';
 const DurationInputRef = React.createRef<HTMLInputElement>();
 
 export const EditExperimentParam = (): any => {
-    const [isShowPencil, setShowPencil] = useState(false);
+    const [isShowPencil, setShowPencil] = useState(true);
     const [isShowSucceedInfo, setShowSucceedInfo] = useState(false);
     const [typeInfo, setTypeInfo] = useState('');
     const [info, setInfo] = useState('');
@@ -69,9 +69,18 @@ export const EditExperimentParam = (): any => {
                     const isMaxDuration = title === 'Max duration';
                     const newProfile = Object.assign({}, EXPERIMENT.profile);
                     let beforeParam = '';
-                    if (!isMaxDuration && !editInputVal.match(/^[1-9]\d*$/)) {
-                        showMessageInfo('Please enter a positive integer!', 'error');
-                        return;
+                    if (isMaxDuration) {
+                        if (!editInputVal.match(/^\d+(?=\.{0,1}\d+$|$)/)) {
+                            showMessageInfo('Please enter a number!', 'error');
+                            setEditValInput(defaultVal);
+                            return;
+                        }
+                    } else {
+                        if (!editInputVal.match(/^[1-9]\d*$/)) {
+                            showMessageInfo('Please enter a positive integer!', 'error');
+                            setEditValInput(defaultVal);
+                            return;
+                        }
                     }
                     if (isMaxDuration) {
                         beforeParam = maxExecDuration;
@@ -80,12 +89,20 @@ export const EditExperimentParam = (): any => {
                     } else {
                         beforeParam = trialConcurrency.toString();
                     }
+
                     if (editInputVal === beforeParam) {
-                        showMessageInfo(`Trial ${field} has not changed`, 'error');
-                        return;
+                        if (isMaxDuration) {
+                            if (values.maxDurationUnit === unit) {
+                                showMessageInfo(`Trial ${field} has not changed`, 'error');
+                                return;
+                            }
+                        } else {
+                            showMessageInfo(`Trial ${field} has not changed`, 'error');
+                            return;
+                        }
                     }
                     if (isMaxDuration) {
-                        const maxDura = parseInt(editInputVal, 10);
+                        const maxDura = JSON.parse(editInputVal);
                         if (unit === 'm') {
                             newProfile.params[field] = maxDura * 60;
                         } else if (unit === 'h') {
@@ -103,7 +120,7 @@ export const EditExperimentParam = (): any => {
                             params: { update_type: editType }
                         });
                         if (res.status === 200) {
-                            showMessageInfo(`Successfully updated ${field}`, 'success');
+                            showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
                             values.changeMaxDurationUnit(unit);
                         }
                     } catch (error) {

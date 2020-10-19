@@ -79,7 +79,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             maxWidth: 87,
             isResizable: true,
             data: 'number',
-            onColumnClick: this.onColumnClick
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.sequenceId}</div>
         },
         {
             name: 'ID',
@@ -90,7 +91,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
-            onColumnClick: this.onColumnClick
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
         },
         {
             name: 'Duration',
@@ -102,7 +104,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
-                <div className='durationsty'>
+                <div className='durationsty succeed-padding'>
                     <div>{convertDuration(item.duration)}</div>
                 </div>
             )
@@ -114,9 +116,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             maxWidth: 150,
             isResizable: true,
             fieldName: 'status',
-            onRender: (item: any): React.ReactNode => {
-                return <div className={`${item.status} commonStyle`}>{item.status}</div>;
-            }
+            onRender: (item: any): React.ReactNode => (
+                <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
+            )
         },
         {
             name: 'Default metric',
@@ -127,9 +129,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => {
-                return <DefaultMetric trialId={item.id} />;
-            }
+            onRender: (item: any): React.ReactNode => <DefaultMetric trialId={item.id} />
         }
     ];
 
