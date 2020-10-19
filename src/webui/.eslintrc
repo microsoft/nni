@@ -28,6 +28,7 @@
         "@typescript-eslint/no-inferrable-types": 0,
         "@typescript-eslint/no-use-before-define": [2, "nofunc"],
         "@typescript-eslint/no-var-requires": 0,
+        "@typescript-eslint/no-unused-vars": [2, { "argsIgnorePattern": "^_" }],
         "arrow-parens": [2, "as-needed"],
         "no-inner-declarations": 0,
         "no-empty": 2,
