@@ -132,7 +132,6 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </TitleContext.Provider>
                                         </div>
                                         <div className='topTrialTitle'>
-                                            {/* <Stack horizontal horizontalAlign='space-between'> */}
                                             <Stack horizontal horizontalAlign='end'>
                                                 <DefaultButton
                                                     onClick={this.clickMaxTop}
