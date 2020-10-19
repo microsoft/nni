@@ -8,13 +8,13 @@ python3 amc_train.py --model_type mobilenetv2 --n_epochs 50
 ```
 Once finished, saved checkpoint file can be found at:
 ```
-logs/mobilenetv2_cifar10_train-run1/ckpt.best.pth.tar
+logs/mobilenetv2_cifar10_train-run1/ckpt.best.pth
 ```
 
 ## Pruning with AMCPruner
 Run following command to prune the trained model:
 ```bash
-python3 amc_search.py --model_type mobilenetv2 --ckpt logs/mobilenetv2_cifar10_train-run1/ckpt.best.pth.tar
+python3 amc_search.py --model_type mobilenetv2 --ckpt logs/mobilenetv2_cifar10_train-run1/ckpt.best.pth
 ```
 Once finished, pruned model and mask can be found at:
 ```

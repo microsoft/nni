@@ -186,11 +186,11 @@ def adjust_learning_rate(optimizer, epoch):
     return lr
 
 def save_checkpoint(state, is_best, checkpoint_dir='.'):
-    filename = os.path.join(checkpoint_dir, 'ckpt.pth.tar')
+    filename = os.path.join(checkpoint_dir, 'ckpt.pth')
     print('=> Saving checkpoint to {}'.format(filename))
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, filename.replace('.pth.tar', '.best.pth.tar'))
+        shutil.copyfile(filename, filename.replace('.pth', '.best.pth'))
 
 if __name__ == '__main__':
     args = parse_args()
