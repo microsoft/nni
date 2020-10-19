@@ -162,7 +162,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                         } else {
                             environment.setStatus('FAILED');
                         }
-                        //this.releaseEnvironmentResource(environment);
+                        this.releaseEnvironmentResource(environment);
                     }
                 }
             }
@@ -264,7 +264,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
         // Execute command in remote machine
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
-            executor.getScriptName("run")), true, true);
+            executor.getScriptName("run")), true, false);
         environment.status = 'RUNNING';
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
@@ -282,6 +282,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
+
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
             this.releaseEnvironmentResource(environment);
