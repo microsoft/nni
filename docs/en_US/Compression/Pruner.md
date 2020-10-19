@@ -20,7 +20,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
-* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [AMC Pruner](#amc-pruner)
 * [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
@@ -495,9 +495,9 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
-## AutoML for Model Compression Pruner
+## AMC Pruner
 
-AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+AMC pruner leverages reinforcement learning to provide the model compression policy.
 This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
 better preserving the accuracy and freeing human labor.
 
