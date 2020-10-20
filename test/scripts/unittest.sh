@@ -8,7 +8,7 @@ CWD=${PWD}
 echo ""
 echo "===========================Testing: nni_annotation==========================="
 cd ${CWD}/../tools/
-python3 -m unittest -v nni_annotation/test_annotation.py
+#python3 -m unittest -v nni_annotation/test_annotation.py
 
 ## Export certain environment variables for unittest code to work
 export NNI_TRIAL_JOB_ID=test_trial_job_id
