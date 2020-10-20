@@ -10,7 +10,6 @@ import numpy as np
 import torch.nn as nn
 
 # FIXME: I don't know where "utils" should be
-from nni.algorithms.compression.torch.pruning.constants_pruner import PRUNER_DICT
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
@@ -64,6 +63,8 @@ class SensitivityAnalysis:
             This value is effective only when the early_stop_mode is set.
 
         """
+        from nni.algorithms.compression.torch.pruning.constants_pruner import PRUNER_DICT
+
         self.model = model
         self.val_func = val_func
         self.target_layer = OrderedDict()
