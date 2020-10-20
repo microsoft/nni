@@ -1,32 +1,32 @@
+name: 'Fast Test'
 jobs:
-- job: 'Ubuntu latest'
+- job: 'ubuntu_latest'
   pool:
     vmImage: 'ubuntu-20.04'
 
   steps:
-  - displayName: 'Install python tools'
-    script: |
+  - script: |
       set -e
       python3 -m pip install -U --upgrade pip setuptools
       python3 -m pip install -U pytest coverage
       python3 -m pip install -U pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+    displayName: 'Install python tools'
 
-  - displayName: 'Install NNI'
-    script: |
+  - script: |
       python3 setup.py develop
+    displayName: 'Install NNI'
 
   # run this one first because it's fast
-  - displayName: 'ESLint'
-    script: |
+  - script: |
       set -e
       cd ts/nni_manager
       yarn eslint
       cd ../webui
       yarn eslint
+    displayName: 'ESLint'
 
-  - displayName: 'Install dependencies'
-    script: |
+  - script: |
       set -e
       sudo apt-get install -y pandoc
       python3 -m pip install -U --upgrade pygments
@@ -38,51 +38,51 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
+    displayName: 'Install dependencies'
 
-  - displayName: 'pylint and flake8'
-    script: |
+  - script: |
       set -e
       python3 -m pylint --rcfile pylintrc nni
       python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
       python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+    displayName: 'pylint and flake8'
 
-  - displayName: 'Python unit test'
-    script: |
+  - script: |
       cd test
       python3 -m pytest ut
+    displayName: 'Python unit test'
 
   # TODO: ts ut
 
-  - displayName: 'Simple integration test'
-    script: |
+  - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
 
-  - displayName: 'Check Sphinx documentation'
-    script: |
+  - script: |
       cd docs/en_US
       sphinx-build -M html . _build -W
+    displayName: 'Check Sphinx documentation'
 
 
-- job: 'Ubuntu legacy'
+- job: 'ubuntu_legacy'
   pool:
     vmImage: 'ubuntu-18.04'
 
   steps:
-  - displayName: 'Install python tools'
-    script: |
+  - script: |
       set -e
       python3 -m pip install -U --upgrade pip setuptools
       python3 -m pip install -U pylint astroid
       python3 -m pip install -U pytest coverage
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+    displayName: 'Install python tools'
 
-  - displayName: 'Install NNI'
-    script: |
+  - script: |
       python3 setup.py develop
+    displayName: 'Install NNI'
 
-  - displayName: 'Install dependencies'
   - script: |
       set -e
       python3 -m pip install -U torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
@@ -92,18 +92,19 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
+    displayName: 'Install dependencies'
 
-  - displayName: 'Python unit test'
-    script: |
+  - script: |
       cd test
       python3 -m pytest ut
+    displayName: 'Python unit test'
 
   # TODO: ts ut
 
-  - displayName: 'Simple integration test'
-    script: |
+  - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
 
 
 # TODO: macOS
