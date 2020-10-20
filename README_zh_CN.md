@@ -238,21 +238,21 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 以下示例基于 TensorFlow 1.x 。确保运行环境中使用的的是 ** TensorFlow 1.x**。
 
 * 通过克隆源代码下载示例。
-   
+
    ```bash
    git clone -b v1.8 https://github.com/Microsoft/nni.git
    ```
 
 * 运行 MNIST 示例。
-   
+
    Linux 或 macOS
-   
+
    ```bash
    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
    ```
-   
+
    Windows
-   
+
    ```bash
    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
    ```

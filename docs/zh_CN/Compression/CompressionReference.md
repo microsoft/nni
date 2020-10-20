@@ -1,10 +1,10 @@
-# 模型压缩 Python API 参考
+# Python API Reference of Compression Utilities
 
 ```eval_rst
 .. contents::
 ```
 
-## 灵敏度工具
+## Sensitivity Utilities
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.utils.sensitivity_analysis.SensitivityAnalysis
@@ -12,7 +12,7 @@
 
 ```
 
-## 拓扑结构工具
+## Topology Utilities
 
 ```eval_rst
 ..  autoclass:: nni.compression.torch.utils.shape_dependency.ChannelDependency
@@ -32,7 +32,7 @@
 
 ```
 
-## 模型 FLOPs 和参数计数器
+## Model FLOPs/Parameters Counter
 
 ```eval_rst
 ..  autofunction:: nni.compression.torch.utils.counter.count_flops_params

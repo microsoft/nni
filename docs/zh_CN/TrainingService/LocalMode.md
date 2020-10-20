@@ -12,29 +12,29 @@
 
     1.1 声明 NNI API
         在 Trial 代码中通过 `import nni` 来导入 NNI API。
-    
+
     1.2 获取预定义的参数
         参考下列代码片段： 
-    
+
             RECEIVED_PARAMS = nni.get_next_parameter()
-    
+
         来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如：
-    
+
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
-    
+
     1.3 返回结果
         使用 API：
-    
+
             `nni.report_intermediate_result(accuracy)`
-    
+
         返回 `accuracy` 的值给 Assessor。
-    
+
         使用 API:
-    
+
             `nni.report_final_result(accuracy)`
-    
+
         返回 `accuracy` 的值给 Tuner。
-    
+
 
 将改动保存到 `mnist.py` 文件中。
 
@@ -43,7 +43,7 @@
     accuracy - 如果使用 NNI 内置的 Tuner/Assessor，那么 `accuracy` 必须是数值（如 float, int）。在定制 Tuner/Assessor 时 `accuracy` 可以是任何类型的 Python 对象。
     Assessor（评估器）- 会根据 Trial 的历史值（即其中间结果），来决定这次 Trial 是否应该提前终止。
     Tuner（调参器） - 会根据探索的历史（所有 Trial 的最终结果）来生成下一组参数、架构。
-    
+
 
 > 第二步：定义搜索空间
 
@@ -55,7 +55,7 @@
         "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
         "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
     }
-    
+
 
 参考[定义搜索空间](../Tutorial/SearchSpaceSpec.md)进一步了解。
 
@@ -67,7 +67,7 @@
 
     useAnnotation: false
     searchSpacePath: /path/to/your/search_space.json
-    
+
 
 在 NNI 中运行 Experiment，只需要：
 
@@ -83,7 +83,7 @@
 先从 NNI 提供的简单 Trial 示例，如 MNIST 开始。 NNI 示例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有 Experiment 的示例。 执行下面的命令可轻松运行 NNI 的 mnist 示例：
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
-    
+
 
 上面的命令会写在 YAML 文件中。 参考[这里](../TrialExample/Trials.md)来写出自己的 Experiment 代码。
 
@@ -93,7 +93,7 @@
         builtinTunerName: TPE
         classArgs:
           optimize_mode: maximize
-    
+
 
 *builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](../Tuner/BuiltinTuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
@@ -135,7 +135,7 @@ trial:
 完成上述步骤后，可通过下列命令来启动 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
-    
+
 
 参考[这里](../Tutorial/Nnictl.md)来了解 *nnictl* 命令行工具的更多用法。
 
@@ -150,21 +150,21 @@ Experiment 应该一直在运行。 除了 *nnictl* 以外，还可以通过 NNI
 **准备配置文件**：NNI 提供了演示用的配置文件，使用 `cat examples/trials/mnist-annotation/config_gpu.yml` 来查看。 trailConcurrency 和 gpuNum 与基本配置文件不同：
 
     ...
-    
+
     # 可同时运行的 Trial 数量
     trialConcurrency: 4
-    
+
     ...
-    
+
     trial:
       command: python mnist.py
       codeDir: ~/nni/examples/trials/mnist-annotation
       gpuNum: 1
-    
+
 
 用下列命令运行 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config_gpu.yml
-    
+
 
 可以用 *nnictl* 命令行工具或网页界面来跟踪训练过程。 *nvidia_smi* 命令行工具能在训练过程中查看 GPU 使用情况。
