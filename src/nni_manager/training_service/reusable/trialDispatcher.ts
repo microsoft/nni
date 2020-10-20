@@ -662,7 +662,11 @@ class TrialDispatcher implements TrainingService {
         trial.status = "RUNNING";
         await this.commandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
     }
-
+    
+    /**
+     * release the trial assigned environment resources
+     * @param trial 
+     */
     private releaseEnvironment(trial: TrialDetail): void {
         if (trial.environment !== undefined) {
             if (trial.environment.runningTrialCount <= 0) {
@@ -728,7 +732,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async handleCommand(command: Command): Promise<void> {
-        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}.}`);
+        this.log.debug(`TrialDispatcher: env ${command.environment.id} received command ${command.command}.`);
         const environment = command.environment;
         const data = command.data;
         const nodeId = data["node"];
