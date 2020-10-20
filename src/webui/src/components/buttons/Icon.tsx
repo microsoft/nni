@@ -11,11 +11,14 @@ const copy = <Icon iconName='Copy' />;
 const tableListIcon = <Icon iconName='BulletedList' />;
 const downLoadIcon = { iconName: 'Download' };
 const infoIconAbout = { iconName: 'info' };
-const timeIcon = { iconName: 'Refresh' };
+const timeIcon = { iconName: 'ReminderTime' };
 const disableUpdates = { iconName: 'DisableUpdates' };
 const requency = { iconName: 'Timer' };
 const closeTimer = { iconName: 'Blocked2' };
 const LineChart = <Icon iconName='LineChart' />;
+const Edit = <Icon iconName='Edit' />;
+const CheckMark = <Icon iconName='CheckMark' />;
+const Cancel = <Icon iconName='Cancel' />;
 
 export {
     infoIcon,
@@ -31,5 +34,8 @@ export {
     disableUpdates,
     requency,
     closeTimer,
-    LineChart
+    LineChart,
+    Edit,
+    CheckMark,
+    Cancel
 };

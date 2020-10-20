@@ -4,6 +4,7 @@ import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
+import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
 import './App.scss';
 
 interface AppState {
@@ -11,6 +12,7 @@ interface AppState {
     columnList: string[];
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
+    maxDurationUnit: string;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
     isillegalFinal: boolean;
     expWarningMessage: string;
@@ -25,17 +27,21 @@ export const AppContext = React.createContext({
     trialsUpdateBroadcast: 0,
     metricGraphMode: 'max',
     bestTrialEntries: '10',
+    maxDurationUnit: 'm',
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeColumn: (val: string[]) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeMetricGraphMode: (val: 'max' | 'min') => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeEntries: (val: string) => {}
+    changeMaxDurationUnit: (val: string) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeEntries: (val: string) => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    updateOverviewPage: () => {}
 });
 
 class App extends React.Component<{}, AppState> {
     private timerId!: number | undefined;
-    private dataFormatimer!: number;
     private firstLoad: boolean = false; // when click refresh selector options
     constructor(props: {}) {
         super(props);
@@ -45,6 +51,7 @@ class App extends React.Component<{}, AppState> {
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
             metricGraphMode: 'max',
+            maxDurationUnit: 'm',
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
@@ -60,34 +67,7 @@ class App extends React.Component<{}, AppState> {
             metricGraphMode: EXPERIMENT.optimizeMode === 'minimize' ? 'min' : 'max'
         }));
         this.timerId = window.setTimeout(this.refresh, this.state.interval * 100);
-        // final result is legal
-        // get a succeed trial，see final result data's format
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.dataFormatimer = window.setInterval(this.getFinalDataFormat, this.state.interval * 1000);
     }
-
-    getFinalDataFormat = (): void => {
-        for (let i = 0; this.state.isillegalFinal === false; i++) {
-            if (TRIALS.succeededTrials()[0] !== undefined && TRIALS.succeededTrials()[0].final !== undefined) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                const oneSucceedTrial = JSON.parse(JSON.parse(TRIALS.succeededTrials()[0].final!.data));
-                if (typeof oneSucceedTrial === 'number' || oneSucceedTrial.hasOwnProperty('default')) {
-                    window.clearInterval(this.dataFormatimer);
-                    break;
-                } else {
-                    // illegal final data
-                    this.setState(() => ({
-                        isillegalFinal: true,
-                        expWarningMessage:
-                            'WebUI support final result as number and dictornary includes default keys, your experiment final result is illegal, please check your data.'
-                    }));
-                    window.clearInterval(this.dataFormatimer);
-                }
-            } else {
-                break;
-            }
-        }
-    };
 
     changeInterval = (interval: number): void => {
         window.clearTimeout(this.timerId);
@@ -116,6 +96,17 @@ class App extends React.Component<{}, AppState> {
         this.setState({ bestTrialEntries: entries });
     };
 
+    // overview max duration unit
+    changeMaxDurationUnit = (unit: string): void => {
+        this.setState({ maxDurationUnit: unit });
+    };
+
+    updateOverviewPage = (): void => {
+        this.setState(state => ({
+            experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1
+        }));
+    };
+
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
         if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
             nextState.isUpdate = true;
@@ -133,7 +124,8 @@ class App extends React.Component<{}, AppState> {
             metricGraphMode,
             isillegalFinal,
             expWarningMessage,
-            bestTrialEntries
+            bestTrialEntries,
+            maxDurationUnit
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null; // TODO: render a loading page
@@ -155,6 +147,25 @@ class App extends React.Component<{}, AppState> {
                 </div>
                 <Stack className='contentBox'>
                     <Stack className='content'>
+                        {/* search space & config */}
+                        <AppContext.Provider
+                            value={{
+                                interval,
+                                columnList,
+                                changeColumn: this.changeColumn,
+                                experimentUpdateBroadcast,
+                                trialsUpdateBroadcast,
+                                metricGraphMode,
+                                maxDurationUnit,
+                                changeMaxDurationUnit: this.changeMaxDurationUnit,
+                                changeMetricGraphMode: this.changeMetricGraphMode,
+                                bestTrialEntries,
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
+                            }}
+                        >
+                            <TrialConfigButton />
+                        </AppContext.Provider>
                         {/* if api has error field, show error message */}
                         {errorList.map(
                             (item, key) =>
@@ -177,9 +188,12 @@ class App extends React.Component<{}, AppState> {
                                 experimentUpdateBroadcast,
                                 trialsUpdateBroadcast,
                                 metricGraphMode,
+                                maxDurationUnit,
+                                changeMaxDurationUnit: this.changeMaxDurationUnit,
                                 changeMetricGraphMode: this.changeMetricGraphMode,
                                 bestTrialEntries,
-                                changeEntries: this.changeEntries
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
                             }}
                         >
                             {this.props.children}

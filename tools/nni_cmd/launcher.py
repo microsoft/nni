@@ -138,7 +138,10 @@ def set_remote_config(experiment_config, port, config_file_name):
     '''Call setClusterMetadata to pass trial'''
     #set machine_list
     request_data = dict()
-    request_data['remote_config'] = experiment_config['remoteConfig']
+    if experiment_config.get('remoteConfig'):
+        request_data['remote_config'] = experiment_config['remoteConfig']
+    else:
+        request_data['remote_config'] = {'reuse': False}
     request_data['machine_list'] = experiment_config['machineList']
     if request_data['machine_list']:
         for i in range(len(request_data['machine_list'])):
