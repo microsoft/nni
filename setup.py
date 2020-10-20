@@ -27,7 +27,7 @@ setup(
         'nni_gpu_tool':'tools/nni_gpu_tool'
     },
     package_data = {'nni': ['**/requirements.txt']},
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     install_requires = [
         'astor',
         'hyperopt==0.1.2',
@@ -37,11 +37,12 @@ setup(
         'psutil',
         'ruamel.yaml',
         'requests',
+        'responses',
         'scipy',
         'schema',
         'PythonWebHDFS',
         'colorama',
-        'scikit-learn>=0.20,<0.22',
+        'scikit-learn>=0.23.2',
         'pkginfo',
         'websockets'
     ],

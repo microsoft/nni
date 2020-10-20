@@ -1,7 +1,7 @@
 # list of commands/arguments
-__nnictl_cmds="create resume view update stop trial experiment platform import export webui config log package tensorboard top"
-__nnictl_create_cmds="--config --port --debug --watch"
-__nnictl_resume_cmds="--port --debug --watch"
+__nnictl_cmds="create resume view update stop trial experiment platform webui config log package tensorboard top ss_gen --version"
+__nnictl_create_cmds="--config --port --debug --foreground"
+__nnictl_resume_cmds="--port --debug --foreground"
 __nnictl_view_cmds="--port"
 __nnictl_update_cmds="searchspace concurrency duration trialnum"
 __nnictl_update_searchspace_cmds="--filename"
@@ -9,30 +9,34 @@ __nnictl_update_concurrency_cmds="--value"
 __nnictl_update_duration_cmds="--value"
 __nnictl_update_trialnum_cmds="--value"
 __nnictl_stop_cmds="--port --all"
-__nnictl_trial_cmds="ls kill codegen"
+__nnictl_trial_cmds="ls kill"
+__nnictl_trial_ls_cmds="--head --tail"
 __nnictl_trial_kill_cmds="--trial_id"
-__nnictl_trial_codegen_cmds="--trial_id"
-__nnictl_experiment_cmds="show status list delete"
+__nnictl_experiment_cmds="show status list delete export import save load"
 __nnictl_experiment_list_cmds="--all"
 __nnictl_experiment_delete_cmds="--all"
+__nnictl_experiment_export_cmds="--filename --type --intermediate"
+__nnictl_experiment_import_cmds="--filename"
+__nnictl_experiment_save_cmds="--path --saveCodeDir"
+__nnictl_experiment_load_cmds="--path --codeDir --logDir"
 __nnictl_platform_cmds="clean"
 __nnictl_platform_clean_cmds="--config"
-__nnictl_import_cmds="--filename"
-__nnictl_export_cmds="--type --filename"
 __nnictl_webui_cmds="url"
 __nnictl_config_cmds="show"
 __nnictl_log_cmds="stdout stderr trial"
 __nnictl_log_stdout_cmds="--tail --head --path"
 __nnictl_log_stderr_cmds="--tail --head --path"
 __nnictl_log_trial_cmds="--trial_id"
-__nnictl_package_cmds="install show"
+__nnictl_package_cmds="install show list uninstall"
 __nnictl_package_install_cmds="--name"
+__nnictl_package_list_cmds="--all"
 __nnictl_tensorboard_cmds="start stop"
 __nnictl_tensorboard_start_cmds="--trial_id --port"
 __nnictl_top_cmds="--time"
+__nnictl_ss_gen_cmds="--trial_command --trial_dir --file"
 
 # list of commands that accept an experiment ID as second argument
-__nnictl_2nd_expid_cmds=" resume view stop import export "
+__nnictl_2nd_expid_cmds=" resume view stop top "
 # list of commands that accept an experiment ID as third argument
 __nnictl_3rd_expid_cmds=" update trial experiment webui config log tensorboard "
 
@@ -41,10 +45,12 @@ __nnictl_3rd_expid_cmds=" update trial experiment webui config log tensorboard "
 __nnictl_remain_args()
 {
     local ret=${!1}  # ret = $__nnictl_xxx_cmds
-    # for arg in COMP_WORDS[:-1]:
-    for arg in "${COMP_WORDS[@]::${#COMP_WORDS[@]}-1}"; do
-        local ret=${ret/$arg/}  # remove it from $ret
-    done
+    # prevent that "--trial_id" changes to "--_id" in this situation: "nnictl trial kill --trial_id"
+    if [[ ${ret} != "--trial_id" ]]; then
+        for arg in "${COMP_WORDS[@]::${#COMP_WORDS[@]}-1}"; do
+            local ret=${ret/$arg/}  # remove it from $ret
+        done
+    fi
     echo $ret
 }
 
@@ -63,9 +69,8 @@ _nnictl()
 {
     local cur=${COMP_WORDS[-1]}
     local last=${COMP_WORDS[-2]}
-
     if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
-        # completing frst argument from __nnictl_cmds
+        # completing first argument from __nnictl_cmds
         COMPREPLY=($(compgen -W "$__nnictl_cmds" -- "${COMP_WORDS[1]}"))
 
     elif [[ ${#COMP_WORDS[@]} -eq 3 ]]; then
@@ -75,15 +80,15 @@ _nnictl()
 
         # add experiment IDs to candidates if desired
         if [[ $__nnictl_2nd_expid_cmds =~ " ${COMP_WORDS[1]} " ]]; then
-            local experiments=$(ls ~/nni/experiments 2>/dev/null)
+            local experiments=$(ls ~/nni-experiments 2>/dev/null)
             COMPREPLY+=($(compgen -W "$experiments" -- $cur))
         fi
 
-    elif [[ $last != -* || $last == --debug ]]; then
+    elif [[ $last != -* || $last == --debug || $last == --foreground || $last == --intermediate || $last == --all ]]; then
         # last argument does not starts with "-", so this one is likely to be "--xxx"
         local args=__nnictl_${COMP_WORDS[1]}_${COMP_WORDS[2]}_cmds
-        if [[ $args =~ "-" || -z ${!args} ]]; then
-            # the second argument starts with "-", use __nnictl_${FirstArg}_cmds
+        if [[ $args =~ "-" || $__nnictl_2nd_expid_cmds =~ " ${COMP_WORDS[1]} " ]]; then
+            # the second argument starts with "-" or is an experiment id, use __nnictl_${FirstArg}_cmds
             local args=__nnictl_${COMP_WORDS[1]}_cmds
         fi
         # remove already set arguments from candidates
@@ -93,12 +98,12 @@ _nnictl()
         # if this is 3rd arguments, try adding experiment IDs to candidates
         if [[ ${#COMP_WORDS[@]} -eq 4 ]]; then
             if [[ $__nnictl_3rd_expid_cmds =~ " ${COMP_WORDS[1]} " && ${COMP_WORDS[2]} != "list" ]]; then
-                local experiments=$(ls ~/nni/experiments 2>/dev/null)
+                local experiments=$(ls ~/nni-experiments 2>/dev/null)
                 COMPREPLY+=($(compgen -W "$experiments" -- $cur))
             fi
         fi
 
-    elif [[ ${COMP_WORDS[1]} == "export" ]]; then
+    elif [[ ${COMP_WORDS[2]} == "export" ]]; then
         # "export" command is somewhat unique
         if [[ " --type -t " =~ " $last " ]]; then
             COMPREPLY=($(compgen -W "json csv" -- $cur))
@@ -117,14 +122,14 @@ _nnictl()
             __nnictl_complete_extension "$ext"
         fi
 
-    elif [[ " --trial_id -t " =~ " $last " ]]; then
+    elif [[ " --trial_id -T " =~ " $last " ]]; then
         # complete trial ID
-        if [[ -e ${HOME}/nni/experiments/${COMP_WORDS[2]} ]]; then
-            local trials=$(ls -d ~/nni/experiments/${COMP_WORDS[2]}/trials/* 2>/dev/null | grep -o '[^/]*$')
-        elif [[ -e "${HOME}/nni/experiments/${COMP_WORDS[3]}" ]]; then
-            local trials=$(ls -d ~/nni/experiments/${COMP_WORDS[3]}/trials/* 2>/dev/null | grep -o '[^/]*$')
+        if [[ -e ${HOME}/nni-experiments/${COMP_WORDS[2]} ]]; then
+            local trials=$(ls -d ~/nni-experiments/${COMP_WORDS[2]}/trials/* 2>/dev/null | grep -o '[^/]*$')
+        elif [[ -e "${HOME}/nni-experiments/${COMP_WORDS[3]}" ]]; then
+            local trials=$(ls -d ~/nni-experiments/${COMP_WORDS[3]}/trials/* 2>/dev/null | grep -o '[^/]*$')
         else
-            local trials=$(ls -d ~/nni/experiments/*/trials/* 2>/dev/null | grep -o '[^/]*$')
+            local trials=$(ls -d ~/nni-experiments/*/trials/* 2>/dev/null | grep -o '[^/]*$')
         fi
         COMPREPLY=($(compgen -W "$trials" -- $cur))
 

@@ -9,10 +9,7 @@ from collections import OrderedDict
 import numpy as np
 import torch.nn as nn
 
-from nni.compression.torch import LevelPruner
-from nni.compression.torch import L1FilterPruner
-from nni.compression.torch import L2FilterPruner
-
+from ..pruning.constants_pruner import PRUNER_DICT
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
@@ -77,11 +74,7 @@ class SensitivityAnalysis:
         else:
             self.sparsities = np.arange(0.1, 1.0, 0.1)
         self.sparsities = [np.round(x, 2) for x in self.sparsities]
-        self.Pruner = L1FilterPruner
-        if prune_type == 'l2':
-            self.Pruner = L2FilterPruner
-        elif prune_type == 'fine-grained':
-            self.Pruner = LevelPruner
+        self.Pruner = PRUNER_DICT[prune_type]
         self.early_stop_mode = early_stop_mode
         self.early_stop_value = early_stop_value
         self.ori_metric = None  # original validation metric for the model
@@ -170,8 +163,8 @@ class SensitivityAnalysis:
         if val_kwargs is None:
             val_kwargs = {}
         # Get the original validation metric(accuracy/loss) before pruning
-        if self.ori_metric is None:
-            self.ori_metric = self.val_func(*val_args, **val_kwargs)
+        # Get the accuracy baseline before starting the analysis.
+        self.ori_metric = self.val_func(*val_args, **val_kwargs)
         namelist = list(self.target_layer.keys())
         if specified_layers is not None:
             # only analyze several specified conv layers
@@ -179,19 +172,21 @@ class SensitivityAnalysis:
         for name in namelist:
             self.sensitivities[name] = {}
             for sparsity in self.sparsities:
+                # here the sparsity is the relative sparsity of the
+                # the remained weights
                 # Calculate the actual prune ratio based on the already pruned ratio
-                sparsity = (
+                real_sparsity = (
                     1.0 - self.already_pruned[name]) * sparsity + self.already_pruned[name]
                 # TODO In current L1/L2 Filter Pruner, the 'op_types' is still necessary
                 # I think the L1/L2 Pruner should specify the op_types automaticlly
                 # according to the op_names
-                cfg = [{'sparsity': sparsity, 'op_names': [
+                cfg = [{'sparsity': real_sparsity, 'op_names': [
                     name], 'op_types': ['Conv2d']}]
                 pruner = self.Pruner(self.model, cfg)
                 pruner.compress()
                 val_metric = self.val_func(*val_args, **val_kwargs)
                 logger.info('Layer: %s Sparsity: %.2f Validation Metric: %.4f',
-                            name, sparsity, val_metric)
+                            name, real_sparsity, val_metric)
 
                 self.sensitivities[name][sparsity] = val_metric
                 pruner._unwrap_model()

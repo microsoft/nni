@@ -1,0 +1,48 @@
+.pagination {
+    margin: 0 10px;
+    display: flex;
+    list-style: none;
+    outline: none;
+
+    .hidden {
+        display: none;
+    }
+
+    .disabled {
+        display: none;
+    }
+
+    .active {
+        a,
+        .span,
+        a:hover,
+        a:focus,
+        span:hover,
+        span:focus {
+            background-color: #0071bc;
+            border-color: #0071bc;
+            color: #fff;
+            outline: none;
+        }
+    }
+
+    li:first-child {
+        a,
+        span {
+            border-radius: unset;
+        }
+    }
+
+    li {
+        a {
+            padding: 5px 10px;
+            outline: none;
+            cursor: pointer;
+            color: #0071bc;
+        }
+
+        span {
+            color: #0071bc;
+        }
+    }
+}

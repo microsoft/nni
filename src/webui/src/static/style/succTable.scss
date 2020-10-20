@@ -1,17 +1,26 @@
-#succTable{
-    height: 404px;
-    overflow-y: scroll;
+#succTable {
+    min-height: 400px;
+    max-height: 1000px;
+    overflow-y: auto;
     position: relative;
-    .succTable-tooltip{
+
+    .succTable-tooltip {
         position: absolute;
         top: 40%;
-        left: 17%;
-        .link{
+        left: 5%;
+
+        .link {
             margin-left: 15px;
-            a{
+
+            a {
                 font-weight: 500;
                 color: blue;
             }
         }
+    }
+
+    .succeed-padding {
+        padding-left: 6px;
+        box-sizing: border-box;
     }
 }

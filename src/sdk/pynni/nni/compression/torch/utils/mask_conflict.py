@@ -4,9 +4,10 @@ import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDependency
+from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDependency, InputChannelDependency
+from .utils import get_module_by_name
 # logging.basicConfig(level = logging.DEBUG)
-_logger = logging.getLogger('FixMaskConflict')
+_logger = logging.getLogger(__name__)
 
 def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     """
@@ -45,7 +46,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     masks = fix_channel_mask.fix_mask()
     padding_cat_mask = CatMaskPadding(masks, model, dummy_input, traced)
     masks = padding_cat_mask.fix_mask()
-    return masks
+    return masks, fix_channel_mask.conv_prune_dim
 
 class MaskFix:
     def __init__(self, masks, model=None, dummy_input=None, traced=None):
@@ -118,11 +119,14 @@ class CatMaskPadding(MaskFix):
                 continue
             # pad the mask for the non-pruned layers
             for layer in layers:
+                if layer in self.masks:
+                    continue
                 module = name_to_module[layer]
                 w_shape = module.weight.data.size()
                 w_mask = torch.ones(w_shape).to(device)
                 b_mask = None
-                if hasattr(module, 'bias'):
+                if hasattr(module, 'bias') and module.bias is not None:
+                    # module.bias may be None
                     b_shape = module.bias.data.size()
                     b_mask = torch.ones(b_shape).to(device)
                 self.masks[layer] = {'weight':w_mask, 'bias':b_mask}
@@ -218,73 +222,148 @@ class ChannelMaskConflict(MaskFix):
             we donnot use the model and dummpy_input to get the trace graph.
         """
         super(ChannelMaskConflict, self).__init__(masks, model, dummy_input, traced)
+        self.conv_prune_dim = detect_mask_prune_dim(masks, model)
+        _logger.info('detected conv prune dim: %s', self.conv_prune_dim)
 
     def fix_mask(self):
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
-        mask inference of the 'speedup' module.
+        mask inference of the 'speedup' module. Only structured pruning masks
+        are supported.
         """
-        channel_depen = ChannelDependency(self.model, self.dummy_input, self.traced)
+        if self.conv_prune_dim == 0:
+            channel_depen = ChannelDependency(self.model, self.dummy_input, self.traced)
+        else:
+            channel_depen = InputChannelDependency(self.model, self.dummy_input, self.traced)
         depen_sets = channel_depen.dependency_sets
+        sum_idx = (1, 2, 3) if self.conv_prune_dim == 0 else (0, 2, 3)
         for dset in depen_sets:
-            if len(dset) == 1:
-                # This layer has no channel dependency with other layers
+            if len(dset) <= 1:
                 continue
-            channel_remain = set()
+            # channel_masks is a list, each element is None or a vector, for example:
+            # [[0, 1, 1, 0, 0], [0, 0, 1, 1, 0], None], None means no channel
+            # is pruned.
+            channel_masks = []
             fine_grained = False
-            out_channels = None
-            # A flag that represents if all the layers in
-            # the dependency set are pruned
-            all_pruned = True
             for name in dset:
-                if name not in self.masks:
-                    # this layer is not pruned
-                    all_pruned = False
-                    continue
-                w_mask = self.masks[name]['weight']
-                if out_channels is None:
-                    out_channels = w_mask.size(0)
-                shape = w_mask.size()
-                count = np.prod(shape[1:])
-                all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
-                all_zeros = (w_mask.flatten(1).sum(-1) == 0).nonzero().squeeze(1).tolist()
-                if len(all_ones) + len(all_zeros) < w_mask.size(0):
-                    # In fine-grained pruning, there is no need to check
-                    # the shape conflict
-                    _logger.info('Layers %s using fine-grained pruning', ','.join(dset))
-                    fine_grained = True
-                    break
-                channel_remain.update(all_ones)
-                _logger.debug('Layer: %s ', name)
-                _logger.debug('Original pruned filters: %s', str(all_zeros))
-            # Update the masks for the layers in the dependency set
-            if fine_grained or out_channels is None:
-                # if use the fine-grained pruner or all the layers in
-                # this dependency set are not pruned
+                if name in self.masks:
+                    _, m = get_module_by_name(self.model, name)
+                    assert m is not None
+                    mask = self.masks[name]['weight']
+                    if type(m).__name__ == 'Conv2d':
+                        channel_mask = (mask.abs().sum(sum_idx) != 0).int()
+                        channel_masks.append(channel_mask)
+                        if (channel_mask.sum() * (mask.numel() / mask.shape[self.conv_prune_dim])).item() != (mask > 0).sum().item():
+                            fine_grained = True
+                    elif type(m).__name__ == 'Linear':
+                        channel_masks.append((mask.abs().sum(0) != 0).int())
+                    elif type(m).__name__ == 'BatchNorm2d':
+                        channel_masks.append(mask.int())
+                    else:
+                        raise RuntimeError(f'unsupported module type: {type(m).__name__}')
+                else:
+                    # no mask means not pruned, equivlent to full masks
+                    channel_masks.append(None)
+            if fine_grained:
+                _logger.info('fine-grained mask detected, skip solving conflict for this set: %s', dset)
                 continue
-            if not all_pruned:
-                # if some layer are not pruned at all
-                # then all the layers in this dependency set
-                # cannot be pruned due to the shape dependency.
-                channel_remain.update(range(out_channels))
-            ori_channels = 0
+            if all(x is None for x in channel_masks):
+                continue
+            num_channels_list = [len(x) for x in channel_masks if x is not None]
+            # number of channels in same set should be identical
+            assert len(set(num_channels_list)) == 1
+            num_channels = num_channels_list[0]
+
+            for i, dim_mask in enumerate(channel_masks):
+                if dim_mask is None:
+                    channel_masks[i] = torch.ones(num_channels).int()
+
+            # merge masks with 'or'
+            merged_channel_mask = channel_masks[0].clone()
+            for i in range(1, len(channel_masks)):
+                merged_channel_mask = ((merged_channel_mask + channel_masks[i]) != 0).int()
+
+            merged_index = torch.nonzero(merged_channel_mask, as_tuple=True)[0]
+
             for name in dset:
                 if name not in self.masks:
-                    # this layer is not pruned at all
-                    # in this case, all_pruned is False
-                    # and the other layers in the same dset
-                    # will not be pruned either.
+                    assert all(merged_channel_mask)
                     continue
-                mask = self.masks[name]
-                w_shape = mask['weight'].size()
-                ori_channels = w_shape[0]
-                for i in channel_remain:
-                    mask['weight'][i] = torch.ones(w_shape[1:])
-                    if hasattr(mask, 'bias'):
-                        mask['bias'][i] = 1
-            _logger.info(','.join(dset))
-            _logger.info('Pruned Filters after fixing conflict:')
-            pruned_filters = set(list(range(ori_channels)))-channel_remain
-            _logger.info(str(sorted(pruned_filters)))
+                orig_mask = self.masks[name]['weight']
+                _, m = get_module_by_name(self.model, name)
+                new_mask = torch.zeros_like(orig_mask)
+                if type(m).__name__ == 'Conv2d':
+                    if self.conv_prune_dim == 0:
+                        new_mask[merged_index, :, :, :] = 1.
+                    else:
+                        new_mask[:, merged_index, :, :] = 1.
+                elif type(m).__name__ == 'Linear':
+                    new_mask[:, merged_index] = 1.
+                elif type(m).__name__ == 'BatchNorm2d':
+                    new_mask = merged_index.type_as(orig_mask)
+                else:
+                    raise RuntimeError(f'unsupported module type: {type(m).__name__}')
+
+                self.masks[name]['weight'] = new_mask
+                if 'bias' in self.masks[name] and self.masks[name]['bias'] is not None:
+                    if type(m).__name__ == 'Conv2d':
+                        assert self.conv_prune_dim == 0
+                    self.masks[name]['bias'] = merged_channel_mask.type_as(self.masks[name]['bias'])
+
         return self.masks
+
+def detect_mask_prune_dim(masks, model):
+    """
+    Detect how the masks of convolutional layers are pruned.
+
+    Parameters
+    ----------
+    masks: dict
+        A dict object that stores the masks.
+    model: nn.Module
+        Model object which the mask can be applied on.
+
+    Returns:
+    -------
+        How the masks of convolutional layers are pruned, this depends on pruning algorithms, it should
+        return 1 for masks generated by AMCPruner, and returns 0 for masks generated by the rest
+        NNI builtin pruners.
+        0: filter pruning, prune filters of weights which causes channels of output feature maps are pruned.
+        1: channel pruning, prune kernels corresponding to each input channels which causes channels of
+           input feature maps are pruned.
+    """
+    dim0_preserved, dim1_preserved = 0., 0.
+    dim0_num, dim1_num = 0., 0.
+    for module_name in masks:
+        _, m = get_module_by_name(model, module_name)
+        if m is None or type(m).__name__ != 'Conv2d':
+            continue
+
+        mask = masks[module_name]['weight'].clone()
+        assert (mask >= 0).sum() == mask.numel(), \
+            "mask values should be greater than or equal to 0."
+        mask = (mask > 0).int()
+        mask = mask.view(mask.shape[0], mask.shape[1], -1)
+        dim0_mask = (mask.sum((1, 2)) > 0).int()
+        dim1_mask = (mask.sum((0, 2)) > 0).int()
+        dim0_preserved += dim0_mask.sum().item()
+        dim1_preserved += dim1_mask.sum().item()
+        dim0_num += len(dim0_mask)
+        dim1_num += len(dim1_mask)
+
+    if dim0_num == 0 or dim1_num == 0:
+        _logger.warning('no multi-dimension masks found.')
+        return 0
+
+    dim0_sparsity, dim1_sparsity = 1. - dim0_preserved / dim0_num, 1. - dim1_preserved / dim1_num
+    _logger.info('dim0 sparsity: %f', dim0_sparsity)
+    _logger.info('dim1 sparsity: %f', dim1_sparsity)
+
+    if dim0_sparsity == dim1_sparsity == 0.:
+        _logger.warning('nothing masked.')
+
+    if dim0_sparsity > 0 and dim1_sparsity > 0:
+        _logger.warning('both dim0 and dim1 masks found.')
+
+    return 0 if dim0_sparsity >= dim1_sparsity else 1

@@ -1,3 +1,26 @@
+/**
+ * Definition of single dimension in search space.
+ */
+interface SingleAxis {
+    baseName: string;
+    fullName: string;
+    type: string;
+    scale: 'log' | 'linear' | 'ordinal';
+    domain: any;
+    nested: boolean;
+}
+
+/**
+ * Definition of combination of multiple dimensions.
+ * The decision in multiple dimensions will be combined together.
+ * Typically, it is a search space or a sub search space.
+ */
+interface MultipleAxes {
+    baseName: string;
+    fullName: string;
+    axes: Map<string, SingleAxis>;
+}
+
 // draw accuracy graph data export interface
 interface TableObj {
     key: number;
@@ -10,6 +33,9 @@ interface TableObj {
     color?: string;
     startTime?: number;
     endTime?: number;
+    intermediates: (MetricDataRecord | undefined)[];
+    parameters(axes: MultipleAxes): Map<SingleAxis, any>;
+    metrics(axes: MultipleAxes): Map<SingleAxis, any>;
 }
 
 interface TableRecord {
@@ -18,12 +44,10 @@ interface TableRecord {
     startTime: number;
     endTime?: number;
     id: string;
-    jobId: string;
-    parameterId: string;
     duration: number;
     status: string;
     intermediateCount: number;
-    accuracy?: number;
+    accuracy?: number | any;
     latestAccuracy: number | undefined;
     formattedLatestAccuracy: string; // format (LATEST/FINAL),
     accDictionary: FinalType | undefined;
@@ -101,8 +125,6 @@ interface Intermedia {
 interface MetricDataRecord {
     timestamp: number;
     trialJobId: string;
-    trialId: string;
-    parameterId: string;
     type: string;
     sequence: number;
     data: string;
@@ -110,8 +132,6 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
-    jobId: string;
-    parameterId: string;
     sequenceId: number;
     status: string;
     startTime?: number;
@@ -189,8 +209,25 @@ interface EventMap {
 }
 
 export {
-    TableObj, TableRecord, SearchSpace, FinalType, ErrorParameter, Parameters,
-    AccurPoint, DetailAccurPoint, TooltipForIntermediate, TooltipForAccuracy,
-    Dimobj, ParaObj, Intermedia, MetricDataRecord, TrialJobInfo, ExperimentParams,
-    ExperimentProfile, NNIManagerStatus, EventMap
+    TableObj,
+    TableRecord,
+    SearchSpace,
+    FinalType,
+    ErrorParameter,
+    Parameters,
+    AccurPoint,
+    DetailAccurPoint,
+    TooltipForIntermediate,
+    TooltipForAccuracy,
+    Dimobj,
+    ParaObj,
+    Intermedia,
+    MetricDataRecord,
+    TrialJobInfo,
+    ExperimentParams,
+    ExperimentProfile,
+    NNIManagerStatus,
+    EventMap,
+    SingleAxis,
+    MultipleAxes
 };

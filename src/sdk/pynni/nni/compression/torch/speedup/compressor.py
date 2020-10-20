@@ -4,33 +4,12 @@
 import logging
 import torch
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.torch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
-from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape
+from .infer_shape import ModuleMasks, infer_from_mask, infer_from_inshape, infer_from_outshape, set_conv_prune_dim
 
 _logger = logging.getLogger(__name__)
 
-
-def get_module_by_name(model, module_name):
-    """
-    Get a module specified by its module name
-
-    Parameters
-    ----------
-    model : pytorch model
-        the pytorch model from which to get its module
-    module_name : str
-        the name of the required module
-
-    Returns
-    -------
-    module, module
-        the parent module of the required module, the required module
-    """
-    name_list = module_name.split(".")
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    leaf_module = getattr(model, name_list[-1])
-    return model, leaf_module
 
 class ModelSpeedup:
     """
@@ -87,7 +66,8 @@ class ModelSpeedup:
         if module_name in self.inferred_masks:
             module_masks = self.inferred_masks[module_name]
         else:
-            module_masks = ModuleMasks(module_name)
+            _, m = get_module_by_name(self.bound_model, module_name)
+            module_masks = ModuleMasks(module_name, m)
             self.inferred_masks[module_name] = module_masks
 
         m_type = self.torch_graph.name_to_node[module_name].op_type
@@ -98,7 +78,12 @@ class ModelSpeedup:
                 raise RuntimeError(
                     "Has not supported infering input/output shape from mask for module/function: `{}`, {}"
                     .format(m_type, module_name))
-            input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
+            if m_type in ['Linear']:
+                input_cmask, output_cmask = infer_from_mask[m_type](
+                    module_masks, mask, self.torch_graph.name_to_node[module_name].auxiliary
+                )
+            else:
+                input_cmask, output_cmask = infer_from_mask[m_type](module_masks, mask)
         if in_shape is not None:
             _logger.debug("in_shape is not None")
             if not m_type in infer_from_inshape:
@@ -124,7 +109,10 @@ class ModelSpeedup:
                 raise RuntimeError(
                     "Has not supported infering input shape from output shape for module/function: `{}`, {}"
                     .format(m_type, module_name))
-            input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
+            if m_type in ['aten::view', 'aten::flatten', 'aten::mean', 'aten::reshape']:
+                input_cmask = infer_from_outshape[m_type](module_masks, out_shape, self.torch_graph.name_to_node[module_name].auxiliary)
+            else:
+                input_cmask = infer_from_outshape[m_type](module_masks, out_shape)
 
         if input_cmask:
             predecessors = self.torch_graph.find_predecessors(module_name)
@@ -141,6 +129,14 @@ class ModelSpeedup:
         """
         for module_name, mask in self.masks.items():
             _logger.debug('Start mask inference from %s', module_name)
+            if module_name not in self.torch_graph.name_to_node:
+                # this module is not traced in the torch_graph,
+                # jit.trace only correctly records functions and
+                # modules which are not data dependent (e.g., do
+                # not have conditionals on data in tensors)
+                # so, if a node is not traced, we just skip it.
+                _logger.warning('%s has mask, but not found in the traced graph, just skip it.', module_name)
+                continue
             self.infer_module_mask(module_name, None, mask=mask)
 
     def replace_compressed_modules(self):
@@ -170,7 +166,6 @@ class ModelSpeedup:
             else:
                 raise RuntimeError("Unsupported node type: {}".format(g_node.type))
 
-
     def speedup_model(self):
         """
         There are basically two steps:
@@ -179,8 +174,11 @@ class ModelSpeedup:
         """
         training = self.bound_model.training
         _logger.info("start to speed up the model")
+
         _logger.info("fix the mask conflict of the interdependent layers")
-        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        _, conv_prune_dim = fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        set_conv_prune_dim(conv_prune_dim)
+
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info("replace compressed modules...")

@@ -4,7 +4,7 @@
 'use strict';
 
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
-import { TrialJobStatus } from './trainingService';
+import { TrialJobStatus, LogType } from './trainingService';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
@@ -87,6 +87,7 @@ abstract class Manager {
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
     public abstract importData(data: string): Promise<void>;
+    public abstract getImportedData(): Promise<string[]>;
     public abstract exportData(): Promise<string>;
 
     public abstract addCustomizedTrialJob(hyperParams: string): Promise<number>;
@@ -100,6 +101,8 @@ abstract class Manager {
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
     public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
     public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
+
+    public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;

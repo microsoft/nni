@@ -2,10 +2,7 @@
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-let MANAGER_IP = `/api/v1/nni`;
-if (process.env.NODE_ENV == "development") {
-    MANAGER_IP = `//${window.location.hostname}:8080` + MANAGER_IP;
-}
+const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
 const trialJobStatus = [
@@ -18,15 +15,11 @@ const trialJobStatus = [
     'SYS_CANCELED',
     'EARLY_STOPPED'
 ];
-const CONTROLTYPE = [
-    'SEARCH_SPACE',
-    'TRIAL_CONCURRENCY',
-    'MAX_EXEC_DURATION'
-];
+const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
 const MONACO = {
     readOnly: true,
     automaticLayout: true,
-    scrollBeyondLastLine: false,
+    scrollBeyondLastLine: false
 };
 const DRAWEROPTION = {
     minimap: { enabled: false },
@@ -37,12 +30,51 @@ const OPERATION = 'Operation';
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', OPERATION];
 // all choice column !dictory final
-const COLUMNPro = ['Trial No.', 'ID', 'Start Time', 'End Time', 'Duration', 'Status',
-    'Intermediate result', 'Default', OPERATION];
+const COLUMNPro = [
+    'Trial No.',
+    'ID',
+    'Start time',
+    'End time',
+    'Duration',
+    'Status',
+    'Intermediate result',
+    'Default',
+    OPERATION
+];
 const CONCURRENCYTOOLTIP = 'Trial concurrency is the number of trials running concurrently.';
+const SUPPORTED_SEARCH_SPACE_TYPE = [
+    'choice',
+    'layer_choice',
+    'input_choice',
+    'randint',
+    'uniform',
+    'quniform',
+    'loguniform',
+    'qloguniform',
+    'normal',
+    'qnormal',
+    'lognormal',
+    'qlognormal'
+];
+
+const TOOLTIP_BACKGROUND_COLOR = '#484848';
+const MAX_TRIAL_NUMBERS = 'Max trial No.';
 
 export {
-    MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMNPro, WEBUIDOC,
-    CONTROLTYPE, MONACO, COLUMN, DRAWEROPTION, OPERATION,
-    METRIC_GROUP_UPDATE_THRESHOLD, METRIC_GROUP_UPDATE_SIZE, CONCURRENCYTOOLTIP
+    MANAGER_IP,
+    DOWNLOAD_IP,
+    trialJobStatus,
+    COLUMNPro,
+    WEBUIDOC,
+    CONTROLTYPE,
+    MONACO,
+    COLUMN,
+    DRAWEROPTION,
+    OPERATION,
+    METRIC_GROUP_UPDATE_THRESHOLD,
+    METRIC_GROUP_UPDATE_SIZE,
+    CONCURRENCYTOOLTIP,
+    SUPPORTED_SEARCH_SPACE_TYPE,
+    TOOLTIP_BACKGROUND_COLOR,
+    MAX_TRIAL_NUMBERS
 };

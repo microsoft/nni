@@ -10,6 +10,7 @@ export enum TrialConfigMetadataKey {
     MACHINE_LIST = 'machine_list',
     LOCAL_CONFIG = 'local_config',
     TRIAL_CONFIG = 'trial_config',
+    REMOTE_CONFIG = 'remote_config',
     EXPERIMENT_ID = 'experimentId',
     MULTI_PHASE = 'multiPhase',
     RANDOM_SCHEDULER = 'random_scheduler',

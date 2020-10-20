@@ -3,24 +3,20 @@
 
 'use strict';
 
+import { EventEmitter } from "events";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { AMLClusterConfig, AMLTrialConfig } from '../aml/amlConfig';
-import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { AMLEnvironmentInformation } from '../aml/amlConfig';
-import { AMLClient } from '../aml/amlClient';
-import {
-    NNIManagerIpConfig,
-} from '../../../common/trainingService';
-import { validateCodeDir } from '../../common/util';
 import { getExperimentRootDir } from '../../../common/utils';
+import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { validateCodeDir } from '../../common/util';
+import { AMLClient } from '../aml/amlClient';
+import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { CommandChannel } from "../commandChannel";
-import { EventEmitter } from "events";
+import { EnvironmentInformation, EnvironmentService } from '../environment';
 
 
 /**
@@ -28,17 +24,11 @@ import { EventEmitter } from "events";
  */
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
-    
+
     private readonly log: Logger = getLogger();
     public amlClusterConfig: AMLClusterConfig | undefined;
     public amlTrialConfig: AMLTrialConfig | undefined;
-    private amlJobConfig: any;
-    private stopping: boolean = false;
-    private versionCheck: boolean = true;
-    private isMultiPhase: boolean = false;
-    private nniVersion?: string;
     private experimentId: string;
-    private nniManagerIpConfig?: NNIManagerIpConfig;
     private experimentRootDir: string;
 
     constructor() {
@@ -51,11 +41,11 @@ export class AMLEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public getCommandChannel(commandEmitter: EventEmitter): CommandChannel {
+    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
         return new AMLCommandChannel(commandEmitter);
     }
 
-    public createEnviornmentInfomation(envId: string, envName: string): EnvironmentInformation {
+    public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new AMLEnvironmentInformation(envId, envName);
     }
 
@@ -83,29 +73,31 @@ export class AMLEnvironmentService extends EnvironmentService {
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         environments.forEach(async (environment) => {
             const amlClient = (environment as AMLEnvironmentInformation).amlClient;
-                    if (!amlClient) {
-            throw new Error('AML client not initialized!');
+            if (!amlClient) {
+                return Promise.reject('AML client not initialized!');
             }
-            const status = await amlClient.updateStatus(environment.status);
-            switch (status.toUpperCase()) {
+            const newStatus = await amlClient.updateStatus(environment.status);
+            switch (newStatus.toUpperCase()) {
                 case 'WAITING':
-                case 'RUNNING':
                 case 'QUEUED':
-                    // RUNNING status is set by runner, and ignore waiting status
+                    environment.setStatus('WAITING');
+                    break;
+                case 'RUNNING':
+                    environment.setStatus('RUNNING');
                     break;
                 case 'COMPLETED':
                 case 'SUCCEEDED':
-                    environment.setFinalStatus('SUCCEEDED');
+                    environment.setStatus('SUCCEEDED');
                     break;
                 case 'FAILED':
-                    environment.setFinalStatus('FAILED');
-                    break;
+                    environment.setStatus('FAILED');
+                    return Promise.reject(`AML: job ${environment.envId} is failed!`);
                 case 'STOPPED':
                 case 'STOPPING':
-                    environment.setFinalStatus('USER_CANCELED');
+                    environment.setStatus('USER_CANCELED');
                     break;
                 default:
-                    environment.setFinalStatus('UNKNOWN');
+                    environment.setStatus('UNKNOWN');
             }
         });
     }
@@ -120,13 +112,15 @@ export class AMLEnvironmentService extends EnvironmentService {
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
         environment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command ,{ encoding: 'utf8' });
+        environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
+        environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+        await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,
             this.amlClusterConfig.resourceGroup,
             this.amlClusterConfig.workspaceName,
             this.experimentId,
-            this.amlTrialConfig.computeTarget,
+            this.amlClusterConfig.computeTarget,
             this.amlTrialConfig.image,
             'nni_script.py',
             environmentLocalTempFolder

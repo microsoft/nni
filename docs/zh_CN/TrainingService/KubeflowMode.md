@@ -101,7 +101,6 @@ assessor:
   builtinAssessorName: Medianstop
   classArgs:
     optimize_mode: maximize
-  gpuNum: 0
 trial:
   codeDir: .
   worker:

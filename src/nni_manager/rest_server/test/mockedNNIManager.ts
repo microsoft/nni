@@ -13,7 +13,7 @@ import {
     TrialJobStatistics, NNIManagerStatus
 } from '../../common/manager';
 import {
-    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
+    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus, LogType
 } from '../../common/trainingService';
 
 export const testManagerProvider: Provider = {
@@ -32,6 +32,10 @@ export class MockedNNIManager extends Manager {
     }
     public importData(data: string): Promise<void> {
         return Promise.resolve();
+    }
+    public getImportedData(): Promise<string[]> {
+        const ret: string[] = ["1", "2"];
+        return Promise.resolve(ret);
     }
     public async exportData(): Promise<string> {
         const ret: string = '';
@@ -116,6 +120,9 @@ export class MockedNNIManager extends Manager {
         throw new MethodNotImplementedError();
     }
     public getLatestMetricData(): Promise<MetricDataRecord[]> {
+        throw new MethodNotImplementedError();
+    }
+    public getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
         throw new MethodNotImplementedError();
     }
     public getExperimentProfile(): Promise<ExperimentProfile> {

@@ -2,7 +2,7 @@
 
 ## Installation
 
-We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.6`.
 
 ### Linux and macOS
 
@@ -27,6 +27,9 @@ python -m pip install --upgrade nni
 ```eval_rst
 .. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
 ```
+### Enable NNI Command-line Auto-Completion (Optional)
+
+After the installation, you may want to enable the auto-completion feature for __nnictl__ commands. Please refer to this [tutorial](../CommunitySharings/AutoCompletion.md).
 
 ## "Hello World" example on MNIST
 

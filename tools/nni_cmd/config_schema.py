@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import json
+import logging
+import os
 import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
 from nni.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
@@ -14,9 +15,11 @@ def setType(key, valueType):
     '''check key type'''
     return And(valueType, error=SCHEMA_TYPE_ERROR % (key, valueType.__name__))
 
+
 def setChoice(key, *args):
     '''check choice'''
     return And(lambda n: n in args, error=SCHEMA_RANGE_ERROR % (key, str(args)))
+
 
 def setNumberRange(key, keyType, start, end):
     '''check number range'''
@@ -25,9 +28,11 @@ def setNumberRange(key, keyType, start, end):
         And(lambda n: start <= n <= end, error=SCHEMA_RANGE_ERROR % (key, '(%s,%s)' % (start, end))),
     )
 
+
 def setPathCheck(key):
     '''check if path exist'''
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
+
 
 class AlgoSchema:
     """
@@ -35,6 +40,7 @@ class AlgoSchema:
     For example:
     AlgoSchema('tuner') creates the schema of tuner section.
     """
+
     def __init__(self, algo_type):
         """
         Parameters:
@@ -73,6 +79,7 @@ class AlgoSchema:
         if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
             raise SchemaError('classArgs is not allowed.')
 
+        logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain
         validator = create_validator_instance(algo_type+'s', builtin_name)
         if validator:
             try:
@@ -108,6 +115,7 @@ class AlgoSchema:
         Schema(self.algo_schema).validate(data)
         self.validate_extras(data, self.algo_type)
 
+
 common_schema = {
     'authorName': setType('authorName', str),
     'experimentName': setType('experimentName', str),
@@ -138,7 +146,7 @@ common_schema = {
 }
 
 common_trial_schema = {
-    'trial':{
+    'trial': {
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
@@ -147,7 +155,7 @@ common_trial_schema = {
 }
 
 pai_yarn_trial_schema = {
-    'trial':{
+    'trial': {
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
         'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
@@ -156,10 +164,10 @@ pai_yarn_trial_schema = {
         'image': setType('image', str),
         Optional('authFile'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'authFile'),
         Optional('shmMB'): setType('shmMB', int),
-        Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                            error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
-        Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),\
-                            error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('dataDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+                                 error='ERROR: dataDir format error, dataDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
+        Optional('outputDir'): And(Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+                                   error='ERROR: outputDir format error, outputDir format is hdfs://xxx.xxx.xxx.xxx:xxx'),
         Optional('virtualCluster'): setType('virtualCluster', str),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('portList'): [{
@@ -184,7 +192,7 @@ pai_yarn_config_schema = {
 
 
 pai_trial_schema = {
-    'trial':{
+    'trial': {
         'codeDir': setPathCheck('codeDir'),
         'nniManagerNFSMountPath': setPathCheck('nniManagerNFSMountPath'),
         'containerNFSMountPath': setType('containerNFSMountPath', str),
@@ -200,21 +208,21 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-    'paiConfig': Or({
+    'paiConfig': {
         'userName': setType('userName', str),
-        'passWord': setType('passWord', str),
+        Or('passWord', 'token', only_one=True): str,
         'host': setType('host', str),
-        Optional('reuse'): setType('reuse', bool)
-    }, {
-        'userName': setType('userName', str),
-        'token': setType('token', str),
-        'host': setType('host', str),
-        Optional('reuse'): setType('reuse', bool)
-    })
+        Optional('reuse'): setType('reuse', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memoryMB'): setType('memoryMB', int),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool),
+    }
 }
 
 dlts_trial_schema = {
-    'trial':{
+    'trial': {
         'command': setType('command', str),
         'codeDir': setPathCheck('codeDir'),
         'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
@@ -235,11 +243,11 @@ dlts_config_schema = {
 }
 
 aml_trial_schema = {
-    'trial':{
+    'trial': {
         'codeDir': setPathCheck('codeDir'),
         'command': setType('command', str),
         'image': setType('image', str),
-        'computeTarget': setType('computeTarget', str)
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     }
 }
 
@@ -248,11 +256,14 @@ aml_config_schema = {
         'subscriptionId': setType('subscriptionId', str),
         'resourceGroup': setType('resourceGroup', str),
         'workspaceName': setType('workspaceName', str),
+        'computeTarget': setType('computeTarget', str),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool),
     }
 }
 
 kubeflow_trial_schema = {
-    'trial':{
+    'trial': {
         'codeDir':  setPathCheck('codeDir'),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('ps'): {
@@ -273,7 +284,7 @@ kubeflow_trial_schema = {
             'image': setType('image', str),
             Optional('privateRegistryAuthPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'privateRegistryAuthPath')
         },
-        Optional('worker'):{
+        Optional('worker'): {
             'replicas': setType('replicas', int),
             'command': setType('command', str),
             'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
@@ -286,7 +297,7 @@ kubeflow_trial_schema = {
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':Or({
+    'kubeflowConfig': Or({
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
@@ -299,23 +310,23 @@ kubeflow_config_schema = {
         'apiVersion': setType('apiVersion', str),
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         'keyVault': {
-            'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
-                         error='ERROR: vaultName format error, vaultName support using (0-9|a-z|A-Z|-)'),
-            'name': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
-                    error='ERROR: name format error, name support using (0-9|a-z|A-Z|-)')
+            'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+                             error='ERROR: vaultName format error, vaultName support using (0-9|a-z|A-Z|-)'),
+            'name': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+                        error='ERROR: name format error, name support using (0-9|a-z|A-Z|-)')
         },
         'azureStorage': {
-            'accountName': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),\
-                           error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
-            'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),\
-                          error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
+            'accountName': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+                               error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
+            'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
+                              error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
     })
 }
 
 frameworkcontroller_trial_schema = {
-    'trial':{
+    'trial': {
         'codeDir':  setPathCheck('codeDir'),
         'taskRoles': [{
             'name': setType('name', str),
@@ -335,7 +346,7 @@ frameworkcontroller_trial_schema = {
 }
 
 frameworkcontroller_config_schema = {
-    'frameworkcontrollerConfig':Or({
+    'frameworkcontrollerConfig': Or({
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'nfs': {
@@ -346,23 +357,29 @@ frameworkcontroller_config_schema = {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
-            'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
-                         error='ERROR: vaultName format error, vaultName support using (0-9|a-z|A-Z|-)'),
-            'name': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
-                    error='ERROR: name format error, name support using (0-9|a-z|A-Z|-)')
+            'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+                             error='ERROR: vaultName format error, vaultName support using (0-9|a-z|A-Z|-)'),
+            'name': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+                        error='ERROR: name format error, name support using (0-9|a-z|A-Z|-)')
         },
         'azureStorage': {
-            'accountName': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),\
-                           error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
-            'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),\
-                          error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
+            'accountName': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+                               error='ERROR: accountName format error, accountName support using (0-9|a-z|A-Z|-)'),
+            'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
+                              error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
     })
 }
 
+remote_config_schema = {
+    Optional('remoteConfig'): {
+        'reuse': setType('reuse', bool)
+    }
+}
+
 machine_list_schema = {
-    'machineList':[Or(
+    'machineList': [Or(
         {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -371,7 +388,8 @@ machine_list_schema = {
             Optional('passphrase'): setType('passphrase', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+            Optional('useActiveGpu'): setType('useActiveGpu', bool),
+            Optional('preCommand'): setType('preCommand', str)
         },
         {
             'ip': setType('ip', str),
@@ -380,13 +398,14 @@ machine_list_schema = {
             'passwd': setType('passwd', str),
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
-            Optional('useActiveGpu'): setType('useActiveGpu', bool)
+            Optional('useActiveGpu'): setType('useActiveGpu', bool),
+            Optional('preCommand'): setType('preCommand', str)
         })]
 }
 
 training_service_schema_dict = {
     'local': Schema({**common_schema, **common_trial_schema}),
-    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema}),
+    'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema, **remote_config_schema}),
     'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
     'paiYarn': Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema}),
     'kubeflow': Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema}),
@@ -394,6 +413,7 @@ training_service_schema_dict = {
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
 }
+
 
 class NNIConfigSchema:
     def validate(self, data):
@@ -483,19 +503,25 @@ class NNIConfigSchema:
                 if not taskRoles_dict:
                     raise SchemaError('Please set taskRoles in paiConfigPath config file!')
             else:
-                pai_trial_fields_required_list = ['image', 'gpuNum', 'cpuNum', 'memoryMB', 'paiStorageConfigName', 'command']
+                pai_trial_fields_required_list = ['image', 'paiStorageConfigName', 'command']
                 for trial_field in pai_trial_fields_required_list:
                     if experiment_config['trial'].get(trial_field) is None:
                         raise SchemaError('Please set {0} in trial configuration,\
                                     or set additional pai configuration file path in paiConfigPath!'.format(trial_field))
+                pai_resource_fields_required_list = ['gpuNum', 'cpuNum', 'memoryMB']
+                for required_field in pai_resource_fields_required_list:
+                    if experiment_config['trial'].get(required_field) is None and \
+                            experiment_config['paiConfig'].get(required_field) is None:
+                        raise SchemaError('Please set {0} in trial or paiConfig configuration,\
+                                    or set additional pai configuration file path in paiConfigPath!'.format(required_field))
 
     def validate_pai_trial_conifg(self, experiment_config):
         '''validate the trial config in pai platform'''
         if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
             if experiment_config.get('trial').get('shmMB') and \
-            experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
+                    experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
                 raise SchemaError('shmMB should be no more than memoryMB!')
-            #backward compatibility
+            # backward compatibility
             warning_information = '{0} is not supported in NNI anymore, please remove the field in config file!\
             please refer https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/PaiMode.md#run-an-experiment\
             for the practices of how to get data and output model in trial code'
@@ -508,6 +534,6 @@ class NNIConfigSchema:
     def validate_eth0_device(self, experiment_config):
         '''validate whether the machine has eth0 device'''
         if experiment_config.get('trainingServicePlatform') not in ['local'] \
-        and not experiment_config.get('nniManagerIp') \
-        and 'eth0' not in netifaces.interfaces():
+                and not experiment_config.get('nniManagerIp') \
+                and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
