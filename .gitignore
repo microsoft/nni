@@ -1,3 +1,8 @@
+/nni_node/node
+/nni_node/node.exe
+/toolchain
+
+
 # Logs
 logs
 *.log
