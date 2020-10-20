@@ -7,7 +7,7 @@ import subprocess
 import json
 import requests
 from nni.experiment import Experiment
-from nni.nni_cmd.updater import load_search_space
+from nni.tools.cmd.updater import load_search_space
 from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
 
