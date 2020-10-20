@@ -257,7 +257,7 @@ class Transformer(ast.NodeTransformer):
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
-            self.last_line = node.lineno
+            self.last_line = lineno(node)
 
         # do nothing for root
         if not self.stack:
@@ -311,7 +311,7 @@ class Transformer(ast.NodeTransformer):
                                            args=[ast_Str(s='nni.report_final_result: '), arg], keywords=[]))
 
         if string.startswith('@nni.mutable_layers'):
-            return parse_annotation_mutable_layers(string[1:], node.lineno)
+            return parse_annotation_mutable_layers(string[1:], lineno(node))
 
         if string.startswith('@nni.variable') \
                 or string.startswith('@nni.function_choice'):
