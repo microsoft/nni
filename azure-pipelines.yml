@@ -107,9 +107,11 @@ jobs:
 
   steps:
   - script: |
-      ls /usr/local/Cellar/python@3.7
+      python3 -c 'import site;print(site.getsitepackages())'
+      ls /usr/local/Cellar/python*
       ls /Users/runner/Library/Python
       which python3
+      ls -lh /usr/local/bin/python3
       export PYTHON37_BIN_DIR=/usr/local/Cellar/python@3.7/`ls /usr/local/Cellar/python@3.7`/bin
       echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${HOME}/Library/Python/3.7/bin:${PATH}"
       python3 -m pip install --upgrade pip setuptools
