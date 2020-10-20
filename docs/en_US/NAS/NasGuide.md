@@ -50,19 +50,14 @@ Each trainer in NNI has its targeted scenario and usage. Some trainers have the 
 
 Furthermore, one-shot NAS can be visualized with our NAS UI. [See more details.](./Visualization.md)
 
-### Retrain with Exported Architecture
+## Retrain with Exported Architecture
 
-After the search phase, it's time to train the found architecture. Unlike many open-source NAS algorithms who write a whole new model specifically for retraining. We found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. For example
+### Exported Architecture Format
 
-```python
-model = Net()
-apply_fixed_architecture(model, "model_dir/final_architecture.json")
-```
+After the search phase, it's time to train the found architecture.  The exported architecture from the search phase is simply a JSON, which can be used for fully training. The JSON is simply a mapping from mutable keys to choices. Choices can be expressed in:
 
-The JSON is simply a mapping from mutable keys to choices. Choices can be expressed in:
-
-* A string: select the candidate with corresponding name.
-* A number: select the candidate with corresponding index.
+* A string: select the candidate with corresponding name. If no names have been specified, this is not applicable.
+* A number: select the candidate with corresponding index. The index starts from 0, and refers to which one in the candidate list has been chosen.
 * A list of string: select the candidates with corresponding names.
 * A list of number: select the candidates with corresponding indices.
 * A list of boolean values: a multi-hot array.
@@ -77,6 +72,15 @@ For example,
     "InputChoice4": [1, 2],
     "InputChoice5": [false, true, false, false, true]
 }
+```
+
+### Reusing Code for Search and Retrain
+
+Unlike many open-source NAS algorithms who write a whole new model specifically for retraining, we found that the search model and retraining model are usually very similar, and therefore you can construct your final model with the exact same model code. For example,
+
+```python
+model = Net()
+apply_fixed_architecture(model, "model_dir/final_architecture.json")
 ```
 
 After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules are pruned.
