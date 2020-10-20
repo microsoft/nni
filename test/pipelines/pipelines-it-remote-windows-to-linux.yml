@@ -42,16 +42,9 @@ jobs:
       (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
       Write-Host "Download Putty success!"
       Write-Host "Connecting to host..."
-      Write-Host /tmp/nnitest/$(Build.BuildId)/port
-      Write-Host $(remote_port)
       Write-Host $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port
       $(Agent.TempDirectory)\pscp.exe -P $(remote_port) -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       Write-Host "Get port success!"
-      Write-Host "----------"
-      dir
-      Write-Host "----------"
-      dir test
-      Write-Host "----------"
       Get-Content test\port
     displayName: 'Get docker port'
   - powershell: |
