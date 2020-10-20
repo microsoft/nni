@@ -1,11 +1,16 @@
 import * as React from 'react';
+import { renderToString } from 'react-dom/server';
 import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
-import IntermediateVal from '../public-child/IntermediateVal';
-import { TRIALS } from '../../static/datamodel';
-import { TableRecord, Intermedia, TooltipForIntermediate } from '../../static/interface';
+import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import '../../static/style/compare.scss';
+import { convertDuration, parseMetrics } from '../../static/function';
+import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+
+function _getWebUIWidth(): number {
+    return window.innerWidth;
+}
 
 const dragOptions: IDragOptions = {
     moveMenuItemText: 'Move',
@@ -13,79 +18,81 @@ const dragOptions: IDragOptions = {
     menu: ContextualMenu
 };
 
-// the modal of trial compare
+// TODO: this should be refactored to the common modules
+// copied from trial.ts
+function _parseIntermediates(trial: TableObj): number[] {
+    const intermediates: number[] = [];
+    for (const metric of trial.intermediates) {
+        if (metric === undefined) {
+            break;
+        }
+        const parsedMetric = parseMetrics(metric.data);
+        if (typeof parsedMetric === 'object') {
+            // TODO: should handle more types of metric keys
+            intermediates.push(parsedMetric.default);
+        } else {
+            intermediates.push(parsedMetric);
+        }
+    }
+    return intermediates;
+}
+
+interface Item {
+    id: string;
+    sequenceId: number;
+    duration: string;
+    parameters: Map<string, any>;
+    metrics: Map<string, any>;
+    intermediates: number[];
+}
+
 interface CompareProps {
-    compareStacks: Array<TableRecord>;
-    cancelFunc: () => void;
+    trials: TableObj[];
+    title: string;
+    showDetails: boolean;
+    onHideDialog: () => void;
 }
 
 class Compare extends React.Component<CompareProps, {}> {
-    public _isCompareMount!: boolean;
     constructor(props: CompareProps) {
         super(props);
     }
 
-    intermediate = (): React.ReactNode => {
-        const { compareStacks } = this.props;
-        const trialIntermediate: Array<Intermedia> = [];
-        const idsList: string[] = [];
-        compareStacks.forEach(element => {
-            const trial = TRIALS.getTrial(element.id);
-            trialIntermediate.push({
-                name: element.id,
-                data: trial.description.intermediate,
-                type: 'line',
-                hyperPara: trial.description.parameters
-            });
-            idsList.push(element.id);
-        });
-        // find max intermediate number
-        trialIntermediate.sort((a, b) => {
-            return b.data.length - a.data.length;
-        });
-        const legend: string[] = [];
-        // max length
-        const length = trialIntermediate[0] !== undefined ? trialIntermediate[0].data.length : 0;
-        const xAxis: number[] = [];
-        trialIntermediate.forEach(element => {
-            legend.push(element.name);
-        });
-        for (let i = 1; i <= length; i++) {
-            xAxis.push(i);
-        }
+    private _generateTooltipSummary(row: Item, metricKey: string): string {
+        return renderToString(
+            <div className='tooldetailAccuracy'>
+                <div>Trial ID: {row.id}</div>
+                <div>Default metric: {row.metrics.get(metricKey) || 'N/A'}</div>
+            </div>
+        );
+    }
+
+    private _intermediates(items: Item[], metricKey: string): React.ReactNode {
+        // Precondition: make sure `items` is not empty
+        const xAxisMax = Math.max(...items.map(item => item.intermediates.length));
+        const xAxis = Array(xAxisMax)
+            .fill(0)
+            .map((_, i) => i + 1); // [1, 2, 3, ..., xAxisMax]
+        const dataForEchart = items.map(item => ({
+            name: item.id,
+            data: item.intermediates,
+            type: 'line'
+        }));
+        const legend = dataForEchart.map(item => item.name);
         const option = {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: function(point: number[], data: TooltipForIntermediate): number[] {
+                position: (point: number[], data: TooltipForIntermediate): [number, number] => {
                     if (data.dataIndex < length / 2) {
                         return [point[0], 80];
                     } else {
                         return [point[0] - 300, 80];
                     }
                 },
-                formatter: function(data: TooltipForIntermediate): React.ReactNode {
-                    const trialId = data.seriesName;
-                    let obj = {};
-                    const temp = trialIntermediate.find(key => key.name === trialId);
-                    if (temp !== undefined) {
-                        obj = temp.hyperPara;
-                    }
-                    return (
-                        '<div class="tooldetailAccuracy">' +
-                        '<div>Trial ID: ' +
-                        trialId +
-                        '</div>' +
-                        '<div>Intermediate: ' +
-                        data.data +
-                        '</div>' +
-                        '<div>Parameters: ' +
-                        '<pre>' +
-                        JSON.stringify(obj, null, 4) +
-                        '</pre>' +
-                        '</div>' +
-                        '</div>'
-                    );
+                formatter: (data: TooltipForIntermediate): string => {
+                    const item = items.find(k => k.id === data.seriesName) as Item;
+                    return this._generateTooltipSummary(item, metricKey);
                 }
             },
             grid: {
@@ -96,12 +103,11 @@ class Compare extends React.Component<CompareProps, {}> {
             legend: {
                 type: 'scroll',
                 right: 40,
-                left: idsList.length > 6 ? 80 : null,
-                data: idsList
+                left: legend.length > 6 ? 80 : null,
+                data: legend
             },
             xAxis: {
                 type: 'category',
-                // name: '# Intermediate',
                 boundaryGap: false,
                 data: xAxis
             },
@@ -110,7 +116,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 name: 'Metric',
                 scale: true
             },
-            series: trialIntermediate
+            series: dataForEchart
         };
         return (
             <ReactEcharts
@@ -119,108 +125,92 @@ class Compare extends React.Component<CompareProps, {}> {
                 notMerge={true} // update now
             />
         );
-    };
+    }
+
+    private _renderRow(
+        key: string,
+        rowName: string,
+        className: string,
+        items: Item[],
+        formatter: (item: Item) => string
+    ): React.ReactNode {
+        return (
+            <tr key={key}>
+                <td className='column'>{rowName}</td>
+                {items.map(item => (
+                    <td className={className} key={item.id}>
+                        {formatter(item)}
+                    </td>
+                ))}
+            </tr>
+        );
+    }
+
+    private _overlapKeys(s: Map<string, any>[]): string[] {
+        // Calculate the overlapped keys for multiple
+        const intersection: string[] = [];
+        for (const i of s[0].keys()) {
+            let inAll = true;
+            for (const t of s) {
+                if (!Array.from(t.keys()).includes(i)) {
+                    inAll = false;
+                    break;
+                }
+            }
+            if (inAll) {
+                intersection.push(i);
+            }
+        }
+        return intersection;
+    }
 
     // render table column ---
-    initColumn = (): React.ReactNode => {
-        const idList: string[] = [];
-        const sequenceIdList: number[] = [];
-        const durationList: number[] = [];
-
-        const compareStacks = this.props.compareStacks.map(tableRecord => TRIALS.getTrial(tableRecord.id));
-
-        const parameterList: Array<object> = [];
-        let parameterKeys: string[] = [];
-        if (compareStacks.length !== 0) {
-            parameterKeys = Object.keys(compareStacks[0].description.parameters);
-        }
-        compareStacks.forEach(temp => {
-            idList.push(temp.id);
-            sequenceIdList.push(temp.sequenceId);
-            durationList.push(temp.duration);
-            parameterList.push(temp.description.parameters);
-        });
-        let isComplexSearchSpace;
-        if (parameterList.length > 0) {
-            isComplexSearchSpace = typeof parameterList[0][parameterKeys[0]] === 'object' ? true : false;
-        }
-        const width = this.getWebUIWidth();
-        let scrollClass;
+    private _columns(items: Item[]): React.ReactNode {
+        // Precondition: make sure `items` is not empty
+        const width = _getWebUIWidth();
+        let scrollClass: string = '';
         if (width > 1200) {
-            scrollClass = idList.length > 3 ? 'flex' : '';
+            scrollClass = items.length > 3 ? 'flex' : '';
         } else if (width < 700) {
-            scrollClass = idList.length > 1 ? 'flex' : '';
+            scrollClass = items.length > 1 ? 'flex' : '';
         } else {
-            scrollClass = idList.length > 2 ? 'flex' : '';
+            scrollClass = items.length > 2 ? 'flex' : '';
         }
+        const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
+        const metricKeys = this._overlapKeys(items.map(item => item.metrics));
         return (
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
-                    <tr>
-                        <td className='column'>Id</td>
-                        {Object.keys(idList).map(key => (
-                            <td className='value idList' key={key}>
-                                {idList[key]}
-                            </td>
-                        ))}
-                    </tr>
-                    <tr>
-                        <td className='column'>Trial No.</td>
-                        {Object.keys(sequenceIdList).map(key => (
-                            <td className='value idList' key={key}>
-                                {sequenceIdList[key]}
-                            </td>
-                        ))}
-                    </tr>
-                    <tr>
-                        <td className='column'>Default metric</td>
-                        {Object.keys(compareStacks).map(index => (
-                            <td className='value' key={index}>
-                                <IntermediateVal trialId={compareStacks[index].id} />
-                            </td>
-                        ))}
-                    </tr>
-                    <tr>
-                        <td className='column'>duration</td>
-                        {Object.keys(durationList).map(index => (
-                            <td className='value' key={index}>
-                                {durationList[index]}
-                            </td>
-                        ))}
-                    </tr>
-                    {isComplexSearchSpace
-                        ? null
-                        : Object.keys(parameterKeys).map(index => (
-                              <tr key={index}>
-                                  <td className='column' key={index}>
-                                      {parameterKeys[index]}
-                                  </td>
-                                  {Object.keys(parameterList).map(key => (
-                                      <td key={key} className='value'>
-                                          {parameterList[key][parameterKeys[index]]}
-                                      </td>
-                                  ))}
-                              </tr>
-                          ))}
+                    {this._renderRow('id', 'ID', 'value idList', items, item => item.id)}
+                    {this._renderRow('trialnum', 'Trial No.', 'value', items, item => item.sequenceId.toString())}
+                    {this._renderRow('duration', 'Duration', 'value', items, item => item.duration)}
+                    {parameterKeys.map(k =>
+                        this._renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k))
+                    )}
+                    {metricKeys.map(k =>
+                        this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item => item.metrics.get(k))
+                    )}
                 </tbody>
             </table>
         );
-    };
-
-    getWebUIWidth = (): number => {
-        return window.innerWidth;
-    };
-
-    componentDidMount(): void {
-        this._isCompareMount = true;
-    }
-
-    componentWillUnmount(): void {
-        this._isCompareMount = false;
     }
 
     render(): React.ReactNode {
-        const { cancelFunc } = this.props;
+        const { onHideDialog, trials, title, showDetails } = this.props;
+        const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
+            return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
+        };
+        const inferredSearchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
+        const items: Item[] = trials.map(trial => ({
+            id: trial.id,
+            sequenceId: trial.sequenceId,
+            duration: convertDuration(trial.duration),
+            parameters: flatten(trial.parameters(inferredSearchSpace)),
+            metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
+            intermediates: _parseIntermediates(trial)
+        }));
+        const metricKeys = this._overlapKeys(items.map(item => item.metrics));
+        const defaultMetricKey = !metricKeys || metricKeys.includes('default') ? 'default' : metricKeys[0];
 
         return (
             <Modal
@@ -229,22 +219,23 @@ class Compare extends React.Component<CompareProps, {}> {
                 className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
+                onDismiss={onHideDialog}
             >
                 <div>
                     <div className={contentStyles.header}>
-                        <span>Compare trials</span>
+                        <span>{title}</span>
                         <IconButton
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
                             ariaLabel='Close popup modal'
-                            onClick={cancelFunc}
+                            onClick={onHideDialog}
                         />
                     </div>
                     <Stack className='compare-modal-intermediate'>
-                        {this.intermediate()}
+                        {this._intermediates(items, defaultMetricKey)}
                         <Stack className='compare-yAxis'># Intermediate result</Stack>
                     </Stack>
-                    <Stack>{this.initColumn()}</Stack>
+                    {showDetails && <Stack>{this._columns(items)}</Stack>}
                 </div>
             </Modal>
         );

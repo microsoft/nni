@@ -662,19 +662,22 @@ class TrialDispatcher implements TrainingService {
         trial.status = "RUNNING";
         await this.commandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
     }
-
+    
+    /**
+     * release the trial assigned environment resources
+     * @param trial 
+     */
     private releaseEnvironment(trial: TrialDetail): void {
-        if (undefined === trial.environment) {
-            throw new Error(`TrialDispatcher: environment is not assigned to trial ${trial.id}, and cannot be released!`);
-        }
-        if (trial.environment.runningTrialCount <= 0) {
-            throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
+        if (trial.environment !== undefined) {
+            if (trial.environment.runningTrialCount <= 0) {
+                throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
+            }
+            trial.environment.runningTrialCount--;
+            trial.environment = undefined;
         }
         if (true === this.enableGpuScheduler) {
             this.gpuScheduler.removeGpuReservation(trial);
         }
-        trial.environment.runningTrialCount--;
-        trial.environment = undefined;
     }
 
     private async handleMetricData(trialId: string, data: any): Promise<void> {
