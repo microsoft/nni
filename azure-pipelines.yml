@@ -14,8 +14,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      make
-      python3 -m pip install -U -e .
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
@@ -65,8 +64,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      make
-      python3 -m pip install -U -e .
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
