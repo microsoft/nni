@@ -102,7 +102,7 @@ class CustomizedSelector(FeatureSelector):
 **3. Integrate with Sklearn**
 
 `sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. 
-The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of the pipeline.
+The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a module of the pipeline.
 
 1. Inherit the calss _sklearn.base.BaseEstimator_
 1. Implement _get_params_ and _set_params_ function in _BaseEstimator_
