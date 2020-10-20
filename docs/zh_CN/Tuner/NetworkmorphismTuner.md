@@ -227,17 +227,17 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
 - `reverse_adj_list` 是与 adj_list 格式一样的反向邻接列表。
 - `node_list` 是一个整数列表。 列表的索引是标识。
 - `layer_list` 是层的列表。 列表的索引是标识。
-  
+
   - 对于 `StubConv(StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
-  
+
   - 对于 `StubDense`，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
-  
+
   - 对于 `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
-  
+
   - 对于 `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
-  
+
   - 对于 `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
-  
+
   - 对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
 ## 5. TODO

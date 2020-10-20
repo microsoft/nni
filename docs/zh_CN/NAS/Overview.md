@@ -64,6 +64,7 @@ NNI 提供了一些预定义的、可被重用的搜索空间。 通过堆叠这
 * [DartsCell](./SearchSpaceZoo.md#DartsCell)
 * [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
 * [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+* [NAS Bench 201](./SearchSpaceZoo.md#nas-bench-201)
 
 ## 使用 NNI API 来编写搜索空间
 

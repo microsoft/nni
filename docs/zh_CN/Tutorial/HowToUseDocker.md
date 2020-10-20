@@ -19,7 +19,7 @@
 例如，通过如下命令来启动 Docker 容器：
 
     docker run -i -t -p [hostPort]:[containerPort] [image]
-    
+
 
 -i: 使用交互模式启动 Docker。
 
@@ -32,7 +32,7 @@
 注意：
 
        NNI 目前仅支持本机模式下的 Ubuntu 和 macOS 系统，请使用正确的 Docker 映像类型。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
-    
+
 
 ### 第三步：在 Docker 容器里运行 NNI
 
@@ -43,7 +43,7 @@
 如果要使用 NNI 的官方示例，可以通过以下 git 命令来克隆 NNI：
 
     git clone https://github.com/Microsoft/nni.git
-    
+
 
 然后可以进入 `nni/examples/trials` 文件夹来启动 Experiment。
 
@@ -62,7 +62,7 @@ NNI 支持在[远程平台](../TrainingService/RemoteMachineMode.md)上启动 Ex
 注意：
 
     NNI 的官方镜像 msranni/nni 暂不支持 SSH 服务，应构建自己的带有 SSH 服务的映像，或者使用其他的带有 SSH 服务的镜像。
-    
+
 
 ### 第二步：在远程机器上启动 Dokcer 容器
 
@@ -71,14 +71,14 @@ SSH 服务需要端口，要把 Docker 的 SSH 服务端口暴露给 NNI 作为�
 例如，通过如下命令来启动 Docker 容器：
 
     docker run -dit -p [hostPort]:[containerPort] [image]
-    
+
 
 `containerPort`是在 Docker 容器中指定的端口，`hostPort` 是主机的端口。 可设置 NNI 配置，连接到 `hostPort`，这个连接会被转发到 Docker 容器。 更多命令信息，可[参考这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)。
 
 注意：
 
     如果使用自己构建的 Docker 映像，确保有基础的 Python 运行时和 NNI SDK 环境。 如果想要在 Docker 容器里面使用 GPU，请使用 nvidia-docker。
-    
+
 
 ### 第三步：运行 NNI Experiment
 

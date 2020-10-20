@@ -67,7 +67,7 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
       File "/usr/lib/python3.7/site-packages/nni/__main__.py", line 81, in create_customized_class_instance
         instance = class_constructor(**class_args)
     TypeError: __init__() missing 1 required positional arguments: 'optimize_mode'.
-    
+
 
 ### **Trial** 失败
 

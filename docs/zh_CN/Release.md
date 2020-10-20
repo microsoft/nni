@@ -290,11 +290,11 @@
 #### 训练平台
 
 * OpenPAI 的 NFS 支持
-    
+
     从 OpenPAI v0.11开始，HDFS 不再用作默认存储，可将 NFS、AzureBlob 或其他存储用作默认存储。 在本次版本中，NNI 扩展了对 OpenPAI 最近改动的支持，可与 OpenPAI v0.11 及后续版本的默认存储集成。
 
 * Kubeflow 更新适配
-    
+
     适配 Kubeflow 0.7 对 tf-operator 的新支持。
 
 ### 工程（代码和生成自动化）
@@ -371,7 +371,7 @@
 ### 主要功能
 
 * Tuners 和 Assessors
-    
+
     - 支持自动特征生成和选择 -Issue#877 -PR #1387 
         + 提供自动特征接口
         + 基于 Beam 搜索的 Tuner
@@ -379,9 +379,9 @@
     + 添加并行算法提高 TPE 在高并发下的性能。 -PR #1052
     + 为 hyperband 支持多阶段 -PR #1257
 + 训练平台
-    
+
     - 支持私有 Docker Registry -PR #755
-        
+
         * 改进
         * 增加 RestFUL API 的 Python 包装，支持通过代码获取指标的值 PR #1318
         * 新的 Python API : get_experiment_id(), get_trial_id() -PR #1353 -Issue #1331 & -Issue#1368
@@ -392,7 +392,7 @@
         + 删除 OpenPAI 模式下的 outputDir 和 dataDir 配置 -Issue #1342
         + 在 Kubeflow 模式下创建 Trial 时，codeDir 不再被拷贝到 logDir -Issue #1224
 + Web 界面和用户体验
-    
+
     - 在 Web 界面的搜索过程中显示最好指标的曲线 -Issue #1218
     - 在多阶段 Experiment 中，显示参数列表的当前值 -Issue1210 -PR #1348
     - 在 AddColumn 中增加 "Intermediate count" 选项。 -Issue #1210
@@ -401,7 +401,7 @@
     - 在命令行中为 nnictl 命令增加详细文档的连接 -Issue #1260
     - 用户体验改进：显示 Error 日志 -Issue #1173
 - 文档
-    
+
     - 更新文档结构 -Issue #1231
     - (已删除) 多阶段文档的改进 -Issue #1233 -PR #1242 
         + 添加配置示例
@@ -433,12 +433,12 @@
 * [有 Matern 核的高斯 Tuner](Tuner/GPTuner.md)
 
 * (已删除) 支持多阶段 Experiment
-    
+
     * 为多阶段 Experiment 增加新的训练平台：pai 模式从 v0.9 开始支持多阶段 Experiment。
     * 为以下内置 Tuner 增加多阶段的功能： 
         * TPE, Random Search, Anneal, Naïve Evolution, SMAC, Network Morphism, Metis Tuner。
 * Web 界面
-    
+
     * 在 Web 界面中可比较 Trial。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
     * 允许用户调节 Web 界面的刷新间隔。 有关详细信息，参考[查看概要页面](Tutorial/WebUI.md)
     * 更友好的显示中间结果。 有关详细信息，参考[查看 Trial 状态](Tutorial/WebUI.md)
@@ -670,9 +670,9 @@
 ### NNICTL 的新功能和更新
 
 * 支持同时运行多个 Experiment。
-    
+
     在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
-    
+
     ```bash
     nnictl create --port 8081 --config <config file path>
     ```
@@ -684,15 +684,15 @@
 * <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
 * 新 API **nni.get_sequence_id()**。 每个尝试任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
-    
+
     ```bash
     git clone -b v0.3 https://github.com/microsoft/nni.git
     ```
 
 * **nni.report_final_result(result)** API 对结果参数支持更多的数据类型。
-    
+
     可用类型：
-    
+
   * int
   * float
   * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
@@ -704,7 +704,7 @@
 ### 新示例
 
 * 公共的 NNI Docker 映像：
-    
+
     ```bash
     docker pull msranni/nni:latest
     ```

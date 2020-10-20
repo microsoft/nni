@@ -26,7 +26,7 @@
 ### 第二步：更新模型代码
 
 * Import NNI
-    
+
     在 Trial 代码中加上 `import nni`。
 
 * 从 Tuner 获得参数值
@@ -130,7 +130,7 @@ Annotation 的语法和用法等，参考 [Annotation](../Tutorial/AnnotationSpe
 在 YAML 配置文件中设置 *useAnnotation* 为 true 来启用 Annotation：
 
     useAnnotation: true
-    
+
 
 ## 用于调试的独立模式
 

@@ -43,7 +43,7 @@ NNI 的文件夹结构如下：
       | |-nni_cmd
       | |-nni_gpu_tool
       | |-nni_trial_tool
-    
+
 
 `nni/src` 文件夹存储 NNI 的大部分源代码。 这个文件夹中的代码和 NNIManager、TrainingService、SDK、WebUI 等模块有关。 用户可以在 `nni/src/nni_manager/common/trainingService.ts` 文件中找到 TrainingService 抽象类的代码，并且把自己实现的子类放到 `nni/src/nni_manager/training_service` 文件夹下。 如果用户实现了自己的 TrainingService，还需要同时实现相应的单元测试代码，并把单元测试放到 `nni/src/nni_manager/training_service/test` 文件夹下。
 
@@ -63,7 +63,7 @@ NNI 的文件夹结构如下：
         public abstract cleanUp(): Promise<void>;
         public abstract run(): Promise<void>;
     }
-    
+
 
 TrainingService 父类有一些抽象方法，用户需要继承并实现这些抽象方法。
 
@@ -81,7 +81,7 @@ ClusterMetadata 是与平台细节相关的数据，例如，ClusterMetadata 在
         public gpuSummary : GPUSummary | undefined;
         /* GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU*/
         public gpuReservation : Map<number, string>;
-    
+
         constructor(ip : string, port : number, username : string, passwd : string,
             sshKeyPath : string, passphrase : string) {
             this.ip = ip;
@@ -93,7 +93,7 @@ ClusterMetadata 是与平台细节相关的数据，例如，ClusterMetadata 在
             this.gpuReservation = new Map<number, string>();
         }
     }
-    
+
 
 Metadata 中包括了主机地址，用户名和其它平台相关配置。 用户需要定义自己的 Metadata 格式，并在这个方法中相应实现。 这个方法在 Experiment 启动之前调用。
 
@@ -118,7 +118,7 @@ SubmitTrialJob 是用来提交新 Trial 任务的函数，需要生成一个 Tri
         readonly sequenceId: number;
         isEarlyStopped?: boolean;
     }
-    
+
 
 根据不同的实现，用户可能需要把 Trial 任务放入队列中，并不断地从队里中取出任务进行提交。 或者也可以直接在这个方法中完成作业提交过程。
 
