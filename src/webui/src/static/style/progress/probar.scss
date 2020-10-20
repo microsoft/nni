@@ -1,7 +1,4 @@
 /* status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
-$running: #0071bc;
-$done: #00ad56;
-$error: #a4262c;
 
 /* status: 'TUNER_NO_MORE_TRIAL' | 'NO_MORE_TRIAL' */
 .RUNNING,
@@ -10,46 +7,27 @@ $error: #a4262c;
 .NO_MORE_TRIAL,
 .TUNER_NO_MORE_TRIAL {
     /* specific status color */
-    color: $running;
+    color: #0071bc;
 
     /* progress- duration & trial numbers span */
     .ms-ProgressIndicator-progressBar {
-        background-color: $running;
+        background-color: #0071bc;
     }
 }
 
 .DONE,
 .STOPPED {
-    color: $done;
+    color: #009245;
 
     .ms-ProgressIndicator-progressBar {
-        background-color: $done;
+        background-color: #009245;
     }
 }
 
 .ERROR {
-    color: $error;
+    color: #eb0716;
 
     .ms-ProgressIndicator-progressBar {
-        background-color: $error;
-    }
-}
-
-.bestMetric {
-    .DONE,
-    .STOPPED {
-        color: $done;
-    }
-
-    .ERROR {
-        color: $error;
-    }
-
-    .RUNNING,
-    .STOPPING,
-    .INITIALIZED,
-    .NO_MORE_TRIAL,
-    .TUNER_NO_MORE_TRIAL {
-        color: $running;
+        background-color: #eb0716;
     }
 }

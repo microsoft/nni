@@ -29,6 +29,27 @@ const convertTime = (num: number): string => {
     }
 };
 
+const convertTimeToSecond = (str: string): number => {
+    let seconds = 0;
+    let d, h, m;
+    if (str.includes('d')) {
+        [d, str] = str.split('d');
+        seconds += parseInt(d) * 24 * 3600;
+    }
+    if (str.includes('h')) {
+        [h, str] = str.split('h');
+        seconds += parseInt(h) * 3600;
+    }
+    if (str.includes('m')) {
+        [m, str] = str.split('m');
+        seconds += parseInt(m) * 60;
+    }
+    if (str) {
+        seconds += parseInt(str.split('s')[0]);
+    }
+    return seconds;
+};
+
 // trial's duration, accurate to seconds for example 10min 30s
 const convertDuration = (seconds: number): string => {
     let str = '';
@@ -57,18 +78,6 @@ const convertDuration = (seconds: number): string => {
     return str ? str : '0s';
 };
 
-// according the unit(d,h,m) to convert duration
-function convertTimeAsUnit(unit: string, value: number): number {
-    let divisor = 1;
-    if (unit === 'h') {
-        divisor = 3600;
-    } else if (unit === 'm') {
-        divisor = 60;
-    } else {
-        divisor = 24 * 3600;
-    }
-    return value / divisor;
-}
 function parseMetrics(metricData: string): any {
     if (metricData.includes('NaN') || metricData.includes('Infinity')) {
         return JSON5.parse(JSON5.parse(metricData));
@@ -265,7 +274,7 @@ function formatComplexTypeValue(value: any): string | number {
 export {
     convertTime,
     convertDuration,
-    convertTimeAsUnit,
+    convertTimeToSecond,
     getFinalResult,
     getFinal,
     downFile,

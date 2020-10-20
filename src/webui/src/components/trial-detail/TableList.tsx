@@ -9,12 +9,10 @@ import {
     SelectionMode,
     Stack,
     StackItem,
-    TooltipHost,
-    DirectionalHint
+    TooltipHost
 } from '@fluentui/react';
 import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
 import { convertDuration, formatTimestamp } from '../../static/function';
 import { TableObj } from '../../static/interface';
 import '../../static/style/search.scss';
@@ -318,19 +316,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
                     onRender: (record): React.ReactNode => (
-                        <TooltipHost
-                            content={record[k]}
-                            directionalHint={DirectionalHint.bottomCenter}
-                            tooltipProps={{
-                                calloutProps: {
-                                    styles: {
-                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                    }
-                                }
-                            }}
-                        >
+                        <TooltipHost content={record[k]}>
                             <div className='ellipsis'>{record[k]}</div>
                         </TooltipHost>
                     )
@@ -338,19 +324,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'latestAccuracy' && {
                     // FIXME: this is ad-hoc
                     onRender: (record): React.ReactNode => (
-                        <TooltipHost
-                            content={record._formattedLatestAccuracy}
-                            directionalHint={DirectionalHint.bottomCenter}
-                            tooltipProps={{
-                                calloutProps: {
-                                    styles: {
-                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                    }
-                                }
-                            }}
-                        >
+                        <TooltipHost content={record._formattedLatestAccuracy}>
                             <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
                         </TooltipHost>
                     )

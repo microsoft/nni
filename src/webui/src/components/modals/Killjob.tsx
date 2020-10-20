@@ -112,15 +112,11 @@ class KillJob extends React.Component<KillJobProps, KillJobState> {
                             setInitialFocus={true}
                         >
                             <div className={styles.header}>
-                                <p className={styles.title} style={{ color: '#333' }}>
-                                    Kill trial
-                                </p>
+                                <p className={styles.title}>Kill trial</p>
                             </div>
                             <div className={styles.inner}>
                                 <div>
-                                    <p className={styles.subtext} style={{ color: '#333' }}>
-                                        {prompString}
-                                    </p>
+                                    <p className={styles.subtext}>{prompString}</p>
                                 </div>
                             </div>
                             <FocusZone>

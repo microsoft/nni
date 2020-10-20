@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 const Overview = lazy(() => import('./components/Overview'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
 import './index.css';
@@ -19,9 +19,9 @@ ReactDOM.render(
                         </div>
                     }
                 >
-                    <Route path='/' component={Overview} exact />
                     <Route path='/oview' component={Overview} />
                     <Route path='/detail' component={TrialsDetail} />
+                    <Route path='/' render={(): React.ReactNode => <Redirect to={{ pathname: '/oview' }} />} />
                 </Suspense>
             </Switch>
         </App>

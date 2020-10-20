@@ -18,10 +18,4 @@ const entriesOption = [
     { key: '100', text: '100' }
 ];
 
-const durationUnit = [
-    { key: 'm', text: 'm' },
-    { key: 'h', text: 'h' },
-    { key: 'd', text: 'd' }
-];
-
-export { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption, durationUnit };
+export { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption };

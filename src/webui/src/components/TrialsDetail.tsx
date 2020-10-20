@@ -82,7 +82,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             </Pivot>
                         </div>
                         {/* trial table list */}
-                        <div style={{ backgroundColor: '#fff', marginTop: 10 }}>
+                        <div style={{ backgroundColor: '#fff' }}>
                             <TableList
                                 tableSource={source}
                                 trialsUpdateBroadcast={this.context.trialsUpdateBroadcast}

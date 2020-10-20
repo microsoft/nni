@@ -1,4 +1,4 @@
-$seriesIconMargin: 8px;
+$seriesIconMargin: 13px;
 
 .ExpDuration {
     margin-top: 28px;
@@ -6,74 +6,23 @@ $seriesIconMargin: 8px;
     span:hover {
         cursor: pointer;
     }
-
-    .maxTrialNum {
-        margin-bottom: 10px;
-    }
 }
 
-.exp-progress {
-    margin-top: 10px;
-
-    .bold {
-        font-weight: 500;
-    }
-
-    .joiner {
-        padding: 0 3px;
-    }
+.durationInput {
+    width: 42px;
+    height: 32px;
+    padding-right: 5px;
+    text-align: right;
+    outline: none;
+    border: none;
+    border-bottom: 1px solid #ccc;
 }
 
-.maxTrialNum {
-    .editparam {
-        position: relative;
-        top: -7px;
-    }
-}
-
-.noEditDuration {
-    position: relative;
-    top: -7px;
-}
-
-.editDuration {
-    position: relative;
-    top: -17px;
-}
-
-.editparam {
-    &-Input {
-        width: 42px;
-        height: 32px;
-        padding-right: 5px;
-        text-align: right;
-        outline: none;
-        border: none;
-        border-bottom: 1px solid #ccc;
-    }
-
-    .maxExecDuration {
-        width: 36px;
-    }
-
-    &-dropdown {
-        width: 51px;
-        display: inline-block;
-        position: relative;
-        top: 13px;
-        left: 4px;
-        margin-right: 3px;
-    }
-}
-
-.ExpDuration .series .confirm {
-    margin: 0 6px;
+.maxExecDuration {
+    width: 74px;
 }
 
 .series {
-    position: relative;
-    top: 5px;
-
     i {
         font-size: 20px;
         font-weight: 700;
@@ -90,7 +39,6 @@ $seriesIconMargin: 8px;
 
 .cancel i {
     color: red;
-    font-size: 16px;
 }
 
 .edit i {
@@ -106,12 +54,4 @@ $seriesIconMargin: 8px;
     position: absolute;
     z-index: 999;
     left: 0;
-}
-
-.mess {
-    margin-top: 20px;
-
-    .basic p {
-        margin-top: 0;
-    }
 }
