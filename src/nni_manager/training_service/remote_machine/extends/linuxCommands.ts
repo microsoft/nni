@@ -136,6 +136,10 @@ class LinuxCommands extends OsCommands {
             return `${preCommand} && ${command}`;
         }
     }
+
+    public fileExistCommand(filePath: string): string {
+        return `test -e ${filePath} && echo True || echo False`;
+    }
 }
 
 export { LinuxCommands };
