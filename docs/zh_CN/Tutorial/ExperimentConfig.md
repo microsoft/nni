@@ -56,6 +56,7 @@
       - [gpuIndices](#gpuindices-3)
       - [maxTrialNumPerGpu](#maxtrialnumpergpu-1)
       - [useActiveGpu](#useactivegpu-1)
+      - [preCommand](#preCommand)
     - [kubeflowConfig](#kubeflowconfig) 
       - [operator](#operator)
       - [storage](#storage)
@@ -585,23 +586,41 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 用于指定 GPU 上存在其他进程时是否使用此 GPU。 默认情况下，NNI 仅在 GPU 中没有其他活动进程时才使用 GPU。 如果 **useActiveGpu** 设置为 true，则 NNI 无论某 GPU 是否有其它进程，都将使用它。 此字段不适用于 Windows 版的 NNI。
 
+#### preCommand
+
+Optional. 字符串。
+
+Specifies the pre-command that will be executed before the remote machine executes other commands. Users can configure the experimental environment on remote machine by setting **preCommand**. If there are multiple commands need to execute, use `&&` to connect them, such as `preCommand: command1 && command2 && ...`.
+
+**Note**: Because **preCommand** will execute before other commands each time, it is strongly not recommended to set **preCommand** that will make changes to system, i.e. `mkdir` or `touch`.
+
+### remoteConfig
+
+Optional field in remote mode. Users could set per machine information in `machineList` field, and set global configuration for remote mode in this field.
+
+#### reuse
+
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse remote jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
+
 ### kubeflowConfig
 
 #### operator
 
-必填。 字符串。 必须是 `tf-operator` 或 `pytorch-operator`。
+Required. String. Has to be `tf-operator` or `pytorch-operator`.
 
-指定要使用的 Kubeflow 运算符，当前版本中 NNI 支持 `tf-operator`。
+Specifies the kubeflow's operator to be used, NNI support `tf-operator` in current version.
 
 #### storage
 
-可选。 字符串。 默认值 `nfs`。
+Optional. String. Default. `nfs`.
 
-指定 Kubeflow 的存储类型，包括 `nfs` 和 `azureStorage`。
+Specifies the storage type of kubeflow, including `nfs` and `azureStorage`.
 
 #### nfs
 
-如果使用 nfs，则必需。 键值对。
+Required if using nfs. Key-value pairs.
 
 - **server** 是 NFS 服务器的地址。
 
@@ -609,9 +628,9 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### keyVault
 
-如果使用 Azure 存储，则必需。 键值对。
+Required if using azure storage. Key-value pairs.
 
-将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考：https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2 。
+Set **keyVault** to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
 
 - **vaultName** 是 az 命令中 `--vault-name` 的值。
 
@@ -619,9 +638,9 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### azureStorage
 
-如果使用 Azure 存储，则必需。 键值对。
+Required if using azure storage. Key-value pairs.
 
-设置 Azure 存储帐户以存储代码文件。
+Set azure storage account to store code files.
 
 - **accountName** 是 Azure 存储账户的名称。
 
@@ -629,47 +648,47 @@ NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper �
 
 #### uploadRetryCount
 
-如果使用 Azure 存储，则必需。 1 到 99999 之间的整数。
+Required if using azure storage. Integer between 1 and 99999.
 
-如果上传文件至 Azure Storage 失败，NNI 会重试。此字段指定了重试的次数。
+If upload files to azure storage failed, NNI will retry the process of uploading, this field will specify the number of attempts to re-upload files.
 
 ### paiConfig
 
 #### userName
 
-必填。 字符串。
+Required. String.
 
-OpenPAI 帐户的用户名。
+The user name of your pai account.
 
 #### password
 
-如果使用密码身份验证，则需要。 字符串。
+Required if using password authentication. String.
 
-OpenPAI 帐户的密码。
+The password of the pai account.
 
 #### token
 
-如果使用令牌（token）身份验证，则需要。 字符串。
+Required if using token authentication. String.
 
-可以从 OpenPAI 门户检索的个人访问令牌。
+Personal access token that can be retrieved from PAI portal.
 
 #### host
 
-必填。 字符串。
+Required. String.
 
-OpenPAI 的 IP 地址。
+The hostname of IP address of PAI.
 
 #### reuse
 
-可选。 布尔。 默认值：`false`。 这是试用中的功能。
+Optional. Bool. default: `false`. It's an experimental feature.
 
-如果为 true，NNI 会重用 OpenPAI 作业，在其中运行尽可能多的 Trial。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。
+If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
 
 ## 示例
 
-### 本机模式
+### Local mode
 
-如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
+If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 
     authorName: test
     experimentName: test_experiment
@@ -692,7 +711,7 @@ OpenPAI 的 IP 地址。
       gpuNum: 0
     
 
-增加 Assessor 配置。
+You can add assessor configuration.
 
     authorName: test
     experimentName: test_experiment
@@ -722,7 +741,7 @@ OpenPAI 的 IP 地址。
       gpuNum: 0
     
 
-或者可以指定自定义的 Tuner 和 Assessor：
+Or you could specify your own tuner and assessor file as following,
 
     authorName: test
     experimentName: test_experiment
@@ -754,33 +773,33 @@ OpenPAI 的 IP 地址。
       gpuNum: 0
     
 
-### 远程模式
+### Remote mode
 
-如果要在远程服务器上运行 Trial 任务，需要增加服务器信息：
+If run trial jobs in remote machine, users could specify the remote machine information as following format:
 
+    ```yaml
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #可选项: local, remote, pai, kubeflow
+    #choice: local, remote, pai, kubeflow
     trainingServicePlatform: remote
     searchSpacePath: /nni/search_space.json
-    #可选项: true, false
+    #choice: true, false
     useAnnotation: false
     tuner:
-      #可选项: TPE, Random, Anneal, Evolution
+      #choice: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #可选项: maximize, minimize
+        #choice: maximize, minimize
         optimize_mode: maximize
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    # 如果是本地 Experiment，machineList 可为空。
+    #machineList can be empty if the platform is local
     machineList:
-    
       - ip: 10.10.10.10
         port: 22
         username: test
@@ -794,9 +813,16 @@ OpenPAI 的 IP 地址。
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
+        # Pre-command will be executed before the remote machine executes other commands.
+        # Below is an example of specifying python environment.
+        # If you want to execute multiple commands, please use "&&" to connect them.
+        # preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
+        # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
+        preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
+    ```
     
 
-### OpenPAI 模式
+### PAI mode
 
     authorName: test
     experimentName: nni_test1
@@ -832,7 +858,7 @@ OpenPAI 的 IP 地址。
       host: 10.10.10.10
     
 
-### Kubeflow 模式
+### Kubeflow mode
 
     使用 NFS 存储。
     
@@ -869,7 +895,7 @@ OpenPAI 的 IP 地址。
     
     
 
-### Kubeflow 中使用 Azure 存储
+### Kubeflow with azure storage
 
     authorName: default
     experimentName: example_mni

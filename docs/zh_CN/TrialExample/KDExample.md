@@ -1,4 +1,4 @@
-NNI Compressor 上使用知识蒸馏
+Knowledge Distillation on NNI
 ===
 
 ## 知识蒸馏 (Knowledge Distillation)

@@ -304,7 +304,7 @@ nnictl 支持的命令：
     > 更新 Experiment 的 Trial 数量
     
     ```bash
-    nnictl update trialnum --id [experiment_id] --value [trial_num]
+    nnictl update trialnum [experiment_id] --value [trial_num]
     ```
 
 <a name="trial"></a>
@@ -357,7 +357,7 @@ nnictl 支持的命令：
     > 结束 Trial 任务
     
     ```bash
-    nnictl trial [trial_id] --experiment [experiment_id]
+    nnictl trial kill [experiment_id] --trial_id [trial_id]
     ```
 
 <a name="top"></a>
@@ -587,11 +587,12 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写         | 是否必需  | 默认值 | 说明                                 |
-  | ------------- | ----- | --- | ---------------------------------- |
-  | --path, -p    | True  |     | NNI 包的文件路径                         |
-  | --codeDir, -c | True  |     | 要加载的实验的代码目录，加载的 NNI 包中的代码也会放到此目录下。 |
-  | --logDir, -l  | False |     | 存放加载的实验的日志的目录。                     |
+  | 参数及缩写                 | 是否必需  | 默认值 | 说明                                                                                                                       |
+  | --------------------- | ----- | --- | ------------------------------------------------------------------------------------------------------------------------ |
+  | --path, -p            | True  |     | NNI 包的文件路径                                                                                                               |
+  | --codeDir, -c         | True  |     | 要加载的实验的代码目录，加载的 NNI 包中的代码也会放到此目录下。                                                                                       |
+  | --logDir, -l          | False |     | 存放加载的实验的日志的目录。                                                                                                           |
+  | --searchSpacePath, -s | True  |     | the path of search space file for loaded experiment, this path contains file name. Default in $codeDir/search_space.json |
   
   * 示例
   
@@ -719,6 +720,22 @@ nnictl 支持的命令：
 ### 管理 Web 界面
 
 * **nnictl webui url**
+  
+  * Description
+    
+    Show an experiment's webui url
+  
+  * Usage
+    
+    ```bash
+    nnictl webui url [options]
+    ```
+  
+  * Options
+  
+  | Name, shorthand | Required | Default | Description   |
+  | --------------- | -------- | ------- | ------------- |
+  | id              | False    |         | Experiment ID |
 
 <a name="tensorboard"></a>
 

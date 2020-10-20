@@ -24,10 +24,25 @@ nni.report_final_result(acc)  # 报告所选架构的性能
 
 此命令会自动生成 `nni_auto_gen_search_space.json` 文件。 然后，将生成的搜索空间文件路径填入 Experiment 配置文件的 `searchSpacePath` 字段。 配置文件中的其它字段，可参考[此教程](../Tutorial/QuickStart.md)。
 
-目前，经典 NAS 仅支持 [PPO Tuner](../Tuner/BuiltinTuner.md) 和 [随机 Tuner ](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner)。 未来将支持更多经典 NAS 算法。
+Currently, we only support [PPO Tuner](../Tuner/BuiltinTuner.md), [Regularized Evolution Tuner](#regulaized-evolution-tuner) and [Random Tuner](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner) for classic NAS. 未来将支持更多经典 NAS 算法。
 
 完整的 [PyTorch 示例](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas)，以及 [TensorFlow 示例](https://github.com/microsoft/nni/tree/master/examples/nas/classic_nas-tf)。
 
 ## 用于调试的独立模式
 
 为了便于调试，其支持独立运行模式，可直接运行 Trial 命令，而不启动 NNI Experiment。 可以通过此方法来检查 Trial 代码是否可正常运行。 在独立模式下，`LayerChoice` 和 `InputChoice` 会选择第一个的候选项。
+
+<a name="regulaized-evolution-tuner"></a>
+
+## Regularized Evolution Tuner
+
+This is a tuner geared for NNI’s Neural Architecture Search (NAS) interface. It uses the [evolution algorithm](https://arxiv.org/pdf/1802.01548.pdf).
+
+The tuner first randomly initializes the number of `population` models and evaluates them. After that, every time to produce a new architecture, the tuner randomly chooses the number of `sample` architectures from `population`, then mutates the best model in `sample`, the parent model, to produce the child model. The mutation includes the hidden mutation and the op mutation. The hidden state mutation consists of replacing a hidden state with another hidden state from within the cell, subject to the constraint that no loops are formed. The op mutation behaves like the hidden state mutation as far as replacing one op with another op from the op set. Note that keeping the child model the same as its parent is not allowed. After evaluating the child model, it is added to the tail of the `population`, then pops the front one.
+
+Note that **trial concurrency should be less than the population of the model**, otherwise NO_MORE_TRIAL exception will be raised.
+
+The whole procedure is summarized by the pseudocode below.
+
+![](../../img/EvoNasTuner.png)
+
