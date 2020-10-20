@@ -228,6 +228,7 @@ class TrialDispatcher implements TrainingService {
         const runnerSettings = storageService.joinPath(envDir, "settings.json");
         await storageService.save(JSON.stringify(this.runnerSettings), runnerSettings);
 
+        // FIXME: what the hell is this?
         if (this.isDeveloping) {
             let trialToolsPath = path.join(__dirname, "../../../../../tools/nni_trial_tool");
             if (false === fs.existsSync(trialToolsPath)) {
@@ -598,7 +599,7 @@ class TrialDispatcher implements TrainingService {
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = environmentService.createEnvironmentInformation(envId, envName);
 
-        environment.command = `sh ../install_nni.sh && python3 -m nni_trial_tool.trial_runner`;
+        environment.command = `sh ../install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
             environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;

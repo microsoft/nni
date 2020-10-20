@@ -9,7 +9,8 @@ from collections import OrderedDict
 import numpy as np
 import torch.nn as nn
 
-from ..pruning.constants_pruner import PRUNER_DICT
+# FIXME: I don't know where "utils" should be
+from nni.algorithms.compression.torch.pruning.constants_pruner import PRUNER_DICT
 SUPPORTED_OP_NAME = ['Conv2d', 'Conv1d']
 SUPPORTED_OP_TYPE = [getattr(nn, name) for name in SUPPORTED_OP_NAME]
 
