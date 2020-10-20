@@ -17,6 +17,11 @@ log_level_map = {
 
 _time_format = '%m/%d/%Y, %I:%M:%S %p'
 
+# FIXME
+# This hotfix the bug that querying installed tuners with `package_utils` will activate dispatcher logger.
+# This behavior depends on underlying implementation of `nnictl` and is likely to break in future.
+_logger_initialized = False
+
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file
@@ -33,6 +38,11 @@ def init_logger(logger_file_path, log_level_name='info'):
     This will redirect anything from logging.getLogger() as well as stdout to specified file.
     logger_file_path: path of logger file (path-like object).
     """
+    global _logger_initialized
+    if _logger_initialized:
+        return
+    _logger_initialized = True
+
     log_level = log_level_map.get(log_level_name, logging.INFO)
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
@@ -55,6 +65,11 @@ def init_standalone_logger():
     Initialize root logger for standalone mode.
     This will set NNI's log level to INFO and print its log to stdout.
     """
+    global _logger_initialized
+    if _logger_initialized:
+        return
+    _logger_initialized = True
+
     fmt = '[%(asctime)s] %(levelname)s (%(name)s) %(message)s'
     formatter = logging.Formatter(fmt, _time_format)
     handler = logging.StreamHandler(sys.stdout)
