@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from .env_vars import trial_env_vars
+from .runtime.env_vars import trial_env_vars
 from . import trial
 from . import parameter_expressions as param_exp
 from .nas_utils import classic_mode, enas_mode, oneshot_mode, darts_mode

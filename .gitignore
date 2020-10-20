@@ -1,6 +1,11 @@
-/nni_node/node
-/nni_node/node.exe
-/toolchain
+/nni_node/
+/toolchain/
+
+# unit test generated files
+/test/model_path/
+/test/temp.json
+/test/ut/sdk/*.pth
+/test/ut/tools/annotation/_generated/
 
 
 # Logs

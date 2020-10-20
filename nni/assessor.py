@@ -50,8 +50,8 @@ class Assessor(Recoverable):
     See Also
     --------
     Builtin assessors:
-    :class:`~nni.medianstop_assessor.MedianstopAssessor`
-    :class:`~nni.curvefitting_assessor.CurvefittingAssessor`
+    :class:`~nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor`
+    :class:`~nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor`
     """
 
     def assess_trial(self, trial_job_id, trial_history):
