@@ -10,7 +10,7 @@ jobs:
   - script: |
       set -e
       python3 -m pip install --upgrade pip setuptools --user
-      python3 -m pip install coverage --user
+      python3 -m pip install pytest coverage --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
@@ -39,7 +39,8 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test
-      source scripts/unittest.sh
+      # TODO: ts ut
+      python3 -m pytest ut
     displayName: 'Unit test'
   - script: |
       cd test
@@ -59,7 +60,7 @@ jobs:
       set -e
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install pylint==2.6.0 astroid==2.4.2 --user
-      python3 -m pip install coverage --user
+      python3 -m pip install pytest coverage --user
       python3 -m pip install thop --user
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
@@ -89,7 +90,8 @@ jobs:
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
-      source scripts/unittest.sh
+      # TODO: ts ut
+      python3 -m pytest ut
     displayName: 'Unit test'
   - script: |
       cd test

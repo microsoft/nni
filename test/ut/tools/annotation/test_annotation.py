@@ -12,34 +12,34 @@ import tempfile
 import pytest
 
 cwd = Path(__file__).parent
-shutil.rmtree(Path(cwd, '_generated'), ignore_errors=True)
-shutil.copytree(Path(cwd, 'testcase/annotated'), Path(cwd, '_generated/annotated'))
+shutil.rmtree(cwd / '_generated', ignore_errors=True)
+shutil.copytree(cwd / 'testcase/annotated', cwd / '_generated/annotated')
 
 def test_search_space_generator():
-    search_space = annotation.generate_search_space(Path(cwd, '_generated/annotated'))
-    expected = json.load(Path(cwd, 'testcase/searchspace.json').open())
+    search_space = annotation.generate_search_space(cwd / '_generated/annotated')
+    expected = json.load((cwd / 'testcase/searchspace.json').open())
     assert search_space == expected
 
 def test_code_generator():
-    src_dir = Path(cwd, 'testcase/usercode')
-    dst_dir = Path(cwd, '_generated/usercode')
+    src_dir = cwd / 'testcase/usercode'
+    dst_dir = cwd / '_generated/usercode'
     code_dir = annotation.expand_annotations(src_dir, dst_dir, nas_mode='classic_mode')
-    assert Path(code_dir) == Path(cwd, '_generated/usercode')
-    expect_dir = Path(cwd, 'testcase/annotated')
+    assert Path(code_dir) == dst_dir
+    expect_dir = cwd / 'testcase/annotated'
     _assert_source_equal(dst_dir, expect_dir, 'dir/simple.py')
     _assert_source_equal(dst_dir, expect_dir, 'mnist.py')
     _assert_source_equal(dst_dir, expect_dir, 'nas.py')
-    assert Path(src_dir, 'nonpy.txt').read_text() == Path(dst_dir, 'nonpy.txt').read_text()
+    assert (src_dir / 'nonpy.txt').read_text() == (dst_dir / 'nonpy.txt').read_text()
 
 def test_annotation_detecting():
-    src_dir = Path(cwd, 'testcase/usercode/non_annotation')
+    src_dir = cwd / 'testcase/usercode/non_annotation'
     code_dir = annotation.expand_annotations(src_dir, tempfile.mkdtemp())
-    assert Path(code_dir) == Path(src_dir)
+    assert Path(code_dir) == src_dir
 
 
 def _assert_source_equal(dir1, dir2, file_name):
-    ast1 = ast.parse(Path(dir1, file_name).read_text())
-    ast2 = ast.parse(Path(dir2, file_name).read_text())
+    ast1 = ast.parse((dir1 / file_name).read_text())
+    ast2 = ast.parse((dir2 / file_name).read_text())
     _assert_ast_equal(ast1, ast2)
 
 def _assert_ast_equal(ast1, ast2):

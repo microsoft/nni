@@ -2,11 +2,12 @@
 # Licensed under the MIT license.
 
 import argparse
+from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
-from nni_cmd.config_utils import Config, Experiments
-from nni_cmd.common_utils import print_green
-from nni_cmd.command_utils import kill_command
-from nni_cmd.nnictl_utils import get_yml_content
+from nni.tools.cmd.config_utils import Config, Experiments
+from nni.tools.cmd.common_utils import print_green
+from nni.tools.cmd.command_utils import kill_command
+from nni.tools.cmd.nnictl_utils import get_yml_content
 
 def create_mock_experiment():
     nnictl_experiment_config = Experiments()
@@ -20,7 +21,8 @@ def create_mock_experiment():
     nni_config.set_config('experimentId', 'xOpEwA5w')
     nni_config.set_config('restServerPort', 8080)
     nni_config.set_config('webuiUrl', ['http://localhost:8080'])
-    experiment_config = get_yml_content('./tests/config_files/valid/test.yml')
+    yml_path = Path(__file__).parents[1] / 'config_files/valid/test.yml'
+    experiment_config = get_yml_content(str(yml_path))
     nni_config.set_config('experimentConfig', experiment_config)
     print_green("expriment start success, experiment id: xOpEwA5w")
 

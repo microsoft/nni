@@ -1,11 +1,16 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from unittest import TestCase, main
-from nni_cmd.common_utils import get_yml_content, get_json_content, detect_process
-from mock.restful_server import init_response
+from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
-from nni_cmd.command_utils import kill_command
+from unittest import TestCase, main
+
+from mock.restful_server import init_response
+
+from nni.tools.cmd.command_utils import kill_command
+from nni.tools.cmd.common_utils import get_yml_content, get_json_content, detect_process
+
+cwd = Path(__file__).parent
 
 class CommonUtilsTestCase(TestCase):
 
@@ -14,11 +19,13 @@ class CommonUtilsTestCase(TestCase):
         init_response()
 
     def test_get_yml(self):
-        content = get_yml_content('./tests/config_files/test_files/test_yaml.yml')
+        yml_path = cwd / 'config_files/test_files/test_yaml.yml'
+        content = get_yml_content(str(yml_path))
         self.assertEqual(content, {'field':'test'})
 
     def test_get_json(self):
-        content = get_json_content('./tests/config_files/test_files/test_json.json')
+        json_path = cwd / 'config_files/test_files/test_json.json'
+        content = get_json_content(str(json_path))
         self.assertEqual(content, {'field':'test'})
 
     def test_detect_process(self):
