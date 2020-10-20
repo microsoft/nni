@@ -45,6 +45,11 @@ jobs:
       Write-Host /tmp/nnitest/$(Build.BuildId)/port
       $(Agent.TempDirectory)\pscp.exe -P $(remote_port) -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       Write-Host "Get port success!"
+      Write-Host "----------"
+      dir
+      Write-Host "----------"
+      dir test
+      Write-Host "----------"
       Get-Content test\port
     displayName: 'Get docker port'
   - powershell: |
