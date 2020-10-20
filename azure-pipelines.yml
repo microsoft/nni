@@ -103,7 +103,7 @@ jobs:
 
 - job: 'macos_latest_python37'
   pool:
-    vmImage: 'macOS-latest'
+    vmImage: 'macOS-10.14'
 
   steps:
   - script: |
