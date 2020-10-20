@@ -16,7 +16,7 @@ jobs:
 
 - job: 'pip_install_macOS_python3'
   pool:
-    vmImage: 'macOS-latest'
+    vmImage: 'macOS-10.14'
 
   steps:
   - script: |
