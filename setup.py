@@ -195,7 +195,8 @@ _temp_files = [
     # unit test
     'test/model_path/',
     'test/temp.json',
-    'test/ut/sdk/*.pth'
+    'test/ut/sdk/*.pth',
+    'test/ut/tools/annotation/_generated/'
 ]
 
 
