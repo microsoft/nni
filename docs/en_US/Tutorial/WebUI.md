@@ -84,7 +84,6 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 ![](../../img/webui-img/detail-pai.png)
 * Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
 
-![](../../img/webui-img/intermediate-btn.png)
 ![](../../img/webui-img/intermediate.png)
 * Kill: you can kill a job that status is running.
 
