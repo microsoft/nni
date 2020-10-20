@@ -1,0 +1,98 @@
+
+.progress{
+    margin: 15px 17px;
+    .status{
+        color: #0573bc;
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 5px;
+    }
+
+    .probar{
+        height: 34px;
+        margin-top: 15px;
+
+        .ant-progress-inner{
+            border: 2px solid #e6e6e6;
+            border-radius: 0 12px 12px 0 !important;
+        }
+        .name{
+            height: 34px;
+            line-height: 30px;
+            text-align: center;
+            color: #fff;
+            background-color: #999;
+            border: 2px solid #e6e6e6;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+        }
+        
+        .showProgress{
+            height: 30px;
+        }
+        .description{
+            width: 100%;
+            line-height: 24px;
+            font-size: 12px;
+            color: #212121;
+            .right{
+                text-align: right;
+            }
+        }
+    }
+}
+
+/* basic experiment message style */
+.basic{
+
+    line-height: 24px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    p{
+        font-size: 14px;
+        color: #212121;
+    }
+    div{
+        font-size: 16px;
+        color: #0573bc;
+    }
+}
+
+.colorOfbasic{
+    div{
+        color: #0573bc;
+    }
+    .time{
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+.mess{
+    margin: 10px 0;
+}
+/*
+.ant-tooltip-inner{
+    min-width: 300px;
+}
+*/
+.inputBox{
+    height: 26px;
+    margin-top: 5px;
+    .concurrencyInput{
+        width: 25%;
+        height: 26px;
+        padding-left: 8px;
+        outline: none;
+        border: 1px solid #ccc;
+    }
+    .editStyle{
+        height: 26px;
+        padding: 0 9px;
+    }
+}
+
+.lineBasic{
+    padding-bottom: 14px;
+    border-bottom: 1px solid #ccc;
+}

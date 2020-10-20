@@ -1,0 +1,54 @@
+$barHeight: 56px;
+.nav{
+    list-style: none;
+    width: 94%;
+    height: $barHeight;
+    margin: 0 auto;
+    .tab{
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: $barHeight;
+        a{
+            font-size: 18px;
+            color: #b8c7ce;
+            text-decoration: none;
+        }
+    }
+    .firstTab{
+        margin: 0 32px;
+    }
+    .logo{
+        margin-top: 2px;
+        max-width: 128px;
+    }
+}
+
+.tab a:hover, .tab a.high{
+    color: white;
+    border-bottom: 1px solid #fff;
+}
+
+.feedback{
+    text-align: right;
+    line-height: $barHeight;
+    font-size: 16px;
+    color: #fff;
+    a{
+        color: #fff;
+        text-decoration: none;
+        margin-left: 10px;
+    }
+    img{
+        width: 24px;
+        margin-right: 8px;
+    }
+    .version{
+        margin-left: 16px;
+    }
+}
+
+.link li{
+    float: left;
+}
+.dropdown{
+    margin-right: 10px;
+}
