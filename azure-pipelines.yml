@@ -38,10 +38,6 @@ jobs:
       nnictl package install --name=BOHB
     displayName: 'Install dependencies'
   - script: |
-      cd docs/en_US/
-      sphinx-build -M html . _build -W
-    displayName: 'Sphinx Documentation Build check'
-  - script: |
       cd test
       source scripts/unittest.sh
     displayName: 'Unit test'
@@ -49,6 +45,10 @@ jobs:
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple test'
+  #- script: |
+  #    cd docs/en_US/
+  #    sphinx-build -M html . _build -W
+  #  displayName: 'Sphinx Documentation Build check'
 
 - job: 'ubuntu_1804_python36_legacy_torch_tf'
   pool:
