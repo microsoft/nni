@@ -135,6 +135,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="docs/en_US/NAS/Proxylessnas.md">ProxylessNAS</a></li>
               <li><a href="docs/en_US/Tuner/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
               <li><a href="docs/en_US/NAS/TextNAS.md">TextNAS</a></li>
+              <li><a href="docs/en_US/NAS/Cream.md">Cream</a></li>
             </ul>
           </ul>
           <a href="docs/en_US/Compressor/Overview.md">Model Compression</a>
@@ -294,8 +295,8 @@ You can use these commands to get more information about the experiment
 * Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/en_US/Tutorial/WebUI.md) are more Web UI pages.
 
 <table style="border: none">
-    <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
-    <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+    <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
+    <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
 </table>
 
 ## **Documentation**

@@ -65,9 +65,9 @@ NNI 通过 Trial SDK 支持多种 one-shot（一次性） NAS 算法，如：ENA
 
 ### 模型压缩
 
-NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Trial SDK 提供。 可以直接在 Trial 代码中使用，并在不启动 NNI Experiment 的情况下运行 Trial 代码。 模型压缩的详细说明和算法可在[这里](Compressor/Overview.md)找到。
+NNI provides an easy-to-use model compression framework to compress deep neural networks, the compressed networks typically have much smaller model size and much faster inference speed without losing performance significantlly. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and quantization algorithms through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. Users can also use NNI model compression framework to customize their own pruning and quantization algorithms.
 
-模型压缩中有不同的超参。 一种类型是在输入配置中的超参，例如，压缩算法的稀疏性、量化的位宽。 另一种类型是压缩算法的超参。 NNI 的超参调优可以自动找到最佳的压缩模型。 参考[简单示例](Compressor/AutoCompression.md)。
+A detailed description of model compression and its usage can be found [here](Compression/Overview.md).
 
 ### 自动特征工程
 
@@ -88,5 +88,5 @@ NNI 上的模型压缩包括剪枝和量化算法。 这些算法通过 NNI Tria
 * [如何在 OpenPAI 上运行 Experiment？](TrainingService/PaiMode.md)
 * [示例](TrialExample/MnistExamples.md)
 * [NNI 上的神经网络架构搜索](NAS/Overview.md)
-* [NNI 上的自动模型压缩](Compressor/Overview.md)
+* [Model Compression on NNI](Compression/Overview.md)
 * [NNI 上的自动特征工程](FeatureEngineering/Overview.md)

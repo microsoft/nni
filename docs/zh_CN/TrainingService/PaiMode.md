@@ -91,47 +91,47 @@ paiConfig:
 与[本机模式](LocalMode.md)，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 `trial` 需要额外的配置：
 
 * cpuNum
-    
+
     可选。 Trial 程序的 CPU 需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 
 * memoryMB
-    
+
     可选。 Trial 程序的内存需求，必须为正数。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 
 * image
-    
+
     可选。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此字段用来指定 Trial 程序的容器使用的 Docker 映像。
-    
+
     [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 生成此 Docker 映像的文件在[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile)。 可以直接使用此映像，或参考它来生成自己的映像。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 
 * virtualCluster
-    
+
     可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认（default）虚拟集群。
 
 * nniManagerNFSMountPath
-    
+
     必填。 在 nniManager 计算机上设置挂载的路径。
 
 * containerNFSMountPath
-    
+
     必填。 在 OpenPAI 的容器中设置挂载路径。
 
 * paiStorageConfigName:
-    
+
     可选。 设置 OpenPAI 中使用的存储名称。 如果没在 Trial 配置中设置，则需要在 `paiConfigPath` 指定的配置文件中设置。
 
 * command
-    
+
     可选。 设置 OpenPAI 容器中使用的命令。
 
 * paiConfigPath 可选。 设置 OpenPAI 作业配置文件路径，文件为 YAML 格式。
-    
+
     如果在 NNI 配置文件中设置了 `paiConfigPath`，则不需在 `trial` 配置中设置 `command`, `paiStorageConfigName`, `virtualCluster`, `image`, `memoryMB`, `cpuNum`, `gpuNum`。 这些字段将使用 `paiConfigPath` 指定的配置文件中的值。
-    
+
     注意：
-    
+
     1. OpenPAI 配置文件中的作业名称会由 NNI 指定，格式为：nni_exp_${this.experimentId}*trial*${trialJobId}。
-    
+
     2. 如果在 OpenPAI 配置文件中有多个 taskRoles，NNI 会将这些 taksRoles 作为一个 Trial 任务，用户需要确保只有一个 taskRole 会将指标上传到 NNI 中，否则可能会产生错误。
 
 ### OpenPAI 配置
@@ -139,19 +139,19 @@ paiConfig:
 `paiConfig` 包括了 OpenPAI 的专门配置，
 
 * userName
-    
+
     必填。 OpenPAI 平台的用户名。
 
 * token
-    
+
     必填。 OpenPAI 平台的身份验证密钥。
 
 * host
-    
+
     必填。 OpenPAI 平台的主机。 OpenPAI 作业提交页面的地址，例如：`10.10.5.1`，NNI 中默认协议是 `http`，如果 OpenPAI 集群启用了 https，则需要使用 `https://10.10.5.1` 的格式。
 
 * reuse (测试版功能)
-    
+
     可选，默认为 false。 如果为 true，NNI 会重用 OpenPAI 作业，在其中运行尽可能多的 Trial。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：

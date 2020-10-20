@@ -18,7 +18,7 @@
 
     对于迭代式剪枝器，使用 `L1Filter Pruner` 作为基础算法。 也就是说, 在迭代式剪枝器决定了稀疏度分布之后，使用 `L1Filter Pruner` 进行真正的剪枝。
 
-    - 上面列出来的所有的剪枝器都已经在 [NNI](https://github.com/microsoft/nni/tree/master/docs/zh_CN/Compressor/Overview.md) 中实现。
+    - All the pruners listed above are implemented in [nni](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/Overview.md).
 
 ## 实验结果
 
@@ -54,7 +54,7 @@ CIFAR-10, ResNet50:
 
 * 实验结果都是在 NNI 中使用剪枝器的默认配置收集的，这意味着当我们在 NNI 中调用一个剪枝器类时，我们不会更改任何默认的类参数。
 
-* FLOPs 和 参数数量均通过 [模型 FLOPs 和参数计数器](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/CompressionUtils.md#model-flopsparameters-counter)在[模型加速](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Compressor/ModelSpeedup.md)后计算。 这避免了依据掩码模型计算的潜在问题。
+* Both FLOPs and the number of parameters are counted with [Model FLOPs/Parameters Counter](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter) after [model speed up](https://github.com/microsoft/nni/tree/master/docs/en_US/Compression/ModelSpeedup.md). 这避免了依据掩码模型计算的潜在问题。
 
 * 实验代码在[这里](https://github.com/microsoft/nni/tree/master/examples/model_compress/auto_pruners_torch.py)。
 

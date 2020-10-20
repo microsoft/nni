@@ -7,27 +7,27 @@
 * **[PyTorch]** https://github.com/pytorch/pytorch
 
 * [MNIST-pytorch](../../examples/trials/mnist-distributed-pytorch)  
-    
+
 * [CIFAR-10](TrialExample/Cifar10Examples.md)  
-    
+
 * [TGS salt identification chanllenge](../../examples/trials/kaggle-tgs-salt/README_zh_CN.md)  
-    
+
 * [Network morphism](../../examples/trials/network_morphism/README_zh_CN.md)  
-    
+
 
 * **[TensorFlow]** https://github.com/tensorflow/tensorflow
 
 * [MNIST-tensorflow](../../examples/trials/mnist-distributed)  
-    
+
 * [Squad](../../examples/trials/ga_squad/README_zh_CN.md)  
-    
+
 
 * **[Keras]** https://github.com/keras-team/keras
 
 * [MNIST-keras](../../examples/trials/mnist-keras)  
-    
+
 * [Network morphism](../../examples/trials/network_morphism/README_zh_CN.md)  
-    
+
 
 * **[MXNet]** https://github.com/apache/incubator-mxnet
 * **[Caffe2]** https://github.com/BVLC/caffe
@@ -35,7 +35,7 @@
 * **[Spark MLlib]** http://spark.apache.org/mllib/
 * **[Chainer]** https://chainer.org/
 * **[Theano]** https://pypi.org/project/Theano/   
-    
+
 
 如果能[贡献更多示例](Tutorial/Contributing.md)，会对其他 NNI 用户有很大的帮助。
 
@@ -46,14 +46,14 @@ NNI 也支持其它 Python 库，包括一些基于 GBDT 的算法：XGBoost, Ca
 * **[Scikit-learn]** https://scikit-learn.org/stable/
 
 * [Scikit-learn](TrialExample/SklearnExamples.md)  
-    
+
 
 * **[XGBoost]** https://xgboost.readthedocs.io/en/latest/
 * **[CatBoost]** https://catboost.ai/
 * **[LightGBM]** https://lightgbm.readthedocs.io/en/latest/
 
 * [Auto-gbdt](TrialExample/GbdtExample.md)  
-    
+
 
 这只是 NNI 支持的一小部分库。 如果对 NNI 感兴趣，可参考[教程](TrialExample/Trials.md)来继续学习。
 

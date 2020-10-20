@@ -20,7 +20,7 @@ def parse_args():
         help='model to prune')
     parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'imagenet'], help='dataset to use (cifar/imagenet)')
     parser.add_argument('--batch_size', default=50, type=int, help='number of data batch size')
-    parser.add_argument('--data_root', default='./cifar10', type=str, help='dataset path')
+    parser.add_argument('--data_root', default='./data', type=str, help='dataset path')
     parser.add_argument('--flops_ratio', default=0.5, type=float, help='target flops ratio to preserve of the model')
     parser.add_argument('--lbound', default=0.2, type=float, help='minimum sparsity')
     parser.add_argument('--rbound', default=1., type=float, help='maximum sparsity')

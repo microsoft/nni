@@ -28,11 +28,15 @@ python -m pip install --upgrade nni
 .. Note:: NNI 的系统需求，参考 :doc:`Linux 和 Mac <InstallationLinux>` 或 :doc:`Windows <InstallationWin>` 的安装教程。
 ```
 
+### Enable NNI Command-line Auto-Completion (Optional)
+
+After the installation, you may want to enable the auto-completion feature for **nnictl** commands. Please refer to this [tutorial](../CommunitySharings/AutoCompletion.md).
+
 ## MNIST 上的 "Hello World"
 
-NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
 
-这是还**没有 NNI** 的示例代码，用 CNN 在 MNIST 数据集上训练：
+Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
 ```python
 def run_trial(params):
@@ -68,11 +72,11 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-完整实现请参考 [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py)
+If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
 
-上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
+The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
-NNI 用来帮助超参调优。它的流程如下：
+NNI is born to help the user do tuning jobs; the NNI working process is presented below:
 
 ```text
 输入: 搜索空间, Trial 代码, 配置文件
@@ -87,11 +91,11 @@ NNI 用来帮助超参调优。它的流程如下：
 7: 返回最好的实验结果
 ```
 
-如果需要使用 NNI 来自动训练模型，找到最佳超参，需要根据代码，进行如下三步改动：
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
 
-### 启动 Experiment 的三个步骤
+### Three steps to start an experiment
 
-**第一步**：编写 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
+**Step 1**: Write a `Search Space` file in JSON, including the `name` and the `distribution` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -105,9 +109,9 @@ NNI 用来帮助超参调优。它的流程如下：
 + }
 ```
 
-*示例：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*Example: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
 
-**第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
+**Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 ```diff
 + import nni
@@ -132,9 +136,9 @@ NNI 用来帮助超参调优。它的流程如下：
       run_trial(params)
 ```
 
-*示例：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*Example: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
 
-**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`。 它还提供其他信息，例如调整算法，最大 Trial 运行次数和最大持续时间的参数。
+**Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
 ```yaml
 authorName: default
@@ -159,13 +163,13 @@ trial:
 .. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>` ，了解更多如何编写此文件的详细信息 _。
 ```
 
-*示例: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
+*Example: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
 
-上面的代码都已准备好，并保存在 [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1)。
+All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
 
 #### Linux 和 macOS
 
-从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
+Run the **config.yml** file from your command line to start an MNIST experiment.
 
 ```bash
 nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
@@ -173,7 +177,7 @@ nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 
 #### Windows
 
-从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
+Run the **config_windows.yml** file from your command line to start an MNIST experiment.
 
 ```bash
 nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
@@ -187,7 +191,7 @@ nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 .. Note:: ``nnictl`` 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 点击 :doc:`这里 <Nnictl>` 查看 ``nnictl`` 的更多用法。
 ```
 
-在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
+Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expect to get:
 
 ```text
 INFO: Starting restful server...
@@ -216,48 +220,48 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-如果根据上述步骤准备好了相应 `Trial`, `搜索空间`和`配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
+If you prepared `trial`, `search space`, and `config` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the requirements you set. You can clearly see its progress through the NNI WebUI.
 
 ## Web 界面
 
-启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
+After you start your experiment in NNI successfully, you can find a message in the command-line interface that tells you the `Web UI url` like this:
 
 ```text
 Web 地址为：[IP 地址]:8080
 ```
 
-在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考[常见问题](FAQ.md)。
+Open the `Web UI url` (Here it's: `[Your IP]:8080`) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the [FAQ](FAQ.md).
 
-### 查看概要页面
+### View summary page
 
-点击 "Overview" 标签。
+Click the "Overview" tab.
 
-Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来下载信息和参数。 可以在 Experiment 运行时随时下载结果，也可以等到执行结束。
+Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
 
 ![](../../img/QuickStart1.png)
 
-前 10 个 Trial 将列在 Overview 页上。 可以在 "Trials Detail" 页面上浏览所有 Trial。
+The top 10 trials will be listed on the Overview page. You can browse all the trials on the "Trials Detail" page.
 
 ![](../../img/QuickStart2.png)
 
-### 查看 Trial 详情页面
+### View trials detail page
 
-点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
+Click the "Default Metric" tab to see the point graph of all trials. Hover to see specific default metrics and search space messages.
 
 ![](../../img/QuickStart3.png)
 
-点击 "Hyper Parameter" 标签查看图像。
+Click the "Hyper Parameter" tab to see the parallel graph.
 
 * 可选择百分比查看最好的 Trial。
 * 选择两个轴来交换位置。
 
 ![](../../img/QuickStart4.png)
 
-点击 "Trial Duration" 标签来查看柱状图。
+Click the "Trial Duration" tab to see the bar graph.
 
 ![](../../img/QuickStart5.png)
 
-下面是所有 Trial 的状态。 包括：
+Below is the status of all trials. Specifically:
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
 * 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。

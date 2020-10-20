@@ -13,3 +13,4 @@
     特征工程<feature_engineering>
     性能测量，比较和分析<perf_compare>
     在 Google Colab 中使用 NNI <NNI_colab_support>
+    Auto Completion for nnictl Commands <AutoCompletion>

@@ -24,7 +24,7 @@
         eta: 3
         #可选项: maximize, minimize
         optimize_mode: maximize
-    
+
 
 注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，会多一个用户定义的 `TRIAL_BUDGET`。 **使用 `TRIAL_BUDGET`，Trial 能够控制其运行的时间。</p> 
 

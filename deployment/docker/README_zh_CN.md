@@ -15,7 +15,7 @@
     pandas 0.23.4
     lightgbm 2.2.2
     nni
-    
+
 
 此 Dockerfile 可作为定制的参考。
 
@@ -24,26 +24,26 @@
 **使用 `nni/deployment/docker` 的下列命令来生成 docker 映像。**
 
         docker build -t nni/nni .
-    
+
 
 **运行 docker 映像**
 
 * 如果 docker 容器中没有 GPU，运行下面的命令
 
         docker run -it nni/nni
-    
+
 
 注意，如果要使用 tensorflow，需要先卸载 tensorflow-gpu，然后在 Docker 容器中安装 tensorflow。 或者修改 `Dockerfile` 来安装没有 GPU 的 tensorflow 版本，并重新生成 Docker 映像。
 
 * 如果 docker 容器中有 GPU，确保安装了 [NVIDIA 容器运行包](https://github.com/NVIDIA/nvidia-docker)，然后运行下面的命令
 
         nvidia-docker run -it nni/nni
-    
+
 
 或者
 
         docker run --runtime=nvidia -it nni/nni
-    
+
 
 ## 3.拉取 docker 映像
 

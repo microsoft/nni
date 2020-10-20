@@ -86,6 +86,8 @@ def update_training_service_config(args):
             config[args.ts]['machineList'][0]['port'] = args.remote_port
         if args.remote_pwd is not None:
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
+        if args.remote_reuse is not None:
+            config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
@@ -119,6 +121,7 @@ if __name__ == '__main__':
     parser.add_argument("--remote_pwd", type=str)
     parser.add_argument("--remote_host", type=str)
     parser.add_argument("--remote_port", type=int)
+    parser.add_argument("--remote_reuse", type=str)
     args = parser.parse_args()
 
     update_training_service_config(args)
