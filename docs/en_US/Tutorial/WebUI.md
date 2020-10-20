@@ -79,7 +79,7 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 * You can use the button named "Copy as python" to copy the trial's parameters.
 
 ![](../../img/webui-img/copyParameter.png)
-* If you run on the OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* If you run on the OpenPAI or Kubeflow platform, you can also see the nfs log.
 
 ![](../../img/webui-img/detail-pai.png)
 * Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
