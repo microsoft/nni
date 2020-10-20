@@ -142,6 +142,18 @@ export const EditExperimentParam = (): any => {
         showPencil();
         setUnit(maxDurationUnit);
     }
+
+    function convertUnit(val: string): string {
+        if (val === 'd') {
+            return 'day';
+        } else if (val === 'h') {
+            return 'hour';
+        } else if (val === 'm') {
+            return 'min';
+        } else {
+            return val;
+        }
+    }
     return (
         <AppContext.Consumer>
             {(values): React.ReactNode => {
@@ -164,7 +176,7 @@ export const EditExperimentParam = (): any => {
                                             onChange={setInputVal}
                                         />
                                         {isShowPencil && title === 'Max duration' && (
-                                            <span>{values.maxDurationUnit}</span>
+                                            <span>{convertUnit(values.maxDurationUnit)}</span>
                                         )}
                                         {!isShowPencil && title === 'Max duration' && (
                                             <Dropdown
