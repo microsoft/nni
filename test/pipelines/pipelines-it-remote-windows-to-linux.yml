@@ -48,7 +48,7 @@ jobs:
     displayName: 'Get docker port'
   - powershell: |
       cd test
-      python nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+      python nni_test/nnitest/generate_ts_config.py --ts remote --remote_reuse $(remote_reuse) --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       Get-Content config/training_service.yml
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote --exclude cifar10
     displayName: 'integration test'
