@@ -4,7 +4,7 @@ This example shows us how to use AMCPruner example.
 ## Step 1: train a model for pruning
 Run following command to train a mobilenetv2 model:
 ```bash
-python3 amc_train.py --model_type mobilenetv2 --n_epochs 50
+python3 amc_train.py --model_type mobilenetv2 --n_epoch 50
 ```
 Once finished, saved checkpoint file can be found at:
 ```
