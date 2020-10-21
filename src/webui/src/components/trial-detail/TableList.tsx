@@ -249,7 +249,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             {
                 key: '_expand',
                 name: '',
-                onRender: (item, index): any => {
+                onRender: (item): any => {
                     return (
                         <Icon
                             aria-hidden={true}
@@ -269,8 +269,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 } else {
                                     this._expandedTrialIds.delete(newItem.id);
                                 }
-                                const newItems = [...this.state.displayedItems];
-                                newItems[index as number] = newItem;
+                                const newItems = this.state.displayedItems.map(item =>
+                                    item.id === newItem.id ? newItem : item
+                                );
                                 this.setState({
                                     displayedItems: newItems
                                 });
