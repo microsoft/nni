@@ -10,7 +10,7 @@ Implementation on NNI is based on the [official implementation in Tensorflow](ht
 
 ### CIFAR10 Macro/Micro Search Space
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/enas)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/enas)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.

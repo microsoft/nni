@@ -39,7 +39,7 @@ Reference link:
 [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
 ## 2. Task description
-Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train).
+Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/v1.9/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/v1.9/examples/trials/auto-gbdt/data/regression.train).
 Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
 ## 3. How to run in nni
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 ```
 
 ### 3.3 Prepare your search space.
-If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
+If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/v1.9/examples/trials/auto-gbdt/search_space.json) as follow:
 
 ```json
 {
