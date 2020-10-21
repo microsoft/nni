@@ -1,0 +1,29 @@
+.config {
+    position: fixed;
+    right: 0;
+    z-index: 1000;
+
+    .ms-Button--default {
+        padding: 0 8px;
+        margin: 0 0 12px 0;
+        border: 1px solid #ccc;
+        border-radius: 18px 0 0 18px;
+        font-size: 12px;
+        text-align: left;
+
+        .ms-Button-label {
+            font-weight: normal;
+        }
+    }
+
+    .ms-Button--default:hover {
+        background-color: #0071bc;
+        color: #fff;
+    }
+}
+
+.ms-Fabric {
+    .ms-Panel-commands {
+        margin: 0;
+    }
+}

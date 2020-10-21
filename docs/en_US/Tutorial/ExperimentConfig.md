@@ -592,6 +592,16 @@ Specifies the pre-command that will be executed before the remote machine execut
 
 __Note__: Because __preCommand__ will execute before other commands each time, it is strongly not recommended to set __preCommand__ that will make changes to system, i.e. `mkdir` or `touch`.
 
+### remoteConfig
+
+Optional field in remote mode. Users could set per machine information in `machineList` field, and set global configuration for remote mode in this field.
+
+#### reuse
+
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse remote jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials. 
+
 ### kubeflowConfig
 
 #### operator

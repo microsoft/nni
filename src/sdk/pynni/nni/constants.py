@@ -62,6 +62,11 @@ BuiltinAlgorithms = {
             'name': 'PBTTuner',
             'class_name': 'nni.pbt_tuner.pbt_tuner.PBTTuner',
             'class_args_validator': 'nni.pbt_tuner.pbt_tuner.PBTClassArgsValidator'
+        },
+        {
+            'name': 'RegularizedEvolutionTuner',
+            'class_name': 'nni.regularized_evolution_tuner.regularized_evolution_tuner.RegularizedEvolutionTuner',
+            'class_args_validator': 'nni.regularized_evolution_tuner.regularized_evolution_tuner.EvolutionClassArgsValidator'
         }
     ],
     'assessors': [

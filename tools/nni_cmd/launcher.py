@@ -138,6 +138,10 @@ def set_remote_config(experiment_config, port, config_file_name):
     '''Call setClusterMetadata to pass trial'''
     #set machine_list
     request_data = dict()
+    if experiment_config.get('remoteConfig'):
+        request_data['remote_config'] = experiment_config['remoteConfig']
+    else:
+        request_data['remote_config'] = {'reuse': False}
     request_data['machine_list'] = experiment_config['machineList']
     if request_data['machine_list']:
         for i in range(len(request_data['machine_list'])):
@@ -301,7 +305,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
-
     if experiment_config.get('description'):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
@@ -332,7 +335,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['versionCheck'] = experiment_config.get('versionCheck')
     if experiment_config.get('logCollection'):
         request_data['logCollection'] = experiment_config.get('logCollection')
-
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
         request_data['clusterMetaData'].append(
@@ -344,6 +346,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'machine_list', 'value': experiment_config['machineList']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+        if not experiment_config.get('remoteConfig'):
+            # set default value of reuse in remoteConfig to False
+            experiment_config['remoteConfig'] = {'reuse': False}
+        request_data['clusterMetaData'].append(
+            {'key': 'remote_config', 'value': experiment_config['remoteConfig']})
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})

@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import logging
 from copy import deepcopy
 from argparse import Namespace
 import numpy as np
@@ -14,6 +15,8 @@ from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
 torch.backends.cudnn.deterministic = True
+
+_logger = logging.getLogger(__name__)
 
 class AMCPruner(Pruner):
     """
@@ -38,13 +41,6 @@ class AMCPruner(Pruner):
             Data loader of validation dataset.
         suffix: str
             suffix to help you remember what experiment you ran. Default: None.
-        job: str
-            train_export: search best pruned model and export after search.
-            export_only: export a searched model, searched_model_path and export_path must be specified.
-        searched_model_path: str
-            when job == export_only, use searched_model_path to specify the path of the searched model.
-        export_path: str
-            path for exporting models
 
         # parameters for pruning environment
         model_type: str
@@ -118,9 +114,6 @@ class AMCPruner(Pruner):
             evaluator,
             val_loader,
             suffix=None,
-            job='train_export',
-            export_path=None,
-            searched_model_path=None,
             model_type='mobilenet',
             dataset='cifar10',
             flops_ratio=0.5,
@@ -149,9 +142,8 @@ class AMCPruner(Pruner):
             epsilon=50000,
             seed=None):
 
-        self.job = job
-        self.searched_model_path = searched_model_path
-        self.export_path = export_path
+        self.val_loader = val_loader
+        self.evaluator = evaluator
 
         if seed is not None:
             np.random.seed(seed)
@@ -165,11 +157,9 @@ class AMCPruner(Pruner):
         # build folder and logs
         base_folder_name = '{}_{}_r{}_search'.format(model_type, dataset, flops_ratio)
         if suffix is not None:
-            base_folder_name = base_folder_name + '_' + suffix
-        self.output_dir = get_output_folder(output_dir, base_folder_name)
-
-        if self.export_path is None:
-            self.export_path = os.path.join(self.output_dir, '{}_r{}_exported.pth'.format(model_type, flops_ratio))
+            self.output_dir = os.path.join(output_dir, base_folder_name + '-' + suffix)
+        else:
+            self.output_dir = get_output_folder(output_dir, base_folder_name)
 
         self.env_args = Namespace(
             model_type=model_type,
@@ -182,47 +172,42 @@ class AMCPruner(Pruner):
             channel_round=channel_round,
             output=self.output_dir
         )
-
         self.env = ChannelPruningEnv(
             self, evaluator, val_loader, checkpoint, args=self.env_args)
+        _logger.info('=> Saving logs to %s', self.output_dir)
+        self.tfwriter = SummaryWriter(log_dir=self.output_dir)
+        self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
+        _logger.info('=> Output path: %s...', self.output_dir)
 
-        if self.job == 'train_export':
-            print('=> Saving logs to {}'.format(self.output_dir))
-            self.tfwriter = SummaryWriter(log_dir=self.output_dir)
-            self.text_writer = open(os.path.join(self.output_dir, 'log.txt'), 'w')
-            print('=> Output path: {}...'.format(self.output_dir))
+        nb_states = self.env.layer_embedding.shape[1]
+        nb_actions = 1  # just 1 action here
 
-            nb_states = self.env.layer_embedding.shape[1]
-            nb_actions = 1  # just 1 action here
+        rmsize = rmsize * len(self.env.prunable_idx)  # for each layer
+        _logger.info('** Actual replay buffer size: %d', rmsize)
 
-            rmsize = rmsize * len(self.env.prunable_idx)  # for each layer
-            print('** Actual replay buffer size: {}'.format(rmsize))
-
-            self.ddpg_args = Namespace(
-                hidden1=hidden1,
-                hidden2=hidden2,
-                lr_c=lr_c,
-                lr_a=lr_a,
-                warmup=warmup,
-                discount=discount,
-                bsize=bsize,
-                rmsize=rmsize,
-                window_length=window_length,
-                tau=tau,
-                init_delta=init_delta,
-                delta_decay=delta_decay,
-                max_episode_length=max_episode_length,
-                debug=debug,
-                train_episode=train_episode,
-                epsilon=epsilon
-            )
-            self.agent = DDPG(nb_states, nb_actions, self.ddpg_args)
+        self.ddpg_args = Namespace(
+            hidden1=hidden1,
+            hidden2=hidden2,
+            lr_c=lr_c,
+            lr_a=lr_a,
+            warmup=warmup,
+            discount=discount,
+            bsize=bsize,
+            rmsize=rmsize,
+            window_length=window_length,
+            tau=tau,
+            init_delta=init_delta,
+            delta_decay=delta_decay,
+            max_episode_length=max_episode_length,
+            debug=debug,
+            train_episode=train_episode,
+            epsilon=epsilon
+        )
+        self.agent = DDPG(nb_states, nb_actions, self.ddpg_args)
 
 
     def compress(self):
-        if self.job == 'train_export':
-            self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output_dir)
-        self.export_pruned_model()
+        self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output_dir)
 
     def train(self, num_episode, agent, env, output_dir):
         agent.is_training = True
@@ -263,12 +248,11 @@ class AMCPruner(Pruner):
             observation = deepcopy(observation2)
 
             if done:  # end of episode
-                print(
-                    '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}'.format(
+                _logger.info(
+                    '#%d: episode_reward: %.4f acc: %.4f, ratio: %.4f',
                         episode, episode_reward,
                         info['accuracy'],
                         info['compress_ratio']
-                    )
                 )
                 self.text_writer.write(
                     '#{}: episode_reward:{:.4f} acc: {:.4f}, ratio: {:.4f}\n'.format(
@@ -310,19 +294,3 @@ class AMCPruner(Pruner):
                 self.text_writer.write('best reward: {}\n'.format(env.best_reward))
                 self.text_writer.write('best policy: {}\n'.format(env.best_strategy))
         self.text_writer.close()
-
-    def export_pruned_model(self):
-        if self.searched_model_path is None:
-            wrapper_model_ckpt = os.path.join(self.output_dir, 'best_wrapped_model.pth')
-        else:
-            wrapper_model_ckpt = self.searched_model_path
-        self.env.reset()
-        self.bound_model.load_state_dict(torch.load(wrapper_model_ckpt))
-
-        print('validate searched model:', self.env._validate(self.env._val_loader, self.env.model))
-        self.env.export_model()
-        self._unwrap_model()
-        print('validate exported model:', self.env._validate(self.env._val_loader, self.env.model))
-
-        torch.save(self.bound_model, self.export_path)
-        print('exported model saved to: {}'.format(self.export_path))

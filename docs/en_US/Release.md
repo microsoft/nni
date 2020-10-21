@@ -158,7 +158,7 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
 * Improve PBT on failure handling and support experiment resume for PBT
 
 #### NAS Updates
-* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/master/examples/nas/naive-tf)
+* NAS support for TensorFlow 2.0 (preview) [TF2.0 NAS examples](https://github.com/microsoft/nni/tree/v1.9/examples/nas/naive-tf)
 * Use OrderedDict for LayerChoice
 * Prettify the format of export
 * Replace layer choice with selected module after applied fixed architecture
@@ -168,7 +168,7 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
 
 #### Training Service Updates
 * update pai yaml merge logic
-* support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
+* support windows as remote machine in remote mode [Remote Mode](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/RemoteMachineMode.md#windows)
 
 ### Bug Fix
 * fix dev install
@@ -183,26 +183,26 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
 
 #### Hyper-Parameter Optimizing
 
-* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/PBTTuner.md)
+* New tuner: [Population Based Training (PBT)](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Tuner/PBTTuner.md)
 * Trials can now report infinity and NaN as result
 
 #### Neural Architecture Search
 
-* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/TextNAS.md)
-* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Visualization.md) through web UI.
+* New NAS algorithm: [TextNAS](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/TextNAS.md)
+* ENAS and DARTS now support [visualization](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/Visualization.md) through web UI.
 
 #### Model Compression
 
-* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
+* New Pruner: [GradientRankFilterPruner](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compressor/Pruner.md#gradientrankfilterpruner)
 * Compressors will validate configuration by default
 * Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
 * Model compression examples are refactored and improved
-* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/master/docs/en_US/Compressor/Framework.md)
+* Added documentation for [implementing compressing algorithm](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compressor/Framework.md)
 
 #### Training Service
 
 * Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
-* Experimental [DLTS](https://github.com/microsoft/nni/blob/master/docs/en_US/TrainingService/DLTSMode.md) support
+* Experimental [DLTS](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/DLTSMode.md) support
 
 #### Overall Documentation Improvement
 
@@ -355,7 +355,7 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
     - Support Auto-Feature generator & selection    -Issue#877  -PR #1387
          + Provide auto feature interface
          + Tuner based on beam search
-         + [Add Pakdd example](https://github.com/microsoft/nni/tree/master/examples/trials/auto-feature-engineering)
+         + [Add Pakdd example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/auto-feature-engineering)
     - Add a parallel algorithm to improve the performance of TPE with large concurrency.  -PR #1052
     - Support multiphase for hyperband    -PR #1257
 
@@ -602,8 +602,8 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
 
 ### New examples
 
-* [FashionMnist](https://github.com/microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/microsoft/nni/tree/v1.9/examples/trials/network_morphism), work together with network morphism tuner
+* [Distributed MNIST example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed-pytorch) written in PyTorch
 
 ## Release 0.4 - 12/6/2018
 
@@ -611,7 +611,7 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
 
 * [Kubeflow Training service](TrainingService/KubeflowMode.md)
   * Support tf-operator
-  * [Distributed trial example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+  * [Distributed trial example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](Tuner/GridsearchTuner.md)
 * [Hyperband tuner](Tuner/HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
@@ -680,8 +680,8 @@ and [examples](https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchma
   docker pull msranni/nni:latest
   ```
 
-* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/master/examples/trials/sklearn)
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* New trial example: [NNI Sklearn Example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/sklearn)
+* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/kaggle-tgs-salt)
 
 ### Others
 

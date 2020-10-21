@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
+import { Dropdown, IDropdownOption, Stack, DefaultButton } from '@fluentui/react';
 import ParCoords from 'parcoord-es';
 import 'parcoord-es/dist/parcoords.css';
 import * as React from 'react';
@@ -9,12 +9,16 @@ import { filterByStatus } from '../../static/function';
 import { TableObj, SingleAxis, MultipleAxes } from '../../static/interface';
 import '../../static/style/button.scss';
 import '../../static/style/para.scss';
+import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 
 interface ParaState {
     dimName: string[];
     selectedPercent: string;
     primaryMetricKey: string;
     noChart: boolean;
+    customizeColumnsDialogVisible: boolean;
+    availableDimensions: string[];
+    chosenDimensions: string[];
 }
 
 interface ParaProps {
@@ -45,7 +49,10 @@ class Para extends React.Component<ParaProps, ParaState> {
             dimName: [],
             primaryMetricKey: 'default',
             selectedPercent: '1',
-            noChart: true
+            noChart: true,
+            customizeColumnsDialogVisible: false,
+            availableDimensions: [],
+            chosenDimensions: []
         };
     }
 
@@ -82,11 +89,24 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const { selectedPercent, noChart } = this.state;
+        const {
+            selectedPercent,
+            noChart,
+            customizeColumnsDialogVisible,
+            availableDimensions,
+            chosenDimensions
+        } = this.state;
 
         return (
             <div className='parameter'>
                 <Stack horizontal className='para-filter' horizontalAlign='end'>
+                    <DefaultButton
+                        text='Add/Remove axes'
+                        onClick={(): void => {
+                            this.setState({ customizeColumnsDialogVisible: true });
+                        }}
+                        styles={{ root: { marginRight: 10 } }}
+                    />
                     <Dropdown
                         selectedKey={selectedPercent}
                         onChange={this.percentNum}
@@ -101,6 +121,21 @@ class Para extends React.Component<ParaProps, ParaState> {
                     />
                     {this.finalKeysDropdown()}
                 </Stack>
+                {customizeColumnsDialogVisible && availableDimensions.length > 0 && (
+                    <ChangeColumnComponent
+                        selectedColumns={chosenDimensions}
+                        allColumns={availableDimensions.map(dim => ({ key: dim, name: dim }))}
+                        onSelectedChange={(selected: string[]): void => {
+                            this.setState({ chosenDimensions: selected }, () => {
+                                this.renderParallelCoordinates();
+                            });
+                        }}
+                        onHideDialog={(): void => {
+                            this.setState({ customizeColumnsDialogVisible: false });
+                        }}
+                        minSelected={2}
+                    />
+                )}
                 <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />
                 {noChart && <div className='nodata'>No data</div>}
             </div>
@@ -143,13 +178,13 @@ class Para extends React.Component<ParaProps, ParaState> {
     private renderParallelCoordinates(): void {
         const { searchSpace } = this.props;
         const percent = parseFloat(this.state.selectedPercent);
-        const { primaryMetricKey } = this.state;
+        const { primaryMetricKey, chosenDimensions } = this.state;
 
         const inferredSearchSpace = TRIALS.inferredSearchSpace(searchSpace);
         const inferredMetricSpace = TRIALS.inferredMetricSpace();
         let convertedTrials = this.getTrialsAsObjectList(inferredSearchSpace, inferredMetricSpace);
 
-        const dimensions: [any, any][] = [];
+        const dimensions: [string, any][] = [];
         let colorDim: string | undefined = undefined,
             colorScale: any = undefined;
         // treat every axis as numeric to fit for brush
@@ -213,7 +248,11 @@ class Para extends React.Component<ParaProps, ParaState> {
         }
         this.pcs
             .data(convertedTrials)
-            .dimensions(dimensions.reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {}));
+            .dimensions(
+                dimensions
+                    .filter(([d, _]) => chosenDimensions.length === 0 || chosenDimensions.includes(d))
+                    .reduce((obj, entry) => ({ ...obj, [entry[0]]: entry[1] }), {})
+            );
         if (firstRun) {
             this.pcs
                 .margin(this.innerChartMargins)
@@ -230,6 +269,12 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (firstRun) {
             this.setState({ noChart: false });
         }
+
+        // set new available dims
+        this.setState({
+            availableDimensions: dimensions.map(e => e[0]),
+            chosenDimensions: chosenDimensions.length === 0 ? dimensions.map(e => e[0]) : chosenDimensions
+        });
     }
 
     private getTrialsAsObjectList(inferredSearchSpace: MultipleAxes, inferredMetricSpace: MultipleAxes): {}[] {

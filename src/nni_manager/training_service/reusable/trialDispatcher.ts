@@ -235,7 +235,7 @@ class TrialDispatcher implements TrainingService {
             }
             await storageService.copyDirectory(trialToolsPath, envDir, true);
         }
-
+        await this.prefetchEnvironments();
         this.log.info(`TrialDispatcher: run loop started.`);
         await Promise.all([
             this.environmentMaintenanceLoop(),
@@ -578,6 +578,15 @@ class TrialDispatcher implements TrainingService {
 
         }
     }
+    
+    private async prefetchEnvironments (): Promise<void> {
+        const environmentService = component.get<EnvironmentService>(EnvironmentService);
+        const number = environmentService.prefetchedEnvironmentCount;
+        this.log.info(`Initialize environments total number: ${number}`);
+        for (let index = 0; index < number; index++) {
+            await this.requestEnvironment();
+        }
+    }
 
     private async requestEnvironment(): Promise<void> {
         if (this.commandChannel === undefined) {
@@ -653,19 +662,22 @@ class TrialDispatcher implements TrainingService {
         trial.status = "RUNNING";
         await this.commandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
     }
-
+    
+    /**
+     * release the trial assigned environment resources
+     * @param trial 
+     */
     private releaseEnvironment(trial: TrialDetail): void {
-        if (undefined === trial.environment) {
-            throw new Error(`TrialDispatcher: environment is not assigned to trial ${trial.id}, and cannot be released!`);
-        }
-        if (trial.environment.runningTrialCount <= 0) {
-            throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
+        if (trial.environment !== undefined) {
+            if (trial.environment.runningTrialCount <= 0) {
+                throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
+            }
+            trial.environment.runningTrialCount--;
+            trial.environment = undefined;
         }
         if (true === this.enableGpuScheduler) {
             this.gpuScheduler.removeGpuReservation(trial);
         }
-        trial.environment.runningTrialCount--;
-        trial.environment = undefined;
     }
 
     private async handleMetricData(trialId: string, data: any): Promise<void> {

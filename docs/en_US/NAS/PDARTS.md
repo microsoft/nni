@@ -2,7 +2,7 @@
 
 ## Examples
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/pdarts)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/pdarts)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.

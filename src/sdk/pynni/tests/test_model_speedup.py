@@ -12,6 +12,8 @@ from torchvision.models.resnet import resnet18
 from unittest import TestCase, main
 
 from nni.compression.torch import L1FilterPruner, apply_compression_results, ModelSpeedup
+from nni.compression.torch.pruning.weight_masker import WeightMasker
+from nni.compression.torch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -104,6 +106,74 @@ def zero_bn_bias(model):
                 shape = module.running_mean.data.size()
                 module.running_mean = torch.zeros(shape).to(device)
 
+class L1ChannelMasker(WeightMasker):
+    def __init__(self, model, pruner):
+        self.model = model
+        self.pruner = pruner
+
+    def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        msg = 'module type {} is not supported!'.format(wrapper.type)
+        #assert wrapper.type == 'Conv2d', msg
+        weight = wrapper.module.weight.data
+        bias = None
+        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
+            bias = wrapper.module.bias.data
+
+        if wrapper.weight_mask is None:
+            mask_weight = torch.ones(weight.size()).type_as(weight).detach()
+        else:
+            mask_weight = wrapper.weight_mask.clone()
+        if bias is not None:
+            if wrapper.bias_mask is None:
+                mask_bias = torch.ones(bias.size()).type_as(bias).detach()
+            else:
+                mask_bias = wrapper.bias_mask.clone()
+        else:
+            mask_bias = None
+        base_mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
+
+        num_total = weight.size(1)
+        num_prune = int(num_total * sparsity)
+
+        if num_total < 2 or num_prune < 1:
+            return base_mask
+        w_abs = weight.abs()
+        if wrapper.type == 'Conv2d':
+            w_abs_structured = w_abs.sum((0, 2, 3))
+            threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
+            mask_weight = torch.gt(w_abs_structured, threshold)[None, :, None, None].expand_as(weight).type_as(weight)
+            return {'weight_mask': mask_weight.detach()}
+        else:
+            # Linear
+            assert wrapper.type == 'Linear'
+            w_abs_structured = w_abs.sum((0))
+            threshold = torch.topk(w_abs_structured, num_prune, largest=False)[0].max()
+            mask_weight = torch.gt(w_abs_structured, threshold)[None, :].expand_as(weight).type_as(weight)
+            return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
+
+class L1ChannelPruner(_StructuredFilterPruner):
+    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
+                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+    def validate_config(self, model, config_list):
+        pass
+
+
+def channel_prune(model):
+    config_list = [{
+        'sparsity': SPARSITY,
+        'op_types': ['Conv2d', 'Linear']
+    }, {
+        'op_names': ['conv1'],
+        'exclude': True
+    }]
+
+    pruner = L1ChannelPruner(model, config_list)
+    masker = L1ChannelMasker(model, pruner)
+    pruner.masker = masker
+    pruner.compress()
+    pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
+
 class SpeedupTestCase(TestCase):
     def test_speedup_vgg16(self):
         prune_model_l1(vgg16())
@@ -145,10 +215,20 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
 
     def test_speedup_integration(self):
-        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3']:
+        for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3', 'resnet50']:
+            kwargs = {
+                'pretrained': True
+            }
+            if model_name == 'resnet50':
+                # testing multiple groups
+                kwargs = {
+                    'pretrained': False,
+                    'groups': 4
+                }
+
             Model = getattr(models, model_name)
-            net = Model(pretrained=True, progress=False).to(device)
-            speedup_model = Model().to(device)
+            net = Model(**kwargs).to(device)
+            speedup_model = Model(**kwargs).to(device)
             net.eval() # this line is necessary
             speedup_model.eval()
             # random generate the prune config for the pruner
@@ -165,6 +245,9 @@ class SpeedupTestCase(TestCase):
             data = torch.ones(BATCH_SIZE, 3, 224, 224).to(device)
             ms = ModelSpeedup(speedup_model, data, MASK_FILE)
             ms.speedup_model()
+
+            speedup_model.eval()
+
             ori_out = net(data)
             speeded_out = speedup_model(data)
             ori_sum = torch.sum(ori_out).item()
@@ -173,6 +256,35 @@ class SpeedupTestCase(TestCase):
             print('Sum of the output of %s (after speedup):'%model_name, speeded_sum)
             assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                    (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+
+    def test_channel_prune(self):
+        orig_net = resnet18(num_classes=10).to(device)
+        channel_prune(orig_net)
+        state_dict = torch.load(MODEL_FILE)
+
+        orig_net = resnet18(num_classes=10).to(device)
+        orig_net.load_state_dict(state_dict)
+        apply_compression_results(orig_net, MASK_FILE)
+        orig_net.eval()
+
+        net = resnet18(num_classes=10).to(device)
+
+        net.load_state_dict(state_dict)
+        net.eval()
+
+        data = torch.randn(BATCH_SIZE, 3, 224, 224).to(device)
+        ms = ModelSpeedup(net, data, MASK_FILE)
+        ms.speedup_model()
+        ms.bound_model(data)
+
+        net.eval()
+
+        ori_sum = orig_net(data).abs().sum().item()
+        speeded_sum = net(data).abs().sum().item()
+
+        print(ori_sum, speeded_sum)
+        assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
+            (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def tearDown(self):
         os.remove(MODEL_FILE)

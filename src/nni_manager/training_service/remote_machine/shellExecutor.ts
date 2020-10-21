@@ -238,6 +238,12 @@ class ShellExecutor {
         return commandResult.exitCode == 0;
     }
 
+    public async fileExist(filePath: string): Promise<boolean> {
+        const commandText = this.osCommands && this.osCommands.fileExistCommand(filePath);
+        const commandResult = await this.execute(commandText);   
+        return commandResult.stdout !== undefined && commandResult.stdout.trim() === 'True';
+    }
+
     public async extractFile(tarFileName: string, targetFolder: string): Promise<boolean> {
         const commandText = this.osCommands && this.osCommands.extractFile(tarFileName, targetFolder);
         const commandResult = await this.execute(commandText);

@@ -125,8 +125,14 @@ export abstract class EnvironmentService {
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
-    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
+    public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    
+    // It is used to set prefetched environment count, default value is 0 for OpenPAI and AML mode,
+    // in remote mode, this value is set to the length of machine list.
+    public get prefetchedEnvironmentCount(): number {
+        return 0;
+    }
 
     // It depends on environment pressure and settings
     // for example, OpenPAI relies on API calls, and there is an limitation for frequence, so it need to be bigger.

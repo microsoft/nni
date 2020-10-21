@@ -60,7 +60,10 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         Object.keys(customized).map(item => {
             if (item !== 'tag') {
                 // unified data type
-                if (typeof copyTrialParameter[item] === 'number' && typeof customized[item] === 'string') {
+                if (
+                    (typeof copyTrialParameter[item] === 'number' && typeof customized[item] === 'string') ||
+                    (typeof copyTrialParameter[item] === 'boolean' && typeof customized[item] === 'string')
+                ) {
                     customized[item] = JSON.parse(customized[item]);
                 }
                 if (searchSpace[item] === undefined) {
