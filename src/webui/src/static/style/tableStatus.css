@@ -5,11 +5,11 @@
 }
 
 .FAILED {
-    color: #dd4b39;
+    color: #a4262c;
 }
 
 .SUCCEEDED {
-    color: #00a445;
+    color: #00ad56;
 }
 
 .UNKNOWN {
@@ -21,7 +21,7 @@
 }
 
 .WAITING {
-    color: #fdc401;
+    color: #d29200;
 }
 
 .EARLY_STOPPED {

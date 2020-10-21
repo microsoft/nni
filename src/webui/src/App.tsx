@@ -12,6 +12,7 @@ interface AppState {
     columnList: string[];
     experimentUpdateBroadcast: number;
     trialsUpdateBroadcast: number;
+    maxDurationUnit: string;
     metricGraphMode: 'max' | 'min'; // tuner's optimize_mode filed
     isillegalFinal: boolean;
     expWarningMessage: string;
@@ -26,10 +27,13 @@ export const AppContext = React.createContext({
     trialsUpdateBroadcast: 0,
     metricGraphMode: 'max',
     bestTrialEntries: '10',
+    maxDurationUnit: 'm',
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeColumn: (val: string[]) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeMetricGraphMode: (val: 'max' | 'min') => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
+    changeMaxDurationUnit: (val: string) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     changeEntries: (val: string) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
@@ -47,6 +51,7 @@ class App extends React.Component<{}, AppState> {
             experimentUpdateBroadcast: 0,
             trialsUpdateBroadcast: 0,
             metricGraphMode: 'max',
+            maxDurationUnit: 'm',
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
@@ -91,6 +96,11 @@ class App extends React.Component<{}, AppState> {
         this.setState({ bestTrialEntries: entries });
     };
 
+    // overview max duration unit
+    changeMaxDurationUnit = (unit: string): void => {
+        this.setState({ maxDurationUnit: unit });
+    };
+
     updateOverviewPage = (): void => {
         this.setState(state => ({
             experimentUpdateBroadcast: state.experimentUpdateBroadcast + 1
@@ -114,7 +124,8 @@ class App extends React.Component<{}, AppState> {
             metricGraphMode,
             isillegalFinal,
             expWarningMessage,
-            bestTrialEntries
+            bestTrialEntries,
+            maxDurationUnit
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null; // TODO: render a loading page
@@ -137,7 +148,24 @@ class App extends React.Component<{}, AppState> {
                 <Stack className='contentBox'>
                     <Stack className='content'>
                         {/* search space & config */}
-                        <TrialConfigButton />
+                        <AppContext.Provider
+                            value={{
+                                interval,
+                                columnList,
+                                changeColumn: this.changeColumn,
+                                experimentUpdateBroadcast,
+                                trialsUpdateBroadcast,
+                                metricGraphMode,
+                                maxDurationUnit,
+                                changeMaxDurationUnit: this.changeMaxDurationUnit,
+                                changeMetricGraphMode: this.changeMetricGraphMode,
+                                bestTrialEntries,
+                                changeEntries: this.changeEntries,
+                                updateOverviewPage: this.updateOverviewPage
+                            }}
+                        >
+                            <TrialConfigButton />
+                        </AppContext.Provider>
                         {/* if api has error field, show error message */}
                         {errorList.map(
                             (item, key) =>
@@ -160,6 +188,8 @@ class App extends React.Component<{}, AppState> {
                                 experimentUpdateBroadcast,
                                 trialsUpdateBroadcast,
                                 metricGraphMode,
+                                maxDurationUnit,
+                                changeMaxDurationUnit: this.changeMaxDurationUnit,
                                 changeMetricGraphMode: this.changeMetricGraphMode,
                                 bestTrialEntries,
                                 changeEntries: this.changeEntries,
