@@ -6,7 +6,7 @@ Use Grid search to find the best combination of alpha, beta and gamma for Effici
 
 ## Instructions
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/trials/efficientnet)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/trials/efficientnet)
 
 1. Set your working directory here in the example code directory.
 2. Run `git clone https://github.com/ultmaster/EfficientNet-PyTorch` to clone this modified version of [EfficientNet-PyTorch](https://github.com/lukemelas/EfficientNet-PyTorch). The modifications were done to adhere to the original [Tensorflow version](https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet) as close as possible (including EMA, label smoothing and etc.); also added are the part which gets parameters from tuner and reports intermediate/final results. Clone it into `EfficientNet-PyTorch`; the files like `main.py`, `train_imagenet.sh` will appear inside, as specified in the configuration files.

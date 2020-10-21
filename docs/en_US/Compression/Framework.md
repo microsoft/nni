@@ -48,7 +48,7 @@ quantizer = DoReFaQuantizer(model, configure_list, optimizer)
 quantizer.compress()
 
 ```
-View [example code](https://github.com/microsoft/nni/tree/master/examples/model_compress) for more information.
+View [example code](https://github.com/microsoft/nni/tree/v1.9/examples/model_compress) for more information.
 
 `Compressor` class provides some utility methods for subclass and users:
 

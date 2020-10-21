@@ -73,12 +73,12 @@ We are ready for the experiment, let's now **run the config.yml file from your c
 nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
-[1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
+[1]: https://github.com/Microsoft/nni/tree/v1.9/examples/trials/cifar10_pytorch
 [2]: https://pytorch.org/
 [3]: https://www.cs.toronto.edu/~kriz/cifar.html
-[4]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
+[4]: https://github.com/Microsoft/nni/tree/v1.9/examples/trials/cifar10_pytorch
 [5]: Trials.md
-[6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
-[7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
-[8]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json
-[9]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py
+[6]: https://github.com/Microsoft/nni/blob/v1.9/examples/trials/cifar10_pytorch/config.yml
+[7]: https://github.com/Microsoft/nni/blob/v1.9/examples/trials/cifar10_pytorch/config_pai.yml
+[8]: https://github.com/Microsoft/nni/blob/v1.9/examples/trials/cifar10_pytorch/search_space.json
+[9]: https://github.com/Microsoft/nni/blob/v1.9/examples/trials/cifar10_pytorch/main.py
