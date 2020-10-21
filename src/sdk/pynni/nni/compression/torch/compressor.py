@@ -293,17 +293,26 @@ class PrunerModuleWrapper(torch.nn.Module):
         self.pruner = pruner
 
         # register buffer for mask
-        self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
+        if self.module.weight.requires_grad:
+            self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
+        else:
+            self.register_buffer("weight_mask", None)
+
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
+            if self.module.bias.requires_grad:
+                self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
+            else:
+                self.register_buffer("bias_mask", None)
         else:
             self.register_buffer("bias_mask", None)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
-        self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
+        if self.module.weight.requires_grad:
+            self.module.weight.data = self.module.weight.data.mul_(self.weight_mask)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
+            if self.module.bias.requires_grad:
+                self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
 
 class Pruner(Compressor):
