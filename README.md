@@ -316,7 +316,7 @@ After getting familiar with contribution agreements, you are ready to create you
 * We recommend new contributors to start with simple issues: ['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
 * [NNI developer environment installation tutorial](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.md)
 * [How to debug](docs/en_US/Tutorial/HowToDebug.md)
-* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
 * [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.md)
 * [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.md)
 * [Implement a new NAS trainer on NNI](docs/en_US/NAS/Advanced.md)
