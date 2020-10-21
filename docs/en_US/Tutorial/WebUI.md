@@ -4,7 +4,7 @@
 
 Click the tab "Overview".
 
-* On the overview tab, you can see the experiment params and the performance of top trials. If you want to see config and search space, please click the right button "Config" and "Search space".
+* On the overview tab, you can see the experiment information and status and the performance of top trials. If you want to see config and search space, please click the right button "Config" and "Search space".
 
 ![](../../img/webui-img/full-oview.png)
 * If your experiment has many trials, you can change the refresh interval here.
@@ -14,7 +14,7 @@ Click the tab "Overview".
 
 ![](../../img/webui-img/download.png)
 
-* You can change experiment param such as maxExecDuration, maxTrialNum and trial concurrency on here.
+* You can change some experiment configurations such as maxExecDuration, maxTrialNum and trial concurrency on here.
 
 ![](../../img/webui-img/edit-experiment-param.png)
 
