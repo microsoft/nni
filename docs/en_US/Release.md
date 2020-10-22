@@ -24,7 +24,7 @@
 ### WebUI & nnictl
 
 * The "Overview" page on WebUI is redesigned with new layout (#2914)
-* Upgraded node, yarn and FabricUI, and enabled Eslint
+* Upgraded node, yarn and FabricUI, and enabled Eslint (#2894 #2873 #2744)
 * Add/Remove columns in hyper-parameter chart and trials table in "Trials detail" page (#2900)
 * JSON format utility beautify on WebUI (#2863)
 * Support nnictl command auto-completion (#2857)
@@ -43,6 +43,7 @@
 * Fix search space issue in experiment save/load (#2886)
 * Fix bug in experiment import data (#2878)
 * Fix annotation in remote mode (python 3.8 ast update issue) (#2881)
+* Support boolean type for "choice" hyper-parameter when customizing trial configuration on WebUI (#3003)
 
 # Release 1.8 - 8/27/2020
 
