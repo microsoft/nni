@@ -39,19 +39,6 @@ class TrialTestCase(TestCase):
             'sequence': 0,
             'value': 123
         })
-    
-    def test_report_intermediate_result_with_accumulator(self):
-        import torch
-        import adaptdl
-        import adaptdl.torch as et
-        adaptdl.torch.init_process_group(
-            "nccl" if torch.cuda.is_available() else "gloo"
-        )
-        INTERMEDIATE_OFFSET = "intermediate_result_idx_offset"
-        stats = et.Accumulator()
-        with stats.synchronized():
-            res = nni.report_intermediate_result(123, stats)
-            self.assertEqual(stats[INTERMEDIATE_OFFSET], 1)
 
     def test_report_final_result_simple(self):
         self._test_report_final_result(123, 123)

@@ -15,7 +15,7 @@ import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manage
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
-import {NNIManager} from "../core/nnimanager";
+import { NNIManager } from "../core/nnimanager";
 
 const expressJoi = require('express-joi-validator');
 
@@ -209,6 +209,7 @@ class NNIRestHandler {
         router.get('/trial-jobs', (req: Request, res: Response) => {
             this.nniManager.listTrialJobs(req.query.status).then((jobInfos: TrialJobInfo[]) => {
                 jobInfos.forEach((trialJob: TrialJobInfo) => {
+                    this.setErrorPathForFailedJob(trialJob);
                     this.setMessageforJob(trialJob);
                 });
                 res.send(jobInfos);
@@ -221,7 +222,8 @@ class NNIRestHandler {
     private getTrialJob(router: Router): void {
         router.get('/trial-jobs/:id', (req: Request, res: Response) => {
             this.nniManager.getTrialJob(req.params.id).then((jobDetail: TrialJobInfo) => {
-                const jobInfo: TrialJobInfo = this.setMessageforJob(jobDetail);
+                const jobInfo: TrialJobInfo = this.setErrorPathForFailedJob(jobDetail);
+                this.setMessageforJob(jobInfo);
                 res.send(jobInfo);
             }).catch((err: Error) => {
                 this.handleError(err, res);
