@@ -23,9 +23,9 @@
 
 ### WebUI & nnictl
 
-* Support the new design of the Overview page. (#2914)
+* The Overview page on WebUI is redesigned with new layout (#2914)
 * Upgraded node, yarn and FabricUI, and enabled Eslint
-* Add/Remove columns in hyper-parameter chart and trial details table and Refactor trial details table (click event) (#2900)
+* Add/Remove columns in hyper-parameter chart and trial details table, refactor trial details table (click event) (#2900)
 * JSON format utility beautify on WebUI (#2863)
 * Support nnictl command auto-completion (#2857)
 
