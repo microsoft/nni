@@ -68,7 +68,6 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             job with <span>{DETAILTABS}</span> button.
         </React.Fragment>
     );
-
     columns = [
         {
             name: 'Trial No.',
