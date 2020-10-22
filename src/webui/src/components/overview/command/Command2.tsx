@@ -16,8 +16,8 @@ export const Command2 = (): any => {
         }
     }
     return (
-        <div className='command basic'>
-            <p>Log directory</p>
+        <div className='basic'>
+            <p className='command'>Log directory</p>
             <div className='nowrap'>
                 <TooltipHost
                     content={EXPERIMENT.profile.logDir || 'unknown'}

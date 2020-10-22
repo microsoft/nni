@@ -28,9 +28,9 @@ export const Command1 = (): any => {
     }
 
     return (
-        <div className='command basic'>
+        <div className='basic'>
             <div>
-                <p>Training platform</p>
+                <p className='command'>Training platform</p>
                 <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
                 <p className='lineMargin'>{title}</p>
                 <div className='nowrap'>{builtinName}</div>
