@@ -252,9 +252,6 @@ def parse_args():
     parser_top.set_defaults(func=monitor_experiment)
 
     args = parser.parse_args()
-    # TODO(Petuum): support flexible additional args without restrictions
-    # args, remaining = parser.parse_known_args()
-    # setattr(args, 'remaining', remaining)
     args.func(args)
 
 if __name__ == '__main__':

@@ -4,7 +4,6 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "testp": "mocha -r ts-node/register",
     "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
@@ -22,7 +21,7 @@
     "kubernetes-client": "^6.5.0",
     "python-shell": "^2.0.1",
     "rx": "^4.1.0",
-    "sqlite3": "^5.0.0",
+    "sqlite3": "^4.0.2",
     "ssh2": "^0.6.1",
     "stream-buffers": "^3.0.2",
     "tail-stream": "^0.3.4",

@@ -80,7 +80,7 @@ build:
 # All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
 .PHONY: easy-install
-# easy-install: check-perm
+easy-install: check-perm
 easy-install: install-dependencies
 easy-install: build
 easy-install: install
