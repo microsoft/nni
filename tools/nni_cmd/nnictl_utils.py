@@ -382,13 +382,13 @@ def log_trial_adl_helper(args, experiment_id):
                   'You can retry the command.')
     print_green('>>> Trial log streaming:')
     try:
-        proc = subprocess.run(
+        subprocess.run(
             [
                 "kubectl", "logs",
                 "-l", "adaptdl/job=%s" % adlJobName,
                 "-f"  # Follow the stream
-            ],  # TODO(Petuum): support remaining argument, uncomment the TODO(Petuum) lines in nnictl.py
-        )  # TODO(Petuum): emulate tee behaviors, not necessary tho.
+            ],  # TODO: support remaining argument, uncomment the lines in nnictl.py
+        )  # TODO: emulate tee behaviors, not necessary tho.
     except KeyboardInterrupt:
         pass
     except Exception:
@@ -401,8 +401,8 @@ def log_trial_adl_helper(args, experiment_id):
                                                          (experiment_id, args.trial_id))
         print_green('>>> (Optional) How to persist the complete trial log locally:')
         print(
-            'Please ensure `logCollection: http` ' 
-            'exists in the experiment configuration yaml. ' 
+            'Please ensure `logCollection: http` '
+            'exists in the experiment configuration yaml. '
             'After trial done, you can check it from the file below: \n  %s'
             % nni_manager_collection_path
         )
