@@ -6,7 +6,8 @@
     .ms-Button--default {
         padding: 0 8px;
         margin: 0 0 12px 0;
-        border: 1px solid #ccc;
+        border: none;
+        box-shadow: 0 3px 3px rgba(0, 0, 0, 0.08);
         border-radius: 18px 0 0 18px;
         font-size: 12px;
         text-align: left;
