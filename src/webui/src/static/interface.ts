@@ -184,7 +184,7 @@ interface ExperimentParams {
     };
     clusterMetaData?: {
         key: string;
-        value: string;
+        value: string | object;
     }[];
 }
 

@@ -10,8 +10,11 @@ export const Command2 = (): any => {
 
     if (clusterMetaData !== undefined) {
         for (const item of clusterMetaData) {
-            if (item.key === 'command' || item.key === 'trial_config') {
-                trialCommand = item.value;
+            if (item.key === 'command') {
+                trialCommand = item.value as string;
+            }
+            if (item.key === 'trial_config') {
+                trialCommand = item.value['command'];
             }
         }
     }
