@@ -64,12 +64,11 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 
     tooltipStr = (
         <React.Fragment>
-            <p>The experiment is running, please wait for the final metric patiently.</p>
-            <div className='link'>
-                You could also find status of trial job with <span>{DETAILTABS}</span> button.
-            </div>
+            The experiment is running, please wait for the final metric patiently. You could also find status of trial
+            job with <span>{DETAILTABS}</span> button.
         </React.Fragment>
     );
+
     columns = [
         {
             name: 'Trial No.',
@@ -154,16 +153,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     render(): React.ReactNode {
         const { columns, source } = this.state;
         const isNoneData = source.length === 0 ? true : false;
-        let leftMargin;
-        if (window.innerWidth > 1400) {
-            if (window.innerWidth > 1517) {
-                leftMargin = '12%';
-            } else {
-                leftMargin = '9%';
-            }
-        } else {
-            leftMargin = '5%';
-        }
+
         return (
             <div id='succTable'>
                 <DetailsList
@@ -175,11 +165,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     selectionMode={0} // close selector function
                     className='succTable'
                 />
-                {isNoneData && (
-                    <div className='succTable-tooltip' style={{ position: 'absolute', left: leftMargin, top: '40%' }}>
-                        {this.tooltipStr}
-                    </div>
-                )}
+                {isNoneData && <div className='succTable-tooltip'>{this.tooltipStr}</div>}
             </div>
         );
     }

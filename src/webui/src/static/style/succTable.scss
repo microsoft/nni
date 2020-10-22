@@ -5,13 +5,15 @@
     position: relative;
 
     .succTable-tooltip {
-        .link {
-            margin-left: 15px;
+        width: 90%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
 
-            a {
-                font-weight: 500;
-                color: blue;
-            }
+        a {
+            font-weight: 500;
+            color: blue;
         }
     }
 
