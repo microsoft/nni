@@ -1,5 +1,50 @@
 # ChangeLog
 
+# Release 1.9 - 10/22/2020
+
+## Major updates
+
+### Neural architecture search
+* Support regularized evolution algorithm for NAS scenario (#2802)
+* Add NASBench201 in search space zoo (#2766)
+
+### Model compression
+* AMC pruner improvement: support resnet, support reproduction of the experiments (default parameters in our example code) in AMC paper (#2876 #2906)
+* Support constraint-aware on some of our pruners to improve model compression efficiency (#2657)
+* Support "tf.keras.Sequential" in model compression for TensorFlow (#2887)
+* Support customized op in the model flops counter (#2795)
+* Support quantizing bias in QAT quantizer (#2914)
+
+### Training service
+
+* Support configuring python environment using "preCommand" in remote mode (#2875)
+* Support AML training service in Windows (#2882)
+* Support reuse mode for remote training service (#2923)
+
+### WebUI & nnictl
+
+* The "Overview" page on WebUI is redesigned with new layout (#2914)
+* Upgraded node, yarn and FabricUI, and enabled Eslint (#2894 #2873 #2744)
+* Add/Remove columns in hyper-parameter chart and trials table in "Trials detail" page (#2900)
+* JSON format utility beautify on WebUI (#2863)
+* Support nnictl command auto-completion (#2857)
+
+## UT & IT
+* Add integration test for experiment import and export (#2878)
+* Add integration test for user installed builtin tuner (#2859)
+* Add unit test for nnictl (#2912)
+
+## Documentation
+* Refactor of the document for model compression (#2919)
+
+## Bug fixes
+* Bug fix of naïve evolution tuner, correctly deal with trial fails (#2695)
+* Resolve the warning "WARNING (nni.protocol) IPC pipeline not exists, maybe you are importing tuner/assessor from trial code?" (#2864)
+* Fix search space issue in experiment save/load (#2886)
+* Fix bug in experiment import data (#2878)
+* Fix annotation in remote mode (python 3.8 ast update issue) (#2881)
+* Support boolean type for "choice" hyper-parameter when customizing trial configuration on WebUI (#3003)
+
 # Release 1.8 - 8/27/2020
 
 ## Major updates
