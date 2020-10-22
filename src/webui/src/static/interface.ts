@@ -190,9 +190,6 @@ interface ExperimentParams {
 
 interface ClusterItem {
     command?: string;
-    codeDir?: string;
-    image?: string;
-    gpuNum?: number;
 }
 
 interface ExperimentProfile {
