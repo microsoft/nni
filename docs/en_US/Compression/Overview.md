@@ -43,7 +43,7 @@ Pruning algorithms compress the original network by removing redundant weights o
 | [AutoCompress Pruner](https://nni.readthedocs.io/en/latest/Compression/Pruner.html#autocompress-pruner) | Automatic pruning by iteratively call SimulatedAnnealing Pruner and ADMM Pruner [Reference Paper](https://arxiv.org/abs/1907.03141) |
 | [AMC Pruner](https://nni.readthedocs.io/en/latest/Compression/Pruner.html#amc-pruner) | AMC: AutoML for Model Compression and Acceleration on Mobile Devices [Reference Paper](https://arxiv.org/pdf/1802.03494.pdf) |
 
-You can refer to this [benchmark](https://github.com/microsoft/nni/tree/master/docs/en_US/CommunitySharings/ModelCompressionComparison.md) for the performance of these pruners on some benchmark problems.
+You can refer to this [benchmark](https://github.com/microsoft/nni/tree/v1.9/docs/en_US/CommunitySharings/ModelCompressionComparison.md) for the performance of these pruners on some benchmark problems.
 
 ### Quantization Algorithms
 

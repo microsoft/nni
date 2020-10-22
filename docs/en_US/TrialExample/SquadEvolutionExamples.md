@@ -99,7 +99,7 @@ useAnnotation: false
 #Your nni_manager ip
 nniManagerIp: 10.10.10.10
 tuner:
-  codeDir: https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner
+  codeDir: https://github.com/Microsoft/nni/tree/v1.9/examples/tuners/ga_customer_tuner
   classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:
