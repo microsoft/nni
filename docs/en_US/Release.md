@@ -17,15 +17,15 @@
 
 ### Training service
 
-* Support of configuring python environment using "preCommand" in remote mode (#2875)
+* Support configuring python environment using "preCommand" in remote mode (#2875)
 * Support AML training service in Windows (#2882)
 * Support reuse mode for remote training service (#2923)
 
 ### WebUI & nnictl
 
-* The Overview page on WebUI is redesigned with new layout (#2914)
+* The "Overview" page on WebUI is redesigned with new layout (#2914)
 * Upgraded node, yarn and FabricUI, and enabled Eslint
-* Add/Remove columns in hyper-parameter chart and trial details table, refactor trial details table (click event) (#2900)
+* Add/Remove columns in hyper-parameter chart and trials table in "Trials detail" page (#2900)
 * JSON format utility beautify on WebUI (#2863)
 * Support nnictl command auto-completion (#2857)
 
