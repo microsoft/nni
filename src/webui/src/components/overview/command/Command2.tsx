@@ -14,7 +14,9 @@ export const Command2 = (): any => {
                 trialCommand = item.value as string;
             }
             if (item.key === 'trial_config') {
-                trialCommand = item.value['command'];
+                if (typeof item.value === 'object' && 'command' in item.value) {
+                    trialCommand = item.value.command as string;
+                }
             }
         }
     }

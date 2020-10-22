@@ -184,8 +184,15 @@ interface ExperimentParams {
     };
     clusterMetaData?: {
         key: string;
-        value: string | object;
+        value: string | ClusterItem;
     }[];
+}
+
+interface ClusterItem {
+    command?: string;
+    codeDir?: string;
+    image?: string;
+    gpuNum?: number;
 }
 
 interface ExperimentProfile {
