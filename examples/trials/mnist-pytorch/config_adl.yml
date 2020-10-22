@@ -4,7 +4,6 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 
-nniManagerIp: 10.20.100.121
 logCollection: http
 trainingServicePlatform: adl
 
@@ -16,9 +15,7 @@ tuner:
     optimize_mode: maximize
 
 trial:
-  image: registry.petuum.com/dev/train-demo:mnist-pytorch-adl
-  imagePullSecrets:
-    - name: stagingsecret
+  image: {replace_to_your_image_tag}  # built by ./adl.Dockerfile
   command: python3 mnist.py
   codeDir: .
   gpuNum: 1
