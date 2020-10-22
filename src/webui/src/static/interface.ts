@@ -184,8 +184,12 @@ interface ExperimentParams {
     };
     clusterMetaData?: {
         key: string;
-        value: string;
+        value: string | ClusterItem;
     }[];
+}
+
+interface ClusterItem {
+    command?: string;
 }
 
 interface ExperimentProfile {
