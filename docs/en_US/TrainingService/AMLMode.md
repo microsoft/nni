@@ -93,4 +93,4 @@ cd nni/examples/trials/mnist-tfv1
 
 nnictl create --config config_aml.yml
 ```
-Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.8`.
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.9`.
