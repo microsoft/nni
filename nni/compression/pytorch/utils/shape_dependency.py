@@ -17,7 +17,7 @@ class Dependency:
         """
         Build the graph for the model.
         """
-        from nni._graph_utils import TorchModuleGraph
+        from nni.common.graph_utils import TorchModuleGraph
 
         # check if the input is legal
         if traced_model is None:

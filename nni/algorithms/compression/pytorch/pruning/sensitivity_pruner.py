@@ -8,10 +8,10 @@ import logging
 import torch
 
 from schema import And, Optional
-from nni.compression.torch.compressor import Pruner
-from nni.compression.torch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.compressor import Pruner
+from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .constants_pruner import PRUNER_DICT
-from nni.compression.torch.utils.sensitivity_analysis import SensitivityAnalysis
+from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
 
 
 MAX_PRUNE_RATIO_PER_ITER = 0.95

@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-from nni.compression.torch.compressor import Pruner
+from nni.compression.pytorch.compressor import Pruner
 from .channel_pruning_env import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder

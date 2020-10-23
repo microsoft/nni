@@ -5,8 +5,8 @@ import copy
 import logging
 import torch
 from schema import And, Optional
-from nni.compression.torch.utils.config_validation import CompressorSchema
-from nni.compression.torch.compressor import Pruner
+from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.compressor import Pruner
 from .finegrained_pruning import LevelPrunerMasker
 
 logger = logging.getLogger('torch pruner')

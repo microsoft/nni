@@ -52,7 +52,7 @@ import shutil
 import setuptools
 from setuptools.command.develop import develop
 
-import build_ts
+import setup_ts
 
 
 dependencies = [
@@ -150,7 +150,7 @@ class BuildTs(Command):
         pass
 
     def run(self):
-        build_ts.build(release)
+        setup_ts.build(release)
 
 class Build(build):
     def run(self):
@@ -165,7 +165,7 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
-        build_ts.build(release=None)
+        setup_ts.build(release=None)
         super().run()
 
 class Clean(clean):
@@ -176,7 +176,7 @@ class Clean(clean):
 
     def run(self):
         super().run()
-        build_ts.clean(self._all)
+        setup_ts.clean(self._all)
         _clean_temp_files()
         shutil.rmtree('nni.egg-info', ignore_errors=True)
         if self._all:

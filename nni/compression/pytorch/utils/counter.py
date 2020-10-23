@@ -3,7 +3,7 @@
 
 import torch
 import torch.nn as nn
-from nni.compression.torch.compressor import PrunerModuleWrapper
+from nni.compression.pytorch.compressor import PrunerModuleWrapper
 
 try:
     from thop import profile

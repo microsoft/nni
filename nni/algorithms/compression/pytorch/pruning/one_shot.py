@@ -3,11 +3,11 @@
 
 import logging
 from schema import And, Optional, SchemaError
-from nni._graph_utils import TorchModuleGraph
-from nni.compression.torch.utils.shape_dependency import ChannelDependency, GroupDependency
+from nni.common.graph_utils import TorchModuleGraph
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 from .constants import MASKER_DICT
-from nni.compression.torch.utils.config_validation import CompressorSchema
-from nni.compression.torch.compressor import Pruner
+from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.compressor import Pruner
 
 
 __all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner',

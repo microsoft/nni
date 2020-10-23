@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from nni.compression.torch.compressor import PrunerModuleWrapper
+from nni.compression.pytorch.compressor import PrunerModuleWrapper
 from .. import AMCWeightMasker
 
 _logger = logging.getLogger(__name__)

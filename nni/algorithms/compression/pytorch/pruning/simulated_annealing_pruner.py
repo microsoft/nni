@@ -12,8 +12,8 @@ from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
-from nni.compression.torch.compressor import Pruner
-from nni.compression.torch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.compressor import Pruner
+from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .constants_pruner import PRUNER_DICT
 
 

@@ -63,7 +63,7 @@ class SensitivityAnalysis:
             This value is effective only when the early_stop_mode is set.
 
         """
-        from nni.algorithms.compression.torch.pruning.constants_pruner import PRUNER_DICT
+        from nni.algorithms.compression.pytorch.pruning.constants_pruner import PRUNER_DICT
 
         self.model = model
         self.val_func = val_func
