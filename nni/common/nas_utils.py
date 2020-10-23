@@ -4,7 +4,7 @@
 import functools
 import logging
 
-from . import trial
+from .. import trial
 
 
 _logger = logging.getLogger(__name__)
