@@ -31,7 +31,7 @@ class Nb201TrialConfig(Model):
         Dataset used for training and evaluation. NAS-Bench-201 provides the following 4 options:
         ``cifar10-valid`` (training data is splited into 25k for training and 25k for validation,
         validation data is used for test), ``cifar10`` (training data is used in training, validation
-        data is splited into 25k for validation and 25k for testing), ``cifar100`` (same protocol as ``cifar10``),
+        data is splited into 5k for validation and 5k for testing), ``cifar100`` (same protocol as ``cifar10``),
         and ``imagenet16-120`` (a subset of 120 classes in ImageNet, downscaled to 16x16, using training data
         for training, 6k images from validation set for validation and the other 6k for testing).
     """

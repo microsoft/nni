@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * Researchers and data scientists who want to easily **implement and experiment new AutoML algorithms**, may it be: hyperparameter tuning algorithm, neural architect search algorithm or model compression algorithm.
 * ML Platform owners who want to **support AutoML in their platform**.
 
-### **[NNI v1.8 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
+### **[NNI v1.9 has been released!](https://github.com/microsoft/nni/releases) &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>**
 
 ## **NNI capabilities in a glance**
 
@@ -246,7 +246,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.8 https://github.com/Microsoft/nni.git
+  git clone -b v1.9 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -294,8 +294,8 @@ You can use these commands to get more information about the experiment
 * Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/en_US/Tutorial/WebUI.md) are more Web UI pages.
 
 <table style="border: none">
-    <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
-    <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+    <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
+    <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
 </table>
 
 ## **Documentation**

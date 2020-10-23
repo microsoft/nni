@@ -19,9 +19,9 @@ const entriesOption = [
 ];
 
 const durationUnit = [
-    { key: 'm', text: 'm' },
-    { key: 'h', text: 'h' },
-    { key: 'd', text: 'd' }
+    { key: 'm', text: 'min' },
+    { key: 'h', text: 'hour' },
+    { key: 'd', text: 'day' }
 ];
 
 export { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption, durationUnit };

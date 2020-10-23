@@ -37,4 +37,4 @@ advisor:
 
 ## Example
 
-Here we provide an [example](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor).
+Here we provide an [example](https://github.com/microsoft/nni/tree/v1.9/examples/tuners/mnist_keras_customized_advisor).

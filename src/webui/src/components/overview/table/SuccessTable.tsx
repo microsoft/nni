@@ -63,13 +63,12 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     }
 
     tooltipStr = (
-        <div>
-            <p>The experiment is running, please wait for the final metric patiently.</p>
-            <div className='link'>
-                You could also find status of trial job with <span>{DETAILTABS}</span> button.
-            </div>
-        </div>
+        <React.Fragment>
+            The experiment is running, please wait for the final metric patiently. You could also find status of trial
+            job with <span>{DETAILTABS}</span> button.
+        </React.Fragment>
     );
+
     columns = [
         {
             name: 'Trial No.',
@@ -154,6 +153,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     render(): React.ReactNode {
         const { columns, source } = this.state;
         const isNoneData = source.length === 0 ? true : false;
+
         return (
             <div id='succTable'>
                 <DetailsList

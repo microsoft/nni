@@ -19,7 +19,7 @@ This is CDARTS based on the NNI platform, which currently supports CIFAR10 searc
 
 ## Examples
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/cdarts)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/cdarts)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
