@@ -40,7 +40,7 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
-    displayName: 'Install dependencies'
+    displayName: 'Install extra dependencies'
 
   - script: |
       cd docs/en_US
@@ -100,7 +100,7 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
-    displayName: 'Install dependencies'
+    displayName: 'Install extra dependencies'
 
   - script: |
       cd test
