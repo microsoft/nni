@@ -59,9 +59,8 @@ jobs:
       set -e
       cd ts/nni_manager
       yarn test
-      # FIXME: NAS UI UT stucks forever
-      #cd ../nasui
-      #yarn test
+      cd ../nasui
+      CI=true yarn test
     displayName: 'TypeScript unit test'
 
   - script: |
@@ -71,7 +70,7 @@ jobs:
 
   - script: |
       cd docs/en_US
-      sphinx-build -M html . _build -W
+      sphinx-build -M html . _build -W --keep-going -T
     displayName: 'Check Sphinx documentation'
 
 
@@ -112,9 +111,8 @@ jobs:
       set -e
       cd ts/nni_manager
       yarn test
-      # FIXME: NAS UI UT stucks forever
-      #cd ../nasui
-      #yarn test
+      cd ../nasui
+      CI=true yarn test
     displayName: 'TypeScript unit test'
 
   - script: |

@@ -49,7 +49,7 @@ The complete code of model compression examples can be found [here](https://gith
 Masks do not provide real speedup of your model. The model should be speeded up based on the exported masks, thus, we provide an API to speed up your model as shown below. After invoking `apply_compression_results` on your model, your model becomes a smaller one with shorter inference latency.
 
 ```python
-from nni.compression.torch import apply_compression_results
+from nni.compression.pytorch import apply_compression_results
 apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 ```
 
@@ -62,7 +62,7 @@ The example code for users to apply model compression on a user model can be fou
 PyTorch code
 
 ```python
-from nni.compression.torch import LevelPruner
+from nni.algorithms.compression.pytorch import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
@@ -71,14 +71,14 @@ pruner.compress()
 Tensorflow code
 
 ```python
-from nni.compression.tensorflow import LevelPruner
+from nni.algorithms.compression.tensorflow import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(tf.get_default_graph(), config_list)
 pruner.compress()
 ```
 
 
-You can use other compression algorithms in the package of `nni.compression`. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under `nni.compression.torch` and `nni.compression.tensorflow` respectively. You can refer to [Pruner](./Pruner.md) and [Quantizer](./Quantizer.md) for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to [KDExample](../TrialExample/KDExample.md)
+You can use other compression algorithms in the package of `nni.compression`. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under `nni.compression.pytorch` and `nni.compression.tensorflow` respectively. You can refer to [Pruner](./Pruner.md) and [Quantizer](./Quantizer.md) for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to [KDExample](../TrialExample/KDExample.md)
 
 A compression algorithm is first instantiated with a `config_list` passed in. The specification of this `config_list` will be described later.
 
