@@ -109,7 +109,7 @@ def _setup():
 
         entry_points = {
             'console_scripts' : [
-                'nnictl = nni.tools.cmd.nnictl:parse_args'
+                'nnictl = nni.tools.nnictl.nnictl:parse_args'
             ]
         },
 
