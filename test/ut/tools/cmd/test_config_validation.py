@@ -4,9 +4,9 @@
 import glob
 from unittest import TestCase, main
 from schema import SchemaError
-from nni.tools.cmd.launcher_utils import validate_all_content
-from nni.tools.cmd.nnictl_utils import get_yml_content
-from nni.tools.cmd.common_utils import print_error, print_green
+from nni.tools.nnictl.launcher_utils import validate_all_content
+from nni.tools.nnictl.nnictl_utils import get_yml_content
+from nni.tools.nnictl.common_utils import print_error, print_green
 
 class ConfigValidationTestCase(TestCase):
     def test_valid_config(self):

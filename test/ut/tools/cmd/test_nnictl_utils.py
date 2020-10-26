@@ -4,7 +4,7 @@
 from mock.restful_server import init_response
 from mock.experiment import create_mock_experiment, stop_mock_experiment, generate_args_parser, \
 generate_args
-from nni.tools.cmd.nnictl_utils import get_experiment_time, get_experiment_status, \
+from nni.tools.nnictl.nnictl_utils import get_experiment_time, get_experiment_status, \
 check_experiment_id, parse_ids, get_config_filename, get_experiment_port, check_rest, \
 trial_ls, list_experiment
 from unittest import TestCase, main

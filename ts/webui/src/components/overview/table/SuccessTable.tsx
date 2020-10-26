@@ -63,12 +63,10 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     }
 
     tooltipStr = (
-        <div>
-            <p>The experiment is running, please wait for the final metric patiently.</p>
-            <div className='link'>
-                You could also find status of trial job with <span>{DETAILTABS}</span> button.
-            </div>
-        </div>
+        <React.Fragment>
+            The experiment is running, please wait for the final metric patiently. You could also find status of trial
+            job with <span>{DETAILTABS}</span> button.
+        </React.Fragment>
     );
 
     columns = [
@@ -76,34 +74,36 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 50,
+            maxWidth: 87,
             isResizable: true,
             data: 'number',
-            onColumnClick: this.onColumnClick
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.sequenceId}</div>
         },
         {
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 50,
+            maxWidth: 87,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
-            onColumnClick: this.onColumnClick
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
         },
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 65,
+            maxWidth: 150,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
-                <div className='durationsty'>
+                <div className='durationsty succeed-padding'>
                     <div>{convertDuration(item.duration)}</div>
                 </div>
             )
@@ -111,26 +111,24 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: (window.innerWidth * 0.333 - 150) / 5,
-            maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 80,
+            maxWidth: 150,
             isResizable: true,
             fieldName: 'status',
-            onRender: (item: any): React.ReactNode => {
-                return <div className={`${item.status} commonStyle`}>{item.status}</div>;
-            }
+            onRender: (item: any): React.ReactNode => (
+                <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
+            )
         },
         {
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: (window.innerWidth * 0.333 - 200) / 5,
-            // maxWidth: (window.innerWidth * 0.333 - 150) / 5,
+            minWidth: 100,
+            maxWidth: 160,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => {
-                return <DefaultMetric trialId={item.id} />;
-            }
+            onRender: (item: any): React.ReactNode => <DefaultMetric trialId={item.id} />
         }
     ];
 
@@ -155,6 +153,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     render(): React.ReactNode {
         const { columns, source } = this.state;
         const isNoneData = source.length === 0 ? true : false;
+
         return (
             <div id='succTable'>
                 <DetailsList

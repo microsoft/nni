@@ -15,7 +15,7 @@ from google.protobuf import text_format
 import unittest
 from unittest import TestCase, main
 
-from nni._graph_utils import build_module_graph, build_graph, TorchModuleGraph, TUPLE_UNPACK_KIND
+from nni.common.graph_utils import build_module_graph, build_graph, TorchModuleGraph, TUPLE_UNPACK_KIND
 
 class BackboneModel1(nn.Module):
     def __init__(self):

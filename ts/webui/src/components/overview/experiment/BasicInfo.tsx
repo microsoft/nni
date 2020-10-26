@@ -24,61 +24,63 @@ export const ReBasicInfo = (): any => {
     return (
         <div>
             <div className='basic'>
-                <p>ID: {EXPERIMENT.profile.id}</p>
+                <p>
+                    ID: <span>{EXPERIMENT.profile.id}</span>
+                </p>
                 <div>{EXPERIMENT.profile.params.experimentName}</div>
             </div>
             <div className='basic'>
-                <Stack className='basic'>
-                    <p>Status</p>
-                    <Stack horizontal className='status'>
-                        <span className={`${EXPERIMENT.status} status-text`}>{EXPERIMENT.status}</span>
-                        {EXPERIMENT.status === 'ERROR' ? (
-                            <div>
-                                <div className={styles.buttonArea} ref={ref}>
-                                    <IconButton
-                                        iconProps={{ iconName: 'info' }}
-                                        onClick={isCalloutVisible ? onDismiss : showCallout}
-                                    />
-                                </div>
-                                {isCalloutVisible && (
-                                    <Callout
-                                        className={styles.callout}
-                                        ariaLabelledBy={labelId}
-                                        ariaDescribedBy={descriptionId}
-                                        role='alertdialog'
-                                        gapSpace={0}
-                                        target={ref}
-                                        onDismiss={onDismiss}
-                                        setInitialFocus={true}
-                                    >
-                                        <div className={styles.header}>
-                                            <p className={styles.title} id={labelId}>
-                                                Error
-                                            </p>
-                                        </div>
-                                        <div className={styles.inner}>
-                                            <p className={styles.subtext} id={descriptionId}>
-                                                {EXPERIMENT.error}
-                                            </p>
-                                            <div className={styles.actions}>
-                                                <Link className={styles.link} onClick={ShowLogDrawer}>
-                                                    Learn about
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    </Callout>
-                                )}
+                <p>Status</p>
+                <Stack horizontal className='status'>
+                    <span className={`${EXPERIMENT.status} status-text`}>{EXPERIMENT.status}</span>
+                    {EXPERIMENT.status === 'ERROR' ? (
+                        <div>
+                            <div className={styles.buttonArea} ref={ref}>
+                                <IconButton
+                                    iconProps={{ iconName: 'info' }}
+                                    onClick={isCalloutVisible ? onDismiss : showCallout}
+                                />
                             </div>
-                        ) : null}
-                    </Stack>
+                            {isCalloutVisible && (
+                                <Callout
+                                    className={styles.callout}
+                                    ariaLabelledBy={labelId}
+                                    ariaDescribedBy={descriptionId}
+                                    role='alertdialog'
+                                    gapSpace={0}
+                                    target={ref}
+                                    onDismiss={onDismiss}
+                                    setInitialFocus={true}
+                                >
+                                    <div className={styles.header}>
+                                        <p className={styles.title} id={labelId} style={{ color: '#333' }}>
+                                            Error
+                                        </p>
+                                    </div>
+                                    <div className={styles.inner}>
+                                        <p className={styles.subtext} id={descriptionId} style={{ color: '#333' }}>
+                                            {EXPERIMENT.error}
+                                        </p>
+                                        <div className={styles.actions}>
+                                            <Link className={styles.link} onClick={ShowLogDrawer}>
+                                                Learn about
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </Callout>
+                            )}
+                        </div>
+                    ) : null}
                 </Stack>
             </div>
             <div className='basic'>
                 <BestMetricContext.Consumer>
                     {(value): React.ReactNode => (
-                        <Stack>
+                        <Stack className='bestMetric'>
                             <p>Best metric</p>
-                            <div>{isNaN(value.bestAccuracy) ? 'N/A' : value.bestAccuracy.toFixed(6)}</div>
+                            <div className={EXPERIMENT.status}>
+                                {isNaN(value.bestAccuracy) ? 'N/A' : value.bestAccuracy.toFixed(6)}
+                            </div>
                         </Stack>
                     )}
                 </BestMetricContext.Consumer>

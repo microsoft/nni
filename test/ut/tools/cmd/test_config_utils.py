@@ -3,7 +3,7 @@
 
 from pathlib import Path
 from unittest import TestCase, main
-from nni.tools.cmd.config_utils import Config, Experiments
+from nni.tools.nnictl.config_utils import Config, Experiments
 
 HOME_PATH = str(Path(__file__).parent / "mock/nnictl_metadata")
 

@@ -25,7 +25,7 @@ To avoid storage and legality issues, we do not provide any prepared databases. 
 git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
 cd nni/examples/nas/benchmarks
 ```
-Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.8`.
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.9`.
 
 2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201` or `nds`.
 3. Generate the database via `./xxx.sh`. The directory that stores the benchmark file can be configured with `NASBENCHMARK_DIR` environment variable, which defaults to `~/.nni/nasbenchmark`. Note that the NAS-Bench-201 dataset will be downloaded from a google drive.

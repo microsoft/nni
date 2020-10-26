@@ -62,7 +62,11 @@ Note: You should set `trainingServicePlatform: aml` in NNI config YAML file if y
 
 Compared with [LocalMode](LocalMode.md) trial configuration in aml mode have these additional keys:
 * image
-    * required key. The docker image name used in job. The image `msranni/nni` of this example only support GPU computeTargets.
+    * required key. The docker image name used in job. NNI support image `msranni/nni` for running aml jobs.
+    ```
+    Note: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
+    ``` 
+
 
 amlConfig:
 * subscriptionId
@@ -72,11 +76,11 @@ amlConfig:
 * workspaceName
     * required key, the workspaceName of your account
 * computeTarget
-    * required key, the compute cluster name you want to use in your AML workspace. See Step 6.
+    * required key, the compute cluster name you want to use in your AML workspace. [refer](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target) See Step 6.
 * maxTrialNumPerGpu
-    * optional key, used to specify the max concurrency trial number on a GPU device.
+    * optional key, default 1. Used to specify the max concurrency trial number on a GPU device.
 * useActiveGpu
-    * optional key, used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
+    * optional key, default false. Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
 
 The required information of amlConfig could be found in the downloaded `config.json` in Step 5.
 
@@ -89,4 +93,4 @@ cd nni/examples/trials/mnist-tfv1
 
 nnictl create --config config_aml.yml
 ```
-Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.8`.
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.9`.

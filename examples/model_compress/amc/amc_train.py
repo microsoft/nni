@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from tensorboardX import SummaryWriter
+from torchvision.models import resnet
 
 from nni.compression.torch.pruning.amc.lib.net_measure import measure_model
 from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
@@ -27,7 +28,9 @@ from mobilenet_v2 import MobileNetV2
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC train / fine-tune script')
-    parser.add_argument('--model_type', default='mobilenet', type=str, help='name of the model to train')
+    parser.add_argument('--model_type', default='mobilenet', type=str,
+        choices=['mobilenet', 'mobilenetv2', 'resnet18', 'resnet34', 'resnet50'],
+        help='name of the model to train')
     parser.add_argument('--dataset', default='cifar10', type=str, help='name of the dataset to train')
     parser.add_argument('--lr', default=0.05, type=float, help='learning rate')
     parser.add_argument('--n_gpu', default=4, type=int, help='number of GPUs to use')
@@ -62,17 +65,21 @@ def get_model(args):
         net = MobileNet(n_class=n_class)
     elif args.model_type == 'mobilenetv2':
         net = MobileNetV2(n_class=n_class)
+    elif args.model_type.startswith('resnet'):
+        net = resnet.__dict__[args.model_type](pretrained=True)
+        in_features = net.fc.in_features
+        net.fc = nn.Linear(in_features, n_class)
     else:
         raise NotImplementedError
 
     if args.ckpt_path is not None:
         # the checkpoint can be state_dict exported by amc_search.py or saved by amc_train.py
         print('=> Loading checkpoint {} ..'.format(args.ckpt_path))
-        net.load_state_dict(torch.load(args.ckpt_path))
+        net.load_state_dict(torch.load(args.ckpt_path, torch.device('cpu')))
         if args.mask_path is not None:
             SZ = 224 if args.dataset == 'imagenet' else 32
             data = torch.randn(2, 3, SZ, SZ)
-            ms = ModelSpeedup(net, data, args.mask_path)
+            ms = ModelSpeedup(net, data, args.mask_path, torch.device('cpu'))
             ms.speedup_model()
 
     net.to(args.device)
@@ -179,11 +186,11 @@ def adjust_learning_rate(optimizer, epoch):
     return lr
 
 def save_checkpoint(state, is_best, checkpoint_dir='.'):
-    filename = os.path.join(checkpoint_dir, 'ckpt.pth.tar')
+    filename = os.path.join(checkpoint_dir, 'ckpt.pth')
     print('=> Saving checkpoint to {}'.format(filename))
     torch.save(state, filename)
     if is_best:
-        shutil.copyfile(filename, filename.replace('.pth.tar', '.best.pth.tar'))
+        shutil.copyfile(filename, filename.replace('.pth', '.best.pth'))
 
 if __name__ == '__main__':
     args = parse_args()

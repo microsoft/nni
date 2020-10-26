@@ -1,16 +1,6 @@
 $iconPaddingVal: 20px;
 
 .panelTitle {
-    img {
-        height: 23px;
-
-        /* (38 - 22 ) / 2 */
-        margin-top: 8px;
-
-        /* icon right */
-        padding: 0 $iconPaddingVal 0 0;
-    }
-
     span {
         font-size: 18px;
         font-weight: 600;

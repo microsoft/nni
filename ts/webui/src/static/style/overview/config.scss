@@ -4,15 +4,21 @@
     z-index: 1000;
 
     .ms-Button--default {
-        padding: 0;
-        margin: 0 0 15px 0;
+        padding: 0 8px;
+        margin: 0 0 12px 0;
+        border: none;
+        box-shadow: 0 3px 3px rgba(0, 0, 0, 0.08);
         border-radius: 18px 0 0 18px;
-        border: 1px solid #ccc;
-        color: #0573bc;
+        font-size: 12px;
+        text-align: left;
+
+        .ms-Button-label {
+            font-weight: normal;
+        }
     }
 
     .ms-Button--default:hover {
-        background-color: orangered;
+        background-color: #0071bc;
         color: #fff;
     }
 }

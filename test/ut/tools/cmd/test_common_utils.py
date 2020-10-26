@@ -7,8 +7,8 @@ from unittest import TestCase, main
 
 from mock.restful_server import init_response
 
-from nni.tools.cmd.command_utils import kill_command
-from nni.tools.cmd.common_utils import get_yml_content, get_json_content, detect_process
+from nni.tools.nnictl.command_utils import kill_command
+from nni.tools.nnictl.common_utils import get_yml_content, get_json_content, detect_process
 
 cwd = Path(__file__).parent
 
