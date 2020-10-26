@@ -29,6 +29,7 @@ abstract class OsCommands {
     public abstract extractFile(tarFileName: string, targetFolder: string): string;
     public abstract executeScript(script: string, isFile: boolean): string;
     public abstract addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined;
+    public abstract fileExistCommand(filePath: string): string | undefined;
 
     public joinPath(...paths: string[]): string {
         let dir: string = paths.filter((path: any) => path !== '').join(this.pathSpliter);

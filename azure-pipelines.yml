@@ -97,27 +97,25 @@ jobs:
     displayName: 'Simple test'
 
 
-# NOTE: seems failed because nnictl is not added to path
-#- job: 'macos_latest_python37'
+#- job: 'macos_latest_python38'
 #  pool:
 #    vmImage: 'macOS-latest'
 #
 #  steps:
 #  - script: |
-#      export PYTHON37_BIN_DIR=/usr/local/Cellar/python@3.7/`ls /usr/local/Cellar/python@3.7`/bin
-#      echo "##vso[task.setvariable variable=PATH]${PYTHON37_BIN_DIR}:${HOME}/Library/Python/3.7/bin:${PATH}"
+#      export PYTHON38_BIN_DIR=/usr/local/Cellar/python@3.8/`ls /usr/local/Cellar/python@3.8`/bin
+#      echo "##vso[task.setvariable variable=PATH]${PYTHON38_BIN_DIR}:${HOME}/Library/Python/3.8/bin:${PATH}"
 #      python3 -m pip install --upgrade pip setuptools
 #    displayName: 'Install python tools'
 #  - script: |
 #      echo "network-timeout 600000" >> ${HOME}/.yarnrc
-#      make
-#      python3 -m pip install -U -e .
+#      source install.sh
 #    displayName: 'Install nni toolkit via source code'
 #  - script: |
 #      set -e
 #      # pytorch Mac binary does not support CUDA, default is cpu version
 #      python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
-#      python3 -m pip install tensorflow==2.3.1 --user
+#      python3 -m pip install tensorflow==2.2 --user
 #      brew install swig@3
 #      rm -f /usr/local/bin/swig
 #      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
@@ -131,7 +129,7 @@ jobs:
 #      cd test
 #      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
 #    displayName: 'Simple test'
-
+#
 #- job: 'win2016_python37'
 #  pool:
 #    vmImage: 'vs2017-win2016'

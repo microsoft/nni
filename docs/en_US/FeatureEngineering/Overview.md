@@ -11,7 +11,7 @@ These selectors are suitable for tabular data(which means it doesn't include ima
 In addition, those selector only for feature selection. If you want to:
 1) generate high-order combined features on nni while doing feature selection;
 2) leverage your distributed resources;
-you could try this [example](https://github.com/microsoft/nni/tree/master/examples/feature_engineering/auto-feature-engineering).
+you could try this [example](https://github.com/microsoft/nni/tree/v1.9/examples/feature_engineering/auto-feature-engineering).
 
 ## How to use?
 
@@ -102,7 +102,7 @@ class CustomizedSelector(FeatureSelector):
 **3. Integrate with Sklearn**
 
 `sklearn.pipeline.Pipeline` can connect models in series, such as feature selector, normalization, and classification/regression to form a typical machine learning problem workflow. 
-The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a mudule of the pipeline.
+The following step could help us to better integrate with sklearn, which means we could treat the customized feature selector as a module of the pipeline.
 
 1. Inherit the calss _sklearn.base.BaseEstimator_
 1. Implement _get_params_ and _set_params_ function in _BaseEstimator_
@@ -266,6 +266,6 @@ The code could be refenrence `/examples/feature_engineering/gradient_feature_sel
 ## Reference and Feedback
 * To [report a bug](https://github.com/microsoft/nni/issues/new?template=bug-report.md) for this feature in GitHub;
 * To [file a feature or improvement request](https://github.com/microsoft/nni/issues/new?template=enhancement.md) for this feature in GitHub;
-* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/NAS/Overview.md);
-* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Compression/Overview.md);
-* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/master/docs/en_US/Tuner/BuiltinTuner.md);
+* To know more about [Neural Architecture Search with NNI](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/Overview.md);
+* To know more about [Model Compression with NNI](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compression/Overview.md);
+* To know more about [Hyperparameter Tuning with NNI](https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Tuner/BuiltinTuner.md);

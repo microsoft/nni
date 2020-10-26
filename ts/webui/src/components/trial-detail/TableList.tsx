@@ -9,10 +9,12 @@ import {
     SelectionMode,
     Stack,
     StackItem,
-    TooltipHost
+    TooltipHost,
+    DirectionalHint
 } from '@fluentui/react';
 import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
 import { convertDuration, formatTimestamp } from '../../static/function';
 import { TableObj } from '../../static/interface';
 import '../../static/style/search.scss';
@@ -26,6 +28,7 @@ import '../../static/style/pagination.scss';
 import '../../static/style/search.scss';
 import '../../static/style/table.scss';
 import '../../static/style/tableStatus.css';
+import '../../static/style/overview/overviewTitle.scss';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
@@ -247,7 +250,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             {
                 key: '_expand',
                 name: '',
-                onRender: (item, index): any => {
+                onRender: (item): any => {
                     return (
                         <Icon
                             aria-hidden={true}
@@ -267,8 +270,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 } else {
                                     this._expandedTrialIds.delete(newItem.id);
                                 }
-                                const newItems = [...this.state.displayedItems];
-                                newItems[index as number] = newItem;
+                                const newItems = this.state.displayedItems.map(item =>
+                                    item.id === newItem.id ? newItem : item
+                                );
                                 this.setState({
                                     displayedItems: newItems
                                 });
@@ -294,17 +298,16 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 // FIXME: default metric is hacked as latestAccuracy currently
                 continue;
             }
-            const lengths = tableItems.map(item => `${item[k]}`.length);
-            const avgLengths = lengths.reduce((a, b) => a + b) / lengths.length;
             const columnTitle = _inferColumnTitle(k);
-            const columnWidth = Math.max(columnTitle.length, avgLengths);
             // TODO: add blacklist
+            // 0.85: tableWidth / screen
+            const widths = window.innerWidth * 0.85;
             columns.push({
                 name: columnTitle,
                 key: k,
                 fieldName: k,
-                minWidth: columnWidth * 13,
-                maxWidth: columnWidth * 18,
+                minWidth: widths * 0.12,
+                maxWidth: widths * 0.19,
                 isResizable: true,
                 onColumnClick: this._onColumnClick.bind(this),
                 ...(k === 'status' && {
@@ -316,7 +319,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
                     onRender: (record): React.ReactNode => (
-                        <TooltipHost content={record[k]}>
+                        <TooltipHost
+                            content={record[k]}
+                            directionalHint={DirectionalHint.bottomCenter}
+                            tooltipProps={{
+                                calloutProps: {
+                                    styles: {
+                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                    }
+                                }
+                            }}
+                        >
                             <div className='ellipsis'>{record[k]}</div>
                         </TooltipHost>
                     )
@@ -324,7 +339,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'latestAccuracy' && {
                     // FIXME: this is ad-hoc
                     onRender: (record): React.ReactNode => (
-                        <TooltipHost content={record._formattedLatestAccuracy}>
+                        <TooltipHost
+                            content={record._formattedLatestAccuracy}
+                            directionalHint={DirectionalHint.bottomCenter}
+                            tooltipProps={{
+                                calloutProps: {
+                                    styles: {
+                                        beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                        calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                    }
+                                }
+                            }}
+                        >
                             <div className='ellipsis'>{record._formattedLatestAccuracy}</div>
                         </TooltipHost>
                     )
@@ -344,8 +371,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             name: 'Operation',
             key: '_operation',
             fieldName: 'operation',
-            minWidth: 160,
-            maxWidth: 200,
+            minWidth: 150,
+            maxWidth: 160,
             isResizable: true,
             className: 'detail-table',
             onRender: this._renderOperationColumn.bind(this)

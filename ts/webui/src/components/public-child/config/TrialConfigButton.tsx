@@ -18,8 +18,8 @@ export const TrialConfigButton = (): any => {
     return (
         <React.Fragment>
             <Stack className='config'>
-                <DefaultButton text='Config' onClick={showTrialConfigpPanel} />
                 <DefaultButton text='Search space' onClick={showSearchSpacePanel} />
+                <DefaultButton text='Config' onClick={showTrialConfigpPanel} />
             </Stack>
             {isShowConfigPanel && <TrialConfigPanel hideConfigPanel={hideConfigPanel} activeTab={activeTab} />}
         </React.Fragment>

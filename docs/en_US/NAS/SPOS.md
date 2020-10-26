@@ -10,7 +10,7 @@ Implementation on NNI is based on [official repo](https://github.com/megvii-mode
 
 Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/spos)
 
 ### Requirements
 

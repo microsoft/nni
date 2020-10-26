@@ -13,7 +13,7 @@ class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
 
     render(): React.ReactNode {
         const accuracy = TRIALS.getTrial(this.props.trialId).accuracy;
-        return <div>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
+        return <div className='succeed-padding'>{accuracy !== undefined ? formatAccuracy(accuracy) : '--'}</div>;
     }
 }
 
