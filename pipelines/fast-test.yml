@@ -43,6 +43,11 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
+      cd docs/en_US
+      sphinx-build -M html . _build -W --keep-going -T
+    displayName: 'Check Sphinx documentation'
+
+  - script: |
       set -e
       python3 -m pylint --rcfile pylintrc nni
       python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
@@ -67,11 +72,6 @@ jobs:
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
-
-  - script: |
-      cd docs/en_US
-      sphinx-build -M html . _build -W --keep-going -T
-    displayName: 'Check Sphinx documentation'
 
 
 - job: 'ubuntu_legacy'

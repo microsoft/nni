@@ -7,7 +7,7 @@ It's convenient to implement auto model pruning with NNI compression and NNI tun
 You can easily compress a model with NNI compression. Take pruning for example, you can prune a pretrained model with LevelPruner like this
 
 ```python
-from nni.algorithms.compression.pytorch import LevelPruner
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
@@ -71,7 +71,7 @@ Then we need to modify our codes for few lines
 
 ```python
 import nni
-from nni.algorithms.compression.pytorch import *
+from nni.algorithms.compression.pytorch.pruning import *
 params = nni.get_parameters()
 conv0_sparsity = params['prune_method']['conv0_sparsity']
 conv1_sparsity = params['prune_method']['conv1_sparsity']

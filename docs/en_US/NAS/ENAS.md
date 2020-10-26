@@ -34,9 +34,9 @@ python3 search.py -h
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.enas.EnasTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.enas.EnasTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.enas.EnasMutator
+..  autoclass:: nni.algorithms.nas.pytorch.enas.EnasMutator
     :members:
 ```

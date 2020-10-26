@@ -62,7 +62,7 @@ The example code for users to apply model compression on a user model can be fou
 PyTorch code
 
 ```python
-from nni.algorithms.compression.pytorch import LevelPruner
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
@@ -71,7 +71,7 @@ pruner.compress()
 Tensorflow code
 
 ```python
-from nni.algorithms.compression.tensorflow import LevelPruner
+from nni.algorithms.compression.tensorflow.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(tf.get_default_graph(), config_list)
 pruner.compress()

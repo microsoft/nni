@@ -40,10 +40,10 @@ python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.darts.DartsTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.darts.DartsMutator
+..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsMutator
     :members:
 ```
 

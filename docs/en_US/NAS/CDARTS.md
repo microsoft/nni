@@ -43,15 +43,15 @@ bash run_retrain_cifar.sh
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.CdartsTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedDartsMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.DartsDiscreteMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedMutatorParallel
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedMutatorParallel
     :members:
 ```
