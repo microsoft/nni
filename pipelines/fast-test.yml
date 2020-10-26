@@ -3,7 +3,8 @@ name: 'Fast Test'
 jobs:
 - job: 'ubuntu_latest'
   pool:
-    vmImage: 'ubuntu-20.04'
+    # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
+    vmImage: 'ubuntu-18.04'
 
   steps:
   - script: |
