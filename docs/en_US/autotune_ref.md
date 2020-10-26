@@ -69,7 +69,7 @@
 ## Advisor
 
 ```eval_rst
-..  autoclass:: nni.msg_dispatcher_base.MsgDispatcherBase
+..  autoclass:: nni.runtime.msg_dispatcher_base.MsgDispatcherBase
     :members:
 
 ..  autoclass:: nni.algorithms.hpo.hyperband_advisor.hyperband_advisor.Hyperband
