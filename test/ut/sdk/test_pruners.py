@@ -10,7 +10,7 @@ import math
 import sys
 import unittest
 from unittest import TestCase, main
-from nni.algorithms.compression.torch.pruning import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
+from nni.algorithms.compression.pytorch.pruning import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner, \
     TaylorFOWeightFilterPruner, NetAdaptPruner, SimulatedAnnealingPruner, ADMMPruner, \
     AutoCompressPruner, AMCPruner

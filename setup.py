@@ -52,7 +52,7 @@ import shutil
 import setuptools
 from setuptools.command.develop import develop
 
-import build_ts
+import setup_ts
 
 
 dependencies = [
@@ -109,7 +109,7 @@ def _setup():
 
         entry_points = {
             'console_scripts' : [
-                'nnictl = nni.tools.cmd.nnictl:parse_args'
+                'nnictl = nni.tools.nnictl.nnictl:parse_args'
             ]
         },
 
@@ -130,11 +130,14 @@ def _find_python_packages():
     return sorted(packages) + ['nni_node']
 
 def _find_node_files():
+    if not os.path.exists('nni_node'):
+        return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
         for filename in filenames:
             files.append((dirpath + '/' + filename)[len('nni_node/'):])
-    files.remove('__init__.py')
+    if '__init__.py' in files:
+        files.remove('__init__.py')
     return sorted(files)
 
 
@@ -150,7 +153,7 @@ class BuildTs(Command):
         pass
 
     def run(self):
-        build_ts.build(release)
+        setup_ts.build(release)
 
 class Build(build):
     def run(self):
@@ -165,7 +168,7 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
-        build_ts.build(release=None)
+        setup_ts.build(release=None)
         super().run()
 
 class Clean(clean):
@@ -176,7 +179,7 @@ class Clean(clean):
 
     def run(self):
         super().run()
-        build_ts.clean(self._all)
+        setup_ts.clean(self._all)
         _clean_temp_files()
         shutil.rmtree('nni.egg-info', ignore_errors=True)
         if self._all:

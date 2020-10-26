@@ -4,10 +4,10 @@
 import argparse
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
-from nni.tools.cmd.config_utils import Config, Experiments
-from nni.tools.cmd.common_utils import print_green
-from nni.tools.cmd.command_utils import kill_command
-from nni.tools.cmd.nnictl_utils import get_yml_content
+from nni.tools.nnictl.config_utils import Config, Experiments
+from nni.tools.nnictl.common_utils import print_green
+from nni.tools.nnictl.command_utils import kill_command
+from nni.tools.nnictl.nnictl_utils import get_yml_content
 
 def create_mock_experiment():
     nnictl_experiment_config = Experiments()

@@ -6,8 +6,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import schema
-import nni.algorithms.compression.torch.pruning as torch_pruner
-import nni.algorithms.compression.torch.quantization as torch_quantizer
+import nni.algorithms.compression.pytorch.pruning as torch_pruner
+import nni.algorithms.compression.pytorch.quantization as torch_quantizer
 import math
 
 

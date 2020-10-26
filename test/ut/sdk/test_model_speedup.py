@@ -12,10 +12,10 @@ from torchvision.models.resnet import resnet18
 import unittest
 from unittest import TestCase, main
 
-from nni.compression.torch import ModelSpeedup
-from nni.algorithms.compression.torch.pruning import L1FilterPruner, apply_compression_results
-from nni.algorithms.compression.torch.pruning.weight_masker import WeightMasker
-from nni.algorithms.compression.torch.pruning.one_shot import _StructuredFilterPruner
+from nni.compression.pytorch import ModelSpeedup
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, apply_compression_results
+from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
+from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -10,10 +10,10 @@ import torch.nn as nn
 import torchvision.models as models
 import numpy as np
 
-from nni.algorithms.compression.torch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner, \
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner, \
     TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, \
     ActivationMeanRankFilterPruner
-from nni.compression.torch import ModelSpeedup
+from nni.compression.pytorch import ModelSpeedup
 
 unittest.TestLoader.sortTestMethodsUsing = None
 

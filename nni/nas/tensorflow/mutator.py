@@ -66,7 +66,13 @@ class Mutator(BaseMutator):
         if reduction_type == 'mean':
             return sum(tensor_list) / len(tensor_list)
         if reduction_type == 'concat':
-            return tf.concat(tensor_list, axis=0)
+            image_data_format = tf.keras.backend.image_data_format()
+            if image_data_format == "channels_first":
+                axis = 0
+            else:
+                axis = -1
+            return tf.concat(tensor_list, axis=axis)  # pylint: disable=E1120,E1123
+            # pylint issue #3613
         raise ValueError('Unrecognized reduction policy: "{}'.format(reduction_type))
 
     def _get_decision(self, mutable):
