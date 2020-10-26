@@ -2,4 +2,3 @@
 # Licensed under the MIT license.
 
 from .compressor import Compressor, Pruner
-from .pruning import *

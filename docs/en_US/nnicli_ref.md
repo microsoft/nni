@@ -3,7 +3,7 @@
 NNI client is a python API of `nnictl`, which implements the most commonly used commands. Users can use this API to control their experiments, collect experiment results and conduct advanced analyses based on experiment results in python code directly instead of using command line. Here is an example:
 
 ```
-from nni.nnicli import Experiment
+from nni.experiment import Experiment
 
 # create an experiment instance
 exp = Experiment() 
@@ -28,14 +28,14 @@ exp.stop_experiment()
 ## References
 
 ```eval_rst
-..  autoclass:: nni.nnicli.Experiment
+..  autoclass:: nni.experiment.Experiment
     :members:
-..  autoclass:: nni.nnicli.TrialJob
+..  autoclass:: nni.experiment.TrialJob
     :members:
-..  autoclass:: nni.nnicli.TrialHyperParameters
+..  autoclass:: nni.experiment.TrialHyperParameters
     :members:
-..  autoclass:: nni.nnicli.TrialMetricData
+..  autoclass:: nni.experiment.TrialMetricData
     :members:
-..  autoclass:: nni.nnicli.TrialResult
+..  autoclass:: nni.experiment.TrialResult
     :members:
 ```

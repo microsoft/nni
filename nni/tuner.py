@@ -57,14 +57,14 @@ class Tuner(Recoverable):
     See Also
     --------
     Builtin tuners:
-    :class:`~nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner`
-    :class:`~nni.evolution_tuner.evolution_tuner.EvolutionTuner`
-    :class:`~nni.smac_tuner.SMACTuner`
-    :class:`~nni.gridsearch_tuner.GridSearchTuner`
-    :class:`~nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner`
-    :class:`~nni.metis_tuner.mets_tuner.MetisTuner`
-    :class:`~nni.ppo_tuner.PPOTuner`
-    :class:`~nni.gp_tuner.gp_tuner.GPTuner`
+    :class:`~nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner.HyperoptTuner`
+    :class:`~nni.algorithms.hpo.evolution_tuner.evolution_tuner.EvolutionTuner`
+    :class:`~nni.algorithms.hpo.smac_tuner.SMACTuner`
+    :class:`~nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner`
+    :class:`~nni.algorithms.hpo.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner`
+    :class:`~nni.algorithms.hpo.metis_tuner.mets_tuner.MetisTuner`
+    :class:`~nni.algorithms.hpo.ppo_tuner.PPOTuner`
+    :class:`~nni.algorithms.hpo.gp_tuner.gp_tuner.GPTuner`
     """
 
     def generate_parameters(self, parameter_id, **kwargs):

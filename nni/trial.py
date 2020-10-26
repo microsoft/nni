@@ -2,8 +2,8 @@
 # Licensed under the MIT license.
 
 from .utils import to_json
-from .env_vars import trial_env_vars
-from . import platform
+from .runtime.env_vars import trial_env_vars
+from .runtime import platform
 
 
 __all__ = [

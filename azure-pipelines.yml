@@ -14,8 +14,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      make
-      python3 -m pip install -U -e .
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
@@ -46,10 +45,10 @@ jobs:
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple test'
-  - script: |
-      cd docs/en_US/
-      sphinx-build -M html . _build -W
-    displayName: 'Sphinx Documentation Build check'
+  #- script: |
+  #    cd docs/en_US/
+  #    sphinx-build -M html . _build -W
+  #  displayName: 'Sphinx Documentation Build check'
 
 - job: 'ubuntu_1804_python36_legacy_torch_tf'
   pool:
@@ -65,8 +64,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      make
-      python3 -m pip install -U -e .
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
