@@ -54,7 +54,13 @@ jobs:
       python3 -m pytest ut
     displayName: 'Python unit test'
 
-  # TODO: ts ut
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      yarn test
+    displayName: 'TypeScript unit test'
 
   - script: |
       cd test
@@ -100,7 +106,13 @@ jobs:
       python3 -m pytest ut
     displayName: 'Python unit test'
 
-  # TODO: ts ut
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      yarn test
+    displayName: 'TypeScript unit test'
 
   - script: |
       cd test

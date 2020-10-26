@@ -5,7 +5,7 @@ import ast
 import astor
 from nni.tools.nnictl.common_utils import print_warning
 
-from .utils import ast_Num, ast_Str
+from .utils import ast_Num, ast_Str, lineno
 
 # pylint: disable=unidiomatic-typecheck
 
