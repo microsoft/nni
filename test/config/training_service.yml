@@ -95,6 +95,8 @@ pai:
     containerNFSMountPath: 
     paiStorageConfigName: 
 remote:
+  remoteConfig:
+    reuse: false
   machineList:
   - ip:
     passwd:

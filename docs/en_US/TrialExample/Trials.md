@@ -140,7 +140,7 @@ nni.get_trial_id # return "STANDALONE"
 nni.get_sequence_id # return 0
 ```
 
-You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code should successfully run with the default hyperparameter values.
+You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code should successfully run with the default hyperparameter values.
 
 For more information on debugging, please refer to [How to Debug](../Tutorial/HowToDebug.md)
 

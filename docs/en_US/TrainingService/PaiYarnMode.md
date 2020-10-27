@@ -50,7 +50,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
     * Required key. Should be positive number based on your trial program's memory requirement
 * image
     * Required key. In paiYarn mode, your trial program will be scheduled by OpenpaiYarn to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
+    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/v1.9/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
 * virtualCluster
     * Optional key. Set the virtualCluster of OpenpaiYarn. If omitted, the job will run on default virtual cluster.
 * shmMB

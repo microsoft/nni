@@ -18,7 +18,7 @@ For now, auto-completion will not be enabled by default if you install NNI throu
 cd ~
 wget https://raw.githubusercontent.com/microsoft/nni/{nni-version}/tools/bash-completion
 ```
-Here, {nni-version} should by replaced by the version of NNI, e.g., `master`, `v1.9`. You can also check the latest `bash-completion` script [here](https://github.com/microsoft/nni/blob/master/tools/bash-completion).
+Here, {nni-version} should by replaced by the version of NNI, e.g., `master`, `v1.9`. You can also check the latest `bash-completion` script [here](https://github.com/microsoft/nni/blob/v1.9/tools/bash-completion).
 
 ### Step 2. Install the script
 If you are running a root account and want to install this script for all the users

@@ -22,7 +22,7 @@ The procedure of classic NAS algorithms is similar to hyper-parameter tuning, us
 
 |Name|Brief Introduction of Algorithm|
 |---|---|
-| [Random Search](https://github.com/microsoft/nni/tree/master/examples/tuners/random_nas_tuner) | Randomly pick a model from search space |
+| [Random Search](https://github.com/microsoft/nni/tree/v1.9/examples/tuners/random_nas_tuner) | Randomly pick a model from search space |
 | [PPO Tuner](https://nni.readthedocs.io/en/latest/Tuner/BuiltinTuner.html#PPOTuner) | PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. [Reference Paper](https://arxiv.org/abs/1707.06347) |
 
 Please refer to [here](ClassicNas.md) for the usage of classic NAS algorithms.
@@ -64,6 +64,7 @@ Search Space Zoo contains the following NAS cells:
 * [DartsCell](./SearchSpaceZoo.md#DartsCell)
 * [ENAS micro](./SearchSpaceZoo.md#ENASMicroLayer)
 * [ENAS macro](./SearchSpaceZoo.md#ENASMacroLayer)
+* [NAS Bench 201](./SearchSpaceZoo.md#nas-bench-201)
 
 ## Using NNI API to Write Your Search Space
 

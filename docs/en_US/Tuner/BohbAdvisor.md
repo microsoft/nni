@@ -92,7 +92,7 @@ The advisor has a lot of different files, functions, and classes. Here, we will 
 
 ### MNIST with BOHB
 
-code implementation: [examples/trials/mnist-advisor](https://github.com/Microsoft/nni/tree/master/examples/trials/)
+code implementation: [examples/trials/mnist-advisor](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/)
 
 We chose BOHB to build a CNN on the MNIST dataset. The following is our experimental final results:
 
