@@ -13,7 +13,7 @@ jobs:
       python3 -m pip install -U pytest coverage
       python3 -m pip install -U pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: 'Install python tools'
+    displayName: 'Install Python tools'
 
   - script: |
       python3 setup.py develop
@@ -82,10 +82,9 @@ jobs:
   - script: |
       set -e
       python3 -m pip install -U --upgrade pip setuptools
-      python3 -m pip install -U pylint astroid
       python3 -m pip install -U pytest coverage
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: 'Install python tools'
+    displayName: 'Install Python tools'
 
   - script: |
       python3 setup.py develop
@@ -121,6 +120,84 @@ jobs:
     displayName: 'Simple integration test'
 
 
-# TODO: macOS
+- job: 'macos'
+  pool:
+    vmImage: 'macOS-10.15'
 
-# TODO: Windows
+  steps:
+  - script: |
+      set -e
+      export PYTHON38_BIN_DIR=/usr/local/Cellar/python@3.8/`ls /usr/local/Cellar/python@3.8`/bin
+      echo "##vso[task.setvariable variable=PATH]${PYTHON38_BIN_DIR}:${HOME}/Library/Python/3.8/bin:${PATH}"
+      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install -U pytest coverage
+    displayName: 'Install Python tools'
+
+  - script: |
+      python3 setup.py develop
+    displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      # pytorch Mac binary does not support CUDA, default is cpu version
+      python3 -m pip install -U torchvision==0.6.0 torch==1.5.0
+      python3 -m pip install -U tensorflow==2.3.1
+      brew install swig@3
+      rm -f /usr/local/bin/swig
+      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      nnictl package install --name=SMAC
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      cd test
+      python3 -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      CI=true yarn test
+    displayName: 'TypeScript unit test'
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+
+- job: 'windows'
+  pool:
+    vmImage: 'windows-2019'
+
+  steps:
+  - script: |
+      python -m pip install -U --upgrade pip setuptools
+      python -m pip install -U pytest coverage
+    displayName: 'Install Python tools'
+
+  - script: |
+      python setup.py develop
+    displayName: 'Install NNI'
+
+  - script: |
+      python -m pip install -U scikit-learn==0.23.2
+      python -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install -U tensorflow==2.3.1
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      cd test
+      python -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      cd ts/nni_manager
+      yarn test
+    displayName: 'TypeScript unit test'
+
+  - script: |
+      cd test
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
