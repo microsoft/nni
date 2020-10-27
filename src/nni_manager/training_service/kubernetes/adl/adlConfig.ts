@@ -3,6 +3,8 @@
 
 'use strict';
 
+import {KubernetesTrialConfig} from "../kubernetesConfig";
+
 /**
  * Checkpoint Config
  */
@@ -48,8 +50,7 @@ export class NFSConfig {
 /**
  * Trial job configuration for Adl
  */
-export class AdlTrialConfig {
-    public readonly codeDir: string;
+export class AdlTrialConfig extends KubernetesTrialConfig {
 
     public readonly command: string;
 
@@ -76,7 +77,7 @@ export class AdlTrialConfig {
                 cpuNum?: number, memorySize?: string,
                 adaptive?: boolean
     ) {
-        this.codeDir = codeDir;
+        super(codeDir);
         this.command = command;
         this.gpuNum = gpuNum;
         this.image = image;

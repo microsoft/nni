@@ -122,7 +122,7 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         const trialJobId: string = uniqueString(5);
         const adlJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const initStatus: TrialJobStatus = 'WAITING';
-        const codeDir = "."
+        const codeDir = this.adlTrialConfig.codeDir;
         const outputDir = "output"
         const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
             trialJobId,
@@ -210,7 +210,7 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         configmap.metadata.name = adlJobName;
         configmap.metadata.ownerReferences[0].name = adlJobName;
         configmap.metadata.ownerReferences[0].uid = k8sadlJob.metadata.uid;
-        configmap.data["run.sh"] = await this.prepareRunSh(
+        configmap.data["run.sh"] = await this.prepareRunScript(
             trialJobId, form, codeDir, outputDir)
         const cleanupScriptTemplate: string =
 `#!/bin/bash
@@ -235,7 +235,7 @@ done
         return Promise.resolve(trialJobDetail);
     }
 
-    private async prepareRunSh(jobId: string,
+    private async prepareRunScript(jobId: string,
                                form: TrialJobApplicationForm,
                                codeDir: string,
                                outputDir: string): Promise<string> {

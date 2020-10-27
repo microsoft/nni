@@ -220,9 +220,7 @@ def _set_adaptdl_signal_handler():
     global _trial_process
     def _handler(signum, frame):
         nni_log(LogType.Info, "RECEIVED SIGNAL {}".format(signum))
-        print(_trial_process.pid)
-        print(signum, signal.SIGTERM)
-        print(type(signum), type(signal.SIGTERM))
+        nni_log(LogType.Debug, "TRIAL PROCESS ID {}".format(_trial_process.pid))
         if _trial_process and (signum == signal.SIGTERM or signum == signal.SIGINT):
             os.killpg(os.getpgid(_trial_process.pid), signal.SIGINT)
             os.waitpid(_trial_process.pid, 0)

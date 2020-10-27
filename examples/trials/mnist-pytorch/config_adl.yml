@@ -15,7 +15,7 @@ tuner:
     optimize_mode: maximize
 
 trial:
-  image: {replace_to_your_image_tag}  # built by ./adl.Dockerfile
+  image: {replace_to_your_image_tag}
   command: python3 mnist.py
   codeDir: .
   gpuNum: 1
