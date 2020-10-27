@@ -1,10 +1,13 @@
-name: 'Fast Test'
+# To reduce debug cost, steps are sorted differently on each platform,
+# so that a bug in any module will cause at least one platform to fail quickly.
 
 jobs:
 - job: 'ubuntu_latest'
   pool:
     # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
     vmImage: 'ubuntu-18.04'
+
+  # This platform tests lint and doc first.
 
   steps:
   - script: |
@@ -19,7 +22,6 @@ jobs:
       python3 setup.py develop
     displayName: 'Install NNI'
 
-  # run this one first because it's fast
   - script: |
       set -e
       cd ts/nni_manager
@@ -43,17 +45,17 @@ jobs:
     displayName: 'Install extra dependencies'
 
   - script: |
-      cd docs/en_US
-      sphinx-build -M html . _build -W --keep-going -T
-    displayName: 'Check Sphinx documentation'
-
-  - script: |
       set -e
       python3 -m pylint --rcfile pylintrc nni
       python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
       python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'pylint and flake8'
+
+  - script: |
+      cd docs/en_US
+      sphinx-build -M html . _build -W --keep-going -T
+    displayName: 'Check Sphinx documentation'
 
   - script: |
       cd test
@@ -77,6 +79,8 @@ jobs:
 - job: 'ubuntu_legacy'
   pool:
     vmImage: 'ubuntu-18.04'
+
+  # This platform runs integration test first.
 
   steps:
   - script: |
@@ -103,6 +107,11 @@ jobs:
 
   - script: |
       cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+  - script: |
+      cd test
       python3 -m pytest ut
     displayName: 'Python unit test'
 
@@ -114,15 +123,12 @@ jobs:
       CI=true yarn test
     displayName: 'TypeScript unit test'
 
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple integration test'
-
 
 - job: 'macos'
   pool:
     vmImage: 'macOS-10.15'
+
+  # This platform runs TypeScript unit test first.
 
   steps:
   - script: |
@@ -136,6 +142,14 @@ jobs:
   - script: |
       python3 setup.py develop
     displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      CI=true yarn test
+    displayName: 'TypeScript unit test'
 
   - script: |
       set -e
@@ -154,14 +168,6 @@ jobs:
     displayName: 'Python unit test'
 
   - script: |
-      set -e
-      cd ts/nni_manager
-      yarn test
-      cd ../nasui
-      CI=true yarn test
-    displayName: 'TypeScript unit test'
-
-  - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
@@ -170,6 +176,8 @@ jobs:
 - job: 'windows'
   pool:
     vmImage: 'windows-2019'
+
+  # This platform runs Python unit test first.
 
   steps:
   - script: |

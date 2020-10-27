@@ -205,7 +205,7 @@ def _yarn(path, *args):
     if os.environ.get('GLOBAL_TOOLCHAIN'):
         subprocess.run(['yarn', *args], cwd=path, check=True)
     else:
-        subprocess.run([_yarn_path, *args], cwd=path, check=True, env=_yarn_env)
+        subprocess.run([str(_yarn_path), *args], cwd=path, check=True, env=_yarn_env)
 
 
 def _symlink(target_file, link_location):
