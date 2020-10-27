@@ -13,7 +13,7 @@ First, we provide a sensitivity analysis tool (**SensitivityAnalysis**) for user
 
 The following codes show the basic usage of the SensitivityAnalysis.
 ```python
-from nni.compression.torch.utils.sensitivity_analysis import SensitivityAnalysis
+from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
 
 def val(model):
     model.eval()
@@ -88,7 +88,7 @@ If the layers have channel dependency are assigned with different sparsities (he
 
 #### Usage
 ```python
-from nni.compression.torch.utils.shape_dependency import ChannelDependency
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency
 data = torch.ones(1, 3, 224, 224).cuda()
 channel_depen = ChannelDependency(net, data)
 channel_depen.export('dependency.csv')
@@ -116,7 +116,7 @@ Set 12,layer4.1.conv1
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
-from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
 ```
 
@@ -125,7 +125,7 @@ We provide a model counter for calculating the model FLOPs and parameters. This 
 
 ### Usage
 ```
-from nni.compression.torch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils.counter import count_flops_params
 
 # Given input size (1, 1, 28, 28) 
 flops, params = count_flops_params(model, (1, 1, 28, 28))

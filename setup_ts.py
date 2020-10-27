@@ -32,13 +32,15 @@ def build(release):
 
     `release` is the version number without leading letter "v".
 
-    If `release` is None or empty, this is a development build and uses symlinks;
+    If `release` is None or empty, this is a development build and uses symlinks on Linux/macOS;
     otherwise this is a release build and copies files instead.
+    On Windows it always copies files because creating symlink requires extra privilege.
     """
     if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
+    prepare_nni_node()
     compile_ts()
-    if release:
+    if release or sys.platform == 'win32':
         copy_nni_node(release)
     else:
         symlink_nni_node()
@@ -48,12 +50,17 @@ def clean(clean_all=False):
     Remove TypeScript-related intermediate files.
     Python intermediate files are not touched here.
     """
-    clear_nni_node()
-    for path in generated_directories:
-        shutil.rmtree(path, ignore_errors=True)
+    shutil.rmtree('nni_node', ignore_errors=True)
+
+    for file_or_dir in generated_files:
+        path = Path(file_or_dir)
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+
     if clean_all:
         shutil.rmtree('toolchain', ignore_errors=True)
-        Path('nni_node', node_executable).unlink()
 
 
 if sys.platform == 'linux' or sys.platform == 'darwin':
@@ -63,6 +70,11 @@ if sys.platform == 'linux' or sys.platform == 'darwin':
     node_extractor = lambda data: tarfile.open(fileobj=BytesIO(data), mode='r:xz')
     node_executable_in_tarball = 'bin/node'
 
+    yarn_executable = 'yarn'
+    yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
+
+    path_env_seperator = ':'
+
 elif sys.platform == 'win32':
     node_executable = 'node.exe'
     node_spec = f'node-{node_version}-win-x64'
@@ -70,20 +82,22 @@ elif sys.platform == 'win32':
     node_extractor = lambda data: ZipFile(BytesIO(data))
     node_executable_in_tarball = 'node.exe'
 
+    yarn_executable = 'yarn.cmd'
+    yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
+
+    path_env_seperator = ';'
+
 else:
     raise RuntimeError('Unsupported system')
-
-yarn_executable = 'yarn' if sys.platform != 'win32' else 'yarn.cmd'
-yarn_download_url = f'https://github.com/yarnpkg/yarn/releases/download/{yarn_version}/yarn-{yarn_version}.tar.gz'
 
 
 def download_toolchain():
     """
-    Download and extract node and yarn,
-    then copy node executable to nni_node directory.
+    Download and extract node and yarn.
     """
-    if Path('nni_node', node_executable).is_file():
+    if Path('toolchain/node', node_executable_in_tarball).is_file():
         return
+
     Path('toolchain').mkdir(exist_ok=True)
     import requests  # place it here so setup.py can install it before importing
 
@@ -105,9 +119,19 @@ def download_toolchain():
     shutil.rmtree('toolchain/yarn', ignore_errors=True)
     Path(f'toolchain/yarn-{yarn_version}').rename('toolchain/yarn')
 
-    src = Path('toolchain/node', node_executable_in_tarball)
-    dst = Path('nni_node', node_executable)
-    shutil.copyfile(src, dst)
+
+def prepare_nni_node():
+    """
+    Create clean nni_node diretory, then copy node runtime to it.
+    """
+    shutil.rmtree('nni_node', ignore_errors=True)
+    Path('nni_node').mkdir()
+
+    Path('nni_node/__init__.py').write_text('"""NNI node.js modules."""\n')
+
+    node_src = Path('toolchain/node', node_executable_in_tarball)
+    node_dst = Path('nni_node', node_executable)
+    shutil.copyfile(node_src, node_dst)
 
 
 def compile_ts():
@@ -136,7 +160,6 @@ def symlink_nni_node():
     If you manually modify and compile TS source files you don't need to install again.
     """
     _print('Creating symlinks')
-    clear_nni_node()
 
     for path in Path('ts/nni_manager/dist').iterdir():
         _symlink(path, Path('nni_node', path.name))
@@ -158,7 +181,6 @@ def copy_nni_node(version):
     while `package.json` in ts directory will be left unchanged.
     """
     _print('Copying files')
-    clear_nni_node()
 
     # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
     for path in Path('ts/nni_manager/dist').iterdir():
@@ -168,9 +190,10 @@ def copy_nni_node(version):
             shutil.copytree(path, Path('nni_node', path.name))
 
     package_json = json.load(open('ts/nni_manager/package.json'))
-    if version.count('.') == 1:  # node.js semver requires at least three parts
-        version = version + '.0'
-    package_json['version'] = version
+    if version:
+        while len(version.split('.')) < 3:  # node.js semver requires at least three parts
+            version = version + '.0'
+        package_json['version'] = version
     json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
 
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
@@ -182,28 +205,16 @@ def copy_nni_node(version):
     shutil.copyfile('ts/nasui/server.js', 'nni_node/nasui/server.js')
 
 
-def clear_nni_node():
-    """
-    Remove compiled files in nni_node.
-    Use `clean()` if you what to remove files in ts as well.
-    """
-    for path in Path('nni_node').iterdir():
-        if path.name not in ('__init__.py', 'node', 'node.exe'):
-            if path.is_symlink() or path.is_file():
-                path.unlink()
-            else:
-                shutil.rmtree(path)
-
-
 _yarn_env = dict(os.environ)
-_yarn_env['PATH'] = str(Path('nni_node').resolve()) + ':' + os.environ['PATH']
-_yarn_path = Path('toolchain/yarn/bin', yarn_executable).resolve()
+# `Path('nni_node').resolve()` does not work on Windows if the directory not exists
+_yarn_env['PATH'] = str(Path().resolve() / 'nni_node') + path_env_seperator + os.environ['PATH']
+_yarn_path = Path().resolve() / 'toolchain/yarn/bin' / yarn_executable
 
 def _yarn(path, *args):
     if os.environ.get('GLOBAL_TOOLCHAIN'):
         subprocess.run(['yarn', *args], cwd=path, check=True)
     else:
-        subprocess.run([_yarn_path, *args], cwd=path, check=True, env=_yarn_env)
+        subprocess.run([str(_yarn_path), *args], cwd=path, check=True, env=_yarn_env)
 
 
 def _symlink(target_file, link_location):
@@ -214,16 +225,22 @@ def _symlink(target_file, link_location):
 
 
 def _print(*args):
-    print('\033[1;36m# ', end='')
-    print(*args, end='')
-    print('\033[0m')
+    if sys.platform == 'win32':
+        print(*args)
+    else:
+        print('\033[1;36m#', *args, '\033[0m')
 
 
-generated_directories = [
+generated_files = [
     'ts/nni_manager/dist',
     'ts/nni_manager/node_modules',
     'ts/webui/build',
     'ts/webui/node_modules',
     'ts/nasui/build',
     'ts/nasui/node_modules',
+
+    # unit test
+    'ts/nni_manager/exp_profile.json',
+    'ts/nni_manager/metrics.json',
+    'ts/nni_manager/trial_jobs.json',
 ]

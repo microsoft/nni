@@ -130,11 +130,14 @@ def _find_python_packages():
     return sorted(packages) + ['nni_node']
 
 def _find_node_files():
+    if not os.path.exists('nni_node'):
+        return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
         for filename in filenames:
             files.append((dirpath + '/' + filename)[len('nni_node/'):])
-    files.remove('__init__.py')
+    if '__init__.py' in files:
+        files.remove('__init__.py')
     return sorted(files)
 
 
@@ -195,7 +198,8 @@ _temp_files = [
     # unit test
     'test/model_path/',
     'test/temp.json',
-    'test/ut/sdk/*.pth'
+    'test/ut/sdk/*.pth',
+    'test/ut/tools/annotation/_generated/'
 ]
 
 
