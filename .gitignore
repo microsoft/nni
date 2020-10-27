@@ -1,3 +1,12 @@
+/nni_node/
+/toolchain/
+
+# unit test generated files
+/test/model_path/
+/test/temp.json
+/test/ut/sdk/*.pth
+
+
 # Logs
 logs
 *.log
