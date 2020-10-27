@@ -6,7 +6,7 @@ import numbers
 
 import astor
 
-from .utils import ast_Num, ast_Str
+from .utils import ast_Num, ast_Str, lineno
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -65,7 +65,7 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         if func not in _ss_funcs:
             return node
 
-        self.last_line = node.lineno
+        self.last_line = lineno(node)
 
         if func == 'mutable_layer':
             self.generate_mutable_layer_search_space(node.args)
