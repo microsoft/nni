@@ -22,5 +22,6 @@ export enum TrialConfigMetadataKey {
     DLTS_CLUSTER_CONFIG = 'dlts_config',
     AML_CLUSTER_CONFIG = 'aml_config',
     VERSION_CHECK = 'version_check',
-    LOG_COLLECTION = 'log_collection'
+    LOG_COLLECTION = 'log_collection',
+    MACHINE_SCHEDULER = 'machine_scheduler'
 }

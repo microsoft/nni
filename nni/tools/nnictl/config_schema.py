@@ -259,6 +259,7 @@ aml_config_schema = {
         'computeTarget': setType('computeTarget', str),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool),
+        Optional('machineScheduler'): setChoice('machineScheduler', 'random', 'round-robin', 'single'),
     }
 }
 

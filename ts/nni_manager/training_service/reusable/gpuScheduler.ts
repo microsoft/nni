@@ -10,7 +10,7 @@ import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { EnvironmentInformation } from './environment';
 import { TrialDetail } from './trial';
 
-type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
+export type SCHEDULE_POLICY_NAME = 'random' | 'round-robin' | 'single';
 
 export class GpuSchedulerSetting {
     public useActiveGpu: boolean = false;
@@ -30,7 +30,7 @@ export class GpuScheduler {
 
     // private readonly machineExecutorMap: Set<TrialDetail>;
     private readonly log: Logger = getLogger();
-    private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
+    private policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private defaultSetting: GpuSchedulerSetting;
     private roundRobinIndex: number = 0;
 
@@ -47,6 +47,10 @@ export class GpuScheduler {
 
     public setSettings(gpuSchedulerSetting: GpuSchedulerSetting): void {
         this.defaultSetting = gpuSchedulerSetting;
+    }
+
+    public setMachineScheduler(machineScheduler: SCHEDULE_POLICY_NAME): void {
+        this.policyName = machineScheduler;
     }
 
     /**
@@ -190,6 +194,8 @@ export class GpuScheduler {
             return randomSelect(qualifiedEnvironments);
         } else if (this.policyName === 'round-robin') {
             return this.roundRobinSelect(qualifiedEnvironments, allEnvironments);
+        } else if (this.policyName === 'single') {
+            return qualifiedEnvironments[0];
         } else {
             throw new Error(`Unsupported schedule policy: ${this.policyName}`);
         }

@@ -162,7 +162,8 @@ export namespace ValidationSchemas {
                 workspaceName: joi.string().min(1),
                 computeTarget: joi.string().min(1),
                 maxTrialNumPerGpu: joi.number(),
-                useActiveGpu: joi.boolean()
+                useActiveGpu: joi.boolean(),
+                machineScheduler: joi.string().min(1),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)

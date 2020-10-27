@@ -22,7 +22,7 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
-import { GpuScheduler } from './gpuScheduler';
+import { GpuScheduler, SCHEDULE_POLICY_NAME } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
@@ -268,6 +268,10 @@ class TrialDispatcher implements TrainingService {
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.runnerSettings.logCollection = value;
+                break;
+            case TrialConfigMetadataKey.MACHINE_SCHEDULER:
+                this.log.info(`TrialDispatcher: set machine scheduler policy to ${value}`);
+                this.gpuScheduler.setMachineScheduler(value as SCHEDULE_POLICY_NAME);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.trialConfig = <TrialConfig>JSON.parse(value);

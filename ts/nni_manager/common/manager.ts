@@ -26,6 +26,7 @@ interface ExperimentParams {
     multiThread?: boolean;
     versionCheck?: boolean;
     logCollection?: string;
+    machineScheduler?: string;
     tuner?: {
         className?: string;
         builtinTunerName?: string;

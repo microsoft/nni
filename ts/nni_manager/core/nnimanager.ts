@@ -173,6 +173,14 @@ class NNIManager implements Manager {
         if (expParams.logCollection !== undefined) {
             this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
         }
+        // Set up machineScheduler config
+        if (expParams.clusterMetaData !== undefined) {
+            for (let metaData of expParams.clusterMetaData) {
+                if (metaData.key === 'machine_scheduler') {
+                    this.trainingService.setClusterMetadata('machine_scheduler', metaData.value);
+                }
+            }
+        }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);

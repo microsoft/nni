@@ -374,6 +374,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'aml':
+        if experiment_config['amlConfig'].get('machineScheduler'):
+            request_data['clusterMetaData'].append(
+                {'key': 'machine_scheduler', 'value': experiment_config['amlConfig']['machineScheduler']})
+            del experiment_config['amlConfig']['machineScheduler']
         request_data['clusterMetaData'].append(
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
