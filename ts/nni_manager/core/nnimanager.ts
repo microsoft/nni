@@ -176,8 +176,9 @@ class NNIManager implements Manager {
         // Set up machineScheduler config
         if (expParams.clusterMetaData !== undefined) {
             for (let metaData of expParams.clusterMetaData) {
-                if (metaData.key === 'machine_scheduler') {
-                    this.trainingService.setClusterMetadata('machine_scheduler', metaData.value);
+                if (typeof metaData.value === 'object' && 'machineScheduler' in metaData.value) {
+                    this.trainingService.setClusterMetadata('machine_scheduler', metaData.value['machineScheduler']);
+                    break;
                 }
             }
         }

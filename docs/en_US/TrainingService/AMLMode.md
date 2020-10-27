@@ -81,6 +81,13 @@ amlConfig:
     * optional key, default 1. Used to specify the max concurrency trial number on a GPU device.
 * useActiveGpu
     * optional key, default false. Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
+* machineScheduler
+    * optional key, default round-robin. Used to set the machine scheduler policy for trial job, values choose from `random, round-robin, single`.
+    ```
+    random: trial jobs will be scheduled into different nodes randomly.
+    round-robin: trial jobs will be scheduled into different node sequentially.
+    single: trial jobs will always be scheduled into same node.
+    ```
 
 The required information of amlConfig could be found in the downloaded `config.json` in Step 5.
 
