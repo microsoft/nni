@@ -29,6 +29,7 @@ jobs:
       cd ../webui
       yarn eslint
     displayName: 'ESLint'
+    continueOnError: true
 
   - script: |
       set -e
@@ -51,16 +52,19 @@ jobs:
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
       python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'pylint and flake8'
+    continueOnError: true
 
   - script: |
       cd docs/en_US
       sphinx-build -M html . _build -W --keep-going -T
     displayName: 'Check Sphinx documentation'
+    continueOnError: true
 
   - script: |
       cd test
       python3 -m pytest ut
     displayName: 'Python unit test'
+    continueOnError: true
 
   - script: |
       set -e
@@ -69,11 +73,13 @@ jobs:
       cd ../nasui
       CI=true yarn test
     displayName: 'TypeScript unit test'
+    continueOnError: true
 
   - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
+    continueOnError: true
 
 
 - job: 'ubuntu_legacy'
@@ -109,11 +115,13 @@ jobs:
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
+    continueOnError: true
 
   - script: |
       cd test
       python3 -m pytest ut
     displayName: 'Python unit test'
+    continueOnError: true
 
   - script: |
       set -e
@@ -122,6 +130,7 @@ jobs:
       cd ../nasui
       CI=true yarn test
     displayName: 'TypeScript unit test'
+    continueOnError: true
 
 
 - job: 'macos'
@@ -150,6 +159,7 @@ jobs:
       cd ../nasui
       CI=true yarn test
     displayName: 'TypeScript unit test'
+    continueOnError: true
 
   - script: |
       set -e
@@ -166,11 +176,13 @@ jobs:
       cd test
       python3 -m pytest ut
     displayName: 'Python unit test'
+    continueOnError: true
 
   - script: |
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
+    continueOnError: true
 
 
 - job: 'windows'
@@ -199,13 +211,16 @@ jobs:
       cd test
       python -m pytest ut
     displayName: 'Python unit test'
+    continueOnError: true
 
   - script: |
       cd ts/nni_manager
       yarn test
     displayName: 'TypeScript unit test'
+    continueOnError: true
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
+    continueOnError: true
