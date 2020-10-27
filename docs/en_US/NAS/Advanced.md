@@ -76,9 +76,9 @@ class RandomMutator(Mutator):
         return self.sample_search()  # use the same logic here. you can do something different
 ```
 
-The complete example of random mutator can be found [here](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/nas/pytorch/random/mutator.py).
+The complete example of random mutator can be found [here](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/nas/pytorch/random/mutator.py).
 
-For advanced usages, e.g., users want to manipulate the way modules in `LayerChoice` are executed, they can inherit `BaseMutator`, and overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the callback implementation of `LayerChoice` and `InputChoice` respectively. Users can still use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. For details, please refer to [reference](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch) here to learn more.
+For advanced usages, e.g., users want to manipulate the way modules in `LayerChoice` are executed, they can inherit `BaseMutator`, and overwrite `on_forward_layer_choice` and `on_forward_input_choice`, which are the callback implementation of `LayerChoice` and `InputChoice` respectively. Users can still use property `mutables` to get all `LayerChoice` and `InputChoice` in the model code. For details, please refer to [reference](https://github.com/microsoft/nni/tree/v1.9/src/sdk/pynni/nni/nas/pytorch) here to learn more.
 
 ```eval_rst
 .. tip::

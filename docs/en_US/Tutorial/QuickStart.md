@@ -71,7 +71,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist_before.py).
+If you want to see the full implementation, please refer to [examples/trials/mnist-tfv1/mnist_before.py](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1/mnist_before.py).
 
 The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
@@ -108,7 +108,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Example: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/search_space.json)*
+*Example: [search_space.json](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1/search_space.json)*
 
 **Step 2**: Modify your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -133,7 +133,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Example: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/mnist.py)*
+*Example: [mnist.py](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1/mnist.py)*
 
 **Step 3**: Define a `config` file in YAML which declares the `path` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
@@ -160,9 +160,9 @@ trial:
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`_.
 ```
 
-*Example: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1/.nniignore)*
+*Example: [config.yml](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1/config.yml) [.nniignore](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1/.nniignore)*
 
-All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-tfv1).
+All the code above is already prepared and stored in [examples/trials/mnist-tfv1/](https://github.com/Microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1).
 
 #### Linux and macOS
 

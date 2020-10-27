@@ -5,17 +5,20 @@
     position: relative;
 
     .succTable-tooltip {
+        width: 90%;
         position: absolute;
-        top: 40%;
-        left: 5%;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
 
-        .link {
-            margin-left: 15px;
-
-            a {
-                font-weight: 500;
-                color: blue;
-            }
+        a {
+            font-weight: 500;
+            color: blue;
         }
+    }
+
+    .succeed-padding {
+        padding-left: 6px;
+        box-sizing: border-box;
     }
 }

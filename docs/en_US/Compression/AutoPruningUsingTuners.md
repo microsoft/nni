@@ -13,7 +13,7 @@ pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
-The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
+The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
 
 Therefore ```{ 'sparsity': 0.8, 'op_types': ['default'] }```means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ```pruner.compress()``` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
 
