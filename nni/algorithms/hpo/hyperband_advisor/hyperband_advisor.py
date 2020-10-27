@@ -325,10 +325,16 @@ class Hyperband(MsgDispatcherBase):
         data: int
             number of trial jobs
         """
-        for _ in range(data):
-            ret = self._get_one_trial_job()
-            if ret is not None:
-                send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+        self.credit += data
+
+        for _ in range(self.credit):
+            self._request_one_trial_job()
+    
+    def _request_one_trial_job(self):
+        ret = self._get_one_trial_job()
+        if ret is not None:
+            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            self.credit -= 1
 
     def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
@@ -384,6 +390,8 @@ class Hyperband(MsgDispatcherBase):
         if hyper_configs is not None:
             _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+        for _ in range(self.credit):
+            self._request_one_trial_job()
 
     def handle_trial_end(self, data):
         """
