@@ -13,7 +13,7 @@ We provide Naive Quantizer to quantizer weight to default 8 bits, you can use it
 ### Usage
 pytorch
 ```python 
-model = nni.compression.torch.NaiveQuantizer(model).compress()
+model = nni.algorithms.compression.pytorch.quantization.NaiveQuantizer(model).compress()
 ```
 
 ***
@@ -31,7 +31,7 @@ You can quantize your model to 8 bits with the code below before your training c
 
 PyTorch code
 ```python
-from nni.compression.torch import QAT_Quantizer
+from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 model = Mnist()
 
 config_list = [{
@@ -79,7 +79,7 @@ To implement DoReFa Quantizer, you can add code below before your training code
 
 PyTorch code
 ```python
-from nni.compression.torch import DoReFaQuantizer
+from nni.algorithms.compression.pytorch.quantization import DoReFaQuantizer
 config_list = [{ 
     'quant_types': ['weight'],
     'quant_bits': 8, 
@@ -110,7 +110,7 @@ In [Binarized Neural Networks: Training Deep Neural Networks with Weights and Ac
 
 PyTorch code
 ```python
-from nni.compression.torch import BNNQuantizer
+from nni.algorithms.compression.pytorch.quantization import BNNQuantizer
 model = VGG_Cifar10(num_classes=10)
 
 configure_list = [{

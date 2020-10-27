@@ -49,8 +49,14 @@ def clean(clean_all=False):
     Python intermediate files are not touched here.
     """
     shutil.rmtree('nni_node', ignore_errors=True)
-    for path in generated_directories:
-        shutil.rmtree(path, ignore_errors=True)
+
+    for file_or_dir in generated_files:
+        path = Path(file_or_dir)
+        if path.is_symlink() or path.is_file():
+            path.unlink()
+        elif path.is_dir():
+            shutil.rmtree(path)
+
     if clean_all:
         shutil.rmtree('toolchain', ignore_errors=True)
 
@@ -215,11 +221,16 @@ def _print(*args):
     print('\033[0m')
 
 
-generated_directories = [
+generated_files = [
     'ts/nni_manager/dist',
     'ts/nni_manager/node_modules',
     'ts/webui/build',
     'ts/webui/node_modules',
     'ts/nasui/build',
     'ts/nasui/node_modules',
+
+    # unit test
+    'ts/nni_manager/exp_profile.json',
+    'ts/nni_manager/metrics.json',
+    'ts/nni_manager/trial_jobs.json',
 ]
