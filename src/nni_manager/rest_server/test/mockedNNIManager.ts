@@ -112,7 +112,7 @@ export class MockedNNIManager extends Manager {
     }
 
     public getTrialJobMessage(trialJobId: string): string | undefined {
-        throw new MethodNotImplementedError();
+        return "TEST-MESSAGE"
     }
 
     public stopExperiment(): Promise<void> {
