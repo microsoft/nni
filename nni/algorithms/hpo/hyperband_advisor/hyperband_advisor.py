@@ -259,7 +259,7 @@ class HyperbandClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         Schema({
             'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
-            'exec_mode': self.choices('exec_mode', 'serial', 'parallelism'),
+            Optional('exec_mode'): self.choices('exec_mode', 'serial', 'parallelism'),
             Optional('R'): int,
             Optional('eta'): int
         }).validate(kwargs)
