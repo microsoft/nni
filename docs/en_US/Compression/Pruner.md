@@ -20,7 +20,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
-* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [AMC Pruner](#amc-pruner)
 * [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
@@ -102,7 +102,7 @@ We implemented one of the experiments in ['Learning Efficient Convolutional Netw
 | VGGNet        | 6.34/6.40     | 20.04M   |           |
 | Pruned-VGGNet | 6.20/6.26     | 2.03M    | 88.5% |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/)
 
 ***
 
@@ -185,7 +185,7 @@ We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNET
 | VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
 | VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/)
 
 ***
 
@@ -242,7 +242,7 @@ pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 
 
@@ -277,7 +277,7 @@ pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 
 ### User configuration for ActivationMeanRankFilterPruner
@@ -376,7 +376,7 @@ PyTorch code
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 #### User configuration for AGP Pruner
 
@@ -410,7 +410,7 @@ pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fin
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for NetAdapt Pruner
 
@@ -449,7 +449,7 @@ pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for SimulatedAnnealing Pruner
 
@@ -485,7 +485,7 @@ pruner = AutoCompressPruner(
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for AutoCompress Pruner
 
@@ -495,9 +495,9 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 ..  autoclass:: nni.compression.torch.AutoCompressPruner
 ```
 
-## AutoML for Model Compression Pruner
+## AMC Pruner
 
-AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+AMC pruner leverages reinforcement learning to provide the model compression policy.
 This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
 better preserving the accuracy and freeing human labor.
 
@@ -519,7 +519,7 @@ pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/amc/) for more information.
 
 #### User configuration for AutoCompress Pruner
 
@@ -537,7 +537,7 @@ We implemented one of the experiments in [AMC: AutoML for Model Compression and 
 | ------------- | --------------| -------------- | ----- |
 | MobileNet     | 70.5% / 69.9% | 89.3% / 89.1%  | 50%   |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/amc/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/amc/)
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -568,7 +568,7 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epoc
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for ADMM Pruner
 
@@ -624,7 +624,7 @@ The above configuration means that there are 5 times of iterative pruning. As th
 
 ### Reproduced Experiment
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 ![](../../img/lottery_ticket_mnist_fc.png)
 

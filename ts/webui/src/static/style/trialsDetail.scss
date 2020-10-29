@@ -1,0 +1,141 @@
+#tabsty {
+    background-color: #fff;
+
+    .ms-Pivot {
+        .ms-Button {
+            padding: 0;
+
+            /* reset fabric style */
+            margin-right: 0;
+            border-right: 2px solid #fff;
+            transition: 0.3s;
+        }
+
+        .ms-Pivot-link::before {
+            height: 0;
+        }
+
+        .is-selected {
+            background: #999;
+
+            &:hover {
+                background: #999;
+            }
+        }
+
+        .is-selected::before {
+            border-bottom: none;
+        }
+    }
+
+    .ms-Pivot-icon {
+        margin-left: 12px;
+    }
+
+    .ms-Pivot-text {
+        /* Default metric | Hyper-parameter | Duration | Intermediate result */
+        margin: 0 12px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+}
+
+.trial {
+    /* graph, title total height */
+    width: 100%;
+    height: 500px;
+
+    .graph {
+        height: 432px;
+        margin: 0 auto;
+    }
+}
+
+.detailTabs {
+    padding-left: 6px;
+    padding-right: 18px;
+}
+
+/* table list all */
+.bulletedList {
+    background: #fff;
+
+    .title {
+        margin-top: 18px;
+        margin-left: 14px;
+    }
+}
+
+#tableList {
+    width: 96%;
+    margin: 0 auto;
+
+    .commonTableStyle {
+        overflow: hidden;
+    }
+}
+
+.tooldetailAccuracy {
+    user-select: text;
+    min-width: 245px;
+    max-width: 350px;
+    max-height: 350px;
+    padding: 10px 10px;
+    white-space: normal;
+    overflow: auto;
+
+    pre {
+        overflow: inherit;
+        margin-bottom: 10px;
+    }
+}
+
+.default-metric {
+    width: 90%;
+    text-align: right;
+    margin-top: 15px;
+
+    &-graph {
+        position: relative;
+    }
+
+    &-noData {
+        position: absolute;
+        left: 48%;
+        top: 30%;
+        color: #333;
+    }
+}
+
+.detial-title {
+    .ms-Button {
+        i {
+            font-size: 22px;
+        }
+    }
+}
+
+/* for yAxis # intermediate position in intermediate graph */
+.intermediate-graph {
+    position: relative;
+
+    .xAxis {
+        color: #333;
+        position: absolute;
+        left: 50%;
+        top: 88%;
+        transform: translate(-50%);
+    }
+}
+
+.detail-table {
+    .ms-Button {
+        padding: 0;
+        height: 26px;
+        margin-top: -2px;
+
+        span {
+            padding: 0;
+        }
+    }
+}

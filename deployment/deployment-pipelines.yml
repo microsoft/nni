@@ -113,10 +113,6 @@ jobs:
   condition: succeeded()
   pool:
     vmImage: 'macOS-10.15'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
   steps:
   - script: |
       python3 -m pip install --upgrade pip setuptools --user
@@ -134,10 +130,10 @@ jobs:
         # NNI build scripts (Makefile) uses branch tag as package version number
         git tag $(build_version)
         echo 'building prerelease package...'
-        PATH=$HOME/Library/Python/3.7/bin:$PATH make version_ts=true build
+        PATH=$HOME/Library/Python/3.8/bin:$PATH make version_ts=true build
       else
         echo 'building release package...'
-        PATH=$HOME/Library/Python/3.7/bin:$PATH make build
+        PATH=$HOME/Library/Python/3.8/bin:$PATH make build
       fi
     condition: eq( variables['upload_package'], 'true')
     displayName: 'build nni bdsit_wheel'

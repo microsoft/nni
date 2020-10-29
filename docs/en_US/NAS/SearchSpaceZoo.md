@@ -2,7 +2,7 @@
 
 ## DartsCell
 
-DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in a convolutional network). Directed edges from Node 1 to Node 2 are associated with some operations that transform Node 1 and the result is stored on Node 2. The [Candidate operators](#predefined-operations-darts) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node, and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, the categorical choice of a particular operation is relaxed to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probability is chosen to be part of the final structure. A CNN model can be formed by stacking several cells together, which builds a search space. Note that, in DARTS paper all cells in the model share the same structure.
+DartsCell is extracted from [CNN model](./DARTS.md) designed [here](https://github.com/microsoft/nni/tree/v1.9/examples/nas/darts). A DartsCell is a directed acyclic graph containing an ordered sequence of N nodes and each node stands for a latent representation (e.g. feature map in a convolutional network). Directed edges from Node 1 to Node 2 are associated with some operations that transform Node 1 and the result is stored on Node 2. The [Candidate operators](#predefined-operations-darts) between nodes is predefined and unchangeable. One edge represents an operation that chosen from the predefined ones to be applied to the starting node of the edge. One cell contains two input nodes, a single output node, and other `n_node` nodes. The input nodes are defined as the cell outputs in the previous two layers. The output of the cell is obtained by applying a reduction operation (e.g. concatenation) to all the intermediate nodes. To make the search space continuous, the categorical choice of a particular operation is relaxed to a softmax over all possible operations. By adjusting the weight of softmax on every node, the operation with the highest probability is chosen to be part of the final structure. A CNN model can be formed by stacking several cells together, which builds a search space. Note that, in DARTS paper all cells in the model share the same structure.
 
 One structure in the Darts search space is shown below. Note that, NNI merges the last one of the four intermediate nodes and the output node.
 
@@ -17,7 +17,7 @@ The predefined operators are shown [here](#predefined-operations-darts).
 
 ### Example code
 
-[example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/darts_example.py)
+[example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/search_space_zoo/darts_example.py)
 
 ```bash
 git clone https://github.com/Microsoft/nni.git
@@ -61,7 +61,7 @@ All supported operators for Darts are listed below.
 
 ## ENASMicroLayer
 
-This layer is extracted from the model designed [here](https://github.com/microsoft/nni/tree/master/examples/nas/enas). A model contains several blocks that share the same architecture. A block is made up of some normal layers and reduction layers, `ENASMicroLayer` is a unified implementation of the two types of layers. The only difference between the two layers is that reduction layers apply all operations with `stride=2`.
+This layer is extracted from the model designed [here](https://github.com/microsoft/nni/tree/v1.9/examples/nas/enas). A model contains several blocks that share the same architecture. A block is made up of some normal layers and reduction layers, `ENASMicroLayer` is a unified implementation of the two types of layers. The only difference between the two layers is that reduction layers apply all operations with `stride=2`.
 
 ENAS Micro employs a DAG with N nodes in one cell, where the nodes represent local computations, and the edges represent the flow of information between the N nodes. One cell contains two input nodes and a single output node. The following nodes choose two previous nodes as input and apply two operations from [predefined ones](#predefined-operations-enas) then add them as the output of this node. For example, Node 4 chooses Node 1 and Node 3 as inputs then applies `MaxPool` and `AvgPool` on the inputs respectively, then adds and sums them as the output of Node 4. Nodes that are not served as input for any other node are viewed as the output of the layer. If there are multiple output nodes, the model will calculate the average of these nodes as the layer output.
 
@@ -80,7 +80,7 @@ The Reduction Layer is made up of two Conv operations followed by BatchNorm, eac
 
 ### Example code
 
-[example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/enas_micro_example.py)
+[example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/search_space_zoo/enas_micro_example.py)
 
 ```bash
 git clone https://github.com/Microsoft/nni.git
@@ -136,7 +136,7 @@ To describe the whole search space, NNI provides a model, which is built by stac
 
 ### Example code
 
-[example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/enas_macro_example.py)
+[example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/search_space_zoo/enas_macro_example.py)
 
 ```bash
 git clone https://github.com/Microsoft/nni.git
@@ -187,7 +187,7 @@ The search space of NAS Bench 201 is shown below.
 
 ### Example code
 
-[example code](https://github.com/microsoft/nni/tree/master/examples/nas/search_space_zoo/nas_bench_201.py)
+[example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/search_space_zoo/nas_bench_201.py)
 
 ```bash
 # for structure searching
