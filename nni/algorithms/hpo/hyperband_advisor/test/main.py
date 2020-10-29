@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 """
 A test for hyperband, using nasbench201. So it need install the dependencies for nasbench201 at first.
 """
