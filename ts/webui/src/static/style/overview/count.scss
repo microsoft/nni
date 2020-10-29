@@ -1,7 +1,7 @@
-$seriesIconMargin: 8px;
+$seriesIconMargin: 10px;
 
 .ExpDuration {
-    margin-top: 28px;
+    margin-top: 20px;
 
     span:hover {
         cursor: pointer;
@@ -13,7 +13,7 @@ $seriesIconMargin: 8px;
 }
 
 .exp-progress {
-    margin-top: 10px;
+    margin-top: 16px;
 
     .bold {
         font-weight: 500;
@@ -66,10 +66,6 @@ $seriesIconMargin: 8px;
     }
 }
 
-.ExpDuration .series .confirm {
-    margin: 0 6px;
-}
-
 .series {
     position: relative;
     top: 5px;
@@ -114,4 +110,12 @@ $seriesIconMargin: 8px;
     .basic p {
         margin-top: 0;
     }
+
+    p.margin {
+        margin-top: 20px;
+    }
+}
+
+.trialStatus {
+    margin-top: 8px;
 }

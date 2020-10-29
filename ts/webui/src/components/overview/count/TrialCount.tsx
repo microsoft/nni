@@ -5,7 +5,7 @@ import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../
 import { EditExperimentParam } from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
-import { trialCountItem1, trialCountItem2 } from './commonStyle';
+import { leftProgress, trialCountItem2, progressHeight } from './commonStyle';
 
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
@@ -23,7 +23,7 @@ export const TrialCount = (): any => {
                 return (
                     <React.Fragment>
                         <Stack horizontal horizontalAlign='space-between' className='ExpDuration'>
-                            <div style={trialCountItem1}>
+                            <div style={leftProgress}>
                                 <TooltipHost
                                     content={bar2.toString()}
                                     directionalHint={DirectionalHint.bottomCenter}
@@ -40,7 +40,7 @@ export const TrialCount = (): any => {
                                     <ProgressIndicator
                                         className={EXPERIMENT.status}
                                         percentComplete={bar2Percent}
-                                        barHeight={15}
+                                        barHeight={progressHeight}
                                     />
                                 </TooltipHost>
                                 <div className='exp-progress'>
@@ -81,7 +81,7 @@ export const TrialCount = (): any => {
                                 </EditExpeParamContext.Provider>
                             </div>
                         </Stack>
-                        <Stack horizontal horizontalAlign='space-between' className='mess'>
+                        <Stack horizontal horizontalAlign='space-between' className='trialStatus'>
                             <div className='basic'>
                                 <p>Running</p>
                                 <div>{count.get('RUNNING')}</div>

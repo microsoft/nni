@@ -1,16 +1,15 @@
-const durationItem1: React.CSSProperties = {
-    width: '33%'
+const leftProgress: React.CSSProperties = {
+    width: '33%',
+    position: 'relative',
+    top: 6
 };
 const durationItem2: React.CSSProperties = {
     width: '52%',
     paddingLeft: '15%'
 };
 
-const trialCountItem1: React.CSSProperties = {
-    width: '33%'
-};
 const trialCountItem2: React.CSSProperties = {
     width: '52%'
 };
-
-export { durationItem1, durationItem2, trialCountItem1, trialCountItem2 };
+const progressHeight = 8;
+export { leftProgress, durationItem2, trialCountItem2, progressHeight };
