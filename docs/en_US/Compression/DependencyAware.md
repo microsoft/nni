@@ -29,7 +29,7 @@ In this section, we will show how to enable the dependency-aware mode for the fi
 
 To enable the dependency-aware mode for `L1FilterPruner`:
 ```python
-from nni.compression.torch import L1FilterPruner
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 # dummy_input is necessary for the dependency_aware mode
 dummy_input = torch.ones(1, 3, 224, 224).cuda()

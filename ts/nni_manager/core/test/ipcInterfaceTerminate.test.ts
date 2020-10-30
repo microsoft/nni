@@ -96,7 +96,7 @@ describe('core/ipcInterface.terminate', (): void => {
                 assert.ok(!procError);
                 deferred.resolve();
             },
-            5000);
+            10000);
 
         return deferred.promise;
     });

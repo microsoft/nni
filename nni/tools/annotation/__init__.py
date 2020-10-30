@@ -22,6 +22,7 @@ def generate_search_space(code_dir):
     Return a serializable search space object.
     code_dir: directory path of source files (str)
     """
+    code_dir = str(code_dir)
     search_space = {}
 
     if code_dir.endswith(slash):
@@ -65,6 +66,8 @@ def expand_annotations(src_dir, dst_dir, exp_id='', trial_id='', nas_mode=None):
     dst_dir: directory to place generated files (str)
     nas_mode: the mode of NAS given that NAS interface is used
     """
+    src_dir, dst_dir = str(src_dir), str(dst_dir)
+
     if src_dir[-1] == slash:
         src_dir = src_dir[:-1]
 
