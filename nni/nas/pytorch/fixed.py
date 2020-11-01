@@ -24,6 +24,8 @@ class FixedArchitecture(Mutator):
         Preloaded architecture object.
     strict : bool
         Force everything that appears in ``fixed_arc`` to be used at least once.
+    verbose : bool
+        Print log messages if set to True
     """
 
     def __init__(self, model, fixed_arc, strict=True, verbose=True):
@@ -125,6 +127,8 @@ def apply_fixed_architecture(model, fixed_arc, verbose=True):
         Model with mutables.
     fixed_arc : str or dict
         Path to the JSON that stores the architecture, or dict that stores the exported architecture.
+    verbose : bool
+        Print log messages if set to True
 
     Returns
     -------
