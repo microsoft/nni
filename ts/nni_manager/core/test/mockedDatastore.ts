@@ -161,7 +161,7 @@ class MockedDataStore implements DataStore {
             }
             if (!(status && jobInfo.status !== status)) {
                 if (jobInfo.status === 'SUCCEEDED') {
-                    jobInfo.finalMetricData = await this.getFinalMetricData(jobInfo.id);
+                    jobInfo.finalMetricData = await this.getFinalMetricData(jobInfo.trialJobId);
                 }
                 result.push(jobInfo);
             }
@@ -206,7 +206,7 @@ class MockedDataStore implements DataStore {
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
         return Promise.resolve({
-            id: '1234',
+            trialJobId: '1234',
             status: 'SUCCEEDED',
             startTime: Date.now(),
             endTime: Date.now()
@@ -242,7 +242,7 @@ class MockedDataStore implements DataStore {
                 jobInfo = map.get(record.trialJobId);
             } else {
                 jobInfo = {
-                    id: record.trialJobId,
+                    trialJobId: record.trialJobId,
                     status: this.getJobStatusByLatestEvent(record.event),
                 };
             }

@@ -122,7 +122,7 @@ describe('Unit test for nnimanager', function () {
     it('test getTrialJob valid', () => {
         //query a exist id
         return nniManager.getTrialJob('1234').then(function (trialJobDetail) {
-            expect(trialJobDetail.id).to.be.equal('1234');
+            expect(trialJobDetail.trialJobId).to.be.equal('1234');
         }).catch((error) => {
             assert.fail(error);
         })
