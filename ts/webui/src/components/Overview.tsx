@@ -167,10 +167,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </div>
                                     </Stack>
                                     <div className='overviewChart'>
-                                        <Stack className='maxmin' horizontal horizontalAlign='end'>
+                                        {/* <Stack className='maxmin' horizontal horizontalAlign='end'>
                                             <div className='circle' />
                                             <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
-                                        </Stack>
+                                        </Stack> */}
                                         <Accuracy
                                             accuracyData={accuracyGraphData}
                                             accNodata={noDataMessage}

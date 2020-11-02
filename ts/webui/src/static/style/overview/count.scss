@@ -57,12 +57,16 @@ $seriesIconMargin: 10px;
     }
 
     &-dropdown {
-        width: 48px;
+        width: 65px;
         display: inline-block;
         position: relative;
         top: 13px;
         left: 4px;
         margin-right: 3px;
+
+        .ms-Dropdown-title {
+            padding-right: 0;
+        }
     }
 }
 

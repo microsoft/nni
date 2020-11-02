@@ -25,7 +25,7 @@ export const TrialCount = (): any => {
                         <Stack horizontal horizontalAlign='space-between' className='ExpDuration'>
                             <div style={leftProgress}>
                                 <TooltipHost
-                                    content={bar2.toString()}
+                                    content={`${bar2.toString()} trials`}
                                     directionalHint={DirectionalHint.bottomCenter}
                                     tooltipProps={{
                                         calloutProps: {
