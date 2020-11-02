@@ -12,6 +12,7 @@ import numpy as np
 from nni.compression.torch import L1FilterPruner
 from nni.compression.torch.utils.shape_dependency import ChannelDependency
 from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.torch.utils.counter import count_flops_params
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 prefix = 'analysis_test'
@@ -135,6 +136,23 @@ class AnalysisUtilsTest(TestCase):
                         b_index2 = self.get_pruned_index(
                             fixed_mask[lset[i]]['bias'])
                         assert b_index1 == b_index2
+
+
+    def test_flops_params(self):
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+                self.conv = nn.Conv2d(3, 5, 1, 1)
+
+            def forward(self, x):
+                return self.conv(x)
+            
+        flops, params, results = count_flops_params(Model(), (1, 3, 2, 2))
+        assert (flops, params)  == (60, 20)
+
+        from torchvision.models import resnet18, resnet50
+        flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224))
+        assert (flops, params) == (4089184256, 25503912)
 
 
 if __name__ == '__main__':
