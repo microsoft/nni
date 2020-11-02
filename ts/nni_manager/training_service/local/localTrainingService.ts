@@ -253,7 +253,8 @@ class LocalTrainingService implements TrainingService {
 
             return Promise.resolve();
         }
-        tkill(trialJob.pid, 'SIGKILL');
+        tkill(trialJob.pid, 'SIGINT');
+        await utils_1.delay(1000);
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
