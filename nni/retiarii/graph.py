@@ -141,12 +141,12 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_training_config':
                 Graph._load(model, graph_name, graph_data)._register()
-        #model.training_config = TrainingConfig._load(ir['_training_config'])
+        model.training_config = TrainingConfig._load(ir['_training_config'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        #ret['_training_config'] = self.training_config._dump()
+        ret['_training_config'] = self.training_config._dump()
         return ret
 
 
