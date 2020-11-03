@@ -149,6 +149,25 @@ class Model:
         ret['_training_config'] = self.training_config._dump()
         return ret
 
+    def get_nodes_by_label(self, label: str) -> List[Node]:
+        """
+        Traverse all the nodes to find the matched node(s) with the given name.
+        There could be multiple nodes with the same name. Name space name can uniquely
+        identify a graph or node.
+
+        NOTE: the implementation does not support the class abstration
+        """
+        matched_nodes = []
+        for graph in self.graphs:
+            nodes = graph.get_nodes_by_label(label)
+            matched_nodes.extend(nodes)
+        return matched_nodes
+
+    def get_by_name(self, name: str) -> Union[Graph, Node]:
+        """
+        Find the graph or node that have the given name space name.
+        """
+
 
 class ModelStatus(Enum):
     """
@@ -269,6 +288,11 @@ class Graph:
         Returns nodes whose operation is specified typed.
         """
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
+
+    def get_nodes_by_label(self, label: str) -> List[Node]:
+        for node in self.hidden_nodes:
+            if node.operation.type in 
+        return 
 
     def topo_sort(self) -> List[Node]:  # TODO
         ...

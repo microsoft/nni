@@ -25,6 +25,20 @@ def get_records():
     global _records
     return _records
 
+
+class Placeholder(nn.Module):
+    def __init__(self, label, related_info):
+        global _records
+        if _records is not None:
+            _records[id(self)] = ([label], related_info)
+        self.label = label
+        self.related_info = related_info
+        super(Placeholder, self).__init__()
+
+    def forward(self, x):
+        return x
+
+
 class Module(nn.Module):
     def __init__(self, *args, **kwargs):
         global _records

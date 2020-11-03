@@ -1,4 +1,5 @@
 MODULE_EXCEPT_LIST = ['Sequential']
+RETIARII_BASE_OPS = ['Placeholder']
 
 class Type:
     """Node Type class

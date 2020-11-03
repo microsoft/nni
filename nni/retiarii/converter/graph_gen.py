@@ -5,7 +5,7 @@ import torch
 from ..graph import Graph, Node, Edge, Model
 from ..operation import Cell, Operation
 
-from .op_types import MODULE_EXCEPT_LIST, Type
+from .op_types import RETIARII_BASE_OPS, MODULE_EXCEPT_LIST, Type
 from .utils import build_full_name
 
 
@@ -292,6 +292,8 @@ def convert_module(script_module, module, module_name, ir_model):
     if original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
         # this is a basic module from pytorch, no need to parse its graph
         return None, m_attrs
+    if original_type_name in RETIARII_BASE_OPS:
+        return None, m_attrs
 
     # handle TorchScript graph
     sm_graph = script_module.graph
@@ -310,6 +312,8 @@ def convert_module(script_module, module, module_name, ir_model):
         predecessor_node_outputs = [o for o in _output.node().outputs()]
         src_node_idx = predecessor_node_outputs.index(_output)
         #edge = Edge(node_index[_output.node()], output_node, src_node_idx, 0)
+        print('===: ', _output.node())
+        print(script_module)
         ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
                           tail=(ir_graph.output_node, 0))
 
