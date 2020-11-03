@@ -75,6 +75,9 @@ class Operation:
             args = [f'type="{self.type}"'] + args
         return f'{type_name}({", ".join(args)})'
 
+    def __eq__(self, other):
+        return type(other) is type(self) and other.type == self.type and other.parameters == self.parameters
+
 
 class PyTorchOperation(Operation):
     def _to_class_name(self) -> str:
