@@ -164,7 +164,7 @@ class Build(build):
 
 class Develop(develop):
     def finalize_options(self):
-        self.user = True  # always use `develop --user`
+        self.user = False  # always use `develop --user`
         super().finalize_options()
 
     def run(self):

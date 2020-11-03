@@ -16,6 +16,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -132,6 +133,7 @@ def prepare_nni_node():
     node_src = Path('toolchain/node', node_executable_in_tarball)
     node_dst = Path('nni_node', node_executable)
     shutil.copyfile(node_src, node_dst)
+    os.chmod(node_dst, os.stat(node_dst).st_mode | stat.S_IEXEC)
 
 
 def compile_ts():
