@@ -144,7 +144,7 @@ def _find_node_files():
     return sorted(files)
 
 def _using_conda_or_virtual_environment():
-    return sys.prefix != sys.base_prefix or Path(sys.prefix, 'conda-meta').is_dir()
+    return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 
 class BuildTs(Command):
@@ -174,6 +174,10 @@ class Develop(develop):
     ]
 
     boolean_options = develop.boolean_options + ['no-user']
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.no_user = None
 
     def finalize_options(self):
         # if `--user` or `--no-user` is explicitly set, do nothing
