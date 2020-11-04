@@ -1,8 +1,8 @@
-from __future__ import annotations
-from enum import Enum
-from typing import *
+from typing import (Any, Dict)
 
 from . import debug_configs
+
+__all__ = ['Operation', 'Cell']
 
 
 class Operation:
@@ -24,13 +24,9 @@ class Operation:
         Arbitrary key-value parameters (e.g. kernel_size).
     """
 
-    def __init__(
-            self,
-            type: str,
-            parameters: Dict[str, Any],
-            _internal_access: bool = False):
-        assert _internal_access, '`Operation()` is private, use `Operation.new()` instead'
-        self.type: str = type
+    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
+        assert _internal, '`Operation()` is private, use `Operation.new()` instead'
+        self.type: str = type_name
         self.parameters: Dict[str, Any] = parameters
 
     def to_init_code(self, field: str) -> str:
@@ -47,19 +43,19 @@ class Operation:
         return True
 
     @staticmethod
-    def new(type: str, **parameters: Any) -> Operation:
-        if type == '_cell':
+    def new(type_name: str, parameters: Dict[str, Any] = {}) -> 'Operation':
+        if type_name == '_cell':
             return Cell(parameters['cell'])
         else:
             if debug_configs.framework.lower() in ('torch', 'pytorch'):
-                from .operation_def import torch_op_def
+                from .operation_def import torch_op_def  # pylint: disable=unused-import
                 cls = PyTorchOperation._find_subclass(type)
             elif debug_configs.framework.lower() in ('tf', 'tensorflow'):
-                from .operation_def import tf_op_def
+                from .operation_def import tf_op_def  # pylint: disable=unused-import
                 cls = TensorFlowOperation._find_subclass(type)
             else:
                 raise ValueError(f'Unsupported framework: {debug_configs.framework}')
-            return cls(type, parameters, _internal_access=True)
+            return cls(type_name, parameters, _internal=True)
 
     @classmethod
     def _find_subclass(cls, subclass_name):
@@ -120,12 +116,13 @@ class Cell(Operation):
     framework
         No real usage. Exists for compatibility with base class.
     """
-    def __init__(self, cell_name: str):
+    def __init__(self, cell_name: str, parameters: Dict[str, Any] = {}):
         self.type = '_cell'
-        self.parameters = {'cell': cell_name}
+        self.cell_name = cell_name
+        self.parameters = parameters
 
-    def to_init_code(self, field: str) -> str:
-        return f'self.{field} = {self.parameters["cell"]}()'
+    def _to_class_name(self):
+        return self.cell_name
 
 
 class _PseudoOperation(Operation):
