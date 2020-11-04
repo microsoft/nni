@@ -1,4 +1,4 @@
-from typing import (Any, Iterable, List, NewType, Optional)
+from typing import (Any, Iterable, List, Optional)
 
 from .graph import Model
 
