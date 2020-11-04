@@ -21,7 +21,7 @@ The above-mentioned example is meant to reproduce the results in the paper, we d
 
 ### CNN Search Space
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/darts)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/darts)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
@@ -40,10 +40,10 @@ python3 retrain.py --arc-checkpoint ./checkpoints/epoch_49.json
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.darts.DartsTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.darts.DartsMutator
+..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsMutator
     :members:
 ```
 

@@ -6,8 +6,8 @@ from os import remove
 import subprocess
 import json
 import requests
-from nnicli import Experiment
-from nni_cmd.updater import load_search_space
+from nni.experiment import Experiment
+from nni.tools.nnictl.updater import load_search_space
 from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
 

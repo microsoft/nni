@@ -10,7 +10,7 @@ In implementation of `CdartsTrainer`, it first instantiates two models and two m
 
 This is CDARTS based on the NNI platform, which currently supports CIFAR10 search and retrain. ImageNet search and retrain should also be supported, and we provide corresponding interfaces. Our reproduced results on NNI are slightly lower than the paper, but much higher than the original DARTS. Here we show the results of three independent experiments on CIFAR10.
 
-| Runs | Paper | NNI | 
+| Runs | Paper | NNI |
 | ---- |:-------------:| :-----:|
 | 1 | 97.52 | 97.44 |
 | 2 | 97.53 | 97.48 |
@@ -19,7 +19,7 @@ This is CDARTS based on the NNI platform, which currently supports CIFAR10 searc
 
 ## Examples
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/cdarts)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/cdarts)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
@@ -43,15 +43,15 @@ bash run_retrain_cifar.sh
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.CdartsTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedDartsMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.DartsDiscreteMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedMutatorParallel
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedMutatorParallel
     :members:
 ```

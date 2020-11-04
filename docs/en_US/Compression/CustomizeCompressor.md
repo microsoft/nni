@@ -29,7 +29,7 @@ class MyMasker(WeightMasker):
         return {'weight_mask': mask}
 ```
 
-You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/structured_pruning.py) implementations to implement your own weight masker.
+You can reference nni provided [weight masker](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/compression/pytorch/pruning/structured_pruning.py) implementations to implement your own weight masker.
 
 A basic `pruner` looks likes this:
 
@@ -54,17 +54,17 @@ class MyPruner(Pruner):
 
 ```
 
-Reference nni provided [pruner](https://github.com/microsoft/nni/blob/master/src/sdk/pynni/nni/compression/torch/pruning/one_shot.py) implementations to implement your own pruner class.
+Reference nni provided [pruner](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/compression/pytorch/pruning/one_shot.py) implementations to implement your own pruner class.
 
 
 ***
 
 ## Customize a new quantization algorithm
 
-To write a new quantization algorithm, you can write a class that inherits `nni.compression.torch.Quantizer`. Then, override the member functions with the logic of your algorithm. The member function to override is `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
+To write a new quantization algorithm, you can write a class that inherits `nni.compression.pytorch.Quantizer`. Then, override the member functions with the logic of your algorithm. The member function to override is `quantize_weight`. `quantize_weight` directly returns the quantized weights rather than mask, because for quantization the quantized weights cannot be obtained by applying mask.
 
 ```python
-from nni.compression.torch import Quantizer
+from nni.compression.pytorch import Quantizer
 
 class YourQuantizer(Quantizer):
     def __init__(self, model, config_list):
@@ -140,7 +140,7 @@ class YourQuantizer(Quantizer):
 Sometimes it's necessary for a quantization operation to have a customized backward function, such as [Straight-Through Estimator](https://stackoverflow.com/questions/38361314/the-concept-of-straight-through-estimator-ste), user can customize a backward function as follow:
 
 ```python
-from nni.compression.torch.compressor import Quantizer, QuantGrad, QuantType
+from nni.compression.pytorch.compressor import Quantizer, QuantGrad, QuantType
 
 class ClipGrad(QuantGrad):
     @staticmethod

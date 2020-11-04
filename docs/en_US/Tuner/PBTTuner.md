@@ -31,7 +31,7 @@ save_path = os.path.join(params['save_checkpoint_dir'], 'model.pth')
 ...
 ```
 
-The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pbt-tuner-pytorch).
+The complete example code can be found [here](https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-pbt-tuner-pytorch).
 
 ### Experiment config
 
