@@ -62,7 +62,7 @@ jobs:
   - script: |
       set -e
       cd test
-      python3 nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
+      python3 nni_test/nnitest/generate_ts_config.py --ts remote --remote_reuse $(remote_reuse) --remote_user $(docker_user) --remote_host $(remote_host) \
       --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       cat config/training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote

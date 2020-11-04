@@ -20,7 +20,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * [NetAdapt Pruner](#netadapt-pruner)
 * [SimulatedAnnealing Pruner](#simulatedannealing-pruner)
 * [AutoCompress Pruner](#autocompress-pruner)
-* [AutoML for Model Compression Pruner](#automl-for-model-compression-pruner)
+* [AMC Pruner](#amc-pruner)
 * [Sensitivity Pruner](#sensitivity-pruner)
 
 **Others**
@@ -37,7 +37,7 @@ We first sort the weights in the specified layer by their absolute values. And t
 
 Tensorflow code
 ```python
-from nni.compression.tensorflow import LevelPruner
+from nni.algorithms.compression.tensorflow.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
@@ -45,7 +45,7 @@ pruner.compress()
 
 PyTorch code
 ```python
-from nni.compression.torch import LevelPruner
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
@@ -56,13 +56,13 @@ pruner.compress()
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.LevelPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.LevelPruner
 ```
 
 ##### Tensorflow
 
 ```eval_rst
-..  autoclass:: nni.compression.tensorflow.LevelPruner
+..  autoclass:: nni.algorithms.compression.tensorflow.pruning.LevelPruner
 ```
 
 
@@ -79,7 +79,7 @@ This is an one-shot pruner, In ['Learning Efficient Convolutional Networks throu
 PyTorch code
 
 ```python
-from nni.compression.torch import SlimPruner
+from nni.algorithms.compression.pytorch.pruning import SlimPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
 pruner = SlimPruner(model, config_list)
 pruner.compress()
@@ -90,7 +90,7 @@ pruner.compress()
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.SlimPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.SlimPruner
 ```
 
 ### Reproduced Experiment
@@ -102,7 +102,7 @@ We implemented one of the experiments in ['Learning Efficient Convolutional Netw
 | VGGNet        | 6.34/6.40     | 20.04M   |           |
 | Pruned-VGGNet | 6.20/6.26     | 2.03M    | 88.5% |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/)
 
 ***
 
@@ -122,7 +122,7 @@ We also provide a dependency-aware mode for this pruner to get better speedup fr
 
 PyTorch code
 ```python
-from nni.compression.torch import FPGMPruner
+from nni.algorithms.compression.pytorch.pruning import FPGMPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -135,7 +135,7 @@ pruner.compress()
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.FPGMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.FPGMPruner
 ```
 
 ## L1Filter Pruner
@@ -163,7 +163,7 @@ In addition, we also provide a dependency-aware mode for the L1FilterPruner. For
 PyTorch code
 
 ```python
-from nni.compression.torch import L1FilterPruner
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L1FilterPruner(model, config_list)
 pruner.compress()
@@ -173,7 +173,7 @@ pruner.compress()
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.L1FilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.L1FilterPruner
 ```
 
 ### Reproduced Experiment
@@ -185,7 +185,7 @@ We implemented one of the experiments in ['PRUNING FILTERS FOR EFFICIENT CONVNET
 | VGG-16          | 6.75/6.49     | 1.5x10^7 |          |
 | VGG-16-pruned-A | 6.60/6.47     | 5.4x10^6 | 64.0% |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/)
 
 ***
 
@@ -200,7 +200,7 @@ We also provide a dependency-aware mode for this pruner to get better speedup fr
 PyTorch code
 
 ```python
-from nni.compression.torch import L2FilterPruner
+from nni.algorithms.compression.pytorch.pruning import L2FilterPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
 pruner = L2FilterPruner(model, config_list)
 pruner.compress()
@@ -211,7 +211,7 @@ pruner.compress()
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.L2FilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.L2FilterPruner
 ```
 ***
 
@@ -231,7 +231,7 @@ We also provide a dependency-aware mode for this pruner to get better speedup fr
 PyTorch code
 
 ```python
-from nni.compression.torch import ActivationAPoZRankFilterPruner
+from nni.algorithms.compression.pytorch.pruning import ActivationAPoZRankFilterPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -242,7 +242,7 @@ pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 
 
@@ -250,7 +250,7 @@ You can view [example](https://github.com/microsoft/nni/blob/master/examples/mod
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.ActivationAPoZRankFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.ActivationAPoZRankFilterPruner
 ```
 ***
 
@@ -266,7 +266,7 @@ We also provide a dependency-aware mode for this pruner to get better speedup fr
 PyTorch code
 
 ```python
-from nni.compression.torch import ActivationMeanRankFilterPruner
+from nni.algorithms.compression.pytorch.pruning import ActivationMeanRankFilterPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -277,14 +277,14 @@ pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the `op_types` field supports only convolutional layers.
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 
 ### User configuration for ActivationMeanRankFilterPruner
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.ActivationMeanRankFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.ActivationMeanRankFilterPruner
 ```
 ***
 
@@ -304,7 +304,7 @@ We also provide a dependency-aware mode for this pruner to get better speedup fr
 PyTorch code
 
 ```python
-from nni.compression.torch import TaylorFOWeightFilterPruner
+from nni.algorithms.compression.pytorch.pruning import TaylorFOWeightFilterPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -318,7 +318,7 @@ pruner.compress()
 
 ##### PyTorch
 ```eval_rst
-..  autoclass:: nni.compression.torch.TaylorFOWeightFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.TaylorFOWeightFilterPruner
 ```
 ***
 
@@ -338,7 +338,7 @@ You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below
 
 PyTorch code
 ```python
-from nni.compression.torch import AGPPruner
+from nni.algorithms.compression.pytorch.pruning import AGPPruner
 config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
@@ -376,14 +376,14 @@ PyTorch code
 ```python
 pruner.update_epoch(epoch)
 ```
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/model_prune_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/model_prune_torch.py) for more information.
 
 #### User configuration for AGP Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.AGPPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.AGPPruner
 ```
 
 ***
@@ -401,7 +401,7 @@ For more details, please refer to [NetAdapt: Platform-Aware Neural Network Adapt
 PyTorch code
 
 ```python
-from nni.compression.torch import NetAdaptPruner
+from nni.algorithms.compression.pytorch.pruning import NetAdaptPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -410,14 +410,14 @@ pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fin
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for NetAdapt Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.NetAdaptPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.NetAdaptPruner
 ```
 
 
@@ -440,7 +440,7 @@ For more details, please refer to [AutoCompress: An Automatic DNN Structured Pru
 PyTorch code
 
 ```python
-from nni.compression.torch import SimulatedAnnealingPruner
+from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner
 config_list = [{
     'sparsity': 0.5,
     'op_types': ['Conv2d']
@@ -449,14 +449,14 @@ pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for SimulatedAnnealing Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.SimulatedAnnealingPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.SimulatedAnnealingPruner
 ```
 
             
@@ -473,7 +473,7 @@ For more details, please refer to [AutoCompress: An Automatic DNN Structured Pru
 PyTorch code
 
 ```python
-from nni.compression.torch import ADMMPruner
+from nni.algorithms.compression.pytorch.pruning import ADMMPruner
 config_list = [{
         'sparsity': 0.5,
         'op_types': ['Conv2d']
@@ -485,19 +485,19 @@ pruner = AutoCompressPruner(
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for AutoCompress Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.AutoCompressPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.AutoCompressPruner
 ```
 
-## AutoML for Model Compression Pruner
+## AMC Pruner
 
-AutoML for Model Compression Pruner (AMCPruner) leverages reinforcement learning to provide the model compression policy.
+AMC pruner leverages reinforcement learning to provide the model compression policy.
 This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
 better preserving the accuracy and freeing human labor.
 
@@ -511,7 +511,7 @@ For more details, please refer to [AMC: AutoML for Model Compression and Acceler
 PyTorch code
 
 ```python
-from nni.compression.torch import AMCPruner
+from nni.algorithms.compression.pytorch.pruning import AMCPruner
 config_list = [{
         'op_types': ['Conv2d', 'Linear']
     }]
@@ -519,14 +519,14 @@ pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/amc/) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/amc/) for more information.
 
 #### User configuration for AutoCompress Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.AMCPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.AMCPruner
 ```
 
 ### Reproduced Experiment
@@ -537,7 +537,7 @@ We implemented one of the experiments in [AMC: AutoML for Model Compression and 
 | ------------- | --------------| -------------- | ----- |
 | MobileNet     | 70.5% / 69.9% | 89.3% / 89.1%  | 50%   |
 
-The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/master/examples/model_compress/amc/)
+The experiments code can be found at [examples/model_compress]( https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/amc/)
 
 ## ADMM Pruner
 Alternating Direction Method of Multipliers (ADMM) is a mathematical optimization technique,
@@ -554,7 +554,7 @@ For more details, please refer to [A Systematic DNN Weight Pruning Framework usi
 PyTorch code
 
 ```python
-from nni.compression.torch import ADMMPruner
+from nni.algorithms.compression.pytorch.pruning import ADMMPruner
 config_list = [{
             'sparsity': 0.8,
             'op_types': ['Conv2d'],
@@ -568,14 +568,14 @@ pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epoc
 pruner.compress()
 ```
 
-You can view [example](https://github.com/microsoft/nni/blob/master/examples/model_compress/auto_pruners_torch.py) for more information.
+You can view [example](https://github.com/microsoft/nni/blob/v1.9/examples/model_compress/auto_pruners_torch.py) for more information.
 
 #### User configuration for ADMM Pruner
 
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.ADMMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.ADMMPruner
 ```
 
 
@@ -595,7 +595,7 @@ If the configured final sparsity is P (e.g., 0.8) and there are n times iterativ
 
 PyTorch code
 ```python
-from nni.compression.torch import LotteryTicketPruner
+from nni.algorithms.compression.pytorch.pruning import LotteryTicketPruner
 config_list = [{
     'prune_iterations': 5,
     'sparsity': 0.8,
@@ -619,12 +619,12 @@ The above configuration means that there are 5 times of iterative pruning. As th
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.LotteryTicketPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.LotteryTicketPruner
 ```
 
 ### Reproduced Experiment
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred [here](https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/lottery_torch_mnist_fc.py). In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 ![](../../img/lottery_ticket_mnist_fc.png)
 
@@ -643,7 +643,7 @@ For more details, please refer to [Learning both Weights and Connections for Eff
 PyTorch code
 
 ```python
-from nni.compression.torch import SensitivityPruner
+from nni.algorithms.compression.pytorch.pruning import SensitivityPruner
 config_list = [{
         'sparsity': 0.5,
         'op_types': ['Conv2d']
@@ -659,5 +659,5 @@ pruner.compress(eval_args=[model], finetune_args=[model])
 ##### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.compression.torch.SensitivityPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.SensitivityPruner
 ```

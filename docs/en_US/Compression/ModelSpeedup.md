@@ -21,7 +21,7 @@ For each module, we should prepare four functions, three for shape inference and
 ## Usage
 
 ```python
-from nni.compression.torch import ModelSpeedup
+from nni.compression.pytorch import ModelSpeedup
 # model: the model you want to speed up
 # dummy_input: dummy input of the model, given to `jit.trace`
 # masks_file: the mask file created by pruning algorithms
@@ -32,7 +32,7 @@ start = time.time()
 out = model(dummy_input)
 print('elapsed time: ', time.time() - start)
 ```
-For complete examples please refer to [the code](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py)
+For complete examples please refer to [the code](https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/model_speedup.py)
 
 NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
@@ -44,7 +44,7 @@ For PyTorch we can only replace modules, if functions in `forward` should be rep
 
 ## Speedup Results of Examples
 
-The code of these experiments can be found [here](https://github.com/microsoft/nni/tree/master/examples/model_compress/model_speedup.py).
+The code of these experiments can be found [here](https://github.com/microsoft/nni/tree/v1.9/examples/model_compress/model_speedup.py).
 
 ### slim pruner example
 
