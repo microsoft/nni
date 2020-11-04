@@ -38,14 +38,54 @@ def count_linear(m, x, y):
     m.input_sizes = tuple(x[0].size())
     m.output_sizes = tuple(y.size())
 
+def count_bn(m, x, y):
+    m.total_ops = 2 * x[0].numel()
+    m.total_params = _get_params(m)
+
+def count_relu(m, x, y):
+    m.total_ops = x[0].numel()
+
+def count_avgpool(m, x, y):
+    m.total_ops = y.numel()
+
+
+def count_adap_avgpool(m, x, y):
+    kernel = torch.DoubleTensor([*(x[0].shape[2:])]) // torch.DoubleTensor(list((m.output_size,))).squeeze()
+    total_add = torch.prod(kernel)
+    total_div = 1
+    kernel_ops = total_add + total_div
+    num_elements = y.numel()
+    m.total_ops = kernel_ops * num_elements
+
 def count_naive(m, _, __):
     m.num_calls += 1
 
-register_ops = {
+DEFAULT_OPS = {
     nn.Conv1d: count_convNd,
     nn.Conv2d: count_convNd,
     nn.Conv3d: count_convNd,
-    nn.Linear: count_linear,
+    nn.Linear: count_linear
+}
+
+OTHER_OPS = {
+    nn.ConvTranspose1d: count_convNd,
+    nn.ConvTranspose2d: count_convNd,
+    nn.ConvTranspose3d: count_convNd,
+    nn.BatchNorm1d: count_bn,
+    nn.BatchNorm2d: count_bn,
+    nn.BatchNorm3d: count_bn,
+    nn.LeakyReLU: count_relu,
+    nn.AvgPool1d: count_avgpool,
+    nn.AvgPool2d: count_avgpool,
+    nn.AvgPool3d: count_avgpool,
+    nn.AdaptiveAvgPool1d: count_adap_avgpool,
+    nn.AdaptiveAvgPool2d: count_adap_avgpool,
+    nn.AdaptiveAvgPool3d: count_adap_avgpool
+}
+
+mode_cls = {
+    'default': DEFAULT_OPS,
+    'full': DEFAULT_OPS.update(OTHER_OPS)
 }
 
 def format_results(modules, show_data_size = False):
@@ -138,7 +178,7 @@ def format_results(modules, show_data_size = False):
 
     return ''.join(result)
 
-def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=True, show_data_size=True):
+def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, show_data_size=True, mode='default'):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -152,8 +192,8 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     ---------
     model : nn.Module
         target model.
-    input_size: list, tuple
-        the input shape of data
+    input: tuple or tensor
+        the input shape of data or the input data
     custom_ops: dict
         a mapping of (module: custom operation)
         the custom operation will overwrite the default operation.
@@ -168,9 +208,24 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
     results:
         information of layers that counted flops and parms
     """
+    assert isinstance(input, tuple) or isinstance(input, torch.Tensor)
+
+    original_device = next(model.parameters()).device
+    training = model.training
+
+    if torch.is_tensor(input[0]):
+        x = (t.to(original_device) for t in input)
+    else:
+        x = (torch.zeros(input).to(original_device), )
+
     handler_collection = []
     if custom_ops is None:
         custom_ops = {}
+    
+    
+        
+    register_ops = mode_cls[mode]
+
     register_ops.update(custom_ops)
 
     def add_hooks(m_):
@@ -197,17 +252,12 @@ def count_flops_params(model: nn.Module, input_size, custom_ops=None, verbose=Tr
 
         del m_.total_ops, m_.total_params, m_.num_calls, m_.input_sizes, m_.output_sizes, m_.weight_size
         
-    original_device = next(model.parameters()).device
-    training = model.training
+    
 
     model.eval()
     model.apply(add_hooks)
 
-    assert isinstance(input_size, tuple)
-    if torch.is_tensor(input_size[0]):
-        x = (t.to(original_device) for t in input_size)
-    else:
-        x = (torch.zeros(input_size).to(original_device), )
+    
 
     with torch.no_grad():
         model(*x)
