@@ -1,6 +1,5 @@
 import os
 import argparse
-# from src.sdk.pynni.nni.compression.torch.utils.counter import count_flops_params
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,10 +11,6 @@ from models.cifar10.vgg import VGG
 import nni
 from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
     L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
-
-import sys
-sys.path.append('/D_data/v-chenqy/workspace/my-nni/src/sdk/pynni')
-from nni.compression.torch.utils.counter import count_flops_params
 
 prune_config = {
     'level': {
@@ -210,9 +205,6 @@ def main(args):
     dummy_input, _ = next(iter(train_loader))
     dummy_input = dummy_input.to(device)
     model = create_model(model_name).cuda()
-    flops, params, results = count_flops_params(model, (1, 1, 24, 24))
-    print("before prune",flops, params)
-
     if args.resume_from is not None and os.path.exists(args.resume_from):
         print('loading checkpoint {} ...'.format(args.resume_from))
         model.load_state_dict(torch.load(args.resume_from))
@@ -231,7 +223,6 @@ def main(args):
             test(model, device, test_loader)
         torch.save(model.state_dict(), pretrain_model_path)
 
-    
     print('start model pruning...')
 
     model_path = os.path.join(args.checkpoints_dir, 'pruned_{}_{}_{}.pth'.format(
@@ -250,9 +241,6 @@ def main(args):
     pruner = create_pruner(model, args.pruner_name,
                            optimizer_finetune, args.dependency_aware, dummy_input)
     model = pruner.compress()
-
-    flops, params, results = count_flops_params(model, (1, 1, 24, 24))
-    print("after prune",flops, params)
 
     if args.multi_gpu and torch.cuda.device_count() > 1:
         model = nn.DataParallel(model)
