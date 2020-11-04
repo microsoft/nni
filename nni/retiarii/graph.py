@@ -263,12 +263,12 @@ class Graph:
             self.output_names.append(output_name)
 
     # mutation
-    def add_node(self, type: Union[Operation, str], name: str = None, **parameters) -> Node:
+    def add_node(self, name: str, type: Union[Operation, str], **parameters) -> Node:
         if isinstance(type, Operation):
             assert not parameters
             op = type
         else:
-            op = Operation.new(type, **parameters)
+            op = Operation.new(type, cell_name=name, **parameters)
         return Node(self, self.model._uid(), name, op, _internal=True)._register()
 
     # mutation
@@ -291,7 +291,8 @@ class Graph:
 
     def get_nodes_by_label(self, label: str) -> List[Node]:
         for node in self.hidden_nodes:
-            if node.operation.type in 
+            if node.operation.label is not None:
+                pass
         return 
 
     def topo_sort(self) -> List[Node]:  # TODO
@@ -412,9 +413,10 @@ class Node:
         self.id: int = node_id
         self.name: str = name or f'_generated_{node_id}'
         self.operation: Operation = operation
+        self.label: str = None
 
     def __repr__(self):
-        return f'Node(id={self.id}, name={self.name}, operation={self.operation})'
+        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
 
     @property
     def predecessors(self) -> List[Node]:
@@ -437,8 +439,10 @@ class Node:
         assert isinstance(self.operation, Cell)
         return self.graph.model.graphs[self.operation.parameters['cell']]
 
-    # mutation
+    def update_label(self, label: str) -> None:
+        self.label = label
 
+    # mutation
     def update_operation(self, type: Union[Operation, str], **parameters) -> None:
         if isinstance(type, Operation):
             assert not parameters
@@ -470,14 +474,20 @@ class Node:
 
     @staticmethod
     def _load(graph: Graph, name: str, ir: Any) -> Node:
+        # TODO: need to be updated
         ir = dict(ir)
-        if 'type' not in ir and 'cell' in ir:
-            ir['type'] = '_cell'
+        #if 'type' not in ir and 'cell' in ir:
+        #    ir['type'] = '_cell'
         op = Operation.new(**ir)
         return Node(graph, graph.model._uid(), name, op)
 
     def _dump(self) -> Any:
-        return {'type': self.operation.type, **self.operation.parameters}
+        obj = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
+        if self.operation.type == '_cell':
+            obj['operation']['cell_name'] = self.operation.cell_name
+        if self.label is not None:
+            obj['label'] = self.label
+        return obj
 
 
 class Edge:

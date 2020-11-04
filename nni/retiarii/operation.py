@@ -49,7 +49,10 @@ class Operation:
     @staticmethod
     def new(type: str, **parameters: Any) -> Operation:
         if type == '_cell':
-            return Cell(parameters['cell'])
+            # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
+            assert 'cell_name' in parameters
+            cell_name = parameters.pop('cell_name')
+            return Cell(cell_name, parameters)
         else:
             if debug_configs.framework.lower() in ('torch', 'pytorch'):
                 from .operation_def import torch_op_def
@@ -122,11 +125,13 @@ class Cell(Operation):
     """
     def __init__(self, cell_name: str, parameters: Dict[str, Any] = {}):
         self.type = '_cell'
+        self.cell_name = cell_name
         self.parameters = parameters
-        self.parameters['cell'] = cell_name
+        #self.parameters['cell'] = cell_name
 
     def to_init_code(self, field: str) -> str:
-        return f'self.{field} = {self.parameters["cell"]}()'
+        # TODO: add parameters
+        return f'self.{field} = {self.cell_name}()'
 
 
 class _PseudoOperation(Operation):

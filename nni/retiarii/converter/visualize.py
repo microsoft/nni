@@ -11,10 +11,11 @@ def convert_to_visualize(graph_ir, vgraph):
                      '_outputs': '{}-{}'.format(name, '_'.join(graph['outputs']))}
             subgraph.node(ioput['_inputs'])
             subgraph.node(ioput['_outputs'])
-            for node_name, value in graph['nodes'].items():
+            for node_name, node_value in graph['nodes'].items():
+                value = node_value['operation']
                 if value['type'] == '_cell':
-                    cell_input_name = '{}-{}'.format(value['cell'], '_'.join(graph_ir[value['cell']]['inputs']))
-                    cell_output_name = '{}-{}'.format(value['cell'], '_'.join(graph_ir[value['cell']]['outputs']))
+                    cell_input_name = '{}-{}'.format(value['cell_name'], '_'.join(graph_ir[value['cell_name']]['inputs']))
+                    cell_output_name = '{}-{}'.format(value['cell_name'], '_'.join(graph_ir[value['cell_name']]['outputs']))
                     cell_node[node_name] = (cell_input_name, cell_output_name)
                     print('cell: ', node_name, cell_input_name, cell_output_name)
                 else:
