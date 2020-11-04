@@ -141,34 +141,34 @@ class AnalysisUtilsTest(TestCase):
 
     def test_flops_params(self):
         class Model1(nn.Module):
-        def __init__(self):
-            super(Model1, self).__init__()
-            self.conv = nn.Conv2d(3, 5, 1, 1)
+            def __init__(self):
+                super(Model1, self).__init__()
+                self.conv = nn.Conv2d(3, 5, 1, 1)
 
-        def forward(self, x):
-            return self.conv(x)
+            def forward(self, x):
+                return self.conv(x)
 
-    class Model2(nn.Module):
-        def __init__(self):
-            super(Model2, self).__init__()
-            self.conv = nn.Conv2d(3, 5, 1, 1)
-            self.conv2 = nn.Conv2d(5, 5, 1, 1)
+        class Model2(nn.Module):
+            def __init__(self):
+                super(Model2, self).__init__()
+                self.conv = nn.Conv2d(3, 5, 1, 1)
+                self.conv2 = nn.Conv2d(5, 5, 1, 1)
 
-        def forward(self, x):
-            x = self.conv(x)
-            for _ in range(5):
-                x = self.conv2(x)
-            return x
+            def forward(self, x):
+                x = self.conv(x)
+                for _ in range(5):
+                    x = self.conv2(x)
+                return x
         
-    flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full')
-    assert (flops, params)  == (60, 20)
+        flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full')
+        assert (flops, params)  == (60, 20)
 
-    flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2))
-    assert (flops, params)  == (560, 170)
+        flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2))
+        assert (flops, params)  == (560, 50)
 
-    from torchvision.models import resnet50
-    flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224))
-    assert (flops, params) == (4089184256, 25503912)
+        from torchvision.models import resnet50
+        flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224))
+        assert (flops, params) == (4089184256, 25503912)
 
 
 if __name__ == '__main__':
