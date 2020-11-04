@@ -1,0 +1,39 @@
+.experimentList{
+    border: 1px solid red;
+    padding: 42px;
+
+    .box{
+        .search{
+            width: 90%;
+            &-input{
+                width: 330px;
+            }
+        }
+
+        .filter{
+            width: 10%;
+            text-align: right;
+
+            &-button{
+                width: 80px;
+            }
+        }
+    }
+
+    .filter-condition{
+        margin-top: 26px;
+        .reset{
+            width: 80px;
+            position: relative;
+            top: 29px;
+        }
+    }
+
+    .hidden{
+        display: none;
+    }
+
+    .margin{
+        margin-left: 10px;
+    }
+}

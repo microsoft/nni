@@ -21,7 +21,8 @@
         "prettier"
     ],
     "rules": {
-        "prettier/prettier": 2,
+        "prettier/prettier": 0,
+        "eslint/eslint": 0,
         "@typescript-eslint/no-explicit-any": 0,
         "@typescript-eslint/no-namespace": 0,
         "@typescript-eslint/consistent-type-assertions": 0,
@@ -31,6 +32,7 @@
         "@typescript-eslint/no-unused-vars": [2, { "argsIgnorePattern": "^_" }],
         "arrow-parens": [2, "as-needed"],
         "no-inner-declarations": 0,
+        "no-console": 0,
         "no-empty": 2,
         "no-multiple-empty-lines": [2, { "max": 1 }],
         "react/display-name": 0

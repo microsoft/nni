@@ -10,11 +10,13 @@ import {
     IStackTokens,
     IStackStyles
 } from '@fluentui/react';
+import { Link } from 'react-router-dom';
 import LogPanel from './modals/LogPanel';
 import ExperimentPanel from './modals/ExperimentPanel';
-import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
+import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, RevToggleKey, ChevronRightMed } from './buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
+import { isManagerExperimentPage } from '../static/function';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 
@@ -146,38 +148,63 @@ class NavCon extends React.Component<NavProps, NavState> {
         };
         return (
             <Stack horizontal className='nav'>
-                <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                    <span className='desktop-logo'>{NNILOGO}</span>
-                    <span className='left-right-margin'>{OVERVIEWTABS}</span>
-                    <span>{DETAILTABS}</span>
-                </StackItem>
-                <StackItem grow={70} className='navOptions'>
-                    <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
-                        {/* refresh button danyi*/}
-                        {/* TODO: fix bug */}
-                        {/* <CommandBarButton
-                            iconProps={{ iconName: 'sync' }}
-                            text="Refresh"
-                            onClick={this.props.refreshFunction}
-                        /> */}
-                        <div className='nav-refresh'>
-                            <CommandBarButton
-                                iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
-                                text={refreshText}
-                                menuProps={this.refreshProps}
-                            />
-                            <div className='nav-refresh-num'>{refreshFrequency}</div>
-                        </div>
-                        <CommandBarButton iconProps={downLoadIcon} text='Download' menuProps={this.menuProps} />
-                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                    </Stack>
-                </StackItem>
-                {/* the drawer for dispatcher & nnimanager log message */}
-                {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
-                {isvisibleExperimentDrawer && (
-                    <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />
-                )}
+                {
+                    isManagerExperimentPage()
+                        ?
+                        <React.Fragment>
+                            <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
+                                <span className='desktop-logo'>{NNILOGO}</span>
+                                <span className='logoTitle'>Neural Network Intelligence</span>
+                            </StackItem>
+                            <StackItem grow={70} className='navOptions'>
+                                <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                                    <Link to="/oview" className='experiment'>
+                                        <CommandBarButton iconProps={RevToggleKey} text="Back to the experiment" />
+                                    </Link>
+                                </Stack>
+                            </StackItem>
+                        </React.Fragment>
+                        :
+                        <React.Fragment>
+                            <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
+                                <span className='desktop-logo'>{NNILOGO}</span>
+                                <span className='left-right-margin'>{OVERVIEWTABS}</span>
+                                <span>{DETAILTABS}</span>
+                            </StackItem>
+                            <StackItem grow={70} className='navOptions'>
+                                <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                                    {/* refresh button danyi*/}
+                                    {/* TODO: fix bug */}
+                                    {/* <CommandBarButton
+                                        iconProps={{ iconName: 'sync' }}
+                                        text="Refresh"
+                                        onClick={this.props.refreshFunction}
+                                    /> */}
+                                    <div className='nav-refresh'>
+                                        <CommandBarButton
+                                            iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
+                                            text={refreshText}
+                                            menuProps={this.refreshProps}
+                                        />
+                                        <div className='nav-refresh-num'>{refreshFrequency}</div>
+                                    </div>
+                                    <CommandBarButton iconProps={downLoadIcon} text='Download' menuProps={this.menuProps} />
+                                    <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
+                                    <Link to="/experiment" className='experiment'>
+                                        <div className='expNavTitle'><span>All experiment</span>{ChevronRightMed}</div>
+                                        {/* <CommandBarButton iconProps={ChevronRightMed} text="All experiment" /> */}
+                                    </Link>
+                                </Stack>
+                            </StackItem>
+                            {/* the drawer for dispatcher & nnimanager log message */}
+                            {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
+                            {isvisibleExperimentDrawer && (
+                                <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />
+                            )}
+                        </React.Fragment>
+                }
             </Stack>
+
         );
     }
 

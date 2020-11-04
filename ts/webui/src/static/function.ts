@@ -262,6 +262,10 @@ function formatComplexTypeValue(value: any): string | number {
     }
 }
 
+function isManagerExperimentPage(): boolean {
+    return (location.href.indexOf('experiment') === -1) ? false : true;
+}
+
 export {
     convertTime,
     convertDuration,
@@ -280,5 +284,6 @@ export {
     isArrayType,
     requestAxios,
     isNaNorInfinity,
-    formatComplexTypeValue
+    formatComplexTypeValue,
+    isManagerExperimentPage
 };

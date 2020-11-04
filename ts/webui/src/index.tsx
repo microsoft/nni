@@ -4,27 +4,29 @@ import App from './App';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/Overview'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
+const Experiment = lazy(() => import('./components/managementExp/Experiment'));
 import './index.css';
 import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
 ReactDOM.render(
     <Router>
-        <App>
+        <Suspense
+            fallback={
+                <div className='loading'>
+                    <img src={require('./static/img/loading.gif')} />
+                </div>
+            }
+        >
+            <Route path='/experiment' component={Experiment} />
             <Switch>
-                <Suspense
-                    fallback={
-                        <div className='loading'>
-                            <img src={require('./static/img/loading.gif')} />
-                        </div>
-                    }
-                >
+                <App>
                     <Route path='/' component={Overview} exact />
                     <Route path='/oview' component={Overview} />
                     <Route path='/detail' component={TrialsDetail} />
-                </Suspense>
+                </App>
             </Switch>
-        </App>
+        </Suspense>
     </Router>,
 
     document.getElementById('root')

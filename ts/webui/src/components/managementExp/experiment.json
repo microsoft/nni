@@ -1,0 +1,62 @@
+[
+    {
+        "name": "example_minst",
+        "id": "qwe34",
+        "status": "RUNNING",
+        "port": 8080,
+        "platform": "local",
+        "startTime": 1603343843980,
+        "endTime": 1603343990436,
+        "tag": "it is an experiment for local"
+    },
+    {
+        "name": "example_pai",
+        "id": "asd34",
+        "status": "SUCCEEDED",
+        "port": 9999,
+        "platform": "pai",
+        "startTime": 1603343773957,
+        "endTime": 1603343833157,
+        "tag": "it is an experiment for pai"
+    },
+    {
+        "name": "example_minst33",
+        "id": "UR5G4",
+        "status": "FAILED",
+        "port": 8082,
+        "platform": "local",
+        "startTime": 1603344004004,
+        "endTime": 1603344167408,
+        "tag": "it is an experiment for local"
+    },
+    {
+        "name": "example_minst",
+        "id": "QjqqiVBp",
+        "status": "SUCCEEDED",
+        "port": 8084,
+        "platform": "local",
+        "startTime": 1603344179024,
+        "endTime": 1603344238656,
+        "tag": "it is an experiment for local"
+    },
+    {
+        "name": "example_minst",
+        "id": "mFT1RE6A",
+        "status": "FAILED",
+        "port": 8086,
+        "platform": "local",
+        "startTime": 1603344249043,
+        "endTime": 1603344348570,
+        "tag": "it is an experiment for local"
+    },
+    {
+        "name": "example_minst",
+        "id": "I4WoFxzq",
+        "status": "USER_CANCELED",
+        "port": 8088,
+        "platform": "local",
+        "startTime": 1603344359065,
+        "endTime": 1603344388521,
+        "tag": "it is an experiment for local"
+    }
+]
