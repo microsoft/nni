@@ -38,7 +38,7 @@ class EngineTest(unittest.TestCase):
 
     def test_submit_models(self):
         os.makedirs('generated', exist_ok=True)
-        from nni import protocol
+        from nni.runtime import protocol
         protocol._out_file = open('generated/debug_protocol_out_file.py', 'wb')
         anything = lambda: None
         advisor = RetiariiAdvisor(anything)

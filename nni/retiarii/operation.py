@@ -49,10 +49,10 @@ class Operation:
         else:
             if debug_configs.framework.lower() in ('torch', 'pytorch'):
                 from .operation_def import torch_op_def  # pylint: disable=unused-import
-                cls = PyTorchOperation._find_subclass(type)
+                cls = PyTorchOperation._find_subclass(type_name)
             elif debug_configs.framework.lower() in ('tf', 'tensorflow'):
                 from .operation_def import tf_op_def  # pylint: disable=unused-import
-                cls = TensorFlowOperation._find_subclass(type)
+                cls = TensorFlowOperation._find_subclass(type_name)
             else:
                 raise ValueError(f'Unsupported framework: {debug_configs.framework}')
             return cls(type_name, parameters, _internal=True)
