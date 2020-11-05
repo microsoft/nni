@@ -1,0 +1,68 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: 'all'
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install -U pytest
+    displayName: 'Install python tools'
+
+  - script: |
+      set -e
+      python3 -m pip uninstall nni
+      NNI_RELEASE=999.0 python3 setup.py build_ts
+      NNI_RELEASE=999.0 python3 setup.py bdist_wheel -p manylinux1_x86_64
+      python3 -m pip install dist/nni-999.0-py3-none-manylinux1_x86_64.whl
+      nnictl --version || echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.bashrc
+    displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      python3 -m pip install -U scikit-learn==0.23.2
+      python3 -m pip install -U torchvision==0.4.2
+      python3 -m pip install -U torch==1.3.1
+      python3 -m pip install -U keras==2.1.6
+      python3 -m pip install -U tensorflow==2.3.1 tensorflow-estimator==2.3.0
+      python3 -m pip install -U thop
+      sudo apt-get install swig -y
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
+      nnictl package install --name=PPOTuner
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      set -e
+      cd examples/tuners/customized_tuner
+      python3 setup.py develop --user
+      nnictl package install ./
+    displayName: 'Install example customized tuner'
+
+  - script: |
+      set -e
+      (cd test && python3 -m pytest ut)
+      (cd ts/nni_manager && yarn test)
+      CI=true (cd ts/nasui && yarn test)
+    displayName: 'Unit test'
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+    displayName: 'Integration test'
+
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH source scripts/nas.sh
+    displayName: 'NAS test'
+
+  - script: |
+      cd test
+      source scripts/model_compression.sh
+    displayName: 'Model compression test'
