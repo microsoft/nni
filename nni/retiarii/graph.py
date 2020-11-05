@@ -276,6 +276,15 @@ class Graph:
         assert head[0].graph is self and tail[0].graph is self
         return Edge(head, tail, _internal=True)._register()
 
+    def insert_node_after(self, node: Node, name: str, type: Union[Operation, str], **parameters) -> Node:
+        if isinstance(type, Operation):
+            assert not parameters
+            op = type
+        else:
+            op = Operation.new(type, cell_name=name, **parameters)
+        new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
+        return new_node
+
     def get_node_by_name(self, name: str) -> Optional[Node]:
         """
         Returns the node which has specified name; or returns `None` if no node has this name.
@@ -290,10 +299,7 @@ class Graph:
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
 
     def get_nodes_by_label(self, label: str) -> List[Node]:
-        for node in self.hidden_nodes:
-            if node.operation.label is not None:
-                pass
-        return 
+        return [node for node in self.hidden_nodes if node.label == label]
 
     def topo_sort(self) -> List[Node]:  # TODO
         ...

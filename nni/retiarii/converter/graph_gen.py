@@ -4,6 +4,7 @@ import torch
 
 from ..graph import Graph, Node, Edge, Model
 from ..operation import Cell, Operation
+from ..model_apis.nn import Placeholder
 
 from .op_types import RETIARII_BASE_OPS, MODULE_EXCEPT_LIST, Type
 from .utils import build_full_name
@@ -208,8 +209,9 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 assert submodule_name in script_module._modules
 
                 submodule_full_name = build_full_name(module_name, submodule_name)
+                submodule_obj = getattr(module, submodule_name)
                 subgraph, sub_m_attrs = convert_module(script_module._modules[submodule_name],
-                                                       getattr(module, submodule_name),
+                                                       submodule_obj,
                                                        submodule_full_name, ir_model)
                 # TODO: try not-connected placeholder in TorchScript
                 # TODO: match subgraph with maintained graphs
@@ -217,6 +219,8 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 if subgraph is None:
                     # if we do not parse this module's graph, we create Node for this module
                     subcell = ir_graph.add_node(name=submodule_full_name, type=submodule_type_str, **sub_m_attrs)
+                    if isinstance(submodule_obj, Placeholder):
+                        subcell.update_label(submodule_obj.label)
                 else:
                     # Graph already created, create Cell for it
                     new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)

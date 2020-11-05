@@ -142,18 +142,20 @@ class MNASNet(nn.Module):
             nn.ReLU(inplace=True),
         ]
         count = 0
-        for conv, prev_depth, depth, ks, skip, stride, repeat, exp_ratio in \
-                zip(convops, depths[:-1], depths[1:], kernel_sizes, skips, strides, num_layers, exp_ratios):
+        #for conv, prev_depth, depth, ks, skip, stride, repeat, exp_ratio in \
+        #        zip(convops, depths[:-1], depths[1:], kernel_sizes, skips, strides, num_layers, exp_ratios):
+        for filter_size, exp_ratio, stride in zip(base_filter_sizes, exp_ratios, strides):
             # TODO: restrict that "choose" can only be used within mutator
             ph = nn.Placeholder(label=f'mutable_{count}', related_info={
-                           'kernel_size_options': [2,4,6],
+                           'kernel_size_options': [2, 4, 6],
                            'n_layer_options': [1, 2, 3, 4],
                            'op_type_options': ['RegularConv', 'DepthwiseConv', 'MobileConv'],
-                           'se_ratio_options': [0, 0.25],
+                           #'se_ratio_options': [0, 0.25],
                            'skip_options': ['identity', 'no'],
-                           'n_filter_options': [int(base_filter_sizes[count]*x) for x in [0.75, 1.0, 1.25]],
-                           'exp_ratio': exp_ratios[count],
-                           'stride': strides[count]
+                           'n_filter_options': [int(filter_size*x) for x in [0.75, 1.0, 1.25]],
+                           'exp_ratio': exp_ratio,
+                           'stride': stride,
+                           'in_ch': depths[0] if count == 0 else None
             })
             layers.append(ph)
             '''if conv == "mconv":
@@ -205,6 +207,83 @@ class MNASNet(nn.Module):
 
 def test_model(model):
     model(torch.randn(2, 3, 224, 224))
+
+#====================definition of candidate op classes
+BN_MOMENTUM = 1 - 0.9997
+
+class RegularConv(nn.Module):
+    def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.in_ch = in_ch
+        self.out_ch = out_ch
+        self.skip = skip
+        self.exp_ratio = exp_ratio
+        self.stride = stride
+
+        self.conv = nn.Conv2d(in_ch, out_ch, kernel_size, padding=kernel_size // 2, stride=stride, bias=False)
+        self.relu = nn.ReLU(inplace=True)
+        self.bn = nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM)
+
+    def forward(self, x):
+        out = self.bn(self.relu(self.conv(x)))
+        if self.skip == 'identity':
+            out = out + x
+        return out
+
+class DepthwiseConv(nn.Module):
+    def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.in_ch = in_ch
+        self.out_ch = out_ch
+        self.skip = skip
+        self.exp_ratio = exp_ratio
+        self.stride = stride
+
+        self.conv1 = nn.Conv2d(in_ch, in_ch, kernel_size, padding=kernel_size // 2, stride=stride, groups=in_ch, bias=False)
+        self.bn1 = nn.BatchNorm2d(in_ch, momentum=BN_MOMENTUM)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv2d(in_ch, out_ch, 1, padding=0, stride=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM)
+
+    def forward(self, x):
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        if self.skip == 'identity':
+            out = out + x
+        return out
+
+class MobileConv(nn.Module):
+    def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
+        super().__init__()
+        self.kernel_size = kernel_size
+        self.in_ch = in_ch
+        self.out_ch = out_ch
+        self.skip = skip
+        self.exp_ratio = exp_ratio
+        self.stride = stride
+
+        mid_ch = in_ch * exp_ratio
+        self.layers = nn.Sequential(
+            # Pointwise
+            nn.Conv2d(in_ch, mid_ch, 1, bias=False),
+            nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
+            nn.ReLU(inplace=True),
+            # Depthwise
+            nn.Conv2d(mid_ch, mid_ch, kernel_size, padding=kernel_size // 2,
+                      stride=stride, groups=mid_ch, bias=False),
+            nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
+            nn.ReLU(inplace=True),
+            # Linear pointwise. Note that there's no activation.
+            nn.Conv2d(mid_ch, out_ch, 1, bias=False),
+            nn.BatchNorm2d(out_ch, momentum=BN_MOMENTUM))
+
+    def forward(self, x):
+        out = self.layers(x)
+        if self.skip == 'identity':
+            out = out + x
+        return out
 
 #====================Training approach
 '''

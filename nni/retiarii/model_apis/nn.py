@@ -30,7 +30,7 @@ class Placeholder(nn.Module):
     def __init__(self, label, related_info):
         global _records
         if _records is not None:
-            _records[id(self)] = ([label], related_info)
+            _records[id(self)] = related_info
         self.label = label
         self.related_info = related_info
         super(Placeholder, self).__init__()
