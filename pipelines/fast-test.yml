@@ -214,3 +214,8 @@ jobs:
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
     continueOnError: true
+
+
+trigger:
+  branches:
+    exclude: [ l10n_master ]
