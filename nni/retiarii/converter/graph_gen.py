@@ -81,8 +81,7 @@ def _handle_inputs(ir_graph, node, graph_inputs, node_index, module_name, ignore
                 node_type, attrs = handle_prim_attr_node(_input.node())
                 global_seq += 1
                 new_node = ir_graph.add_node(build_full_name(module_name, Type.Attr, global_seq),
-                                             node_type,
-                                             **attrs)
+                                             node_type, attrs)
                 node_index[_input.node()] = new_node
                 print('==handle inputs getattr==: ', _input.node())
 
@@ -93,8 +92,7 @@ def create_prim_constant_node(ir_graph, node, module_name):
         attrs = {'value': node.outputsAt(0).toIValue()}
     global_seq += 1
     new_node = ir_graph.add_node(build_full_name(module_name, Type.Constant, global_seq),
-                                 node.kind(),
-                                 **attrs)
+                                 node.kind(), attrs)
     return new_node
 
 def handle_prim_attr_node(node):
@@ -218,13 +216,13 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 # build cell
                 if subgraph is None:
                     # if we do not parse this module's graph, we create Node for this module
-                    subcell = ir_graph.add_node(name=submodule_full_name, type=submodule_type_str, **sub_m_attrs)
+                    subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                     if isinstance(submodule_obj, Placeholder):
                         subcell.update_label(submodule_obj.label)
                 else:
                     # Graph already created, create Cell for it
                     new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
-                    subcell = ir_graph.add_node(name=submodule_full_name, type=new_cell)
+                    subcell = ir_graph.add_node(submodule_full_name, new_cell)
                 node_index[node] = subcell
                 _handle_inputs(ir_graph, node, graph_inputs, node_index, module_name, ignore_first=True)
                 # connect the cell into graph
@@ -239,7 +237,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             func_name = func.s('name')
             # create node for func
             global_seq += 1
-            func_node = ir_graph.add_node(name=build_full_name(module_name, func_name, global_seq), type=func_type_str)
+            func_node = ir_graph.add_node(build_full_name(module_name, func_name, global_seq), func_type_str)
             node_index[node] = func_node
             _handle_inputs(ir_graph, node, graph_inputs, node_index, module_name, ignore_first=True)
             _add_edge(ir_graph, node, graph_inputs, node_index, func_node, ignore_first=True)

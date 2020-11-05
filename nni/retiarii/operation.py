@@ -43,11 +43,9 @@ class Operation:
         return True
 
     @staticmethod            
-    def new(type_name: str, parameters: Dict[str, Any] = {}) -> 'Operation':
+    def new(type_name: str, parameters: Dict[str, Any] = {}, cell_name: str = None) -> 'Operation':
         if type_name == '_cell':
             # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
-            assert 'cell_name' in parameters
-            cell_name = parameters.pop('cell_name')
             return Cell(cell_name, parameters)
         else:
             if debug_configs.framework.lower() in ('torch', 'pytorch'):

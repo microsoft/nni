@@ -5,7 +5,7 @@ Model representation.
 import copy
 from enum import Enum
 import json
-from typing import (Any, Dict, List, Optional, Tuple, overload)
+from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _PseudoOperation
 
@@ -146,7 +146,7 @@ class Model:
         ret['_training_config'] = self.training_config._dump()
         return ret
 
-    def get_nodes_by_label(self, label: str) -> List[Node]:
+    def get_nodes_by_label(self, label: str) -> List['Node']:
         """
         Traverse all the nodes to find the matched node(s) with the given name.
         There could be multiple nodes with the same name. Name space name can uniquely
@@ -160,7 +160,7 @@ class Model:
             matched_nodes.extend(nodes)
         return matched_nodes
 
-    def get_by_name(self, name: str) -> Union[Graph, Node]:
+    def get_by_name(self, name: str) -> Union['Graph', 'Node']:
         """
         Find the graph or node that have the given name space name.
         """
@@ -268,7 +268,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, cell_name=name, parameters)
+            op = Operation.new(operation_or_type, name, parameters)
         return Node(self, self.model._uid(), name, op, _internal=True)._register()
 
     # mutation
@@ -276,7 +276,7 @@ class Graph:
         assert head[0].graph is self and tail[0].graph is self
         return Edge(head, tail, _internal=True)._register()
 
-    def insert_node_after(self, node: Node, name: str, type: Union[Operation, str], **parameters) -> Node:
+    def insert_node_after(self, node: 'Node', name: str, type: Union[Operation, str], **parameters) -> 'Node':
         if isinstance(type, Operation):
             assert not parameters
             op = type
