@@ -188,7 +188,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python setup.py develop
+      python setup.py develop --no-user
     displayName: 'Install NNI'
 
   - script: |
