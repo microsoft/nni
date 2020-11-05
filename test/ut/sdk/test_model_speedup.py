@@ -251,7 +251,7 @@ class SpeedupTestCase(TestCase):
             zero_bn_bias(net)
             zero_bn_bias(speedup_model)
 
-            data = torch.ones(BATCH_SIZE, 3, 64, 64).to(device)
+            data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
             ms = ModelSpeedup(speedup_model, data, MASK_FILE)
             ms.speedup_model()
 
@@ -281,7 +281,7 @@ class SpeedupTestCase(TestCase):
         net.load_state_dict(state_dict)
         net.eval()
 
-        data = torch.randn(BATCH_SIZE, 3, 64, 64).to(device)
+        data = torch.randn(BATCH_SIZE, 3, 128, 128).to(device)
         ms = ModelSpeedup(net, data, MASK_FILE)
         ms.speedup_model()
         ms.bound_model(data)
