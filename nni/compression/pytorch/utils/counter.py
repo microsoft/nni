@@ -2,12 +2,13 @@
 # Licensed under the MIT license.
 
 from typing import DefaultDict
+import functools
 from collections import defaultdict
 from prettytable import PrettyTable
 import torch
 import torch.nn as nn
 from nni.compression.pytorch.compressor import PrunerModuleWrapper
-import functools
+
 
 def _get_params(m):
     return sum([p.numel() for p in m.parameters()])
@@ -110,7 +111,7 @@ def count_adap_avgpool(m, x, y, add_results):
 
 
 def count_upsample(m, x, y, add_results):
-    if m.mode not in ("linear", "bilinear", "bicubic"): 
+    if m.mode not in ("linear", "bilinear", "bicubic"):
         return
 
     if m.mode == "linear":
@@ -154,20 +155,16 @@ OTHER_OPS = {
     nn.ConvTranspose1d: count_convNd,
     nn.ConvTranspose2d: count_convNd,
     nn.ConvTranspose3d: count_convNd,
-    
     nn.BatchNorm1d: count_bn,
     nn.BatchNorm2d: count_bn,
     nn.BatchNorm3d: count_bn,
-    
     nn.LeakyReLU: count_relu,
-    
     nn.AvgPool1d: count_avgpool,
     nn.AvgPool2d: count_avgpool,
     nn.AvgPool3d: count_avgpool,
     nn.AdaptiveAvgPool1d: count_adap_avgpool,
     nn.AdaptiveAvgPool2d: count_adap_avgpool,
     nn.AdaptiveAvgPool3d: count_adap_avgpool,
-    
     nn.Upsample: count_upsample,
     nn.UpsamplingBilinear2d: count_upsample,
     nn.UpsamplingNearest2d: count_upsample
@@ -183,7 +180,7 @@ def format_results(modules):
     has_multi_use = True if len(list(filter(lambda x: len(x) > 1, [module['flops'] for module in modules.values()]))) else False
 
     headers = [
-        'Index', 
+        'Index',
         'Name',
         'Module',
         'Weight Size',
@@ -194,7 +191,6 @@ def format_results(modules):
         headers.append('#Calls')
 
     table.field_names = headers
-    
     total_ops, total_params = 0, 0
     for i, (name, module) in enumerate(modules.items()):
         if len(module['flops']) == 0: continue
@@ -214,7 +210,6 @@ def format_results(modules):
         total_ops += row_values[4]
         total_params += row_values[5]
         table.add_row(row_values)
-        
     return table
 
 
@@ -241,7 +236,9 @@ def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, m
     verbose: bool
         If False, mute detail information about modules. Default is True.
     mode:
-        the mode of how to collect information. If the mode is set to `default`, only the information of convolution and linear will be collected. If the mode is set to `full`, other operations will also be collected. 
+        the mode of how to collect information. If the mode is set to `default`, 
+        only the information of convolution and linear will be collected. 
+        If the mode is set to `full`, other operations will also be collected. 
 
     Returns
     -------
@@ -268,7 +265,6 @@ def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, m
     results = dict()
     if custom_ops is None:
         custom_ops = {}
-        
     register_ops = mode_cls[mode]
     register_ops.update(custom_ops)
 
@@ -327,7 +323,6 @@ def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, m
 
         if hasattr(m, "weight_mask"):
             delattr(m, "weight_mask")
-        
     model.train(training).to(original_device)
     for handler in handler_collection:
         handler.remove()
@@ -336,7 +331,6 @@ def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, m
     table = format_results(results)
     total_ops = sum([sum(v["flops"]) for v in results.values()])
     total_params = sum([v["params"][0] for v in results.values()])
-    
     if verbose:
         print(table)
         print(f'FLOPs total: {total_ops}')
