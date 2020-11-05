@@ -29,9 +29,7 @@ class CommonUtilsTestCase(TestCase):
         content = get_json_content(str(json_path))
         self.assertEqual(content, {'field':'test'})
 
-    # FIXME: This test case fails randomly on Windows. Cannot reproduce locally.
-
-    @skipIf(sys.platform == 'win32')
+    @skipIf(sys.platform == 'win32', 'FIXME: Fails randomly on Windows, cannot reproduce locally')
     def test_detect_process(self):
         if sys.platform == 'win32':
             cmds = ['timeout', '360000']
