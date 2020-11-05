@@ -33,7 +33,12 @@ def check_output_command(file_path, head=None, tail=None):
 
 def kill_command(pid):
     """kill command"""
-    psutil.Process(pid).terminate()
+    if sys.platform == 'win32':
+        psutil.Process(pid).terminate()
+    else:
+        # Process.terminate() failed on azure pipeline. No idea why.
+        cmds = ['kill', str(pid)]
+        call(cmds)
 
 
 def install_package_command(package_name):
