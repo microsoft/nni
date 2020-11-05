@@ -211,7 +211,7 @@ def format_results(modules):
     return table
 
 
-def count_flops_params(model, input, custom_ops=None, verbose=True, mode='default'):
+def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -225,7 +225,7 @@ def count_flops_params(model, input, custom_ops=None, verbose=True, mode='defaul
     ---------
     model : nn.Module
         target model.
-    input: tuple or tensor
+    x: tuple or tensor
         the input shape of data or a tensor as input data
     custom_ops: dict
         a mapping of (module: custom operation)
@@ -248,16 +248,16 @@ def count_flops_params(model, input, custom_ops=None, verbose=True, mode='defaul
         detail information of modules
     """
 
-    assert isinstance(input, tuple) or isinstance(input, torch.Tensor)
+    assert isinstance(x, tuple) or isinstance(x, torch.Tensor)
     assert mode in ['default', 'full']
 
     original_device = next(model.parameters()).device
     training = model.training
 
-    if torch.is_tensor(input[0]):
-        x = (t.to(original_device) for t in input)
+    if torch.is_tensor(x[0]):
+        x = (t.to(original_device) for t in x)
     else:
-        x = (torch.zeros(input).to(original_device), )
+        x = (torch.zeros(x).to(original_device), )
 
     handler_collection = []
     results = dict()
