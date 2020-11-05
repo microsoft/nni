@@ -218,11 +218,9 @@ class SpeedupTestCase(TestCase):
         assert model.backbone2.conv2.out_channels == int(orig_model.backbone2.conv2.out_channels * SPARSITY)
         assert model.backbone2.fc1.in_features == int(orig_model.backbone2.fc1.in_features * SPARSITY)
 
-    # FIXME:
-    # This test case failed on macOS:
-    # https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=15658
+    # FIXME: This test case might fail randomly, no idea why
+    # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282
 
-    #@unittest.skipIf(sys.platform == 'darwin', 'Failed for unknown reason')
     def test_speedup_integration(self):
         for model_name in ['resnet18', 'squeezenet1_1', 'mobilenet_v2', 'densenet121', 'densenet169', 'inception_v3', 'resnet50']:
             kwargs = {

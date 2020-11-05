@@ -4,6 +4,7 @@
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
 import sys
+import time
 from unittest import TestCase, main
 
 from mock.restful_server import init_response
@@ -35,6 +36,7 @@ class CommonUtilsTestCase(TestCase):
         else:
             cmds = ['sleep', '360000']
         process = Popen(cmds, stdout=PIPE, stderr=STDOUT)
+        time.sleep(1)
         self.assertTrue(detect_process(process.pid))
         kill_command(process.pid)
 
