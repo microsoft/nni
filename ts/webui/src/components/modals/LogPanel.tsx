@@ -29,7 +29,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
             nniManagerLogStr: null,
             dispatcherLogStr: null,
             isLoading: true,
-            logDrawerHeight: window.innerHeight - 48
+            logDrawerHeight: window.innerHeight
         };
     }
 
@@ -64,7 +64,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     );
 
     setLogDrawerHeight = (): void => {
-        this.setState(() => ({ logDrawerHeight: window.innerHeight - 48 }));
+        this.setState(() => ({ logDrawerHeight: window.innerHeight }));
     };
 
     async componentDidMount(): Promise<void> {
@@ -80,7 +80,8 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     render(): React.ReactNode {
         const { closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
-
+        // tab[44] + tab[PaddingTop: 12] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
+        const monacoHeight = logDrawerHeight - 160 - 2;
         return (
             <Stack>
                 <Panel
@@ -90,15 +91,13 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                     isLightDismiss={true}
                     onLightDismissClick={closeDrawer}
                 >
-                    <div className='log-tab-body'>
-                        <Pivot selectedKey={activeTab} style={{ minHeight: 190, paddingTop: '16px' }}>
-                            {/* <PivotItem headerText={this.dispatcherHTML()} key="dispatcher" onLinkClick> */}
-                            <PivotItem headerText='Dispatcher log' key='dispatcher'>
+                    <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
+                        <PivotItem headerText='Dispatcher log' key='dispatcher'>
+                            <div className='panel'>
                                 <MonacoHTML
                                     content={dispatcherLogStr || 'Loading...'}
                                     loading={isLoading}
-                                    // paddingTop[16] + tab[44] + button[32]
-                                    height={logDrawerHeight - 92}
+                                    height={monacoHeight}
                                 />
                                 <Stack horizontal className='buttons'>
                                     <StackItem grow={12} className='download'>
@@ -108,13 +107,15 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                         <DefaultButton text='Close' onClick={closeDrawer} />
                                     </StackItem>
                                 </Stack>
-                            </PivotItem>
-                            <PivotItem headerText='NNIManager log' key='nnimanager'>
-                                {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
+                            </div>
+                        </PivotItem>
+                        <PivotItem headerText='NNIManager log' key='nnimanager'>
+                            {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
+                            <div className='panel'>
                                 <MonacoHTML
                                     content={nniManagerLogStr || 'Loading...'}
                                     loading={isLoading}
-                                    height={logDrawerHeight - 92}
+                                    height={monacoHeight}
                                 />
                                 <Stack horizontal className='buttons'>
                                     <StackItem grow={12} className='download'>
@@ -124,9 +125,9 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                                         <DefaultButton text='Close' onClick={closeDrawer} />
                                     </StackItem>
                                 </Stack>
-                            </PivotItem>
-                        </Pivot>
-                    </div>
+                            </div>
+                        </PivotItem>
+                    </Pivot>
                 </Panel>
             </Stack>
         );
