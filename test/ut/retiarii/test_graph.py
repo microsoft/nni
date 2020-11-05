@@ -23,13 +23,19 @@ def _test_file(json_path):
 
     # add default values to JSON, so we can compare with `==`
     for graph_name, graph in orig_ir.items():
+        if graph_name == '_training_config':
+            continue
         if 'inputs' not in graph:
             graph['inputs'] = None
         if 'outputs' not in graph:
             graph['outputs'] = None
         for node_name, node in graph['nodes'].items():
-            if 'type' not in node and 'cell' in node:
-                node['type'] = '_cell'
+            if 'parameters' not in node:
+                node['parameters'] = {}
+
+    # debug output
+    #json.dump(orig_ir, open('_orig.json', 'w'), indent=4)
+    #json.dump(dump_ir, open('_dump.json', 'w'), indent=4)
 
     assert orig_ir == dump_ir
 

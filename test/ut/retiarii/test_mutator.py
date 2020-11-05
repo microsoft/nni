@@ -8,6 +8,10 @@ from nni.retiarii import *
 import nni.retiarii.debug_configs
 nni.retiarii.debug_configs.framework = 'tensorflow'
 
+max_pool = Operation.new('MaxPool2D', {'pool_size': 2})
+avg_pool = Operation.new('AveragePooling2D', {'pool_size': 2})
+global_pool = Operation.new('GlobalAveragePooling2D')
+
 
 class DebugSampler(Sampler):
     def __init__(self):
@@ -22,9 +26,6 @@ class DebugSampler(Sampler):
 
 class DebugMutator(Mutator):
     def mutate(self, model):
-        max_pool = Operation.new('MaxPool2D', pool_size = 2)
-        avg_pool = Operation.new('AveragePooling2D', pool_size=2)
-        global_pool = Operation.new('GlobalAveragePooling2D')
         ops = [max_pool, avg_pool, global_pool]
 
         pool1 = model.graphs['stem'].get_node_by_name('pool1')
@@ -66,10 +67,6 @@ def _get_pools(model):
     pool2 = model.graphs['stem'].get_node_by_name('pool2').operation
     return pool1, pool2
 
-
-max_pool = Operation.new(type='MaxPool2D', pool_size=2)
-avg_pool = Operation.new(type='AveragePooling2D', pool_size=2)
-global_pool = Operation.new(type='GlobalAveragePooling2D')
 
 if __name__ == '__main__':
     test_dry_run()

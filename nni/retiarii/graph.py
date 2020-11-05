@@ -1,24 +1,22 @@
 """
-Classes related to Graph IR, except `Operation`.
+Model representation.
 """
 
-from __future__ import annotations
 import copy
-import json
 from enum import Enum
-from typing import *
+import json
+from typing import (Any, Dict, List, Optional, Tuple, overload)
 
 from .operation import Cell, Operation, _PseudoOperation
-
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
 
-MetricData = NewType('MetricData', Any)
+MetricData = Any
 """
 Graph metrics like loss, accuracy, etc.
 
-Maybe we can assume this is a single float number for first iteration.
+# Maybe we can assume this is a single float number for first iteration.
 """
 
 
@@ -36,7 +34,7 @@ class TrainingConfig:
         Trainer keyword arguments
     """
 
-    def __init__(self, module: str, kwargs: Dict[str, any]):
+    def __init__(self, module: str, kwargs: Dict[str, Any]):
         self.module = module
         self.kwargs = kwargs
 
@@ -44,7 +42,7 @@ class TrainingConfig:
         return f'TrainingConfig(module={self.module}, kwargs={self.kwargs})'
 
     @staticmethod
-    def _load(ir: Any) -> TrainingConfig:
+    def _load(ir: Any) -> 'TrainingConfig':
         return TrainingConfig(ir['module'], ir.get('kwargs', {}))
 
     def _dump(self) -> Any:
@@ -56,15 +54,14 @@ class TrainingConfig:
 
 class Model:
     """
-    Top-level structure of graph IR.
+    Represents a neural network model.
 
-    In execution engine's perspective, this is a trainable neural network model.
-    In mutator's perspective, this is a sandbox for a round of mutation.
-
-    Once a round of mutation starts, a sandbox is created and all mutating operations will happen inside.
-    When mutation is complete, the sandbox will be frozen to a trainable model.
-    Then the strategy will submit model to execution engine for training.
-    The model will record its metrics once trained.
+    During mutation, one `Model` object is created for each trainable snapshot.
+    For example, consider a mutator that insert a node at an edge for each iteration.
+    In one iteration, the mutator invokes 4 primitives: add node, remove edge, add edge to head, add edge to tail.
+    These 4 primitives operates in one `Model` object.
+    When they are all done the model will be set to "frozen" (trainable) status and be submitted to execution engine.
+    And then a new iteration starts, and a new `Model` object is created by forking last model.
 
     Attributes
     ----------
@@ -104,17 +101,17 @@ class Model:
         self.metric: Optional[MetricData] = None
         self.intermediate_metrics: List[MetricData] = []
 
-        self._last_uid: int = 0
+        self._last_uid: int = 0  # FIXME: this should be global, not model-wise
 
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
             f'training_config={self.training_config}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics})'
 
     @property
-    def root_graph(self) -> Graph:
+    def root_graph(self) -> 'Graph':
         return self.graphs[self._root_graph_name]
 
-    def fork(self) -> Model:
+    def fork(self) -> 'Model':
         """
         Create a new model which has same topology, names, and IDs to current one.
 
@@ -136,7 +133,7 @@ class Model:
         return self._last_uid
 
     @staticmethod
-    def _load(ir: Any) -> Model:
+    def _load(ir: Any) -> 'Model':
         model = Model(_internal=True)
         for graph_name, graph_data in ir.items():
             if graph_name != '_training_config':
@@ -247,7 +244,7 @@ class Graph:
             f'output_names={self.output_names}, num_hidden_nodes={len(self.hidden_nodes)}, num_edges={len(self.edges)})'
 
     @property
-    def nodes(self) -> List[Node]:
+    def nodes(self) -> List['Node']:
         return [self.input_node, self.output_node] + self.hidden_nodes
 
     def _add_input(self, input_name) -> None:
@@ -262,17 +259,20 @@ class Graph:
         else:
             self.output_names.append(output_name)
 
-    # mutation
-    def add_node(self, name: str, type: Union[Operation, str], **parameters) -> Node:
-        if isinstance(type, Operation):
-            assert not parameters
-            op = type
+    @overload
+    def add_node(self, name: str, operation: Operation) -> 'Node': ...
+    @overload
+    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+
+    def add_node(self, name, operation_or_type, parameters={}):
+        if isinstance(operation_or_type, Operation):
+            op = operation_or_type
         else:
-            op = Operation.new(type, cell_name=name, **parameters)
+            op = Operation.new(operation_or_type, cell_name=name, parameters)
         return Node(self, self.model._uid(), name, op, _internal=True)._register()
 
     # mutation
-    def add_edge(self, head: Tuple[Node, Optional[int]], tail: Tuple[Node, Optional[int]]) -> Edge:
+    def add_edge(self, head: Tuple['Node', Optional[int]], tail: Tuple['Node', Optional[int]]) -> 'Edge':
         assert head[0].graph is self and tail[0].graph is self
         return Edge(head, tail, _internal=True)._register()
 
@@ -285,26 +285,26 @@ class Graph:
         new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
         return new_node
 
-    def get_node_by_name(self, name: str) -> Optional[Node]:
+    def get_node_by_name(self, name: str) -> Optional['Node']:
         """
         Returns the node which has specified name; or returns `None` if no node has this name.
         """
         found = [node for node in self.nodes if node.name == name]
         return found[0] if found else None
 
-    def get_nodes_by_type(self, operation_type: str) -> List[Node]:
+    def get_nodes_by_type(self, operation_type: str) -> List['Node']:
         """
         Returns nodes whose operation is specified typed.
         """
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
 
-    def get_nodes_by_label(self, label: str) -> List[Node]:
+    def get_nodes_by_label(self, label: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.label == label]
 
-    def topo_sort(self) -> List[Node]:  # TODO
+    def topo_sort(self) -> List['Node']:  # TODO
         ...
 
-    def fork(self) -> Graph:
+    def fork(self) -> 'Graph':
         """
         Fork the model and returns corresponding graph in new model.
         This shortcut might be helpful because many algorithms only cares about "stem" subgraph instead of whole model.
@@ -314,7 +314,7 @@ class Graph:
     def __eq__(self, other: object) -> bool:
         return self is other
 
-    def _fork_to(self, model: Model) -> Graph:
+    def _fork_to(self, model: Model) -> 'Graph':
         new_graph = Graph(model, self.id, self.name, _internal=True)._register()
         new_graph.input_names = self.input_names
         new_graph.output_names = self.output_names
@@ -331,7 +331,7 @@ class Graph:
 
         return new_graph
 
-    def _copy(self) -> Graph:
+    def _copy(self) -> 'Graph':
         # Copy this graph inside the model.
         # The new graph will have identical topology, but its nodes' name and ID will be different.
         new_graph = Graph(self.model, self.model._uid(), _internal=True)._register()
@@ -351,12 +351,12 @@ class Graph:
 
         return new_graph
 
-    def _register(self) -> Graph:
+    def _register(self) -> 'Graph':
         self.model.graphs[self.name] = self
         return self
 
     @staticmethod
-    def _load(model: Model, name: str, ir: Any) -> Graph:
+    def _load(model: Model, name: str, ir: Any) -> 'Graph':
         graph = Graph(model, model._uid(), name, _internal=True)
         graph.input_names = ir.get('inputs')
         graph.output_names = ir.get('outputs')
@@ -425,19 +425,19 @@ class Node:
         return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
 
     @property
-    def predecessors(self) -> List[Node]:
+    def predecessors(self) -> List['Node']:
         return sorted(set(edge.head for edge in self.incoming_edges), key=(lambda node: node.id))
 
     @property
-    def successors(self) -> List[Node]:
+    def successors(self) -> List['Node']:
         return sorted(set(edge.tail for edge in self.outgoing_edges), key=(lambda node: node.id))
 
     @property
-    def incoming_edges(self) -> List[Edge]:
+    def incoming_edges(self) -> List['Edge']:
         return [edge for edge in self.graph.edges if edge.tail is self]
 
     @property
-    def outgoing_edges(self) -> List[Edge]:
+    def outgoing_edges(self) -> List['Edge']:
         return [edge for edge in self.graph.edges if edge.head is self]
 
     @property
@@ -448,13 +448,16 @@ class Node:
     def update_label(self, label: str) -> None:
         self.label = label
 
-    # mutation
-    def update_operation(self, type: Union[Operation, str], **parameters) -> None:
-        if isinstance(type, Operation):
-            assert not parameters
-            self.operation = type
+    @overload
+    def update_operation(self, operation: Operation) -> None: ...
+    @overload
+    def update_operation(self, type_name: str, parameters: Dict[str, Any] = {}) -> None: ...
+
+    def update_operation(self, operation_or_type, parameters={}):
+        if isinstance(operation_or_type, Operation):
+            self.operation = operation_or_type
         else:
-            self.operation = Operation.new(type, **parameters)
+            self.operation = Operation.new(operation_or_type, parameters)
 
     # mutation
     def remove(self) -> None:
@@ -468,32 +471,31 @@ class Node:
         Duplicate the cell template and let this node reference to newly created copy.
         """
         new_cell = self.cell._copy()._register()
-        self.operation = Operation.new('_cell', cell=new_cell.name)
+        self.operation = Cell(new_cell.name)
         return new_cell
 
     def __eq__(self, other: object) -> bool:
         return self is other
 
-    def _register(self) -> Node:
+    def _register(self) -> 'Node':
         self.graph.hidden_nodes.append(self)
         return self
 
     @staticmethod
-    def _load(graph: Graph, name: str, ir: Any) -> Node:
-        # TODO: need to be updated
-        ir = dict(ir)
-        #if 'type' not in ir and 'cell' in ir:
-        #    ir['type'] = '_cell'
-        op = Operation.new(**ir)
+    def _load(graph: Graph, name: str, ir: Any) -> 'Node':
+        if ir['operation']['type'] == '_cell':
+            op = Cell(ir['operation']['cell'], ir['operation'].get('parameters', {}))
+        else:
+            op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}))
         return Node(graph, graph.model._uid(), name, op)
 
     def _dump(self) -> Any:
-        obj = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
-        if self.operation.type == '_cell':
-            obj['operation']['cell_name'] = self.operation.cell_name
+        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
+        if isinstance(self.operation, Cell):
+            ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:
-            obj['label'] = self.label
-        return obj
+            ret['label'] = self.label
+        return ret
 
 
 class Edge:
@@ -551,14 +553,15 @@ class Edge:
     def remove(self) -> None:
         self.graph.edges.remove(self)
 
-    def _register(self) -> Edge:
+    def _register(self) -> 'Edge':
         self.graph.edges.append(self)
         return self
 
     @staticmethod
-    def _load(graph: Graph, ir: Any) -> Edge:
+    def _load(graph: Graph, ir: Any) -> 'Edge':
         head = graph.get_node_by_name(ir['head'][0])
         tail = graph.get_node_by_name(ir['tail'][0])
+        assert head is not None and tail is not None
         return Edge((head, ir['head'][1]), (tail, ir['tail'][1]), _internal=True)
 
     def _dump(self) -> Any:
