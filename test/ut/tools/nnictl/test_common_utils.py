@@ -3,6 +3,7 @@
 
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
+import sys
 from unittest import TestCase, main
 
 from mock.restful_server import init_response
@@ -29,7 +30,10 @@ class CommonUtilsTestCase(TestCase):
         self.assertEqual(content, {'field':'test'})
 
     def test_detect_process(self):
-        cmds = ['sleep', '360000']
+        if sys.platform == 'win32':
+            cmds = ['timeout', '360000']
+        else:
+            cmds = ['sleep', '360000']
         process = Popen(cmds, stdout=PIPE, stderr=STDOUT)
         self.assertTrue(detect_process(process.pid))
         kill_command(process.pid)
