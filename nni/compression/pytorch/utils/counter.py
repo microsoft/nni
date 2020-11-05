@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Any
 import functools
 from collections import defaultdict
 from prettytable import PrettyTable
@@ -212,7 +211,7 @@ def format_results(modules):
     return table
 
 
-def count_flops_params(model: nn.Module, input: Any, custom_ops=None, verbose=True, mode='default'):
+def count_flops_params(model, input, custom_ops=None, verbose=True, mode='default'):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
