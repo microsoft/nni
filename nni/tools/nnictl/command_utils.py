@@ -36,7 +36,6 @@ def kill_command(pid):
     if sys.platform == 'win32':
         psutil.Process(pid).terminate()
     else:
-        # Process.terminate() failed on azure pipeline. No idea why.
         cmds = ['kill', str(pid)]
         call(cmds)
 
