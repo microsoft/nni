@@ -31,7 +31,7 @@ class CommonUtilsTestCase(TestCase):
 
     # FIXME: This test case fails randomly on Windows. Cannot reproduce locally.
 
-    @unittest.skipIf(sys.platform == 'win32')
+    @skipIf(sys.platform == 'win32')
     def test_detect_process(self):
         if sys.platform == 'win32':
             cmds = ['timeout', '360000']
