@@ -80,8 +80,8 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
     render(): React.ReactNode {
         const { closeDrawer, activeTab } = this.props;
         const { nniManagerLogStr, dispatcherLogStr, isLoading, logDrawerHeight } = this.state;
-        // tab[44] + tab[PaddingTop: 12] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
-        const monacoHeight = logDrawerHeight - 160 - 2;
+        // tab[height: 56] + tab[margin-bottom: 20] + button[32] + button[margin-top: 45, -bottom: 7] + fluent-panel own paddingBottom[20] + title-border[2]
+        const monacoHeight = logDrawerHeight - 182;
         return (
             <Stack>
                 <Panel
@@ -93,7 +93,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                 >
                     <Pivot selectedKey={activeTab} style={{ minHeight: 190 }}>
                         <PivotItem headerText='Dispatcher log' key='dispatcher'>
-                            <div className='panel'>
+                            <div className='panel logMargin'>
                                 <MonacoHTML
                                     content={dispatcherLogStr || 'Loading...'}
                                     loading={isLoading}
@@ -111,7 +111,7 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                         </PivotItem>
                         <PivotItem headerText='NNIManager log' key='nnimanager'>
                             {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
-                            <div className='panel'>
+                            <div className='panel logMargin'>
                                 <MonacoHTML
                                     content={nniManagerLogStr || 'Loading...'}
                                     loading={isLoading}
