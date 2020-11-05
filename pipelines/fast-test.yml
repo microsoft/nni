@@ -184,7 +184,7 @@ jobs:
   steps:
   - script: |
       python -m pip install -U --upgrade pip setuptools
-      python -m pip install -U pytest coverage
+      python -m pip install -U pytest pytest-azurepipelines coverage
     displayName: 'Install Python tools'
 
   - script: |
