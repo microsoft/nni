@@ -12,7 +12,7 @@ import numpy as np
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
-from nni.compression.pytroch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils.counter import count_flops_params
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 prefix = 'analysis_test'

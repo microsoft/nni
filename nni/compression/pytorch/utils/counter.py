@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import DefaultDict
+from typing import Any
 import functools
 from collections import defaultdict
 from prettytable import PrettyTable
@@ -177,7 +177,7 @@ mode_cls = {
 
 def format_results(modules):
     table = PrettyTable()
-    has_multi_use = True if len(list(filter(lambda x: len(x) > 1, [module['flops'] for module in modules.values()]))) else False
+    has_multi_use = True if len(list(filter(lambda x: len(x) > 1, [module['flops'] for module in modules.values()]))) > 0 else False
 
     headers = [
         'Index',
@@ -203,7 +203,6 @@ def format_results(modules):
             sum(module['flops']),
             module['params'][0],
         ]
-        
         if has_multi_use:
             row_values.append(len(module['flops']))
 
@@ -213,7 +212,7 @@ def format_results(modules):
     return table
 
 
-def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, mode='default'):
+def count_flops_params(model: nn.Module, input: Any, custom_ops=None, verbose=True, mode='default'):
     """
     Count FLOPs and Params of the given model.
     This function would identify the mask on the module
@@ -236,9 +235,9 @@ def count_flops_params(model: nn.Module, input, custom_ops=None, verbose=True, m
     verbose: bool
         If False, mute detail information about modules. Default is True.
     mode:
-        the mode of how to collect information. If the mode is set to `default`, 
-        only the information of convolution and linear will be collected. 
-        If the mode is set to `full`, other operations will also be collected. 
+        the mode of how to collect information. If the mode is set to `default`,
+        only the information of convolution and linear will be collected.
+        If the mode is set to `full`, other operations will also be collected.
 
     Returns
     -------
