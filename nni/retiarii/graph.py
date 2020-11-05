@@ -271,19 +271,30 @@ class Graph:
             op = Operation.new(operation_or_type, name, parameters)
         return Node(self, self.model._uid(), name, op, _internal=True)._register()
 
+    @overload
+    def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
+    @overload
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+
+    def insert_node_on_edge(self, edge, name, operation_or_type, parameters={}) -> 'Node':
+        if isinstance(operation_or_type, Operation):
+            op = operation_or_type
+        else:
+            op = Operation.new(operation_or_type, name, parameters)
+        new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
+        # update edges
+        self.add_edge((edge.head, edge.head_slot), (new_node, 0))
+        self.add_edge((new_node, 0), (edge.tail, edge.tail_slot))
+        self.del_edge(edge)
+        return new_node
+
     # mutation
     def add_edge(self, head: Tuple['Node', Optional[int]], tail: Tuple['Node', Optional[int]]) -> 'Edge':
         assert head[0].graph is self and tail[0].graph is self
         return Edge(head, tail, _internal=True)._register()
 
-    def insert_node_after(self, node: 'Node', name: str, type: Union[Operation, str], **parameters) -> 'Node':
-        if isinstance(type, Operation):
-            assert not parameters
-            op = type
-        else:
-            op = Operation.new(type, cell_name=name, **parameters)
-        new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
-        return new_node
+    def del_edge(self, edge: 'Edge') -> None:
+        self.edges.remove(edge)
 
     def get_node_by_name(self, name: str) -> Optional['Node']:
         """
