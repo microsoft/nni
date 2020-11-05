@@ -4,8 +4,8 @@ from typing import *
 
 import json_tricks
 import nni
-from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.protocol import send, CommandType
+from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
+from nni.runtime.protocol import send, CommandType
 from nni.utils import MetricType
 
 from . import utils

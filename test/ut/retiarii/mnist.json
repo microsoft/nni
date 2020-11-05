@@ -1,0 +1,40 @@
+{
+    "_model": {
+        "inputs": ["image"],
+        "outputs": ["metric"],
+
+        "nodes": {
+            "stem": {"cell": "stem"},
+            "flatten": {"type": "Flatten"},
+            "fc1": {"type": "Dense", "units": 1024, "activation": "relu"},
+            "fc2": {"type": "Dense", "units": 10},
+            "softmax": {"type": "Softmax"}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["stem", 0]},
+            {"head": ["stem", 0], "tail": ["flatten", null]},
+            {"head": ["flatten", null], "tail": ["fc1", null]},
+            {"head": ["fc1", null], "tail": ["fc2", null]},
+            {"head": ["fc2", null], "tail": ["softmax", null]},
+            {"head": ["softmax", null], "tail": ["_outputs", 0]}
+        ]
+    },
+
+    "stem": {
+        "nodes": {
+            "conv1": {"type": "Conv2D", "filters": 32, "kernel_size": 5, "activation": "relu"},
+            "pool1": {"type": "MaxPool2D", "pool_size": 2},
+            "conv2": {"type": "Conv2D", "filters": 64, "kernel_size": 5, "activation": "relu"},
+            "pool2": {"type": "MaxPool2D", "pool_size": 2}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["conv1", null]},
+            {"head": ["conv1", null], "tail": ["pool1", null]},
+            {"head": ["pool1", null], "tail": ["conv2", null]},
+            {"head": ["conv2", null], "tail": ["pool2", null]},
+            {"head": ["pool2", null], "tail": ["_outputs", 0]}
+        ]
+    }
+}
