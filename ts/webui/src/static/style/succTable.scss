@@ -1,8 +1,10 @@
 #succTable {
-    height: 400px;
-    margin-top: -24px;
-    overflow-y: auto;
+    height: 412px;
     position: relative;
+
+    .ms-DetailsHeader {
+        padding-top: 0;
+    }
 
     .succTable-tooltip {
         width: 90%;
