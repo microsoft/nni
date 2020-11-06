@@ -7,7 +7,7 @@ from nni.retiarii.converter.graph_gen import convert_to_graph
 from nni.retiarii.converter.visualize import visualize_model
 from nni.retiarii import nn
 from base_mnasnet import MNASNet
-
+from nni.experiment import Experiment
 
 if __name__ == '__main__':
     _DEFAULT_DEPTHS = [16, 24, 40, 80, 96, 192, 320]
@@ -27,6 +27,9 @@ if __name__ == '__main__':
     graph_ir = model._dump()
     print(graph_ir)
     visualize_model(graph_ir)
+
+    exp = Experiment()
+    exp.start_retiarii_experiment(base_model)
 
     '''exp = sdk.create_experiment('mnasnet_search', base_model)
     mutators = []

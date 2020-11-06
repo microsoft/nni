@@ -495,7 +495,7 @@ class Node:
     @staticmethod
     def _load(graph: Graph, name: str, ir: Any) -> 'Node':
         if ir['operation']['type'] == '_cell':
-            op = Cell(ir['operation']['cell'], ir['operation'].get('parameters', {}))
+            op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}))
         else:
             op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}))
         return Node(graph, graph.model._uid(), name, op)
