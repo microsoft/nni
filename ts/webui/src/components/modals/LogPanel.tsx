@@ -110,7 +110,6 @@ class LogDrawer extends React.Component<LogDrawerProps, LogDrawerState> {
                             </div>
                         </PivotItem>
                         <PivotItem headerText='NNIManager log' key='nnimanager'>
-                            {/* <TabPane tab="NNImanager Log" key="nnimanager"> */}
                             <div className='panel logMargin'>
                                 <MonacoHTML
                                     content={nniManagerLogStr || 'Loading...'}

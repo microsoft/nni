@@ -266,7 +266,7 @@ function caclMonacoEditorHeight(height): number {
     // [Search space 56px] + [marginBottom 18px] +
     // button[height: 32px, marginTop: 45px, marginBottom: 7px]
     // panel own padding-bottom: 20px;
-    return height - 56 - 18 - 32 - 45 - 7 - 20;
+    return height - 178;
 }
 
 export {

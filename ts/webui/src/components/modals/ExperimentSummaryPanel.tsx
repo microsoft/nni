@@ -17,7 +17,7 @@ interface ExpDrawerState {
     expDrawerHeight: number;
 }
 
-class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
+class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerState> {
     public _isExperimentMount!: boolean;
     private refreshId!: number | undefined;
 
@@ -116,4 +116,4 @@ class ExperimentDrawer extends React.Component<ExpDrawerProps, ExpDrawerState> {
     }
 }
 
-export default ExperimentDrawer;
+export default ExperimentSummaryPanel;

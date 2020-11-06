@@ -10,7 +10,7 @@ import {
     IStackTokens,
     IStackStyles
 } from '@fluentui/react';
-import ExperimentPanel from './modals/ExperimentSummaryPanel';
+import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
 import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
@@ -160,12 +160,14 @@ class NavCon extends React.Component<NavProps, NavState> {
                             text='Experiment summary'
                             onClick={this.showExpcontent}
                         />
-                        {/* <CommandBarButton iconProps={downLoadIcon} text='Download' menuProps={this.menuProps} /> */}
                         <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
                     </Stack>
                 </StackItem>
                 {isvisibleExperimentDrawer && (
-                    <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />
+                    <ExperimentSummaryPanel
+                        closeExpDrawer={this.closeExpDrawer}
+                        experimentProfile={EXPERIMENT.profile}
+                    />
                 )}
             </Stack>
         );
