@@ -14,16 +14,18 @@ export const Command1 = (): any => {
             builtinName = builtinName.concat(tuner.builtinTunerName);
         }
     }
-    if (advisor !== undefined) {
-        title = title.concat('/ Assessor');
-        if (advisor.builtinAdvisorName !== undefined) {
-            builtinName = builtinName.concat(advisor.builtinAdvisorName);
-        }
-    }
+    
     if (assessor !== undefined) {
-        title = title.concat('/ Addvisor');
+        title = title.concat('/ Assessor');
         if (assessor.builtinAssessorName !== undefined) {
             builtinName = builtinName.concat(assessor.builtinAssessorName);
+        }
+    }
+
+    if (advisor !== undefined) {
+        title = title.concat('Advisor');
+        if (advisor.builtinAdvisorName !== undefined) {
+            builtinName = builtinName.concat(advisor.builtinAdvisorName);
         }
     }
 
