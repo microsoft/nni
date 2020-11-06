@@ -15,13 +15,6 @@ export const Command1 = (): any => {
         }
     }
 
-    if (assessor !== undefined) {
-        title = title.concat('/ Assessor');
-        if (assessor.builtinAssessorName !== undefined) {
-            builtinName = builtinName.concat(assessor.builtinAssessorName);
-        }
-    }
-
     if (advisor !== undefined) {
         title = 'Advisor';
         if (advisor.builtinAdvisorName !== undefined) {
@@ -29,7 +22,13 @@ export const Command1 = (): any => {
         }
         if (advisor.className !== undefined) {
             builtinName = builtinName.concat(advisor.className);
+        }
+    }
 
+    if (assessor !== undefined) {
+        title = title.concat('/ Assessor');
+        if (assessor.builtinAssessorName !== undefined) {
+            builtinName = builtinName.concat(assessor.builtinAssessorName);
         }
     }
 
