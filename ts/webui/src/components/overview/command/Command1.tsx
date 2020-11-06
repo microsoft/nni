@@ -9,12 +9,12 @@ export const Command1 = (): any => {
     let title = '';
     let builtinName = '';
     if (tuner !== undefined) {
-        title = title.concat('Tuner');
+        title = 'Tuner';
         if (tuner.builtinTunerName !== undefined) {
             builtinName = builtinName.concat(tuner.builtinTunerName);
         }
     }
-    
+
     if (assessor !== undefined) {
         title = title.concat('/ Assessor');
         if (assessor.builtinAssessorName !== undefined) {
@@ -23,9 +23,13 @@ export const Command1 = (): any => {
     }
 
     if (advisor !== undefined) {
-        title = title.concat('Advisor');
+        title = 'Advisor';
         if (advisor.builtinAdvisorName !== undefined) {
             builtinName = builtinName.concat(advisor.builtinAdvisorName);
+        }
+        if (advisor.className !== undefined) {
+            builtinName = builtinName.concat(advisor.className);
+
         }
     }
 
