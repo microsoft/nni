@@ -468,7 +468,7 @@ class NNIManager implements Manager {
         let count: number = 1;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             await delay(1000 * 1); // 1 seconds
-            if (this.status.status === 'RUNNING') {
+            if (['RUNNING', 'NO_MORE_TRIAL', 'TUNER_NO_MORE_TRIAL'].includes(this.status.status)) {
                 this.experimentProfile.execDuration += 1;
                 if (count % 10 === 0) {
                     await this.storeExperimentProfile();
