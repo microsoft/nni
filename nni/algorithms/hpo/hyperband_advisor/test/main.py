@@ -7,6 +7,7 @@ A test for hyperband, using nasbench201. So it need install the dependencies for
 import argparse
 import logging
 import random
+import time
 
 import nni
 from nni.utils import merge_parameter
@@ -20,7 +21,7 @@ def main(args):
     r = args.pop('TRIAL_BUDGET')
     dataset = [t for t in query_nb201_trial_stats(args, 200, 'cifar100', include_intermediates=True)]
     test_acc = random.choice(dataset)['intermediates'][r - 1]['ori_test_acc'] / 100
-
+    time.sleep(random.randint(0, 10))
     nni.report_final_result(test_acc)
     logger.debug('Final result is %g', test_acc)
     logger.debug('Send final result done.')
