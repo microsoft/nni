@@ -11,7 +11,7 @@ import torch.nn as nn
 import datasets
 from macro import GeneralNetwork
 from micro import MicroNetwork
-from nni.nas.pytorch import enas
+from nni.algorithms.nas.pytorch import enas
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)
 from utils import accuracy, reward_accuracy
