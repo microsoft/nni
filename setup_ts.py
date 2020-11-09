@@ -131,7 +131,7 @@ def prepare_nni_node():
 
     node_src = Path('toolchain/node', node_executable_in_tarball)
     node_dst = Path('nni_node', node_executable)
-    shutil.copyfile(node_src, node_dst)
+    shutil.copy(node_src, node_dst)
 
 
 def compile_ts():
