@@ -15,7 +15,7 @@ The above-mentioned example is meant to reproduce the results in the paper, we d
 |                        | In paper      | Reproduction |
 | ---------------------- | ------------- | ------------ |
 | First order (CIFAR10)  | 3.00 +/- 0.14 | 2.78         |
-| Second order (CIFAR10) | 2.76 +/- 0.09 | 2.89         |
+| Second order (CIFAR10) | 2.76 +/- 0.09 | 2.80         |
 
 ## Examples
 
