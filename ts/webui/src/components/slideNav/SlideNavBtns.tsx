@@ -28,8 +28,8 @@ export const SlideNavBtns = (): any => {
         // right side nav buttons
         <React.Fragment>
             <Stack className='config'>
-                <IconButtonTemplate icon='ClassroomLogo' btuName='Search space' event={showSearchSpacePanel} />
-                <IconButtonTemplate icon='TestParameter' btuName='Config' event={showTrialConfigpPanel} />
+                <IconButtonTemplate icon='DocumentSearch' btuName='Search space' event={showSearchSpacePanel} />
+                <IconButtonTemplate icon='Archive' btuName='Config' event={showTrialConfigpPanel} />
                 <IconButtonTemplate icon='FilePDB' btuName='Log files' event={showLogPanel} />
             </Stack>
             {isShowConfigPanel && <TrialConfigPanel panelName={panelName} hideConfigPanel={hideConfigPanel} />}
