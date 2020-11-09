@@ -188,7 +188,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python setup.py develop
+      python setup.py develop --no-user
     displayName: 'Install NNI'
 
   - script: |
@@ -201,16 +201,18 @@ jobs:
       cd test
       python -m pytest ut
     displayName: 'Python unit test'
-    continueOnError: true
 
   - script: |
       cd ts/nni_manager
       yarn test
     displayName: 'TypeScript unit test'
-    continueOnError: true
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
-    continueOnError: true
+
+
+trigger:
+  branches:
+    exclude: [ l10n_master ]

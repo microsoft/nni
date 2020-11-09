@@ -429,7 +429,7 @@ def webui_nas(args):
         if sys.platform == 'win32':
             node_command = os.path.join(entry_dir, 'node.exe')
         else:
-            node_command = 'node'
+            node_command = os.path.join(entry_dir, 'node')
         cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
         subprocess.run(cmds, cwd=entry_dir)
     except KeyboardInterrupt:
