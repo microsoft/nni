@@ -34,7 +34,7 @@ jobs:
       set -e
       sudo apt-get install -y pandoc
       python3 -m pip install -U --upgrade pygments
-      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python3 -m pip install -U tensorflow==2.3.1
       python3 -m pip install -U keras==2.4.2
       python3 -m pip install -U gym onnx peewee thop
@@ -96,7 +96,7 @@ jobs:
 
   - script: |
       set -e
-      python3 -m pip install -U torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python3 -m pip install -U tensorflow==1.15.2
       python3 -m pip install -U keras==2.1.6
       python3 -m pip install -U gym onnx peewee
