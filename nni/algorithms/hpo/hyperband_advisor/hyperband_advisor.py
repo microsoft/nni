@@ -329,7 +329,7 @@ class Hyperband(MsgDispatcherBase):
 
         for _ in range(self.credit):
             self._request_one_trial_job()
-    
+
     def _request_one_trial_job(self):
         ret = self._get_one_trial_job()
         if ret is not None:
