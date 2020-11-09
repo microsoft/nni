@@ -123,7 +123,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </ExpDurationContext.Provider>
                                 </div>
                                 {/* table */}
-                                <div className='overviewTable'>
+                                <div className='overviewBestMetric'>
                                     <Stack horizontal>
                                         <div style={itemStyleSucceed}>
                                             <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
@@ -167,10 +167,6 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </div>
                                     </Stack>
                                     <div className='overviewChart'>
-                                        {/* <Stack className='maxmin' horizontal horizontalAlign='end'>
-                                            <div className='circle' />
-                                            <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
-                                        </Stack> */}
                                         <Accuracy
                                             accuracyData={accuracyGraphData}
                                             accNodata={noDataMessage}

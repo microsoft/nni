@@ -84,7 +84,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 70,
+            minWidth: 65,
             maxWidth: 119,
             isResizable: true,
             data: 'number',
@@ -95,7 +95,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 70,
+            minWidth: 65,
             maxWidth: 119,
             isResizable: true,
             className: 'tableHead leftTitle',
@@ -106,7 +106,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 100,
+            minWidth: 90,
             maxWidth: 166,
             isResizable: true,
             fieldName: 'duration',
@@ -148,7 +148,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
         return (
             <Sticky stickyPosition={StickyPositionType.Header} isScrollSynced>
-                {defaultRender!({
+                {// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                defaultRender!({
                     ...props
                 })}
             </Sticky>
@@ -179,7 +180,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 
         return (
             <div id='succTable'>
-                <ScrollablePane scrollbarVisibility={ScrollbarVisibility.auto}>
+                <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
                     <DetailsList
                         columns={columns}
                         items={source}
