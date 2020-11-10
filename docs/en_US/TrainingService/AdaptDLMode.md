@@ -54,7 +54,7 @@ maxTrialNum: 2
 
 trial:
   adaptive: false # optional.
-  image: registry.petuum.com/dev/scalable-ml/demo:nfs
+  image: <image_tag>
   imagePullSecrets:  # optional
     - name: stagingsecret
   codeDir: .

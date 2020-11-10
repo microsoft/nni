@@ -28,7 +28,7 @@ describe('Unit Test for AdlTrainingService', () => {
         "command": "python3 /root/apps/nni_linear_regression/main.py",
         "codeDir": ".",
         "gpuNum": 0,
-        "image": "registry.petuum.com/dev/adaptdl-submit:latest",
+        "image": "test.image:latest",
         "imagePullSecrets": [
             {
                 "name": "stagingsecrets"
@@ -46,7 +46,7 @@ describe('Unit Test for AdlTrainingService', () => {
         "command": "python3 /root/apps/nni_linear_regression/main.py",
         "codeDir": ".",
         "gpuNum": 0,
-        "image": "registry.petuum.com/dev/adaptdl-submit:latest",
+        "image": "test.image:latest",
         "imagePullSecrets": [
             {
                 "name": "stagingsecrets"
