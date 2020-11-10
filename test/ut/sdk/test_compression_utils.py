@@ -144,9 +144,21 @@ class AnalysisUtilsTest(TestCase):
             def __init__(self):
                 super(Model1, self).__init__()
                 self.conv = nn.Conv2d(3, 5, 1, 1)
+                self.bn = nn.BatchNorm2d(5)
+                self.relu = nn.LeakyReLU()
+                self.linear = nn.Linear(20, 10)
+                self.upsample = nn.UpsamplingBilinear2d(size=2)
+                self.pool = nn.AdaptiveAvgPool2d((2, 2))
 
             def forward(self, x):
-                return self.conv(x)
+                x = self.conv(x)
+                x = self.bn(x)
+                x = self.relu(x)
+                x = self.upsample(x)
+                x = self.pool(x)
+                x = x.view(x.size(0), -1)
+                x = self.linear(x)
+                return x
 
         class Model2(nn.Module):
             def __init__(self):
@@ -161,7 +173,7 @@ class AnalysisUtilsTest(TestCase):
                 return x
         
         flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full')
-        assert (flops, params)  == (60, 20)
+        assert (flops, params)  == (580, 240)
 
         flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2))
         assert (flops, params)  == (560, 50)

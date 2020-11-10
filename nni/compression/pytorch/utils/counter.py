@@ -12,7 +12,7 @@ from nni.compression.pytorch.compressor import PrunerModuleWrapper
 def _get_params(m):
     return sum([p.numel() for p in m.parameters()])
 
-def count_convNd(m, x, y, add_results):
+def count_convNd(m, x, y):
     cin = m.in_channels
     kernel_ops = m.weight.size()[2] * m.weight.size()[3]
     output_size = torch.zeros(y.size()[2:]).numel()
@@ -32,9 +32,9 @@ def count_convNd(m, x, y, add_results):
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
-def count_linear(m, x, y, add_results):
+def count_linear(m, x, y):
     out_features = m.out_features
     if hasattr(m, "weight_mask"):
         out_features = m.weight_mask.sum() // m.in_features
@@ -49,9 +49,9 @@ def count_linear(m, x, y, add_results):
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
-def count_bn(m, x, y, add_results):
+def count_bn(m, x, y):
     results = {
         "flops": 2 * x[0].numel(),
         "params": _get_params(m),
@@ -61,23 +61,22 @@ def count_bn(m, x, y, add_results):
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
 
-def count_relu(m, x, y, add_results):
+def count_relu(m, x, y):
     results = {
         "flops": x[0].numel(),
         "params": 0,
-        "weight_size": tuple(m.weight.size()),
+        "weight_size": 0,
         "input_size": tuple(x[0].size()),
         "output_size": tuple(y.size()),
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
-def count_avgpool(m, x, y, add_results):
-    print("avgpool", y.numel())
+def count_avgpool(m, x, y):
     results = {
         "flops": y.numel(),
         "params": 0,
@@ -87,12 +86,13 @@ def count_avgpool(m, x, y, add_results):
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
 
-def count_adap_avgpool(m, x, y, add_results):
+def count_adap_avgpool(m, x, y):
     kernel = torch.DoubleTensor([*(x[0].shape[2:])]) // torch.DoubleTensor(list((m.output_size,))).squeeze()
-    total_add = torch.prod(kernel)
+    total_add = int(torch.prod(kernel))
+
     total_div = 1
     kernel_ops = total_add + total_div
     num_elements = y.numel()
@@ -106,13 +106,10 @@ def count_adap_avgpool(m, x, y, add_results):
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
+    return results
 
 
-def count_upsample(m, x, y, add_results):
-    if m.mode not in ("linear", "bilinear", "bicubic"):
-        return
-
+def count_upsample(m, x, y):
     if m.mode == "linear":
         total_ops = y.nelement() * 5  # 2 muls + 3 add
     elif m.mode == "bilinear":
@@ -128,20 +125,19 @@ def count_upsample(m, x, y, add_results):
         # https://en.wikipedia.org/wiki/Trilinear_interpolation
         # can viewed as 2 bilinear + 1 linear
         total_ops = y.nelement() * (13 * 2 + 5)
+    else:
+        return None
 
     results = {
         "flops": total_ops,
         "params": 0,
-        "weight_size": tuple(m.weight.size()),
+        "weight_size": 0,
         "input_size": tuple(x[0].size()),
         "output_size": tuple(y.size()),
         "module_type": type(m).__name__
     }
 
-    add_results(m._name, **results)
-
-def count_naive(m, _, __, add_results):
-    pass
+    return results
 
 DEFAULT_OPS = {
     nn.Conv1d: count_convNd,
@@ -174,6 +170,7 @@ mode_cls = {
     'full': {k: v for d in [DEFAULT_OPS, OTHER_OPS] for k, v in d.items()}
 }
 
+
 def format_results(modules):
     table = PrettyTable()
     has_multi_use = True if len(list(filter(lambda x: len(x) > 1, [module['flops'] for module in modules.values()]))) > 0 else False
@@ -193,7 +190,6 @@ def format_results(modules):
     total_ops, total_params = 0, 0
     for i, (name, module) in enumerate(modules.items()):
         if len(module['flops']) == 0: continue
-        # print(name, module)
         row_values = [
             i,
             name,  # Name
@@ -211,6 +207,25 @@ def format_results(modules):
     return table
 
 
+def count_module_flops_params(m, x, y):
+    m_type = type(m)
+    if m_type not in register_ops.keys():
+        return
+
+    fn = register_ops[m_type]
+    module_result = fn(m, x, y)
+    if module_result is None:
+        return
+
+    for k, v in module_result.items():
+        if k not in results[m._name]:
+            results[m._name][k] = []
+
+        if k in ['params', 'module_type', 'weight_size']:
+            results[m._name][k] = [v]
+        else:
+            results[m._name][k].append(v)
+
 def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     """
     Count FLOPs and Params of the given model.
@@ -223,14 +238,15 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
 
     Parameters
     ---------
-    model : nn.Module
+    model: nn.Module
         target model.
     x: tuple or tensor
         the input shape of data or a tensor as input data
     custom_ops: dict
-        a mapping of (module: custom operation)
-        the custom operation will overwrite the default operation.
-        for reference, please see ``custom_mask_ops``.
+        a mapping of (module -> torch.nn.Module : custom operation)
+        the custom operation is a callback funtion to calculate
+        the module flops and parameters, it will overwrite the default operation.
+        for reference, please see ``DEFAULT_OPS``.
     verbose: bool
         If False, mute detail information about modules. Default is True.
     mode:
@@ -240,12 +256,14 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
 
     Returns
     -------
-    flops: float
+    flops: int
         total flops of the model
-    params:
+    params: int
         total params of the model
     results: dict
-        detail information of modules
+        the detail information of modules. (module_name, module_type, weight_size,
+        flops, params, input_size, output_size) are included in the results.
+
     """
 
     assert isinstance(x, tuple) or isinstance(x, torch.Tensor)
@@ -254,25 +272,28 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     original_device = next(model.parameters()).device
     training = model.training
 
-    if torch.is_tensor(x[0]):
+    if torch.is_tensor(x):
         x = (t.to(original_device) for t in x)
     else:
         x = (torch.zeros(x).to(original_device), )
 
-    handler_collection = []
-    results = dict()
+
+    global register_ops, results
+    register_ops = mode_cls[mode]
     if custom_ops is None:
         custom_ops = {}
-    register_ops = mode_cls[mode]
     register_ops.update(custom_ops)
+
+    results = defaultdict(dict)
+    handler_collection = []
 
     # set leaf module name
     prev_m = None
     for name, m in model.named_modules():
-        if len(list(m.children())) > 0:  # skip for non-leaf module
-            continue
-        setattr(m, "_name", name)
-        results[name] = defaultdict(list)
+        m_type = type(m)
+
+        if m_type in register_ops.keys():
+            setattr(m, "_name", name)
 
         if isinstance(prev_m, PrunerModuleWrapper):
             weight_mask = prev_m.weight_mask
@@ -284,20 +305,8 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         if len(list(m_.children())) > 0:
             return
 
-        m_type = type(m_)
-        fn = register_ops.get(m_type, count_naive)
-
-        def _add_results(*args, **kwargs):
-            name = args[0]
-            for k, v in kwargs.items():
-                if k in ['params', 'module_type', 'weight_size']:
-                    results[name][k] = [v]
-                else:
-                    results[name][k].append(v)
-
-        if fn is not None:
-            _handler = m_.register_forward_hook(functools.partial(fn, add_results=_add_results))
-            handler_collection.append(_handler)
+        _handler = m_.register_forward_hook(count_module_flops_params)
+        handler_collection.append(_handler)
 
     model.eval()
     model.apply(add_hooks)
@@ -305,26 +314,20 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     with torch.no_grad():
         model(*x)
 
-
     # restore origin status
     for name, m in model.named_modules():
-        if len(list(m.children())) > 0:
+        if name not in results.keys():
             continue
 
         delattr(m, "_name")
 
-        if not len(results[name]["flops"]) > 0:
-            del results[name]
-            if not verbose:
-                print(f'Module {name} of type {type(m)} is not used.')
-            continue
-
         if hasattr(m, "weight_mask"):
             delattr(m, "weight_mask")
+
     model.train(training).to(original_device)
     for handler in handler_collection:
         handler.remove()
-
+        
     # get detail information
     table = format_results(results)
     total_ops = sum([sum(v["flops"]) for v in results.values()])
