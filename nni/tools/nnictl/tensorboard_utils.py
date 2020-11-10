@@ -19,7 +19,7 @@ def parse_log_path(args, trial_content):
     path_list = []
     host_list = []
     for trial in trial_content:
-        if args.trial_id and args.trial_id != 'all' and trial.get('id') != args.trial_id:
+        if args.trial_id and args.trial_id != 'all' and trial.get('trialJobId') != args.trial_id:
             continue
         pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
         match = re.search(pattern, trial['logPath'])
@@ -40,7 +40,7 @@ def copy_data_from_remote(args, nni_config, trial_content, path_list, host_list,
         machine_dict[machine['ip']] = {'port': machine['port'], 'passwd': machine['passwd'], 'username': machine['username'],
                                        'sshKeyPath': machine.get('sshKeyPath'), 'passphrase': machine.get('passphrase')}
     for index, host in enumerate(host_list):
-        local_path = os.path.join(temp_nni_path, trial_content[index].get('id'))
+        local_path = os.path.join(temp_nni_path, trial_content[index].get('trialJobId'))
         local_path_list.append(local_path)
         print_normal('Copying log data from %s to %s' % (host + ':' + path_list[index], local_path))
         sftp = create_ssh_sftp_client(host, machine_dict[host]['port'], machine_dict[host]['username'], machine_dict[host]['passwd'],
