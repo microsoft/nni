@@ -48,6 +48,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
         self._running_models: Dict[int, Model] = dict()
 
+    def get_search_space(self) -> 'JSON':
+        advisor = get_advisor()
+        return advisor.search_space
+
     def submit_models(self, *models: Model) -> None:
         for model in models:
             data = BaseGraphData(codegen.model_to_pytorch_script(model),

@@ -146,6 +146,10 @@ class Model:
         ret['_training_config'] = self.training_config._dump()
         return ret
 
+    def apply_trainer(self, module, args) -> None:
+        # TODO: rethink the way of specifying a trainer
+        self.training_config = TrainingConfig(module, args)
+
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """
         Traverse all the nodes to find the matched node(s) with the given name.
@@ -268,7 +272,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, name, parameters)
+            op = Operation.new(operation_or_type, parameters, name)
         return Node(self, self.model._uid(), name, op, _internal=True)._register()
 
     @overload

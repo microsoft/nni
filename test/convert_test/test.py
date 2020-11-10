@@ -1,3 +1,4 @@
+import os
 import sys
 import torch
 from pathlib import Path
@@ -26,25 +27,40 @@ if __name__ == '__main__':
     print("Model: ", model)
     graph_ir = model._dump()
     print(graph_ir)
-    visualize_model(graph_ir)
+    #visualize_model(graph_ir)
 
+    # TODO: new interface
+    #exp = Experiment()
+    #exp.start_retiarii_experiment(base_model, training_approach,
+    #                              applied_mutators, strategy,
+    #                              exp_config)
+    
+    exp_config = {'authorName': 'nni',
+                  'experimentName': 'naive',
+                  'trialConcurrency': 3,
+                  'maxExecDuration': '1h',
+                  'maxTrialNum': 10,
+                  'trainingServicePlatform': 'local'
+                }
+
+    applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}}]
+    training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
+        "dataset_kwargs": {
+                "root": "data/mnist",
+                "download": True
+            },
+            "dataloader_kwargs": {
+                "batch_size": 32
+            },
+            "optimizer_kwargs": {
+                "lr": 1e-3
+            },
+            "trainer_kwargs": {
+                "max_epochs": 1
+            }
+    }}
+    strategy = {'filename': 'simple_strategy', 'funcname': 'simple_startegy', 'args': {}}
     exp = Experiment()
-    exp.start_retiarii_experiment(base_model)
-
-    '''exp = sdk.create_experiment('mnasnet_search', base_model)
-    mutators = []
-    base_filter_sizes = [16, 24, 40, 80, 96, 192, 320]
-    exp_ratios = [3, 3, 3, 6, 6, 6, 6]
-    strides = [1, 2, 2, 2, 1, 2, 1]
-    for i in range(3, 10):
-        mutators.append(BlockMutator(i, 'layers__'+str(i)+'__placeholder',
-                        n_layer_options=[1, 2, 3, 4],
-                        op_type_options=['RegularConv', 'DepthwiseConv', 'MobileConv'],
-                        kernel_size_options=[3, 5],
-                        se_ratio_options=[0, 0.25],
-                        #skip_options=['pool', 'identity', 'no'],
-                        skip_options=['identity', 'no'],
-                        n_filter_options=[int(base_filter_sizes[i-3]*x) for x in [0.75, 1.0, 1.25]],
-                        exp_ratio = exp_ratios[i-3],
-                        stride = strides[i-3]))
-    exp.specify_training(ModelTrain)'''
+    exp.tmp_start_retiarii(graph_ir, training_approach,
+                           applied_mutators, strategy,
+                           exp_config)
