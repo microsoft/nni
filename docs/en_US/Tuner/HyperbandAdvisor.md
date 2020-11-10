@@ -7,9 +7,15 @@ Hyperband on NNI
 ## 2. Implementation with full parallelism
 First, this is an example of how to write an autoML algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it Advisor.
 
-Second, this implementation fully leverages Hyperband's internal parallelism. Specifically, the next bucket is not started strictly after the current bucket. Instead, it starts when there are available resources. If you want to use full parallelism mode, set `exec_mode` with `parallelism`.
+Second, this implementation fully leverages Hyperband's internal parallelism. Specifically, the next bucket is not started strictly after the current bucket. Instead, it starts when there are available resources. If you want to use full parallelism mode, set `exec_mode` with `parallelism`. 
+
+![parallelism](../../img/hyperband_parallelism.png)
 
 Or if you want according to the original algorithm, set `exec_mode` with `serial`. In this mode, the next bucket will start strictly after the current bucket.
+
+![serial](../../img/hyperband_serial.png)
+
+`parallelism` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under `serial` mode. The advantage of `parallelism` mode is to make full use of resources, which may multiple reduction the experiment duration.
 
 ## 3. Usage
 To use Hyperband, you should add the following spec in your experiment's YAML config file:
