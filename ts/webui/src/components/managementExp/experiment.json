@@ -5,9 +5,9 @@
         "status": "RUNNING",
         "port": 8080,
         "platform": "local",
-        "startTime": 1603343843980,
-        "endTime": 1603343990436,
-        "tag": "it is an experiment for local"
+        "startTime": 1604574871346,
+        "endTime": 1604651935683,
+        "tag": ["local", "first", "tf-1"]
     },
     {
         "name": "example_pai",
@@ -17,7 +17,7 @@
         "platform": "pai",
         "startTime": 1603343773957,
         "endTime": 1603343833157,
-        "tag": "it is an experiment for pai"
+        "tag": ["pai", "first", "tf-2"]
     },
     {
         "name": "example_minst33",
@@ -27,7 +27,7 @@
         "platform": "local",
         "startTime": 1603344004004,
         "endTime": 1603344167408,
-        "tag": "it is an experiment for local"
+        "tag": ["local", "failed", "tf-1"]
     },
     {
         "name": "example_minst",
@@ -37,7 +37,7 @@
         "platform": "local",
         "startTime": 1603344179024,
         "endTime": 1603344238656,
-        "tag": "it is an experiment for local"
+        "tag": ["local", "first", "tf-1"]
     },
     {
         "name": "example_minst",
@@ -47,7 +47,7 @@
         "platform": "local",
         "startTime": 1603344249043,
         "endTime": 1603344348570,
-        "tag": "it is an experiment for local"
+        "tag": ["local", "first", "tf-1"]
     },
     {
         "name": "example_minst",
@@ -57,6 +57,6 @@
         "platform": "local",
         "startTime": 1603344359065,
         "endTime": 1603344388521,
-        "tag": "it is an experiment for local"
+        "tag": ["local", "first", "tf-1"]
     }
 ]

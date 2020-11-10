@@ -40,10 +40,6 @@ class Experiment extends React.Component<{}, OverviewState> {
         };
     }
 
-    // componentDidUpdate(): void {
-
-    // }
-
     render(): React.ReactNode {
         const { hideFilter, selectedStatus, source, selectedPlatform } = this.state;
         return (
@@ -53,26 +49,36 @@ class Experiment extends React.Component<{}, OverviewState> {
                         <Stack className='box' horizontal>
                             <div className='search'>
                                 <SearchBox
-                                    // styles={searchBoxStyles}
                                     className='search-input'
                                     placeholder="Search the experiment by name, ID, tags..."
                                     onEscape={(_ev): void => {
 
-                                        this.setState(() => ({source: data}));
+                                        this.setState(() => ({ source: data }));
                                         console.log('Custom onEscape Called');
                                     }}
                                     onClear={(_ev): void => {
-                                        this.setState(() => ({source: data}));
-                                        console.log('Custom onClear Called');
+                                        this.setState(() => ({ source: data }));
+                                        console.log('onClear');
+                                        // 点 × 操作
+                                        console.info('source', this.state.source);
                                     }}
                                     onChange={(_, newValue): void => {
-                                        if(newValue !== undefined){
-                                            this.setState(() => ({source: this.state.source.filter(item => (item.status.includes(newValue) || 
-                                                item.id.includes(newValue)))}));
+                                        if (newValue !== undefined) {
+                                            // 空格回退操作
+                                            if (newValue === '') {
+                                                this.setState(() => ({ source: data }));
+                                                console.info('source', this.state.source);
+                                                return;
+                                            }
+                                            this.setState(() => ({
+                                                source: this.state.source.filter(item => (item.status.includes(newValue) ||
+                                                    item.id.includes(newValue)))
+                                            }));
                                         }
-                                    console.log('SearchBox onChange fired: ' + newValue)}
+                                        console.log('SearchBox onChange fired: ' + newValue)
                                     }
-                                    // onSearch={(newValue): void => console.log('SearchBox onSearch fired: ' + newValue)}
+                                    }
+                                // onSearch={(newValue): void => console.log('SearchBox onSearch fired: ' + newValue)}
                                 />
                             </div>
                             <div className='filter'>
@@ -92,7 +98,7 @@ class Experiment extends React.Component<{}, OverviewState> {
                                 onChange={this.selectStatus.bind(this)}
                                 placeholder="Select an option"
                                 options={this.statusOption}
-                                />
+                            />
                             <Dropdown
                                 label="Platform"
                                 selectedKey={selectedPlatform}
@@ -111,7 +117,7 @@ class Experiment extends React.Component<{}, OverviewState> {
                                 ariaLabel="Select a date"
                                 // dateTimeFormatter={formatMonthDayYear()}
                                 // formatDate={(date?: Date): string => date!.toString()}
-                                onSelectDate={this.getSelectedData.bind(this)}
+                                onSelectDate={this.getSelectedData.bind(this, 'start')}
                             />
                             <DatePicker
                                 label='End time'
@@ -120,6 +126,7 @@ class Experiment extends React.Component<{}, OverviewState> {
                                 strings={DayPickerStrings}
                                 placeholder="Select a date..."
                                 ariaLabel="Select a date"
+                                onSelectDate={this.getSelectedData.bind(this, 'end')}
                             />
                             <DefaultButton
                                 onClick={this.setOriginSource.bind(this)}
@@ -196,7 +203,7 @@ class Experiment extends React.Component<{}, OverviewState> {
             key: 'port',
             fieldName: 'port',
             minWidth: 65,
-            maxWidth: 150,
+            maxWidth: 90,
             isResizable: true,
             data: 'number',
             // onColumnClick: this.onColumnClick,
@@ -206,13 +213,12 @@ class Experiment extends React.Component<{}, OverviewState> {
                 </div>
             )
         },
-
         {
             name: 'Platform',
             key: 'platform',
             fieldName: 'platform',
-            minWidth: 100,
-            maxWidth: 160,
+            minWidth: 80,
+            maxWidth: 100,
             isResizable: true,
             data: 'string',
             // onColumnClick: this.onColumnClick,
@@ -246,6 +252,29 @@ class Experiment extends React.Component<{}, OverviewState> {
                 <div>{formatTimestamp(item.endTime)}</div>
             </div>
         },
+        {
+            name: 'Tag',
+            key: 'tag',
+            fieldName: 'tag',
+            minWidth: 100,
+            maxWidth: 160,
+            isResizable: true,
+            data: 'number',
+            // onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => {
+                return (
+                    <div className='succeed-padding'>
+                        {
+                            item.tag.map(tag => {
+                                return (
+                                    <span className='tag' key={tag}>{tag}</span>
+                                );
+                            })
+                        }
+                    </div>
+                );
+            }
+        }
     ];
 
     private clickFilter(_e: any): void {
@@ -256,25 +285,42 @@ class Experiment extends React.Component<{}, OverviewState> {
     selectStatus = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
             // 只能set item.key
-            this.setState({selectedStatus: item.key, source: this.state.source.filter(temp => temp.status === item.key)});
+            this.setState({ selectedStatus: item.key, source: this.state.source.filter(temp => temp.status === item.key) });
         }
     };
 
     selectPlatform = (event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
             // 只能set item.key
-            this.setState({selectedPlatform: item.key, source: this.state.source.filter(temp => temp.platform === item.key)});
+            this.setState({ selectedPlatform: item.key, source: this.state.source.filter(temp => temp.platform === item.key) });
         }
     };
 
-    private getSelectedData(date: Date | null | undefined): void {
-        console.info('daa', date);
-        // const {source} = this.state;
-        // if
+    private compareDate(date1: Date, date2: Date): boolean {
+        if (date1.getFullYear() === date2.getFullYear()) {
+            if (date1.getMonth() === date2.getMonth()) {
+                if (date1.getDate() === date2.getDate()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private getSelectedData(type: string, date: Date | null | undefined): void {
+        if (date !== null && date !== undefined) {
+            const { source } = this.state;
+            if (type === 'start') {
+                this.setState({ source: source.filter(item => this.compareDate(new Date(item.startTime), date)) });
+            } else {
+                this.setState({ source: source.filter(item => this.compareDate(new Date(item.endTime), date)) });
+            }
+        }
 
     }
     private setOriginSource(): void {
-        this.setState(() => ({source: data, selectedStatus: '', selectedPlatform: ''}));
+        this.setState(() => ({ source: data, selectedStatus: '', selectedPlatform: '' }));
     }
 }
 
