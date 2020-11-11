@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import functools
 from collections import defaultdict
 from prettytable import PrettyTable
 import torch
@@ -327,7 +326,6 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     model.train(training).to(original_device)
     for handler in handler_collection:
         handler.remove()
-        
     # get detail information
     table = format_results(results)
     total_ops = sum([sum(v["flops"]) for v in results.values()])
