@@ -10,6 +10,7 @@ import string
 import random
 import ruamel.yaml as yaml
 import psutil
+import filelock
 from colorama import Fore
 
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
@@ -95,3 +96,6 @@ def generate_temp_dir():
         temp_dir = generate_folder_name()
     os.makedirs(temp_dir)
     return temp_dir
+
+def get_file_lock(path: string, timeout=-1):
+    return filelock.SoftFileLock(path + '.lock', timeout=timeout)

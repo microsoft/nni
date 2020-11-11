@@ -56,9 +56,9 @@ def update_experiment():
                     continue
                 rest_port = nni_config.get_config('restServerPort')
                 startTime, endTime = get_experiment_time(rest_port)
-                if startTime:
+                if startTime != experiment_dict[key]['startTime']:
                     experiment_config.update_experiment(key, 'startTime', startTime)
-                if endTime:
+                if endTime != experiment_dict[key]['endTime']:
                     experiment_config.update_experiment(key, 'endTime', endTime)
                 status = get_experiment_status(rest_port)
                 if status:
