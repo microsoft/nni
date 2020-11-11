@@ -4,7 +4,6 @@
 from .utils import to_json
 from .env_vars import trial_env_vars
 from . import platform
-from . import adl_utils
 
 
 __all__ = [
