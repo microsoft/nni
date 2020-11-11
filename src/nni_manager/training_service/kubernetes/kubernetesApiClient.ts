@@ -23,6 +23,7 @@ class GeneralK8sClient {
         const adlSupportedProvisioners: RegExp[] = [
             new RegExp("microk8s.io/hostpath"),
             new RegExp(".*cephfs.csi.ceph.com"),
+            new RegExp(".*azure.*"),
             new RegExp("\\b" + "efs" + "\\b")
         ]
         const templateLen = adlSupportedProvisioners.length,

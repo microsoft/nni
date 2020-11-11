@@ -8,13 +8,12 @@ AdaptDL aims to make distributed deep learning easy and efficient in dynamic-res
 
 ## Prerequisite for Kubernetes Service
 
-1. A **Kubernetes** cluster using Kubernetes 1.14 or later. Follow this guideline to set up Kubernetes [on-premise](https://kubernetes.io/docs/setup/) or [on Azure](https://azure.microsoft.com/en-us/services/kubernetes-service/). 
-2. Deploy **AdaptDL Scheduler** to your Kubernetes cluster. Follow this [guideline](https://adaptdl.readthedocs.io/en/latest/installation/install-adaptdl.html) to setup AdaptDL scheduler.
+1. A **Kubernetes** cluster using Kubernetes 1.14 or later with storage. Follow this guideline to set up Kubernetes [on Azure](https://azure.microsoft.com/en-us/services/kubernetes-service/), or [on-premise](https://kubernetes.io/docs/setup/) with [cephfs](https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd), or [microk8s with storage add-on enabled](https://microk8s.io/docs/addons).
+2. Helm install **AdaptDL Scheduler** to your Kubernetes cluster. Follow this [guideline](https://adaptdl.readthedocs.io/en/latest/installation/install-adaptdl.html) to setup AdaptDL scheduler.
 3. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the **KUBECONFIG** environment variable. Refer this [guideline]( https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig) to learn more about kubeconfig.
 4. If your NNI trial job needs GPU resource, you should follow this [guideline](https://github.com/NVIDIA/k8s-device-plugin) to configure **Nvidia device plugin for Kubernetes**.
-5. Prepare a **NFS server** and export a general purpose mount as external storage.
-6. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. 
-7. Install **NNI**, follow the install guide [here](../Tutorial/QuickStart.md).
+5. (Optional) Prepare a **NFS server** and export a general purpose mount as external storage.
+6. Install **NNI**, follow the install guide [here](../Tutorial/QuickStart.md).
 
 ### Verify Prerequisites
 
@@ -78,7 +77,6 @@ Those configs not mentioned below, are following the
 * **nniManagerIp**: *Required* to get the correct info and metrics back from the cluster, for `adl` training service.
 IP address of the machine with NNI manager (NNICTL) that launches NNI experiment. 
 * **logCollection**: *Recommended* to set as `http`. It will collect the trial logs on cluster back to your machine via http.
-For more about logging, check [this page](logs.md).
 * **tuner**: It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**: It defines the specs of an `adl` trial.
     * **adaptive**: (*Optional*) Boolean for AdaptDL trainer. While `true`, it the job is preemptible and adaptive.
