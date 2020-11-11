@@ -9,13 +9,15 @@ First, this is an example of how to write an autoML algorithm based on MsgDispat
 
 Second, this implementation fully leverages Hyperband's internal parallelism. Specifically, the next bucket is not started strictly after the current bucket. Instead, it starts when there are available resources. If you want to use full parallelism mode, set `exec_mode` with `parallelism`. 
 
-Or if you want according to the original algorithm, set `exec_mode` with `serial`. In this mode, the next bucket will start strictly after the current bucket.
+Or if you want to set `exec_mode` with `serial` according to the original algorithm. In this mode, the next bucket will start strictly after the current bucket.
 
-![parallelism](../../img/hyperband_parallelism.png)
+`parallelism` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under `serial` mode. The advantage of `parallelism` mode is to make full use of resources, which may reduce the experiment duration multiple times. The following two pictures are the results of quick verification using [nas-bench-201](../NAS/Benchmarks.md), picture above is in `parallelism` mode, picture below is in `serial` mode.
 
-![serial](../../img/hyperband_serial.png)
+![parallelism mode](../../img/hyperband_parallelism.png "parallelism mode")
 
-`parallelism` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under `serial` mode. The advantage of `parallelism` mode is to make full use of resources, which may multiple reduction the experiment duration. The above two pictures are the results of quick verification using [nas-bench-201](../NAS/Benchmarks.md).
+![serial mode](../../img/hyperband_serial.png "serial mode")
+
+If you want to reproduce these results, refer to the example under `examples/trials/benchmarking/` for details.
 
 ## 3. Usage
 To use Hyperband, you should add the following spec in your experiment's YAML config file:

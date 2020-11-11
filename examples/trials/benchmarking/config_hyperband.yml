@@ -22,6 +22,6 @@ advisor:
     #choice: serial, parallelism
     exec_mode: serial
 trial:
-  command: python main.py
+  command: python3 main.py
   codeDir: .
   gpuNum: 0
