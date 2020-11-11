@@ -11,24 +11,24 @@ export const Command1 = (): any => {
     if (tuner !== undefined) {
         title = 'Tuner';
         if (tuner.builtinTunerName !== undefined) {
-            builtinName = builtinName.concat(tuner.builtinTunerName);
+            builtinName = `${tuner.builtinTunerName}`;
         }
     }
 
     if (advisor !== undefined) {
-        title = 'Advisor';
+        title = `${title}/Advisor`;
         if (advisor.builtinAdvisorName !== undefined) {
-            builtinName = builtinName.concat(advisor.builtinAdvisorName);
+            builtinName = `${builtinName}/${advisor.builtinAdvisorName}`;
         }
         if (advisor.className !== undefined) {
-            builtinName = builtinName.concat(advisor.className);
+            builtinName = `${builtinName}/${advisor.className}`;
         }
     }
 
     if (assessor !== undefined) {
-        title = title.concat('/ Assessor');
+        title = `${title}/Assessor`;
         if (assessor.builtinAssessorName !== undefined) {
-            builtinName = builtinName.concat(assessor.builtinAssessorName);
+            builtinName = `${builtinName}/${assessor.builtinAssessorName}`;
         }
     }
 
