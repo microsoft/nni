@@ -26,11 +26,10 @@ import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTr
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
-    startExpMode: string, resumeExperimentId: string, basePort: number, platform: string,
+    startExpMode: string, ExperimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort, platform, logDirectory, experimentLogLevel, readonly);
+    setExperimentStartupInfo(createNew, ExperimentId, basePort, platform, logDirectory, experimentLogLevel, readonly);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -128,7 +127,7 @@ if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMod
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if ((startMode === ExperimentStartUpMode.RESUME) && experimentId.trim().length < 1) {
+if (experimentId.trim().length < 1) {
     console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);

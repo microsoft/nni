@@ -48,7 +48,7 @@ def update_experiment():
     for key in experiment_dict.keys():
         if isinstance(experiment_dict[key], dict):
             if experiment_dict[key].get('status') != 'STOPPED':
-                nni_config = Config(experiment_dict[key]['fileName'])
+                nni_config = Config(key)
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
@@ -182,9 +182,7 @@ def get_config_filename(args):
     if experiment_id is None:
         print_error('Please set correct experiment id.')
         exit(1)
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['fileName']
+    return experiment_id
 
 def get_experiment_port(args):
     '''get the port of experiment'''
@@ -227,10 +225,9 @@ def stop_experiment(args):
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
         experiment_config = Experiments()
-        experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
-            nni_config = Config(experiment_dict[experiment_id]['fileName'])
+            nni_config = Config(experiment_id)
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 kill_command(rest_pid)
@@ -509,7 +506,7 @@ def experiment_clean(args):
         else:
             break
     for experiment_id in experiment_id_list:
-        nni_config = Config(experiment_dict[experiment_id]['fileName'])
+        nni_config = Config(experiment_id)
         platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
         experiment_id = nni_config.get_config('experimentId')
         if platform == 'remote':
@@ -806,7 +803,7 @@ def save_experiment(args):
         print_error('Can only save stopped experiment!')
         exit(1)
     print_normal('Saving...')
-    nni_config = Config(experiment_dict[args.id]['fileName'])
+    nni_config = Config(args.id)
     logDir = os.path.join(NNI_HOME_DIR, args.id)
     if nni_config.get_config('logDir'):
         logDir = os.path.join(nni_config.get_config('logDir'), args.id)
@@ -829,8 +826,8 @@ def save_experiment(args):
     except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
-    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
-    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, experiment_dict[args.id]['fileName']))
+    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, args.id)
+    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, args.id))
 
     # Step3. Copy code dir
     if args.saveCodeDir:
@@ -903,20 +900,20 @@ def load_experiment(args):
         print_error('Invalid: experiment id already exist!')
         shutil.rmtree(temp_root_dir)
         exit(1)
-    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))):
+    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_id)):
         print_error('Invalid: experiment metadata does not exist!')
         shutil.rmtree(temp_root_dir)
         exit(1)
 
     # Step2. Copy nnictl metadata
-    src_path = os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))
-    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_metadata.get('fileName'))
+    src_path = os.path.join(nnictl_temp_dir, experiment_id)
+    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_id)
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
     shutil.copytree(src_path, dest_path)
 
     # Step3. Copy experiment data
-    nni_config = Config(experiment_metadata.get('fileName'))
+    nni_config = Config(experiment_id)
     nnictl_exp_config = nni_config.get_config('experimentConfig')
     if args.logDir:
         logDir = args.logDir
@@ -983,7 +980,6 @@ def load_experiment(args):
     experiment_config.add_experiment(experiment_id,
                                      experiment_metadata.get('port'),
                                      experiment_metadata.get('startTime'),
-                                     experiment_metadata.get('fileName'),
                                      experiment_metadata.get('platform'),
                                      experiment_metadata.get('experimentName'),
                                      experiment_metadata.get('endTime'),
@@ -992,4 +988,3 @@ def load_experiment(args):
 
     # Step6. Cleanup temp data
     shutil.rmtree(temp_root_dir)
-

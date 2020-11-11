@@ -95,8 +95,7 @@ def stop_tensorboard(args):
     experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
+    nni_config = Config(experiment_id)
     tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
     if tensorboard_pid_list:
         for tensorboard_pid in tensorboard_pid_list:
@@ -116,8 +115,7 @@ def start_tensorboard(args):
     experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
+    nni_config = Config(experiment_id)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):

@@ -56,14 +56,13 @@ class Experiments:
         self.experiment_file = os.path.join(home_dir, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, expId, port, startTime, file_name, platform, experiment_name, endTime='N/A', status='INITIALIZED'):
+    def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED'):
         '''set {key:value} paris to self.experiment'''
         self.experiments[expId] = {}
         self.experiments[expId]['port'] = port
         self.experiments[expId]['startTime'] = startTime
         self.experiments[expId]['endTime'] = endTime
         self.experiments[expId]['status'] = status
-        self.experiments[expId]['fileName'] = file_name
         self.experiments[expId]['platform'] = platform
         self.experiments[expId]['experimentName'] = experiment_name
         self.write_file()
@@ -79,7 +78,7 @@ class Experiments:
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
         if expId in self.experiments:
-            fileName = self.experiments.pop(expId).get('fileName')
+            fileName = expId
             if fileName:
                 logPath = os.path.join(NNICTL_HOME_DIR, fileName)
                 try:
