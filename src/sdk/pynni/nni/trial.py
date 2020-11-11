@@ -98,7 +98,22 @@ def get_sequence_id():
 
 _intermediate_seq = 0
 
-def report_intermediate_result(metric, **kwargs):
+
+def overwrite_intermediate_seq(value):
+    """
+    Overwrite intermediate sequence value.
+
+    Parameters
+    ----------
+    value:
+        int
+    """
+    assert isinstance(value, int)
+    global _intermediate_seq
+    _intermediate_seq = value
+
+
+def report_intermediate_result(metric):
     """
     Reports intermediate result to NNI.
 
@@ -108,12 +123,6 @@ def report_intermediate_result(metric, **kwargs):
         serializable object.
     """
     global _intermediate_seq
-
-    # Overwrite intermediate sequence
-    seq = kwargs.pop('intermediate_seq', None)
-    if seq is not None:
-        _intermediate_seq = seq
-
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'
     metric = to_json({
