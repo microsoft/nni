@@ -4,6 +4,7 @@
 import os
 import json
 import shutil
+import time
 from .constants import NNICTL_HOME_DIR
 from .command_utils import print_error
 
@@ -56,15 +57,21 @@ class Experiments:
         self.experiment_file = os.path.join(home_dir, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED'):
+    def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
+                       statusUpdateTime=int(time.time() * 1000), tag=[], pid=None, webuiUrl=[], logDir=[]):
         '''set {key:value} paris to self.experiment'''
         self.experiments[expId] = {}
         self.experiments[expId]['port'] = port
         self.experiments[expId]['startTime'] = startTime
         self.experiments[expId]['endTime'] = endTime
         self.experiments[expId]['status'] = status
+        self.experiments[expId]['statusUpdateTime'] = statusUpdateTime
         self.experiments[expId]['platform'] = platform
         self.experiments[expId]['experimentName'] = experiment_name
+        self.experiments[expId]['tag'] = tag
+        self.experiments[expId]['pid'] = pid
+        self.experiments[expId]['webuiUrl'] = webuiUrl
+        self.experiments[expId]['logDir'] = logDir
         self.write_file()
 
     def update_experiment(self, expId, key, value):
@@ -74,6 +81,18 @@ class Experiments:
         self.experiments[expId][key] = value
         self.write_file()
         return True
+
+    def update_experiment_status(self, expId, status, statusUpdateTime):
+        '''Update experiment'''
+        if expId not in self.experiments:
+            return False
+        if statusUpdateTime > self.experiments[expId]['statusUpdateTime']:
+            self.experiments[expId]['status'] = status
+            self.experiments[expId]['statusUpdateTime'] = statusUpdateTime
+            self.write_file()
+            return True
+        else:
+            return False
 
     def remove_experiment(self, expId):
         '''remove an experiment by id'''

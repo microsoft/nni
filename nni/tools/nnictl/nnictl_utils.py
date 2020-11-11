@@ -28,10 +28,11 @@ def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
     response = rest_get(experiment_url(port), REST_TIME_OUT)
     if response and check_response(response):
-        content = convert_time_stamp_to_date(json.loads(response.text))
+        content = json.loads(response.text)
         return content.get('startTime'), content.get('endTime')
     return None, None
 
+# need to modify to return (status, statusUpdateTime)
 def get_experiment_status(port):
     '''get the status of an experiment'''
     result, response = check_rest_server_quick(port)
@@ -51,7 +52,7 @@ def update_experiment():
                 nni_config = Config(key)
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
-                    experiment_config.update_experiment(key, 'status', 'STOPPED')
+                    experiment_config.update_experiment_status(key, 'STOPPED', int(time.time() * 1000))
                     continue
                 rest_port = nni_config.get_config('restServerPort')
                 startTime, endTime = get_experiment_time(rest_port)
@@ -61,7 +62,7 @@ def update_experiment():
                     experiment_config.update_experiment(key, 'endTime', endTime)
                 status = get_experiment_status(rest_port)
                 if status:
-                    experiment_config.update_experiment(key, 'status', status)
+                    experiment_config.update_experiment_status(key, status, int(time.time() * 1000))
 
 def check_experiment_id(args, update=True):
     '''check if the id is valid
@@ -240,9 +241,8 @@ def stop_experiment(args):
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
             print_normal('Stop experiment success.')
-            experiment_config.update_experiment(experiment_id, 'status', 'STOPPED')
-            time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-            experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))
+            experiment_config.update_experiment_status(experiment_id, 'STOPPED', int(time.time() * 1000))
+            experiment_config.update_experiment(experiment_id, 'endTime', int(time.time() * 1000))
 
 def trial_ls(args):
     '''List trial'''
@@ -621,18 +621,15 @@ def experiment_list(args):
                                                               experiment_dict[key]['status'],
                                                               experiment_dict[key]['port'],
                                                               experiment_dict[key].get('platform'),
-                                                              experiment_dict[key]['startTime'],
-                                                              experiment_dict[key]['endTime'])
+                                                              str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000))),
+                                                              str(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
     return experiment_id_list
 
 def get_time_interval(time1, time2):
     '''get the interval of two times'''
     try:
-        #convert time to timestamp
-        time1 = time.mktime(time.strptime(time1, '%Y/%m/%d %H:%M:%S'))
-        time2 = time.mktime(time.strptime(time2, '%Y/%m/%d %H:%M:%S'))
-        seconds = (datetime.fromtimestamp(time2) - datetime.fromtimestamp(time1)).seconds
+        seconds = int((time2 - time1) / 1000)
         #convert seconds to day:hour:minute:second
         days = seconds / 86400
         seconds %= 86400
@@ -661,8 +658,8 @@ def show_experiment_info():
         return
     for key in experiment_id_list:
         print(EXPERIMENT_MONITOR_INFO % (key, experiment_dict[key]['status'], experiment_dict[key]['port'], \
-             experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
-             get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
+              experiment_dict[key].get('platform'), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)), \
+              get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiment_dict[key]['port'])
         if running:
@@ -983,7 +980,12 @@ def load_experiment(args):
                                      experiment_metadata.get('platform'),
                                      experiment_metadata.get('experimentName'),
                                      experiment_metadata.get('endTime'),
-                                     experiment_metadata.get('status'))
+                                     experiment_metadata.get('status'),
+                                     experiment_metadata.get('statusUpdateTime'),
+                                     experiment_metadata.get('tag'),
+                                     experiment_metadata.get('pid'),
+                                     experiment_metadata.get('webUrl'),
+                                     experiment_metadata.get('logDir'))
     print_normal('Load experiment %s succsss!' % experiment_id)
 
     # Step6. Cleanup temp data

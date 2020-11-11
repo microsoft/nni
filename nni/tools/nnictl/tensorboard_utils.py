@@ -11,7 +11,7 @@ from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
-from .nnictl_utils import check_experiment_id, check_experiment_id
+from .nnictl_utils import check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
 def parse_log_path(args, trial_content):

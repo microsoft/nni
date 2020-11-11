@@ -79,7 +79,8 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         cmds += ['--foreground', 'true']
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
-        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        start_time = time.time()
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
         #add time information in the header of log files
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
@@ -96,7 +97,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
                 process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE)
             else:
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
-    return process, str(time_now)
+    return process, int(start_time * 1000)
 
 def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
@@ -520,7 +521,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     nnictl_experiment_config = Experiments()
     nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
                                             experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'])
+                                            experiment_config['experimentName'], pid=rest_process.pid,
+                                            webuiUrl=web_ui_url_list, logDir=log_dir)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
