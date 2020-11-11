@@ -109,11 +109,10 @@ def report_intermediate_result(metric, **kwargs):
     """
     global _intermediate_seq
 
-    # An AdaptDL Accumulator which persists running state.
-    adl_accum = kwargs.pop('accum', None)
-    if adl_accum is not None:
-        # It is only used together with AdaptDL library for distributed training.
-        _intermediate_seq = adl_utils.sync_intermediate_seq(adl_accum)
+    # Overwrite intermediate sequence
+    seq = kwargs.pop('intermediate_seq', None)
+    if seq is not None:
+        _intermediate_seq = seq
 
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'
