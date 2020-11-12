@@ -363,7 +363,6 @@ class TorchModuleGraph(TorchGraph):
                 if _input.node().kind() == CONSTANT_KIND:
                     continue
                 input_name = _input.debugName()
-                assert len(output_to_node[input_name]) <= 1
                 if input_name in output_to_node:
                     for predecessor_node in output_to_node[input_name]:
                         if predecessor_node in nodes:
