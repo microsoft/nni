@@ -106,7 +106,9 @@ class Experiments:
     def remove_experiment(self, expId):
         '''remove an experiment by id'''
         with self.lock:
+            self.experiments = self.read_file()
             if expId in self.experiments:
+                self.experiments.pop(expId)
                 fileName = expId
                 if fileName:
                     logPath = os.path.join(NNICTL_HOME_DIR, fileName)
