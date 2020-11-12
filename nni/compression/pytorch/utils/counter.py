@@ -194,7 +194,6 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     """
     Count FLOPs and Params of the given model. This function would
     identify the mask on the module and take the pruned shape into consideration.
-    
     Note that, for sturctured pruning, we only identify the remained filters
     according to its mask, and do not take the pruned input channels into consideration,
     so the calculated FLOPs  will be larger than real number.
