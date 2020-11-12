@@ -1,7 +1,5 @@
 # Run an Experiment on AdaptDL
 
-===
-
 Now NNI supports running experiment on [AdaptDL](https://github.com/petuum/adaptdl). Before starting to use NNI AdaptDL mode, you should have a Kubernetes cluster, either on-premises or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is setup to connect to your Kubernetes cluster. In AdaptDL mode, your trial program will run as AdaptDL job in Kubernetes cluster.
 
 AdaptDL aims to make distributed deep learning easy and efficient in dynamic-resource environments such as shared clusters and the cloud.
