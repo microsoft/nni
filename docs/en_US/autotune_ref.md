@@ -22,31 +22,31 @@
 ..  autoclass:: nni.tuner.Tuner
     :members:
 
-..  autoclass:: nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner
+..  autoclass:: nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner.HyperoptTuner
     :members:
 
-..  autoclass:: nni.evolution_tuner.evolution_tuner.EvolutionTuner
+..  autoclass:: nni.algorithms.hpo.evolution_tuner.evolution_tuner.EvolutionTuner
     :members:
 
-..  autoclass:: nni.smac_tuner.SMACTuner
+..  autoclass:: nni.algorithms.hpo.smac_tuner.SMACTuner
     :members:
 
-..  autoclass:: nni.gridsearch_tuner.GridSearchTuner
+..  autoclass:: nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner
     :members:
 
-..  autoclass:: nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
+..  autoclass:: nni.algorithms.hpo.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
     :members:
 
-..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
+..  autoclass:: nni.algorithms.hpo.metis_tuner.metis_tuner.MetisTuner
     :members:
 
-..  autoclass:: nni.ppo_tuner.PPOTuner
+..  autoclass:: nni.algorithms.hpo.ppo_tuner.PPOTuner
     :members:
 
-..  autoclass:: nni.batch_tuner.batch_tuner.BatchTuner
+..  autoclass:: nni.algorithms.hpo.batch_tuner.batch_tuner.BatchTuner
     :members:
 
-..  autoclass:: nni.gp_tuner.gp_tuner.GPTuner
+..  autoclass:: nni.algorithms.hpo.gp_tuner.gp_tuner.GPTuner
     :members:
 ```
 
@@ -59,23 +59,23 @@
 ..  autoclass:: nni.assessor.AssessResult
     :members:
 
-..  autoclass:: nni.curvefitting_assessor.CurvefittingAssessor
+..  autoclass:: nni.algorithms.hpo.curvefitting_assessor.CurvefittingAssessor
     :members:
 
-..  autoclass:: nni.medianstop_assessor.MedianstopAssessor
+..  autoclass:: nni.algorithms.hpo.medianstop_assessor.MedianstopAssessor
     :members:
 ```
 
 ## Advisor
 
 ```eval_rst
-..  autoclass:: nni.msg_dispatcher_base.MsgDispatcherBase
+..  autoclass:: nni.runtime.msg_dispatcher_base.MsgDispatcherBase
     :members:
 
-..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
+..  autoclass:: nni.algorithms.hpo.hyperband_advisor.hyperband_advisor.Hyperband
     :members:
 
-..  autoclass:: nni.bohb_advisor.bohb_advisor.BOHB
+..  autoclass:: nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHB
     :members:
 ```
 

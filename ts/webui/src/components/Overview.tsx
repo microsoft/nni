@@ -173,8 +173,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                             height={290}
                                         />
                                     </div>
-
-                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
                                 </div>
                                 <div className='overviewCommand1'>
                                     <Command1 />

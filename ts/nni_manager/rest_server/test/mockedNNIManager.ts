@@ -101,7 +101,7 @@ export class MockedNNIManager extends Manager {
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
         const deferred: Deferred<TrialJobInfo> = new Deferred<TrialJobInfo>();
         const jobInfo: TrialJobInfo = {
-            id: '1234',
+            trialJobId: '1234',
             status: 'SUCCEEDED',
             startTime: Date.now(),
             endTime: Date.now()
@@ -152,7 +152,7 @@ export class MockedNNIManager extends Manager {
     }
     public listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
         const job1: TrialJobInfo = {
-            id: '1234',
+            trialJobId: '1234',
             status: 'SUCCEEDED',
             startTime: Date.now(),
             endTime: Date.now(),
@@ -166,7 +166,7 @@ export class MockedNNIManager extends Manager {
             }]
         };
         const job2: TrialJobInfo = {
-            id: '3456',
+            trialJobId: '3456',
             status: 'FAILED',
             startTime: Date.now(),
             endTime: Date.now(),

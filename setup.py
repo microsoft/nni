@@ -48,6 +48,7 @@ from distutils.command.clean import clean
 import glob
 import os
 import shutil
+import sys
 
 import setuptools
 from setuptools.command.develop import develop
@@ -130,12 +131,20 @@ def _find_python_packages():
     return sorted(packages) + ['nni_node']
 
 def _find_node_files():
+    if not os.path.exists('nni_node'):
+        if release and 'built_ts' not in sys.argv:
+            sys.exit('ERROR: To build a release version, run "python setup.py built_ts" first')
+        return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
         for filename in filenames:
             files.append((dirpath + '/' + filename)[len('nni_node/'):])
-    files.remove('__init__.py')
+    if '__init__.py' in files:
+        files.remove('__init__.py')
     return sorted(files)
+
+def _using_conda_or_virtual_environment():
+    return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 
 class BuildTs(Command):
@@ -160,8 +169,21 @@ class Build(build):
         super().run()
 
 class Develop(develop):
+    user_options = develop.user_options + [
+        ('no-user', None, 'Prevent automatically adding "--user"')
+    ]
+
+    boolean_options = develop.boolean_options + ['no-user']
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.no_user = None
+
     def finalize_options(self):
-        self.user = True  # always use `develop --user`
+        # if `--user` or `--no-user` is explicitly set, do nothing
+        # otherwise activate `--user` if using system python
+        if not self.user and not self.no_user:
+            self.user = not _using_conda_or_virtual_environment()
         super().finalize_options()
 
     def run(self):
@@ -195,7 +217,8 @@ _temp_files = [
     # unit test
     'test/model_path/',
     'test/temp.json',
-    'test/ut/sdk/*.pth'
+    'test/ut/sdk/*.pth',
+    'test/ut/tools/annotation/_generated/'
 ]
 
 
