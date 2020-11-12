@@ -11,12 +11,13 @@ import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
-import { Manager, ExperimentStartUpMode } from './common/manager';
+import { Manager, ExpManager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
+import { ExperimentsManager } from './core/experimentsManager';
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
@@ -76,6 +77,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         .scope(Scope.Singleton);
     Container.bind(DataStore)
         .to(NNIDataStore)
+        .scope(Scope.Singleton);
+    Container.bind(ExpManager)
+        .to(ExperimentsManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     if (foreground) {
