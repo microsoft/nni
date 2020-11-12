@@ -285,8 +285,8 @@ class TorchModuleGraph(TorchGraph):
         self.global_count += 1
         op_type = node.kind()
         node_group = [node]
-        inputs = list()
-        outputs = list()
+        inputs = set()
+        outputs = set()
         node_queue = queue.Queue()
         node_queue.put(node)
         while not node_queue.empty():
@@ -295,21 +295,24 @@ class TorchModuleGraph(TorchGraph):
                 if _input.node().kind() == CONSTANT_KIND:
                     continue
                 input_name = _input.debugName()
-                if input_name in output_to_node and output_to_node[input_name] in nodes:
-                    predecessor_node = output_to_node[input_name]
-                    if not self._is_key_func(predecessor_node):
-                        node_group.append(predecessor_node)
-                        node_queue.put(predecessor_node)
-                    else:
-                        inputs.append(input_name)
+                if input_name in output_to_node:
+                    for predecessor_node in output_to_node[input_name]:
+                        if predecessor_node in nodes:
+                            if not self._is_key_func(predecessor_node):
+                                node_group.append(predecessor_node)
+                                node_queue.put(predecessor_node)
+                            else:
+                                inputs.add(input_name)
+                        else:
+                            inputs.add(input_name)
                 else:
-                    inputs.append(input_name)
+                    inputs.add(input_name)
         for output in node.outputs():
             if output.node().kind() == CONSTANT_KIND:
                 continue
-            outputs.append(output.debugName())
+            outputs.add(output.debugName())
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
-                             node_group, inputs=inputs, outputs=outputs, key_node=node)
+                             node_group, inputs=list(inputs), outputs=list(outputs), key_node=node)
         return nodepy
 
     def _expand_module_node(self, node, node_name, unique_name, op_type, nodes,
@@ -349,8 +352,8 @@ class TorchModuleGraph(TorchGraph):
         if not op_type:
             op_type = node.kind()
         node_group = [node]
-        inputs = list()
-        outputs = list()
+        inputs = set()
+        outputs = set()
         node_queue = queue.Queue()
         node_queue.put(node)
         visited = {node}
@@ -360,29 +363,36 @@ class TorchModuleGraph(TorchGraph):
                 if _input.node().kind() == CONSTANT_KIND:
                     continue
                 input_name = _input.debugName()
-                if input_name in output_to_node and output_to_node[input_name] in nodes:
-                    predecessor_node = output_to_node[input_name]
-                    if predecessor_node not in visited:
-                        node_group.append(predecessor_node)
-                        node_queue.put(predecessor_node)
-                        visited.add(predecessor_node)
+                assert len(output_to_node[input_name]) <= 1
+                if input_name in output_to_node:
+                    for predecessor_node in output_to_node[input_name]:
+                        if predecessor_node in nodes:
+                            if predecessor_node not in visited:
+                                node_group.append(predecessor_node)
+                                node_queue.put(predecessor_node)
+                                visited.add(predecessor_node)
+                        else:
+                            inputs.add(input_name)
                 else:
-                    inputs.append(input_name)
+                    inputs.add(input_name)
             for _output in curr_node.outputs():
                 if _output.node().kind() == CONSTANT_KIND:
                     continue
                 output_name = _output.debugName()
-                if output_name in input_to_node and input_to_node[output_name] in nodes:
-                    successor_node = input_to_node[output_name]
-                    if successor_node not in visited:
-                        node_group.append(successor_node)
-                        node_queue.put(successor_node)
-                        visited.add(successor_node)
+                if output_name in input_to_node:
+                    for successor_node in input_to_node[output_name]:
+                        if successor_node in nodes:
+                            if successor_node not in visited:
+                                node_group.append(successor_node)
+                                node_queue.put(successor_node)
+                                visited.add(successor_node)
+                        else:
+                            outputs.add(output_name)
                 else:
-                    outputs.append(output_name)
+                    outputs.add(output_name)
 
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
-                             node_group, inputs=inputs, outputs=outputs)
+                             node_group, inputs=list(inputs), outputs=list(outputs))
         return nodepy
 
     def _extract_cat_info(self, node_group, cpp_node):
@@ -654,19 +664,19 @@ class TorchModuleGraph(TorchGraph):
         graph = self.trace.graph
         _logger.debug(graph)
         # build input/output mapping, from input/output debugName to its node
-        input_to_node = {}
-        output_to_node = {}
+        input_to_node = defaultdict(list)
+        output_to_node = defaultdict(list)
         for node in graph.nodes():
             if node.kind() == CONSTANT_KIND:
                 continue
             for x in node.outputs():
                 if x.node().kind() == CONSTANT_KIND:
                     continue
-                output_to_node[x.debugName()] = node
+                output_to_node[x.debugName()].append(node)
             for x in node.inputs():
                 if x.node().kind() == CONSTANT_KIND:
                     continue
-                input_to_node[x.debugName()] = node
+                input_to_node[x.debugName()].append(node)
 
         # build module mapping, from module name to all nodes (as list) under this module scope
         module_to_nodes = defaultdict(list)
