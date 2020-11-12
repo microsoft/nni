@@ -215,6 +215,7 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         the mode of how to collect information. If the mode is set to `default`,
         only the information of convolution and linear will be collected.
         If the mode is set to `full`, other operations will also be collected.
+
     Returns
     -------
     flops: int
