@@ -1,4 +1,4 @@
-from typing import (Any, Dict)
+from typing import (Any, Dict, List)
 
 from . import debug_configs
 
@@ -30,11 +30,10 @@ class Operation:
         self.parameters: Dict[str, Any] = parameters
 
     def to_init_code(self, field: str) -> str:
-        params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
-        return f'self.{field} = {self._to_class_name()}({params})'
+        raise NotImplementedError()
 
-    def to_forward_code(self, field: str, output: str, *inputs: str) -> str:
-        return f'{output} = self.{field}({", ".join(inputs)})'
+    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+        raise NotImplementedError()
 
     def _to_class_name(self) -> str:
         raise NotImplementedError()
@@ -42,7 +41,7 @@ class Operation:
     def __bool__(self) -> bool:
         return True
 
-    @staticmethod            
+    @staticmethod
     def new(type_name: str, parameters: Dict[str, Any] = {}, cell_name: str = None) -> 'Operation':
         if type_name == '_cell':
             # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
@@ -78,15 +77,45 @@ class Operation:
 
 class PyTorchOperation(Operation):
     def _to_class_name(self) -> str:
-        return 'nn.' + self.type
+        if self.type.startswith('__torch__.'):
+            return self.type[len('__torch__.'):]
+        else:
+            return None
+
+    def to_init_code(self, field: str) -> str:
+        params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
+        if self._to_class_name() is not None:
+            return f'self.{field} = {self._to_class_name()}({params})'
+        return None
+
+    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+        if self._to_class_name() is not None:
+            return f'{output} = self.{field}({", ".join(inputs)})'
+        elif self.type.startswith('Function.'):
+            func_name = self.type[len('Function.'):]
+            return f'{output} = F.{func_name}({", ".join(inputs)})'
+        elif self.type == 'prim::Constant':
+            if self.parameters:
+                value = self.parameters['value']
+            else:
+                value = None
+            return f'{output} = {value}'
+        elif self.type == 'prim::ListConstruct':
+            return f'{output} = [{", ".join(inputs)}]'
+        elif self.type == 'aten::mean':
+            return f'{output} = {inputs[0]}.mean({", ".join(inputs[1:])})'
+        else:
+            raise RuntimeError('unsupported operation type: {}'.format(self.type))
 
 class TensorFlowOperation(Operation):
     def _to_class_name(self) -> str:
         return 'K.layers.' + self.type
 
 
-class Cell(Operation):
+class Cell(PyTorchOperation):
     """
+    TODO: this is pytorch cell
+
     An operation reference to a subgraph.
 
     Example code:
@@ -140,7 +169,7 @@ class _PseudoOperation(Operation):
     def to_init_code(self, field: str) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
-    def to_forward_code(self, field: str, output: str, *inputs: str) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
     def __bool__(self) -> bool:

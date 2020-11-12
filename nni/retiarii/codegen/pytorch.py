@@ -3,11 +3,21 @@ from typing import *
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
 
+# TODO: add an mapping from operation type in graph gen to the one in generated code
+# TODO: fix: inputs is a list, how to deal with single element list and single element
 
 def model_to_pytorch_script(model: Model) -> str:
     graphs = [graph_to_pytorch_model(name, cell) for name, cell in model.graphs.items()]
     return _PyTorchScriptTemplate.format('\n\n'.join(graphs)).strip()
 
+def _convert_name(name: str) -> str:
+    """
+    Convert the names using separator '.' to valid variable name in code
+    """
+    return name.replace('.', '__')
+
+def _convert_names(names: List[str]) -> List[str]:
+    return [_convert_name(name) for name in names]
 
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
@@ -21,8 +31,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
             return edges
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
 
-
-def _format_inputs(node: Node) -> str:
+def _format_inputs(node: Node) -> List[str]:
     edges = _sorted_incoming_edges(node)
     inputs = []
     for edge in edges:
@@ -30,18 +39,18 @@ def _format_inputs(node: Node) -> str:
             assert isinstance(edge.head_slot, int)
             if node.graph.input_names is not None:
                 # when input has names, e.g., forward(self, tensor1, tensor2, another_one)
-                inputs.append(node.graph.input_names[edge.head_slot])
+                inputs.append(_convert_name(node.graph.input_names[edge.head_slot]))
             else:
                 # when input has no name, e.g., forward(*_inputs)
                 inputs.append('_inputs[{}]'.format(edge.head_slot))
         else:
             if edge.head_slot is None:
                 # when the input comes from a single-output operator
-                inputs.append('{}'.format(edge.head.name))
+                inputs.append('{}'.format(_convert_name(edge.head.name)))
             else:
                 # when the input comes from a multi-output operator: needs to know which one it comes from
-                inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
-    return ', '.join(inputs)
+                inputs.append('{}[{}]'.format(_convert_name(edge.head.name), edge.head_slot))
+    return inputs
 
 
 def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
@@ -52,29 +61,31 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     node_codes = []
     for node in nodes:
         if node.operation:
-            node_codes.append(node.operation.to_init_code(node.name))
+            node_code = node.operation.to_init_code(_convert_name(node.name))
+            if node_code is not None:
+                node_codes.append(node_code)
 
     if graph.input_names is None:
         input_code = '*_inputs'
     else:
-        input_code = ', '.join(graph.input_names)
+        input_code = ', '.join(_convert_names(graph.input_names))
 
     edge_codes = []
 
     for node in nodes:
         if node.operation:
             inputs = _format_inputs(node)
-            edge_codes.append(node.operation.to_forward_code(node.name, node.name, inputs))
+            edge_codes.append(node.operation.to_forward_code(_convert_name(node.name), _convert_name(node.name), inputs))
 
-    output_code = _format_inputs(graph.output_node)
-    if not output_code:
-        output_code = 'None'
+    output_names = _format_inputs(graph.output_node)
+    if not output_names:
+        output_names = ['None']
 
     linebreak = '\n        '
     return _PyTorchModelTemplate.format(
-        graph_name=('Graph' if graph_name == '_graph' else graph_name),
+        graph_name=('Graph' if graph_name == '_graph' else _convert_name(graph_name)),
         inputs=input_code,
-        outputs=output_code,
+        outputs=', '.join(output_names),
         nodes=linebreak.join(node_codes),
         edges=linebreak.join(edge_codes)
     )

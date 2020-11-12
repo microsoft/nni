@@ -44,7 +44,10 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
             assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
             # find out the index of _input in the outputs of predecessor_node
             predecessor_outputs = [_output for _output in predecessor_node.outputs()]
-            idx = predecessor_outputs.index(_input)
+            if len(predecessor_outputs) == 1:
+                idx = None
+            else:
+                idx = predecessor_outputs.index(_input)
             ir_predecessor_node = node_index[predecessor_node]
             src_node_idx = idx
             # get source node
@@ -216,6 +219,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 # build cell
                 if subgraph is None:
                     # if we do not parse this module's graph, we create Node for this module
+                    print('-------------: ', submodule_type_str)
                     subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                     if isinstance(submodule_obj, Placeholder):
                         subcell.update_label(submodule_obj.label)
@@ -237,7 +241,10 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             func_name = func.s('name')
             # create node for func
             global_seq += 1
-            func_node = ir_graph.add_node(build_full_name(module_name, func_name, global_seq), func_type_str)
+            print('zql===: ', build_full_name(module_name, func_name, global_seq), func_type_str)
+            print('zql2===: ', node)
+            func_node = ir_graph.add_node(build_full_name(module_name, func_name, global_seq),
+                                          '{}.{}'.format(func_type_str, func_name))
             node_index[node] = func_node
             _handle_inputs(ir_graph, node, graph_inputs, node_index, module_name, ignore_first=True)
             _add_edge(ir_graph, node, graph_inputs, node_index, func_node, ignore_first=True)
@@ -299,6 +306,7 @@ def convert_module(script_module, module, module_name, ir_model):
 
     # handle TorchScript graph
     sm_graph = script_module.graph
+    print('zql graph: ', sm_graph)
     global_graph_id += 1
     ir_graph = Graph(model=ir_model, graph_id=global_graph_id, name=module_name, _internal=True)
 
