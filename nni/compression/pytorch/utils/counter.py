@@ -192,11 +192,11 @@ class ModelProfiler:
 
 def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     """
-    Count FLOPs and Params of the given model. This function would 
-    identify the mask on the module and take the pruned shape into consideration. 
+    Count FLOPs and Params of the given model. This function would
+    identify the mask on the module and take the pruned shape into consideration.
     
-    Note that, for sturctured pruning, we only identify the remained filters 
-    according to its mask, and do not take the pruned input channels into consideration, 
+    Note that, for sturctured pruning, we only identify the remained filters
+    according to its mask, and do not take the pruned input channels into consideration,
     so the calculated FLOPs  will be larger than real number.
 
     Parameters
@@ -216,7 +216,6 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         the mode of how to collect information. If the mode is set to `default`,
         only the information of convolution and linear will be collected.
         If the mode is set to `full`, other operations will also be collected.
-        
     Returns
     -------
     flops: int
