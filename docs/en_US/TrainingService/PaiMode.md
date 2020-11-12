@@ -4,23 +4,23 @@ NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai
 
 ## Setup environment
 
-Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).   
+**Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).**   
 
-Step 2. Get token.
+**Step 2. Get token.**
 
 Open web portal of OpenPAI, and click `My profile` button in the top-right side.
-![](../../img/pai_profile.jpg)
+<img src="../../img/pai_profile.jpg" style="zoom: 80%;" />
 
 Click `copy` button in the page to copy a jwt token.
-![](../../img/pai_token.jpg)
+<img src="../../img/pai_token.jpg" style="zoom:67%;" />
 
-Step 3. Mount NFS storage to local machine.  
+**Step 3. Mount NFS storage to local machine.**  
 
   Click `Submit job` button in web portal.
-![](../../img/pai_job_submission_page.jpg)
+<img src="../../img/pai_job_submission_page.jpg" style="zoom: 50%;" />
 
   Find the data management region in job submission page.
-![](../../img/pai_data_management_page.jpg)  
+<img src="../../img/pai_data_management_page.jpg" style="zoom: 33%;" />  
 
 The `Preview container paths` is the NFS host and path that OpenPAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the OpenPAI's NFS storage.  
 For example, use the following command:
@@ -33,9 +33,9 @@ You could use the following configuration in your NNI's config file:
 
 ```yaml
 nniManagerNFSMountPath: /local/mnt
-```    
+```
 
-Step 4. Get OpenPAI's storage config name and nniManagerMountPath
+**Step 4. Get OpenPAI's storage config name and nniManagerMountPath**
 
 The `Team share storage` field is storage configuration used to specify storage value in OpenPAI. You can get `paiStorageConfigName` and `containerNFSMountPath` field in `Team share storage`, for example:
 
@@ -171,10 +171,10 @@ Notice: In pai mode, NNIManager will start a rest server and listen on a port wh
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
 
 Expand a trial information in trial list view, click the logPath link like:
-![](../../img/nni_webui_joblist.jpg)
+<img src="../../img/nni_webui_joblist.jpg" style="zoom: 30%;" />
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-![](../../img/nni_trial_hdfs_output.jpg)
+<img src="../../img/nni_trial_hdfs_output.jpg" style="zoom: 80%;" />
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
