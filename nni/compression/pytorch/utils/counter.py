@@ -18,10 +18,24 @@ def _get_params(m):
 
 
 class ModelProfiler:
-    # use a class to share state to hooks
-    # profile results are available in `self.results`
 
     def __init__(self, custom_ops=None, mode='default'):
+        """
+        ModelProfiler is used to share state to hooks.
+        The profile results are available in `self.results`
+
+        Parameters
+        ----------
+        custom_ops: dict
+            a mapping of (module -> torch.nn.Module : custom operation)
+            the custom operation is a callback funtion to calculate
+            the module flops and parameters, it will overwrite the default operation.
+            for reference, please see ``DEFAULT_OPS``.
+        mode:
+            the mode of how to collect information. If the mode is set to `default`,
+            only the information of convolution and linear will be collected.
+            If the mode is set to `full`, other operations will also be collected.
+        """
         self.ops = {
             nn.Conv1d: self._count_convNd,
             nn.Conv2d: self._count_convNd,

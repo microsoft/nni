@@ -133,8 +133,8 @@ flops, params, results = count_flops_params(model, (1, 1, 28, 28))
 
 # Given input tensor with size (1, 1, 28, 28) and switch to full mode
 x = torch.randn(1, 1, 28, 28)
-# tuple of tensor as input
-flops, params, results = count_flops_params(model, (x,) mode='full') 
+
+flops, params, results = count_flops_params(model, (x,) mode='full') # tuple of tensor as input
 
 # Format output size to M (i.e., 10^6)
 print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
