@@ -30,9 +30,9 @@ def get_log_path(experiment_id):
     stderr_full_path = os.path.join(NNICTL_HOME_DIR, experiment_id, 'log', 'nnictl_stderr.log')
     return stdout_full_path, stderr_full_path
 
-def print_log_content(experiment_id):
+def print_log_content(config_file_name):
     '''print log information'''
-    stdout_full_path, stderr_full_path = get_log_path(experiment_id)
+    stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     print_normal(' Stdout:')
     print(check_output_command(stdout_full_path))
     print('\n\n')

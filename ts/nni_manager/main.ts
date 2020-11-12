@@ -13,7 +13,7 @@ import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
-import { getLogDir, mkDirP, parseArg, uniqueString } from './common/utils';
+import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
