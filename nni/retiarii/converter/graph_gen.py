@@ -219,7 +219,6 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 # build cell
                 if subgraph is None:
                     # if we do not parse this module's graph, we create Node for this module
-                    print('-------------: ', submodule_type_str)
                     subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                     if isinstance(submodule_obj, Placeholder):
                         subcell.update_label(submodule_obj.label)
@@ -241,8 +240,6 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             func_name = func.s('name')
             # create node for func
             global_seq += 1
-            print('zql===: ', build_full_name(module_name, func_name, global_seq), func_type_str)
-            print('zql2===: ', node)
             func_node = ir_graph.add_node(build_full_name(module_name, func_name, global_seq),
                                           '{}.{}'.format(func_type_str, func_name))
             node_index[node] = func_node
@@ -306,7 +303,6 @@ def convert_module(script_module, module, module_name, ir_model):
 
     # handle TorchScript graph
     sm_graph = script_module.graph
-    print('zql graph: ', sm_graph)
     global_graph_id += 1
     ir_graph = Graph(model=ir_model, graph_id=global_graph_id, name=module_name, _internal=True)
 
@@ -320,12 +316,12 @@ def convert_module(script_module, module, module_name, ir_model):
         graph_outputs.append(_output) # <class 'torch._C.Value'>
         ir_graph._add_output(_output.debugName())
         predecessor_node_outputs = [o for o in _output.node().outputs()]
-        src_node_idx = predecessor_node_outputs.index(_output)
-        #edge = Edge(node_index[_output.node()], output_node, src_node_idx, 0)
-        print('===: ', _output.node())
-        print(script_module)
+        if len(predecessor_node_outputs) == 1:
+            src_node_idx = None
+        else:
+            src_node_idx = predecessor_node_outputs.index(_output)
         ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
-                          tail=(ir_graph.output_node, 0))
+                          tail=(ir_graph.output_node, None))
 
     remove_unconnected_nodes(ir_graph)
 
