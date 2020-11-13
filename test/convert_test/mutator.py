@@ -1,3 +1,4 @@
+import logging
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
@@ -5,13 +6,16 @@ from nni.retiarii import Mutator
 
 from base_mnasnet import RegularConv, DepthwiseConv, MobileConv
 
+_logger = logging.getLogger(__name__)
 
 class BlockMutator(Mutator):
     def __init__(self, target: str):
         self.target = target
 
     def mutate(self, model):
-        node = model.get_nodes_by_label(self.target)
+        nodes = model.get_nodes_by_label(self.target)
+        assert len(nodes) == 1
+        node = nodes[0]
         graph = node.graph
 
         related_info = node.operation.parameters
@@ -22,10 +26,15 @@ class BlockMutator(Mutator):
         n_filter = self.choice(related_info['n_filter_options'])
 
         if related_info['in_ch'] is not None:
+            _logger.info('zql debug X ...')
             in_ch = related_info['in_ch']
         else:
             assert len(node.predecessors) == 1
-            in_ch = node.predecessors[0].operation.parameters['out_ch']
+            the_node = node.predecessors[0]
+            _logger.info('zql debug ...')
+            _logger.info(the_node.operation.parameters)
+            _logger.info(the_node.__repr__())
+            in_ch = the_node.operation.parameters['out_ch']
 
         # update the placeholder to be a new operation
         node.update_operation(op_type, {

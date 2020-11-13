@@ -149,7 +149,9 @@ class MNASNet(nn.Module):
             ph = nn.Placeholder(label=f'mutable_{count}', related_info={
                            'kernel_size_options': [2, 4, 6],
                            'n_layer_options': [1, 2, 3, 4],
-                           'op_type_options': ['RegularConv', 'DepthwiseConv', 'MobileConv'],
+                           'op_type_options': ['__mutated__.base_mnasnet.RegularConv',
+                                               '__mutated__.base_mnasnet.DepthwiseConv',
+                                               '__mutated__.base_mnasnet.MobileConv'],
                            #'se_ratio_options': [0, 0.25],
                            'skip_options': ['identity', 'no'],
                            'n_filter_options': [int(filter_size*x) for x in [0.75, 1.0, 1.25]],

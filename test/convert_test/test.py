@@ -26,11 +26,11 @@ if __name__ == '__main__':
     print(recorded_module_args)
     script_module = torch.jit.script(base_model)
     model = convert_to_graph(script_module, base_model, recorded_module_args)
-    code_script = model_to_pytorch_script(model)
-    print(code_script)
-    #print("Model: ", model)
-    #graph_ir = model._dump()
-    #print(graph_ir)
+    #code_script = model_to_pytorch_script(model)
+    #print(code_script)
+    print("Model: ", model)
+    graph_ir = model._dump()
+    print(graph_ir)
     #visualize_model(graph_ir)
 
     # TODO: new interface
@@ -38,16 +38,16 @@ if __name__ == '__main__':
     #exp.start_retiarii_experiment(base_model, training_approach,
     #                              applied_mutators, strategy,
     #                              exp_config)
-    
-    """exp_config = {'authorName': 'nni',
+
+    exp_config = {'authorName': 'nni',
                   'experimentName': 'naive',
                   'trialConcurrency': 3,
                   'maxExecDuration': '1h',
                   'maxTrialNum': 10,
                   'trainingServicePlatform': 'local'
                 }
-
-    applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}}]
+    applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}},
+                        {'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_1'}}]
     training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
         "dataset_kwargs": {
                 "root": "data/mnist",
@@ -67,4 +67,4 @@ if __name__ == '__main__':
     exp = Experiment()
     exp.tmp_start_retiarii(graph_ir, training_approach,
                            applied_mutators, strategy,
-                           exp_config)"""
+                           exp_config)

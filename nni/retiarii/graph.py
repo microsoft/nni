@@ -159,7 +159,7 @@ class Model:
         NOTE: the implementation does not support the class abstration
         """
         matched_nodes = []
-        for graph in self.graphs:
+        for graph in self.graphs.values():
             nodes = graph.get_nodes_by_label(label)
             matched_nodes.extend(nodes)
         return matched_nodes
@@ -284,7 +284,7 @@ class Graph:
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
-            op = Operation.new(operation_or_type, name, parameters)
+            op = Operation.new(operation_or_type, parameters, name)
         new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
         # update edges
         self.add_edge((edge.head, edge.head_slot), (new_node, 0))
@@ -335,7 +335,9 @@ class Graph:
         new_graph.output_names = self.output_names
 
         for node in self.hidden_nodes:
-            Node(new_graph, node.id, node.name, node.operation, _internal=True)._register()
+            new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
+            new_node.update_label(node.label)
+            new_node._register()
 
         id_to_new_node = {node.id: node for node in new_graph.nodes}
 
@@ -492,6 +494,9 @@ class Node:
     def __eq__(self, other: object) -> bool:
         return self is other
 
+    def __hash__(self) -> int:
+        return hash(id(self))
+
     def _register(self) -> 'Node':
         self.graph.hidden_nodes.append(self)
         return self
@@ -502,7 +507,10 @@ class Node:
             op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}))
         else:
             op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}))
-        return Node(graph, graph.model._uid(), name, op)
+        node = Node(graph, graph.model._uid(), name, op)
+        if 'label' in ir:
+            node.update_label(ir['label'])
+        return node
 
     def _dump(self) -> Any:
         ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}

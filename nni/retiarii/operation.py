@@ -84,6 +84,8 @@ class PyTorchOperation(Operation):
     def _to_class_name(self) -> str:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):]
+        elif self.type.startswith('__mutated__.'):
+            return self.type[len('__mutated__.'):]
         else:
             return None
 
