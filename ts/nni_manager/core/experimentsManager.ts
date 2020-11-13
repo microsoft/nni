@@ -91,7 +91,7 @@ class ExperimentsManager {
 
     private async getUpdatedStatus(expId: string, pid: number, port: number): Promise<NewStatusInfo> {
         const deferred: Deferred<NewStatusInfo> = new Deferred<NewStatusInfo>();
-        let alive: AliveInfo = await this.isAlive(pid);
+        const alive: AliveInfo = await this.isAlive(pid);
         if (alive.alive) {
             request(`http://localhost:${port}/api/v1/nni/check-status`, {json: true}, (err, res, body) => {
                 if (err) {
