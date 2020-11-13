@@ -22,7 +22,6 @@ class ModelProfiler:
     def __init__(self, custom_ops=None, mode='default'):
         """
         ModelProfiler is used to share state to hooks.
-        The profile results are available in `self.results`
 
         Parameters
         ----------
@@ -276,3 +275,50 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         print(f'#Params total: {profiler.sum_params()}')
 
     return profiler.sum_flops(), profiler.sum_params(), profiler.results
+
+def test_flops_params():
+    class Model1(nn.Module):
+        def __init__(self):
+            super(Model1, self).__init__()
+            self.conv = nn.Conv2d(3, 5, 1, 1)
+            self.bn = nn.BatchNorm2d(5)
+            self.relu = nn.LeakyReLU()
+            self.linear = nn.Linear(20, 10)
+            self.upsample = nn.UpsamplingBilinear2d(size=2)
+            self.pool = nn.AdaptiveAvgPool2d((2, 2))
+
+        def forward(self, x):
+            x = self.conv(x)
+            x = self.bn(x)
+            x = self.relu(x)
+            x = self.upsample(x)
+            x = self.pool(x)
+            x = x.view(x.size(0), -1)
+            x = self.linear(x)
+            return x
+
+    class Model2(nn.Module):
+        def __init__(self):
+            super(Model2, self).__init__()
+            self.conv = nn.Conv2d(3, 5, 1, 1)
+            self.conv2 = nn.Conv2d(5, 5, 1, 1)
+
+        def forward(self, x):
+            x = self.conv(x)
+            for _ in range(5):
+                x = self.conv2(x)
+            return x
+    
+    flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full', verbose=False)
+    assert (flops, params)  == (610, 240)
+
+    flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2), verbose=False)
+    assert (flops, params)  == (560, 50)
+
+    from torchvision.models import resnet50
+    flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224), verbose=False)
+    assert (flops, params) == (4089184256, 25503912)
+
+
+if __name__ == '__main__':
+    test_flops_params()

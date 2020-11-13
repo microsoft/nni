@@ -172,14 +172,14 @@ class AnalysisUtilsTest(TestCase):
                     x = self.conv2(x)
                 return x
         
-        flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full')
+        flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full', verbose=False)
         assert (flops, params)  == (580, 240)
 
-        flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2))
+        flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2), verbose=False)
         assert (flops, params)  == (560, 50)
 
         from torchvision.models import resnet50
-        flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224))
+        flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224), verbose=False)
         assert (flops, params) == (4089184256, 25503912)
 
 
