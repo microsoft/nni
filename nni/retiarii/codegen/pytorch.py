@@ -3,8 +3,8 @@ from typing import *
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
 
-# TODO: add an mapping from operation type in graph gen to the one in generated code
 # TODO: fix: inputs is a list, how to deal with single element list and single element
+# TODO: sort edges in topological order
 
 def model_to_pytorch_script(model: Model) -> str:
     graphs = [graph_to_pytorch_model(name, cell) for name, cell in model.graphs.items()]
@@ -52,7 +52,6 @@ def _format_inputs(node: Node) -> List[str]:
                 inputs.append('{}[{}]'.format(_convert_name(edge.head.name), edge.head_slot))
     return inputs
 
-
 def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     nodes = graph.nodes  # FIXME: topological sort is needed here
 
@@ -71,8 +70,8 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
         input_code = ', '.join(_convert_names(graph.input_names))
 
     edge_codes = []
-
-    for node in nodes:
+    sorted_nodes = graph.topo_sort()
+    for node in sorted_nodes:
         if node.operation:
             inputs = _format_inputs(node)
             edge_codes.append(node.operation.to_forward_code(_convert_name(node.name), _convert_name(node.name), inputs))

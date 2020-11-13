@@ -316,8 +316,28 @@ class Graph:
     def get_nodes_by_label(self, label: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.label == label]
 
-    def topo_sort(self) -> List['Node']:  # TODO
-        ...
+    def topo_sort(self) -> List['Node']:
+        node_to_fanin = {}
+        curr_nodes = []
+        for node in self.nodes:
+            fanin = len(node.incoming_edges)
+            node_to_fanin[node] = fanin
+            if fanin == 0:
+                curr_nodes.append(node)
+
+        sorted_nodes = []
+        while curr_nodes:
+            curr_node = curr_nodes.pop(0)
+            sorted_nodes.append(curr_node)
+            for successor in curr_node.successors:
+                node_to_fanin[successor] -= 1
+                if node_to_fanin[successor] == 0:
+                    curr_nodes.append(successor)
+
+        for key in node_to_fanin:
+            assert node_to_fanin[key] == 0
+
+        return sorted_nodes
 
     def fork(self) -> 'Graph':
         """
