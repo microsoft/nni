@@ -54,12 +54,12 @@ export const ReBasicInfo = (): any => {
                                         setInitialFocus={true}
                                     >
                                         <div className={styles.header}>
-                                            <p className={styles.title} id={labelId} style={{ color: '#333' }}>
+                                            <p className={`${styles.title} color`} id={labelId}>
                                                 Error
                                             </p>
                                         </div>
                                         <div className={styles.inner}>
-                                            <p className={styles.subtext} id={descriptionId} style={{ color: '#333' }}>
+                                            <p className={`${styles.subtext} color`} id={descriptionId}>
                                                 {EXPERIMENT.error}
                                             </p>
                                             <div className={styles.actions}>

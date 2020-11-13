@@ -167,11 +167,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </div>
                                     </Stack>
                                     <div className='overviewChart'>
-                                        <Accuracy
-                                            accuracyData={accuracyGraphData}
-                                            accNodata={noDataMessage}
-                                            height={290}
-                                        />
+                                        <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} />
                                     </div>
                                     <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
                                 </div>

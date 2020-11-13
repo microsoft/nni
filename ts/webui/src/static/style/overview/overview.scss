@@ -138,8 +138,12 @@ $boxGapPadding: 10px;
     margin-top: 20px;
 }
 
-.showMess {
-    position: absolute;
-    top: 42%;
-    left: 48%;
+.defaultMetricContainer {
+    position: relative;
+
+    .showMess {
+        position: absolute;
+        top: 42%;
+        left: 48%;
+    }
 }
