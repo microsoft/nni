@@ -49,19 +49,20 @@ if __name__ == '__main__':
     applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}},
                         {'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_1'}}]
     training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
+        "dataset_cls": "CIFAR10",
         "dataset_kwargs": {
-                "root": "data/mnist",
+                "root": "data/cifar10",
                 "download": True
-            },
-            "dataloader_kwargs": {
-                "batch_size": 32
-            },
-            "optimizer_kwargs": {
-                "lr": 1e-3
-            },
-            "trainer_kwargs": {
-                "max_epochs": 1
-            }
+        },
+        "dataloader_kwargs": {
+            "batch_size": 32
+        },
+        "optimizer_kwargs": {
+            "lr": 1e-3
+        },
+        "trainer_kwargs": {
+            "max_epochs": 1
+        }
     }}
     strategy = {'filename': 'simple_strategy', 'funcname': 'simple_startegy', 'args': {}}
     exp = Experiment()

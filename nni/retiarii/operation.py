@@ -89,9 +89,18 @@ class PyTorchOperation(Operation):
         else:
             return None
 
+    def get_import_pkg(self) -> str:
+        if self.type.startswith('__torch__.'):
+            return self.type[len('__torch__.'):].split('.')[0]
+        elif self.type.startswith('__mutated__.'):
+            return self.type[len('__mutated__.'):].split('.')[0]
+        else:
+            return None
+
     def to_init_code(self, field: str) -> str:
         if self._to_class_name() is not None:
             params = []
+            # TODO: remove positional args
             if self.parameters.get('positional_args', None):
                 pos_params = ', '.join(f'{repr(value)}' for value in self.parameters['positional_args'])
                 params.append(pos_params)

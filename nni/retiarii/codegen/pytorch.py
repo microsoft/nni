@@ -7,8 +7,15 @@ from ..operation import Operation, Cell
 # TODO: sort edges in topological order
 
 def model_to_pytorch_script(model: Model) -> str:
-    graphs = [graph_to_pytorch_model(name, cell) for name, cell in model.graphs.items()]
-    return _PyTorchScriptTemplate.format('\n\n'.join(graphs)).strip()
+    graphs = []
+    total_pkgs = set()
+    for name, cell in model.graphs.items():
+        import_pkgs, graph_code = graph_to_pytorch_model(name, cell)
+        graphs.append(graph_code)
+        total_pkgs.update(import_pkgs)
+    # TODO: set correct PATH for the packages
+    pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
+    return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
 def _convert_name(name: str) -> str:
     """
@@ -57,9 +64,13 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
 
     # handle module node and function node differently
     # only need to generate code for module here
+    import_pkgs = set()
     node_codes = []
     for node in nodes:
         if node.operation:
+            pkg_name = node.operation.get_import_pkg()
+            if pkg_name is not None:
+                import_pkgs.add(pkg_name)
             node_code = node.operation.to_init_code(_convert_name(node.name))
             if node_code is not None:
                 node_codes.append(node_code)
@@ -81,7 +92,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
         output_names = ['None']
 
     linebreak = '\n        '
-    return _PyTorchModelTemplate.format(
+    return import_pkgs, _PyTorchModelTemplate.format(
         graph_name=('Graph' if graph_name == '_graph' else _convert_name(graph_name)),
         inputs=input_code,
         outputs=', '.join(output_names),
@@ -97,6 +108,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+import sys
+sys.path.append("test/convert_test")
+
+{}
 
 {}
 '''

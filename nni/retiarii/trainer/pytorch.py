@@ -31,6 +31,13 @@ def get_default_transform(dataset: str) -> Any:
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))
         ])
+    if dataset == 'CIFAR10':
+        return transforms.Compose([
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+        ])
     # unsupported dataset, return None
     return None
 
