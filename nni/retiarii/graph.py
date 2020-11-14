@@ -287,8 +287,8 @@ class Graph:
             op = Operation.new(operation_or_type, parameters, name)
         new_node = Node(self, self.model._uid(), name, op, _internal=True)._register()
         # update edges
-        self.add_edge((edge.head, edge.head_slot), (new_node, 0))
-        self.add_edge((new_node, 0), (edge.tail, edge.tail_slot))
+        self.add_edge((edge.head, edge.head_slot), (new_node, None))
+        self.add_edge((new_node, None), (edge.tail, edge.tail_slot))
         self.del_edge(edge)
         return new_node
 

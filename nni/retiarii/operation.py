@@ -117,7 +117,7 @@ class PyTorchOperation(Operation):
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'aten::mean':
-            return f'{output} = {inputs[0]}.mean({", ".join(inputs[1:])})'
+            return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
         else:
             raise RuntimeError('unsupported operation type: {}'.format(self.type))
 

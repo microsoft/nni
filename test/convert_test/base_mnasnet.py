@@ -147,7 +147,7 @@ class MNASNet(nn.Module):
         for filter_size, exp_ratio, stride in zip(base_filter_sizes, exp_ratios, strides):
             # TODO: restrict that "choose" can only be used within mutator
             ph = nn.Placeholder(label=f'mutable_{count}', related_info={
-                           'kernel_size_options': [2, 4, 6],
+                           'kernel_size_options': [1, 3, 5],
                            'n_layer_options': [1, 2, 3, 4],
                            'op_type_options': ['__mutated__.base_mnasnet.RegularConv',
                                                '__mutated__.base_mnasnet.DepthwiseConv',
@@ -273,7 +273,7 @@ class MobileConv(nn.Module):
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True),
             # Depthwise
-            nn.Conv2d(mid_ch, mid_ch, kernel_size, padding=kernel_size // 2,
+            nn.Conv2d(mid_ch, mid_ch, kernel_size, padding= (kernel_size - 1) // 2,
                       stride=stride, groups=mid_ch, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True),

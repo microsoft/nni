@@ -290,6 +290,7 @@ def convert_module(script_module, module, module_name, ir_model):
     if isinstance(modules_arg[id(module)], tuple):
         positional_args, keyword_args = modules_arg[id(module)]
         m_attrs = keyword_args
+        # TODO: remove positional args
         m_attrs['positional_args'] = positional_args
     else:
         m_attrs = modules_arg[id(module)]

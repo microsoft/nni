@@ -1,3 +1,4 @@
+import inspect
 import logging
 import torch.nn as nn
 
@@ -41,6 +42,7 @@ class Placeholder(nn.Module):
 
 class Module(nn.Module):
     def __init__(self, *args, **kwargs):
+        # TODO: users have to pass init's arguments to super init's arguments
         global _records
         if _records is not None:
             _records[id(self)] = (args, kwargs)
@@ -56,12 +58,17 @@ class Sequential(nn.Sequential):
 
 def wrap_module(original_class):
     orig_init = original_class.__init__
+    argname_list = list(inspect.signature(original_class).parameters.keys())
     # Make copy of original __init__, so we can call it without recursion
 
     def __init__(self, *args, **kws):
         global _records
         if _records is not None:
-            _records[id(self)] = (args, kws)
+            full_args = {}
+            full_args.update(kws)
+            for i, arg in enumerate(args):
+                full_args[argname_list[i]] = args[i]
+            _records[id(self)] = full_args
         orig_init(self, *args, **kws) # Call the original __init__
 
     original_class.__init__ = __init__ # Set the class' __init__ to the new one
