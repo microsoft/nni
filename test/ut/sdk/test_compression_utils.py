@@ -173,7 +173,7 @@ class AnalysisUtilsTest(TestCase):
                 return x
         
         flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full', verbose=False)
-        assert (flops, params)  == (580, 240)
+        assert (flops, params)  == (610, 240)
 
         flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2), verbose=False)
         assert (flops, params)  == (560, 50)
