@@ -65,13 +65,16 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def _send_trial_callback(self, paramater: dict) -> None:
         for listener in self._listeners:
+            _logger.warning('resources: {}'.format(listener.resources))
             if not listener.has_available_resource():
                 _logger.warning('There is no available resource, but trial is submitted.')
-            listener.on_resource_used(1)  # FIXME: find the real resource id
+            listener.on_resource_used(1)
+            _logger.warning('on_resource_used: {}'.format(listener.resources))
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
         for listener in self._listeners:
-            listener.on_resource_available(1 * num_trials)  # FIXME: find the real resource id
+            listener.on_resource_available(1 * num_trials)
+            _logger.warning('on_resource_available: {}'.format(listener.resources))
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]

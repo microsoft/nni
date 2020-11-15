@@ -4,7 +4,6 @@ from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
 
 # TODO: fix: inputs is a list, how to deal with single element list and single element
-# TODO: sort edges in topological order
 
 def model_to_pytorch_script(model: Model) -> str:
     graphs = []
@@ -13,7 +12,7 @@ def model_to_pytorch_script(model: Model) -> str:
         import_pkgs, graph_code = graph_to_pytorch_model(name, cell)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
-    # TODO: set correct PATH for the packages
+    # TODO: set correct PATH for the packages (after launch refactor)
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
     return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
@@ -46,17 +45,17 @@ def _format_inputs(node: Node) -> List[str]:
             assert isinstance(edge.head_slot, int)
             if node.graph.input_names is not None:
                 # when input has names, e.g., forward(self, tensor1, tensor2, another_one)
-                inputs.append(_convert_name(node.graph.input_names[edge.head_slot]))
+                inputs.append(node.graph.input_names[edge.head_slot])
             else:
                 # when input has no name, e.g., forward(*_inputs)
                 inputs.append('_inputs[{}]'.format(edge.head_slot))
         else:
             if edge.head_slot is None:
                 # when the input comes from a single-output operator
-                inputs.append('{}'.format(_convert_name(edge.head.name)))
+                inputs.append('{}'.format(edge.head.name))
             else:
                 # when the input comes from a multi-output operator: needs to know which one it comes from
-                inputs.append('{}[{}]'.format(_convert_name(edge.head.name), edge.head_slot))
+                inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
     return inputs
 
 def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
@@ -71,13 +70,14 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
-            node_code = node.operation.to_init_code(_convert_name(node.name))
+            node_code = node.operation.to_init_code(node.name)
             if node_code is not None:
                 node_codes.append(node_code)
 
     if graph.input_names is None:
         input_code = '*_inputs'
     else:
+        # TODO: remove _convert_names (after merging input_names and input_node)
         input_code = ', '.join(_convert_names(graph.input_names))
 
     edge_codes = []
@@ -85,9 +85,11 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     for node in sorted_nodes:
         if node.operation:
             inputs = _format_inputs(node)
-            edge_codes.append(node.operation.to_forward_code(_convert_name(node.name), _convert_name(node.name), inputs))
+            edge_codes.append(node.operation.to_forward_code(node.name, node.name, inputs))
 
+    # TODO: refactor graph output_node
     output_names = _format_inputs(graph.output_node)
+    output_names = _convert_names(output_names)
     if not output_names:
         output_names = ['None']
 

@@ -45,6 +45,7 @@ class Module(nn.Module):
         # TODO: users have to pass init's arguments to super init's arguments
         global _records
         if _records is not None:
+            # TODO: change tuple to dict
             _records[id(self)] = (args, kwargs)
             #print('my module: ', id(self), args, kwargs)
         super(Module, self).__init__()

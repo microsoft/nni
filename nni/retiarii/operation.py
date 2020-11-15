@@ -98,20 +98,17 @@ class PyTorchOperation(Operation):
             return None
 
     def to_init_code(self, field: str) -> str:
+        field = _convert_name(field)
         if self._to_class_name() is not None:
-            params = []
-            # TODO: remove positional args
-            if self.parameters.get('positional_args', None):
-                pos_params = ', '.join(f'{repr(value)}' for value in self.parameters['positional_args'])
-                params.append(pos_params)
-            kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items() if key != 'positional_args')
-            if kw_params:
-                params.append(kw_params)
-            params_str = ', '.join(params)
-            return f'self.{field} = {self._to_class_name()}({params_str})'
+            assert 'positional_args' not in self.parameters
+            kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
+            return f'self.{field} = {self._to_class_name()}({kw_params})'
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+        field = _convert_name(field)
+        output = _convert_name(output)
+        inputs = [_convert_name(_input) for _input in inputs]
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
