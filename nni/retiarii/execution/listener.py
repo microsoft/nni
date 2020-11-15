@@ -6,7 +6,10 @@ from .interface import *
 
 class DefaultListener(AbstractGraphListener):
     def __init__(self):
-        self.resources: List[WorkerInfo] = []
+        self.resources: int = 0 # simply resource count
+
+    def has_available_resource(self) -> bool:
+        return self.resources > 0
 
     def on_metric(self, model: Model, metric: MetricData) -> None:
         model.metric = metric
@@ -20,8 +23,8 @@ class DefaultListener(AbstractGraphListener):
         else:
             model.status = ModelStatus.Failed
 
-    def on_resource_available(self, resources: List[WorkerInfo]) -> None:
+    def on_resource_available(self, resources: int) -> None:
         self.resources += resources
 
-    def on_resource_used(self, resources: List[WorkerInfo]) -> None:
-        self.resources = [r for r in self.resources if r not in resources]
+    def on_resource_used(self, resources: int) -> None:
+        self.resources -= resources
