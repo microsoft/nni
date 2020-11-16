@@ -9,13 +9,14 @@ import { Container } from 'typescript-ioc';
 
 import * as component from '../../common/component';
 import { DataStore } from '../../common/datastore';
-import { ExperimentProfile, Manager } from '../../common/manager';
+import { ExperimentProfile, Manager, ExpManager } from '../../common/manager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../../core/test/mockedDatastore';
 import { MockedTrainingService } from '../../core/test/mockedTrainingService';
 import { NNIRestServer } from '../nniRestServer';
 import { testManagerProvider } from './mockedNNIManager';
+import { testExpManagerProvider } from './mockedExperimentManager';
 
 describe('Unit test for rest server', () => {
 
@@ -26,6 +27,7 @@ describe('Unit test for rest server', () => {
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
+        Container.bind(ExpManager).provider(testExpManagerProvider)
         const restServer: NNIRestServer = component.get(NNIRestServer);
         restServer.start().then(() => {
             ROOT_URL = `${restServer.endPoint}/api/v1/nni`;
@@ -76,6 +78,16 @@ describe('Unit test for rest server', () => {
 
     it('Test GET trial-jobs', (done: Mocha.Done) => {
         request.get(`${ROOT_URL}/trial-jobs`, (err: Error, res: request.Response) => {
+            expect(res.statusCode).to.equal(200);
+            if (err) {
+                assert.fail(err.message);
+            }
+            done();
+        });
+    });
+
+    it('Test GET experiments-info', (done: Mocha.Done) => {
+        request.get(`${ROOT_URL}/experiments-info`, (err: Error, res: request.Response) => {
             expect(res.statusCode).to.equal(200);
             if (err) {
                 assert.fail(err.message);

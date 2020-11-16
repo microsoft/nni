@@ -110,6 +110,7 @@ abstract class Manager {
 
 abstract class ExpManager {
     public abstract getExperimentsInfo(): Promise<JSON>;
+    public abstract setExperimentPath(): void;
 }
 
 export { Manager, ExpManager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

@@ -56,6 +56,18 @@ class ExperimentsManager {
         return this.withLock(this.updateStatus, updateList, this.experimentsPath);
     }
 
+    public setExperimentPath(newPath: string): void {
+        if (newPath[0] === '~') {
+            newPath = path.join(os.homedir(), newPath.slice(1));
+        }
+        if (!path.isAbsolute(newPath)) {
+            newPath = path.resolve(newPath);
+        }
+        this.log.info(`Set new experiment information path: ${newPath}`);
+        this.experimentsPath = newPath;
+        this.experimentsPathLock = newPath + '.lock';
+    }
+
     private async readExperimentsInfo(): Promise<Buffer> {
         return this.withLock(fs.readFileSync, this.experimentsPath);
     }
