@@ -167,7 +167,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </Stack>
                                         </div>
                                     </Stack>
-                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
+                                    <SuccessTable
+                                        trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                        updateOverviewPage={updateOverviewPage}
+                                    />
                                 </div>
                                 <div className='overviewCommand1'>
                                     <Command1 />
