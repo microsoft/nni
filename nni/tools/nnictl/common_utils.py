@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import tempfile
+import time
 import socket
 import string
 import random
@@ -97,5 +98,22 @@ def generate_temp_dir():
     os.makedirs(temp_dir)
     return temp_dir
 
-def get_file_lock(path: string, timeout=-1):
-    return filelock.SoftFileLock(path + '.lock', timeout=timeout)
+def get_file_lock(path: string, timeout=-1, stale=10):
+    class SimpleFileLock(filelock.SoftFileLock):
+        def __init__(self, lock_file, timeout=-1, stale=10):
+            super(__class__, self).__init__(lock_file, timeout)
+            self._stale = stale
+
+        def __enter__(self):
+            count = 0
+            while True:
+                try:
+                    if os.path.isfile(self._lock_file) and time.time() - os.stat(self._lock_file).st_mtime > self._stale:
+                        os.remove(self._lock_file)
+                    self.acquire()
+                    return self
+                except Exception:
+                    print_warning('[{}] fail lock file, auto try again!'.format(count))
+                    count += 1
+
+    return SimpleFileLock(path + '.lock', timeout=timeout, stale=stale)
