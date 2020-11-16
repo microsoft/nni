@@ -6,7 +6,10 @@
 
     .status-text {
         display: inline-block;
-        line-height: 30px;
+    }
+
+    .color {
+        color: #333;
     }
 }
 
@@ -60,7 +63,6 @@
 /* office-fabric-ui progressIndicator */
 .ms-ProgressIndicator-itemProgress {
     padding: 0;
-    border: 2px solid #e6e6e6;
 }
 
 .cursor,
