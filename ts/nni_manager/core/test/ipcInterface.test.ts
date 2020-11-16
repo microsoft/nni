@@ -88,7 +88,7 @@ describe('core/protocol', (): void => {
     });
 
     it('sendCommand() should throw on wrong command type', (): void => {
-        assert.equal((<Error>rejectCommandType).name, 'AssertionError [ERR_ASSERTION]');
+        assert.equal((<Error>rejectCommandType).name.split(' ')[0], 'AssertionError');
     });
 
     it('should have received 3 commands', (): void => {

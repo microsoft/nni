@@ -21,7 +21,7 @@ For each module, we should prepare four functions, three for shape inference and
 ## Usage
 
 ```python
-from nni.compression.torch import ModelSpeedup
+from nni.compression.pytorch import ModelSpeedup
 # model: the model you want to speed up
 # dummy_input: dummy input of the model, given to `jit.trace`
 # masks_file: the mask file created by pruning algorithms

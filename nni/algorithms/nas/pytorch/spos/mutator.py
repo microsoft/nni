@@ -4,7 +4,7 @@
 import logging
 
 import numpy as np
-from nni.nas.pytorch.random import RandomMutator
+from nni.algorithms.nas.pytorch.random import RandomMutator
 
 _logger = logging.getLogger(__name__)
 

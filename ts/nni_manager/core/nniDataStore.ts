@@ -168,7 +168,7 @@ class NNIDataStore implements DataStore {
                     const oneEntry: ExportedDataFormat = {
                         parameter: parameters.parameters,
                         value: JSON.parse(job.finalMetricData[0].data),
-                        id: job.id
+                        trialJobId: job.trialJobId
                     };
                     exportedData.push(oneEntry);
                 } else {
@@ -188,7 +188,7 @@ class NNIDataStore implements DataStore {
                             const oneEntry: ExportedDataFormat = {
                                 parameter: value,
                                 value: metricValue,
-                                id: job.id
+                                trialJobId: job.trialJobId
                             };
                             exportedData.push(oneEntry);
                         }
@@ -229,7 +229,7 @@ class NNIDataStore implements DataStore {
             }
             if (!(status !== undefined && jobInfo.status !== status)) {
                 if (jobInfo.status === 'SUCCEEDED') {
-                    jobInfo.finalMetricData = finalMetricsMap.get(jobInfo.id);
+                    jobInfo.finalMetricData = finalMetricsMap.get(jobInfo.trialJobId);
                 }
                 result.push(jobInfo);
             }
@@ -320,7 +320,7 @@ class NNIDataStore implements DataStore {
                 jobInfo = map.get(record.trialJobId);
             } else {
                 jobInfo = {
-                    id: record.trialJobId,
+                    trialJobId: record.trialJobId,
                     status: this.getJobStatusByLatestEvent('UNKNOWN', record.event),
                     hyperParameters: []
                 };
@@ -364,14 +364,14 @@ class NNIDataStore implements DataStore {
                 const newHParam: any = this.parseHyperParameter(record.data);
                 if (newHParam !== undefined) {
                     if (jobInfo.hyperParameters !== undefined) {
-                        let hParamIds: Set<number> | undefined = hParamIdMap.get(jobInfo.id);
+                        let hParamIds: Set<number> | undefined = hParamIdMap.get(jobInfo.trialJobId);
                         if (hParamIds === undefined) {
                             hParamIds = new Set();
                         }
                         if (!hParamIds.has(newHParam.parameter_index)) {
                             jobInfo.hyperParameters.push(JSON.stringify(newHParam));
                             hParamIds.add(newHParam.parameter_index);
-                            hParamIdMap.set(jobInfo.id, hParamIds);
+                            hParamIdMap.set(jobInfo.trialJobId, hParamIds);
                         }
                     } else {
                         assert(false, 'jobInfo.hyperParameters is undefined');

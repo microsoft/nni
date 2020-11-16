@@ -62,7 +62,7 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
     if sys.platform == 'win32':
         node_command = os.path.join(entry_dir, 'node.exe')
     else:
-        node_command = 'node'
+        node_command = os.path.join(entry_dir, 'node')
     cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
