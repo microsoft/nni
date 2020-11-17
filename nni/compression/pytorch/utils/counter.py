@@ -29,7 +29,7 @@ class ModelProfiler:
             a mapping of (module -> torch.nn.Module : custom operation)
             the custom operation is a callback funtion to calculate
             the module flops and parameters, it will overwrite the default operation.
-            for reference, please see ``DEFAULT_OPS``.
+            for reference, please see ``self.ops``.
         mode:
             the mode of how to collect information. If the mode is set to `default`,
             only the information of convolution and linear will be collected.
