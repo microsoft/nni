@@ -28,7 +28,7 @@ class ModelProfiler:
         custom_ops: dict
             a mapping of (module -> torch.nn.Module : custom operation)
             the custom operation is a callback funtion to calculate
-            the module flops and parameters, it will overwrite the default operation.
+            the module flops, parameters and the weight shape, it will overwrite the default operation.
             for reference, please see ``self.ops``.
         mode:
             the mode of how to collect information. If the mode is set to `default`,
@@ -69,8 +69,19 @@ class ModelProfiler:
         self.mode = mode
         self.results = []
 
-    def _push_results(self, result):
+    def _push_result(self, result):
         self.results.append(result)
+
+    def _get_result(self, m, flops):
+        # assume weight is called `weight`, otherwise it's not applicable
+        # if user customize the operation, the callback function should return the dict result, inluding calculated flops, params and weight_shape.
+        
+        result = {
+            'flops': flops,
+            'params': _get_params(m),
+            'weight_shape': tuple(m.weight.size()) if hasattr(m, 'weight') else 0,
+        }
+        return result
 
     def _count_convNd(self, m, x, y):
         cin = m.in_channels
@@ -87,7 +98,7 @@ class ModelProfiler:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += cout * output_size * bias_flops
 
-        return total_ops
+        return self._get_result(m, total_ops)
 
     def _count_linear(self, m, x, y):
         out_features = m.out_features
@@ -99,17 +110,19 @@ class ModelProfiler:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += out_features * bias_flops
 
-        return total_ops
+        return self._get_result(m, total_ops)
 
     def _count_bn(self, m, x, y):
-        return 2 * x[0].numel()
-
+        total_ops = 2 * x[0].numel()
+        return self._get_result(m, total_ops)
 
     def _count_relu(self, m, x, y):
-        return x[0].numel()
+        total_ops = x[0].numel()
+        return self._get_result(m, total_ops)
 
     def _count_avgpool(self, m, x, y):
-        return y.numel()
+        total_ops = y.numel()
+        return self._get_result(m, total_ops)
 
     def _count_adap_avgpool(self, m, x, y):
         kernel = torch.Tensor([*(x[0].shape[2:])]) // torch.Tensor(list((m.output_size,))).squeeze()
@@ -119,7 +132,7 @@ class ModelProfiler:
         num_elements = y.numel()
         total_ops = kernel_ops * num_elements
 
-        return total_ops
+        return self._get_result(m, total_ops)
 
     def _count_upsample(self, m, x, y):
         if m.mode == 'linear':
@@ -140,24 +153,20 @@ class ModelProfiler:
         else:
             total_ops = 0
 
-        return total_ops
-
+        return self._get_result(m, total_ops)
 
     def counte_module(self, m, x, y, name):
         # assume x is tuple of single tensor
-        # assume weight is called `weight`, otherwise it's not applicable
-        flops = self.ops[type(m)](m, x, y)
-        result = {
+        result = self.ops[type(m)](m, x, y)
+        total_result = {
             'name': name,
-            'flops': flops,
-            'params': _get_params(m),
-            'weight_shape': tuple(m.weight.size()) if hasattr(m, 'weight') else 0,
             'input_size': tuple(x[0].size()),
             'output_size': tuple(y.size()),
-            'module_type': type(m).__name__
+            'module_type': type(m).__name__,
+            **result
         }
 
-        self._push_results(result)
+        self._push_result(total_result)
 
     def sum_flops(self):
         return sum([s['flops'] for s in self.results])
@@ -259,7 +268,9 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
             m.weight_mask = weight_mask
         prev_m = m
 
-        if len(list(m.children())) == 0 and type(m) in profiler.ops:
+        if type(m) in profiler.ops:
+        # if len(list(m.children())) == 0 or type(m) in profiler.ops:
+            # print(name, m, len(list(m.children())) == 0, type(m))
             # if a leaf node
             _handler = m.register_forward_hook(functools.partial(profiler.counte_module, name=name))
             handler_collection.append(_handler)
