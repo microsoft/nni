@@ -135,7 +135,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         await executor.allowPermission(true, nniRootDir);
     }
     
-    private async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;

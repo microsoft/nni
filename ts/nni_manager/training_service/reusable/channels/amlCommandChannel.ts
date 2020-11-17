@@ -39,7 +39,7 @@ export class AMLCommandChannel extends CommandChannel {
         ]);
     }
 
-    protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
+    public async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
         this.sendQueues.push([environment, message]);
     }
 

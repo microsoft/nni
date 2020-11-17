@@ -1,0 +1,64 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+'use strict';
+
+import { EventEmitter } from "events";
+import { delay } from "../../../common/utils";
+import { AMLEnvironmentInformation } from '../aml/amlConfig';
+import { CommandChannel, RunnerConnection } from "../commandChannel";
+import { Channel, EnvironmentInformation } from "../environment";
+import { AMLCommandChannel } from "./amlCommandChannel";
+import { WebCommandChannel } from "./webCommandChannel";
+
+class HeterogenousRunnerConnection extends RunnerConnection {
+}
+
+export class HeterogenousCommandChannel extends CommandChannel{
+    private stopping: boolean = false;
+    private amlCommandChannel: AMLCommandChannel | undefined;
+    private webCommandChannel: WebCommandChannel | undefined;
+
+    public get channelName(): Channel {
+        return "heterogenous";
+    }
+
+    public constructor(commandEmitter: EventEmitter) {
+        super(commandEmitter);
+    }
+
+    public async config(_key: string, _value: any): Promise<void> {
+        // do nothing
+    }
+
+    public async start(): Promise<void> {
+        this.amlCommandChannel?.start();
+        this.webCommandChannel?.start();
+    }
+
+    public async stop(): Promise<void> {
+        this.stopping = true;
+    }
+
+    public async run(): Promise<void> {
+        this.amlCommandChannel?.start();
+        this.webCommandChannel?.run();
+    }
+
+    protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
+        switch (environment.platform) {
+            case 'aml':
+                this.amlCommandChannel?.sendCommandInternal(environment, message);
+                break;
+            case 'remote':
+                this.webCommandChannel?.sendCommandInternal(environment, message);
+                break;
+            default:
+                throw new Error(`Heterogenous not support platform: '${environment.platform}'`);
+        }
+    }
+
+    protected createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
+        return new HeterogenousRunnerConnection(environment);
+    }
+}

@@ -69,37 +69,43 @@ export class AMLEnvironmentService extends EnvironmentService {
                 this.log.debug(`AML not proccessed metadata key: '${key}', value: '${value}'`);
         }
     }
+    
+    public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+        const amlClient = (environment as AMLEnvironmentInformation).amlClient;
+        if (!amlClient) {
+            return Promise.reject('AML client not initialized!');
+        }
+        const newStatus = await amlClient.updateStatus(environment.status);
+        switch (newStatus.toUpperCase()) {
+            case 'WAITING':
+            case 'QUEUED':
+                environment.setStatus('WAITING');
+                break;
+            case 'RUNNING':
+                environment.setStatus('RUNNING');
+                break;
+            case 'COMPLETED':
+            case 'SUCCEEDED':
+                environment.setStatus('SUCCEEDED');
+                break;
+            case 'FAILED':
+                environment.setStatus('FAILED');
+                return Promise.reject(`AML: job ${environment.envId} is failed!`);
+            case 'STOPPED':
+            case 'STOPPING':
+                environment.setStatus('USER_CANCELED');
+                break;
+            default:
+                environment.setStatus('UNKNOWN');
+        }
+    }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        const tasks: Promise<void>[] = [];
         environments.forEach(async (environment) => {
-            const amlClient = (environment as AMLEnvironmentInformation).amlClient;
-            if (!amlClient) {
-                return Promise.reject('AML client not initialized!');
-            }
-            const newStatus = await amlClient.updateStatus(environment.status);
-            switch (newStatus.toUpperCase()) {
-                case 'WAITING':
-                case 'QUEUED':
-                    environment.setStatus('WAITING');
-                    break;
-                case 'RUNNING':
-                    environment.setStatus('RUNNING');
-                    break;
-                case 'COMPLETED':
-                case 'SUCCEEDED':
-                    environment.setStatus('SUCCEEDED');
-                    break;
-                case 'FAILED':
-                    environment.setStatus('FAILED');
-                    return Promise.reject(`AML: job ${environment.envId} is failed!`);
-                case 'STOPPED':
-                case 'STOPPING':
-                    environment.setStatus('USER_CANCELED');
-                    break;
-                default:
-                    environment.setStatus('UNKNOWN');
-            }
+            tasks.push(this.refreshEnvironment(environment));
         });
+        await Promise.all(tasks);
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {

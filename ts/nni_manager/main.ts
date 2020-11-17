@@ -25,6 +25,7 @@ import { RouterTrainingService } from './training_service/reusable/routerTrainin
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
+
 function initStartupInfo(
     startExpMode: string, resumeExperimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
@@ -66,6 +67,10 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         Container.bind(TrainingService)
             .to(RouterTrainingService)
             .scope(Scope.Singleton);
+    } else if (platformMode === 'heterogeneous') {
+        Container.bind(TrainingService)
+        .to(RouterTrainingService)
+        .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
@@ -94,7 +99,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/heterogeneous> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -114,7 +119,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'heterogeneous'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

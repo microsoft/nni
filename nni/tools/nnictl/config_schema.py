@@ -124,7 +124,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'),
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'heterogeneous'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -259,6 +259,12 @@ aml_config_schema = {
         'computeTarget': setType('computeTarget', str),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool),
+    }
+}
+
+heterogeneous_config_schema = {
+    'heterogeneousConfig': {
+        'trainingServicePlatforms': setType('trainingServicePlatforms', str),
     }
 }
 
@@ -412,6 +418,7 @@ training_service_schema_dict = {
     'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
+    'heterogeneous': Schema({**common_schema, **common_trial_schema, **heterogeneous_config_schema}),
 }
 
 

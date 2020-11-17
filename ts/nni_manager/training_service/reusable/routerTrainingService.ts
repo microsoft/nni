@@ -18,6 +18,7 @@ import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentServ
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
+import { HeteroGenousEnvironmentService } from './environments/heterogenousEnvironmentService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
@@ -161,9 +162,11 @@ class RouterTrainingService implements TrainingService {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
-            } else {
-                this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
-                this.metaDataCache.set(key, value);
+            } else if (key === TrialConfigMetadataKey.HETEROGENOUS_CLUSTER_CONFIG){
+                this.internalTrainingService = component.get(TrialDispatcher);
+                Container.bind(EnvironmentService)
+                    .to(HeteroGenousEnvironmentService)
+                    .scope(Scope.Singleton);
             }
         } else {
             await this.internalTrainingService.setClusterMetadata(key, value);

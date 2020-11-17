@@ -12,7 +12,7 @@ import { CommandChannel } from "./commandChannel";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
-export type Channel = "web" | "file" | "aml" | "ut";
+export type Channel = "web" | "file" | "aml" | "ut" | "heterogenous";
 
 
 export class TrialGpuSummary {
@@ -74,6 +74,9 @@ export class EnvironmentInformation {
     // user can specify how to use GPU resource for an environment, like local and remote.
     public maxTrialNumberPerGpu?: number;
     public useActiveGpu?: boolean;
+    
+    // the running mode for trial jobs, including local, remote, aml, pai etc.
+    public platform: string = "";
 
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
