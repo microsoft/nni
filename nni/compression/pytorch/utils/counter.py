@@ -70,8 +70,6 @@ class ModelProfiler:
         self.results = []
 
     def _push_results(self, result):
-        # assume x is tuple of single tensor
-        # assume weight is called `weight`, otherwise it's not applicable
         self.results.append(result)
 
     def _count_convNd(self, m, x, y):
@@ -100,7 +98,7 @@ class ModelProfiler:
         if self._count_bias:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += out_features * bias_flops
-        
+
         return total_ops
 
     def _count_bn(self, m, x, y):
@@ -146,6 +144,8 @@ class ModelProfiler:
 
 
     def counte_module(self, m, x, y, name):
+        # assume x is tuple of single tensor
+        # assume weight is called `weight`, otherwise it's not applicable
         flops = self.ops[type(m)](m, x, y)
         result = {
             'name': name,
