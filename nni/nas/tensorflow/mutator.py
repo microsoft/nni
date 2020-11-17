@@ -71,7 +71,8 @@ class Mutator(BaseMutator):
                 axis = 0
             else:
                 axis = -1
-            return tf.concat(tensor_list, axis=axis)
+            return tf.concat(tensor_list, axis=axis)  # pylint: disable=E1120,E1123
+            # pylint issue #3613
         raise ValueError('Unrecognized reduction policy: "{}'.format(reduction_type))
 
     def _get_decision(self, mutable):

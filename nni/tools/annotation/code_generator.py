@@ -4,7 +4,7 @@
 import ast
 import astor
 
-from .utils import ast_Num, ast_Str
+from .utils import ast_Num, ast_Str, lineno
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -274,7 +274,7 @@ class Transformer(ast.NodeTransformer):
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
-            self.last_line = node.lineno
+            self.last_line = lineno(node)
 
         # do nothing for root
         if not self.stack:
@@ -316,7 +316,7 @@ class Transformer(ast.NodeTransformer):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.mutable_layers'):
-            nodes = parse_annotation_mutable_layers(string[1:], node.lineno, self.nas_mode)
+            nodes = parse_annotation_mutable_layers(string[1:], lineno(node), self.nas_mode)
             return nodes
 
         if string.startswith('@nni.variable') \

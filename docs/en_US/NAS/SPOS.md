@@ -90,13 +90,13 @@ By default, it will use `architecture_final.json`. This architecture is provided
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.spos.SPOSEvolution
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSEvolution
     :members:
 
-..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainingMutator
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainingMutator
     :members:
 ```
 

@@ -1,5 +1,15 @@
 import * as React from 'react';
-import { DetailsList, IDetailsListProps, IColumn } from '@fluentui/react';
+import {
+    DetailsList,
+    IDetailsListProps,
+    IColumn,
+    IRenderFunction,
+    IDetailsHeaderProps,
+    Sticky,
+    StickyPositionType,
+    ScrollablePane,
+    ScrollbarVisibility
+} from '@fluentui/react';
 import DefaultMetric from '../../public-child/DefaultMetric';
 import Details from './Details';
 import { convertDuration } from '../../../static/function';
@@ -74,8 +84,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 50,
-            maxWidth: 87,
+            minWidth: 65,
+            maxWidth: 119,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -85,8 +95,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 50,
-            maxWidth: 87,
+            minWidth: 65,
+            maxWidth: 119,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -96,8 +106,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 65,
-            maxWidth: 150,
+            minWidth: 90,
+            maxWidth: 166,
             isResizable: true,
             fieldName: 'duration',
             data: 'number',
@@ -111,8 +121,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: 80,
-            maxWidth: 150,
+            minWidth: 108,
+            maxWidth: 160,
             isResizable: true,
             fieldName: 'status',
             onRender: (item: any): React.ReactNode => (
@@ -123,14 +133,28 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 100,
-            maxWidth: 160,
+            minWidth: 108,
+            maxWidth: 166,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => <DefaultMetric trialId={item.id} />
         }
     ];
+
+    onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
+        if (!props) {
+            return null;
+        }
+        return (
+            <Sticky stickyPosition={StickyPositionType.Header} isScrollSynced>
+                {// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                defaultRender!({
+                    ...props
+                })}
+            </Sticky>
+        );
+    };
 
     setInnerWidth = (): void => {
         this.setState(() => ({ innerWidth: window.innerWidth }));
@@ -156,15 +180,18 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 
         return (
             <div id='succTable'>
-                <DetailsList
-                    columns={columns}
-                    items={source}
-                    setKey='set'
-                    compact={true}
-                    onRenderRow={this.onRenderRow}
-                    selectionMode={0} // close selector function
-                    className='succTable'
-                />
+                <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
+                    <DetailsList
+                        columns={columns}
+                        items={source}
+                        setKey='set'
+                        compact={true}
+                        onRenderRow={this.onRenderRow}
+                        onRenderDetailsHeader={this.onRenderDetailsHeader}
+                        selectionMode={0} // close selector function
+                        className='succTable'
+                    />
+                </ScrollablePane>
                 {isNoneData && <div className='succTable-tooltip'>{this.tooltipStr}</div>}
             </div>
         );

@@ -231,7 +231,7 @@ class NNIManager implements Manager {
         // Check the final status for WAITING and RUNNING jobs
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.trialJobId)));
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -304,7 +304,7 @@ class NNIManager implements Manager {
             // FIXME: can this be undefined?
             trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
         ));
-        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.trialJobId));
 
         const allMetrics = await this.dataStore.getMetricData();
         return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
@@ -468,7 +468,7 @@ class NNIManager implements Manager {
         let count: number = 1;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             await delay(1000 * 1); // 1 seconds
-            if (this.status.status === 'RUNNING') {
+            if (['RUNNING', 'NO_MORE_TRIAL', 'TUNER_NO_MORE_TRIAL'].includes(this.status.status)) {
                 this.experimentProfile.execDuration += 1;
                 if (count % 10 === 0) {
                     await this.storeExperimentProfile();

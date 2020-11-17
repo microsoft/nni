@@ -5,7 +5,7 @@ import { EXPERIMENT, TRIALS } from './static/datamodel';
 import { isManagerExperimentPage } from './static/function';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
-import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
+import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
 import './App.scss';
 
 interface AppState {
@@ -155,7 +155,7 @@ class App extends React.Component<{}, AppState> {
                                 ?
                                 null
                                 :
-                                <TrialConfigButton />
+                                <SlideNavBtns />
                         }
                         {/* if api has error field, show error message */}
                         {errorList.map(

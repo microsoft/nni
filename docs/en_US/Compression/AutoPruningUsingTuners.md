@@ -7,13 +7,13 @@ It's convenient to implement auto model pruning with NNI compression and NNI tun
 You can easily compress a model with NNI compression. Take pruning for example, you can prune a pretrained model with LevelPruner like this
 
 ```python
-from nni.compression.torch import LevelPruner
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
 config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
 pruner = LevelPruner(model, config_list)
 pruner.compress()
 ```
 
-The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/compression/torch/default_layers.py) for pytorch.
+The 'default' op_type stands for the module types defined in [default_layers.py](https://github.com/microsoft/nni/blob/v1.9/src/sdk/pynni/nni/compression/pytorch/default_layers.py) for pytorch.
 
 Therefore ```{ 'sparsity': 0.8, 'op_types': ['default'] }```means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ```pruner.compress()``` called, the model is compressed with masks and after that you can normally fine tune this model and **pruned weights won't be updated** which have been masked.
 
@@ -71,7 +71,7 @@ Then we need to modify our codes for few lines
 
 ```python
 import nni
-from nni.compression.torch import *
+from nni.algorithms.compression.pytorch.pruning import *
 params = nni.get_parameters()
 conv0_sparsity = params['prune_method']['conv0_sparsity']
 conv1_sparsity = params['prune_method']['conv1_sparsity']

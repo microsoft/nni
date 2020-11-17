@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.callbacks import ModelCheckpoint
-from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
+from nni.algorithms.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
 
 from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict

@@ -11,7 +11,7 @@ import nni
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
+from nni.algorithms.nas.pytorch.classic_nas import get_and_apply_next_architecture
 from nni.nas.pytorch.utils import AverageMeterGroup
 
 from dataloader import get_imagenet_iter_dali
