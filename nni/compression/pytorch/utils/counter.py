@@ -155,7 +155,7 @@ class ModelProfiler:
 
         return self._get_result(m, total_ops)
 
-    def counte_module(self, m, x, y, name):
+    def count_module(self, m, x, y, name):
         # assume x is tuple of single tensor
         result = self.ops[type(m)](m, x, y)
         total_result = {
@@ -218,31 +218,28 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
 
     Parameters
     ---------
-    model: nn.Module
-        target model.
-    x: tuple or tensor
-        the input shape of data or a tensor as input data
-    custom_ops: dict
-        a mapping of (module -> torch.nn.Module : custom operation)
+    model : nn.Module
+        Target model.
+    x : tuple or tensor
+        The input shape of data (a tuple), a tensor or a tuple of tensor as input data.
+    custom_ops : dict
+        A mapping of (module -> torch.nn.Module : custom operation)
         the custom operation is a callback funtion to calculate
         the module flops and parameters, it will overwrite the default operation.
-        for reference, please see ``DEFAULT_OPS``.
-    verbose: bool
+        for reference, please see ``ops`` in ``ModelProfiler``.
+    verbose : bool
         If False, mute detail information about modules. Default is True.
-    mode:
-        the mode of how to collect information. If the mode is set to `default`,
+    mode : str
+        the mode of how to collect information. If the mode is set to ``default``,
         only the information of convolution and linear will be collected.
-        If the mode is set to `full`, other operations will also be collected.
+        If the mode is set to ``full``, other operations will also be collected.
 
     Returns
     -------
-    flops: int
-        total flops of the model
-    params: int
-        total params of the model
-    results: dict
-        the detail information of modules. (name, module_type, weight_shape,
-        flops, params, input_size, output_size) are included in the results.
+    tuple of int, int and dict
+        Representing total FLOPs, total parameters, and a detailed list of results respectively.
+        The list of results are a list of dict, each of which contains (name, module_type, weight_shape,
+        flops, params, input_size, output_size) as its keys.
     """
 
     assert isinstance(x, tuple) or isinstance(x, torch.Tensor)
@@ -253,6 +250,8 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
 
     if isinstance(x, tuple) and all(isinstance(t, int) for t in x):
         x = (torch.zeros(x).to(original_device), )
+    elif torch.is_tensor(x):
+        x = (x.to(original_device), )
     else:
         x = (t.to(original_device) for t in x)
 
@@ -269,10 +268,8 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         prev_m = m
 
         if type(m) in profiler.ops:
-        # if len(list(m.children())) == 0 or type(m) in profiler.ops:
-            # print(name, m, len(list(m.children())) == 0, type(m))
             # if a leaf node
-            _handler = m.register_forward_hook(functools.partial(profiler.counte_module, name=name))
+            _handler = m.register_forward_hook(functools.partial(profiler.count_module, name=name))
             handler_collection.append(_handler)
 
     model.eval()
