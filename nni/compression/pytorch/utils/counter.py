@@ -69,20 +69,12 @@ class ModelProfiler:
         self.mode = mode
         self.results = []
 
-    def _push_results(self, name, module, x, y, total_ops):
+    def _push_results(self, result):
         # assume x is tuple of single tensor
         # assume weight is called `weight`, otherwise it's not applicable
-        self.results.append({
-            'name': name,
-            'flops': total_ops,
-            'params': _get_params(module),
-            'weight_shape': tuple(module.weight.size()) if hasattr(module, 'weight') else 0,
-            'input_size': tuple(x[0].size()),
-            'output_size': tuple(y.size()),
-            'module_type': type(module).__name__
-        })
+        self.results.append(result)
 
-    def _count_convNd(self, m, x, y, name=None):
+    def _count_convNd(self, m, x, y):
         cin = m.in_channels
         kernel_ops = m.weight.size()[2] * m.weight.size()[3]
         output_size = torch.zeros(y.size()[2:]).numel()
@@ -97,9 +89,9 @@ class ModelProfiler:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += cout * output_size * bias_flops
 
-        self._push_results(name, m, x, y, total_ops)
+        return total_ops
 
-    def _count_linear(self, m, x, y, name=None):
+    def _count_linear(self, m, x, y):
         out_features = m.out_features
         if hasattr(m, 'weight_mask'):
             out_features = m.weight_mask.sum() // m.in_features
@@ -108,27 +100,30 @@ class ModelProfiler:
         if self._count_bias:
             bias_flops = 1 if m.bias is not None else 0
             total_ops += out_features * bias_flops
+        
+        return total_ops
 
-        self._push_results(name, m, x, y, total_ops)
+    def _count_bn(self, m, x, y):
+        return 2 * x[0].numel()
 
-    def _count_bn(self, m, x, y, name=None):
-        self._push_results(name, m, x, y, 2 * x[0].numel())
 
-    def _count_relu(self, m, x, y, name=None):
-        self._push_results(name, m, x, y, x[0].numel())
+    def _count_relu(self, m, x, y):
+        return x[0].numel()
 
-    def _count_avgpool(self, m, x, y, name=None):
-        self._push_results(name, m, x, y, y.numel())
+    def _count_avgpool(self, m, x, y):
+        return y.numel()
 
-    def _count_adap_avgpool(self, m, x, y, name=None):
+    def _count_adap_avgpool(self, m, x, y):
         kernel = torch.Tensor([*(x[0].shape[2:])]) // torch.Tensor(list((m.output_size,))).squeeze()
         total_add = int(torch.prod(kernel))
         total_div = 1
         kernel_ops = total_add + total_div
         num_elements = y.numel()
-        self._push_results(name, m, x, y, kernel_ops * num_elements)
+        total_ops = kernel_ops * num_elements
 
-    def _count_upsample(self, m, x, y, name=None):
+        return total_ops
+
+    def _count_upsample(self, m, x, y):
         if m.mode == 'linear':
             total_ops = y.nelement() * 5  # 2 muls + 3 add
         elif m.mode == 'bilinear':
@@ -147,7 +142,22 @@ class ModelProfiler:
         else:
             total_ops = 0
 
-        self._push_results(name, m, x, y, total_ops)
+        return total_ops
+
+
+    def counte_module(self, m, x, y, name):
+        flops = self.ops[type(m)](m, x, y)
+        result = {
+            'name': name,
+            'flops': flops,
+            'params': _get_params(m),
+            'weight_shape': tuple(m.weight.size()) if hasattr(m, 'weight') else 0,
+            'input_size': tuple(x[0].size()),
+            'output_size': tuple(y.size()),
+            'module_type': type(m).__name__
+        }
+
+        self._push_results(result)
 
     def sum_flops(self):
         return sum([s['flops'] for s in self.results])
@@ -251,7 +261,7 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
 
         if len(list(m.children())) == 0 and type(m) in profiler.ops:
             # if a leaf node
-            _handler = m.register_forward_hook(functools.partial(profiler.ops[type(m)], name=name))
+            _handler = m.register_forward_hook(functools.partial(profiler.counte_module, name=name))
             handler_collection.append(_handler)
 
     model.eval()
