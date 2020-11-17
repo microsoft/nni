@@ -11,7 +11,7 @@ import {
     IStackStyles
 } from '@fluentui/react';
 import { Link } from 'react-router-dom';
-import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, RevToggleKey } from './buttons/Icon';
+import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, RevToggleKey, ChevronRightMed } from './buttons/Icon';
 import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
@@ -159,36 +159,40 @@ class NavCon extends React.Component<NavProps, NavState> {
                                 <span>{DETAILTABS}</span>
                             </StackItem>
                             <StackItem grow={70} className='navOptions'>
-                    <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
-                        {/* refresh button danyi*/}
-                        {/* TODO: fix bug */}
-                        {/* <CommandBarButton
-                            iconProps={{ iconName: 'sync' }}
-                            text="Refresh"
-                            onClick={this.props.refreshFunction}
-                        /> */}
-                        <div className='nav-refresh'>
-                            <CommandBarButton
-                                iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
-                                text={refreshText}
-                                menuProps={this.refreshProps}
-                            />
-                            <div className='nav-refresh-num'>{refreshFrequency}</div>
-                        </div>
-                        <CommandBarButton
-                            iconProps={{ iconName: 'ShowResults' }}
-                            text='Experiment summary'
-                            onClick={this.showExpcontent}
-                        />
-                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                    </Stack>
-                </StackItem>
-                {isvisibleExperimentDrawer && (
-                    <ExperimentSummaryPanel
-                        closeExpDrawer={this.closeExpDrawer}
-                        experimentProfile={EXPERIMENT.profile}
-                    />
-                )}
+                                <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                                    {/* refresh button danyi*/}
+                                    {/* TODO: fix bug */}
+                                    {/* <CommandBarButton
+                                        iconProps={{ iconName: 'sync' }}
+                                        text="Refresh"
+                                        onClick={this.props.refreshFunction}
+                                    /> */}
+                                    <div className='nav-refresh'>
+                                        <CommandBarButton
+                                            iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
+                                            text={refreshText}
+                                            menuProps={this.refreshProps}
+                                        />
+                                        <div className='nav-refresh-num'>{refreshFrequency}</div>
+                                    </div>
+                                    <CommandBarButton
+                                        iconProps={{ iconName: 'ShowResults' }}
+                                        text='Experiment summary'
+                                        onClick={this.showExpcontent}
+                                    />
+                                    <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
+                                    <Link to="/experiment" className='experiment'>
+                                        <div className='expNavTitle'><span>All experiment</span>{ChevronRightMed}</div>
+                                        {/* <CommandBarButton iconProps={ChevronRightMed} text="All experiment" /> */}
+                                    </Link>
+                                </Stack>
+                            </StackItem>
+                            {isvisibleExperimentDrawer && (
+                                <ExperimentSummaryPanel
+                                    closeExpDrawer={this.closeExpDrawer}
+                                    experimentProfile={EXPERIMENT.profile}
+                                />
+                            )}
                         </React.Fragment>
                 }
             </Stack>
