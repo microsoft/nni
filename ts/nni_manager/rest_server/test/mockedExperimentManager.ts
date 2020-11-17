@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ExpManager } from '../../common/manager';
+import { ExpManager } from '../../common/expmanager';
 import { Provider } from 'typescript-ioc';
 
 export const testExpManagerProvider: Provider = {

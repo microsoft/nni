@@ -13,6 +13,7 @@ import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentStatus } from '../common/manager'
 import { isAlive } from '../common/utils';
+import { ExpManager } from '../common/expmanager';
 
 
 interface LockOpts {
@@ -32,7 +33,7 @@ interface NewStatusInfo {
     timestamp: number;
 }
 
-class ExperimentsManager {
+class ExperimentsManager implements ExpManager {
     private experimentsPath: string;
     private experimentsPathLock: string;
     private log: Logger;

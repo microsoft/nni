@@ -9,7 +9,8 @@ import { Container } from 'typescript-ioc';
 
 import * as component from '../../common/component';
 import { DataStore } from '../../common/datastore';
-import { ExperimentProfile, Manager, ExpManager } from '../../common/manager';
+import { ExperimentProfile, Manager } from '../../common/manager';
+import { ExpManager } from '../../common/expmanager'
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../../core/test/mockedDatastore';
