@@ -42,6 +42,7 @@ testCases:
   config:
     maxTrialNum: 1
     trialConcurrency: 1
+  trainingService: local remote # FIXME: timeout on pai, looks like tensorflow failed to link CUDA
 
 - name: mnist-pytorch-local
   configFile: test/config/examples/mnist-pytorch.yml

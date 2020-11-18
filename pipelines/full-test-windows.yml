@@ -35,7 +35,7 @@ jobs:
   - script: |
       cd examples/tuners/customized_tuner
       python setup.py develop --user
-      nnictl package install ./
+      nnictl package install .
     displayName: Install example customized tuner
   
   - script: |
