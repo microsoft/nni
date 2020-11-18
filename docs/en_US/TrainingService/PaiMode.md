@@ -205,4 +205,4 @@ Check policy:
 3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.
 
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
-<img src="../../img/version_check.jpg" style="zoom: 80%;" />
+<img src="../../img/version_check.png" style="zoom: 80%;" />
