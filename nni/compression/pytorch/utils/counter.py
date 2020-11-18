@@ -74,7 +74,7 @@ class ModelProfiler:
 
     def _get_result(self, m, flops):
         # assume weight is called `weight`, otherwise it's not applicable
-        # if user customize the operation, the callback function should 
+        # if user customize the operation, the callback function should
         # return the dict result, inluding calculated flops, params and weight_shape.
         
         result = {
