@@ -97,7 +97,7 @@ Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if y
 
 ### Trial configurations
 
-Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), `trial` configuration in pai mode have these additional keys:
+Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), `trial` configuration in pai mode has the following additional keys:
 
 * cpuNum
 
