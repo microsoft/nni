@@ -76,7 +76,7 @@ class ModelProfiler:
         # assume weight is called `weight`, otherwise it's not applicable
         # if user customize the operation, the callback function should
         # return the dict result, inluding calculated flops, params and weight_shape.
-        
+
         result = {
             'flops': flops,
             'params': _get_params(m),
