@@ -138,28 +138,13 @@ jobs:
 
   - script: |
       set -e
-      echo ${PATH}
-      python --version
-      python -c 'import sys ; print(sys.executable)'
-      python -c 'import site ; print(site.getsitepackages())'
-      python -c 'import site ; print(site.getusersitepackages())'
-      echo $USER
-      (cd ~ && pwd)
-
-      ls /Users/runner/hostedtoolcache/Python/3.8.6/x64
-      ls /Users/runner/.local
-
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       python -m pip install -U --upgrade pip setuptools wheel
       python -m pip install -U pytest coverage
     displayName: 'Install Python tools'
 
   - script: |
       python3 setup.py develop
-
-      echo 'vvv Find nnictl #1 vvv'
-      find /Users/runner/hostedtoolcache/Python/3.8.6/x64 -name nnictl
-      echo 'vvv Find nnictl #2 vvv'
-      find /Users/runner/.local -name nnictl
     displayName: 'Install NNI'
 
   #- script: |
