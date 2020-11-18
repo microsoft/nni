@@ -6,10 +6,11 @@ import { formatTimestamp } from '../../../static/function';
 import { useId } from '@uifabric/react-hooks';
 import { BestMetricContext } from '../../Overview';
 import { styles } from './basicInfoStyles';
-import '../../../static/style/progress/progress.scss';
-import '../../../static/style/progress/probar.scss';
+import '../../../static/style/overview/probar.scss';
+import '../../../static/style/overview/basic.scss';
+import '../../../static/style/common/ellipsis.scss';
 
-export const ReBasicInfo = (): any => {
+export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');
     const descriptionId: string = useId('callout-description');
     const ref = React.createRef<HTMLDivElement>();
@@ -26,9 +27,9 @@ export const ReBasicInfo = (): any => {
             <Stack horizontal horizontalAlign='space-between' className='mess'>
                 <div className='basic'>
                     <p>Name</p>
-                    <div className='nowrap'>{EXPERIMENT.profile.params.experimentName}</div>
+                    <div className='ellipsis'>{EXPERIMENT.profile.params.experimentName}</div>
                     <p className='margin'>ID</p>
-                    <div className='nowrap'>{EXPERIMENT.profile.id}</div>
+                    <div className='ellipsis'>{EXPERIMENT.profile.id}</div>
                 </div>
                 <div className='basic'>
                     <p>Status</p>
@@ -86,9 +87,9 @@ export const ReBasicInfo = (): any => {
                 </div>
                 <div className='basic'>
                     <p>Start time</p>
-                    <div className='nowrap'>{formatTimestamp(EXPERIMENT.profile.startTime)}</div>
+                    <div className='ellipsis'>{formatTimestamp(EXPERIMENT.profile.startTime)}</div>
                     <p className='margin'>End time</p>
-                    <div className='nowrap'>{formatTimestamp(EXPERIMENT.profile.endTime)}</div>
+                    <div className='ellipsis'>{formatTimestamp(EXPERIMENT.profile.endTime)}</div>
                 </div>
             </Stack>
             {/* learn about click -> default active key is dispatcher. */}

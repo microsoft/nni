@@ -1,6 +1,7 @@
 import React from 'react';
 import { EXPERIMENT } from '../../../static/datamodel';
 import '../../../static/style/overview/command.scss';
+import '../../../static/style/common/ellipsis.scss';
 
 export const Command1 = (): any => {
     const tuner = EXPERIMENT.profile.params.tuner;
@@ -36,9 +37,9 @@ export const Command1 = (): any => {
         <div className='basic'>
             <div>
                 <p className='command'>Training platform</p>
-                <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
+                <div className='ellipsis'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
                 <p className='lineMargin'>{title.join('/')}</p>
-                <div className='nowrap'>{builtinName.join('/')}</div>
+                <div className='ellipsis'>{builtinName.join('/')}</div>
             </div>
         </div>
     );

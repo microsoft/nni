@@ -3,6 +3,7 @@ import { TooltipHost, DirectionalHint } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import '../../../static/style/overview/command.scss';
+import '../../../static/style/common/ellipsis.scss';
 
 export const Command2 = (): any => {
     const clusterMetaData = EXPERIMENT.profile.params.clusterMetaData;
@@ -23,10 +24,10 @@ export const Command2 = (): any => {
     return (
         <div className='basic'>
             <p className='command'>Log directory</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={EXPERIMENT.profile.logDir || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {
@@ -42,10 +43,10 @@ export const Command2 = (): any => {
                 </TooltipHost>
             </div>
             <p className='lineMargin'>Trial command</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={trialCommand || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {

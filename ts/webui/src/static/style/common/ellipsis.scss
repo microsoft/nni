@@ -1,0 +1,13 @@
+.ellipsis {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.link{
+	outline: none;
+	color: #0071bc;
+	&:active, &:visited{
+		color: #0071bc;
+	}
+}

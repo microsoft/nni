@@ -6,7 +6,7 @@ import { AppContext } from '../App';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
 import Accuracy from './overview/Accuracy';
-import { ReBasicInfo } from './overview/experiment/BasicInfo';
+import { BasicInfo } from './overview/params/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
@@ -86,7 +86,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                         <Title />
                                     </TitleContext.Provider>
                                     <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
-                                        <ReBasicInfo />
+                                        <BasicInfo />
                                     </BestMetricContext.Provider>
                                 </div>
                                 {/* duration & trial numbers */}

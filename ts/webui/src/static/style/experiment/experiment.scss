@@ -1,5 +1,12 @@
+.expBackground{
+    background: #f2f2f2;
+    height: 100%;
+    .content{
+        background: #fff;
+    }
+}
+
 .experimentList{
-    border: 1px solid red;
     padding: 42px;
 
     .box{
@@ -14,8 +21,8 @@
             width: 10%;
             text-align: right;
 
-            &-button{
-                width: 80px;
+            &-button-open{
+                background: #F3F2F1;
             }
         }
     }
@@ -27,6 +34,13 @@
             position: relative;
             top: 29px;
         }
+
+        &-status{
+            width: 194px;
+        }
+        &-platform{
+            width: 150px;
+        }
     }
 
     .hidden{
@@ -37,10 +51,22 @@
         margin-left: 10px;
     }
 
-    .tag{
-        font-weight: 500;
-        background: #f2f2f2;
-        margin: 0 4px;
-        padding: 0 6px;
+    .table{
+        .id{
+            font-variant: small-caps;
+            font-size: 15px;
+        }
+    }
+
+    .tagContainer{
+
+        width: 100%;
+        
+        .tag{
+            font-weight: 500;
+            background: #f2f2f2;
+            margin: 0 4px;
+            padding: 0 6px;
+        }
     }
 }
