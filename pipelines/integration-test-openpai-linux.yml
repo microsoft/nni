@@ -6,9 +6,9 @@ schedules:
     include: [ master ]
 
 # variables set on VSO: (mostly for security concern)
-#   manager_ip
 #   pai_user
 #   pai_token
+#   manager_ip
 #   docker_hub_password
 
 jobs:
