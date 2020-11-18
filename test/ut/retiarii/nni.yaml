@@ -13,6 +13,6 @@ advisor:
   classArgs:
     strategy: debug_strategy.single_model_startegy
 trial:
-  command: python -m nni.retiarii.trial_entry
+  command: python3 -m nni.retiarii.trial_entry
   codeDir: ../..
   gpuNum: 0

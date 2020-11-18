@@ -47,6 +47,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
     def __init__(self, strategy: Union[str, Callable]):
         super(RetiariiAdvisor, self).__init__()
         register_advisor(self)  # register the current advisor as the "global only" advisor
+        self.search_space = None
 
         self.send_trial_callback: Callable[[dict], None] = None
         self.request_trial_jobs_callback: Callable[[int], None] = None
@@ -56,10 +57,19 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
         self.strategy = utils.import_(strategy) if isinstance(strategy, str) else strategy
         self.parameters_count = 0
+        _logger.info('Starting strategy...')
         threading.Thread(target=self.strategy).start()
+        _logger.info('Strategy started!')
 
     def handle_initialize(self, data):
-        pass
+        """callback for initializing the advisor
+        Parameters
+        ----------
+        data: dict
+            search space
+        """
+        self.handle_update_search_space(data)
+        send(CommandType.Initialized, '')
 
     def send_trial(self, parameters):
         """
@@ -94,7 +104,8 @@ class RetiariiAdvisor(MsgDispatcherBase):
             self.request_trial_jobs_callback(num_trials)  # pylint: disable=not-callable
 
     def handle_update_search_space(self, data):
-        pass
+        _logger.info('Received search space: {}'.format(data))
+        self.search_space = data
 
     def handle_trial_end(self, data):
         _logger.info('Trial end: {}'.format(data))  # do nothing
