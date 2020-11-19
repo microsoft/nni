@@ -264,7 +264,6 @@ class SimpleDataset:
     def __len__(self):
         return 1000
 
-@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
