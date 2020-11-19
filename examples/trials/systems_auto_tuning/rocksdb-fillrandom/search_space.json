@@ -1,0 +1,14 @@
+{
+    "write_buffer_size": {
+        "_type": "quniform",
+        "_value": [2097152, 16777216, 1048576]
+    },
+    "min_write_buffer_number_to_merge": {
+        "_type": "quniform",
+        "_value": [2, 16, 1]
+    },
+    "level0_file_num_compaction_trigger": {
+        "_type": "quniform",
+        "_value": [2, 16, 1]
+    }
+}

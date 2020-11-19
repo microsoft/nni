@@ -6,7 +6,7 @@ import { convertDuration, convertTimeAsUnit } from '../../../static/function';
 import { EditExperimentParam } from './EditExperimentParam';
 import { ExpDurationContext } from './ExpDurationContext';
 import { EditExpeParamContext } from './context';
-import { durationItem1, durationItem2 } from './commonStyle';
+import { leftProgress, durationItem2, progressHeight } from './commonStyle';
 import '../../../static/style/overview/count.scss';
 
 export const ExpDuration = (): any => (
@@ -19,7 +19,7 @@ export const ExpDuration = (): any => (
             const maxExecDurationStr = convertTimeAsUnit(maxDurationUnit, maxExecDuration).toString();
             return (
                 <Stack horizontal className='ExpDuration'>
-                    <div style={durationItem1}>
+                    <div style={leftProgress}>
                         <TooltipHost
                             content={`${convertDuration(tooltip)} remaining`}
                             directionalHint={DirectionalHint.bottomCenter}
@@ -33,7 +33,11 @@ export const ExpDuration = (): any => (
                                 }
                             }}
                         >
-                            <ProgressIndicator className={EXPERIMENT.status} percentComplete={percent} barHeight={15} />
+                            <ProgressIndicator
+                                className={EXPERIMENT.status}
+                                percentComplete={percent}
+                                barHeight={progressHeight}
+                            />
                         </TooltipHost>
                         {/* execDuration / maxDuration: 20min / 1h */}
                         <div className='exp-progress'>
