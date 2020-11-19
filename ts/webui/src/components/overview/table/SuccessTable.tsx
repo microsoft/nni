@@ -14,8 +14,9 @@ import {
 } from '@fluentui/react';
 import DefaultMetric from '../../public-child/DefaultMetric';
 import OpenRow from '../../public-child/OpenRow';
-import { convertDuration } from '../../../static/function';
+import { convertDuration, copyAndSort } from '../../../static/function';
 import { TRIALS } from '../../../static/datamodel';
+import { SortInfo } from '../../../static/interface';
 import { DETAILTABS } from '../../stateless-component/NNItabs';
 import '../../../static/style/succTable.scss';
 import '../../../static/style/tableStatus.css';
@@ -31,6 +32,7 @@ interface SuccessTableState {
     columns: IColumn[];
     source: Array<any>;
     expandRowIdList: Set<string>;
+    sortInfo: SortInfo;
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
@@ -39,6 +41,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         this.state = {
             columns: this.columns,
             source: TRIALS.table(this.props.trialIds),
+            sortInfo: { field: '', isDescend: false },
             expandRowIdList: new Set() // store expanded row's trial id
         };
     }
@@ -51,14 +54,15 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     }
 
     render(): React.ReactNode {
-        const { columns, source } = this.state;
+        const { columns, source, sortInfo } = this.state;
+        const keepSortedSource = copyAndSort(source, sortInfo.field, sortInfo.isDescend);
         const isNoneData = source.length === 0 ? true : false;
         return (
             <div id='succTable'>
                 <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
                     <DetailsList
                         columns={columns}
-                        items={source}
+                        items={keepSortedSource}
                         setKey='set'
                         compact={true}
                         onRenderRow={this.onRenderRow}
@@ -72,7 +76,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         );
     }
 
-    private onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+    private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { columns, source } = this.state;
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
@@ -86,10 +90,12 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             }
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this.copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        const newItems = copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             columns: newColumns,
-            source: newItems
+            source: newItems,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            sortInfo: { field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending }
         });
     };
 
@@ -100,7 +106,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         </React.Fragment>
     );
 
-    columns = [
+    private columns = [
         {
             key: '_expand',
             name: '',
@@ -127,8 +133,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 65,
-            maxWidth: 119,
+            minWidth: 60,
+            maxWidth: 100,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -138,8 +144,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 65,
-            maxWidth: 119,
+            minWidth: 60,
+            maxWidth: 118,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -149,7 +155,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 90,
+            minWidth: 85,
             maxWidth: 166,
             isResizable: true,
             fieldName: 'duration',
@@ -164,7 +170,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: 108,
+            minWidth: 98,
             maxWidth: 160,
             isResizable: true,
             fieldName: 'status',
@@ -176,7 +182,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 108,
+            minWidth: 100,
             maxWidth: 166,
             isResizable: true,
             data: 'number',
@@ -184,6 +190,20 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             onRender: (item: any): React.ReactNode => <DefaultMetric trialId={item.id} />
         }
     ];
+
+    private onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
+        if (!props) {
+            return null;
+        }
+        return (
+            <Sticky stickyPosition={StickyPositionType.Header} isScrollSynced>
+                {// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                defaultRender!({
+                    ...props
+                })}
+            </Sticky>
+        );
+    };
 
     private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
         const { expandRowIdList } = this.state;
@@ -201,25 +221,6 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
         return null;
     };
-
-    private onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
-        if (!props) {
-            return null;
-        }
-        return (
-            <Sticky stickyPosition={StickyPositionType.Header} isScrollSynced>
-                {// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                defaultRender!({
-                    ...props
-                })}
-            </Sticky>
-        );
-    };
-
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
-        const key = columnKey as keyof T;
-        return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
-    }
 
     private expandTrialId = (_event: any, id: string): void => {
         const { expandRowIdList } = this.state;
