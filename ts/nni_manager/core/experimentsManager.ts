@@ -4,15 +4,11 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as lockfile from 'lockfile';
 import * as os from 'os';
 import * as path from 'path';
-import * as request from 'request';
-import { Deferred } from 'ts-deferred';
 
 import { getLogger, Logger } from '../common/log';
-import { ExperimentStatus } from '../common/manager'
-import { isAlive } from '../common/utils';
+import { isAlive, withLock } from '../common/utils';
 import { ExpManager } from '../common/expmanager';
 
 
@@ -22,15 +18,14 @@ interface LockOpts {
     retryWait?: number;
 }
 
-interface AliveInfo {
-    alive: boolean;
-    timestamp: number;
+interface CrashedInfo {
+    experimentId: string;
+    isCrashed: boolean;
 }
 
-interface NewStatusInfo {
-    experimentId: string;
-    newStatus: ExperimentStatus;
-    timestamp: number;
+interface FileInfo {
+    buffer: Buffer;
+    mtime: number;
 }
 
 class ExperimentsManager implements ExpManager {
@@ -47,14 +42,24 @@ class ExperimentsManager implements ExpManager {
     }
 
     public async getExperimentsInfo(): Promise<JSON> {
-        const experimentsInformation = JSON.parse((await this.readExperimentsInfo()).toString());
+        const fileInfo = await this.readExperimentsInfo();
+        const experimentsInformation = JSON.parse(fileInfo.buffer.toString());
         const expIdList: Array<string> = Object.keys(experimentsInformation).filter((expId) => {
             return experimentsInformation[expId]['status'] !== 'STOPPED';
         });
-        const updateList: Array<NewStatusInfo> = await Promise.all(expIdList.map((expId) => {
-            return this.getUpdatedStatus(expId, experimentsInformation[expId]['pid'], experimentsInformation[expId]['port']);
-        }));
-        return this.withLock(this.updateStatus, updateList, this.experimentsPath);
+        const updateList: Array<CrashedInfo> = (await Promise.all(expIdList.map((expId) => {
+            return this.checkCrashed(expId, experimentsInformation[expId]['pid']);
+        }))).filter(crashedInfo => crashedInfo.isCrashed);
+        if (updateList.length > 0){
+            const result = await this.withLock(this.updateStatus, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
+            if (result !== undefined) {
+                return result;
+            } else {
+                return this.getExperimentsInfo();
+            }
+        } else {
+            return experimentsInformation;
+        }
     }
 
     public setExperimentPath(newPath: string): void {
@@ -69,68 +74,39 @@ class ExperimentsManager implements ExpManager {
         this.experimentsPathLock = newPath + '.lock';
     }
 
-    private async readExperimentsInfo(): Promise<Buffer> {
-        return this.withLock(fs.readFileSync, this.experimentsPath);
+    private async withLock (func: Function, ...args: any): Promise<any> {
+        return withLock(func, this.experimentsPathLock, this.lockOpts, ...args);
     }
 
-    private async withLock(func: Function, ...args: any): Promise<any> {
-        const deferred = new Deferred<any>();
-        lockfile.lock(this.experimentsPathLock, this.lockOpts, (err) => {
-            if (err) {
-                deferred.reject(err);
-            }
-            try {
-                this.log.debug('Experiments Manager: .experiment locked');
-                const result = func(...args);
-                lockfile.unlockSync(this.experimentsPathLock);
-                this.log.debug('Experiments Manager: .experiment unlocked');
-                deferred.resolve(result);
-            } catch (err) {
-                deferred.reject(err);
-            }
-        });
-        return deferred.promise;
+    private async readExperimentsInfo(): Promise<FileInfo> {
+        return this.withLock((path: string) => {
+                const buffer: Buffer = fs.readFileSync(path);
+                const mtime: number = fs.statSync(path).mtimeMs;
+                return {buffer: buffer, mtime: mtime};
+            },
+            this.experimentsPath);
     }
 
-    private async isAlive(pid: number): Promise<AliveInfo> {
-        const deferred: Deferred<AliveInfo> = new Deferred<AliveInfo>();
-        isAlive(pid).then((alive: boolean) => {
-            deferred.resolve({alive: alive, timestamp: Date.now()});
-        }).catch((err) => {
-            deferred.reject(err);
-        });
-        return deferred.promise;
+    private async checkCrashed(expId: string, pid: number): Promise<CrashedInfo> {
+        const alive: boolean = await isAlive(pid);
+        return {experimentId: expId, isCrashed: !alive}
     }
 
-    private async getUpdatedStatus(expId: string, pid: number, port: number): Promise<NewStatusInfo> {
-        const deferred: Deferred<NewStatusInfo> = new Deferred<NewStatusInfo>();
-        const alive: AliveInfo = await this.isAlive(pid);
-        if (alive.alive) {
-            request(`http://localhost:${port}/api/v1/nni/check-status`, {json: true}, (err, res, body) => {
-                if (err) {
-                    deferred.resolve({experimentId: expId, newStatus: 'ERROR', timestamp: Date.now()})
+    private updateStatus(updateList: Array<string>, timestamp: number) {
+        if (timestamp !== fs.statSync(this.experimentsPath).mtimeMs) {
+            return;
+        } else {
+            const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
+            updateList.forEach((expId: string) => {
+                if (experimentsInformation[expId]) {
+                    experimentsInformation[expId]['status'] = 'STOPPED';
                 } else {
-                    deferred.resolve({experimentId: expId, newStatus: body.status, timestamp: Date.now()})
+                    this.log.error('Experiment Manager: Experiment Id not found, this should not happen');
                 }
             });
-        } else {
-            deferred.resolve({experimentId: expId, newStatus: 'STOPPED', timestamp: alive.timestamp});
+            fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
+            return experimentsInformation;
         }
-        return deferred.promise;
-    }
-
-    private updateStatus(updateList: Array<NewStatusInfo>, experimentsPath: string): JSON {
-        const experimentsInformation = JSON.parse(fs.readFileSync(experimentsPath).toString());
-        updateList.forEach((newStatusInfo: NewStatusInfo) => {
-            if (experimentsInformation[newStatusInfo.experimentId]) {
-                if (experimentsInformation[newStatusInfo.experimentId]['statusUpdateTime'] < newStatusInfo.timestamp) {
-                    experimentsInformation[newStatusInfo.experimentId]['status'] = newStatusInfo.newStatus;
-                    experimentsInformation[newStatusInfo.experimentId]['statusUpdateTime'] = newStatusInfo.timestamp;
-                }
-            }
-        });
-        fs.writeFileSync(experimentsPath, JSON.stringify(experimentsInformation));
-        return experimentsInformation;
     }
 }
 

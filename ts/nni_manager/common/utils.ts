@@ -11,6 +11,7 @@ import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
 import * as util from 'util';
@@ -416,8 +417,28 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
+/**
+ * lock a file and 
+ */
+async function withLock(func: Function, lockPath: string, lockOpts: {[key: string]: any}, ...args: any): Promise<any> {
+    const deferred = new Deferred<any>();
+    lockfile.lock(lockPath, lockOpts, (err: any) => {
+        if (err) {
+            deferred.reject(err);
+        }
+        try {
+            const result = func(...args);
+            lockfile.unlockSync(lockPath);
+            deferred.resolve(result);
+        } catch (err) {
+            deferred.reject(err);
+        }
+    });
+    return deferred.promise;
+}
+
 export {
     countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLock,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };
