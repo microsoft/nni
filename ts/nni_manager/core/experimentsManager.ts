@@ -136,7 +136,7 @@ class ExperimentsManager implements ExpManager {
         const deferred = new Deferred<void>();
         if (this.isUndone()) {
             this.log.info('something undone');
-            setTimeout(((deferred: Deferred<void>) => {
+            setTimeout(((deferred: Deferred<void>): void => {
                 if (this.isUndone()) {
                     deferred.reject(new Error('Still has undone after 5s, forced stop.'));
                 } else {
