@@ -30,11 +30,11 @@ export class mockedeExpManager extends ExpManager {
         });
     }
 
-    public setExperimentPath(): void {
+    public setExperimentPath(newPath: string): void {
         return
     }
 
-    public setStatus(): void {
+    public setExperimentInfo(experimentId: string, key: string, value: any): void {
         return
     }
 
