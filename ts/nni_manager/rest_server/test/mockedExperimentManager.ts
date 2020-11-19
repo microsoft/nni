@@ -18,7 +18,6 @@ export class mockedeExpManager extends ExpManager {
                 "startTime": 1605246730756,
                 "endTime": "N/A",
                 "status": "RUNNING",
-                "statusUpdateTime": 1605493558545,
                 "platform": "local",
                 "experimentName": "testExp",
                 "tag": [], "pid": 11111,
@@ -32,6 +31,10 @@ export class mockedeExpManager extends ExpManager {
     }
 
     public setExperimentPath(): void {
+        return
+    }
+
+    public setStatus(): void {
         return
     }
 }

@@ -56,12 +56,12 @@ class Experiments:
     def __init__(self, home_dir=NNICTL_HOME_DIR):
         os.makedirs(home_dir, exist_ok=True)
         self.experiment_file = os.path.join(home_dir, '.experiment')
-        self.lock = get_file_lock(self.experiment_file, timeout=1, stale=10)
+        self.lock = get_file_lock(self.experiment_file, timeout=1, stale=2)
         with self.lock:
             self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
-                       statusUpdateTime=int(time.time() * 1000), tag=[], pid=None, webuiUrl=[], logDir=[]):
+                       tag=[], pid=None, webuiUrl=[], logDir=[]):
         '''set {key:value} paris to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()
@@ -70,7 +70,6 @@ class Experiments:
             self.experiments[expId]['startTime'] = startTime
             self.experiments[expId]['endTime'] = endTime
             self.experiments[expId]['status'] = status
-            self.experiments[expId]['statusUpdateTime'] = statusUpdateTime
             self.experiments[expId]['platform'] = platform
             self.experiments[expId]['experimentName'] = experiment_name
             self.experiments[expId]['tag'] = tag
@@ -88,20 +87,6 @@ class Experiments:
             self.experiments[expId][key] = value
             self.write_file()
             return True
-
-    def update_experiment_status(self, expId, status, statusUpdateTime):
-        '''Update experiment'''
-        with self.lock:
-            self.experiments = self.read_file()
-            if expId not in self.experiments:
-                return False
-            if statusUpdateTime > self.experiments[expId]['statusUpdateTime']:
-                self.experiments[expId]['status'] = status
-                self.experiments[expId]['statusUpdateTime'] = statusUpdateTime
-                self.write_file()
-                return True
-            else:
-                return False
 
     def remove_experiment(self, expId):
         '''remove an experiment by id'''

@@ -32,7 +32,6 @@ def get_experiment_time(port):
         return content.get('startTime'), content.get('endTime')
     return None, None
 
-# need to modify to return (status, statusUpdateTime)
 def get_experiment_status(port):
     '''get the status of an experiment'''
     result, response = check_rest_server_quick(port)
@@ -52,17 +51,9 @@ def update_experiment():
                 nni_config = Config(key)
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
-                    experiment_config.update_experiment_status(key, 'STOPPED', int(time.time() * 1000))
+                    experiment_config.update_experiment(key, 'status', 'STOPPED')
+                    experiment_config.update_experiment(key, 'endTime', int(time.time() * 1000))
                     continue
-                rest_port = nni_config.get_config('restServerPort')
-                startTime, endTime = get_experiment_time(rest_port)
-                if startTime != experiment_dict[key]['startTime']:
-                    experiment_config.update_experiment(key, 'startTime', startTime)
-                if endTime != experiment_dict[key]['endTime']:
-                    experiment_config.update_experiment(key, 'endTime', endTime)
-                status = get_experiment_status(rest_port)
-                if status:
-                    experiment_config.update_experiment_status(key, status, int(time.time() * 1000))
 
 def check_experiment_id(args, update=True):
     '''check if the id is valid
@@ -241,7 +232,7 @@ def stop_experiment(args):
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
             print_normal('Stop experiment success.')
-            experiment_config.update_experiment_status(experiment_id, 'STOPPED', int(time.time() * 1000))
+            experiment_config.update_experiment(experiment_id, 'status', 'STOPPED')
             experiment_config.update_experiment(experiment_id, 'endTime', int(time.time() * 1000))
 
 def trial_ls(args):
@@ -981,7 +972,6 @@ def load_experiment(args):
                                      experiment_metadata.get('experimentName'),
                                      experiment_metadata.get('endTime'),
                                      experiment_metadata.get('status'),
-                                     experiment_metadata.get('statusUpdateTime'),
                                      experiment_metadata.get('tag'),
                                      experiment_metadata.get('pid'),
                                      experiment_metadata.get('webUrl'),

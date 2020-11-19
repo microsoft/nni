@@ -19,7 +19,6 @@ describe('Unit test for experiment manager', function () {
             "startTime": 1605246730756,
             "endTime": "N/A",
             "status": "RUNNING",
-            "statusUpdateTime": 1605493558545,
             "platform": "local",
             "experimentName": "testExp",
             "tag": [], "pid": 11111,
