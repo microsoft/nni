@@ -1,7 +1,10 @@
+import logging
 from typing import *
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
+
+_logger = logging.getLogger(__name__)
 
 # TODO: fix: inputs is a list, how to deal with single element list and single element
 
@@ -22,11 +25,9 @@ def _convert_name(name: str) -> str:
     """
     return name.replace('.', '__')
 
-def _convert_names(names: List[str]) -> List[str]:
-    return [_convert_name(name) for name in names]
-
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
+    _logger.info('sorted_incoming_edges: {}'.format(edges))
     if not edges:
         return []
     if all(edge.tail_slot is None for edge in edges):
@@ -43,9 +44,9 @@ def _format_inputs(node: Node) -> List[str]:
     for edge in edges:
         if edge.head.name == '_inputs':
             assert isinstance(edge.head_slot, int)
-            if node.graph.input_names is not None:
+            if edge.head.operation.io_names is not None:
                 # when input has names, e.g., forward(self, tensor1, tensor2, another_one)
-                inputs.append(node.graph.input_names[edge.head_slot])
+                inputs.append(edge.head.operation.io_names[edge.head_slot])
             else:
                 # when input has no name, e.g., forward(*_inputs)
                 inputs.append('_inputs[{}]'.format(edge.head_slot))
@@ -74,11 +75,12 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             if node_code is not None:
                 node_codes.append(node_code)
 
-    if graph.input_names is None:
-        input_code = '*_inputs'
-    else:
-        # TODO: remove _convert_names (after merging input_names and input_node)
-        input_code = ', '.join(_convert_names(graph.input_names))
+    #if graph.input_names is None:
+    #    input_code = '*_inputs'
+    #else:
+    #    # TODO: remove _convert_names (after merging input_names and input_node)
+    #    input_code = ', '.join(_convert_names(graph.input_names))
+    input_code = graph.input_node.operation.to_forward_code(None, None, None)
 
     edge_codes = []
     sorted_nodes = graph.topo_sort()
@@ -89,15 +91,18 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
 
     # TODO: refactor graph output_node
     output_names = _format_inputs(graph.output_node)
-    output_names = _convert_names(output_names)
     if not output_names:
-        output_names = ['None']
+        raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))
+    output_code = graph.output_node.operation.to_forward_code(None, None, output_names)
+    #output_names = _convert_names(output_names)
+    #if not output_names:
+    #    output_names = ['None']
 
     linebreak = '\n        '
     return import_pkgs, _PyTorchModelTemplate.format(
         graph_name=('Graph' if graph_name == '_graph' else _convert_name(graph_name)),
         inputs=input_code,
-        outputs=', '.join(output_names),
+        outputs=output_code,
         nodes=linebreak.join(node_codes),
         edges=linebreak.join(edge_codes)
     )
