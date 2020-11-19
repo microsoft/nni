@@ -155,6 +155,9 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         self._optimizers = []
         self._trainers = []
         self._loss_fn = nn.CrossEntropyLoss()
+        self.max_steps = None
+        if 'max_steps' in self.kwargs:
+            self.max_steps = self.kwargs['max_steps']
 
         for m in self.kwargs['model_kwargs']:
             if m['use_input']:
@@ -218,6 +221,9 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                 opt.step()
             if batch_idx % 50 == 0:
                 nni.report_intermediate_result(report_loss)
+            if self.max_steps and batch_idx >= self.max_steps:
+                return
+
     
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, Any]:
         x, y = self.training_step_before_model(batch, batch_idx)
