@@ -495,6 +495,11 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 
     # start a new experiment
     print_normal('Starting experiment...')
+    # save experiment information
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
@@ -515,13 +520,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     else:
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
-
-    # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'], pid=rest_process.pid,
-                                            webuiUrl=web_ui_url_list, logDir=log_dir)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:

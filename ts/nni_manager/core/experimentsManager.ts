@@ -81,18 +81,18 @@ class ExperimentsManager implements ExpManager {
                 }
             });
         } catch (err) {
-            this.log.error(err.message);
+            this.log.error(err);
             this.log.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
-            this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo, 100, experimentId, key, value);
+            this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 100, experimentId, key, value);
         }
     }
 
     private async withLock (func: Function, ...args: any): Promise<any> {
-        return withLock(func, this.experimentsPath, {stale: 2 * 1000, retries: 100, retryWait: 100}, ...args);
+        return withLock(func.bind(this), this.experimentsPath, {stale: 2 * 1000, retries: 100, retryWait: 100}, ...args);
     }
 
     private withLockSync (func: Function, ...args: any): any {
-        return withLockSync(func, this.experimentsPath, {stale: 2 * 1000}, ...args);
+        return withLockSync(func.bind(this), this.experimentsPath, {stale: 2 * 1000}, ...args);
     }
 
     private async readExperimentsInfo(): Promise<FileInfo> {
@@ -109,7 +109,7 @@ class ExperimentsManager implements ExpManager {
         return {experimentId: expId, isCrashed: !alive}
     }
 
-    private updateAllStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | any {
+    private updateAllStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | undefined {
         if (timestamp !== fs.statSync(this.experimentsPath).mtimeMs) {
             return;
         } else {
@@ -135,14 +135,16 @@ class ExperimentsManager implements ExpManager {
     private async cleanUp(): Promise<void> {
         const deferred = new Deferred<void>();
         if (this.isUndone()) {
-            setTimeout((deferred: Deferred<void>) => {
+            this.log.info('something undone');
+            setTimeout(((deferred: Deferred<void>) => {
                 if (this.isUndone()) {
                     deferred.reject(new Error('Still has undone after 5s, forced stop.'));
                 } else {
                     deferred.resolve();
                 }
-            }, 5 * 1000, deferred);
+            }).bind(this), 5 * 1000, deferred);
         } else {
+            this.log.info('all done');
             deferred.resolve();
         }
         return deferred.promise;

@@ -795,10 +795,8 @@ class NNIManager implements Manager {
     }
 
     private setEndtime(): void {
-        if (status !== this.status.status) {
-            this.experimentProfile.endTime = Date.now();
-            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
-        }
+        this.experimentProfile.endTime = Date.now();
+        this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
     }
 
     private createEmptyExperimentProfile(): ExperimentProfile {
