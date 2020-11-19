@@ -3,11 +3,28 @@ from typing import *
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
 
+# TODO: fix: inputs is a list, how to deal with single element list and single element
 
-def model_to_pytorch_script(model: Model, placement = None) -> str:
-    graphs = [graph_to_pytorch_model(name, cell, placement = placement) for name, cell in model.graphs.items()]
-    return _PyTorchScriptTemplate.format('\n\n'.join(graphs)).strip()
 
+def model_to_pytorch_script(model: Model) -> str:
+    graphs = []
+    total_pkgs = set()
+    for name, cell in model.graphs.items():
+        import_pkgs, graph_code = graph_to_pytorch_model(name, cell)
+        graphs.append(graph_code)
+        total_pkgs.update(import_pkgs)
+    # TODO: set correct PATH for the packages (after launch refactor)
+    pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
+    return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
+
+def _convert_name(name: str) -> str:
+    """
+    Convert the names using separator '.' to valid variable name in code
+    """
+    return name.replace('.', '__')
+
+def _convert_names(names: List[str]) -> List[str]:
+    return [_convert_name(name) for name in names]
 
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
@@ -21,8 +38,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
             return edges
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
 
-
-def _format_inputs(node: Node) -> str:
+def _format_inputs(node: Node) -> List[str]:
     edges = _sorted_incoming_edges(node)
     inputs = []
     for edge in edges:
@@ -41,46 +57,52 @@ def _format_inputs(node: Node) -> str:
             else:
                 # when the input comes from a multi-output operator: needs to know which one it comes from
                 inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
-    return ', '.join(inputs)
-
+    return inputs
 
 def graph_to_pytorch_model(graph_name: str, graph: Graph, placement = None) -> str:
     nodes = graph.topo_sort()  # FIXME: topological sort is needed here
 
     # handle module node and function node differently
     # only need to generate code for module here
+    import_pkgs = set()
     node_codes = []
     placement_codes = []
     for node in nodes:
         if node.operation:
-            init_code = node.operation.to_init_code(node.name)
-            if placement and node in placement and len(init_code) > 0:
-                node_codes.append(f"{init_code}.to('{placement[node].device}')")
-            else:
-                node_codes.append(init_code)
-
+            pkg_name = node.operation.get_import_pkg()
+            if pkg_name is not None:
+                import_pkgs.add(pkg_name)
+            node_code = node.operation.to_init_code(node.name)
+            if node_code is not None:
+                if placement and node in placement and len(init_code) > 0:
+                    node_codes.append(f"{init_code}.to('{placement[node].device}')")
+                else:
+                    node_codes.append(node_code)
 
     if graph.input_names is None:
         input_code = '*_inputs'
     else:
-        input_code = ', '.join(graph.input_names)
+        # TODO: remove _convert_names (after merging input_names and input_node)
+        input_code = ', '.join(_convert_names(graph.input_names))
 
     edge_codes = []
-
-    for node in nodes:
+    sorted_nodes = graph.topo_sort()
+    for node in sorted_nodes:
         if node.operation:
             inputs = _format_inputs(node)
             edge_codes.append(node.operation.to_forward_code(node.name, node.name, inputs))
 
-    output_code = _format_inputs(graph.output_node)
-    if not output_code:
-        output_code = 'None'
+    # TODO: refactor graph output_node
+    output_names = _format_inputs(graph.output_node)
+    output_names = _convert_names(output_names)
+    if not output_names:
+        output_names = ['None']
 
     linebreak = '\n        '
-    return _PyTorchModelTemplate.format(
-        graph_name=('Graph' if graph_name == '_graph' else graph_name),
+    return import_pkgs, _PyTorchModelTemplate.format(
+        graph_name=('Graph' if graph_name == '_graph' else _convert_name(graph_name)),
         inputs=input_code,
-        outputs=output_code,
+        outputs=', '.join(output_names),
         nodes=linebreak.join(node_codes),
         edges=linebreak.join(edge_codes)
     )
@@ -93,6 +115,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+import sys
+sys.path.append("test/convert_test")
+
+{}
 
 {}
 '''
