@@ -11,7 +11,7 @@ from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 
 from .base import BaseGraphData
 
-
+_logger = logging.getLogger('nni.msg_dispatcher_base')
 class CGOExecutionEngine(AbstractExecutionEngine):
     def __init__(self, n_model_per_graph = 4) -> None:
         self._listeners: List[AbstractGraphListener] = []
@@ -35,6 +35,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._optimizers.append(opt)
 
     def submit_models(self, *models: List[Model]) -> None:
+        _logger.info(f'{len(models)} Models are submitted')
         logical = self._build_logical(models)
         
         for opt in self._optimizers:
@@ -130,6 +131,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         Initialize the model, hand it over to trainer.
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
+        _logger.info('CGO_ENGINE trial parameters received')
         with open('_generated_model.py', 'w') as f:
             f.write(graph_data.model_script)
         # with open('_debug_graph_data.json', 'w') as f:

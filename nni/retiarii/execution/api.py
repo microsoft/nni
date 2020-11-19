@@ -1,4 +1,5 @@
 import time
+import os
 from typing import *
 
 from ..graph import Model, ModelStatus
@@ -9,7 +10,6 @@ from .listener import DefaultListener
 
 _execution_engine = None
 _default_listener = None
-_default_engine = 'CGO'
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'submit_models', 'wait_models', 'query_available_resources']
@@ -21,7 +21,7 @@ def get_execution_engine() -> BaseExecutionEngine:
     """
     global _execution_engine
     if _execution_engine is None:
-        if _default_engine == 'CGO':
+        if os.environ.get('CGO') == 'true':
             _execution_engine = CGOExecutionEngine()
         else:
             _execution_engine = BaseExecutionEngine()
