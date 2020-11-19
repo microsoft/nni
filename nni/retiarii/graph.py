@@ -537,7 +537,10 @@ class Node:
         return node
 
     def _dump(self) -> Any:
+<<<<<<< HEAD
         # FIXME: IO Node does not have member variable parameters
+=======
+>>>>>>> 8af731463df46f6c73c933bdc45ed9a4ecd4e422
         ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
         if isinstance(self.operation, Cell):
             ret['operation']['cell_name'] = self.operation.cell_name

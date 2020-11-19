@@ -86,7 +86,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     return import_pkgs, _PyTorchModelTemplate.format(
         graph_name=('Graph' if graph_name == '_graph' else graph_name),
         inputs=input_code,
-        outputs=output_code,
+        outputs=', '.join(output_names),
         nodes=linebreak.join(node_codes),
         edges=linebreak.join(edge_codes)
     )

@@ -4,6 +4,11 @@ from . import debug_configs
 
 __all__ = ['Operation', 'Cell']
 
+def _convert_name(name: str) -> str:
+    """
+    Convert the names using separator '.' to valid variable name in code
+    """
+    return name.replace('.', '__')
 
 class Operation:
     """
@@ -163,7 +168,8 @@ class Cell(PyTorchOperation):
         self.parameters = parameters
 
     def _to_class_name(self):
-        return self.cell_name
+        # TODO: ugly, think about how to refactor this part
+        return _convert_name(self.cell_name)
 
 
 class _IOPseudoOperation(Operation):
