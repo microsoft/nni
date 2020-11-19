@@ -6,6 +6,7 @@ import copy
 from enum import Enum
 import json
 from typing import (Any, Dict, List, Optional, Tuple, overload)
+from collections import defaultdict
 
 from .operation import Cell, Operation, _PseudoOperation
 
@@ -50,6 +51,10 @@ class TrainingConfig:
             'module': self.module,
             'kwargs': self.kwargs
         }
+
+    def __eq__(self, other):
+        return self.module == other.module and \
+            self.kwargs == other.kwargs
 
 
 class Model:
@@ -258,9 +263,41 @@ class Graph:
         Returns nodes whose operation is specified typed.
         """
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
-
+    
     def topo_sort(self) -> List['Node']:  # TODO
-        ...
+        sorted_nodes = []  # list of nodes' name
+        rest_nodes = set()  # set of nodes' name
+        in_degree = defaultdict(int)  # node name -> in degree
+        successors = defaultdict(list)  # node name -> list of successors' name
+        name_to_node = { node.name: node for node in self.nodes}
+
+
+        for edge in self.edges:
+            in_degree[edge.tail.name] += 1
+            successors[edge.head.name].append(edge.tail.name)
+            rest_nodes.add(edge.head.name)
+            rest_nodes.add(edge.tail.name)
+
+        while rest_nodes:
+            heads = [node for node in rest_nodes if in_degree[node] == 0]
+            
+            if not heads:
+                raise ValueError('Cycle detected in graph {}'.format(self.id))
+            head = heads[0]
+            rest_nodes.remove(head)
+            sorted_nodes.append(head)
+            for successor in successors[head]:
+                in_degree[successor] -= 1
+
+        nodes = [name_to_node[name] for name in sorted_nodes]
+        return nodes
+        
+    def get_node_by_id(self, id: int) -> Optional['Node']:
+        """
+        Returns the node which has specified name; or returns `None` if no node has this name.
+        """
+        found = [node for node in self.nodes if node.id == id]
+        return found[0] if found else None
 
     def fork(self) -> 'Graph':
         """
@@ -272,8 +309,8 @@ class Graph:
     def __eq__(self, other: object) -> bool:
         return self is other
 
-    def _fork_to(self, model: Model) -> 'Graph':
-        new_graph = Graph(model, self.id, self.name, _internal=True)._register()
+    def _fork_to(self, model: Model, name_prefix='') -> 'Graph':
+        new_graph = Graph(model, self.id, name_prefix+self.name, _internal=True)._register()
         new_graph.input_names = self.input_names
         new_graph.output_names = self.output_names
 
@@ -450,7 +487,9 @@ class Node:
         if isinstance(self.operation, Cell):
             ret['cell'] = self.operation.cell_name
         return ret
-
+    
+    def __hash__(self) -> int:
+        return hash(self.__repr__())
 
 class Edge:
     """

@@ -4,8 +4,8 @@ from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 from ..operation import Operation, Cell
 
 
-def model_to_pytorch_script(model: Model) -> str:
-    graphs = [graph_to_pytorch_model(name, cell) for name, cell in model.graphs.items()]
+def model_to_pytorch_script(model: Model, placement = None) -> str:
+    graphs = [graph_to_pytorch_model(name, cell, placement = placement) for name, cell in model.graphs.items()]
     return _PyTorchScriptTemplate.format('\n\n'.join(graphs)).strip()
 
 
@@ -44,15 +44,21 @@ def _format_inputs(node: Node) -> str:
     return ', '.join(inputs)
 
 
-def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
-    nodes = graph.nodes  # FIXME: topological sort is needed here
+def graph_to_pytorch_model(graph_name: str, graph: Graph, placement = None) -> str:
+    nodes = graph.topo_sort()  # FIXME: topological sort is needed here
 
     # handle module node and function node differently
     # only need to generate code for module here
     node_codes = []
+    placement_codes = []
     for node in nodes:
         if node.operation:
-            node_codes.append(node.operation.to_init_code(node.name))
+            init_code = node.operation.to_init_code(node.name)
+            if placement and node in placement and len(init_code) > 0:
+                node_codes.append(f"{init_code}.to('{placement[node].device}')")
+            else:
+                node_codes.append(init_code)
+
 
     if graph.input_names is None:
         input_code = '*_inputs'

@@ -3,11 +3,13 @@ from typing import *
 
 from ..graph import Model, ModelStatus
 from .base import BaseExecutionEngine
+from .cgo_engine import CGOExecutionEngine
 from .interface import *
 from .listener import DefaultListener
 
 _execution_engine = None
 _default_listener = None
+_default_engine = 'CGO'
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'submit_models', 'wait_models', 'query_available_resources']
@@ -19,7 +21,10 @@ def get_execution_engine() -> BaseExecutionEngine:
     """
     global _execution_engine
     if _execution_engine is None:
-        _execution_engine = BaseExecutionEngine()
+        if _default_engine == 'CGO':
+            _execution_engine = CGOExecutionEngine()
+        else:
+            _execution_engine = BaseExecutionEngine()
     return _execution_engine
 
 

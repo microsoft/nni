@@ -115,7 +115,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
         if isinstance(value, dict):
-            return value['default']
+            if 'default' in value:
+                return value['default']
+            else:
+                return value
         return value
 
 

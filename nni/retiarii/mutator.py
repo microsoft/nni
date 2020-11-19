@@ -1,25 +1,25 @@
-from typing import (Any, Iterable, List, Optional)
-
-from .graph import Model
+from __future__ import annotations
+from typing import *
+from .graph import *
 
 
 __all__ = ['Sampler', 'Mutator']
 
 
-Choice = Any
+Choice = NewType('Choice', Any)
 
 
 class Sampler:
     """
     Handles `Mutator.choice()` calls.
     """
-    def choice(self, candidates: List[Choice], mutator: 'Mutator', model: Model, index: int) -> Choice:
+    def choice(self, candidates: List[Choice], mutator: Mutator, model: Model, index: int) -> Choice:
         raise NotImplementedError()
 
-    def mutation_start(self, mutator: 'Mutator', model: Model) -> None:
+    def mutation_start(self, mutator: Mutator, model: Model) -> None:
         pass
 
-    def mutation_end(self, mutator: 'Mutator', model: Model) -> None:
+    def mutation_end(self, mutator: Mutator, model: Model) -> None:
         pass
 
 
@@ -44,12 +44,11 @@ class Mutator:
         self._cur_model: Optional[Model] = None
         self._cur_choice_idx: Optional[int] = None
 
-    def bind_sampler(self, sampler: Sampler) -> 'Mutator':
+    def bind_sampler(self, sampler: Sampler) -> Mutator:
         """
         Set the sampler which will handle `Mutator.choice` calls.
         """
         self.sampler = sampler
-        return self
 
     def apply(self, model: Model) -> Model:
         """
@@ -58,7 +57,6 @@ class Mutator:
 
         The model will be copied before mutation and the original model will not be modified.
         """
-        assert self.sampler is not None
         copy = model.fork()
         self._cur_model = copy
         self._cur_choice_idx = 0
@@ -95,7 +93,6 @@ class Mutator:
         """
         Ask sampler to make a choice.
         """
-        assert self.sampler is not None and self._cur_model is not None and self._cur_choice_idx is not None
         ret = self.sampler.choice(list(candidates), self, self._cur_model, self._cur_choice_idx)
         self._cur_choice_idx += 1
         return ret

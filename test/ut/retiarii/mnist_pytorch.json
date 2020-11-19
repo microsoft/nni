@@ -41,6 +41,7 @@
     "_training_config": {
         "module": "nni.retiarii.trainer.PyTorchImageClassificationTrainer",
         "kwargs": {
+            "dataset_cls": "MNIST",
             "dataset_kwargs": {
                 "root": "data/mnist",
                 "download": true
@@ -48,6 +49,7 @@
             "dataloader_kwargs": {
                 "batch_size": 32
             },
+            "optimizer_cls" : "SGD",
             "optimizer_kwargs": {
                 "lr": 1e-3
             },

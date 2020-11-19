@@ -1,4 +1,4 @@
-from .execution import *
+from .operation import Operation
 from .graph import *
+from .execution import *
 from .mutator import *
-from .operation import *
