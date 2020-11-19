@@ -37,4 +37,8 @@ export class mockedeExpManager extends ExpManager {
     public setStatus(): void {
         return
     }
+
+    public stop(): Promise<void> {
+        return new Promise<void>(()=>{});
+    }
 }

@@ -197,6 +197,8 @@ process.on(getStopSignal(), async () => {
     try {
         const nniManager: Manager = component.get(Manager);
         await nniManager.stopExperiment();
+        const experimentManager: ExpManager = component.get(ExpManager);
+        await experimentManager.stop();
         const ds: DataStore = component.get(DataStore);
         await ds.close();
         const restServer: NNIRestServer = component.get(NNIRestServer);

@@ -462,7 +462,7 @@ class NNIManager implements Manager {
             }
         }
         await this.trainingService.cleanUp();
-        this.experimentProfile.endTime = Date.now();
+        this.setEndtime();
         await this.storeExperimentProfile();
         this.setStatus('STOPPED');
     }
@@ -587,7 +587,7 @@ class NNIManager implements Manager {
                     assert(allFinishedTrialJobNum <= waitSubmittedToFinish);
                     if (allFinishedTrialJobNum >= waitSubmittedToFinish) {
                         this.setStatus('DONE');
-                        this.experimentProfile.endTime = Date.now();
+                        this.setEndtime();
                         await this.storeExperimentProfile();
                         // write this log for travis CI
                         this.log.info('Experiment done.');
@@ -790,7 +790,14 @@ class NNIManager implements Manager {
         if (status !== this.status.status) {
             this.log.info(`Change NNIManager status from: ${this.status.status} to: ${status}`);
             this.status.status = status;
-            this.experimentManager.setStatus(this.experimentProfile.id, status);
+            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'status', this.status.status);
+        }
+    }
+
+    private setEndtime(): void {
+        if (status !== this.status.status) {
+            this.experimentProfile.endTime = Date.now();
+            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
         }
     }
 

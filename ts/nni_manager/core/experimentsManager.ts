@@ -10,7 +10,7 @@ import * as path from 'path';
 import { getLogger, Logger } from '../common/log';
 import { isAlive, withLock, withLockSync, getExperimentsInfoPath } from '../common/utils';
 import { ExpManager } from '../common/expmanager';
-import { ExperimentStatus } from '../common/manager';
+import { Deferred } from 'ts-deferred';
 
 interface CrashedInfo {
     experimentId: string;
@@ -25,11 +25,12 @@ interface FileInfo {
 class ExperimentsManager implements ExpManager {
     private experimentsPath: string;
     private log: Logger;
-    private statusUpdateTimer: any;
+    private profileUpdateTimer: {[key: string]: any};
 
     constructor() {
         this.experimentsPath = getExperimentsInfoPath();
         this.log = getLogger();
+        this.profileUpdateTimer = {};
     }
 
     public async getExperimentsInfo(): Promise<JSON> {
@@ -42,7 +43,7 @@ class ExperimentsManager implements ExpManager {
             return this.checkCrashed(expId, experimentsInformation[expId]['pid']);
         }))).filter(crashedInfo => crashedInfo.isCrashed);
         if (updateList.length > 0){
-            const result = await this.withLock(this.updateStatus, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
+            const result = await this.withLock(this.updateAllStatus, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
             if (result !== undefined) {
                 return result;
             } else {
@@ -64,16 +65,16 @@ class ExperimentsManager implements ExpManager {
         this.experimentsPath = newPath;
     }
 
-    public setStatus(experimentId: string, status: ExperimentStatus): void {
+    public setExperimentInfo(experimentId: string, key: string, value: any): void {
         try {
-            if (this.statusUpdateTimer !== undefined) {
-                clearTimeout(this.statusUpdateTimer);
-                this.statusUpdateTimer = undefined;
+            if (this.profileUpdateTimer[key] !== undefined) {
+                clearTimeout(this.profileUpdateTimer[key]);
+                this.profileUpdateTimer[key] = undefined;
             }
             this.withLockSync(() => {
                 const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
                 if (experimentsInformation[experimentId]) {
-                    experimentsInformation[experimentId]['status'] = status;
+                    experimentsInformation[experimentId][key] = value;
                     fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
                 } else {
                     this.log.error(`Experiment Manager: Experiment Id ${experimentId} not found, this should not happen`);
@@ -81,8 +82,8 @@ class ExperimentsManager implements ExpManager {
             });
         } catch (err) {
             this.log.error(err.message);
-            this.log.debug(`Experiment Manager: Retry set status: ${experimentId} ${status}`);
-            this.statusUpdateTimer = setTimeout(this.setStatus, 100, experimentId, status);
+            this.log.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
+            this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo, 100, experimentId, key, value);
         }
     }
 
@@ -108,7 +109,7 @@ class ExperimentsManager implements ExpManager {
         return {experimentId: expId, isCrashed: !alive}
     }
 
-    private updateStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | any {
+    private updateAllStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | any {
         if (timestamp !== fs.statSync(this.experimentsPath).mtimeMs) {
             return;
         } else {
@@ -123,6 +124,34 @@ class ExperimentsManager implements ExpManager {
             fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
             return experimentsInformation;
         }
+    }
+
+    public async stop(): Promise<void> {
+        this.log.debug('Stopping experiment manager.');
+        await this.cleanUp().catch(err=>this.log.error(err.message));
+        this.log.debug('Experiment stopped.');
+    }
+
+    private async cleanUp(): Promise<void> {
+        const deferred = new Deferred<void>();
+        if (this.isUndone()) {
+            setTimeout((deferred: Deferred<void>) => {
+                if (this.isUndone()) {
+                    deferred.reject(new Error('Still has undone after 5s, forced stop.'));
+                } else {
+                    deferred.resolve();
+                }
+            }, 5 * 1000, deferred);
+        } else {
+            deferred.resolve();
+        }
+        return deferred.promise;
+    }
+
+    private isUndone(): boolean {
+        return Object.keys(this.profileUpdateTimer).filter((key: string) => {
+            return this.profileUpdateTimer[key] !== undefined;
+        }).length > 0;
     }
 }
 
