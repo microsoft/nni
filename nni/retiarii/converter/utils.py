@@ -1,5 +1,11 @@
 def build_full_name(prefix, name, seq=None):
     if seq is None:
-        return '{}.{}'.format(prefix, name)
+        return '{}__{}'.format(prefix, name)
     else:
-        return '{}.{}{}'.format(prefix, name, str(seq))
+        return '{}__{}{}'.format(prefix, name, str(seq))
+
+def _convert_name(name: str) -> str:
+    """
+    Convert the names using separator '.' to valid variable name in code
+    """
+    return name.replace('.', '__')

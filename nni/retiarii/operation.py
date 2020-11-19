@@ -4,11 +4,6 @@ from . import debug_configs
 
 __all__ = ['Operation', 'Cell']
 
-def _convert_name(name: str) -> str:
-    """
-    Convert the names using separator '.' to valid variable name in code
-    """
-    return name.replace('.', '__')
 
 class Operation:
     """
@@ -98,7 +93,6 @@ class PyTorchOperation(Operation):
             return None
 
     def to_init_code(self, field: str) -> str:
-        field = _convert_name(field)
         if self._to_class_name() is not None:
             assert 'positional_args' not in self.parameters
             kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
@@ -106,9 +100,6 @@ class PyTorchOperation(Operation):
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
-        field = _convert_name(field)
-        output = _convert_name(output)
-        inputs = [_convert_name(_input) for _input in inputs]
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
@@ -172,8 +163,7 @@ class Cell(PyTorchOperation):
         self.parameters = parameters
 
     def _to_class_name(self):
-        # TODO: ugly, think about how to refactor this part
-        return _convert_name(self.cell_name)
+        return self.cell_name
 
 
 class _IOPseudoOperation(Operation):
@@ -193,13 +183,13 @@ class _IOPseudoOperation(Operation):
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
         if inputs is not None:
             # for output node
-            return ', '.join([_convert_name(name) for name in inputs])
+            return ', '.join(inputs)
         else:
             # for input node
             if self.io_names is None:
                 return '*_inputs'
             else:
-                return ', '.join([_convert_name(name) for name in self.io_names])
+                return ', '.join(self.io_names)
 
     def __bool__(self) -> bool:
         return False

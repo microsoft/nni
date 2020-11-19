@@ -19,12 +19,6 @@ def model_to_pytorch_script(model: Model) -> str:
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
     return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
-def _convert_name(name: str) -> str:
-    """
-    Convert the names using separator '.' to valid variable name in code
-    """
-    return name.replace('.', '__')
-
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
     _logger.info('sorted_incoming_edges: {}'.format(edges))
@@ -100,7 +94,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
 
     linebreak = '\n        '
     return import_pkgs, _PyTorchModelTemplate.format(
-        graph_name=('Graph' if graph_name == '_graph' else _convert_name(graph_name)),
+        graph_name=('Graph' if graph_name == '_graph' else graph_name),
         inputs=input_code,
         outputs=output_code,
         nodes=linebreak.join(node_codes),
