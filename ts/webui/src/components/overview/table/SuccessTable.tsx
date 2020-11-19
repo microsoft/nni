@@ -85,7 +85,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             job with <span>{DETAILTABS}</span> button.
         </React.Fragment>
     );
-    
+
     columns = [
         {
             key: '_expand',
@@ -100,6 +100,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                             transform: `rotate(${this.state.expandRowIdList.has(item.id) ? 90 : 0}deg)`
                         }
                     }}
+                    className='cursor'
                     onClick={this.expandTrialId.bind(this, Event, item.id)}
                 />
             ),
@@ -195,13 +196,13 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     private expandTrialId = (_event: any, id: string): void => {
         const { expandRowIdList } = this.state;
         const { updateOverviewPage } = this.props;
-        const a = expandRowIdList;
-        if (a.has(id)) {
-            a.delete(id);
+        const copyExpandList = expandRowIdList;
+        if (copyExpandList.has(id)) {
+            copyExpandList.delete(id);
         } else {
-            a.add(id);
+            copyExpandList.add(id);
         }
-        this.setState(() => ({ expandRowIdList: a }));
+        this.setState(() => ({ expandRowIdList: copyExpandList }));
         updateOverviewPage();
     };
 }
