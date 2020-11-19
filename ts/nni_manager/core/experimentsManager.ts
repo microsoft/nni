@@ -64,7 +64,7 @@ class ExperimentsManager implements ExpManager {
         this.experimentsPath = newPath;
     }
 
-    public setStatus(experimentId: string, status: ExperimentStatus) {
+    public setStatus(experimentId: string, status: ExperimentStatus): void {
         try {
             if (this.statusUpdateTimer !== undefined) {
                 clearTimeout(this.statusUpdateTimer);
@@ -108,7 +108,7 @@ class ExperimentsManager implements ExpManager {
         return {experimentId: expId, isCrashed: !alive}
     }
 
-    private updateStatus(updateList: Array<string>, timestamp: number) {
+    private updateStatus(updateList: Array<string>, timestamp: number): {[key: string]: any} | any {
         if (timestamp !== fs.statSync(this.experimentsPath).mtimeMs) {
             return;
         } else {
