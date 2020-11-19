@@ -233,10 +233,6 @@ class Graph:
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
 
-        # TODO: why not merge the names into input_node and output_node???
-        #self.input_names: Optional[List[str]] = None
-        #self.output_names: Optional[List[str]] = None
-
         self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _IOPseudoOperation('_inputs'), _internal=True)
         self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _IOPseudoOperation('_outputs'), _internal=True)
         self.hidden_nodes: List[Node] = []

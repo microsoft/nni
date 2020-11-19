@@ -6,7 +6,6 @@ from ..operation import Operation, Cell
 
 _logger = logging.getLogger(__name__)
 
-# TODO: fix: inputs is a list, how to deal with single element list and single element
 
 def model_to_pytorch_script(model: Model) -> str:
     graphs = []
@@ -54,7 +53,7 @@ def _format_inputs(node: Node) -> List[str]:
     return inputs
 
 def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
-    nodes = graph.nodes  # FIXME: topological sort is needed here
+    nodes = graph.nodes
 
     # handle module node and function node differently
     # only need to generate code for module here
@@ -69,11 +68,6 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             if node_code is not None:
                 node_codes.append(node_code)
 
-    #if graph.input_names is None:
-    #    input_code = '*_inputs'
-    #else:
-    #    # TODO: remove _convert_names (after merging input_names and input_node)
-    #    input_code = ', '.join(_convert_names(graph.input_names))
     input_code = graph.input_node.operation.to_forward_code(None, None, None)
 
     edge_codes = []
@@ -83,14 +77,10 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             inputs = _format_inputs(node)
             edge_codes.append(node.operation.to_forward_code(node.name, node.name, inputs))
 
-    # TODO: refactor graph output_node
     output_names = _format_inputs(graph.output_node)
     if not output_names:
         raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))
     output_code = graph.output_node.operation.to_forward_code(None, None, output_names)
-    #output_names = _convert_names(output_names)
-    #if not output_names:
-    #    output_names = ['None']
 
     linebreak = '\n        '
     return import_pkgs, _PyTorchModelTemplate.format(
