@@ -44,6 +44,10 @@ function getCheckpointDir(): string {
     return path.join(getExperimentRootDir(), 'checkpoint');
 }
 
+function getExperimentsInfoPath(): string {
+    return path.join(os.homedir(), 'nni-experiments', '.experiment');
+}
+
 function mkDirP(dirPath: string): Promise<void> {
     const deferred: Deferred<void> = new Deferred<void>();
     fs.exists(dirPath, (exists: boolean) => {
@@ -418,9 +422,10 @@ function unixPathJoin(...paths: any[]): string {
 }
 
 /**
- * lock a file and 
+ * lock a file
  */
-async function withLock(func: Function, lockPath: string, lockOpts: {[key: string]: any}, ...args: any): Promise<any> {
+async function withLock(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): Promise<any> {
+    const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock');
     const deferred = new Deferred<any>();
     lockfile.lock(lockPath, lockOpts, (err: any) => {
         if (err) {
@@ -437,8 +442,19 @@ async function withLock(func: Function, lockPath: string, lockOpts: {[key: strin
     return deferred.promise;
 }
 
+/**
+ * lock a file sync
+ */
+function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): any {
+    const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock');
+    lockfile.lockSync(lockPath, lockOpts);
+    const result = func(...args);
+    lockfile.unlockSync(lockPath);
+    return result;
+}
+
 export {
-    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLock,
+    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLock, withLockSync,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };
