@@ -232,8 +232,6 @@ def stop_experiment(args):
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
             print_normal('Stop experiment success.')
-            experiment_config.update_experiment(experiment_id, 'status', 'STOPPED')
-            experiment_config.update_experiment(experiment_id, 'endTime', int(time.time() * 1000))
 
 def trial_ls(args):
     '''List trial'''
