@@ -46,7 +46,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
 
     Parameters
     ----------
-    brackets_id: int
+    brackets_id: string
         brackets id
     brackets_curr_decay:
         brackets curr decay
@@ -60,7 +60,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
     """
     if increased_id == -1:
         increased_id = str(create_parameter_id())
-    params_id = '_'.join([str(brackets_id),
+    params_id = '_'.join([brackets_id,
                           str(brackets_curr_decay),
                           increased_id])
     return params_id
@@ -108,6 +108,8 @@ class Bracket():
 
     Parameters
     ----------
+    bracket_id: string
+        The id of this bracket, usually be set as '{Hyperband index}-{SH iteration index}'
     s: int
         The current SH iteration index.
     s_max: int
@@ -122,8 +124,9 @@ class Bracket():
         optimize mode, 'maximize' or 'minimize'
     """
 
-    def __init__(self, s, s_max, eta, R, optimize_mode):
-        self.bracket_id = s
+    def __init__(self, bracket_id, s, s_max, eta, R, optimize_mode):
+        self.bracket_id = bracket_id
+        self.s = s
         self.s_max = s_max
         self.eta = eta
         self.n = math.ceil((s_max + 1) * (eta ** s) / (s + 1) - _epsilon)
@@ -147,7 +150,7 @@ class Bracket():
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
         self.i += 1
-        if self.i > self.bracket_id:
+        if self.i > self.s:
             self.no_more_trial = True
 
     def set_config_perf(self, i, parameter_id, seq, value):
@@ -256,13 +259,14 @@ class HyperbandClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         Schema({
             'optimize_mode': self.choices('optimize_mode', 'maximize', 'minimize'),
+            Optional('exec_mode'): self.choices('exec_mode', 'serial', 'parallelism'),
             Optional('R'): int,
             Optional('eta'): int
         }).validate(kwargs)
 
 class Hyperband(MsgDispatcherBase):
     """Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
-    This is an implementation that could fully leverage available resources, i.e., high parallelism.
+    This is an implementation that could fully leverage available resources or follow the algorithm process, i.e., high parallelism or serial.
     A single execution of Hyperband takes a finite budget of (s_max + 1)B.
 
     Parameters
@@ -273,9 +277,11 @@ class Hyperband(MsgDispatcherBase):
         the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
+    exec_mode: str
+        execution mode, 'serial' or 'parallelism'
     """
 
-    def __init__(self, R=60, eta=3, optimize_mode='maximize'):
+    def __init__(self, R=60, eta=3, optimize_mode='maximize', exec_mode='parallelism'):
         """B = (s_max + 1)R"""
         super(Hyperband, self).__init__()
         self.R = R
@@ -285,6 +291,9 @@ class Hyperband(MsgDispatcherBase):
         self.completed_hyper_configs = []  # all the completed configs
         self.s_max = math.floor(math.log(self.R, self.eta) + _epsilon)
         self.curr_s = self.s_max
+        self.curr_hb = 0
+        self.exec_mode = exec_mode
+        self.curr_bracket_id = None
 
         self.searchspace_json = None
         self.random_state = None
@@ -316,25 +325,44 @@ class Hyperband(MsgDispatcherBase):
         data: int
             number of trial jobs
         """
-        for _ in range(data):
-            ret = self._get_one_trial_job()
+        self.credit += data
+
+        for _ in range(self.credit):
+            self._request_one_trial_job()
+
+    def _request_one_trial_job(self):
+        ret = self._get_one_trial_job()
+        if ret is not None:
             send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            self.credit -= 1
 
     def _get_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
-            if self.curr_s < 0:
-                self.curr_s = self.s_max
-            _logger.debug('create a new bracket, self.curr_s=%d', self.curr_s)
-            self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
-            next_n, next_r = self.brackets[self.curr_s].get_n_r()
-            _logger.debug('new bracket, next_n=%d, next_r=%d', next_n, next_r)
-            assert self.searchspace_json is not None and self.random_state is not None
-            generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r,
-                                                                                                   self.searchspace_json,
-                                                                                                   self.random_state)
-            self.generated_hyper_configs = generated_hyper_configs.copy()
-            self.curr_s -= 1
+            if self.exec_mode == 'parallelism' or \
+               (self.exec_mode == 'serial' and (self.curr_bracket_id is None or self.brackets[self.curr_bracket_id].is_completed())):
+                if self.curr_s < 0:
+                    self.curr_s = self.s_max
+                    self.curr_hb += 1
+                _logger.debug('create a new bracket, self.curr_hb=%d, self.curr_s=%d', self.curr_hb, self.curr_s)
+                self.curr_bracket_id = '{}-{}'.format(self.curr_hb, self.curr_s)
+                self.brackets[self.curr_bracket_id] = Bracket(self.curr_bracket_id, self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
+                next_n, next_r = self.brackets[self.curr_bracket_id].get_n_r()
+                _logger.debug('new bracket, next_n=%d, next_r=%d', next_n, next_r)
+                assert self.searchspace_json is not None and self.random_state is not None
+                generated_hyper_configs = self.brackets[self.curr_bracket_id].get_hyperparameter_configurations(next_n, next_r,
+                                                                                                    self.searchspace_json,
+                                                                                                    self.random_state)
+                self.generated_hyper_configs = generated_hyper_configs.copy()
+                self.curr_s -= 1
+            else:
+                ret = {
+                    'parameter_id': '-1_0_0',
+                    'parameter_source': 'algorithm',
+                    'parameters': ''
+                }
+                send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
+                return None
 
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop(0)
@@ -358,10 +386,12 @@ class Hyperband(MsgDispatcherBase):
         parameter_id: parameter id of the finished config
         """
         bracket_id, i, _ = parameter_id.split('_')
-        hyper_configs = self.brackets[int(bracket_id)].inform_trial_end(int(i))
+        hyper_configs = self.brackets[bracket_id].inform_trial_end(int(i))
         if hyper_configs is not None:
             _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
+        for _ in range(self.credit):
+            self._request_one_trial_job()
 
     def handle_trial_end(self, data):
         """
@@ -392,6 +422,7 @@ class Hyperband(MsgDispatcherBase):
         """
         if 'value' in data:
             data['value'] = json_tricks.loads(data['value'])
+        # multiphase? need to check
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
@@ -408,7 +439,6 @@ class Hyperband(MsgDispatcherBase):
         else:
             value = extract_scalar_reward(data['value'])
             bracket_id, i, _ = data['parameter_id'].split('_')
-            bracket_id = int(bracket_id)
 
             # add <trial_job_id, parameter_id> to self.job_id_para_id_map here,
             # because when the first parameter_id is created, trial_job_id is not known yet.

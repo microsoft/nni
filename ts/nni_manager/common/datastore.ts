@@ -43,7 +43,7 @@ interface MetricDataRecord {
 }
 
 interface TrialJobInfo {
-    id: string;
+    trialJobId: string;
     sequenceId?: number;
     status: TrialJobStatus;
     startTime?: number;
@@ -63,7 +63,7 @@ interface HyperParameterFormat {
 interface ExportedDataFormat {
     parameter: Record<string, any>;
     value: Record<string, any>;
-    id: string;
+    trialJobId: string;
 }
 
 abstract class DataStore {

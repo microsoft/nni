@@ -1,0 +1,64 @@
+$buttonBorderRadius: 23px;
+
+.config {
+    position: fixed;
+    right: 0;
+    z-index: 1000;
+
+    .ms-Button--default {
+        padding: 0 8px;
+        margin-bottom: 12px;
+        border: none;
+        box-shadow: 0 3px 3px rgba(0, 0, 0, 0.08);
+        border-radius: $buttonBorderRadius 0 0 $buttonBorderRadius;
+        font-size: 12px;
+        text-align: left;
+
+        .ms-Button-label {
+            font-weight: normal;
+        }
+    }
+
+    .integralBtn {
+        display: none;
+    }
+
+    .margin {
+        margin-left: 10px;
+    }
+}
+
+.container {
+    text-align: right;
+
+    .icon {
+        min-width: 50px;
+
+        i {
+            font-size: 16px;
+        }
+    }
+
+    &:hover {
+        .icon {
+            display: none;
+        }
+
+        .integralBtn {
+            display: block;
+            color: #fff;
+            border: 1px solid blue;
+            background-color: #0071bc;
+
+            i {
+                font-size: 14px;
+            }
+        }
+    }
+}
+
+.ms-Fabric {
+    .ms-Panel-commands {
+        margin: 0;
+    }
+}
