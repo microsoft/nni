@@ -187,15 +187,7 @@ class _IOPseudoOperation(Operation):
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
-        if inputs is not None:
-            # for output node
-            return ', '.join(inputs)
-        else:
-            # for input node
-            if self.io_names is None:
-                return '*_inputs'
-            else:
-                return ', '.join(self.io_names)
+        raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')
 
     def __bool__(self) -> bool:
         return False

@@ -68,7 +68,10 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             if node_code is not None:
                 node_codes.append(node_code)
 
-    input_code = graph.input_node.operation.to_forward_code(None, None, None)
+    if graph.input_node.operation.io_names is None:
+        input_code = '*_inputs'
+    else:
+        input_code = ', '.join(graph.input_node.operation.io_names)
 
     edge_codes = []
     sorted_nodes = graph.topo_sort()
@@ -80,7 +83,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     output_names = _format_inputs(graph.output_node)
     if not output_names:
         raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))
-    output_code = graph.output_node.operation.to_forward_code(None, None, output_names)
+    output_code = ', '.join(output_names)
 
     linebreak = '\n        '
     return import_pkgs, _PyTorchModelTemplate.format(
