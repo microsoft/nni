@@ -98,7 +98,6 @@ class PyTorchOperation(Operation):
             return None
 
     def to_init_code(self, field: str) -> str:
-        field = _convert_name(field)
         if self._to_class_name() is not None:
             assert 'positional_args' not in self.parameters
             kw_params = ', '.join(f'{key}={repr(value)}' for key, value in self.parameters.items())
@@ -106,9 +105,6 @@ class PyTorchOperation(Operation):
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
-        field = _convert_name(field)
-        output = _convert_name(output)
-        inputs = [_convert_name(_input) for _input in inputs]
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
@@ -176,16 +172,16 @@ class Cell(PyTorchOperation):
         return _convert_name(self.cell_name)
 
 
-class _PseudoOperation(Operation):
+class _IOPseudoOperation(Operation):
     """
     This is the pseudo operation used by I/O nodes.
     The benefit is that users no longer need to verify `Node.operation is not None`,
     especially in static type checking.
     """
-    def __init__(self, type_name: str):
+    def __init__(self, type_name: str, io_names: List = None):
         assert type_name.startswith('_')
-        self.type = type_name
-        self.parameters = {}
+        super(_IOPseudoOperation, self).__init__(type_name, {}, True)
+        self.io_names = io_names
 
     def to_init_code(self, field: str) -> str:
         raise ValueError(f'Cannot generate code for pseudo operation "{self.type}"')

@@ -7,7 +7,7 @@ from enum import Enum
 import json
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
-from .operation import Cell, Operation, _PseudoOperation
+from .operation import Cell, Operation, _IOPseudoOperation
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -233,35 +233,33 @@ class Graph:
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
 
-        # TODO: why not merge the names into input_node and output_node???
-        self.input_names: Optional[List[str]] = None
-        self.output_names: Optional[List[str]] = None
-
-        self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _PseudoOperation('_inputs'), _internal=True)
-        self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _PseudoOperation('_outputs'), _internal=True)
+        self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _IOPseudoOperation('_inputs'), _internal=True)
+        self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _IOPseudoOperation('_outputs'), _internal=True)
         self.hidden_nodes: List[Node] = []
 
         self.edges: List[Edge] = []
 
     def __repr__(self):
-        return f'Graph(id={self.id}, name={self.name}, input_names={self.input_names}, ' + \
-            f'output_names={self.output_names}, num_hidden_nodes={len(self.hidden_nodes)}, num_edges={len(self.edges)})'
+        return f'Graph(id={self.id}, name={self.name}, ' + \
+            f'input_names={self.input_node.operation.io_names}, ' + \
+            f'output_names={self.output_node.operation.io_names}, ' + \
+            f'num_hidden_nodes={len(self.hidden_nodes)}, num_edges={len(self.edges)})'
 
     @property
     def nodes(self) -> List['Node']:
         return [self.input_node, self.output_node] + self.hidden_nodes
 
     def _add_input(self, input_name) -> None:
-        if self.input_names is None:
-            self.input_names = [input_name]
+        if self.input_node.operation.io_names is None:
+            self.input_node.operation.io_names = [input_name]
         else:
-            self.input_names.append(input_name)
+            self.input_node.operation.io_names.append(input_name)
 
     def _add_output(self, output_name) -> None:
-        if self.output_names is None:
-            self.output_names = [output_name]
+        if self.output_node.operation.io_names is None:
+            self.output_node.operation.io_names = [output_name]
         else:
-            self.output_names.append(output_name)
+            self.output_node.operation.io_names.append(output_name)
 
     @overload
     def add_node(self, name: str, operation: Operation) -> 'Node': ...
@@ -351,8 +349,11 @@ class Graph:
 
     def _fork_to(self, model: Model) -> 'Graph':
         new_graph = Graph(model, self.id, self.name, _internal=True)._register()
-        new_graph.input_names = self.input_names
-        new_graph.output_names = self.output_names
+        # TODO: use node copy instead
+        new_graph.input_node.operation.io_names = self.input_node.operation.io_names
+        new_graph.output_node.operation.io_names = self.output_node.operation.io_names
+        new_graph.input_node.update_label(self.input_node.label)
+        new_graph.output_node.update_label(self.output_node.label)
 
         for node in self.hidden_nodes:
             new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
@@ -372,13 +373,16 @@ class Graph:
         # Copy this graph inside the model.
         # The new graph will have identical topology, but its nodes' name and ID will be different.
         new_graph = Graph(self.model, self.model._uid(), _internal=True)._register()
-        new_graph.input_names = self.input_names
-        new_graph.output_names = self.output_names
+        new_graph.input_node.operation.io_names = self.input_node.operation.io_names
+        new_graph.output_node.operation.io_names = self.output_node.operation.io_names
+        new_graph.input_node.update_label(self.input_node.label)
+        new_graph.output_node.update_label(self.output_node.label)
 
         id_to_new_node = {}  # old node ID -> new node object
 
         for old_node in self.hidden_nodes:
             new_node = Node(new_graph, self.model._uid(), None, old_node.operation, _internal=True)._register()
+            new_node.update_label(old_node.label)
             id_to_new_node[old_node.id] = new_node
 
         for edge in self.edges:
@@ -395,8 +399,8 @@ class Graph:
     @staticmethod
     def _load(model: Model, name: str, ir: Any) -> 'Graph':
         graph = Graph(model, model._uid(), name, _internal=True)
-        graph.input_names = ir.get('inputs')
-        graph.output_names = ir.get('outputs')
+        graph.input_node.operation.io_names = ir.get('inputs')
+        graph.output_node.operation.io_names = ir.get('outputs')
         for node_name, node_data in ir['nodes'].items():
             Node._load(graph, node_name, node_data)._register()
         for edge_data in ir['edges']:
@@ -405,8 +409,8 @@ class Graph:
 
     def _dump(self) -> Any:
         return {
-            'inputs': self.input_names,
-            'outputs': self.output_names,
+            'inputs': self.input_node.operation.io_names,
+            'outputs': self.output_node.operation.io_names,
             'nodes': {node.name: node._dump() for node in self.hidden_nodes},
             'edges': [edge._dump() for edge in self.edges]
         }

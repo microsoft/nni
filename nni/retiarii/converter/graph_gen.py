@@ -7,7 +7,7 @@ from ..operation import Cell, Operation
 from ..model_apis.nn import Placeholder
 
 from .op_types import RETIARII_BASE_OPS, MODULE_EXCEPT_LIST, Type
-from .utils import build_full_name
+from .utils import build_full_name, _convert_name
 
 
 global_seq = 0
@@ -149,7 +149,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             continue
         graph_inputs.append(_input)
         # TODO: add scope name
-        ir_graph._add_input(_input.debugName())
+        ir_graph._add_input(_convert_name(_input.debugName()))
 
     node_index = {} # graph node to graph ir node
 
@@ -315,7 +315,7 @@ def convert_module(script_module, module, module_name, ir_model):
     graph_outputs = []
     for _output in sm_graph.outputs():
         graph_outputs.append(_output) # <class 'torch._C.Value'>
-        ir_graph._add_output(_output.debugName())
+        ir_graph._add_output(_convert_name(_output.debugName()))
         predecessor_node_outputs = [o for o in _output.node().outputs()]
         if len(predecessor_node_outputs) == 1:
             src_node_idx = None
