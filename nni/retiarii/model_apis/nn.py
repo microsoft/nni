@@ -6,10 +6,6 @@ import torch.nn as nn
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
-#consoleHandler = logging.StreamHandler()
-#consoleHandler.setLevel(logging.INFO)
-#_logger.addHandler(consoleHandler)
-
 _records = None
 
 def enable_record_args():
