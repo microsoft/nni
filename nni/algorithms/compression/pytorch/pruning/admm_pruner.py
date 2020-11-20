@@ -53,7 +53,7 @@ class ADMMPruner(OneshotPruner):
     row : float
         Penalty parameters for ADMM training.
     base_algo : str
-        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among the ops,
         the assigned `base_algo` is used to decide which filters/channels/weights to prune.
 
     """
@@ -87,7 +87,7 @@ class ADMMPruner(OneshotPruner):
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
             }], model, _logger)
-        elif self._base_algo in ['l1', 'l2']:
+        elif self._base_algo in ['l1', 'l2', 'fpgm']:
             schema = CompressorSchema([{
                 'sparsity': And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
@@ -96,7 +96,7 @@ class ADMMPruner(OneshotPruner):
 
         schema.validate(config_list)
 
-    def _projection(self, weight, sparsity):
+    def _projection(self, weight, sparsity, wrapper):
         '''
         Return the Euclidean projection of the weight matrix according to the pruning mode.
 
@@ -106,31 +106,14 @@ class ADMMPruner(OneshotPruner):
             original matrix
         sparsity : float
             the ratio of parameters which need to be set to zero
-
+        wrapper: PrunerModuleWrapper
+            layer wrapper of this layer
         Returns
         -------
         tensor
             the projected matrix
         '''
-        w_abs = weight.abs()
-        if self._base_algo == 'level':
-            k = int(weight.numel() * sparsity)
-            if k == 0:
-                mask_weight = torch.ones(weight.shape).type_as(weight)
-            else:
-                threshold = torch.topk(w_abs.view(-1), k, largest=False)[0].max()
-                mask_weight = torch.gt(w_abs, threshold).type_as(weight)
-        elif self._base_algo in ['l1', 'l2']:
-            filters = weight.size(0)
-            num_prune = int(filters * sparsity)
-            if filters < 2 or num_prune < 1:
-                mask_weight = torch.ones(weight.size()).type_as(weight).detach()
-            else:
-                w_abs_structured = w_abs.view(filters, -1).sum(dim=1)
-                threshold = torch.topk(w_abs_structured.view(-1), num_prune, largest=False)[0].max()
-                mask_weight = torch.gt(w_abs_structured, threshold)[:, None, None, None].expand_as(weight).type_as(weight)
-
-        return weight.data.mul(mask_weight)
+        return weight.data.mul(self.masker.calc_mask(sparsity, wrapper)['weight_mask'])
 
     def compress(self):
         """
@@ -179,7 +162,7 @@ class ADMMPruner(OneshotPruner):
             # U_i^{k+1} = U^k + W_i^{k+1} - Z_i^{k+1}
             for i, wrapper in enumerate(self.get_modules_wrapper()):
                 z = wrapper.module.weight.data + U[i]
-                Z[i] = self._projection(z, wrapper.config['sparsity'])
+                Z[i] = self._projection(z, wrapper.config['sparsity'], wrapper)
                 U[i] = U[i] + wrapper.module.weight.data - Z[i]
 
         # apply prune
