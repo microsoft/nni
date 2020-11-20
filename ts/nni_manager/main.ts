@@ -175,7 +175,12 @@ mkDirP(getLogDir())
     });
 
 function getStopSignal(): any {
-    return 'SIGTERM';
+    if (process.platform === "win32") {
+        return 'SIGBREAK';
+    }
+    else {
+        return 'SIGTERM';
+    }
 }
 
 function getCtrlCSignal(): any {
