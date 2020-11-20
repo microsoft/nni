@@ -129,13 +129,13 @@ class ExperimentsManager implements ExpManager {
     public async stop(): Promise<void> {
         this.log.debug('Stopping experiment manager.');
         await this.cleanUp().catch(err=>this.log.error(err.message));
-        this.log.debug('Experiment stopped.');
+        this.log.debug('Experiment manager stopped.');
     }
 
     private async cleanUp(): Promise<void> {
         const deferred = new Deferred<void>();
         if (this.isUndone()) {
-            this.log.info('something undone');
+            this.log.debug('Experiment manager: something undone');
             setTimeout(((deferred: Deferred<void>): void => {
                 if (this.isUndone()) {
                     deferred.reject(new Error('Still has undone after 5s, forced stop.'));
@@ -144,7 +144,7 @@ class ExperimentsManager implements ExpManager {
                 }
             }).bind(this), 5 * 1000, deferred);
         } else {
-            this.log.info('all done');
+            this.log.debug('Experiment manager: all clean up');
             deferred.resolve();
         }
         return deferred.promise;

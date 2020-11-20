@@ -462,7 +462,9 @@ class NNIManager implements Manager {
             }
         }
         await this.trainingService.cleanUp();
-        this.setEndtime();
+        if (this.experimentProfile.endTime === undefined) {
+            this.setEndtime();
+        }
         await this.storeExperimentProfile();
         this.setStatus('STOPPED');
     }
@@ -783,6 +785,7 @@ class NNIManager implements Manager {
             this.log.error(err.stack);
         }
         this.status.errors.push(err.message);
+        this.setEndtime();
         this.setStatus('ERROR');
     }
 

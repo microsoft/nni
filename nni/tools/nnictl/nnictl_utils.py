@@ -52,7 +52,6 @@ def update_experiment():
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
-                    experiment_config.update_experiment(key, 'endTime', int(time.time() * 1000))
                     continue
 
 def check_experiment_id(args, update=True):
@@ -216,7 +215,6 @@ def stop_experiment(args):
         exit(1)
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
-        experiment_config = Experiments()
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
             nni_config = Config(experiment_id)
