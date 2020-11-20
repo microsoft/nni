@@ -200,11 +200,11 @@ epub_title = project
 epub_exclude_files = ['search.html']
 
 # external links (for github code)
-# Reference the code via :githubcode:`path/to/your/example/code.py`
+# Reference the code via :githublink:`path/to/your/example/code.py`
 git_commit_id = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
 
 extlinks = {
-    'githubcode': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github code: ')
+    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
 }
 
 # -- Extension configuration -------------------------------------------------
