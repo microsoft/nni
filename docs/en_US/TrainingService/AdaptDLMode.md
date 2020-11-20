@@ -32,21 +32,23 @@ kubectl api-versions | grep adaptdl
 
 ## Run an experiment
 
+We have a CIFAR10 example that fully leverages the AdaptDL scheduler under `examples/trials/cifar10_pytorch` folder. (`main_adl.py` and `config_adl.yaml`)
+
 Here is a template configuration specification to use AdaptDL as a training service.
 
 ```yaml
-authorName: default                                                                                                                                                                                                                  
+authorName: default
 experimentName: minimal_adl
-                                                                                                                                                                                                                   
-trainingServicePlatform: adl                                                                                                                                                                                                                  
+
+trainingServicePlatform: adl
 nniManagerIp: 10.1.10.11
-logCollection: http                                                                                                                                                                                                                         
-                                                                                                                                                                                                                                              
+logCollection: http
+
 tuner:
   builtinTunerName: GridSearch
 searchSpacePath: search_space.json
 
-trialConcurrency: 2                                                                                                                                                                                                                           
+trialConcurrency: 2
 maxTrialNum: 2
 
 trial:
@@ -68,24 +70,24 @@ trial:
     storageSize: 1Gi
 ```
 
-Those configs not mentioned below, are following the 
+Those configs not mentioned below, are following the
 [default specs defined in the NNI doc](https://nni.readthedocs.io/en/latest/Tutorial/ExperimentConfig.html#configuration-spec).
 
 * **trainingServicePlatform**: Choose `adl` to use the Kubernetes cluster with AdaptDL scheduler.
 * **nniManagerIp**: *Required* to get the correct info and metrics back from the cluster, for `adl` training service.
-IP address of the machine with NNI manager (NNICTL) that launches NNI experiment. 
+IP address of the machine with NNI manager (NNICTL) that launches NNI experiment.
 * **logCollection**: *Recommended* to set as `http`. It will collect the trial logs on cluster back to your machine via http.
 * **tuner**: It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**: It defines the specs of an `adl` trial.
     * **adaptive**: (*Optional*) Boolean for AdaptDL trainer. While `true`, it the job is preemptible and adaptive.
     * **image**: Docker image for the trial
-    * **imagePullSecret**: (*Optional*) If you are using a private registry, 
+    * **imagePullSecret**: (*Optional*) If you are using a private registry,
     you need to provide the secret to successfully pull the image.
     * **codeDir**: the working directory of the container. `.` means the default working directory defined by the image.
     * **command**: the bash command to start the trial
     * **gpuNum**: the number of GPUs requested for this trial. It must be non-negative integer.
     * **cpuNum**: (*Optional*) the number of CPUs requested for this trial.  It must be non-negative integer.
-    * **memorySize**: (*Optional*) the size of memory requested for this trial. It must follow the Kubernetes 
+    * **memorySize**: (*Optional*) the size of memory requested for this trial. It must follow the Kubernetes
     [default format](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory).
     * **nfs**: (*Optional*) mounting external storage. For more information about using NFS please check the below paragraph.
     * **checkpoint** (*Optional*) [storage settings](https://kubernetes.io/docs/concepts/storage/storage-classes/) for AdaptDL internal checkpoints. You can keep it optional if you are not dev users.
@@ -93,29 +95,29 @@ IP address of the machine with NNI manager (NNICTL) that launches NNI experiment
 ### NFS Storage
 
 As you may have noticed in the above configuration spec,
-an *optional* section is available to configure NFS external storage. It is optional when no external storage is required, when for example an docker image is sufficient with codes and data inside. 
+an *optional* section is available to configure NFS external storage. It is optional when no external storage is required, when for example an docker image is sufficient with codes and data inside.
 
 Note that `adl` training service does NOT help mount an NFS to the local dev machine, so that one can manually mount it to local, manage the filesystem, copy the data or code etc.
 The `adl` training service can then mount it to the kubernetes for every trials, with the proper configurations:
 
 * **server**: NFS server address, e.g. IP address or domain
 * **path**: NFS server export path, i.e. the absolute path in NFS that can be mounted to trials
-* **containerMountPath**: In container absolute path to mount the NFS **path** above, 
-so that every trial will have the access to the NFS. 
-In the trial containers, you can access the NFS with this path. 
+* **containerMountPath**: In container absolute path to mount the NFS **path** above,
+so that every trial will have the access to the NFS.
+In the trial containers, you can access the NFS with this path.
 
 Use cases:
 
 * If your training trials depend on a dataset of large size, you may want to download it first onto the NFS first,
- and mount it so that it can be shared across multiple trials. 
+ and mount it so that it can be shared across multiple trials.
 * The storage for containers are ephemeral and the trial containers will be deleted after a trial's lifecycle is over.
-So if you want to export your trained models, 
-you may mount the NFS to the trial to persist and export your trained models. 
+So if you want to export your trained models,
+you may mount the NFS to the trial to persist and export your trained models.
 
 In short, it is not limited how a trial wants to read from or write on the NFS storage, so you may use it flexibly as per your needs.
 
 
-## Monitor via Log Stream 
+## Monitor via Log Stream
 
 Follow the log streaming of a certain trial:
 
@@ -128,7 +130,7 @@ nnictl log trial <experiment_id> --trial_id=<trial_id>
 ```
 
 Note that *after* a trial has done and its pod has been deleted,
-no logs can be retrieved then via this command. 
+no logs can be retrieved then via this command.
 However you may still be able to access the past trial logs
 according to the following approach.
 
@@ -142,7 +144,7 @@ an independent TensorBoard logging directory thus dashboard.
 
 
 You can only use the TensorBoard while the monitored experiment is running.
-In other words, it is not supported to monitor stopped experiments. 
+In other words, it is not supported to monitor stopped experiments.
 
 
 In the trial container you may have access to two environment variables:
@@ -161,10 +163,10 @@ tensorboard_logdir = os.path.join(
 )
 ```
 
-If an experiment is stopped, the data logged here 
+If an experiment is stopped, the data logged here
 (defined by *the above envs* for monitoring with the following commands)
 will be lost. To persist the logged data, you can use the external storage (e.g. to mount an NFS)
-to export it and view the TensorBoard locally.  
+to export it and view the TensorBoard locally.
 
 
 With the above setting, you can monitor the experiment easily
@@ -183,4 +185,4 @@ nnictl tensorboard start <experiment_id>
 It will provide you the web url to access the tensorboard.
 
 Note that you have the flexibility to set up the local `--port`
-for the TensorBoard.  
+for the TensorBoard.
