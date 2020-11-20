@@ -147,7 +147,7 @@ In other words, it is not supported to monitor stopped experiments.
 
 In the trial container you may have access to two environment variables:
 
-* `ADAPTDLCTL_TENSORBOARD_LOGDIR`: the TensorBoard logging directory for the current experiment,
+* `ADAPTDL_TENSORBOARD_LOGDIR`: the TensorBoard logging directory for the current experiment,
 * `NNI_TRIAL_JOB_ID`: the `trial` job id for the current trial.
 
 It is recommended for to have them joined as the directory for trial,
@@ -156,7 +156,7 @@ for example in Python:
 ```python
 import os
 tensorboard_logdir = os.path.join(
-    os.getenv("ADAPTDLCTL_TENSORBOARD_LOGDIR"),
+    os.getenv("ADAPTDL_TENSORBOARD_LOGDIR"),
     os.getenv("NNI_TRIAL_JOB_ID")
 )
 ```

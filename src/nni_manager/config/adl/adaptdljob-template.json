@@ -32,7 +32,7 @@
                                 "value": "/adaptdl/checkpoint"
                             },
                             {
-                                "name": "ADAPTDLCTL_TENSORBOARD_LOGDIR",
+                                "name": "ADAPTDL_TENSORBOARD_LOGDIR",
                                 "value": "/adaptdl/tensorboard"
                             },
                             {
