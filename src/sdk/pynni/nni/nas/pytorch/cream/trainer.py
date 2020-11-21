@@ -2,21 +2,21 @@
 # Licensed under the MIT license.
 
 import os
-import logging
-from copy import deepcopy
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.distributed as dist
+import logging
+
+from copy import deepcopy
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
+
+from .utils import accuracy, reduce_metrics
 
 logger = logging.getLogger(__name__)
 
 
 class CreamSupernetTrainer(Trainer):
     """
-    This trainer trains a supernet that can be used for evolution search.
+    This trainer trains a supernet and output prioritized architectures that can be used for other tasks.
 
     Parameters
     ----------
@@ -24,6 +24,8 @@ class CreamSupernetTrainer(Trainer):
         Model with mutables.
     loss : callable
         Called with logits and targets. Returns a loss tensor.
+    val_loss : callable
+        Called with logits and targets for validation only. Returns a loss tensor.
     optimizer : Optimizer
         Optimizer that optimizes the model.
     num_epochs : int
@@ -38,266 +40,347 @@ class CreamSupernetTrainer(Trainer):
         Batch size.
     log_frequency : int
         Number of mini-batches to log metrics.
-    est : object
-        look-up table of flops and parameters
     meta_sta_epoch : int
-        starting epoch of using meta picking
+        start epoch of using meta matching network to pick teacher architecture
     update_iter : int
-        interval of updating meta networks
+        interval of updating meta matching networks
     slices : int
-        batch size of mini slices
+        batch size of mini training data in the process of training meta matching network
     pool_size : int
         board size
     pick_method : basestring
         how to pick teacher network
-    lr_scheduler : scheduler
-        Learning rate scheduler
-    distributed : bool
-        whether to use distributed training
+    choice_num : int
+        number of operations in supernet
+    sta_num : int
+        layer number of each stage in supernet (5 stage in supernet)
+    acc_gap : int
+        maximum accuracy improvement to omit the limitation of flops
+    flops_dict : Dict
+        dictionary of each layer's operations in supernet
+    flops_fixed : int
+        flops of fixed part in supernet
     local_rank : int
         index of current rank
-    val_loss : callable
-        calculate validation loss
+    callbacks : list of Callback
+        Callbacks to plug into the trainer. See Callbacks.
     """
 
-    def __init__(self, model, loss,
+
+    def __init__(self, model, loss, val_loss,
                  optimizer, num_epochs, train_loader, valid_loader,
                  mutator=None, batch_size=64, log_frequency=None,
-                 est=None, meta_sta_epoch=20, update_iter=200, slices=2, pool_size=10,
-                 pick_method='meta', lr_scheduler=None, distributed=True, local_rank=0, val_loss=None):
+                 meta_sta_epoch=20, update_iter=200, slices=2,
+                 pool_size=10, pick_method='meta', choice_num=6,
+                 sta_num=(4, 4, 4, 4, 4), acc_gap=5,
+                 flops_dict=None, flops_fixed=0, local_rank=0, callbacks=None):
         assert torch.cuda.is_available()
-        super(CreamSupernetTrainer, self).__init__(model, mutator, loss, None, optimizer, num_epochs,
-                                                   train_loader, valid_loader, batch_size, 8,
-                                                   'cuda', log_frequency, None)
+        super(CreamSupernetTrainer, self).__init__(model, mutator, loss, None,
+                                                   optimizer, num_epochs, None, None,
+                                                    batch_size, None, None, log_frequency, callbacks)
+        self.model = model
+        self.loss = loss
+        self.val_loss = val_loss
         self.train_loader = train_loader
         self.valid_loader = valid_loader
         self.log_frequency = log_frequency
         self.batch_size = batch_size
-        self.mutator = mutator
         self.optimizer = optimizer
         self.model = model
         self.loss = loss
-        self.est = est
-        self.best_children_pool = []
         self.num_epochs = num_epochs
         self.meta_sta_epoch = meta_sta_epoch
         self.update_iter = update_iter
         self.slices = slices
         self.pick_method = pick_method
         self.pool_size = pool_size
-        self.main_proc = not distributed or local_rank == 0
-        self.distributed = distributed
-        self.val_loss = val_loss
-        self.lr_scheduler = lr_scheduler
-        self.callbacks = []
-        self.arch_dict = dict()
+        self.local_rank = local_rank
+        self.main_proc = (local_rank == 0)
+        self.choice_num = choice_num
+        self.sta_num = sta_num
+        self.acc_gap = acc_gap
+        self.flops_dict = flops_dict
+        self.flops_fixed = flops_fixed
 
-    def cross_entropy_loss_with_soft_target(self, pred, soft_target):
-        logsoftmax = nn.LogSoftmax()
-        return torch.mean(torch.sum(-soft_target * logsoftmax(pred), 1))
+        self.current_student_arch = None
+        self.current_teacher_arch = None
 
-    def reduce_tensor(self, tensor):
-        rt = tensor.clone()
-        dist.all_reduce(rt, op=dist.ReduceOp.SUM)
-        rt /= float(os.environ["WORLD_SIZE"])
-        return rt
+        self.prioritized_board = []
 
-    def reduce_metrics(self, metrics, distributed=False):
-        if distributed:
-            return {k: self.reduce_tensor(v).item() for k, v in metrics.items()}
-        return {k: v.item() for k, v in metrics.items()}
+    # size of prioritized board
+    def _board_size(self):
+        return len(self.prioritized_board)
 
-    def accuracy(self, output, target, topk=(1,)):
-        """Computes the accuracy over the k top predictions for the specified values of k"""
-        maxk = max(topk)
-        batch_size = target.size(0)
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target.view(1, -1).expand_as(pred))
-        return [correct[:k].view(-1).float().sum(0) * 100. / batch_size for k in topk]
+    # select teacher architecture according to the logit difference
+    def _select_teacher(self):
+        self._replace_mutator_cand(self.current_student_arch)
+
+        if self.pick_method == 'top1':
+            meta_value, teacher_cand = 0.5, sorted(
+                self.prioritized_board, reverse=True)[0][3]
+        elif self.pick_method == 'meta':
+            meta_value, cand_idx, teacher_cand = -1000000000, -1, None
+            for now_idx, item in enumerate(self.prioritized_board):
+                inputx = item[4]
+                output = torch.nn.functional.softmax(self.model(inputx), dim=1)
+                weight = self.model.module.forward_meta(output - item[5])
+                if weight > meta_value:
+                    meta_value = weight
+                    cand_idx = now_idx
+                    teacher_cand = self.prioritized_board[cand_idx][3]
+            assert teacher_cand is not None
+            meta_value = torch.nn.functional.sigmoid(-weight)
+        else:
+            raise ValueError('Method Not supported')
+
+        return meta_value, teacher_cand
+
+    # check whether to update prioritized board
+    def _isUpdateBoard(self, prec1, flops):
+        if self.current_epoch <= self.meta_sta_epoch:
+            return False
+
+        if len(self.prioritized_board) < self.pool_size:
+            return True
+
+        if prec1 > self.prioritized_board[-1][1] + self.acc_gap:
+            return True
+
+        if prec1 > self.prioritized_board[-1][1] and flops < self.prioritized_board[-1][2]:
+            return True
+
+        return False
+
+    # update prioritized board
+    def _update_prioritized_board(self, inputs, teacher_output, outputs, prec1, flops):
+        if self._isUpdateBoard(prec1, flops):
+            val_prec1 = prec1
+            training_data = deepcopy(inputs[:self.slices].detach())
+            if len(self.prioritized_board) == 0:
+                features = deepcopy(outputs[:self.slices].detach())
+            else:
+                features = deepcopy(
+                    teacher_output[:self.slices].detach())
+            self.prioritized_board.append(
+                (val_prec1,
+                 prec1,
+                 flops,
+                 self.current_teacher_arch,
+                 training_data,
+                 torch.nn.functional.softmax(
+                     features,
+                     dim=1)))
+            self.prioritized_board = sorted(
+                self.prioritized_board, reverse=True)
+
+        if len(self.prioritized_board) > self.pool_size:
+            self.prioritized_board = sorted(
+                self.prioritized_board, reverse=True)
+            del self.prioritized_board[-1]
+
+    # only update student network weights
+    def _update_student_weights_only(self, grad_1):
+        for weight, grad_item in zip(
+                self.model.module.rand_parameters(self.current_student_arch), grad_1):
+            weight.grad = grad_item
+        torch.nn.utils.clip_grad_norm_(
+            self.model.module.rand_parameters(self.current_student_arch), 1)
+        self.optimizer.step()
+        for weight, grad_item in zip(
+                self.model.module.rand_parameters(self.current_student_arch), grad_1):
+            del weight.grad
+
+    # only update meta networks weights
+    def _update_meta_weights_only(self, teacher_cand, grad_teacher):
+        for weight, grad_item in zip(self.model.module.rand_parameters(
+                teacher_cand, self.pick_method == 'meta'), grad_teacher):
+            weight.grad = grad_item
+
+        # clip gradients
+        torch.nn.utils.clip_grad_norm_(
+            self.model.module.rand_parameters(
+                self.current_student_arch, self.pick_method == 'meta'), 1)
+
+        self.optimizer.step()
+        for weight, grad_item in zip(self.model.module.rand_parameters(
+                teacher_cand, self.pick_method == 'meta'), grad_teacher):
+            del weight.grad
+
+    # simulate sgd updating
+    def _simulate_sgd_update(self, w, g, optimizer):
+        return g * optimizer.param_groups[-1]['lr'] + w
+
+    # split training images into several slices
+    def _get_minibatch_input(self, input):
+        slice = self.slices
+        x = deepcopy(input[:slice].clone().detach())
+        return x
+
+    # calculate 1st gradient of student architectures
+    def _calculate_1st_gradient(self, kd_loss):
+        self.optimizer.zero_grad()
+        grad = torch.autograd.grad(
+            kd_loss,
+            self.model.module.rand_parameters(self.current_student_arch),
+            create_graph=True)
+        return grad
+
+    # calculate 2nd gradient of meta networks
+    def _calculate_2nd_gradient(self, validation_loss, teacher_cand, students_weight):
+        self.optimizer.zero_grad()
+        grad_student_val = torch.autograd.grad(
+            validation_loss,
+            self.model.module.rand_parameters(self.random_cand),
+            retain_graph=True)
+
+        grad_teacher = torch.autograd.grad(
+            students_weight[0],
+            self.model.module.rand_parameters(
+                teacher_cand,
+                self.pick_method == 'meta'),
+            grad_outputs=grad_student_val)
+        return grad_teacher
+
+    # forward training data
+    def _forward_training(self, x, meta_value):
+        self._replace_mutator_cand(self.current_student_arch)
+        output = self.model(x)
+
+        with torch.no_grad():
+            self._replace_mutator_cand(self.current_teacher_arch)
+            teacher_output = self.model(x)
+            soft_label = torch.nn.functional.softmax(teacher_output, dim=1)
+
+        kd_loss = meta_value * \
+                  self._cross_entropy_loss_with_soft_target(output, soft_label)
+        return kd_loss
+
+    # calculate soft target loss
+    def _cross_entropy_loss_with_soft_target(self, pred, soft_target):
+        logsoftmax = torch.nn.LogSoftmax()
+        return torch.mean(torch.sum(- soft_target * logsoftmax(pred), 1))
+
+    # forward validation data
+    def _forward_validation(self, input, target):
+        slice = self.slices
+        x = input[slice:slice * 2].clone()
+
+        self._replace_mutator_cand(self.current_student_arch)
+        output_2 = self.model(x)
+
+        validation_loss = self.loss(output_2, target[slice:slice * 2])
+        return validation_loss
+
+    def _isUpdateMeta(self, batch_idx):
+        isUpdate = True
+        isUpdate &= (self.current_epoch > self.meta_sta_epoch)
+        isUpdate &= (batch_idx > 0)
+        isUpdate &= (batch_idx % self.update_iter == 0)
+        isUpdate &= (self._board_size() > 0)
+        return isUpdate
+
+    def _replace_mutator_cand(self, cand):
+        self.mutator._cache = cand
+
+    # update meta matching networks
+    def _run_update(self, input, target, batch_idx):
+        if self._isUpdateMeta(batch_idx):
+            x = self._get_minibatch_input(input)
+
+            meta_value, teacher_cand = self._select_teacher()
+
+            kd_loss = self._forward_training(x, meta_value)
+
+            # calculate 1st gradient
+            grad_1st = self._calculate_1st_gradient(kd_loss)
+
+            # simulate updated student weights
+            students_weight = [
+                self._simulate_sgd_update(
+                    p, grad_item, self.optimizer) for p, grad_item in zip(
+                    self.model.module.rand_parameters(self.current_student_arch), grad_1st)]
+
+            # update student weights
+            self._update_student_weights_only(grad_1st)
+
+            validation_loss = self._forward_validation(input, target)
+
+            # calculate 2nd gradient
+            grad_teacher = self._calculate_2nd_gradient(validation_loss, teacher_cand, students_weight)
+
+            # update meta matching networks
+            self._update_meta_weights_only(teacher_cand, grad_teacher)
+
+            # delete internal variants
+            del grad_teacher, grad_1st, x, validation_loss, kd_loss, students_weight
+
+    def _get_cand_flops(self, cand):
+        flops = 0
+        for block_id, block in enumerate(cand):
+            for module_id, choice in enumerate(block):
+                if choice == -1:
+                    continue
+                flops += self.flops_dict[block_id][module_id][choice]
+        return flops + self.flops_fixed
 
     def train_one_epoch(self, epoch):
-        def get_model(model):
-            return model.module
-
         meters = AverageMeterGroup()
         for step, (input_data, target) in enumerate(self.train_loader):
-            self.optimizer.zero_grad()
             self.mutator.reset()
+            self.current_student_arch = self.mutator._cache
 
-            input_data = input_data.cuda()
-            target = target.cuda()
+            input_data, target = input_data.cuda(), target.cuda()
 
-            cand_flops = self.est.get_flops(self.mutator._cache)
+            # calculate flops of current architecture
+            cand_flops = self._get_cand_flops(self.mutator._cache)
 
-            if epoch > self.meta_sta_epoch and step > 0 and step % self.update_iter == 0:
+            # update meta matching network
+            self._run_update(input_data, target, step)
 
-                slice_ind = self.slices
-                x = deepcopy(input_data[:slice_ind].clone().detach())
+            # select teacher architecture
+            meta_value, teacher_cand = self._select_teacher()
+            self.current_teacher_arch = teacher_cand
 
-                if self.best_children_pool:
-                    if self.pick_method == 'top1':
-                        meta_value, cand = 1, sorted(self.best_children_pool, reverse=True)[0][3]
-                    elif self.pick_method == 'meta':
-                        meta_value, cand_idx, cand = -1000000000, -1, None
-                        for now_idx, item in enumerate(self.best_children_pool):
-                            inputx = item['input']
-                            output = F.softmax(self.model(inputx), dim=1)
-                            weight = get_model(self.model).forward_meta(output - item['feature_map'])
-                            if weight > meta_value:
-                                meta_value = weight  # deepcopy(torch.nn.functional.sigmoid(weight))
-                                cand_idx = now_idx
-                                cand = self.arch_dict[(self.best_children_pool[cand_idx]['acc'],
-                                                       self.best_children_pool[cand_idx]['arch_list'])]
-                        assert cand is not None
-                        meta_value = torch.nn.functional.sigmoid(-weight)
-                    else:
-                        raise ValueError('Method Not supported')
-
-                    u_output = self.model(x)
-
-                    saved_cache = self.mutator._cache
-                    self.mutator._cache = cand
-                    u_teacher_output = self.model(x)
-                    self.mutator._cache = saved_cache
-
-                    u_soft_label = F.softmax(u_teacher_output, dim=1)
-                    kd_loss = meta_value * self.cross_entropy_loss_with_soft_target(u_output, u_soft_label)
-                    self.optimizer.zero_grad()
-
-                    grad_1 = torch.autograd.grad(kd_loss,
-                                                 get_model(self.model).rand_parameters(self.mutator._cache),
-                                                 create_graph=True)
-
-                    def raw_sgd(w, g):
-                        return g * self.optimizer.param_groups[-1]['lr'] + w
-
-                    students_weight = [raw_sgd(p, grad_item)
-                                       for p, grad_item in
-                                       zip(get_model(self.model).rand_parameters(self.mutator._cache), grad_1)]
-
-                    # update student weights
-                    for weight, grad_item in zip(get_model(self.model).rand_parameters(self.mutator._cache), grad_1):
-                        weight.grad = grad_item
-                    torch.nn.utils.clip_grad_norm_(get_model(self.model).rand_parameters(self.mutator._cache), 1)
-                    self.optimizer.step()
-                    for weight, grad_item in zip(get_model(self.model).rand_parameters(self.mutator._cache), grad_1):
-                        del weight.grad
-
-                    held_out_x = deepcopy(input_data[slice_ind:slice_ind * 2].clone().detach())
-                    output_2 = self.model(held_out_x)
-                    valid_loss = self.loss(output_2, target[slice_ind:slice_ind * 2])
-                    self.optimizer.zero_grad()
-
-                    grad_student_val = torch.autograd.grad(valid_loss,
-                                                           get_model(self.model).rand_parameters(self.mutator._cache),
-                                                           retain_graph=True)
-
-                    grad_teacher = torch.autograd.grad(students_weight[0],
-                                                       get_model(self.model).rand_parameters(cand,
-                                                                                             self.pick_method == 'meta'),
-                                                       grad_outputs=grad_student_val)
-
-                    # update teacher model
-                    for weight, grad_item in zip(
-                            get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
-                            grad_teacher):
-                        weight.grad = grad_item
-                    torch.nn.utils.clip_grad_norm_(
-                        get_model(self.model).rand_parameters(self.mutator._cache, self.pick_method == 'meta'), 1)
-                    self.optimizer.step()
-                    for weight, grad_item in zip(
-                            get_model(self.model).rand_parameters(cand, self.pick_method == 'meta'),
-                            grad_teacher):
-                        del weight.grad
-
-                    for item in students_weight:
-                        del item
-                    del grad_teacher, grad_1, grad_student_val, x, held_out_x
-                    del valid_loss, kd_loss, u_soft_label, u_output, u_teacher_output, output_2
-
-                else:
-                    raise ValueError("Must 1nd or 2nd update teacher weights")
-
-            # get_best_teacher
-            if self.best_children_pool:
-                if self.pick_method == 'top1':
-                    meta_value, cand = 0.5, sorted(self.best_children_pool, reverse=True)[0][3]
-                elif self.pick_method == 'meta':
-                    meta_value, cand_idx, cand = -1000000000, -1, None
-                    for now_idx, item in enumerate(self.best_children_pool):
-                        inputx = item['input']
-                        output = F.softmax(self.model(inputx), dim=1)
-                        weight = get_model(self.model).forward_meta(output - item['feature_map'])
-                        if weight > meta_value:
-                            meta_value = weight
-                            cand_idx = now_idx
-                            cand = self.arch_dict[(self.best_children_pool[cand_idx]['acc'],
-                                                   self.best_children_pool[cand_idx]['arch_list'])]
-                    assert cand is not None
-                    meta_value = torch.nn.functional.sigmoid(-weight)
-                else:
-                    raise ValueError('Method Not supported')
-            if not self.best_children_pool:
+            # forward supernet
+            if self._board_size() == 0 or epoch <= self.meta_sta_epoch:
+                self._replace_mutator_cand(self.current_student_arch)
                 output = self.model(input_data)
-                loss = self.loss(output, target)
-                kd_loss = loss
-            elif epoch <= self.meta_sta_epoch:
-                output = self.model(input_data)
+
                 loss = self.loss(output, target)
             else:
+                self._replace_mutator_cand(self.current_student_arch)
                 output = self.model(input_data)
-                with torch.no_grad():
-                    # save student arch
-                    saved_cache = self.mutator._cache
-                    self.mutator._cache = cand
 
-                    # forward
+                gt_loss = self.loss(output, target)
+
+                with torch.no_grad():
+                    self._replace_mutator_cand(self.current_teacher_arch)
                     teacher_output = self.model(input_data).detach()
 
-                    # restore student arch
-                    self.mutator._cache = saved_cache
-                    soft_label = F.softmax(teacher_output, dim=1)
-                kd_loss = self.cross_entropy_loss_with_soft_target(output, soft_label)
-                valid_loss = self.loss(output, target)
-                loss = (meta_value * kd_loss + (2 - meta_value) * valid_loss) / 2
+                    soft_label = torch.nn.functional.softmax(teacher_output, dim=1)
+                kd_loss = self._cross_entropy_loss_with_soft_target(output, soft_label)
 
+                loss = (meta_value * kd_loss + (2 - meta_value) * gt_loss) / 2
+
+            # update network
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
 
-            prec1, prec5 = self.accuracy(output, target, topk=(1, 5))
+            # update metrics
+            prec1, prec5 = accuracy(output, target, topk=(1, 5))
             metrics = {"prec1": prec1, "prec5": prec5, "loss": loss}
-            metrics = self.reduce_metrics(metrics, self.distributed)
+            metrics = reduce_metrics(metrics)
             meters.update(metrics)
 
-            if epoch > self.meta_sta_epoch and (
-                    (len(self.best_children_pool) < self.pool_size) or (prec1 > self.best_children_pool[-1]['acc'] + 5) or
-                    (prec1 > self.best_children_pool[-1]['acc'] and cand_flops < self.best_children_pool[-1]['flops'])):
-                val_prec1 = prec1
-                training_data = deepcopy(input_data[:self.slices].detach())
-                if not self.best_children_pool:
-                    features = deepcopy(output[:self.slices].detach())
-                else:
-                    features = deepcopy(teacher_output[:self.slices].detach())
-                self.best_children_pool.append(
-                    {'acc': val_prec1, 'accu': prec1, 'flops': cand_flops, 'input': training_data,
-                     'feature_map': F.softmax(features, dim=1)})
-                self.arch_dict[(val_prec1, cand_flops)] = self.mutator._cache
-                self.best_children_pool = sorted(self.best_children_pool, key=lambda x: x['acc'], reverse=True)
+            # update prioritized board
+            self._update_prioritized_board(input_data, teacher_output, output, metrics['top1'], cand_flops)
 
-            if len(self.best_children_pool) > self.pool_size:
-                self.best_children_pool = sorted(self.best_children_pool, key=lambda x: x['acc'], reverse=True)
-                del self.best_children_pool[-1]
+            if self.main_proc and (step % self.log_frequency == 0 or step + 1 == self.steps_per_epoch):
+                self.logger.info("Epoch [%d/%d] Step [%d/%d] %s", epoch + 1, self.num_epochs,
+                                 step + 1, len(self.train_loader), meters)
 
-            if self.lr_scheduler is not None:
-                self.lr_scheduler.step()
-
-            if self.main_proc and self.log_frequency is not None and step % self.log_frequency == 0:
-                logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
-                            self.num_epochs, step + 1, len(self.train_loader), meters)
-
-        if self.main_proc:
+        if self.main_proc and self.num_epochs == epoch + 1:
             for idx, i in enumerate(self.best_children_pool):
                 logger.info("No.%s %s", idx, i[:4])
 
