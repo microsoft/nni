@@ -4,6 +4,7 @@
 import logging
 import torch
 from schema import And, Optional
+import copy
 
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .constants import MASKER_DICT
@@ -113,7 +114,9 @@ class ADMMPruner(OneshotPruner):
         tensor
             the projected matrix
         '''
-        return weight.data.mul(self.masker.calc_mask(sparsity, wrapper)['weight_mask'])
+        wrapper_copy = copy.deepcopy(wrapper)
+        wrapper_copy.module.weight.data = weight
+        return weight.data.mul(self.masker.calc_mask(sparsity, wrapper_copy)['weight_mask'])
 
     def compress(self):
         """
