@@ -57,6 +57,7 @@ class BigModel(torch.nn.Module):
         x = self.fc3(x)
         return x
 
+@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class GraphUtilsTestCase(TestCase):
     def test_build_module_graph(self):
         big_model = BigModel()
