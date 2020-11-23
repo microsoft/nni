@@ -16,7 +16,7 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 | Model (M Flops) |  8Gpus | 16Gpus | 
 | ---- |:-------------:| :-----:|
 | 14M | 59.3 | 59.6 |
-| 42M | 65.8 | 66.5 |
+| 43M | 65.8 | 66.5 |
 | 114M | 72.1 | 72.8 |
 | 287M | 76.7 | 77.6 |
 | 481M | 78.9 | 79.2 |
@@ -74,9 +74,9 @@ The searched architectures need to be retrained and obtain the final model. The 
 
 ### II. Retrain
 
-To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,42,112,287,481,604], which stands for different Flops(MB).
+To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,43,112,287,481,604], which stands for different Flops(MB).
 ```buildoutcfg
-MODEL_SELECTION: 42 # Retrain 42m model
+MODEL_SELECTION: 43 # Retrain 43m model
 MODEL_SELECTION: 481 # Retrain 481m model
 ......
 ```
@@ -93,7 +93,7 @@ python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./confi
 To test our trained of models, you need to use `MODEL_SELECTION` in `./configs/test.yaml` to specify which model to test.
 
 ```
-MODEL_SELECTION: 42 # test 42m model
+MODEL_SELECTION: 43 # test 43m model
 MODEL_SELECTION: 481 # test 470m model
 ......
 ```
@@ -101,12 +101,12 @@ MODEL_SELECTION: 481 # test 470m model
 After specifying the flops of the model, you need to write the path to the resume model in `./test.sh`.
 
 ```
-RESUME_PATH: './42.pth.tar'
+RESUME_PATH: './43.pth.tar'
 RESUME_PATH: './481.pth.tar'
 ......
 ```
 
-We provide 14M/42M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
+We provide 14M/43M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
 
 After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME_PATH` in './configs/test.yaml', you need to use the following command to test the model.
 
