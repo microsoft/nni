@@ -7,5 +7,6 @@ git+https://github.com/sovrasov/flops-counter.pytorch.git
 pillow==6.1.0
 torch==1.2
 timm==0.1.20
-git+https://github.com/Tramac/torchscope.git
+tensorboardx==1.2
 tensorboard
+future

@@ -1,0 +1,53 @@
+AUTO_RESUME: False
+DATA_DIR: './data/imagenet'
+MODEL: 'Supernet_Training'
+RESUME_PATH: './experiments/workspace/train/resume.pth.tar'
+SAVE_PATH: './checkpoints'
+SEED: 42
+LOG_INTERVAL: 50
+RECOVERY_INTERVAL: 0
+WORKERS: 8
+NUM_GPU: 8
+SAVE_IMAGES: False
+AMP: False
+OUTPUT: 'None'
+EVAL_METRICS: 'prec1'
+TTA: 0
+LOCAL_RANK: 0
+
+DATASET:
+  NUM_CLASSES: 1000
+  IMAGE_SIZE: 224 # image patch size
+  INTERPOLATION: 'bilinear' # Image resize interpolation type
+  BATCH_SIZE: 128 # batch size
+
+NET:
+  GP: 'avg'
+  DROPOUT_RATE: 0.0
+
+  EMA:
+    USE: True
+    FORCE_CPU: False # force model ema to be tracked on CPU
+    DECAY: 0.9998
+
+OPT: 'sgd'
+LR: 1.0
+EPOCHS: 120
+META_LR: 1e-4
+
+BATCHNORM:
+  SYNC_BN: False
+
+SUPERNET:
+  UPDATE_ITER: 200
+  SLICE: 4
+  POOL_SIZE: 10
+  RESUNIT: False
+  DIL_CONV: False
+  UPDATE_2ND: True
+  FLOPS_MINIMUM: 0
+  FLOPS_MAXIMUM: 600
+  PICK_METHOD: 'meta'
+  META_STA_EPOCH: 20
+  HOW_TO_PROB: 'pre_prob'
+  PRE_PROB: (0.05,0.2,0.05,0.5,0.05,0.15)
