@@ -1,6 +1,3 @@
-# Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search
-
-
 # Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search 
 This is an official implementation for our Cream NAS work presented in NeurIPS'20.
 
