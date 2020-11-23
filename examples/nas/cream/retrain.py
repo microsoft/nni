@@ -65,7 +65,7 @@ def main():
                     3, 3, 3, 3], [
                         3, 3, 3, 3], [0]]
         cfg.DATASET.IMAGE_SIZE = 224
-    elif cfg.NET.SELECTION == 42:
+    elif cfg.NET.SELECTION == 43:
         arch_list = [[0], [3], [3, 1], [3, 1], [3, 3, 3], [3, 3], [0]]
         cfg.DATASET.IMAGE_SIZE = 96
     elif cfg.NET.SELECTION == 14:
