@@ -61,7 +61,6 @@ channel_dependency_ground_truth = {
 unittest.TestLoader.sortTestMethodsUsing = None
 
 
-@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class AnalysisUtilsTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_channel_dependency(self):
