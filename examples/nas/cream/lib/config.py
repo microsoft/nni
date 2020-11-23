@@ -53,6 +53,7 @@ __C.NET = CN()
 __C.NET.SELECTION = 14
 __C.NET.GP = 'avg'  # type of global pool ["avg", "max", "avgmax", "avgmaxc"]
 __C.NET.DROPOUT_RATE = 0.0  # dropout rate
+__C.NET.INPUT_ARCH = [[0], [3], [3, 3], [3, 1, 3], [3, 3, 3, 3], [3, 3, 3], [0]]
 
 # model ema parameters
 __C.NET.EMA = CN()

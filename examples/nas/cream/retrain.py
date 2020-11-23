@@ -86,6 +86,9 @@ def main():
                     3, 3, 2, 2, 3, 3], [
                         3, 3, 2, 3, 3, 3], [0]]
         cfg.DATASET.IMAGE_SIZE = 224
+    elif cfg.NET.SELECTION == -1:
+        arch_list = cfg.NET.INPUT_ARCH
+        cfg.DATASET.IMAGE_SIZE = 224
     else:
         raise ValueError("Model Retrain Selection is not Supported!")
 
