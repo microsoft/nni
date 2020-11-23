@@ -1,8 +1,19 @@
-# Cream of the Crop: 
-# Distilling Prioritized Paths For One-Shot Neural Architecture Search
+# Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search
+
+
+# Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search 
+This is an official implementation for our Cream NAS work presented in NeurIPS'20.
+
+**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk]](https://pan.baidu.com/s/4hymmwni) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
+
+In this work, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent MobileNetV3 (Google, ICCV’19) and EfficientNet (Google, ICML’19) families under aligned settings.
+
+<div >
+    <img src="./demo/intro.jpg" width="800"/>
+</div>
 
 ## Introduction
-One-shot weight sharing methods have recently drawn great attention in neural architecture search due to high efficiency and competitive performance. However, weight sharing across models has an inherent deficiency, i.e., insufficient training of subnetworks in the hypernetwork. To alleviate this problem, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. We directly select the most promising one from the prioritized paths as the final architecture, without using other complex search methods, such as reinforcement learning or evolution algorithms. The experiments on ImageNet verify such path distillation method can improve the convergence ratio and performance of the hypernetwork, as well as boosting the training of subnetworks. The discovered architectures achieve superior performance compared to the recent MobileNetV3 and EfficientNet families under aligned settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method. For more details, please refer to the paper (coming soon).
+Neural Architecture Search (NAS) is an exciting field which facilitates the automatic design of deep networks. In this project, we propose a novel one-shot NAS method and introduce the concept of prioritized paths to NAS. The prioritized path refers to the architecture candidates exhibiting superior performance during searching. Distilling knowledge from prioritized paths allows boosting the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final discovered paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent MobileNetV3 (Google, ICCV’19) and EfficientNet (Google, ICML’19) families under aligned settings.
 
 <div align="left">
   <img src="./../../img/cream.png" height="230" alt="Cream"/><br/>
