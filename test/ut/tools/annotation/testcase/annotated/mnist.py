@@ -38,8 +38,7 @@ class MnistNetwork(object):
                 input_dim = int(math.sqrt(self.x_dim))
             except:
                 logger.debug(
-                    'input dim cannot be sqrt and reshape. input dim: ' +
-                    str(self.x_dim))
+                    'input dim cannot be sqrt and reshape. input dim: ', str(self.x_dim))
                 raise
             x_image = tf.reshape(self.x, [-1, input_dim, input_dim, 1])
         with tf.name_scope('conv1'):
@@ -132,7 +131,7 @@ def main():
     mnist_network.build_network()
     logger.debug('Mnist build network done.')
     graph_location = tempfile.mkdtemp()
-    logger.debug('Saving graph to: %s' % graph_location)
+    logger.debug('Saving graph to: %s', graph_location)
     train_writer = tf.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.get_default_graph())
     test_acc = 0.0
