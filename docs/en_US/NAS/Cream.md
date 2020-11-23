@@ -113,5 +113,3 @@ After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME
 ```
 python -m torch.distributed.launch --nproc_per_node=8 ./test.py --cfg ./configs/test.yaml
 ```
-
-
