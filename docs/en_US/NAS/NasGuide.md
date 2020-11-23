@@ -27,7 +27,7 @@ def metrics_fn(output, target):
     # metrics function receives output and target and computes a dict of metrics
     return {"acc1": top1_accuracy(output, target)}
 
-from nni.nas.pytorch import enas
+from nni.algorithms.nas.pytorch import enas
 trainer = enas.EnasTrainer(model,
                            loss=criterion,
                            metrics=metrics_fn,

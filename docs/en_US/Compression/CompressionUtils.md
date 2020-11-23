@@ -13,7 +13,7 @@ First, we provide a sensitivity analysis tool (**SensitivityAnalysis**) for user
 
 The following codes show the basic usage of the SensitivityAnalysis.
 ```python
-from nni.compression.torch.utils.sensitivity_analysis import SensitivityAnalysis
+from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
 
 def val(model):
     model.eval()
@@ -88,7 +88,7 @@ If the layers have channel dependency are assigned with different sparsities (he
 
 #### Usage
 ```python
-from nni.compression.torch.utils.shape_dependency import ChannelDependency
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency
 data = torch.ones(1, 3, 224, 224).cuda()
 channel_depen = ChannelDependency(net, data)
 channel_depen.export('dependency.csv')
@@ -116,19 +116,33 @@ Set 12,layer4.1.conv1
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
 ```
-from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
 ```
 
 ## Model FLOPs/Parameters Counter
-We provide a model counter for calculating the model FLOPs and parameters. This counter supports calculating FLOPs/parameters of a normal model without masks, it can also calculates FLOPs/parameters of a model with mask wrappers, which helps users easily check model complexity during model compression on NNI. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number (i.e., the number calculated after Model Speedup).
+We provide a model counter for calculating the model FLOPs and parameters. This counter supports calculating FLOPs/parameters of a normal model without masks, it can also calculates FLOPs/parameters of a model with mask wrappers, which helps users easily check model complexity during model compression on NNI. Note that, for sturctured pruning, we only identify the remained filters according to its mask, which not taking the pruned input channels into consideration, so the calculated FLOPs will be larger than real number (i.e., the number calculated after Model Speedup). 
+
+We support two modes to collect information of modules. The first mode is `default`, which only collect the information of convolution and linear. The second mode is `full`, which also collect the information of other operations. Users can easily use our collected `results` for futher analysis.
 
 ### Usage
 ```
-from nni.compression.torch.utils.counter import count_flops_params
+from nni.compression.pytorch.utils.counter import count_flops_params
 
-# Given input size (1, 1, 28, 28) 
-flops, params = count_flops_params(model, (1, 1, 28, 28))
+# Given input size (1, 1, 28, 28)
+flops, params, results = count_flops_params(model, (1, 1, 28, 28)) 
+
+# Given input tensor with size (1, 1, 28, 28) and switch to full mode
+x = torch.randn(1, 1, 28, 28)
+
+flops, params, results = count_flops_params(model, (x,) mode='full') # tuple of tensor as input
+
 # Format output size to M (i.e., 10^6)
 print(f'FLOPs: {flops/1e6:.3f}M,  Params: {params/1e6:.3f}M)
+print(results)
+{
+'conv': {'flops': [60], 'params': [20], 'weight_size': [(5, 3, 1, 1)], 'input_size': [(1, 3, 2, 2)], 'output_size': [(1, 5, 2, 2)], 'module_type': ['Conv2d']}, 
+'conv2': {'flops': [100], 'params': [30], 'weight_size': [(5, 5, 1, 1)], 'input_size': [(1, 5, 2, 2)], 'output_size': [(1, 5, 2, 2)], 'module_type': ['Conv2d']}
+}
+
 ```
