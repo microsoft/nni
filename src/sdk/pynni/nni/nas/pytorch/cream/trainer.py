@@ -95,7 +95,6 @@ class CreamSupernetTrainer(Trainer):
         self.pick_method = pick_method
         self.pool_size = pool_size
         self.local_rank = local_rank
-        self.main_proc = (local_rank == 0)
         self.choice_num = choice_num
         self.sta_num = sta_num
         self.acc_gap = acc_gap
@@ -104,6 +103,8 @@ class CreamSupernetTrainer(Trainer):
 
         self.current_student_arch = None
         self.current_teacher_arch = None
+        self.main_proc = (local_rank == 0)
+        self.current_epoch = 0
 
         self.prioritized_board = []
 
@@ -317,13 +318,14 @@ class CreamSupernetTrainer(Trainer):
     def _get_cand_flops(self, cand):
         flops = 0
         for block_id, block in enumerate(cand):
-            for module_id, choice in enumerate(block):
-                if choice == -1:
-                    continue
-                flops += self.flops_dict[block_id][module_id][choice]
+            if block is 'LayerChoice1' or block_id is 'LayerChoice23':
+                continue
+            for idx, choice in enumerate(cand[block]):
+                flops += self.flops_dict[block_id][idx] * (1 if choice else 0)
         return flops + self.flops_fixed
 
     def train_one_epoch(self, epoch):
+        self.current_epoch = epoch
         meters = AverageMeterGroup()
         for step, (input_data, target) in enumerate(self.train_loader):
             self.mutator.reset()
@@ -337,9 +339,10 @@ class CreamSupernetTrainer(Trainer):
             # update meta matching network
             self._run_update(input_data, target, step)
 
-            # select teacher architecture
-            meta_value, teacher_cand = self._select_teacher()
-            self.current_teacher_arch = teacher_cand
+            if self._board_size() > 0:
+                # select teacher architecture
+                meta_value, teacher_cand = self._select_teacher()
+                self.current_teacher_arch = teacher_cand
 
             # forward supernet
             if self._board_size() == 0 or epoch <= self.meta_sta_epoch:
@@ -347,6 +350,7 @@ class CreamSupernetTrainer(Trainer):
                 output = self.model(input_data)
 
                 loss = self.loss(output, target)
+                kd_loss, teacher_output, teacher_cand = None, None, None
             else:
                 self._replace_mutator_cand(self.current_student_arch)
                 output = self.model(input_data)
@@ -374,10 +378,10 @@ class CreamSupernetTrainer(Trainer):
             meters.update(metrics)
 
             # update prioritized board
-            self._update_prioritized_board(input_data, teacher_output, output, metrics['top1'], cand_flops)
+            self._update_prioritized_board(input_data, teacher_output, output, metrics['prec1'], cand_flops)
 
             if self.main_proc and (step % self.log_frequency == 0 or step + 1 == self.steps_per_epoch):
-                self.logger.info("Epoch [%d/%d] Step [%d/%d] %s", epoch + 1, self.num_epochs,
+                logger.info("Epoch [%d/%d] Step [%d/%d] %s", epoch + 1, self.num_epochs,
                                  step + 1, len(self.train_loader), meters)
 
         if self.main_proc and self.num_epochs == epoch + 1:

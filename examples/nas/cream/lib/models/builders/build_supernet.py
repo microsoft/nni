@@ -5,6 +5,7 @@ from lib.models.blocks import get_Bottleneck, InvertedResidual
 
 from timm.models.efficientnet_blocks import *
 
+from nni.nas.pytorch import mutables
 
 class SuperNetBuilder:
     """ Build Trunk Blocks
@@ -122,25 +123,22 @@ class SuperNetBuilder:
              List of block stacks (each stack wrapped in nn.Sequential)
         """
         if self.verbose:
-            self.logger.info(
-                'Building model trunk with %d stages...' %
-                len(model_block_args))
+            logging.info('Building model trunk with %d stages...' % len(model_block_args))
         self.in_chs = in_chs
         total_block_count = sum([len(x) for x in model_block_args])
         total_block_idx = 0
         current_stride = 2
         current_dilation = 1
         feature_idx = 0
-        stages = nn.ModuleList()
-        # outer list of block_args defines the stacks ('stages' by some
-        # conventions)
+        stages = []
+        # outer list of block_args defines the stacks ('stages' by some conventions)
         for stage_idx, stage_block_args in enumerate(model_block_args):
             last_stack = stage_idx == (len(model_block_args) - 1)
             if self.verbose:
                 self.logger.info('Stack: {}'.format(stage_idx))
             assert isinstance(stage_block_args, list)
 
-            blocks = nn.ModuleList()
+            # blocks = []
             # each stack (stage) contains a list of block arguments
             for block_idx, block_args in enumerate(stage_block_args):
                 last_block = block_idx == (len(stage_block_args) - 1)
@@ -159,17 +157,14 @@ class SuperNetBuilder:
                     if next_output_stride > self.output_stride:
                         next_dilation = current_dilation * block_args['stride']
                         block_args['stride'] = 1
-                        if self.verbose:
-                            self.logger.info(
-                                '  Converting stride to dilation to maintain output_stride=={}'.format(
-                                    self.output_stride))
                     else:
                         current_stride = next_output_stride
                 block_args['dilation'] = current_dilation
                 if next_dilation != current_dilation:
                     current_dilation = next_dilation
 
-                if stage_idx == 0 or stage_idx == 6:
+
+                if stage_idx==0 or stage_idx==6:
                     self.choice_num = 1
                 else:
                     self.choice_num = len(self.choices)
@@ -177,43 +172,30 @@ class SuperNetBuilder:
                     if self.dil_conv:
                         self.choice_num += 2
 
-                choice_blocks = nn.ModuleList()
+                choice_blocks = []
                 block_args_copy = deepcopy(block_args)
                 if self.choice_num == 1:
                     # create the block
-                    block = self._make_block(
-                        block_args, 0, total_block_idx, total_block_count)
+                    block = self._make_block(block_args, 0, total_block_idx, total_block_count)
                     choice_blocks.append(block)
                 else:
                     for choice_idx, choice in enumerate(self.choices):
                         # create the block
                         block_args = deepcopy(block_args_copy)
-                        block_args = modify_block_args(
-                            block_args, choice[0], choice[1])
-                        block = self._make_block(
-                            block_args, choice_idx, total_block_idx, total_block_count)
+                        block_args = modify_block_args(block_args, choice[0], choice[1])
+                        block = self._make_block(block_args, choice_idx, total_block_idx, total_block_count)
                         choice_blocks.append(block)
                     if self.dil_conv:
                         block_args = deepcopy(block_args_copy)
                         block_args = modify_block_args(block_args, 3, 0)
-                        block = self._make_block(
-                            block_args,
-                            self.choice_num - 2,
-                            total_block_idx,
-                            total_block_count,
-                            resunit=self.resunit,
-                            dil_conv=self.dil_conv)
+                        block = self._make_block(block_args, self.choice_num - 2, total_block_idx, total_block_count,
+                                                 resunit=self.resunit, dil_conv=self.dil_conv)
                         choice_blocks.append(block)
 
                         block_args = deepcopy(block_args_copy)
                         block_args = modify_block_args(block_args, 5, 0)
-                        block = self._make_block(
-                            block_args,
-                            self.choice_num - 1,
-                            total_block_idx,
-                            total_block_count,
-                            resunit=self.resunit,
-                            dil_conv=self.dil_conv)
+                        block = self._make_block(block_args, self.choice_num - 1, total_block_idx, total_block_count,
+                                                 resunit=self.resunit, dil_conv=self.dil_conv)
                         choice_blocks.append(block)
 
                     if self.resunit:
@@ -222,9 +204,11 @@ class SuperNetBuilder:
                                                block.conv_dw.stride[0])
                         choice_blocks.append(block)
 
-                blocks.append(choice_blocks)
-                # incr global block idx (across all stacks)
-                total_block_idx += 1
+                choice_block = mutables.LayerChoice(choice_blocks)
+                stages.append(choice_block)
+                # create the block
+                # block = self._make_block(block_args, total_block_idx, total_block_count)
+                total_block_idx += 1  # incr global block idx (across all stacks)
 
-            stages.append(blocks)
+            # stages.append(blocks)
         return stages

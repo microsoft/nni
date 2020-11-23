@@ -10,10 +10,7 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-import _init_paths
-
 # import timm packages
-from timm.utils import CheckpointSaver, update_summary
 from timm.loss import LabelSmoothingCrossEntropy
 from timm.data import Dataset, create_loader
 from timm.models import resume_checkpoint
@@ -30,8 +27,6 @@ except ImportError:
 # import models and training functions
 from lib.utils.flops_table import FlopsEst
 from lib.models.structures.supernet import gen_supernet
-from lib.models.PrioritizedBoard import PrioritizedBoard
-from lib.models.MetaMatchingNetwork import MetaMatchingNetwork
 from lib.config import DEFAULT_CROP_PCT, IMAGENET_DEFAULT_STD, IMAGENET_DEFAULT_MEAN
 from lib.utils.util import parse_config_args, get_logger, \
     create_optimizer_supernet, create_supernet_scheduler
@@ -85,7 +80,7 @@ def main():
         logger=logger)
 
     # number of choice blocks in supernet
-    choice_num = len(model.blocks[1][0])
+    choice_num = len(model.blocks[7])
     if args.local_rank == 0:
         logger.info('Supernet created, param count: %d', (
             sum([m.numel() for m in model.parameters()])))
@@ -200,7 +195,7 @@ def main():
     trainer = CreamSupernetTrainer(model, train_loss_fn, validate_loss_fn,
                                    optimizer, num_epochs, loader_train, loader_eval,
                                    mutator=mutator, batch_size=cfg.DATASET.BATCH_SIZE,
-                                   log_frequency=cfg.LOG_FREQUENCY,
+                                   log_frequency=cfg.LOG_INTERVAL,
                                    meta_sta_epoch=cfg.SUPERNET.META_STA_EPOCH,
                                    update_iter=cfg.SUPERNET.UPDATE_ITER,
                                    slices=cfg.SUPERNET.SLICE,

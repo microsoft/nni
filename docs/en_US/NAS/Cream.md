@@ -1,14 +1,15 @@
-# Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search
+# Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search 
 
-## Introduction
-One-shot weight sharing methods have recently drawn great attention in neural architecture search due to high efficiency and competitive performance. However, weight sharing across models has an inherent deficiency, i.e., insufficient training of subnetworks in the hypernetwork. To alleviate this problem, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. We directly select the most promising one from the prioritized paths as the final architecture, without using other complex search methods, such as reinforcement learning or evolution algorithms. The experiments on ImageNet verify such path distillation method can improve the convergence ratio and performance of the hypernetwork, as well as boosting the training of subnetworks. The discovered architectures achieve superior performance compared to the recent MobileNetV3 and EfficientNet families under aligned settings. Moreover, the experiments on object detection and more challenging search space show the generality and robustness of the proposed method. For more details, please refer to the paper (coming soon).
+**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk]](https://pan.baidu.com/s/4hymmwni) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
 
-<div align="left">
-  <img src="./../../img/cream.jpg" height="230" alt="Cream"/><br/>
-  <!-- <p>Example SiamFC, SiamRPN and SiamMask outputs.</p> -->
+In this work, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent [MobileNetV3](https://arxiv.org/abs/1905.02244) and [EfficientNet](https://arxiv.org/abs/1905.11946) families under aligned settings.
+
+<div >
+    <img src="https://github.com/microsoft/Cream/blob/main/demo/intro.jpg" width="800"/>
 </div>
 
-## Reproduction Results
+
+## Reproduced Results
 Top-1 Accuracy on ImageNet. The top-1 accuracy of Cream search algorithm surpasses MobileNetV3 and EfficientNet-B0/B1 on ImageNet.
 The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 
@@ -17,21 +18,14 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 | 14M | 59.3 | 59.6 |
 | 42M | 65.8 | 66.5 |
 | 114M | 72.1 | 72.8 |
-| 285M | 76.7 | 77.6 |
-| 470M | 78.9 | 79.2 |
-| 600M | 79.4 | 80.0 |
+| 287M | 76.7 | 77.6 |
+| 481M | 78.9 | 79.2 |
+| 604M | 79.4 | 80.0 |
 
 <table style="border: none">
     <th><img src="./../../img/cream_flops100.jpg" alt="drawing" width="400"/></th>
     <th><img src="./../../img/cream_flops600.jpg" alt="drawing" width="400"/></th>
 </table>
-
-
-## Requirements
-* python >= 3.6
-* torch >= 1.2
-* torchscope
-* apex
 
 ## Examples
 
@@ -58,59 +52,66 @@ Put the imagenet data in `./data`. It should be like following:
 First, build environments for searching.
 
 ```
-pip install -r ./requirements.txt
+pip install -r ./requirements
 ```
 
-To search for an architecture, you need to configure the parameters `flops_minimum` and `flops_maximum` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./run.sh`
+To search for an architecture, you need to configure the parameters `FLOPS_MINIMUM` and `FLOPS_MAXIMUM` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./configs/train.yaml`
 
 ```
---flops_minimum 0 # Minimum Flops of Architecture
---flops_maximum 600 # Maximum Flops of Architecture
+FLOPS_MINIMUM: 0 # Minimum Flops of Architecture
+FLOPS_MAXIMUM: 600 # Maximum Flops of Architecture
 ```
 
-For example, if you expect to search an architecture with model flops <= 200M, please set the `flops_minimum` and `flops_maximum` to be `0` and `200`.
+For example, if you expect to search an architecture with model flops <= 200M, please set the `FLOPS_MINIMUM` and `FLOPS_MAXIMUM` to be `0` and `200`.
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 
 ```
-sh ./run.sh
+python -m torch.distributed.launch --nproc_per_node=8 ./train.py --cfg ./configs/train.yaml
 ```
 
 The searched architectures need to be retrained and obtain the final model. The final model is saved in `.pth.tar` format. Retraining code will be released soon.
 
+### II. Retrain
+
+To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,42,112,287,481,604], which stands for different Flops(MB).
+```buildoutcfg
+MODEL_SELECTION: 42 # Retrain 42m model
+MODEL_SELECTION: 481 # Retrain 481m model
+......
+```
+
+
+
+After adding `MODEL_SELECTION` in `./configs/retrain.yaml`, you need to use the following command to train the model.
+```buildoutcfg
+python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./configs/retrain.yaml
+```
+
 ### II. Test
 
-To test our trained of models, you need to use `model_selection` in `./test.sh` to specify which model to test.
+To test our trained of models, you need to use `MODEL_SELECTION` in `./configs/test.yaml` to specify which model to test.
 
 ```
---model_selection 42 # test 42m model
---model_selection 470 # test 470m model
+MODEL_SELECTION: 42 # test 42m model
+MODEL_SELECTION: 481 # test 470m model
 ......
 ```
 
 After specifying the flops of the model, you need to write the path to the resume model in `./test.sh`.
 
 ```
---resume './data/ckpts/42.pth.tar'
---resume './data/ckpts/470.pth.tar'
+RESUME_PATH: './42.pth.tar'
+RESUME_PATH: './481.pth.tar'
 ......
 ```
 
-We provide 14M/42M/114M/285M/470M/600M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
+We provide 14M/42M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
 
-After downloading the pretrained models and adding `--model_selection` and `--resume` in './test.sh', you need to use the following command to test the model.
+After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME_PATH` in './configs/test.yaml', you need to use the following command to test the model.
 
 ```
-sh ./test.sh
+python -m torch.distributed.launch --nproc_per_node=8 ./test.py --cfg ./configs/test.yaml
 ```
 
-The test result will be saved in `./retrain`. You can configure the `--output` in `./test.sh` to specify a path for it.
 
-```eval_rst
-..  autoclass:: nni.nas.pytorch.cream.CreamSupernetTrainer
-    :members:
-
-..  autoclass:: nni.nas.pytorch.cdarts.CreamSupernetTrainingMutator
-    :members:
-    
-```

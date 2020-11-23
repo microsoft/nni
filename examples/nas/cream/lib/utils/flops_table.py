@@ -36,17 +36,14 @@ class FlopsEst(object):
             self.flops_dict[block_id] = {}
             self.params_dict[block_id] = {}
             for module_id, module in enumerate(block):
-                self.flops_dict[block_id][module_id] = {}
-                self.params_dict[block_id][module_id] = {}
-                for choice_id, choice in enumerate(module):
-                    flops, params = get_model_complexity_info(choice, tuple(
-                        input.shape[1:]), as_strings=False, print_per_layer_stat=False)
-                    # Flops(M)
-                    self.flops_dict[block_id][module_id][choice_id] = flops / 1e6
-                    # Params(M)
-                    self.params_dict[block_id][module_id][choice_id] = params / 1e6
+                flops, params = get_model_complexity_info(module, tuple(
+                    input.shape[1:]), as_strings=False, print_per_layer_stat=False)
+                # Flops(M)
+                self.flops_dict[block_id][module_id] = flops / 1e6
+                # Params(M)
+                self.params_dict[block_id][module_id] = params / 1e6
 
-                input = choice(input)
+            input = module(input)
 
         # conv_last
         flops, params = get_model_complexity_info(model.global_pool, tuple(
@@ -66,18 +63,17 @@ class FlopsEst(object):
     def get_params(self, arch):
         params = 0
         for block_id, block in enumerate(arch):
-            for module_id, choice in enumerate(block):
-                if choice == -1:
-                    continue
-                params += self.params_dict[block_id][module_id][choice]
+            if block == -1:
+                continue
+            params += self.params_dict[block_id][block]
         return params + self.params_fixed
 
     # return flops (M)
     def get_flops(self, arch):
         flops = 0
         for block_id, block in enumerate(arch):
-            for module_id, choice in enumerate(block):
-                if choice == -1:
-                    continue
-                flops += self.flops_dict[block_id][module_id][choice]
+            if block is 'LayerChoice1' or block_id is 'LayerChoice23':
+                continue
+            for idx, choice in enumerate(arch[block]):
+                flops += self.flops_dict[block_id][idx] * (1 if choice else 0)
         return flops + self.flops_fixed

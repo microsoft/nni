@@ -30,6 +30,7 @@ __C.WORKERS = 4
 __C.NUM_GPU = 1
 __C.SAVE_IMAGES = False
 __C.AMP = False
+__C.ACC_GAP = 5
 __C.OUTPUT = 'output/path/'
 __C.EVAL_METRICS = 'prec1'
 __C.TTA = 0  # Test or inference time augmentation
