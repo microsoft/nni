@@ -70,7 +70,8 @@ class SuperNet(nn.Module):
             resunit=resunit,
             dil_conv=dil_conv,
             logger=self.logger)
-        self.blocks = builder(self._in_chs, block_args)
+        blocks = builder(self._in_chs, block_args)
+        self.blocks = nn.Sequential(*blocks)
         self._in_chs = builder.in_chs
 
         # Head + Pooling
@@ -102,23 +103,18 @@ class SuperNet(nn.Module):
             self.num_features * self.global_pool.feat_mult(),
             num_classes) if self.num_classes else None
 
-    def forward_features(self, x, architecture):
+    def forward_features(self, x):
         x = self.conv_stem(x)
         x = self.bn1(x)
         x = self.act1(x)
-        for layer, layer_arch in zip(self.blocks, architecture):
-            for blocks, arch in zip(layer, layer_arch):
-                if arch == -1:
-                    continue
-                x = blocks[arch](x)
-
+        x = self.blocks(x)
         x = self.global_pool(x)
         x = self.conv_head(x)
         x = self.act2(x)
         return x
 
-    def forward(self, x, architecture):
-        x = self.forward_features(x, architecture)
+    def forward(self, x):
+        x = self.forward_features(x)
         x = x.flatten(1)
         if self.drop_rate > 0.:
             x = F.dropout(x, p=self.drop_rate, training=self.training)

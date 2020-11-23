@@ -18,21 +18,14 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 | 14M | 59.3 | 59.6 |
 | 42M | 65.8 | 66.5 |
 | 114M | 72.1 | 72.8 |
-| 285M | 76.7 | 77.6 |
-| 470M | 78.9 | 79.2 |
-| 600M | 79.4 | 80.0 |
+| 287M | 76.7 | 77.6 |
+| 481M | 78.9 | 79.2 |
+| 604M | 79.4 | 80.0 |
 
 <table style="border: none">
     <th><img src="./../../img/cream_flops100.jpg" alt="drawing" width="400"/></th>
     <th><img src="./../../img/cream_flops600.jpg" alt="drawing" width="400"/></th>
 </table>
-
-
-## Requirements
-* python >= 3.6
-* torch >= 1.2
-* torchscope
-* apex
 
 ## Examples
 
@@ -59,59 +52,64 @@ Put the imagenet data in `./data`. It should be like following:
 First, build environments for searching.
 
 ```
-pip install -r ./requirements.txt
+pip install -r ./requirements
 ```
 
-To search for an architecture, you need to configure the parameters `flops_minimum` and `flops_maximum` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./run.sh`
+To search for an architecture, you need to configure the parameters `FLOPS_MINIMUM` and `FLOPS_MAXIMUM` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./configs/train.yaml`
 
 ```
---flops_minimum 0 # Minimum Flops of Architecture
---flops_maximum 600 # Maximum Flops of Architecture
+FLOPS_MINIMUM: 0 # Minimum Flops of Architecture
+FLOPS_MAXIMUM: 600 # Maximum Flops of Architecture
 ```
 
-For example, if you expect to search an architecture with model flops <= 200M, please set the `flops_minimum` and `flops_maximum` to be `0` and `200`.
+For example, if you expect to search an architecture with model flops <= 200M, please set the `FLOPS_MINIMUM` and `FLOPS_MAXIMUM` to be `0` and `200`.
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 
 ```
-sh ./run.sh
+python -m torch.distributed.launch --nproc_per_node=8 ./train.py --cfg ./configs/train.yaml
 ```
 
 The searched architectures need to be retrained and obtain the final model. The final model is saved in `.pth.tar` format. Retraining code will be released soon.
 
+### II. Retrain
+
+To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,42,112,287,481,604], which stands for different Flops(MB).
+```buildoutcfg
+MODEL_SELECTION: 42 # Retrain 42m model
+MODEL_SELECTION: 481 # Retrain 481m model
+......
+```
+
+
+
+After adding `MODEL_SELECTION` in `./configs/retrain.yaml`, you need to use the following command to train the model.
+```buildoutcfg
+python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./configs/retrain.yaml
+```
+
 ### II. Test
 
-To test our trained of models, you need to use `model_selection` in `./test.sh` to specify which model to test.
+To test our trained of models, you need to use `MODEL_SELECTION` in `./configs/test.yaml` to specify which model to test.
 
 ```
---model_selection 42 # test 42m model
---model_selection 470 # test 470m model
+MODEL_SELECTION: 42 # test 42m model
+MODEL_SELECTION: 481 # test 470m model
 ......
 ```
 
 After specifying the flops of the model, you need to write the path to the resume model in `./test.sh`.
 
 ```
---resume './data/ckpts/42.pth.tar'
---resume './data/ckpts/470.pth.tar'
+RESUME_PATH: './42.pth.tar'
+RESUME_PATH: './481.pth.tar'
 ......
 ```
 
-We provide 14M/42M/114M/285M/470M/600M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
+We provide 14M/42M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
 
-After downloading the pretrained models and adding `--model_selection` and `--resume` in './test.sh', you need to use the following command to test the model.
+After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME_PATH` in './configs/test.yaml', you need to use the following command to test the model.
 
 ```
-sh ./test.sh
-```
-
-The test result will be saved in `./retrain`. You can configure the `--output` in `./test.sh` to specify a path for it.
-
-```eval_rst
-..  autoclass:: nni.nas.pytorch.cream.CreamSupernetTrainer
-    :members:
-
-..  autoclass:: nni.nas.pytorch.cdarts.CreamSupernetTrainingMutator
-    :members:
-    
+python -m torch.distributed.launch --nproc_per_node=8 ./test.py --cfg ./configs/test.yaml
 ```
