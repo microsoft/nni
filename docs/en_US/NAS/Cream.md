@@ -74,7 +74,7 @@ The searched architectures need to be retrained and obtain the final model. The 
 
 ### II. Retrain
 
-To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,42,112,287,481,604], which stands for different Flops(MB).
+To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,43,112,287,481,604], which stands for different Flops(MB).
 ```buildoutcfg
 MODEL_SELECTION: 43 # Retrain 43m model
 MODEL_SELECTION: 481 # Retrain 481m model
