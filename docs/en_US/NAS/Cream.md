@@ -8,13 +8,6 @@ In this work, we present a simple yet effective architecture distillation method
     <img src="https://github.com/microsoft/Cream/blob/main/demo/intro.jpg" width="800"/>
 </div>
 
-## Introduction
-Neural Architecture Search (NAS) is an exciting field which facilitates the automatic design of deep networks. In this project, we propose a novel one-shot NAS method and introduce the concept of prioritized paths to NAS. The prioritized path refers to the architecture candidates exhibiting superior performance during searching. Distilling knowledge from prioritized paths allows boosting the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final discovered paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent MobileNetV3 (Google, ICCV’19) and EfficientNet (Google, ICML’19) families under aligned settings.
-
-<div align="left">
-  <img src="./../../img/cream.png" height="230" alt="Cream"/><br/>
-  <!-- <p>Example SiamFC, SiamRPN and SiamMask outputs.</p> -->
-</div>
 
 ## Reproduction Results
 Top-1 Accuracy on ImageNet. The top-1 accuracy of Cream search algorithm surpasses MobileNetV3 and EfficientNet-B0/B1 on ImageNet.
