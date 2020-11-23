@@ -56,7 +56,7 @@ def main():
         writer, logger = None, None
 
     # retrain model selection
-    if cfg.NET.SELECTION == 470:
+    if cfg.NET.SELECTION == 481:
         arch_list = [
             [0], [
                 3, 4, 3, 1], [
@@ -74,10 +74,10 @@ def main():
     elif cfg.NET.SELECTION == 112:
         arch_list = [[0], [3], [3, 3], [3, 3], [3, 3, 3], [3, 3], [0]]
         cfg.DATASET.IMAGE_SIZE = 160
-    elif cfg.NET.SELECTION == 285:
+    elif cfg.NET.SELECTION == 287:
         arch_list = [[0], [3], [3, 3], [3, 1, 3], [3, 3, 3, 3], [3, 3, 3], [0]]
         cfg.DATASET.IMAGE_SIZE = 224
-    elif cfg.NET.SELECTION == 600:
+    elif cfg.NET.SELECTION == 604:
         arch_list = [
             [0], [
                 3, 3, 2, 3, 3], [
