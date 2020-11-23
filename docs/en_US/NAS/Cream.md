@@ -1,6 +1,6 @@
 # Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search 
 
-**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk (PWD: wqw6)]](https://pan.baidu.com/s/4hymmwni) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
+**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk (PWD: wqw6)]](https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
 
 In this work, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent [MobileNetV3](https://arxiv.org/abs/1905.02244) and [EfficientNet](https://arxiv.org/abs/1905.11946) families under aligned settings.
 
@@ -76,7 +76,7 @@ The searched architectures need to be retrained and obtain the final model. The 
 
 To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,42,112,287,481,604], which stands for different Flops(MB).
 ```buildoutcfg
-MODEL_SELECTION: 42 # Retrain 42m model
+MODEL_SELECTION: 43 # Retrain 43m model
 MODEL_SELECTION: 481 # Retrain 481m model
 ......
 ```
@@ -93,7 +93,7 @@ python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./confi
 To test our trained of models, you need to use `MODEL_SELECTION` in `./configs/test.yaml` to specify which model to test.
 
 ```
-MODEL_SELECTION: 42 # test 42m model
+MODEL_SELECTION: 43 # test 43m model
 MODEL_SELECTION: 481 # test 470m model
 ......
 ```
@@ -101,12 +101,12 @@ MODEL_SELECTION: 481 # test 470m model
 After specifying the flops of the model, you need to write the path to the resume model in `./test.sh`.
 
 ```
-RESUME_PATH: './42.pth.tar'
+RESUME_PATH: './43.pth.tar'
 RESUME_PATH: './481.pth.tar'
 ......
 ```
 
-We provide 14M/42M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
+We provide 14M/43M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2) or [[Models-Baidu Disk (password: wqw6)]](https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g) .
 
 After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME_PATH` in './configs/test.yaml', you need to use the following command to test the model.
 
