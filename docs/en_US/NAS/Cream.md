@@ -1,6 +1,6 @@
 # Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search 
 
-**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk]](https://pan.baidu.com/s/4hymmwni) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
+**[[Paper]](https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf) [[Models-Google Drive]](https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing)[[Models-Baidu Disk (PWD: wqw6)]](https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g) [[BibTex]](https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja)**  <br/>
 
 In this work, we present a simple yet effective architecture distillation method. The central idea is that subnetworks can learn collaboratively and teach each other throughout the training process, aiming to boost the convergence of individual models. We introduce the concept of prioritized path, which refers to the architecture candidates exhibiting superior performance during training. Distilling knowledge from the prioritized paths is able to boost the training of subnetworks. Since the prioritized paths are changed on the fly depending on their performance and complexity, the final obtained paths are the cream of the crop. The discovered architectures achieve superior performance compared to the recent [MobileNetV3](https://arxiv.org/abs/1905.02244) and [EfficientNet](https://arxiv.org/abs/1905.11946) families under aligned settings.
 
@@ -15,7 +15,7 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 
 | Model (M Flops) |  8Gpus | 16Gpus | 
 | ---- |:-------------:| :-----:|
-| 14M | 59.3 | 59.6 |
+| 14M | 53.7 | 53.7 |
 | 43M | 65.8 | 66.5 |
 | 114M | 72.1 | 72.8 |
 | 287M | 76.7 | 77.6 |
@@ -106,7 +106,7 @@ RESUME_PATH: './481.pth.tar'
 ......
 ```
 
-We provide 14M/43M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2).
+We provide 14M/43M/114M/287M/481M/604M pretrained models in [google drive](https://drive.google.com/drive/folders/1CQjyBryZ4F20Rutj7coF8HWFcedApUn2) or [[Models-Baidu Disk (password: wqw6)]](https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g) .
 
 After downloading the pretrained models and adding `MODEL_SELECTION` and `RESUME_PATH` in './configs/test.yaml', you need to use the following command to test the model.
 
