@@ -19,6 +19,7 @@ import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
+import { AdlTrainingService } from './training_service/kubernetes/adl/adlTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
@@ -34,7 +35,11 @@ function initStartupInfo(
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
-    if (platformMode === 'local') {
+    if (platformMode === 'adl') {
+        Container.bind(TrainingService)
+            .to(AdlTrainingService)
+            .scope(Scope.Singleton);
+    } else if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
             .scope(Scope.Singleton);
@@ -94,7 +99,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <adl/local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -114,7 +119,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
+if (!['adl', 'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
