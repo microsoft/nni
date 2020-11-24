@@ -140,7 +140,7 @@ nni.get_trial_id # return "STANDALONE"
 nni.get_sequence_id # return 0
 ```
 
-You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code should successfully run with the default hyperparameter values.
+You can try standalone mode with the [mnist example](https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-tfv1). Simply run `python3 mnist.py` under the code directory. The trial code should successfully run with the default hyperparameter values.
 
 For more information on debugging, please refer to [How to Debug](../Tutorial/HowToDebug.md)
 
@@ -156,19 +156,19 @@ If NNI Annotation is used, the trial's converted code is in another temporary di
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
 export NNI_PLATFORM=local
-export NNI_SYS_DIR=/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$
+export NNI_SYS_DIR=/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$
 export NNI_TRIAL_JOB_ID=nrbb2
-export NNI_OUTPUT_DIR=/home/user_name/nni/experiments/$eperiment_id$/trials/$trial_id$
+export NNI_OUTPUT_DIR=/home/user_name/nni-experiments/$eperiment_id$/trials/$trial_id$
 export NNI_TRIAL_SEQ_ID=1
 export MULTI_PHASE=false
 export CUDA_VISIBLE_DEVICES=
-eval python3 mnist.py 2>/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/stderr
-echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
+eval python3 mnist.py 2>/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$/stderr
+echo $? `date +%s%3N` >/home/user_name/nni-experiments/$experiment_id$/trials/$trial_id$/.nni/state
 ```
 
 ### Other Modes
 
-When running trials on other platforms like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while the trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to the local machine in the trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
+When running trials on other platforms like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while the trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to the local machine in the trial's directory, which defaults to `~/nni-experiments/$experiment_id$/trials/$trial_id$/`
 
 For more information, please refer to [HowToDebug](../Tutorial/HowToDebug.md).
 

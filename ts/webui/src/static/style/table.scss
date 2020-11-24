@@ -1,0 +1,67 @@
+/* react-json-tree background */
+#description ul,
+#allList ul {
+    background: none !important;
+}
+
+.tabScroll {
+    height: 324px;
+    overflow: hidden;
+
+    #succeTable .commonTableStyle {
+        overflow-y: auto;
+    }
+}
+
+.ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#succeTable,
+#tableList {
+    .commonTableStyle .leftTitle div {
+        text-align: left;
+    }
+
+    .durationsty {
+        width: 80%;
+        margin: 0 auto;
+
+        div {
+            text-align: right;
+            margin-right: 9px;
+        }
+    }
+}
+
+.margin-mediate {
+    margin: 0 10px;
+}
+
+.detail-button {
+    &-operation {
+        min-width: 44px;
+        border: none;
+        margin-right: 10px;
+    }
+
+    i {
+        color: #fff;
+    }
+}
+
+/* office-fabric-ui */
+.ms-DetailsRow {
+    height: 30px;
+}
+
+.detail-table {
+    padding-top: 5px;
+}
+
+.columns-height {
+    max-height: 335px;
+    overflow-y: auto;
+}

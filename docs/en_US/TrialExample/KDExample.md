@@ -1,4 +1,4 @@
-Knowledge Distillation on NNI Compressor
+Knowledge Distillation on NNI
 ===
 
 ## KnowledgeDistill

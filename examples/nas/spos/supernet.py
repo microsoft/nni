@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.callbacks import ModelCheckpoint
-from nni.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
+from nni.algorithms.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
 
 from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = True
 
     model = ShuffleNetV2OneShot()
+    flops_func = model.get_candidate_flops
     if args.load_checkpoint:
         if not args.spos_preprocessing:
             logger.warning("You might want to use SPOS preprocessing if you are loading their checkpoints.")
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     model.cuda()
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
-    mutator = SPOSSupernetTrainingMutator(model, flops_func=model.module.get_candidate_flops,
+    mutator = SPOSSupernetTrainingMutator(model, flops_func=flops_func,
                                           flops_lb=290E6, flops_ub=360E6)
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,

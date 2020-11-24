@@ -22,8 +22,8 @@ Step 6. Create an AML cluster as the computeTarget.
 
 Step 7. Open a command line and install AML package environment.
 ```
-python3 -m pip install azureml --user
-python3 -m pip install azureml-sdk --user
+python3 -m pip install azureml
+python3 -m pip install azureml-sdk
 ```
 
 ## Run an experiment
@@ -49,30 +49,38 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computeTarget: ${replace_to_your_computeTarget}
   image: msranni/nni
+  gpuNum: 1
 amlConfig:
   subscriptionId: ${replace_to_your_subscriptionId}
   resourceGroup: ${replace_to_your_resourceGroup}
   workspaceName: ${replace_to_your_workspaceName}
-
+  computeTarget: ${replace_to_your_computeTarget}
 ```
 
 Note: You should set `trainingServicePlatform: aml` in NNI config YAML file if you want to start experiment in aml mode.
 
 Compared with [LocalMode](LocalMode.md) trial configuration in aml mode have these additional keys:
-* computeTarget
-    * required key. The compute cluster name you want to use in your AML workspace. See Step 6.
 * image
-    * required key. The docker image name used in job. The image `msranni/nni` of this example only support GPU computeTargets.
+    * required key. The docker image name used in job. NNI support image `msranni/nni` for running aml jobs.
+    ```
+    Note: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
+    ``` 
+
 
 amlConfig:
 * subscriptionId
-    * the subscriptionId of your account
+    * required key, the subscriptionId of your account
 * resourceGroup
-    * the resourceGroup of your account
+    * required key, the resourceGroup of your account
 * workspaceName
-    * the workspaceName of your account
+    * required key, the workspaceName of your account
+* computeTarget
+    * required key, the compute cluster name you want to use in your AML workspace. [refer](https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target) See Step 6.
+* maxTrialNumPerGpu
+    * optional key, default 1. Used to specify the max concurrency trial number on a GPU device.
+* useActiveGpu
+    * optional key, default false. Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU.
 
 The required information of amlConfig could be found in the downloaded `config.json` in Step 5.
 
@@ -85,4 +93,4 @@ cd nni/examples/trials/mnist-tfv1
 
 nnictl create --config config_aml.yml
 ```
-Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.7`.
+Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.9`.

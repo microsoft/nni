@@ -54,6 +54,7 @@ setuptools.setup(
         'ruamel.yaml',
         'psutil',
         'requests',
+        'responses',
         'astor',
         'PythonWebHDFS',
         'hyperopt==0.1.2',
@@ -63,7 +64,7 @@ setuptools.setup(
         'scipy',
         'coverage',
         'colorama',
-        'scikit-learn>=0.20,<0.22',
+        'scikit-learn>=0.23.2',
         'pkginfo',
         'websockets'
     ],

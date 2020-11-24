@@ -1,0 +1,33 @@
+$tableHeight: 381px;
+
+.scrollPanel {
+    height: $tableHeight;
+}
+
+#succTable {
+    height: $tableHeight;
+    position: relative;
+    top: -10px;
+
+    .ms-DetailsHeader {
+        padding-top: 0;
+    }
+
+    .succTable-tooltip {
+        width: 90%;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+
+        a {
+            font-weight: 500;
+            color: blue;
+        }
+    }
+
+    .succeed-padding {
+        padding-left: 6px;
+        box-sizing: border-box;
+    }
+}

@@ -9,14 +9,14 @@ If a user want to implement a customized Advisor, she/he only needs to:
 **1. Define an Advisor inheriting from the MsgDispatcherBase class.** For example:
 
 ```python
-from nni.msg_dispatcher_base import MsgDispatcherBase
+from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 
 class CustomizedAdvisor(MsgDispatcherBase):
     def __init__(self, ...):
         ...
 ```
 
-**2. Implement the methods with prefix `handle_` except `handle_request`**.. You might find [docs](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.msg_dispatcher_base.MsgDispatcherBase) for `MsgDispatcherBase` helpful.
+**2. Implement the methods with prefix `handle_` except `handle_request`**.. You might find [docs](https://nni.readthedocs.io/en/latest/sdk_reference.html#nni.runtime.msg_dispatcher_base.MsgDispatcherBase) for `MsgDispatcherBase` helpful.
 
 **3. Configure your customized Advisor in experiment YAML config file.**
 
@@ -33,8 +33,8 @@ advisor:
     arg1: value1
 ```
 
-**Note that** The working directory of your advisor is `<home>/nni/experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`.
+**Note that** The working directory of your advisor is `<home>/nni-experiments/<experiment_id>/log`, which can be retrieved with environment variable `NNI_LOG_DIRECTORY`.
 
 ## Example
 
-Here we provide an [example](https://github.com/microsoft/nni/tree/master/examples/tuners/mnist_keras_customized_advisor).
+Here we provide an [example](https://github.com/microsoft/nni/tree/v1.9/examples/tuners/mnist_keras_customized_advisor).

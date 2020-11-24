@@ -10,7 +10,7 @@ Implementation on NNI is based on [official repo](https://github.com/megvii-mode
 
 Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/spos)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/spos)
 
 ### Requirements
 
@@ -75,7 +75,7 @@ Then search with evolution tuner.
 nnictl create --config config_search.yml
 ```
 
-The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni/experiments/your_experiment_id/log`.
+The final architecture exported from every epoch of evolution can be found in `checkpoints` under the working directory of your tuner, which, by default, is `$HOME/nni-experiments/your_experiment_id/log`.
 
 ### Step 3. Train from Scratch
 
@@ -90,13 +90,13 @@ By default, it will use `architecture_final.json`. This architecture is provided
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.spos.SPOSEvolution
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSEvolution
     :members:
 
-..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.spos.SPOSSupernetTrainingMutator
+..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainingMutator
     :members:
 ```
 

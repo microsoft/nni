@@ -58,6 +58,7 @@ This document describes the rules to write the config file, and provides some ex
       - [gpuIndices](#gpuindices-3)
       - [maxTrialNumPerGpu](#maxtrialnumpergpu-1)
       - [useActiveGpu](#useactivegpu-1)
+      - [preCommand](#preCommand)
     + [kubeflowConfig](#kubeflowconfig)
       - [operator](#operator)
       - [storage](#storage)
@@ -573,7 +574,7 @@ Used to specify designated GPU devices for NNI, if it is set, only the specified
 
 #### maxTrialNumPerGpu
 
-Optional. Integer. Default: 99999.
+Optional. Integer. Default: 1.
 
 Used to specify the max concurrency trial number on a GPU device.
 
@@ -582,6 +583,24 @@ Used to specify the max concurrency trial number on a GPU device.
 Optional. Bool. Default: false.
 
 Used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no other active process in the GPU. If __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+
+#### preCommand
+
+Optional. String.
+
+Specifies the pre-command that will be executed before the remote machine executes other commands. Users can configure the experimental environment on remote machine by setting __preCommand__. If there are multiple commands need to execute, use `&&` to connect them, such as `preCommand: command1 && command2 && ...`.
+
+__Note__: Because __preCommand__ will execute before other commands each time, it is strongly not recommended to set __preCommand__ that will make changes to system, i.e. `mkdir` or `touch`.
+
+### remoteConfig
+
+Optional field in remote mode. Users could set per machine information in `machineList` field, and set global configuration for remote mode in this field.
+
+#### reuse
+
+Optional. Bool. default: `false`. It's an experimental feature.
+
+If it's true, NNI will reuse remote jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials. 
 
 ### kubeflowConfig
 
@@ -795,6 +814,12 @@ If run trial jobs in remote machine, users could specify the remote machine info
       username: test
       sshKeyPath: /nni/sshkey
       passphrase: qwert
+      # Pre-command will be executed before the remote machine executes other commands.
+      # Below is an example of specifying python environment.
+      # If you want to execute multiple commands, please use "&&" to connect them.
+      # preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
+      # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
+      preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
   ```
 
 ### PAI mode

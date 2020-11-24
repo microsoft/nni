@@ -35,6 +35,8 @@ def update_training_service_config(args):
             config[args.ts]['paiConfig']['host'] = args.pai_host
         if args.pai_token is not None:
             config[args.ts]['paiConfig']['token'] = args.pai_token
+        if args.pai_reuse is not None:
+            config[args.ts]['paiConfig']['reuse'] = args.pai_reuse.lower() == 'true'
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.nni_manager_nfs_mount_path is not None:
@@ -84,6 +86,8 @@ def update_training_service_config(args):
             config[args.ts]['machineList'][0]['port'] = args.remote_port
         if args.remote_pwd is not None:
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
+        if args.remote_reuse is not None:
+            config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
@@ -101,6 +105,7 @@ if __name__ == '__main__':
     parser.add_argument("--output_dir", type=str)
     parser.add_argument("--vc", type=str)
     parser.add_argument("--pai_token", type=str)
+    parser.add_argument("--pai_reuse", type=str)
     parser.add_argument("--pai_storage_config_name", type=str)
     parser.add_argument("--nni_manager_nfs_mount_path", type=str)
     parser.add_argument("--container_nfs_mount_path", type=str)
@@ -116,6 +121,7 @@ if __name__ == '__main__':
     parser.add_argument("--remote_pwd", type=str)
     parser.add_argument("--remote_host", type=str)
     parser.add_argument("--remote_port", type=int)
+    parser.add_argument("--remote_reuse", type=str)
     args = parser.parse_args()
 
     update_training_service_config(args)

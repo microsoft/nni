@@ -19,6 +19,8 @@ advisor:
     eta: 3
     #choice: maximize, minimize
     optimize_mode: maximize
+    #choice: serial, parallelism
+    exec_mode: parallelism
 trial:
   command: python3 mnist.py
   codeDir: .

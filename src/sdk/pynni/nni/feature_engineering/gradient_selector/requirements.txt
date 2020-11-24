@@ -1,4 +1,0 @@
-numpy==1.14.3
-scikit-learn==0.20.0
-scipy==1.1.0
-torch==1.1.0

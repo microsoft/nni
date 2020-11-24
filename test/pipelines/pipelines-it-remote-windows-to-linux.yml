@@ -16,8 +16,13 @@ jobs:
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python -m pip install scikit-learn==0.20.1 --user
+      python -m pip install scikit-learn==0.23.2 --user
     displayName: 'Install dependencies for integration tests'
+  - script: |
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl package install ./
+    displayName: 'Install demotuner for customized_tuner test'
   - task: SSH@0
     inputs:
       sshEndpoint: $(end_point)
@@ -43,7 +48,7 @@ jobs:
     displayName: 'Get docker port'
   - powershell: |
       cd test
-      python nni_test/nnitest/generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+      python nni_test/nnitest/generate_ts_config.py --ts remote --remote_reuse $(remote_reuse) --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       Get-Content config/training_service.yml
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote --exclude cifar10
     displayName: 'integration test'

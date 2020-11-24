@@ -45,7 +45,7 @@ The following link might be helpful for finding and downloading the correspondin
 
 ### Search Space
 
-[Example code](https://github.com/microsoft/nni/tree/master/examples/nas/textnas)
+[Example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/textnas)
 
 ```bash
 # In case NNI code is not cloned. If the code is cloned already, ignore this line and enter code folder.
