@@ -81,7 +81,12 @@ MODEL_SELECTION: 481 # Retrain 481m model
 ......
 ```
 
-
+To train random architectures, you need specify `MODEL_SELECTION` to `-1` and configure the parameter `INPUT_ARCH`:
+```buildoutcfg
+MODEL_SELECTION: -1 # Train random architectures
+INPUT_ARCH: [[0], [3], [3, 3], [3, 1, 3], [3, 3, 3, 3], [3, 3, 3], [0]] # Random Architectures
+......
+```
 
 After adding `MODEL_SELECTION` in `./configs/retrain.yaml`, you need to use the following command to train the model.
 ```buildoutcfg
