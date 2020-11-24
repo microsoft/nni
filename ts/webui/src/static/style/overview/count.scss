@@ -1,121 +1,140 @@
 $seriesIconMargin: 10px;
+$margin: 24px;
+
+.marginTop {
+	margin-top: $margin;
+}
 
 .ExpDuration {
-    margin-top: 20px;
+	margin-top: $margin;
 
-    .maxTrialNum {
-        margin-bottom: 10px;
-    }
+	.maxTrialNum {
+		margin-bottom: 10px;
+	}
 }
 
 .exp-progress {
-    margin-top: 16px;
+	margin-top: 9px;
 
-    .bold {
-        font-weight: 500;
+	.bold {
+		font-weight: 500;
+	}
+
+	.joiner {
+		padding: 0 3px;
+	}
+}
+
+.status-count {
+    span {
+        font-size: 14px;
+        color: #8f8f8f;
     }
 
-    .joiner {
-        padding: 0 3px;
+    p {
+        font-size: 16px;
+        font-weight: 500;
+        color: #484848;
     }
 }
 
 .maxTrialNum {
-    .editparam {
-        position: relative;
-        top: -7px;
-    }
+	.editparam {
+		position: relative;
+		top: -7px;
+	}
 }
 
 .noEditDuration {
-    position: relative;
-    top: -7px;
+	position: relative;
+	top: -7px;
 }
 
 .editDuration {
-    position: relative;
-    top: -17px;
+	position: relative;
+	top: -4px;
 }
 
+.concurrency {
+	.editparam {
+		margin-top: 5px;
+	}
+}
 .editparam {
-    &-Input {
-        width: 42px;
-        height: 32px;
-        padding-right: 5px;
-        text-align: right;
-        outline: none;
-        border: none;
-        border-bottom: 1px solid #ccc;
-    }
+	&-Input {
+		width: 42px;
+		height: 32px;
+		padding-right: 5px;
+		text-align: right;
+		outline: none;
+		border: none;
+		border-bottom: 1px solid #ccc;
+	}
 
-    .maxExecDuration {
-        width: 36px;
-    }
+	.maxExecDuration {
+		width: 36px;
+	}
 
-    &-dropdown {
-        width: 65px;
-        display: inline-block;
-        position: relative;
-        top: 13px;
-        left: 4px;
-        margin-right: 3px;
+	&-dropdown {
+		width: 65px;
+		display: inline-block;
+		position: relative;
+		top: 13px;
+		left: 4px;
+		margin-right: 3px;
 
-        .ms-Dropdown-title {
-            padding-right: 0;
-        }
-    }
+		.ms-Dropdown-title {
+			padding-right: 0;
+		}
+	}
 }
 
 .series {
-    position: relative;
-    top: 5px;
+	position: relative;
+	top: 5px;
 
-    i {
-        font-size: 20px;
-        font-weight: 700;
-    }
+	i {
+		font-size: 20px;
+		font-weight: 700;
+	}
 
-    .confirm {
-        margin: 0 $seriesIconMargin;
+	.confirm {
+		margin: 0 $seriesIconMargin;
 
-        i {
-            color: green;
-        }
-    }
+		i {
+			color: green;
+		}
+	}
 }
 
 .cancel i {
-    color: red;
-    font-size: 16px;
+	color: red;
+	font-size: 16px;
 }
 
 .edit i {
-    margin-left: 4px;
+	margin-left: 4px;
 }
 
 .overview input:disabled {
-    background: transparent;
-    border: none;
+	background: transparent;
+	border: none;
 }
 
 .info {
-    position: absolute;
-    z-index: 999;
-    left: 0;
+	position: absolute;
+	z-index: 999;
+	left: 0;
 }
 
 .mess {
-    margin-top: 20px;
+	margin-top: $margin;
 
-    .basic p {
-        margin-top: 0;
-    }
+	.basic p {
+		margin-top: 0;
+	}
 
-    p.margin {
-        margin-top: 20px;
-    }
-}
-
-.trialStatus {
-    margin-top: 8px;
+	p.margin {
+		margin-top: $margin;
+	}
 }
