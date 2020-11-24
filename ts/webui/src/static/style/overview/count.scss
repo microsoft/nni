@@ -1,0 +1,125 @@
+$seriesIconMargin: 10px;
+
+.ExpDuration {
+    margin-top: 20px;
+
+    span:hover {
+        cursor: pointer;
+    }
+
+    .maxTrialNum {
+        margin-bottom: 10px;
+    }
+}
+
+.exp-progress {
+    margin-top: 16px;
+
+    .bold {
+        font-weight: 500;
+    }
+
+    .joiner {
+        padding: 0 3px;
+    }
+}
+
+.maxTrialNum {
+    .editparam {
+        position: relative;
+        top: -7px;
+    }
+}
+
+.noEditDuration {
+    position: relative;
+    top: -7px;
+}
+
+.editDuration {
+    position: relative;
+    top: -17px;
+}
+
+.editparam {
+    &-Input {
+        width: 42px;
+        height: 32px;
+        padding-right: 5px;
+        text-align: right;
+        outline: none;
+        border: none;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .maxExecDuration {
+        width: 36px;
+    }
+
+    &-dropdown {
+        width: 65px;
+        display: inline-block;
+        position: relative;
+        top: 13px;
+        left: 4px;
+        margin-right: 3px;
+
+        .ms-Dropdown-title {
+            padding-right: 0;
+        }
+    }
+}
+
+.series {
+    position: relative;
+    top: 5px;
+
+    i {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .confirm {
+        margin: 0 $seriesIconMargin;
+
+        i {
+            color: green;
+        }
+    }
+}
+
+.cancel i {
+    color: red;
+    font-size: 16px;
+}
+
+.edit i {
+    margin-left: 4px;
+}
+
+.overview input:disabled {
+    background: transparent;
+    border: none;
+}
+
+.info {
+    position: absolute;
+    z-index: 999;
+    left: 0;
+}
+
+.mess {
+    margin-top: 20px;
+
+    .basic p {
+        margin-top: 0;
+    }
+
+    p.margin {
+        margin-top: 20px;
+    }
+}
+
+.trialStatus {
+    margin-top: 8px;
+}

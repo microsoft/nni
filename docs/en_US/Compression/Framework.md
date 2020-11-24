@@ -15,7 +15,7 @@ There are 3 major components/classes in NNI model compression framework: `Compre
 Compressor is the base class for pruner and quntizer, it provides a unified interface for pruner and quantizer for end users, so that pruner and quantizer can be used in the same way. For example, to use a pruner:
 
 ```python
-from nni.compression.torch import LevelPruner
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
 # load a pretrained model or train a model before using a pruner
 
@@ -34,7 +34,7 @@ model = pruner.compress()
 
 To use a quantizer:
 ```python
-from nni.compression.torch import DoReFaQuantizer
+from nni.algorithms.compression.pytorch.pruning import DoReFaQuantizer
 
 configure_list = [{
     'quant_types': ['weight'],
