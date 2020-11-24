@@ -14,6 +14,8 @@ import { CommandChannel } from "../commandChannel";
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { AMLEnvironmentService } from './amlEnvironmentService';
 import { RemoteEnvironmentService } from './remoteEnvironmentService';
+import { LocalEnvironmentService } from './localEnvironmentService';
+import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { randomSelect } from '../../../common/utils';
 
 
@@ -25,6 +27,8 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     
     private amlEnvironmentService: AMLEnvironmentService;
     private remoteEnvironmentService: RemoteEnvironmentService;
+    private localEnvironmentService: LocalEnvironmentService;
+    private paiEnvironmentService: OpenPaiEnvironmentService;
 
     private readonly log: Logger = getLogger();
 
@@ -32,6 +36,8 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
         super();
         this.amlEnvironmentService = new AMLEnvironmentService();
         this.remoteEnvironmentService = new RemoteEnvironmentService();
+        this.localEnvironmentService = new LocalEnvironmentService();
+        this.paiEnvironmentService = new OpenPaiEnvironmentService();
     }
 
     public get hasStorageService(): boolean {
@@ -52,7 +58,16 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG: 
                 this.amlEnvironmentService.config(key, value);
-                this.remoteEnvironmentService.config(key, value);     
+                this.remoteEnvironmentService.config(key, value);
+                this.paiEnvironmentService.config(key, value);
+                this.localEnvironmentService.config(key, value);
+                break;
+            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
+                this.paiEnvironmentService.config(key, value);
+                break;
+            case TrialConfigMetadataKey.LOCAL_CONFIG:
+                this.localEnvironmentService.config(key, value);
+                break;
             default:
                 this.log.debug(`Heterogenous not support metadata key: '${key}', value: '${value}'`);
         }
@@ -68,6 +83,10 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
                 case 'remote':
                     tasks.push(this.remoteEnvironmentService.refreshEnvironment(environment));
                     break;
+                case 'local':
+                    tasks.push(this.localEnvironmentService.refreshEnvironment(environment));
+                    break;
+                // TODO: refresh pai
                 default:
                     throw new Error(`Heterogenous not support platform: '${environment.platform}'`);
             }
@@ -76,7 +95,7 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        const number = randomSelect([0, 1]);
+        const number = randomSelect([0, 1, 2, 3]);
         switch (number) {
             case 0:
                 environment.platform = 'aml';
@@ -85,6 +104,14 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
             case 1:
                 environment.platform = 'remote';
                 this.remoteEnvironmentService.startEnvironment(environment);
+                break;
+            case 2:
+                environment.platform = 'local';
+                this.localEnvironmentService.startEnvironment(environment);
+                break;
+            case 3:
+                environment.platform = 'pai';
+                this.paiEnvironmentService.stopEnvironment(environment);
                 break;
         }
     }
@@ -96,6 +123,12 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
                 break;
             case 'remote':
                 this.remoteEnvironmentService.stopEnvironment(environment);
+                break;
+            case 'local':
+                this.localEnvironmentService.stopEnvironment(environment);
+                break;
+            case 'pai':
+                this.paiEnvironmentService.stopEnvironment(environment);
                 break;
             default:
                 throw new Error(`Heterogenous not support platform '${environment.platform}'`);

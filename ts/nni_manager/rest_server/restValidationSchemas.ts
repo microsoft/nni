@@ -23,7 +23,8 @@ export namespace ValidationSchemas {
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
-                useActiveGpu: joi.boolean()
+                useActiveGpu: joi.boolean(),
+                reuse: joi.boolean()
             }),
             trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 image: joi.string().min(1),

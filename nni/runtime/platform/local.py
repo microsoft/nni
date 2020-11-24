@@ -21,7 +21,8 @@ if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
 
 _nni_platform = trial_env_vars.NNI_PLATFORM
-if _nni_platform == 'local':
+_nni_trial_job_id = trial_env_vars.NNI_TRIAL_JOB_ID
+if _nni_platform == 'local' and _nni_trial_job_id != 'runner':
     _log_file_path = os.path.join(_outputdir, 'trial.log')
     init_logger(_log_file_path)
 
@@ -62,7 +63,7 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    if _nni_platform != 'local':
+    if _nni_platform != 'local' or _nni_trial_job_id == 'runner':
         assert len(string) < 1000000, 'Metric too long'
         print("NNISDK_MEb'%s'" % (string), flush=True)
     else:

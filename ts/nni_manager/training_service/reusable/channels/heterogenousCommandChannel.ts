@@ -32,8 +32,12 @@ export class HeterogenousCommandChannel extends CommandChannel{
     }
 
     public async start(): Promise<void> {
-        this.amlCommandChannel?.start();
-        this.webCommandChannel?.start();
+        if (this.amlCommandChannel) {
+            this.amlCommandChannel.start();
+        }
+        if (this.webCommandChannel) {
+            this.webCommandChannel.start();
+        }
     }
 
     public async stop(): Promise<void> {
@@ -41,17 +45,27 @@ export class HeterogenousCommandChannel extends CommandChannel{
     }
 
     public async run(): Promise<void> {
-        this.amlCommandChannel?.start();
-        this.webCommandChannel?.run();
+        if (this.amlCommandChannel) {
+            this.amlCommandChannel.run();
+        }
+        if (this.webCommandChannel) {
+            this.webCommandChannel.run();
+        }
     }
 
     protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
         switch (environment.platform) {
             case 'aml':
-                this.amlCommandChannel?.sendCommandInternal(environment, message);
+                if (this.amlCommandChannel === undefined) {
+                    throw new Error(`amlCommandChannel not initialezed!`);
+                }
+                this.amlCommandChannel.sendCommandInternal(environment, message);
                 break;
             case 'remote':
-                this.webCommandChannel?.sendCommandInternal(environment, message);
+                if (this.webCommandChannel === undefined) {
+                    throw new Error(`webCommandChannel not initialezed!`);
+                }
+                this.webCommandChannel.sendCommandInternal(environment, message);
                 break;
             default:
                 throw new Error(`Heterogenous not support platform: '${environment.platform}'`);

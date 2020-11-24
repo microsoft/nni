@@ -15,6 +15,7 @@ import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { EnvironmentService } from './environment';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
+import { LocalEnvironmentService } from './environments/localEnvironmentService';
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
@@ -22,6 +23,8 @@ import { HeteroGenousEnvironmentService } from './environments/heterogenousEnvir
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
+import { LocalConfig, LocalTrainingService } from '../local/localTrainingService';
+import { TrialConfig } from 'training_service/common/trialConfig';
 
 
 /**
@@ -100,6 +103,24 @@ class RouterTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
+            if (key === TrialConfigMetadataKey.LOCAL_CONFIG) {
+                const config = <LocalConfig>JSON.parse(value);
+                if (config.reuse === true) {
+                    this.log.info(`reuse flag enabled, use EnvironmentManager.`);
+                    this.internalTrainingService = component.get(TrialDispatcher);
+
+                    // TODO to support other serivces later.
+                    Container.bind(EnvironmentService)
+                        .to(LocalEnvironmentService)
+                        .scope(Scope.Singleton);
+                } else {
+                    this.internalTrainingService = component.get(LocalTrainingService);
+                }
+                if (this.internalTrainingService === undefined) {
+                    throw new Error("TrainingService is not assigned!");
+                }
+                await this.internalTrainingService.setClusterMetadata(key, value);
+            }
             if (key === TrialConfigMetadataKey.PAI_CLUSTER_CONFIG) {
                 const config = <PAIClusterConfig>JSON.parse(value);
                 if (config.reuse === true) {

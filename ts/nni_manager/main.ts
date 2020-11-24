@@ -37,7 +37,7 @@ function initStartupInfo(
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
-            .to(LocalTrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService)
@@ -69,8 +69,8 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
             .scope(Scope.Singleton);
     } else if (platformMode === 'heterogeneous') {
         Container.bind(TrainingService)
-        .to(RouterTrainingService)
-        .scope(Scope.Singleton);
+            .to(RouterTrainingService)
+            .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
     }

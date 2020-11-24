@@ -20,7 +20,7 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 
 
 /**
- * Collector PAI jobs info from PAI cluster, and update pai job status locally
+ * Collector AML jobs info from AML cluster, and update pai job status locally
  */
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {

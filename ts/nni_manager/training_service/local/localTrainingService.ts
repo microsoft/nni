@@ -78,11 +78,12 @@ class LocalTrialJobDetail implements TrialJobDetail {
 /**
  * Local training service config
  */
-class LocalConfig {
+export class LocalConfig {
     public maxTrialNumPerGpu?: number;
     public gpuIndices?: string;
     public useActiveGpu?: boolean;
-    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
+    public reuse?: boolean;
+    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean, reuse?: boolean) {
         if (gpuIndices !== undefined) {
             this.gpuIndices = gpuIndices;
         }
@@ -92,6 +93,7 @@ class LocalConfig {
         if (useActiveGpu !== undefined) {
             this.useActiveGpu = useActiveGpu;
         }
+        this.reuse = reuse;
     }
 }
 

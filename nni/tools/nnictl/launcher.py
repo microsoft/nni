@@ -115,15 +115,9 @@ def set_trial_config(experiment_config, port, config_file_name):
 def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
     request_data = dict()
+    request_data['local_config'] = {'reuse': False}
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
-        if request_data['local_config']:
-            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
-                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
-            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
-                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
-            if request_data['local_config'].get('useActiveGpu'):
-                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
@@ -303,9 +297,9 @@ def set_heterogeneous_config(experiment_config, port, config_file_name):
     heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
     platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms'].split(',')
     for platform in platform_list:
-        if platform === 'aml':
+        if platform == 'aml':
             heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
-        elif platform ===  'remote':
+        elif platform ==  'remote':
             heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
     err_message = None
@@ -408,10 +402,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
         platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms'].split(',')
         for platform in platform_list:
-            if platform === 'aml':
+            if platform == 'aml':
                 request_data['clusterMetaData'].append(
                     {'key': 'aml_config', 'value': experiment_config['amlConfig']})
-            elif platform ===  'remote':
+            elif platform ==  'remote':
                 request_data['clusterMetaData'].append(
                     {'key': 'remote_config', 'value': experiment_config['remoteConfig']})
         response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
