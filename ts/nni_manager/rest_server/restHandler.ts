@@ -319,7 +319,7 @@ class NNIRestHandler {
         if (jobInfo === undefined){
             return jobInfo
         }
-        jobInfo.message = this.nniManager.getTrialJobMessage(jobInfo.id);
+        jobInfo.message = this.nniManager.getTrialJobMessage(jobInfo.trialJobId);
         return jobInfo
     }
 }
