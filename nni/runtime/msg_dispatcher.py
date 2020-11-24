@@ -186,8 +186,7 @@ class MsgDispatcher(MsgDispatcherBase):
             self.tuner.receive_trial_result(id_, _trial_params[id_], value, customized=customized,
                                             trial_job_id=data.get('trial_job_id'))
         else:
-            _logger.info('Find unknown job parameter id %s, maybe something goes wrong.', _trial_params[id_])
-            return
+            _logger.warning('Find unknown job parameter id %s, maybe something goes wrong.', _trial_params[id_])
 
     def _handle_intermediate_metric_data(self, data):
         """Call assessor to process intermediate results

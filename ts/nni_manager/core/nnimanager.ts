@@ -685,7 +685,7 @@ class NNIManager implements Manager {
             }
             this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
         } else {
-            this.log.error(`NNIManager received non-existent trial job metrics: ${metric}`);
+            this.log.warning(`NNIManager received non-existent trial job metrics: ${metric}`);
         }
     }
 
