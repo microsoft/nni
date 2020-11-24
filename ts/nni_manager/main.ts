@@ -196,5 +196,3 @@ async function cleanUp(): Promise<void> {
 process.on('SIGTERM', cleanUp);
 process.on('SIGBREAK', cleanUp);
 process.on('SIGINT', cleanUp);
-//not sure if 'SIGKILL' signal can be listened
-process.on('SIGKILL', cleanUp);
