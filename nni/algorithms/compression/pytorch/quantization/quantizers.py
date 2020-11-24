@@ -146,8 +146,8 @@ class QAT_Quantizer(Quantizer):
         self.steps = 1
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
-            layer.module.register_buffer("zero_point", None)
-            layer.module.register_buffer("scale", None)
+            layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
+            layer.module.register_buffer("scale", torch.Tensor([1.0]))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))

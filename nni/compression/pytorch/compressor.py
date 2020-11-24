@@ -455,7 +455,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
         super().__init__()
         # origin layer information
         self.module = module
-        self.name = module_name
+        self.name = f"wrapper_{module_name}"
         self.type = module_type
         # config and pruner
         self.config = config
