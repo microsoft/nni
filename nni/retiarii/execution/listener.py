@@ -13,7 +13,7 @@ class DefaultListener(AbstractGraphListener):
 
     def on_metric(self, model: Model, metric: MetricData) -> None:
         model.metric = metric
-            
+
     def on_intermediate_metric(self, model: Model, metric: MetricData) -> None:
         model.intermediate_metrics.append(metric)
 
