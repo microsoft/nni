@@ -93,7 +93,7 @@ After adding `MODEL_SELECTION` in `./configs/retrain.yaml`, you need to use the 
 python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./configs/retrain.yaml
 ```
 
-### II. Test
+### III. Test
 
 To test our trained of models, you need to use `MODEL_SELECTION` in `./configs/test.yaml` to specify which model to test.
 
