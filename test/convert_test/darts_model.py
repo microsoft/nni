@@ -1,11 +1,12 @@
 from collections import OrderedDict
 
 import torch
-import torch.nn as nn
+import torch.nn as torch_nn
 
 from typing import (List, Optional)
 
 import ops
+from nni.retiarii import nn
 from nni.retiarii import LayerChoice, InputChoice
 
 
@@ -37,7 +38,7 @@ class AuxiliaryHead(nn.Module):
 
 class Node(nn.Module):
     def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect):
-        super().__init__()
+        super().__init__(node_id, num_prev_nodes, channels, num_downsample_connect)
         self.ops = nn.ModuleList()
         choice_keys = []
         for i in range(num_prev_nodes):
@@ -62,14 +63,14 @@ class Node(nn.Module):
         out = []
         for i, op in enumerate(self.ops):
             out.append(op(prev_nodes[i]))
-        out = [self.drop_path(o) if o is not None else None for o in out]
+        #out = [self.drop_path(o) if o is not None else None for o in out]
         return self.input_switch(out)
 
 
 class Cell(nn.Module):
 
     def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
-        super().__init__()
+        super().__init__(n_nodes, channels_pp, channels_p, channels, reduction_p, reduction)
         self.reduction = reduction
         self.n_nodes = n_nodes
 
@@ -96,7 +97,7 @@ class Cell(nn.Module):
             cur_tensor = node(tmp)
             new_tensors.append(cur_tensor)
 
-        output = torch.cat(tensors[2:], dim=1)
+        output = torch.cat(new_tensors, dim=1)
         return output
 
 
@@ -104,7 +105,7 @@ class CNN(nn.Module):
 
     def __init__(self, input_size, in_channels, channels, n_classes, n_layers, n_nodes=4,
                  stem_multiplier=3, auxiliary=False):
-        super().__init__()
+        super().__init__(input_size, in_channels, channels, n_classes, n_layers, n_nodes, stem_multiplier, auxiliary)
         self.in_channels = in_channels
         self.channels = channels
         self.n_classes = n_classes

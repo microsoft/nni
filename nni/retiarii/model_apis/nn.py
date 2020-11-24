@@ -41,8 +41,13 @@ class Module(nn.Module):
         # TODO: users have to pass init's arguments to super init's arguments
         global _records
         if _records is not None:
-            # TODO: change tuple to dict
-            _records[id(self)] = (args, kwargs)
+            assert not kwargs
+            argname_list = list(inspect.signature(self.__class__).parameters.keys())
+            assert len(argname_list) == len(args), 'Error: {} not put input arguments in its super().__init__ function'.format(self.__class__)
+            full_args = {}
+            for i, arg_value in enumerate(args):
+                full_args[argname_list[i]] = args[i]
+            _records[id(self)] = full_args
             #print('my module: ', id(self), args, kwargs)
         super(Module, self).__init__()
 
@@ -52,6 +57,13 @@ class Sequential(nn.Sequential):
         if _records is not None:
             _records[id(self)] = {} # no args need to be recorded
         super(Sequential, self).__init__(*args)
+
+class ModuleList(nn.ModuleList):
+    def __init__(self, *args):
+        global _records
+        if _records is not None:
+            _records[id(self)] = {} # no args need to be recorded
+        super(ModuleList, self).__init__(*args)
 
 def wrap_module(original_class):
     orig_init = original_class.__init__
@@ -76,3 +88,7 @@ BatchNorm2d = wrap_module(nn.BatchNorm2d)
 ReLU = wrap_module(nn.ReLU)
 Dropout = wrap_module(nn.Dropout)
 Linear = wrap_module(nn.Linear)
+MaxPool2d = wrap_module(nn.MaxPool2d)
+AvgPool2d = wrap_module(nn.AvgPool2d)
+Identity = wrap_module(nn.Identity)
+AdaptiveAvgPool2d = wrap_module(nn.AdaptiveAvgPool2d)

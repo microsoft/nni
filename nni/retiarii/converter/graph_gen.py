@@ -124,9 +124,13 @@ def remove_unconnected_nodes(ir_graph):
     for hidden_node in ir_graph.hidden_nodes:
         if hidden_node.id not in node_fanout:
             assert isinstance(hidden_node, Node)
-            to_removes.append(hidden_node)
-            # some constant is not used, for example, function name as prim::Constant
-            assert hidden_node.operation.type == 'prim::Constant', 'the type is {}'.format(hidden_node.operation.type)
+            if hidden_node.operation.type == 'prim::Constant':
+                # some constant is not used, for example, function name as prim::Constant
+                to_removes.append(hidden_node)
+            elif hidden_node.operation.type == 'aten::append':
+                pass
+            else:
+                raise RuntimeError('Unknown type: {}'.format(hidden_node.operation.type))
     for hidden_node in to_removes:
         hidden_node.remove()
 
@@ -207,13 +211,29 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 assert submodule.kind() == 'prim::GetAttr'
                 assert submodule.hasAttribute('name')
                 submodule_name = submodule.s('name')
-                assert submodule_name in script_module._modules
+                #assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules['cells']._modules["0"])
+                if submodule.inputsAt(0).debugName() == 'self':
+                    assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules.keys())
 
-                submodule_full_name = build_full_name(module_name, submodule_name)
-                submodule_obj = getattr(module, submodule_name)
-                subgraph, sub_m_attrs = convert_module(script_module._modules[submodule_name],
-                                                       submodule_obj,
-                                                       submodule_full_name, ir_model)
+                    submodule_full_name = build_full_name(module_name, submodule_name)
+                    submodule_obj = getattr(module, submodule_name)
+                    subgraph, sub_m_attrs = convert_module(script_module._modules[submodule_name],
+                                                        submodule_obj,
+                                                        submodule_full_name, ir_model)
+                else:
+                    # handle ModuleList
+                    predecessor = submodule.inputsAt(0).node()
+                    assert predecessor.kind() == 'prim::GetAttr'
+                    assert predecessor.hasAttribute('name')
+                    assert predecessor.inputsAt(0).debugName() == 'self'
+                    predecessor_name = predecessor.s('name')
+                    submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
+                    predecessor_obj = getattr(module, predecessor_name)
+                    submodule_obj = getattr(predecessor_obj, submodule_name)
+                    print('submodule_name: {}, type of submodule: {}'.format(submodule_name, type(submodule_obj)))
+                    print('submodule_type_str: {}, full_name: {}'.format(submodule_type_str, submodule_full_name))
+                    subgraph, sub_m_attrs = convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
+                                                           submodule_obj, submodule_full_name, ir_model)
                 # TODO: try not-connected placeholder in TorchScript
                 # TODO: match subgraph with maintained graphs
                 # build cell
@@ -258,11 +278,14 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
         elif node.kind().startswith('aten::'):
             # handle aten::XXX
             global_seq += 1
+            #if node.kind() not in Type.BasicOpsPT:
+            #    assert False, "{}".format(sm_graph)
             aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
             _handle_inputs(ir_graph, node, graph_inputs, node_index, module_name)
             _add_edge(ir_graph, node, graph_inputs, node_index, aten_node)
         elif node.kind() == 'prim::Loop':
+            print('mygraph: ', sm_graph)
             raise RuntimeError('Loop has not been supported yet!')
         elif node.kind() == 'prim::If':
             last_block_node = handle_if_node(node)
@@ -282,9 +305,44 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
 
     return node_index
 
+def _handle_layerchoice(module):
+    global modules_arg
+
+    m_attrs = {}
+    candidates = module.candidate_ops
+    for i, cand in enumerate(candidates):
+        assert id(cand) in modules_arg, 'id not exist: {}'.format(id(cand))
+        assert isinstance(modules_arg[id(cand)], dict)
+        m_attrs[f'choice_{i}'] = modules_arg[id(cand)]
+    # FIXME: rethink how to deal with label
+    m_attrs['label'] = module.label
+    return m_attrs
+
+def _handle_inputchoice(module):
+    global modules_arg
+
+    m_attrs = {}
+    m_attrs['n_chosen'] = module.n_chosen
+    m_attrs['reduction'] = module.reduction
+    # FIXME: rethink how to deal with label
+    m_attrs['label'] = module.label
+    return m_attrs
+
 def convert_module(script_module, module, module_name, ir_model):
     global global_graph_id
     global modules_arg
+
+    # TODO: nn.Module arguments
+    # NOTE: have not supported nested LayerChoice, i.e., a candidate module
+    # also has LayerChoice or InputChoice or ValueChoice
+    print('original_type_name: {}'.format(script_module.original_name))
+    original_type_name = script_module.original_name
+    if original_type_name == Type.LayerChoice:
+        m_attrs = _handle_layerchoice(module)
+        return None, m_attrs
+    if original_type_name == Type.InputChoice:
+        m_attrs = _handle_inputchoice(module)
+        return None, m_attrs
 
     assert id(module) in modules_arg, 'id not exist: {}, {}'.format(id(module), module_name)
     if isinstance(modules_arg[id(module)], tuple):
@@ -295,7 +353,6 @@ def convert_module(script_module, module, module_name, ir_model):
     else:
         m_attrs = modules_arg[id(module)]
 
-    original_type_name = script_module.original_name
     if original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
         # this is a basic module from pytorch, no need to parse its graph
         return None, m_attrs
@@ -323,7 +380,7 @@ def convert_module(script_module, module, module_name, ir_model):
             src_node_idx = predecessor_node_outputs.index(_output)
         ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
                           tail=(ir_graph.output_node, None))
-
+    print(script_module.graph)
     remove_unconnected_nodes(ir_graph)
 
     ir_graph._register()

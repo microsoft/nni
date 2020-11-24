@@ -1,5 +1,6 @@
 import torch
-import torch.nn as nn
+#import torch.nn as nn
+from nni.retiarii import nn
 
 
 class DropPath(nn.Module):
@@ -11,7 +12,7 @@ class DropPath(nn.Module):
         p : float
             Probability of an path to be zeroed.
         """
-        super().__init__()
+        super(DropPath, self).__init__(p)
         self.p = p
 
     def forward(self, x):
@@ -29,7 +30,7 @@ class PoolBN(nn.Module):
     AvgPool or MaxPool with BN. `pool_type` must be `max` or `avg`.
     """
     def __init__(self, pool_type, C, kernel_size, stride, padding, affine=True):
-        super().__init__()
+        super(PoolBN, self).__init__(pool_type, C, kernel_size, stride, padding, affine)
         if pool_type.lower() == 'max':
             self.pool = nn.MaxPool2d(kernel_size, stride, padding)
         elif pool_type.lower() == 'avg':
@@ -50,7 +51,7 @@ class StdConv(nn.Module):
     Standard conv: ReLU - Conv - BN
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
-        super().__init__()
+        super(StdConv, self).__init__(C_in, C_out, kernel_size, stride, padding, affine)
         self.net = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(C_in, C_out, kernel_size, stride, padding, bias=False),
@@ -66,7 +67,7 @@ class FacConv(nn.Module):
     Factorized conv: ReLU - Conv(Kx1) - Conv(1xK) - BN
     """
     def __init__(self, C_in, C_out, kernel_length, stride, padding, affine=True):
-        super().__init__()
+        super(FacConv, self).__init__(C_in, C_out, kernel_length, stride, padding, affine)
         self.net = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(C_in, C_in, (kernel_length, 1), stride, padding, bias=False),
@@ -85,7 +86,7 @@ class DilConv(nn.Module):
     If dilation == 2, 3x3 conv => 5x5 receptive field, 5x5 conv => 9x9 receptive field.
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
-        super().__init__()
+        super(DilConv, self).__init__(C_in, C_out, kernel_size, stride, padding, dilation, affine)
         self.net = nn.Sequential(
             nn.ReLU(),
             nn.Conv2d(C_in, C_in, kernel_size, stride, padding, dilation=dilation, groups=C_in,
@@ -104,7 +105,7 @@ class SepConv(nn.Module):
     DilConv(dilation=1) * 2.
     """
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
-        super().__init__()
+        super(SepConv, self).__init__(C_in, C_out, kernel_size, stride, padding, affine)
         self.net = nn.Sequential(
             DilConv(C_in, C_in, kernel_size, stride, padding, dilation=1, affine=affine),
             DilConv(C_in, C_out, kernel_size, 1, padding, dilation=1, affine=affine)
@@ -119,7 +120,7 @@ class FactorizedReduce(nn.Module):
     Reduce feature map size by factorized pointwise (stride=2).
     """
     def __init__(self, C_in, C_out, affine=True):
-        super().__init__()
+        super(FactorizedReduce, self).__init__(C_in, C_out, affine)
         self.relu = nn.ReLU()
         self.conv1 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
         self.conv2 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)

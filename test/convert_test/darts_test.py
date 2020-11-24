@@ -19,7 +19,7 @@ if __name__ == '__main__':
     nn.disable_record_args()
     print(recorded_module_args)
     script_module = torch.jit.script(base_model)
-    exit(1)
+
     model = convert_to_graph(script_module, base_model, recorded_module_args)
     #code_script = model_to_pytorch_script(model)
     #print(code_script)

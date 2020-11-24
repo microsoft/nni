@@ -20,7 +20,7 @@ class InputChoice(nn.Module):
         self.reduction = reduction
         self.label = label
 
-    def forward(self, candidate_inputs: List[Optional['Tensor']]) -> 'Tensor':
+    def forward(self, candidate_inputs: List['Tensor']) -> 'Tensor':
         # fake return
         return torch.tensor(candidate_inputs)
 
