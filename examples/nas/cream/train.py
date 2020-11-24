@@ -33,8 +33,8 @@ from lib.utils.util import parse_config_args, get_logger, \
 
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 from nni.nas.pytorch.callbacks import ModelCheckpoint
-from nni.nas.pytorch.cream import CreamSupernetTrainer
-from nni.nas.pytorch.random import RandomMutator
+from nni.algorithms.nas.pytorch.cream import CreamSupernetTrainer
+from nni.algorithms.nas.pytorch.random import RandomMutator
 
 def main():
     args, cfg = parse_config_args('nni.cream.supernet')
