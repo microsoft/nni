@@ -15,7 +15,7 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 
 | Model (M Flops) |  8Gpus | 16Gpus | 
 | ---- |:-------------:| :-----:|
-| 14M | 53.7 | 53.7 |
+| 14M | 53.7 | 53.8 |
 | 43M | 65.8 | 66.5 |
 | 114M | 72.1 | 72.8 |
 | 287M | 76.7 | 77.6 |
