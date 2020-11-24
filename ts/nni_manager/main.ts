@@ -174,7 +174,7 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-async function cleanUp() {
+async function cleanUp(): Promise<void> {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {
@@ -188,7 +188,7 @@ async function cleanUp() {
         hasError = true;
         log.error(`${err.stack}`);
     } finally {
-        await log.close();
+        log.close();
         process.exit(hasError ? 1 : 0);
     }
 }
