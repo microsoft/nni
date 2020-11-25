@@ -14,14 +14,14 @@ advisor:
   classArgs:
     #R: the maximum trial budget (could be the number of mini-batches or epochs) can be
     #   allocated to a trial. Each trial should use trial budget to control how long it runs.
-    R: 100
+    R: 60
     #eta: proportion of discarded trials
     eta: 3
     #choice: maximize, minimize
     optimize_mode: maximize
     #choice: serial, parallelism
-    exec_mode: parallelism
+    exec_mode: serial
 trial:
-  command: python3 mnist.py
+  command: python3 main.py
   codeDir: .
   gpuNum: 0

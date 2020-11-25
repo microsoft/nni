@@ -1,4 +1,4 @@
-$iconPaddingVal: 20px;
+$iconPaddingVal: 10px;
 
 .panelTitle {
     span {
@@ -9,7 +9,7 @@ $iconPaddingVal: 20px;
 
     i {
         font-size: 24px;
-        margin-right: 20px;
+        margin-right: $iconPaddingVal;
         color: #545454;
     }
 }
@@ -17,23 +17,4 @@ $iconPaddingVal: 20px;
 /* antd icon margin intermediate result style */
 #tabsty .anticon {
     margin-right: 0;
-}
-
-.top10bg {
-    .top10Title {
-        width: 160px;
-    }
-
-    .title {
-        border-left: 2px solid #fff;
-    }
-
-    .minTitle {
-        // margin-right: $iconPaddingVal;
-        border-right: 2px solid #fff;
-    }
-
-    .title:hover {
-        cursor: pointer;
-    }
 }

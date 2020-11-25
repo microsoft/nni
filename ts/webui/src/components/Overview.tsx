@@ -13,8 +13,9 @@ import { TrialCount } from './overview/count/TrialCount';
 import { Command1 } from './overview/command/Command1';
 import { Command2 } from './overview/command/Command2';
 import { TitleContext } from './overview/TitleContext';
-import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
+import { itemStyleSucceed, entriesOption } from './overview/overviewConst';
 import '../static/style/overview/overview.scss';
+import '../static/style/overview/topTrial.scss';
 import '../static/style/logPath.scss';
 
 interface OverviewState {
@@ -89,42 +90,40 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </BestMetricContext.Provider>
                                 </div>
                                 {/* duration & trial numbers */}
-                                <div className='overviewProgress'>
-                                    <div className='duration'>
-                                        <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
-                                            <Title />
-                                        </TitleContext.Provider>
-                                        <ExpDurationContext.Provider
-                                            value={{
-                                                maxExecDuration,
-                                                execDuration,
-                                                updateOverviewPage,
-                                                maxDurationUnit,
-                                                changeMaxDurationUnit
-                                            }}
-                                        >
-                                            <ExpDuration />
-                                        </ExpDurationContext.Provider>
-                                    </div>
-                                    <div className='trialCount'>
-                                        <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
-                                            <Title />
-                                        </TitleContext.Provider>
-                                        <ExpDurationContext.Provider
-                                            value={{
-                                                maxExecDuration,
-                                                execDuration,
-                                                updateOverviewPage,
-                                                maxDurationUnit,
-                                                changeMaxDurationUnit
-                                            }}
-                                        >
-                                            <TrialCount />
-                                        </ExpDurationContext.Provider>
-                                    </div>
+                                <div className='duration'>
+                                    <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
+                                        <Title />
+                                    </TitleContext.Provider>
+                                    <ExpDurationContext.Provider
+                                        value={{
+                                            maxExecDuration,
+                                            execDuration,
+                                            updateOverviewPage,
+                                            maxDurationUnit,
+                                            changeMaxDurationUnit
+                                        }}
+                                    >
+                                        <ExpDuration />
+                                    </ExpDurationContext.Provider>
+                                </div>
+                                <div className='trialCount'>
+                                    <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
+                                        <Title />
+                                    </TitleContext.Provider>
+                                    <ExpDurationContext.Provider
+                                        value={{
+                                            maxExecDuration,
+                                            execDuration,
+                                            updateOverviewPage,
+                                            maxDurationUnit,
+                                            changeMaxDurationUnit
+                                        }}
+                                    >
+                                        <TrialCount />
+                                    </ExpDurationContext.Provider>
                                 </div>
                                 {/* table */}
-                                <div className='overviewTable'>
+                                <div className='overviewBestMetric'>
                                     <Stack horizontal>
                                         <div style={itemStyleSucceed}>
                                             <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
@@ -167,31 +166,19 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </Stack>
                                         </div>
                                     </Stack>
-                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
+                                    <div className='overviewChart'>
+                                        <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} />
+                                        <SuccessTable
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            updateOverviewPage={updateOverviewPage}
+                                        />
+                                    </div>
                                 </div>
                                 <div className='overviewCommand1'>
                                     <Command1 />
                                 </div>
                                 <div className='overviewCommand2'>
                                     <Command2 />
-                                </div>
-                                <div className='overviewChart'>
-                                    <Stack horizontal>
-                                        <div style={itemStyle1}>
-                                            <TitleContext.Provider
-                                                value={{ text: 'Trial metric chart', icon: 'HomeGroup' }}
-                                            >
-                                                <Title />
-                                            </TitleContext.Provider>
-                                        </div>
-                                        <div style={itemStyle2}>
-                                            <Stack className='maxmin' horizontal>
-                                                <div className='circle' />
-                                                <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
-                                            </Stack>
-                                        </div>
-                                    </Stack>
-                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={380} />
                                 </div>
                             </div>
                         </div>
@@ -219,8 +206,8 @@ class Overview extends React.Component<{}, OverviewState> {
         return {
             // support max show 0.0000000
             grid: {
-                left: 67,
-                right: 40
+                x: 60,
+                y: 40
             },
             tooltip: {
                 trigger: 'item'

@@ -10,7 +10,7 @@
 
 **NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.md)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.md)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.md)以及[模型压缩](docs/zh_CN/Compressor/Overview.md)。
 
-NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode. md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode. md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode. md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode. md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode. md)， [DLWorkspace](docs/zh_CN/TrainingService/DLTSMode. md) (又称 DLTS)</a>, [AML](docs/zh_CN/TrainingService/AMLMode.md) (Azure Machine Learning) 以及其它环境。
+NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)， [DLWorkspace](docs/zh_CN/TrainingService/DLTSMode.md) (又称 DLTS)</a>, [AML](docs/zh_CN/TrainingService/AMLMode.md) (Azure Machine Learning) 以及其它环境。
 
 ## **使用场景**
 
@@ -328,8 +328,8 @@ You can use these commands to get more information about the experiment
    * 使用 NNI 的 [矩阵分解超参调优](https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb)
    * [scikit-nni](https://github.com/ksachdeva/scikit-nni) 使用 NNI 为 scikit-learn 开发的超参搜索。
 * ### **相关文章** ### 
-   * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparision.md)
-   * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparision.md)
+   * [超参数优化的对比](docs/zh_CN/CommunitySharings/HpoComparison.md)
+   * [神经网络结构搜索的对比](docs/zh_CN/CommunitySharings/NasComparison.md)
    * [并行化顺序算法：TPE](docs/zh_CN/CommunitySharings/ParallelizingTpeSearch.md)
    * [使用 NNI 为 SVD 自动调参](docs/zh_CN/CommunitySharings/RecommendersSvd.md)
    * [使用 NNI 为 SPTAG 自动调参](docs/zh_CN/CommunitySharings/SptagAutoTune.md)

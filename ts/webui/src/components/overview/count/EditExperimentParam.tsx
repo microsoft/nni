@@ -188,16 +188,16 @@ export const EditExperimentParam = (): any => {
                                             />
                                         )}
                                         {isShowPencil && (
-                                            <span className='edit' onClick={hidePencil}>
+                                            <span className='edit cursor' onClick={hidePencil}>
                                                 {Edit}
                                             </span>
                                         )}
                                         {!isShowPencil && (
                                             <span className='series'>
-                                                <span className='confirm' onClick={confirmEdit}>
+                                                <span className='confirm cursor' onClick={confirmEdit}>
                                                     {CheckMark}
                                                 </span>
-                                                <span className='cancel' onClick={cancelEdit}>
+                                                <span className='cancel cursor' onClick={cancelEdit}>
                                                     {Cancel}
                                                 </span>
                                             </span>
