@@ -212,6 +212,12 @@ interface EventMap {
     [key: string]: () => void;
 }
 
+// table column sort
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
+}
+
 interface AllExperimentList{
     port: number;
     startTime: number;
@@ -224,7 +230,6 @@ interface AllExperimentList{
     webuiUrl: string[];
     logDir: string[];
 }
-
 export {
     TableObj,
     TableRecord,
@@ -247,5 +252,6 @@ export {
     EventMap,
     SingleAxis,
     MultipleAxes,
+    SortInfo,
     AllExperimentList
 };
