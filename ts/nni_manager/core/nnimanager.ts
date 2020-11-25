@@ -678,11 +678,15 @@ class NNIManager implements Manager {
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
         this.log.debug(`NNIManager received trial job metrics: ${metric}`);
-        await this.dataStore.storeMetricData(metric.id, metric.data);
-        if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
+        if (this.trialJobs.has(metric.id)){
+            await this.dataStore.storeMetricData(metric.id, metric.data);
+            if (this.dispatcher === undefined) {
+                throw new Error('Error: tuner has not been setup');
+            }
+            this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
+        } else {
+            this.log.warning(`NNIManager received non-existent trial job metrics: ${metric}`);
         }
-        this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
     }
 
     private requestTrialJobs(jobNum: number): void {
