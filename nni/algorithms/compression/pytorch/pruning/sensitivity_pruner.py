@@ -68,7 +68,7 @@ class SensitivityPruner(Pruner):
         >>>             loss.backward()
         >>>             optimizer.step()
     base_algo: str
-        base pruning algorithm. `level`, `l1` or `l2`, by default `l1`.
+        base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`.
     sparsity_proportion_calc: function
         This function generate the sparsity proportion between the conv layers according to the
         sensitivity analysis results. We provide a default function to quantify the sparsity
@@ -150,7 +150,7 @@ class SensitivityPruner(Pruner):
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
             }], model, _logger)
-        elif self.base_algo in ['l1', 'l2']:
+        elif self.base_algo in ['l1', 'l2', 'fpgm']:
             schema = CompressorSchema([{
                 'sparsity': And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
