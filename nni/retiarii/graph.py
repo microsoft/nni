@@ -640,6 +640,6 @@ class IllegalGraphError(ValueError):
     @staticmethod
     def _debug_dump_graph(graph):
         if isinstance(graph, Graph):
-            graph = graph.dump()
+            graph = graph._dump()
         with open('generated/debug.json', 'w') as dump_file:
             json.dump(graph, dump_file, indent=4)

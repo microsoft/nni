@@ -21,7 +21,7 @@ class ToDevice(PyTorchOperation):
     def to_init_code(self, field):
         return ''
 
-    def to_forward_code(self, field, output, *inputs) -> str:
+    def to_forward_code(self, field, output, inputs) -> str:
         assert len(inputs) == 1
         return f"{output} = {inputs[0]}.to('{self.parameters['device']}')"
 

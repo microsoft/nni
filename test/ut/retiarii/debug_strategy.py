@@ -7,7 +7,7 @@ from nni.retiarii import Model, submit_models, wait_models
 
 
 def single_model_strategy():
-    with open(os.path.join(os.path.dirname(__file__), 'mnist_pytorch.json')) as f:
+    with open(os.path.join(os.path.dirname(__file__), 'converted_mnist_pytorch.json')) as f:
         ir = json.load(f)
     model = Model._load(ir)
     submit_models(model)
@@ -16,7 +16,7 @@ def single_model_strategy():
 
 def multi_model_cgo():
     os.environ['CGO'] = 'true'
-    with open(os.path.join(os.path.dirname(__file__), 'mnist_pytorch.json')) as f:
+    with open(os.path.join(os.path.dirname(__file__), 'converted_mnist_pytorch.json')) as f:
         ir = json.load(f)
     m = Model._load(ir)
     models = [m]
@@ -28,4 +28,4 @@ def multi_model_cgo():
     print('Strategy says:', [_.metric for _ in models])
 
 if __name__ == '__main__':
-    single_model_startegy()
+    single_model_strategy()

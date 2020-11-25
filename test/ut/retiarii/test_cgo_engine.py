@@ -15,12 +15,14 @@ from nni.retiarii import Model, Node
 
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.integration import RetiariiAdvisor, register_advisor, destory_advisor
+from nni.retiarii.integration import RetiariiAdvisor
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
+
+
 def _load_mnist(n_models: int = 1):
-    with open('mnist_pytorch.json') as f:
+    with open('converted_mnist_pytorch.json') as f:
         mnist_model = Model._load(json.load(f))
     if n_models == 1:
         return mnist_model
@@ -50,7 +52,8 @@ class CGOEngineTest(unittest.TestCase):
             params['parameters']['training_kwargs']['max_steps'] = 100
 
             platform.test.init_params(params)
-            trial_thread = threading.Thread(target=CGOExecutionEngine.trial_execute_graph)
+            
+            trial_thread = threading.Thread(target=CGOExecutionEngine.trial_execute_graph())
             trial_thread.start()
             last_metric = None
             while True:

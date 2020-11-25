@@ -2,7 +2,7 @@ from .interface import AbstractOptimizer
 from .logical_plan import LogicalPlan, AbstractLogicalNode, LogicalGraph, OriginNode, PhysicalDevice
 from nni.retiarii import Graph, Node, Model
 from typing import *
-from nni.retiarii.operation import _PseudoOperation
+from nni.retiarii.operation import _IOPseudoOperation
 
 
 _supported_training_modules = ['nni.retiarii.trainer.PyTorchImageClassificationTrainer']

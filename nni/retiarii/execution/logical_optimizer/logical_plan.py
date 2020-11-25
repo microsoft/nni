@@ -2,7 +2,7 @@ from nni.retiarii.operation import Operation
 from nni.retiarii.graph import Model, Graph, Edge, Node, Cell
 from typing import *
 import logging
-from nni.retiarii.graph import _InputPseudoUid, _OutputPseudoUid, _PseudoOperation
+from nni.retiarii.operation import _IOPseudoOperation
 import copy
 
 
@@ -54,8 +54,8 @@ class LogicalGraph(Graph):
                 tail_info = edge.tail.name
             edges_dump.append((head_info, tail_info))
         return {
-            'inputs': self.input_names,
-            'outputs': self.output_names,
+            'inputs': self.input_node.operation.io_names,
+            'outputs': self.output_node.operation.io_names,
             'nodes': nodes_dump,
             'edges': edges_dump
         }
@@ -63,8 +63,6 @@ class LogicalGraph(Graph):
     def _fork_to(self, model: Model) -> Graph:
         new_graph = Graph(model, self.id, self.name,
                           _internal=True)._register()
-        new_graph.input_names = self.input_names
-        new_graph.output_names = self.output_names
 
         for node in self.hidden_nodes:
             if isinstance(node, AbstractLogicalNode):
@@ -182,7 +180,7 @@ class LogicalPlan:
 
             if isinstance(node, AbstractLogicalNode):
                 new_node, placement = node.assemble(multi_model_placement)
-                if isinstance(new_node.operation, _PseudoOperation):
+                if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in training_config_slot:
                         phy_model.training_config.kwargs['model_kwargs'].append(
@@ -244,7 +242,7 @@ class LogicalPlan:
         # merge all input nodes into one with multiple slots
         input_nodes = []
         for node in phy_graph.hidden_nodes:
-            if isinstance(node.operation, _PseudoOperation) and node.operation.type == '_inputs':
+            if isinstance(node.operation, _IOPseudoOperation) and node.operation.type == '_inputs':
                 input_nodes.append(node)
 
         for edge in phy_graph.edges:
@@ -256,7 +254,7 @@ class LogicalPlan:
         # merge all output nodes into one with multiple slots
         output_nodes = []
         for node in phy_graph.hidden_nodes:
-            if isinstance(node.operation, _PseudoOperation) and node.operation.type == '_outputs':
+            if isinstance(node.operation, _IOPseudoOperation) and node.operation.type == '_outputs':
                 output_nodes.append(node)
                 
         for edge in phy_graph.edges:
