@@ -5,6 +5,7 @@
 import os
 import torch.distributed as dist
 
+
 def accuracy(output, target, topk=(1,)):
     """ Computes the precision@k for the specified values of k """
     maxk = max(topk)
@@ -24,8 +25,10 @@ def accuracy(output, target, topk=(1,)):
         res.append(correct_k.mul_(1.0 / batch_size))
     return res
 
+
 def reduce_metrics(metrics):
     return {k: reduce_tensor(v).item() for k, v in metrics.items()}
+
 
 def reduce_tensor(tensor):
     rt = tensor.clone()

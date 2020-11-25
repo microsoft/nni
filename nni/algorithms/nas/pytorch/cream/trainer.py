@@ -66,7 +66,6 @@ class CreamSupernetTrainer(Trainer):
         Callbacks to plug into the trainer. See Callbacks.
     """
 
-
     def __init__(self, model, loss, val_loss,
                  optimizer, num_epochs, train_loader, valid_loader,
                  mutator=None, batch_size=64, log_frequency=None,
@@ -77,7 +76,7 @@ class CreamSupernetTrainer(Trainer):
         assert torch.cuda.is_available()
         super(CreamSupernetTrainer, self).__init__(model, mutator, loss, None,
                                                    optimizer, num_epochs, None, None,
-                                                    batch_size, None, None, log_frequency, callbacks)
+                                                   batch_size, None, None, log_frequency, callbacks)
         self.model = model
         self.loss = loss
         self.val_loss = val_loss
@@ -253,7 +252,7 @@ class CreamSupernetTrainer(Trainer):
             soft_label = torch.nn.functional.softmax(teacher_output, dim=1)
 
         kd_loss = meta_value * \
-                  self._cross_entropy_loss_with_soft_target(output, soft_label)
+            self._cross_entropy_loss_with_soft_target(output, soft_label)
         return kd_loss
 
     # calculate soft target loss
@@ -327,6 +326,7 @@ class CreamSupernetTrainer(Trainer):
     def train_one_epoch(self, epoch):
         self.current_epoch = epoch
         meters = AverageMeterGroup()
+        self.steps_per_epoch = len(self.train_loader)
         for step, (input_data, target) in enumerate(self.train_loader):
             self.mutator.reset()
             self.current_student_arch = self.mutator._cache
@@ -382,7 +382,7 @@ class CreamSupernetTrainer(Trainer):
 
             if self.main_proc and (step % self.log_frequency == 0 or step + 1 == self.steps_per_epoch):
                 logger.info("Epoch [%d/%d] Step [%d/%d] %s", epoch + 1, self.num_epochs,
-                                 step + 1, len(self.train_loader), meters)
+                            step + 1, len(self.train_loader), meters)
 
         if self.main_proc and self.num_epochs == epoch + 1:
             for idx, i in enumerate(self.best_children_pool):

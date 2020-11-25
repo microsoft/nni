@@ -19,7 +19,7 @@ DATASET:
   NUM_CLASSES: 1000
   IMAGE_SIZE: 224 # image patch size
   INTERPOLATION: 'random' # Image resize interpolation type
-  BATCH_SIZE: 128 # batch size
+  BATCH_SIZE: 32 # batch size
   NO_PREFECHTER: False
 
 NET:
@@ -32,7 +32,7 @@ NET:
     FORCE_CPU: False # force model ema to be tracked on CPU
     DECAY: 0.9998
 
-OPT: 'rmsproptf'
+OPT: 'sgd'
 OPT_EPS: 1e-2
 MOMENTUM: 0.9
 DECAY_RATE: 0.1
