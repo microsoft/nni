@@ -50,7 +50,7 @@ class NNIExperimentsManager implements ExperimentManager {
                 return this.getExperimentsInfo();
             }
         } else {
-            return experimentsInformation;
+            return JSON.parse(JSON.stringify(Object.keys(experimentsInformation).map(key=>experimentsInformation[key])));
         }
     }
 
