@@ -263,7 +263,7 @@ function formatComplexTypeValue(value: any): string | number {
 }
 
 function isManagerExperimentPage(): boolean {
-    return (location.href.indexOf('experiment') === -1) ? false : true;
+    return (location.pathname.indexOf('experiment') === -1) ? false : true;
 }
 
 function caclMonacoEditorHeight(height): number {

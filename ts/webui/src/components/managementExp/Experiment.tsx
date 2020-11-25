@@ -1,38 +1,36 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, Dropdown, DatePicker, DayOfWeek, TooltipHost, DirectionalHint } from '@fluentui/react';
+import { Stack, StackItem, DetailsList, DefaultButton, Icon, SearchBox, Dropdown, DatePicker, DayOfWeek, TooltipHost, DirectionalHint, CommandBarButton } from '@fluentui/react';
+import { Link } from 'react-router-dom';
 import { formatTimestamp } from '../../static/function';
 import { TOOLTIP_BACKGROUND_COLOR, EXPERIMENTSTATUS, PLATFORM } from '../../static/const';
+import { RevToggleKey } from '../buttons/Icon';
+import { NNILOGO } from '../stateless-component/NNItabs';
 import DayPickerStrings from './experimentConst';
+import {
+    stackTokens,
+    stackStyle
+} from '../NavConst';
 import '../../App.scss';
+import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/common/ellipsis.scss';
 import '../../static/style/tableStatus.css';
-const data = require('./experiment.json');
+import { ExperimentsManager } from '../../static/model/experimentsManager';
+import { AllExperimentList } from '../../static/interface';
 
-interface AllExperimentList {
-    name: string;
-    id: string;
-    status: string;
-    port: number;
-    platform: string;
-    startTime: number;
-    endTime: number;
-    tag: string[];
-}
-
-interface OverviewState {
+interface ExpListState {
     hideFilter: boolean;
     searchInputVal: string;
     selectedStatus: string;
     selectedPlatform: string;
     selectedStartDate?: Date;
     selectedEndDate?: Date;
-    source: Array<AllExperimentList>;
-    filterSource: Array<AllExperimentList>;
-    filterSourceOrigin: Array<AllExperimentList>;
+    source: AllExperimentList[];
+    filterSource: AllExperimentList[];
+    filterSourceOrigin: AllExperimentList[];
 }
 
-class Experiment extends React.Component<{}, OverviewState> {
+class Experiment extends React.Component<{}, ExpListState> {
     constructor(props) {
         super(props);
         this.state = {
@@ -40,103 +38,131 @@ class Experiment extends React.Component<{}, OverviewState> {
             searchInputVal: '',
             selectedStatus: '',
             selectedPlatform: '',
-            source: data,
-            filterSource: data,
-            filterSourceOrigin: data
+            source: [],
+            filterSource: [],
+            filterSourceOrigin: []
         };
     }
 
-    render(): React.ReactNode {
-        const { hideFilter, selectedStatus, source, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        return (
-            <Stack className='contentBox expBackground'>
-                <Stack className='content'>
-                    <Stack className='experimentList'>
-                        <Stack className='box' horizontal>
-                            <div className='search'>
-                                <SearchBox
-                                    className='search-input'
-                                    placeholder="Search the experiment by name, ID, tags..."
-                                    onEscape={(_ev): void => {
+    async componentDidMount(): Promise<void> {
+        const EXPERIMENTMANAGER = new ExperimentsManager();
+        await EXPERIMENTMANAGER.init();
+        const result = EXPERIMENTMANAGER.getExperimentList();
+        this.setState(() => ({
+            source: result,
+            filterSource: result,
+            filterSourceOrigin: result
+        }));
+    }
 
-                                        this.setState(() => ({ source: data }));
-                                        console.log('Custom onEscape Called');
-                                    }}
-                                    onClear={(_ev): void => {
-                                        this.setState(() => ({ source: data }));
-                                        console.log('onClear');
-                                        // 点 × 操作
-                                        console.info('source', this.state.source);
-                                    }}
-                                    onChange={this.searchNameAndId.bind(this)}
+    render(): React.ReactNode {
+        const { hideFilter, selectedStatus, source, filterSourceOrigin, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
+        console.info('source', source);
+        return (
+            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                <div className='header'>
+                    <div className='headerCon'>
+                        <Stack className='nav' horizontal>
+                            <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
+                                <span className='desktop-logo'>{NNILOGO}</span>
+                                <span className='logoTitle'>Neural Network Intelligence</span>
+                            </StackItem>
+                            <StackItem grow={70} className='navOptions'>
+                                <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                                    <Link to='/oview' className='experiment'>
+                                        <CommandBarButton iconProps={RevToggleKey} text='Back to the experiment' />
+                                    </Link>
+                                </Stack>
+                            </StackItem>
+                        </Stack>
+                    </div>
+                </div>
+                <Stack className='contentBox expBackground'>
+                    <Stack className='content'>
+                        <Stack className='experimentList'>
+                            <Stack className='box' horizontal>
+                                <div className='search'>
+                                    <SearchBox
+                                        className='search-input'
+                                        placeholder='Search the experiment by name, ID, tags...'
+                                        onEscape={(_ev): void => {
+                                            // xxxxxxxx
+                                            this.setState(() => ({ source: filterSourceOrigin }));
+                                        }}
+                                        onClear={(_ev): void => {
+                                            // xxxxxxxx
+                                            this.setState(() => ({ source: filterSourceOrigin }));
+                                        }}
+                                        onChange={this.searchNameAndId.bind(this)}
+                                    />
+                                </div>
+                                <div className='filter'>
+                                    <DefaultButton
+                                        onClick={this.clickFilter.bind(this)}
+                                        // className='fiter-button'
+                                        className={`${!hideFilter ? 'filter-button-open' : null}`}
+                                    >
+                                        <Icon iconName='Equalizer' />
+                                        <span className='margin'>Filter</span>
+                                    </DefaultButton>
+                                </div>
+                            </Stack>
+                            <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
+                                <Dropdown
+                                    label='Status'
+                                    selectedKey={selectedStatus}
+                                    onChange={this.selectStatus.bind(this)}
+                                    placeholder='Select an option'
+                                    options={this.fillOptions(EXPERIMENTSTATUS)}
+                                    className='filter-condition-status'
                                 />
-                            </div>
-                            <div className='filter'>
+                                <Dropdown
+                                    label='Platform'
+                                    selectedKey={selectedPlatform}
+                                    onChange={this.selectPlatform.bind(this)}
+                                    placeholder='Select an option'
+                                    options={this.fillOptions(PLATFORM)}
+                                    className='filter-condition-platform'
+                                />
+                                <DatePicker
+                                    label='Start time'
+                                    firstDayOfWeek={DayOfWeek.Sunday}
+                                    strings={DayPickerStrings}
+                                    showMonthPickerAsOverlay={true}
+                                    placeholder='Select a date...'
+                                    ariaLabel='Select a date'
+                                    value={selectedStartDate}
+                                    // dateTimeFormatter={formatMonthDayYear()}
+                                    // formatDate={(date?: Date): string => date!.toString()}
+                                    onSelectDate={this.getSelectedData.bind(this, 'start')}
+                                />
+                                <DatePicker
+                                    label='End time'
+                                    firstDayOfWeek={DayOfWeek.Sunday}
+                                    strings={DayPickerStrings}
+                                    showMonthPickerAsOverlay={true}
+                                    placeholder='Select a date...'
+                                    ariaLabel='Select a date'
+                                    value={selectedEndDate}
+                                    onSelectDate={this.getSelectedData.bind(this, 'end')}
+                                />
                                 <DefaultButton
-                                    onClick={this.clickFilter.bind(this)}
-                                    // className='fiter-button'
-                                    className={`${!hideFilter ? 'filter-button-open' : null}`}
+                                    onClick={this.setOriginSource.bind(this)}
+                                    className='reset'
                                 >
-                                    <Icon iconName='Equalizer' />
-                                    <span className='margin'>Filter</span>
+                                    <Icon iconName='Refresh' />
+                                    <span className='margin'>Reset</span>
                                 </DefaultButton>
-                            </div>
+                            </Stack>
+                            <DetailsList
+                                columns={this.columns}
+                                items={source}
+                                setKey='set'
+                                compact={true}
+                                selectionMode={0} // close selector function
+                                className='table'
+                            />
                         </Stack>
-                        <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
-                            <Dropdown
-                                label="Status"
-                                selectedKey={selectedStatus}
-                                onChange={this.selectStatus.bind(this)}
-                                placeholder="Select an option"
-                                options={this.fillOptions(EXPERIMENTSTATUS)}
-                                className='filter-condition-status'
-                            />
-                            <Dropdown
-                                label="Platform"
-                                selectedKey={selectedPlatform}
-                                onChange={this.selectPlatform.bind(this)}
-                                placeholder="Select an option"
-                                options={this.fillOptions(PLATFORM)}
-                                className='filter-condition-platform'
-                            />
-                            <DatePicker
-                                label='Start time'
-                                firstDayOfWeek={DayOfWeek.Sunday}
-                                strings={DayPickerStrings}
-                                showMonthPickerAsOverlay={true}
-                                placeholder="Select a date..."
-                                ariaLabel="Select a date"
-                                value={selectedStartDate}
-                                // dateTimeFormatter={formatMonthDayYear()}
-                                // formatDate={(date?: Date): string => date!.toString()}
-                                onSelectDate={this.getSelectedData.bind(this, 'start')}
-                            />
-                            <DatePicker
-                                label='End time'
-                                firstDayOfWeek={DayOfWeek.Sunday}
-                                strings={DayPickerStrings}
-                                showMonthPickerAsOverlay={true}
-                                placeholder="Select a date..."
-                                ariaLabel="Select a date"
-                                value={selectedEndDate}
-                                onSelectDate={this.getSelectedData.bind(this, 'end')}
-                            />
-                            <DefaultButton
-                                onClick={this.setOriginSource.bind(this)}
-                                className='reset'
-                            >
-                                <Icon iconName='Refresh' />
-                                <span className='margin'>Reset</span>
-                            </DefaultButton>
-                        </Stack>
-                        <DetailsList
-                            columns={this.columns}
-                            items={source}
-                            setKey='set'
-                            compact={true}
-                            selectionMode={0} // close selector function
-                            className='table'
-                        />
                     </Stack>
                 </Stack>
             </Stack>
@@ -164,7 +190,6 @@ class Experiment extends React.Component<{}, OverviewState> {
             isResizable: true,
             data: 'number',
             // onColumnClick: this.onColumnClick,
-            // onClick={() => {window.open(webuiPortal)}}
             onRender: (item: any): React.ReactNode => {
                 const hostname = window.location.hostname;
                 const protocol = window.location.protocol;
@@ -303,15 +328,19 @@ class Experiment extends React.Component<{}, OverviewState> {
     }
 
     private searchNameAndId(_event, newValue): void {
+        const {filterSourceOrigin} = this.state;
         if (newValue !== undefined) {
             // 空格回退操作
             if (newValue === '') {
-                this.setState(() => ({ source: data, filterSource: data }));
+                // xxxxxxxx
+                this.setState(() => ({ source: filterSourceOrigin, filterSource: filterSourceOrigin }));
                 console.info('source', this.state.source);
                 return;
             }
-            const result = this.state.source.filter(item => (item.name.includes(newValue) ||
-                item.id.includes(newValue) || item.tag.join(',').includes(newValue)));
+            // TODOTODO
+            const result = this.state.source.filter(item => (item.experimentName.includes(newValue) ||
+                // item.id.includes(newValue) || item.tag.join(',').includes(newValue)));
+                item.tag.join(',').includes(newValue)));
             this.setState(() => ({
                 source: result, filterSource: result, filterSourceOrigin: result
             }));

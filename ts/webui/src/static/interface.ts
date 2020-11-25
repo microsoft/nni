@@ -212,6 +212,19 @@ interface EventMap {
     [key: string]: () => void;
 }
 
+interface AllExperimentList{
+    port: number;
+    startTime: number;
+    endTime: number;
+    status: string;
+    platform: string;
+    experimentName: string;
+    tag: string[];
+    pid: number;
+    webuiUrl: string[];
+    logDir: string[];
+}
+
 export {
     TableObj,
     TableRecord,
@@ -233,5 +246,6 @@ export {
     NNIManagerStatus,
     EventMap,
     SingleAxis,
-    MultipleAxes
+    MultipleAxes,
+    AllExperimentList
 };

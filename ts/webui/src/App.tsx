@@ -139,59 +139,61 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
-        
+
         return (
-            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
-                <div className='header'>
-                    <div className='headerCon'>
-                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
-                    </div>
-                </div>
-                <Stack className='contentBox'>
-                    <Stack className='content'>
-                        {/* search space & config */}
-                        {
-                            isManagerExperimentPage()
-                                ?
-                                null
-                                :
-                                <SlideNavBtns />
-                        }
-                        {/* if api has error field, show error message */}
-                        {errorList.map(
-                            (item, key) =>
-                                item.errorWhere && (
-                                    <div key={key} className='warning'>
-                                        <MessageInfo info={item.errorMessage} typeInfo='error' />
-                                    </div>
-                                )
-                        )}
-                        {isillegalFinal && (
-                            <div className='warning'>
-                                <MessageInfo info={expWarningMessage} typeInfo='warning' />
+            <React.Fragment>
+                {
+                    isManagerExperimentPage()
+                        ?
+                        null
+                        :
+                        <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                            <div className='header'>
+                                <div className='headerCon'>
+                                    <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
+                                </div>
                             </div>
-                        )}
-                        <AppContext.Provider
-                            value={{
-                                interval,
-                                columnList,
-                                changeColumn: this.changeColumn,
-                                experimentUpdateBroadcast,
-                                trialsUpdateBroadcast,
-                                metricGraphMode,
-                                maxDurationUnit,
-                                changeMaxDurationUnit: this.changeMaxDurationUnit,
-                                changeMetricGraphMode: this.changeMetricGraphMode,
-                                bestTrialEntries,
-                                changeEntries: this.changeEntries,
-                                updateOverviewPage: this.updateOverviewPage
-                            }}
-                        >
-                            {this.props.children}
-                        </AppContext.Provider>
-                    </Stack>
-                </Stack>
-            </Stack>
+                            <Stack className='contentBox'>
+                                <Stack className='content'>
+                                    {/* search space & config */}
+                                    <SlideNavBtns />
+                                    {/* if api has error field, show error message */}
+                                    {errorList.map(
+                                        (item, key) =>
+                                            item.errorWhere && (
+                                                <div key={key} className='warning'>
+                                                    <MessageInfo info={item.errorMessage} typeInfo='error' />
+                                                </div>
+                                            )
+                                    )}
+                                    {isillegalFinal && (
+                                        <div className='warning'>
+                                            <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                                        </div>
+                                    )}
+                                    <AppContext.Provider
+                                        value={{
+                                            interval,
+                                            columnList,
+                                            changeColumn: this.changeColumn,
+                                            experimentUpdateBroadcast,
+                                            trialsUpdateBroadcast,
+                                            metricGraphMode,
+                                            maxDurationUnit,
+                                            changeMaxDurationUnit: this.changeMaxDurationUnit,
+                                            changeMetricGraphMode: this.changeMetricGraphMode,
+                                            bestTrialEntries,
+                                            changeEntries: this.changeEntries,
+                                            updateOverviewPage: this.updateOverviewPage
+                                        }}
+                                    >
+                                        {this.props.children}
+                                    </AppContext.Provider>
+                                </Stack>
+                            </Stack>
+                        </Stack>
+                }
+            </React.Fragment>
         );
     }
 
