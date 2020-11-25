@@ -19,7 +19,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentParams, Manager } from './manager';
-import { ExpManager } from './expmanager';
+import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
 
@@ -190,7 +190,7 @@ function prepareUnitTest(): void {
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
-    Container.snapshot(ExpManager);
+    Container.snapshot(ExperimentManager);
 
     const logLevel: string = parseArg(['--log_level', '-ll']);
     if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
@@ -218,7 +218,7 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentStartupInfo);
-    Container.restore(ExpManager);
+    Container.restore(ExperimentManager);
 }
 
 let cachedipv4Address: string = '';

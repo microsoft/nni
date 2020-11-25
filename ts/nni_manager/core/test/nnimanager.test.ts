@@ -11,10 +11,10 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { Database, DataStore } from '../../common/datastore';
 import { Manager, ExperimentProfile} from '../../common/manager';
-import { ExpManager } from '../../common/expmanager';
+import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { ExperimentsManager } from '../experimentsManager';
+import { NNIExperimentsManager } from '../nniExperimentsManager';
 import { NNIManager } from '../nnimanager';
 import { SqlDB } from '../sqlDatabase';
 import { MockedTrainingService } from './mockedTrainingService';
@@ -27,7 +27,7 @@ async function initContainer(): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
-    Container.bind(ExpManager).to(ExperimentsManager).scope(Scope.Singleton);
+    Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
     await component.get<DataStore>(DataStore).init();
 }
 
@@ -108,7 +108,7 @@ describe('Unit test for nnimanager', function () {
     before(async () => {
         await initContainer();
         fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
-        const experimentsManager: ExpManager = component.get(ExpManager);
+        const experimentsManager: ExperimentManager = component.get(ExperimentManager);
         experimentsManager.setExperimentPath('.experiment.test');
         nniManager = component.get(Manager);
         const expId: string = await nniManager.startExperiment(experimentParams);

@@ -3,14 +3,14 @@
 
 'use strict';
 
-import { ExpManager } from '../../common/expmanager';
+import { ExperimentManager } from '../../common/experimentManager';
 import { Provider } from 'typescript-ioc';
 
-export const testExpManagerProvider: Provider = {
-    get: (): ExpManager => { return new mockedeExpManager(); }
+export const testExperimentManagerProvider: Provider = {
+    get: (): ExperimentManager => { return new mockedeExperimentManager(); }
 };
 
-export class mockedeExpManager extends ExpManager {
+export class mockedeExperimentManager extends ExperimentManager {
     public getExperimentsInfo(): Promise<JSON> {
         const expInfo = JSON.parse(JSON.stringify({
             "test": {

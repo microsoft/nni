@@ -9,7 +9,7 @@ import * as path from 'path';
 
 import { getLogger, Logger } from '../common/log';
 import { isAlive, withLock, withLockSync, getExperimentsInfoPath } from '../common/utils';
-import { ExpManager } from '../common/expmanager';
+import { ExperimentManager } from '../common/experimentManager';
 import { Deferred } from 'ts-deferred';
 
 interface CrashedInfo {
@@ -22,7 +22,7 @@ interface FileInfo {
     mtime: number;
 }
 
-class ExperimentsManager implements ExpManager {
+class NNIExperimentsManager implements ExperimentManager {
     private experimentsPath: string;
     private log: Logger;
     private profileUpdateTimer: {[key: string]: any};
@@ -157,4 +157,4 @@ class ExperimentsManager implements ExpManager {
     }
 }
 
-export { ExperimentsManager };
+export { NNIExperimentsManager };

@@ -9,12 +9,12 @@ import { Container, Scope } from 'typescript-ioc';
 
 import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { ExpManager } from '../../common/expmanager';
-import { ExperimentsManager } from '../experimentsManager';
+import { ExperimentManager } from '../../common/experimentManager';
+import { NNIExperimentsManager } from '../nniExperimentsManager';
 
 
 describe('Unit test for experiment manager', function () {
-    let expManager: ExperimentsManager;
+    let experimentManager: NNIExperimentsManager;
     const mockedInfo = {
         "test": {
             "port": 8080,
@@ -32,9 +32,9 @@ describe('Unit test for experiment manager', function () {
     before(() => {
         prepareUnitTest();
         fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
-        Container.bind(ExpManager).to(ExperimentsManager).scope(Scope.Singleton);
-        expManager = component.get(ExperimentsManager);
-        expManager.setExperimentPath('.experiment.test');
+        Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
+        experimentManager = component.get(NNIExperimentsManager);
+        experimentManager.setExperimentPath('.experiment.test');
     });
 
     after(() => {
@@ -45,7 +45,7 @@ describe('Unit test for experiment manager', function () {
     });
 
     it('test getExperimentsInfo', () => {
-        return expManager.getExperimentsInfo().then(function (experimentsInfo: {[key: string]: any}) {
+        return experimentManager.getExperimentsInfo().then(function (experimentsInfo: {[key: string]: any}) {
             expect(experimentsInfo['test']['status']).to.be.oneOf(['STOPPED', 'ERROR']);
         }).catch((error) => {
             assert.fail(error);

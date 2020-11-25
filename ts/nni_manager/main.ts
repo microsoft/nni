@@ -12,13 +12,13 @@ import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
-import { ExpManager } from './common/expmanager';
+import { ExperimentManager } from './common/experimentManager';
 import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
-import { ExperimentsManager } from './core/experimentsManager';
+import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
@@ -79,8 +79,8 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
     Container.bind(DataStore)
         .to(NNIDataStore)
         .scope(Scope.Singleton);
-    Container.bind(ExpManager)
-        .to(ExperimentsManager)
+    Container.bind(ExperimentManager)
+        .to(NNIExperimentsManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     if (foreground) {
@@ -197,7 +197,7 @@ process.on(getStopSignal(), async () => {
     try {
         const nniManager: Manager = component.get(Manager);
         await nniManager.stopExperiment();
-        const experimentManager: ExpManager = component.get(ExpManager);
+        const experimentManager: ExperimentManager = component.get(ExperimentManager);
         await experimentManager.stop();
         const ds: DataStore = component.get(DataStore);
         await ds.close();

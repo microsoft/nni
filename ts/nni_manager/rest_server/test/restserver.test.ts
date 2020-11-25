@@ -10,14 +10,14 @@ import { Container } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { DataStore } from '../../common/datastore';
 import { ExperimentProfile, Manager } from '../../common/manager';
-import { ExpManager } from '../../common/expmanager'
+import { ExperimentManager } from '../../common/experimentManager'
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../../core/test/mockedDatastore';
 import { MockedTrainingService } from '../../core/test/mockedTrainingService';
 import { NNIRestServer } from '../nniRestServer';
 import { testManagerProvider } from './mockedNNIManager';
-import { testExpManagerProvider } from './mockedExperimentManager';
+import { testExperimentManagerProvider } from './mockedExperimentManager';
 
 describe('Unit test for rest server', () => {
 
@@ -28,7 +28,7 @@ describe('Unit test for rest server', () => {
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
-        Container.bind(ExpManager).provider(testExpManagerProvider)
+        Container.bind(ExperimentManager).provider(testExperimentManagerProvider)
         const restServer: NNIRestServer = component.get(NNIRestServer);
         restServer.start().then(() => {
             ROOT_URL = `${restServer.endPoint}/api/v1/nni`;

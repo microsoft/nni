@@ -15,7 +15,7 @@ import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExpManager } from '../common/expmanager';
+import { ExperimentManager } from '../common/experimentManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
@@ -32,7 +32,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
-    private experimentManager: ExpManager;
+    private experimentManager: ExperimentManager;
     private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private log: Logger;
@@ -51,7 +51,7 @@ class NNIManager implements Manager {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.trainingService = component.get(TrainingService);
-        this.experimentManager = component.get(ExpManager);
+        this.experimentManager = component.get(ExperimentManager);
         assert(this.trainingService);
         this.dispatcherPid = 0;
         this.waitingTrials = [];

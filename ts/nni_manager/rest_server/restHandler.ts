@@ -12,7 +12,7 @@ import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
-import { ExpManager } from '../common/expmanager';
+import { ExperimentManager } from '../common/experimentManager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
@@ -22,12 +22,12 @@ const expressJoi = require('express-joi-validator');
 class NNIRestHandler {
     private restServer: NNIRestServer;
     private nniManager: Manager;
-    private experimentsManager: ExpManager;
+    private experimentsManager: ExperimentManager;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
-        this.experimentsManager = component.get(ExpManager);
+        this.experimentsManager = component.get(ExperimentManager);
         this.restServer = rs;
         this.log = getLogger();
     }
