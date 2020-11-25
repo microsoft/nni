@@ -555,9 +555,6 @@ class Node:
         if self.label is not None:
             ret['label'] = self.label
         return ret
-    
-    def __hash__(self) -> int:
-        return hash(self.__repr__())
 
 class Edge:
     """
