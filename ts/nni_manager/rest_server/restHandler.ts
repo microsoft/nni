@@ -16,7 +16,6 @@ import { ExperimentManager } from '../common/experimentManager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
-import { NNIManager } from "../core/nnimanager";
 
 const expressJoi = require('express-joi-validator');
 
