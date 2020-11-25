@@ -66,6 +66,7 @@ class Experiments:
         with self.lock:
             self.experiments = self.read_file()
             self.experiments[expId] = {}
+            self.experiments[expId]['id'] = expId
             self.experiments[expId]['port'] = port
             self.experiments[expId]['startTime'] = startTime
             self.experiments[expId]['endTime'] = endTime
