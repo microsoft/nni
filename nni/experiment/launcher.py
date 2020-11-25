@@ -1,88 +1,103 @@
+import contextlib
 from pathlib import Path
-import random
 import socket
 from subprocess import Popen
 import sys
-import tempfile
-from threading import Thread
+import time
+from typing import Optional, Tuple
+
+import requests
 
 import nni.runtime.protocol
 import nni_node
 
 from .config import ExperimentConfig
+from . import management
+from .pipe import Pipe
+
+_url_template = 'http://localhost:{}/api/v1/nni{}'
+_rest_timeout = 20
 
 
-def _start_rest_server(config: ExperimentConfig, port: int) -> Popen:
-    _check_port_idle(port)
+def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
+    pipe = None
+    proc = None
+
+    config.validate()
+    _ensure_port_idle(port)
     if config._training_service == 'pai':
-        _check_port_idle(port + 1)
+        _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
+    exp_id = management._generate_experiment_id()
 
-    uid = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    pipe_path = Path(tempfile.gettempdir(), 'nni-pipe-' + uid)
+    try:
+        print(f'Creating experiment {exp_id}...')
+        pipe = Pipe(exp_id)
+        proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
+        pipe_file = pipe.connect()
+        print('## setting io file')
+        nni.runtime.protocol._in_file = pipe_file
+        nni.runtime.protocol._out_file = pipe_file
+        print('Statring web server...')
+        _check_rest_server(port)
+        print('Setting up...')
+        _init_experiment(config, port, debug)  # todo: kill on fail
+        return proc, pipe
 
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(pipe_path)
-    sock.listen(1)
+    except Exception as e:
+        print('Create experiment failed')
+        if proc is not None:
+            with contextlib.suppress(Exception):
+                proc.kill()
+        if pipe is not None:
+            with contextlib.suppress(Exception):
+                pipe.close()
+        raise e
 
-    # TODO: check if a new thread is really necessary
-    Thread(target=lambda: _wait_connection(sock)).start()
 
-    print('Starting NNI manager...')
+def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
+    sock = socket.socket()
+    if sock.connect_ex(('localhost', port)) == 0:
+        sock.close()
+        message = f'(message)' if message else ''
+        raise RuntimeError(f'Port {port} is not idle {message}')
+
+
+def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Popen:
+    args = {
+        'port': port,
+        'mode': config._training_service,
+        'experiment_id': experiment_id,
+        'start_mode': 'new',
+        'log_level': 'debug' if debug else 'info',
+        'dispatcher_pipe': pipe_path
+    }
 
     node_dir = Path(nni_node.__path__[0])
     node = node_dir / ('node.exe' if sys.platform == 'win32' else 'node')
-    cmd = [
-        str(node), '--max-old-space-size=4096',
-        str(node_dir / 'main.js'),
-        '--port', str(port), 
-        '--mode', platform,
-        '--start_mode', 'new',
-        '--dispatcher-pipe', pipe_path
-    ]
-
-    # TODO: logging
+    cmd = [str(node), '--max-old-space-size=4096', str(node_dir / 'main.js')]
+    for arg_key, arg_value in args.items():
+        cmd.append('--' + arg_key)
+        cmd.append(str(arg_value))
     return Popen(cmd, cwd=node_dir)
-
-def _wait_connection(sock):
-    conn, addr = sock.accept()
-    nni.runtime.protocol._in_file = conn
-    nni.runtime.protocol._out_file = conn
+    # todo: logging
 
 
-def _init_experiment(proc: Popen, config: ExperimentConfig, port: int, debug: bool) -> None:
-    _check_rest_server(config, port, debug)
-
-    print('Initializing experiment...')
-
-    config_json = config._to_json()
-    config_json['debug'] = debug
-    url = _url_template.format(port=port, api='/experiment')
-    resp = requests.post(url, data=config_json, timeout=20)
-    resp.raise_for_status()
-
-    print('Experiment started')
-    print('Experiment ID:', resp.json()['experimentId'])
-
-
-
-_url_template = 'http://localhost:{port}/api/v1/nni{api}'
-
-def _check_port_idle(port: int) -> None:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        sock.connect(('localhost', port))
-        sock.close()
-    except ConnectionRefusedError:
-        raise RuntimeError(f'port {port} is not idle')
-
-
-def _check_rest_server(port: int, retry_count: int = 20, timeout: int = 20) -> None:
-    url = _url_template.format(port=port, api='/check-status')
-    while True:
-        try:
-            requests.get(url, timeout=timeout).raise_for_status()
-        except Exception:
-            retry_count -= 1
-            if retry_count <= 0:
-                raise RuntimeError('NNI manager start failed')
+def _check_rest_server(port: int, retry: int = 10) -> None:
+    url = _url_template.format(port, '/check-status')
+    for _ in range(retry):
+        with contextlib.suppress(Exception):
+            requests.get(url, timeout=_rest_timeout).raise_for_status()
+            return
         time.sleep(1)
+    requests.get(url, timeout=_rest_timeout).raise_for_status()
+
+
+def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
+    config_json = config.to_json()
+    config_json['debug'] = debug
+    url = _url_template.format(port, '/experiment')
+    print(config_json)
+    resp = requests.post(url, json=config_json, timeout=_rest_timeout)
+    print(resp.json())
+    resp.raise_for_status()
+    #requests.post(url, config_json, timeout=_rest_timeout).raise_for_status()

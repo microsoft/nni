@@ -1,10 +1,13 @@
 from typing import overload
 
+from nni.runtime.msg_dispatcher import MsgDispatcher
 from nni.tuner import Tuner
 
 from .config import ExperimentConfig
 from . import launcher
+from .pipe import Pipe
 
+from .config import LocalExperimentConfig
 
 class Experiment:
     """
@@ -64,10 +67,12 @@ class Experiment:
         """
         ...
 
-    def __init__(self, tuner, config=None, training_service=None):
+    def __init__(self, tuner: Tuner, config=None, training_service=None):
         self.config: ExperimentConfig
         self.port: Optional[int] = None
+        self._dispatcher = MsgDispatcher(tuner, None)
         self._proc: Optional[Popen] = None
+        self._pipe: Optional[Pipe] = None
 
         if isinstance(config, str):
             config, training_service = None, config
@@ -75,7 +80,8 @@ class Experiment:
             training_service = 'pai'
 
         if config is None:
-            self.config = ExperimentConfig._create(training_service)
+            self.config = LocalExperimentConfig()
+            #self.config = ExperimentConfig._create(training_service)
         else:
             self.config = config
 
@@ -95,16 +101,23 @@ class Experiment:
             Whether to start in debug mode.
         """
         self.config.validate()
-        self._proc = launcher._start_rest_server(self.config, port)
-        try:
-            launcher._init_experiment(self._proc, self.config, port, debug)
-        except Exception as e:
-            self._proc.kill()
-            self._proc = None
-            raise e
-        self.port = port
+
+        from threading import Thread
+
+        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
+
+        Thread(target = lambda: self._dispatcher.run()).start()
+
+        assert self._proc is not None
+        assert self._pipe is not None
+        self.port = port  # port will be None if previous line raises
+        #management._create(self)
+
 
     def stop(self) -> None:
         self._proc.kill()
+        self._pipe.close()
+
         self.port = None
         self._proc = None
+        self._pipe = None

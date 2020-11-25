@@ -62,7 +62,7 @@ def init_logger(logger_file_path, log_level_name='info'):
     # these modules are too verbose
     logging.getLogger('matplotlib').setLevel(log_level)
 
-    sys.stdout = _LoggerFileWrapper(logger_file)
+    #sys.stdout = _LoggerFileWrapper(logger_file)
 
 def init_standalone_logger():
     """
