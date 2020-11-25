@@ -345,6 +345,14 @@ class NNIManager implements Manager {
         return this.status;
     }
 
+    public getTrialJobMessage(trialJobId: string): string | undefined {
+        const trialJob = this.trialJobs.get(trialJobId);
+        if (trialJob !== undefined){
+            return trialJob.message
+        }
+        return undefined
+    }
+
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
         return this.dataStore.listTrialJobs(status);
     }
@@ -500,6 +508,10 @@ class NNIManager implements Manager {
                 this.log.info(`Trial job ${trialJobDetail.id} status changed from ${oldTrialJobDetail.status} to ${trialJobDetail.status}`);
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
+            }
+            const newTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if (newTrialJobDetail !== undefined) {
+                newTrialJobDetail.message = trialJobDetail.message;
             }
             let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {

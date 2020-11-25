@@ -15,12 +15,13 @@ import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manage
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
+import { NNIManager } from "../core/nnimanager";
 
 const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
     private restServer: NNIRestServer;
-    private nniManager: Manager;
+    private nniManager: NNIManager;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
@@ -209,6 +210,7 @@ class NNIRestHandler {
             this.nniManager.listTrialJobs(req.query.status).then((jobInfos: TrialJobInfo[]) => {
                 jobInfos.forEach((trialJob: TrialJobInfo) => {
                     this.setErrorPathForFailedJob(trialJob);
+                    this.setMessageforJob(trialJob);
                 });
                 res.send(jobInfos);
             }).catch((err: Error) => {
@@ -221,6 +223,7 @@ class NNIRestHandler {
         router.get('/trial-jobs/:id', (req: Request, res: Response) => {
             this.nniManager.getTrialJob(req.params.id).then((jobDetail: TrialJobInfo) => {
                 const jobInfo: TrialJobInfo = this.setErrorPathForFailedJob(jobDetail);
+                this.setMessageforJob(jobInfo);
                 res.send(jobInfo);
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -310,6 +313,14 @@ class NNIRestHandler {
         jobInfo.stderrPath = path.join(jobInfo.logPath, 'stderr');
 
         return jobInfo;
+    }
+
+    private setMessageforJob(jobInfo: TrialJobInfo): TrialJobInfo {
+        if (jobInfo === undefined){
+            return jobInfo
+        }
+        jobInfo.message = this.nniManager.getTrialJobMessage(jobInfo.trialJobId);
+        return jobInfo
     }
 }
 
