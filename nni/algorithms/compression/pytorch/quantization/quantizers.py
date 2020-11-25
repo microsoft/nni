@@ -143,11 +143,11 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
-        self.steps = 1
         modules_to_compress = self.get_modules_to_compress()
+        self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
-            layer.module.register_buffer("zero_point", None)
-            layer.module.register_buffer("scale", None)
+            layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
+            layer.module.register_buffer("scale", torch.Tensor([1.0]))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
@@ -229,7 +229,8 @@ class QAT_Quantizer(Quantizer):
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
-        if quant_start_step > self.steps:
+        # we dont update weight in evaluation stage
+        if quant_start_step > self.bound_model.steps or not wrapper.training:
             return weight
 
         # if bias exists, quantize bias to uint32
@@ -258,15 +259,17 @@ class QAT_Quantizer(Quantizer):
         quant_start_step = config.get('quant_start_step', 0)
         assert output_bits >= 1, "quant bits length should be at least 1"
 
-        if quant_start_step > self.steps:
+        if quant_start_step > self.bound_model.steps:
             return output
 
-        current_min, current_max = torch.min(output), torch.max(output)
-        module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min,
-                                                                   module.ema_decay, self.steps)
-        module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max,
-                                                                   module.ema_decay, self.steps)
-        module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
+        # we dont update output quantization parameters in evaluation stage
+        if wrapper.training:
+            current_min, current_max = torch.min(output), torch.max(output)
+            module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min,
+                                                                       module.ema_decay, self.bound_model.steps)
+            module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max,
+                                                                       module.ema_decay, self.bound_model.steps)
+            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -279,7 +282,7 @@ class QAT_Quantizer(Quantizer):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
-        self.steps += 1
+        self.bound_model.steps +=1
 
 
 class DoReFaQuantizer(Quantizer):
