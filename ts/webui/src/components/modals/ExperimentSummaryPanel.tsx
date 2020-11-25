@@ -39,7 +39,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
         const interResultList = TRIALS.getMetricsList();
         Object.keys(trialMessagesArr).map(item => {
             // not deal with trial's hyperParameters
-            const trialId = trialMessagesArr[item].jobId;
+            const trialId = trialMessagesArr[item].trialJobId;
             // add intermediate result message
             trialMessagesArr[item].intermediate = [];
             Object.keys(interResultList).map(key => {

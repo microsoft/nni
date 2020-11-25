@@ -26,16 +26,16 @@ $margin: 24px;
 }
 
 .status-count {
-    span {
-        font-size: 14px;
-        color: #8f8f8f;
-    }
+	span {
+		font-size: 14px;
+		color: #8f8f8f;
+	}
 
-    p {
-        font-size: 16px;
-        font-weight: 500;
-        color: #484848;
-    }
+	p {
+		font-size: 16px;
+		font-weight: 500;
+		color: #484848;
+	}
 }
 
 .maxTrialNum {
@@ -125,16 +125,4 @@ $margin: 24px;
 	position: absolute;
 	z-index: 999;
 	left: 0;
-}
-
-.mess {
-	margin-top: $margin;
-
-	.basic p {
-		margin-top: 0;
-	}
-
-	p.margin {
-		margin-top: $margin;
-	}
 }

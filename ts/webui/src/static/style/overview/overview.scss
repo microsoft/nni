@@ -38,25 +38,13 @@ $boxGapPadding: 10px;
 		height: 273px;
 	}
 
-	.overviewCommand1,
-	.overviewCommand2 {
+	.overviewCommand {
+		grid-column: 1 / 5;
 		grid-row-start: 8;
 		margin-top: -50px;
 		height: 158px;
 		margin-right: $boxGapPadding;
-		border-radius: 0;
-	}
-
-	.overviewCommand1 {
-		grid-column: 1 / 4;
-		border-radius: $boxBorderRadius 0 0 $boxBorderRadius;
-	}
-
-	.overviewCommand2 {
-		margin-left: -38px;
-		margin-right: $boxGapPadding;
-		padding-left: 30px;
-		border-radius: 0 $boxBorderRadius $boxBorderRadius 0;
+		border-radius: $boxBorderRadius;
 	}
 }
 
@@ -77,9 +65,9 @@ $boxGapPadding: 10px;
 	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
 	p {
-		font-size: 14px;
 		color: #8f8f8f;
-		margin-top: 20px;
+		font-size: 14px;
+		font-weight: normal;
 
 		span {
 			color: #484848;
@@ -141,7 +129,7 @@ $boxGapPadding: 10px;
 
 .defaultMetricContainer {
 	position: relative;
-	
+
 	.showMess {
 		position: absolute;
 		top: 42%;

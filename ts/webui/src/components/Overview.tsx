@@ -174,12 +174,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                         />
                                     </div>
                                 </div>
-                                <div className='overviewCommand1'>
+                                <Stack className='overviewCommand' horizontal>
                                     <Command2 />
-                                </div>
-                                <div className='overviewCommand2'>
                                     <Command1 />
-                                </div>
+                                </Stack>
                             </div>
                         </div>
                     );

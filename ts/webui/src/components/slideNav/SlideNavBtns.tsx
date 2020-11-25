@@ -29,12 +29,12 @@ export const SlideNavBtns = (): any => {
         // right side nav buttons
         <React.Fragment>
             <Stack className='config'>
-                <MediaQuery maxWidth={1699}>
+                <MediaQuery maxWidth={1799}>
                     <IconButtonTemplate icon='DocumentSearch' btuName='Search space' event={showSearchSpacePanel} />
                     <IconButtonTemplate icon='Archive' btuName='Config' event={showTrialConfigpPanel} />
                     <IconButtonTemplate icon='FilePDB' btuName='Log files' event={showLogPanel} />
                 </MediaQuery>
-                <MediaQuery minWidth={1700}>
+                <MediaQuery minWidth={1798}>
                     <div className='container'>
                         <DefaultButton onClick={showSearchSpacePanel} className='maxScrBtn'>
                             <Icon iconName='DocumentSearch' />
