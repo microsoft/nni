@@ -1,0 +1,21 @@
+authorName: default
+experimentName: example_mnist_pytorch
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+
+logCollection: http
+trainingServicePlatform: adl
+
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+
+trial:
+  image: {replace_to_your_image_tag}
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 1

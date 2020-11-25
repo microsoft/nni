@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 from functools import cmp_to_key
+import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
 from pyhdfs import HdfsClient
@@ -21,6 +22,7 @@ from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
+from .common_utils import print_green
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -356,6 +358,40 @@ def log_stderr(args):
     '''get stderr log'''
     log_internal(args, 'stderr')
 
+def log_trial_adl_helper(args, experiment_id):
+    # adljob_id format should be consistent to the one in "adlTrainingService.ts":
+    #   const adlJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
+    adlJobName = "nni-exp-{}-trial-{}".format(experiment_id, args.trial_id).lower()
+    print_warning('Note that no log will show when trial is pending or done (succeeded or failed). '
+                  'You can retry the command.')
+    print_green('>>> Trial log streaming:')
+    try:
+        subprocess.run(
+            [
+                "kubectl", "logs",
+                "-l", "adaptdl/job=%s" % adlJobName,
+                "-f"  # Follow the stream
+            ],  # TODO: support remaining argument, uncomment the lines in nnictl.py
+        )  # TODO: emulate tee behaviors, not necessary tho.
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        print_error('Error! Please check kubectl:')
+        traceback.print_exc()
+        exit(1)
+    finally:
+        print_green('<<< [adlJobName:%s]' % adlJobName)
+        nni_manager_collection_path = os.path.expanduser('~/nni-experiments/%s/trials/%s/stdout_log_collection.log' %
+                                                         (experiment_id, args.trial_id))
+        print_green('>>> (Optional) How to persist the complete trial log locally:')
+        print(
+            'Please ensure `logCollection: http` '
+            'exists in the experiment configuration yaml. '
+            'After trial done, you can check it from the file below: \n  %s'
+            % nni_manager_collection_path
+        )
+
+
 def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
@@ -378,10 +414,18 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
+    is_adl = nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl'
+    if is_adl and not args.trial_id:
+        print_error('Trial ID is required to retrieve the log for adl. Please specify it with "--trial_id".')
+        exit(1)
     if args.trial_id:
         if args.trial_id not in trial_id_list:
             print_error('Trial id {0} not correct, please check your command!'.format(args.trial_id))
             exit(1)
+        if is_adl:
+            log_trial_adl_helper(args, nni_config.get_config('experimentId'))
+            # adl has its own way to log trial, and it thus returns right after the helper returns
+            return
         if trial_id_path_dict.get(args.trial_id):
             print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
         else:

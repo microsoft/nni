@@ -10,7 +10,7 @@ from .rest_utils import rest_get, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
+from .common_utils import print_normal, print_warning, print_error, print_green, detect_process, detect_port, check_tensorboard_version
 from .nnictl_utils import check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
@@ -109,13 +109,36 @@ def stop_tensorboard(args):
     else:
         print_error('No tensorboard configuration!')
 
+def adl_tensorboard_helper(args):
+    '''start tensorboard on adl'''
+    import subprocess
+    if args.trial_id is not None:
+        print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
+    cmd = "kubectl port-forward --address 0.0.0.0 deployment/{} {}:{}".format(
+        "adaptdl-tensorboard" + "-" + args.id.lower(),
+        args.port,
+        6006
+    )
+    print_green('Tensorboard is accessible at 0.0.0.0:{port} or localhost:{port}'.format(port=args.port))
+    subprocess.run(args=cmd, shell=True)
 
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if not experiment_id:
+        return
+    if args.id is None:
+        args.id = experiment_id
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    nni_config = Config(experiment_id)
+    if experiment_dict[args.id]["status"] == "STOPPED":
+        print_error("Experiment {} is stopped...".format(args.id))
+        return
+    config_file_name = experiment_dict[experiment_id]['fileName']
+    nni_config = Config(args.id)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
+        adl_tensorboard_helper(args)
+        return
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):

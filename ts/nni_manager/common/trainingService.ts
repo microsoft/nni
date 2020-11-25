@@ -42,6 +42,7 @@ interface TrialJobDetail {
     readonly workingDirectory: string;
     readonly form: TrialJobApplicationForm;
     isEarlyStopped?: boolean;
+    message?: string;
 }
 
 /**
