@@ -11,7 +11,7 @@ from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 
 from .base import BaseGraphData
 
-_logger = logging.getLogger('nni.msg_dispatcher_base')
+_logger = logging.getLogger(__name__)
 class CGOExecutionEngine(AbstractExecutionEngine):
     def __init__(self, n_model_per_graph = 4) -> None:
         self._listeners: List[AbstractGraphListener] = []
