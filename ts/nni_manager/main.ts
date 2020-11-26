@@ -13,7 +13,7 @@ import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { TrainingService } from './common/trainingService';
-import { getLogDir, mkDirP, parseArg, uniqueString } from './common/utils';
+import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
@@ -26,11 +26,10 @@ import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTr
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 function initStartupInfo(
-    startExpMode: string, resumeExperimentId: string, basePort: number, platform: string,
+    startExpMode: string, experimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
+    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -128,7 +127,7 @@ if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMod
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
-if ((startMode === ExperimentStartUpMode.RESUME) && experimentId.trim().length < 1) {
+if (experimentId.trim().length < 1) {
     console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);

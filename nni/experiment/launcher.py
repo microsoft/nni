@@ -69,7 +69,7 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         'experiment_id': experiment_id,
         'start_mode': 'new',
         'log_level': 'debug' if debug else 'info',
-        'dispatcher_pipe': pipe_path
+        'dispatcher_pipe': pipe_path,
     }
 
     node_dir = Path(nni_node.__path__[0])
@@ -93,8 +93,12 @@ def _check_rest_server(port: int, retry: int = 10) -> None:
 
 
 def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
+    url = _url_template.format(port, '/experiment/cluster-metadata')
+    resp = requests.put(url, json=config.to_cluster_metadata(), timeout=_rest_timeout)
+    print(resp)
+    resp.raise_for_status()
+
     config_json = config.to_json()
-    config_json['debug'] = debug
     url = _url_template.format(port, '/experiment')
     print(config_json)
     resp = requests.post(url, json=config_json, timeout=_rest_timeout)

@@ -1,7 +1,10 @@
 from datetime import datetime
+from io import TextIOBase
 import logging
 from logging import FileHandler, Formatter, Handler, StreamHandler
+from pathlib import Path
 import sys
+from typing import Optional
 
 from .env_vars import dispatcher_env_vars, trial_env_vars
 
@@ -30,7 +33,7 @@ def init_logger() -> None:
     _init_logger_standalone()
 
 
-time_format = '%Y-%m-%d %H:%M:%S',
+time_format = '%Y-%m-%d %H:%M:%S'
 
 formatter = Formatter(
     '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s',

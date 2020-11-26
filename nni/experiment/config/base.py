@@ -43,9 +43,12 @@ class ExperimentConfig:
 
     _json_schema = {
         '_training_service': lambda value: ('trainingServicePlatform', value),
-        'max_execution_seconds': lambda value: ('maxExecDuration', str(value) + 's'),
         'search_space': lambda value: ('searchSpace', json.dumps(value)),
-        'trial_code_directory': lambda value: ('trialCodeDir', str(value)),
+        'max_execution_seconds': lambda value: ('maxExecDuration', value or 99999),
+        'max_trial_number': lambda value: ('maxTrialNum', value or 99999),
+        'trial_command': lambda value: (None, None),
+        'trial_code_directory': lambda value: (None, None),
+        'trial_gpu_number': lambda value: (None, None),
     }
 
 
@@ -68,14 +71,14 @@ class ExperimentConfig:
 
     def to_json(self) -> Dict[str, Any]:
         ret = self._general_to_json()
-        ret['authorName'] = ''
+        ret['authorName'] = '_'
         ret['tuner'] = {'builtinTunerName': '_placeholder_'}
         return ret
 
 
     def _general_validate(self) -> None:
         # check existence
-        for key, placeholder_value in type(self)._placeholders.items():
+        for key, placeholder_value in type(self)._placeholder.items():
             if getattr(self, key) == placeholder_value:
                 raise ValueError(f'Field "{key}" is not set')
 
@@ -93,13 +96,16 @@ class ExperimentConfig:
 
         for field in dataclasses.fields(self):
             key = field.name
+            if key == 'extra_config':
+                continue
             value = getattr(self, key)
             special_schema = type(self)._json_schema.get(key)
             if special_schema is None:
-                key = _to_camel_case(key)
+                ret[_to_camel_case(key)] = value
             else:
                 key, value = special_schema(value)
-            ret[key] = value
+                if key:
+                    ret[key] = value
 
         if self.extra_config:
             ret.update(self.extra_config)
