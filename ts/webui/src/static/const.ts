@@ -2,7 +2,7 @@
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-const MANAGER_IP = `http://13.77.78.63:8080/api/v1/nni`;
+const MANAGER_IP = `/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
 const trialJobStatus = [
@@ -15,7 +15,16 @@ const trialJobStatus = [
     'SYS_CANCELED',
     'EARLY_STOPPED'
 ];
-const EXPERIMENTSTATUS = ['INITIALIZED','RUNNING','ERROR','STOPPING','STOPPED','DONE','NO_MORE_TRIAL','TUNER_NO_MORE_TRIAL'];
+const EXPERIMENTSTATUS = [
+    'INITIALIZED',
+    'RUNNING',
+    'ERROR',
+    'STOPPING',
+    'STOPPED',
+    'DONE',
+    'NO_MORE_TRIAL',
+    'TUNER_NO_MORE_TRIAL'
+];
 // 后三个正确吗
 const PLATFORM = ['local', 'remote', 'pai', 'kubeflow', 'aml', 'dlts', 'framework'];
 const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];

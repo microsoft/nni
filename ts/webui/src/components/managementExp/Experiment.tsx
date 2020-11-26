@@ -1,46 +1,45 @@
 import * as React from 'react';
-import { Stack, StackItem, DetailsList, DefaultButton, Icon, SearchBox, Dropdown, DatePicker, DayOfWeek, TooltipHost, DirectionalHint, CommandBarButton } from '@fluentui/react';
-import { Link } from 'react-router-dom';
-import { formatTimestamp } from '../../static/function';
-import { TOOLTIP_BACKGROUND_COLOR, EXPERIMENTSTATUS, PLATFORM } from '../../static/const';
-import { RevToggleKey } from '../buttons/Icon';
-import { NNILOGO } from '../stateless-component/NNItabs';
-import DayPickerStrings from './experimentConst';
-import {
-    stackTokens,
-    stackStyle
-} from '../NavConst';
+import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn } from '@fluentui/react';
+import { ExperimentsManager } from '../../static/model/experimentsManager';
+import { formatTimestamp, copyAndSort } from '../../static/function';
+import { AllExperimentList, SortInfo } from '../../static/interface';
+import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
+import { Hearder } from './Header';
+import NameColumn from './NameColumn';
+import FilterBtns from './FilterBtns';
 import '../../App.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/common/ellipsis.scss';
 import '../../static/style/tableStatus.css';
-import { ExperimentsManager } from '../../static/model/experimentsManager';
-import { AllExperimentList } from '../../static/interface';
 
 interface ExpListState {
+    columns: IColumn[];
     hideFilter: boolean;
     searchInputVal: string;
     selectedStatus: string;
     selectedPlatform: string;
     selectedStartDate?: Date;
     selectedEndDate?: Date;
+    sortInfo: SortInfo;
     source: AllExperimentList[];
-    filterSource: AllExperimentList[];
-    filterSourceOrigin: AllExperimentList[];
+    originExperimentList: AllExperimentList[];
+    searchSource: AllExperimentList[];
 }
 
 class Experiment extends React.Component<{}, ExpListState> {
     constructor(props) {
         super(props);
         this.state = {
+            columns: this.columns,
             hideFilter: true,
             searchInputVal: '',
             selectedStatus: '',
             selectedPlatform: '',
-            source: [],
-            filterSource: [],
-            filterSourceOrigin: []
+            source: [], // data in table
+            originExperimentList: [], // api /experiments-info
+            searchSource: [], // search box search result
+            sortInfo: { field: '', isDescend: false }
         };
     }
 
@@ -50,33 +49,16 @@ class Experiment extends React.Component<{}, ExpListState> {
         const result = EXPERIMENTMANAGER.getExperimentList();
         this.setState(() => ({
             source: result,
-            filterSource: result,
-            filterSourceOrigin: result
+            originExperimentList: result,
+            searchSource: result
         }));
     }
 
     render(): React.ReactNode {
-        const { hideFilter, selectedStatus, source, filterSourceOrigin, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        console.info('source', source);
+        const { hideFilter, selectedStatus, source, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
         return (
             <Stack className='nni' style={{ minHeight: window.innerHeight }}>
-                <div className='header'>
-                    <div className='headerCon'>
-                        <Stack className='nav' horizontal>
-                            <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                                <span className='desktop-logo'>{NNILOGO}</span>
-                                <span className='logoTitle'>Neural Network Intelligence</span>
-                            </StackItem>
-                            <StackItem grow={70} className='navOptions'>
-                                <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
-                                    <Link to='/oview' className='experiment'>
-                                        <CommandBarButton iconProps={RevToggleKey} text='Back to the experiment' />
-                                    </Link>
-                                </Stack>
-                            </StackItem>
-                        </Stack>
-                    </div>
-                </div>
+                <Hearder />
                 <Stack className='contentBox expBackground'>
                     <Stack className='content'>
                         <Stack className='experimentList'>
@@ -84,22 +66,15 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 <div className='search'>
                                     <SearchBox
                                         className='search-input'
-                                        placeholder='Search the experiment by name, ID, tags...'
-                                        onEscape={(_ev): void => {
-                                            // xxxxxxxx
-                                            this.setState(() => ({ source: filterSourceOrigin }));
-                                        }}
-                                        onClear={(_ev): void => {
-                                            // xxxxxxxx
-                                            this.setState(() => ({ source: filterSourceOrigin }));
-                                        }}
+                                        placeholder='Search the experiment by name and ID'
+                                        onEscape={this.setOriginSource.bind(this)}
+                                        onClear={this.setOriginSource.bind(this)}
                                         onChange={this.searchNameAndId.bind(this)}
                                     />
                                 </div>
                                 <div className='filter'>
                                     <DefaultButton
                                         onClick={this.clickFilter.bind(this)}
-                                        // className='fiter-button'
                                         className={`${!hideFilter ? 'filter-button-open' : null}`}
                                     >
                                         <Icon iconName='Equalizer' />
@@ -108,51 +83,18 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 </div>
                             </Stack>
                             <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
-                                <Dropdown
-                                    label='Status'
-                                    selectedKey={selectedStatus}
-                                    onChange={this.selectStatus.bind(this)}
-                                    placeholder='Select an option'
-                                    options={this.fillOptions(EXPERIMENTSTATUS)}
-                                    className='filter-condition-status'
+                                <FilterBtns
+                                    selectedStatus={selectedStatus}
+                                    selectedPlatform={selectedPlatform}
+                                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                    selectedStartDate={selectedStartDate!}
+                                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                    selectedEndDate={selectedEndDate!}
+                                    selectStatus={this.selectStatus.bind(this)}
+                                    selectPlatform={this.selectPlatform.bind(this)}
+                                    getSelectedData={this.getSelectedData.bind(this)}
+                                    setSearchSource={this.setSearchSource.bind(this)}
                                 />
-                                <Dropdown
-                                    label='Platform'
-                                    selectedKey={selectedPlatform}
-                                    onChange={this.selectPlatform.bind(this)}
-                                    placeholder='Select an option'
-                                    options={this.fillOptions(PLATFORM)}
-                                    className='filter-condition-platform'
-                                />
-                                <DatePicker
-                                    label='Start time'
-                                    firstDayOfWeek={DayOfWeek.Sunday}
-                                    strings={DayPickerStrings}
-                                    showMonthPickerAsOverlay={true}
-                                    placeholder='Select a date...'
-                                    ariaLabel='Select a date'
-                                    value={selectedStartDate}
-                                    // dateTimeFormatter={formatMonthDayYear()}
-                                    // formatDate={(date?: Date): string => date!.toString()}
-                                    onSelectDate={this.getSelectedData.bind(this, 'start')}
-                                />
-                                <DatePicker
-                                    label='End time'
-                                    firstDayOfWeek={DayOfWeek.Sunday}
-                                    strings={DayPickerStrings}
-                                    showMonthPickerAsOverlay={true}
-                                    placeholder='Select a date...'
-                                    ariaLabel='Select a date'
-                                    value={selectedEndDate}
-                                    onSelectDate={this.getSelectedData.bind(this, 'end')}
-                                />
-                                <DefaultButton
-                                    onClick={this.setOriginSource.bind(this)}
-                                    className='reset'
-                                >
-                                    <Icon iconName='Refresh' />
-                                    <span className='margin'>Reset</span>
-                                </DefaultButton>
                             </Stack>
                             <DetailsList
                                 columns={this.columns}
@@ -169,59 +111,61 @@ class Experiment extends React.Component<{}, ExpListState> {
         );
     }
 
-    private fillOptions(arr: string[]): any {
-        const list: Array<object> = [];
-
-        arr.map(item => {
-            list.push({ key: item, text: item });
+    private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+        const { columns, source } = this.state;
+        const newColumns: IColumn[] = columns.slice();
+        const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
+        newColumns.forEach((newCol: IColumn) => {
+            if (newCol === currColumn) {
+                currColumn.isSortedDescending = !currColumn.isSortedDescending;
+                currColumn.isSorted = true;
+            } else {
+                newCol.isSorted = false;
+                newCol.isSortedDescending = true;
+            }
         });
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const newItems = copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        this.setState(() => ({
+            columns: newColumns,
+            source: newItems,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            sortInfo: { field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending }
+        }));
+    };
 
-        return list;
-    }
-
-    // TODO: 引入tag之后调整大小屏幕下的列宽
-    private columns = [
+    private columns: IColumn[] = [
         {
             name: 'Name',
-            key: 'name',
-            fieldName: 'name', // required!
-            minWidth: 50,
-            maxWidth: 87,
+            key: 'experimentName',
+            fieldName: 'experimentName', // required!
+            minWidth: 100,
+            maxWidth: 130,
             isResizable: true,
             data: 'number',
-            // onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => {
-                const hostname = window.location.hostname;
-                const protocol = window.location.protocol;
-                const webuiPortal = `${protocol}//${hostname}:${item.port}/oview`;
-                return (
-                    <div className='succeed-padding ellipsis'>
-                        <a href={webuiPortal} className='link' target='_blank' rel='noopener noreferrer'>
-                            {item.name}
-                        </a>
-                    </div>
-                );
-            }
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <NameColumn port={item.port} expName={item.experimentName} />
         },
         {
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 50,
-            maxWidth: 87,
+            minWidth: 100,
+            maxWidth: 130,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
-            // onColumnClick: this.onColumnClick,
+            onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => <div className='succeed-padding id'>{item.id}</div>
         },
         {
             name: 'Status',
             key: 'status',
-            minWidth: 80,
+            fieldName: 'status',
+            minWidth: 100,
             maxWidth: 150,
             isResizable: true,
-            fieldName: 'status',
+            onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
             )
@@ -230,11 +174,11 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Port',
             key: 'port',
             fieldName: 'port',
-            minWidth: 65,
+            minWidth: 60,
             maxWidth: 90,
             isResizable: true,
             data: 'number',
-            // onColumnClick: this.onColumnClick,
+            onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
                     <div>{item.port}</div>
@@ -245,229 +189,209 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Platform',
             key: 'platform',
             fieldName: 'platform',
-            minWidth: 80,
-            maxWidth: 100,
+            minWidth: 110,
+            maxWidth: 130,
             isResizable: true,
             data: 'string',
-            // onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className='commonStyle succeed-padding'>{item.platform}</div>
-            )
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => <div className='commonStyle succeed-padding'>{item.platform}</div>
         },
         {
             name: 'Start time',
             key: 'startTime',
             fieldName: 'startTime',
-            minWidth: 100,
+            minWidth: 140,
             maxWidth: 160,
             isResizable: true,
             data: 'number',
-            // onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>
-                <div>{formatTimestamp(item.startTime)}</div>
-            </div>
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => (
+                <div className='succeed-padding'>
+                    <div>{formatTimestamp(item.startTime)}</div>
+                </div>
+            )
         },
         {
             name: 'End time',
             key: 'endTime',
             fieldName: 'endTime',
-            minWidth: 100,
+            minWidth: 120,
             maxWidth: 160,
             isResizable: true,
             data: 'number',
-            // onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>
-                <div>{formatTimestamp(item.endTime)}</div>
-            </div>
-        },
-        {
-            name: 'Tag',
-            key: 'tag',
-            fieldName: 'tag',
-            minWidth: 100,
-            maxWidth: 160,
-            isResizable: true,
-            data: 'number',
-            // onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => {
-                return (
-                    <TooltipHost
-                        content={item.tag.join(', ')}
-                        className='ellipsis'
-                        directionalHint={DirectionalHint.bottomCenter}
-                        tooltipProps={{
-                            calloutProps: {
-                                styles: {
-                                    beak: { background: TOOLTIP_BACKGROUND_COLOR },
-                                    beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
-                                    calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
-                                }
-                            }
-                        }}
-                    >
-                        <div className='succeed-padding tagContainer'>
-                            {
-                                item.tag.map(tag => {
-                                    return (
-                                        <span className='tag' key={tag}>{tag}</span>
-                                    );
-                                })
-                            }
-                        </div>
-                    </TooltipHost>
-                );
-            }
+            onColumnClick: this.onColumnClick,
+            onRender: (item: any): React.ReactNode => (
+                <div className='succeed-padding'>
+                    <div>{formatTimestamp(item.endTime)}</div>
+                </div>
+            )
         }
     ];
 
     private clickFilter(_e: any): void {
         const { hideFilter } = this.state;
-        this.setOriginSource();
+        if (!hideFilter === true) {
+            this.setSearchSource();
+        }
         this.setState(() => ({ hideFilter: !hideFilter }));
-
     }
 
-    private searchNameAndId(_event, newValue): void {
-        const {filterSourceOrigin} = this.state;
-        if (newValue !== undefined) {
-            // 空格回退操作
-            if (newValue === '') {
-                // xxxxxxxx
-                this.setState(() => ({ source: filterSourceOrigin, filterSource: filterSourceOrigin }));
-                console.info('source', this.state.source);
-                return;
-            }
-            // TODOTODO
-            const result = this.state.source.filter(item => (item.experimentName.includes(newValue) ||
-                // item.id.includes(newValue) || item.tag.join(',').includes(newValue)));
-                item.tag.join(',').includes(newValue)));
+    private setOriginSource(): void {
+        let { originExperimentList } = this.state;
+        const { sortInfo } = this.state;
+        if (originExperimentList !== undefined) {
+            originExperimentList = this.commonSelectString(originExperimentList, '');
+            const sortedData = getSortedSource(originExperimentList, sortInfo);
             this.setState(() => ({
-                source: result, filterSource: result, filterSourceOrigin: result
+                source: sortedData
             }));
         }
     }
 
+    private searchNameAndId(_event, newValue): void {
+        const { originExperimentList, sortInfo } = this.state;
+        if (newValue !== undefined) {
+            if (newValue === '') {
+                this.setOriginSource();
+            } else {
+                let result = originExperimentList.filter(
+                    item =>
+                        item.experimentName.toLowerCase().includes(newValue.toLowerCase()) ||
+                        item.id.toLowerCase().includes(newValue.toLowerCase())
+                );
+                result = this.commonSelectString(result, '');
+                const sortedResult = getSortedSource(result, sortInfo);
+                this.setState(() => ({
+                    source: sortedResult,
+                    searchSource: sortedResult
+                }));
+            }
+        }
+    }
+
+    /***
+     * status, platform
+     * param
+     * data: searchSource
+     * field: no care selected filed
+     */
+    private commonSelectString = (data: AllExperimentList[], field: string): AllExperimentList[] => {
+        const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
+        const hasStatus = selectedStatus === '' ? false : true;
+        const hasPlatform = selectedPlatform === '' ? false : true;
+        const hasStartDate = selectedStartDate === undefined ? false : true;
+        const hasEndDate = selectedEndDate === undefined ? false : true;
+
+        if (field === 'status') {
+            if (hasPlatform) {
+                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
+            }
+        }
+        if (field === 'platform') {
+            if (hasStatus) {
+                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
+            }
+        }
+
+        if (field === '') {
+            if (hasPlatform) {
+                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
+            }
+            if (hasStatus) {
+                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
+            }
+        }
+
+        if (hasStartDate) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            data = data.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
+        }
+        if (hasEndDate) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            data = data.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
+        }
+
+        return data;
+    };
+
     // status platform startTime endTime
-    selectStatus = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
+    private selectStatus = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            const { selectedPlatform, selectedStartDate, selectedEndDate, filterSource } = this.state;
+            const { searchSource, sortInfo } = this.state;
+            let result = filterByStatusOrPlatform(item.key, 'status', searchSource);
+            result = this.commonSelectString(result, 'status');
+            this.setState({ selectedStatus: item.key, source: getSortedSource(result, sortInfo) });
+        }
+    };
+
+    private selectPlatform = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
+        if (item !== undefined) {
+            const { searchSource, sortInfo } = this.state;
+            let result = filterByStatusOrPlatform(item.key, 'platform', searchSource);
+            result = this.commonSelectString(result, 'platform');
+            this.setState({ selectedPlatform: item.key, source: getSortedSource(result, sortInfo) });
+        }
+    };
+
+    private getSelectedData(type: string, date: Date | null | undefined): void {
+        if (date !== null && date !== undefined) {
+            const {
+                selectedStatus,
+                selectedPlatform,
+                selectedStartDate,
+                selectedEndDate,
+                searchSource,
+                sortInfo
+            } = this.state;
             // 只能set item.key
+            const hasStatus = selectedStatus === '' ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
             const hasStartDate = selectedStartDate === undefined ? false : true;
             const hasEndDate = selectedEndDate === undefined ? false : true;
             let result;
-            result = filterSource.filter(temp => (temp.status === item.key));
-            if (hasPlatform) {
-                result = result.filter(temp => (temp.platform === selectedPlatform));
-            }
-            if (hasStartDate) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = result.filter(temp => this.compareDate(new Date(temp.startTime), selectedStartDate!));
-            }
-            if (hasEndDate) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = result.filter(temp => this.compareDate(new Date(temp.endTime), selectedEndDate!));
-            }
-            this.setState({ selectedStatus: item.key, source: result });
-        }
-    };
-
-    selectPlatform = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
-        if (item !== undefined) {
-            const { selectedStatus, selectedStartDate, selectedEndDate, filterSource } = this.state;
-            // 只能set item.key
-            const hasStatus = selectedStatus === '' ? false : true;
-            const hasStartDate = selectedStartDate === undefined ? false : true;
-            const hasEndDate = selectedEndDate === undefined ? false : true;
-            let result;
-            result = filterSource.filter(temp => (temp.platform === item.key));
-            if (hasStatus) {
-                result = result.filter(temp => (temp.status === selectedStatus));
-            }
-            if (hasStartDate) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = result.filter(temp => this.compareDate(new Date(temp.startTime), selectedStartDate!));
-            }
-            if (hasEndDate) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = result.filter(temp => this.compareDate(new Date(temp.endTime), selectedEndDate!));
-            }
-            this.setState({ selectedPlatform: item.key, source: result });
-        }
-    };
-
-    private compareDate(date1: Date, date2: Date): boolean {
-        if (date1.getFullYear() === date2.getFullYear()) {
-            if (date1.getMonth() === date2.getMonth()) {
-                if (date1.getDate() === date2.getDate()) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private getSelectedData(type: string, date: Date | null | undefined): void {
-        if (date !== null && date !== undefined) {
-            const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate, filterSource } = this.state;
-            // 只能set item.key
-            const hasStatus = selectedStatus === '' ? false : true;
-            const hasPlatform = selectedStatus === '' ? false : true;
-            const hasStartDate = selectedStartDate === undefined ? false : true;
-            const hasEndDate = selectedEndDate === undefined ? false : true;
-            let result;
-
             if (type === 'start') {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = filterSource.filter(item => this.compareDate(new Date(item.startTime), date));
-
+                result = searchSource.filter(item => compareDate(new Date(item.startTime), date));
                 if (hasStatus) {
-                    result = result.filter(temp => (temp.status === selectedStatus));
+                    result = result.filter(temp => temp.status === selectedStatus);
                 }
-
                 if (hasPlatform) {
-                    result = result.filter(temp => (temp.platform === selectedPlatform));
+                    result = result.filter(temp => temp.platform === selectedPlatform);
                 }
-
                 if (hasEndDate) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => this.compareDate(new Date(temp.endTime), selectedEndDate!));
+                    result = result.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
                 }
-
-                this.setState({
-                    source: result,
+                this.setState(() => ({
+                    source: getSortedSource(result, sortInfo),
                     selectedStartDate: date
-                });
+                }));
             } else {
-                result = filterSource.filter(item => this.compareDate(new Date(item.endTime), date));
+                result = searchSource.filter(item => compareDate(new Date(item.endTime), date));
 
                 if (hasStatus) {
-                    result = result.filter(temp => (temp.status === selectedStatus));
+                    result = result.filter(temp => temp.status === selectedStatus);
                 }
-
                 if (hasPlatform) {
-                    result = result.filter(temp => (temp.platform === selectedPlatform));
+                    result = result.filter(temp => temp.platform === selectedPlatform);
                 }
-
                 if (hasStartDate) {
                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => this.compareDate(new Date(temp.startTime), selectedEndDate!));
+                    result = result.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
                 }
-
-                this.setState({
-                    source: result,
+                this.setState(() => ({
+                    source: getSortedSource(result, sortInfo),
                     selectedEndDate: date
-                });
+                }));
             }
-
         }
     }
 
     // reset
-    private setOriginSource(): void {
+    private setSearchSource(): void {
+        const { searchSource, sortInfo } = this.state;
         this.setState(() => ({
-            source: this.state.filterSource,
+            source: getSortedSource(searchSource, sortInfo),
             selectedStatus: '',
             selectedPlatform: '',
             selectedStartDate: undefined,

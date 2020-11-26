@@ -218,13 +218,14 @@ interface SortInfo {
     isDescend?: boolean;
 }
 
-interface AllExperimentList{
+interface AllExperimentList {
+    id: string;
+    experimentName: string;
     port: number;
-    startTime: number;
-    endTime: number;
     status: string;
     platform: string;
-    experimentName: string;
+    startTime: number;
+    endTime: number;
     tag: string[];
     pid: number;
     webuiUrl: string[];

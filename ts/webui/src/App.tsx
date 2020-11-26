@@ -31,15 +31,15 @@ export const AppContext = React.createContext({
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeColumn: (_val: string[]) => { },
+    changeColumn: (_val: string[]) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMetricGraphMode: (_val: 'max' | 'min') => { },
+    changeMetricGraphMode: (_val: 'max' | 'min') => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMaxDurationUnit: (_val: string) => { },
+    changeMaxDurationUnit: (_val: string) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeEntries: (_val: string) => { },
+    changeEntries: (_val: string) => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    updateOverviewPage: () => { }
+    updateOverviewPage: () => {}
 });
 
 class App extends React.Component<{}, AppState> {
@@ -143,57 +143,53 @@ class App extends React.Component<{}, AppState> {
 
         return (
             <React.Fragment>
-                {
-                    isManagerExperimentPage()
-                        ?
-                        null
-                        :
-                        <Stack className='nni' style={{ minHeight: window.innerHeight }}>
-                            <div className='header'>
-                                <div className='headerCon'>
-                                    <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
-                                </div>
+                {isManagerExperimentPage() ? null : (
+                    <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                        <div className='header'>
+                            <div className='headerCon'>
+                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                             </div>
-                            <Stack className='contentBox'>
-                                <Stack className='content'>
-                                    {/* search space & config */}
-                                    <SlideNavBtns />
-                                    {/* if api has error field, show error message */}
-                                    {errorList.map(
-                                        (item, key) =>
-                                            item.errorWhere && (
-                                                <div key={key} className='warning'>
-                                                    <MessageInfo info={item.errorMessage} typeInfo='error' />
-                                                </div>
-                                            )
-                                    )}
-                                    {isillegalFinal && (
-                                        <div className='warning'>
-                                            <MessageInfo info={expWarningMessage} typeInfo='warning' />
-                                        </div>
-                                    )}
-                                    <AppContext.Provider
-                                        value={{
-                                            interval,
-                                            columnList,
-                                            changeColumn: this.changeColumn,
-                                            experimentUpdateBroadcast,
-                                            trialsUpdateBroadcast,
-                                            metricGraphMode,
-                                            maxDurationUnit,
-                                            changeMaxDurationUnit: this.changeMaxDurationUnit,
-                                            changeMetricGraphMode: this.changeMetricGraphMode,
-                                            bestTrialEntries,
-                                            changeEntries: this.changeEntries,
-                                            updateOverviewPage: this.updateOverviewPage
-                                        }}
-                                    >
-                                        {this.props.children}
-                                    </AppContext.Provider>
-                                </Stack>
+                        </div>
+                        <Stack className='contentBox'>
+                            <Stack className='content'>
+                                {/* search space & config */}
+                                <SlideNavBtns />
+                                {/* if api has error field, show error message */}
+                                {errorList.map(
+                                    (item, key) =>
+                                        item.errorWhere && (
+                                            <div key={key} className='warning'>
+                                                <MessageInfo info={item.errorMessage} typeInfo='error' />
+                                            </div>
+                                        )
+                                )}
+                                {isillegalFinal && (
+                                    <div className='warning'>
+                                        <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                                    </div>
+                                )}
+                                <AppContext.Provider
+                                    value={{
+                                        interval,
+                                        columnList,
+                                        changeColumn: this.changeColumn,
+                                        experimentUpdateBroadcast,
+                                        trialsUpdateBroadcast,
+                                        metricGraphMode,
+                                        maxDurationUnit,
+                                        changeMaxDurationUnit: this.changeMaxDurationUnit,
+                                        changeMetricGraphMode: this.changeMetricGraphMode,
+                                        bestTrialEntries,
+                                        changeEntries: this.changeEntries,
+                                        updateOverviewPage: this.updateOverviewPage
+                                    }}
+                                >
+                                    {this.props.children}
+                                </AppContext.Provider>
                             </Stack>
                         </Stack>
-                }
+                    </Stack>
+                )}
             </React.Fragment>
         );
     }

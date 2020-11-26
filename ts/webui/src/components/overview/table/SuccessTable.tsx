@@ -106,7 +106,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         </React.Fragment>
     );
 
-    private columns = [
+    private columns: IColumn[] = [
         {
             key: '_expand',
             name: '',

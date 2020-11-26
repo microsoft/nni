@@ -1,19 +1,13 @@
 import * as React from 'react';
 import axios from 'axios';
 import { WEBUIDOC, MANAGER_IP } from '../static/const';
-import {
-    Stack,
-    StackItem,
-    CommandBarButton,
-    IContextualMenuProps,
-} from '@fluentui/react';
+import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
 import { Link } from 'react-router-dom';
 import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from './buttons/Icon';
 import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
-import {stackTokens,
-    stackStyle} from './NavConst';
+import { stackTokens, stackStyle } from './NavConst';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
 
@@ -149,8 +143,11 @@ class NavCon extends React.Component<NavProps, NavState> {
                                 onClick={this.showExpcontent}
                             />
                             <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                            <Link to="/experiment" className='experiment'>
-                                <div className='expNavTitle'><span>All experiment</span>{ChevronRightMed}</div>
+                            <Link to='/experiment' className='experiment'>
+                                <div className='expNavTitle'>
+                                    <span>All experiment</span>
+                                    {ChevronRightMed}
+                                </div>
                                 {/* <CommandBarButton iconProps={ChevronRightMed} text="All experiment" /> */}
                             </Link>
                         </Stack>
@@ -163,7 +160,6 @@ class NavCon extends React.Component<NavProps, NavState> {
                     )}
                 </React.Fragment>
             </Stack>
-
         );
     }
 
