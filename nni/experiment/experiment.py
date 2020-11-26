@@ -80,8 +80,7 @@ class Experiment:
             training_service = 'pai'
 
         if config is None:
-            self.config = LocalExperimentConfig()
-            #self.config = ExperimentConfig._create(training_service)
+            self.config = ExperimentConfig.create_template(training_service)
         else:
             self.config = config
 

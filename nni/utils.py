@@ -9,7 +9,6 @@ import json_tricks
 from schema import And
 
 from . import parameter_expressions
-from .runtime.common import init_logger
 from .runtime.env_vars import dispatcher_env_vars
 
 
@@ -118,16 +117,6 @@ def convert_dict2tuple(value):
             value[_keys] = convert_dict2tuple(value[_keys])
         return tuple(sorted(value.items()))
     return value
-
-
-def init_dispatcher_logger():
-    """
-    Initialize dispatcher logging configuration
-    """
-    logger_file_path = 'dispatcher.log'
-    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
-        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
-    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
 
 
 def json2space(x, oldy=None, name=NodeType.ROOT):

@@ -5,13 +5,13 @@
 Experiment configuration structures.
 """
 
-from dataclasses import MISSING, dataclass, fields
+import dataclasses
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 
-@dataclass(init=False)
+@dataclasses.dataclass(init=False)
 class ExperimentConfig:
     experiment_name: str
     search_space: Any
@@ -26,7 +26,7 @@ class ExperimentConfig:
     _training_service: str
 
 
-    _placeholders = {
+    _placeholder = {
         'experiment_name': '_unset_',
         'search_space': '_unset_',
         'trial_concurrency': -1,
@@ -50,13 +50,13 @@ class ExperimentConfig:
 
 
     def __init__(self, **kwargs):
-        for field in fields(self):
+        for field in dataclasses.fields(self):
             if field.name in kwargs:
                 setattr(self, field.name, kwargs[field.name])
-            elif field.default != MISSING:
+            elif field.default != dataclasses.MISSING:
                 setattr(self, field.name, field.default)
             else:
-                setattr(self, field.name, type(self)._placeholders[field.name])
+                setattr(self, field.name, type(self)._placeholder[field.name])
 
 
     def validate(self) -> None:
@@ -74,14 +74,14 @@ class ExperimentConfig:
 
 
     def _general_validate(self) -> None:
-        # check for existence
+        # check existence
         for key, placeholder_value in type(self)._placeholders.items():
             if getattr(self, key) == placeholder_value:
                 raise ValueError(f'Field "{key}" is not set')
 
-        # TODO: check for type
+        # TODO: check type
 
-        # check for value
+        # check value
         for key, condition in type(self)._value_range.items():
             value = getattr(self, key)
             if not condition(getattr(self, key)):
@@ -91,7 +91,7 @@ class ExperimentConfig:
     def _general_to_json(self) -> Dict[str, Any]:
         ret = {}
 
-        for field in fields(self):
+        for field in dataclasses.fields(self):
             key = field.name
             value = getattr(self, key)
             special_schema = type(self)._json_schema.get(key)
@@ -108,12 +108,11 @@ class ExperimentConfig:
 
 
     @staticmethod
-    def _create(training_service: str) -> 'ExperimentConfig':
-        # create an empty configuration for given training service
+    def create_template(training_service: str) -> 'ExperimentConfig':
         for cls in ExperimentConfig.__subclasses__():
-            for field in fields(cls):
+            for field in dataclasses.fields(cls):
                 if field.name == '_training_service' and field.default == training_service:
-                    return cls(**cls._placeholders)
+                    return cls()
         raise ValueError(f'Unrecognized training service {training_service}')
 
 
