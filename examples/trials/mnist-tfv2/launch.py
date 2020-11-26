@@ -1,6 +1,5 @@
 # FIXME: For demonstration only. It should not be here
 
-import json
 from pathlib import Path
 
 from nni.experiment import Experiment
@@ -24,8 +23,4 @@ experiment.config.search_space = search_space
 experiment.config.trial_command = 'python3 mnist.py'
 experiment.config.trial_code_directory = Path(__file__).parent
 
-experiment.start(8082, debug=True)
-
-import signal
-signal.signal(signal.SIGINT, lambda _1, _2: experiment.stop())
-signal.pause()
+experiment.run(8081, debug=True)
