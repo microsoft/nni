@@ -63,7 +63,7 @@ def run(X_train, X_test, y_train, y_test, model):
     '''Train model and predict result'''
     model.fit(X_train, y_train)
     score = model.score(X_test, y_test)
-    LOG.debug('score: %s' % score)
+    LOG.debug('score: %s', score)
     nni.report_final_result(score)
 
 if __name__ == '__main__':

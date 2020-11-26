@@ -80,7 +80,7 @@ class AutoCompressPruner(Pruner):
     optimize_mode : str
         optimize mode, `maximize` or `minimize`, by default `maximize`.
     base_algo : str
-        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among the ops,
         the assigned `base_algo` is used to decide which filters/channels/weights to prune.
     start_temperature : float
         Start temperature of the simulated annealing process.
@@ -151,7 +151,7 @@ class AutoCompressPruner(Pruner):
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
             }], model, _logger)
-        elif self._base_algo in ['l1', 'l2']:
+        elif self._base_algo in ['l1', 'l2', 'fpgm']:
             schema = CompressorSchema([{
                 'sparsity': And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],

@@ -34,7 +34,7 @@ jobs:
       set -e
       sudo apt-get install -y pandoc
       python3 -m pip install -U --upgrade pygments
-      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python3 -m pip install -U tensorflow==2.3.1
       python3 -m pip install -U keras==2.4.2
       python3 -m pip install -U gym onnx peewee thop
@@ -96,7 +96,7 @@ jobs:
 
   - script: |
       set -e
-      python3 -m pip install -U torch==1.3.1+cpu torchvision==0.4.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python3 -m pip install -U tensorflow==1.15.2
       python3 -m pip install -U keras==2.1.6
       python3 -m pip install -U gym onnx peewee
@@ -131,12 +131,16 @@ jobs:
   # This platform runs TypeScript unit test first.
 
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python
+
   - script: |
       set -e
-      export PYTHON38_BIN_DIR=/usr/local/Cellar/python@3.8/`ls /usr/local/Cellar/python@3.8`/bin
-      echo "##vso[task.setvariable variable=PATH]${PYTHON38_BIN_DIR}:${HOME}/Library/Python/3.8/bin:${PATH}"
-      python3 -m pip install -U --upgrade pip setuptools
-      python3 -m pip install -U pytest coverage
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      python -m pip install -U --upgrade pip setuptools wheel
+      python -m pip install -U pytest coverage
     displayName: 'Install Python tools'
 
   - script: |
@@ -145,10 +149,9 @@ jobs:
 
   - script: |
       set -e
-      cd ts/nni_manager
-      yarn test
-      cd ../nasui
-      CI=true yarn test
+      export CI=true
+      (cd ts/nni_manager && yarn test)
+      (cd ts/nasui && yarn test)
     displayName: 'TypeScript unit test'
 
   - script: |
