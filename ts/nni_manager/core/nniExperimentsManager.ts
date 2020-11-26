@@ -46,7 +46,7 @@ class NNIExperimentsManager implements ExperimentManager {
         if (updateList.length > 0){
             const result = await this.withLock(this.updateAllStatus, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
             if (result !== undefined) {
-                return result;
+                return JSON.parse(JSON.stringify(Object.keys(result).map(key=>result[key])));
             } else {
                 delay(500);
                 return await this.getExperimentsInfo();
