@@ -6,9 +6,10 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as assert from 'assert';
 
 import { getLogger, Logger } from '../common/log';
-import { isAlive, withLock, withLockSync, getExperimentsInfoPath } from '../common/utils';
+import { isAlive, withLock, withLockSync, getExperimentsInfoPath, delay } from '../common/utils';
 import { ExperimentManager } from '../common/experimentManager';
 import { Deferred } from 'ts-deferred';
 
@@ -47,7 +48,8 @@ class NNIExperimentsManager implements ExperimentManager {
             if (result !== undefined) {
                 return result;
             } else {
-                return this.getExperimentsInfo();
+                delay(500);
+                return await this.getExperimentsInfo();
             }
         } else {
             return JSON.parse(JSON.stringify(Object.keys(experimentsInformation).map(key=>experimentsInformation[key])));
@@ -68,22 +70,22 @@ class NNIExperimentsManager implements ExperimentManager {
     public setExperimentInfo(experimentId: string, key: string, value: any): void {
         try {
             if (this.profileUpdateTimer[key] !== undefined) {
+                // if a new call with the same timerId occurs, destroy the unfinished old one
                 clearTimeout(this.profileUpdateTimer[key]);
                 this.profileUpdateTimer[key] = undefined;
             }
             this.withLockSync(() => {
                 const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
-                if (experimentsInformation[experimentId]) {
-                    experimentsInformation[experimentId][key] = value;
-                    fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
-                } else {
-                    this.log.error(`Experiment Manager: Experiment Id ${experimentId} not found, this should not happen`);
-                }
+                assert(experimentId in experimentsInformation, `Experiment Manager: Experiment Id ${experimentId} not found, this should not happen`);
+                experimentsInformation[experimentId][key] = value;
+                fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
             });
         } catch (err) {
             this.log.error(err);
             this.log.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
-            this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 100, experimentId, key, value);
+            if (err.code === 'EEXIST') {
+                this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 1000, experimentId, key, value);
+            }
         }
     }
 

@@ -99,7 +99,8 @@ def generate_temp_dir():
     return temp_dir
 
 class SimpleFileLock(filelock.SoftFileLock):
-    def __init__(self, lock_file, timeout=-1, stale=10):
+    '''this is a lock support check lock expiration, if you do not need check expiration, you can use SoftFileLock'''
+    def __init__(self, lock_file, timeout=-1, stale=-1):
         super(__class__, self).__init__(lock_file, timeout)
         self._stale = stale
 
@@ -115,5 +116,5 @@ class SimpleFileLock(filelock.SoftFileLock):
                 print_warning('[{}] fail lock file, auto try again!'.format(count))
                 count += 1
 
-def get_file_lock(path: string, timeout=-1, stale=10):
+def get_file_lock(path: string, timeout=-1, stale=-1):
     return SimpleFileLock(path + '.lock', timeout=timeout, stale=stale)

@@ -36,7 +36,7 @@ class Config:
         if self.config:
             try:
                 with open(self.config_file, 'w') as file:
-                    json.dump(self.config, file)
+                    json.dump(self.config, file, indent=4)
             except IOError as error:
                 print('Error:', error)
                 return
@@ -62,7 +62,7 @@ class Experiments:
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
                        tag=[], pid=None, webuiUrl=[], logDir=[]):
-        '''set {key:value} paris to self.experiment'''
+        '''set {key:value} pairs to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()
             self.experiments[expId] = {}
@@ -112,7 +112,7 @@ class Experiments:
         '''save config to local file'''
         try:
             with open(self.experiment_file, 'w') as file:
-                json.dump(self.experiments, file)
+                json.dump(self.experiments, file, indent=4)
         except IOError as error:
             print('Error:', error)
             return ''
