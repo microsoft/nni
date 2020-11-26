@@ -73,9 +73,9 @@ def update_quantization_param(bits, rmin, rmax):
     ----------
     bits : int
         quantization bits length
-    rmin : float
+    rmin : Tensor
         min value of real value
-    rmax : float
+    rmax : Tensor
         max value of real value
 
     Returns
@@ -85,8 +85,12 @@ def update_quantization_param(bits, rmin, rmax):
     # extend the [min, max] interval to ensure that it contains 0.
     # Otherwise, we would not meet the requirement that 0 be an exactly
     # representable value.
-    rmin = min(rmin, 0)
-    rmax = max(rmax, 0)
+    if rmin.is_cuda:
+        rmin = torch.min(rmin, torch.Tensor([0]).cuda())
+        rmax = torch.max(rmax, torch.Tensor([0]).cuda())
+    else:
+        rmin = torch.min(rmin, torch.Tensor([0]))
+        rmax = torch.max(rmax, torch.Tensor([0]))
 
     # the min and max quantized values, as floating-point values
     qmin = 0
