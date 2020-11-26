@@ -4,4 +4,4 @@
 from .config import *
 from .experiment import Experiment
 
-#from .nni_client import *
+from .nni_client import *

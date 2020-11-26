@@ -43,7 +43,7 @@ else:
 
     class UnixPipe:
         def __init__(self, experiment_id: str):
-            self.path: str = str(management._create_experiment_path(experiment_id) / 'dispatcher-pipe')
+            self.path: str = str(management.create_experiment_directory(experiment_id) / 'dispatcher-pipe')
             self.file = None
     
             self._socket = socket.socket(socket.AF_UNIX)

@@ -6,17 +6,13 @@ import sys
 import time
 from typing import Optional, Tuple
 
-import requests
-
 import nni.runtime.protocol
 import nni_node
 
 from .config import ExperimentConfig
 from . import management
 from .pipe import Pipe
-
-_url_template = 'http://localhost:{}/api/v1/nni{}'
-_rest_timeout = 20
+from . import rest
 
 
 def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
@@ -27,14 +23,13 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     _ensure_port_idle(port)
     if config._training_service == 'pai':
         _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
-    exp_id = management._generate_experiment_id()
+    exp_id = management.generate_experiment_id()
 
     try:
         print(f'Creating experiment {exp_id}...')
         pipe = Pipe(exp_id)
         proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         pipe_file = pipe.connect()
-        print('## setting io file')
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
         print('Statring web server...')
@@ -73,35 +68,24 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     }
 
     node_dir = Path(nni_node.__path__[0])
-    node = node_dir / ('node.exe' if sys.platform == 'win32' else 'node')
-    cmd = [str(node), '--max-old-space-size=4096', str(node_dir / 'main.js')]
+    node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
+    main_js = str(node_dir / 'main.js')
+    cmd = [node, '--max-old-space-size=4096', main_js]
     for arg_key, arg_value in args.items():
         cmd.append('--' + arg_key)
         cmd.append(str(arg_value))
     return Popen(cmd, cwd=node_dir)
-    # todo: logging
 
 
 def _check_rest_server(port: int, retry: int = 10) -> None:
-    url = _url_template.format(port, '/check-status')
     for _ in range(retry):
         with contextlib.suppress(Exception):
-            requests.get(url, timeout=_rest_timeout).raise_for_status()
+            rest.get(port, '/check-status')
             return
         time.sleep(1)
-    requests.get(url, timeout=_rest_timeout).raise_for_status()
+    rest.get(port, '/check-status')
 
 
 def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
-    url = _url_template.format(port, '/experiment/cluster-metadata')
-    resp = requests.put(url, json=config.to_cluster_metadata(), timeout=_rest_timeout)
-    print(resp)
-    resp.raise_for_status()
-
-    config_json = config.to_json()
-    url = _url_template.format(port, '/experiment')
-    print(config_json)
-    resp = requests.post(url, json=config_json, timeout=_rest_timeout)
-    print(resp.json())
-    resp.raise_for_status()
-    #requests.post(url, config_json, timeout=_rest_timeout).raise_for_status()
+    rest.put(port, '/experiment/cluster-metadata', config.cluster_metadata_json())
+    rest.post(port, '/experiment', config.experiment_config_json())

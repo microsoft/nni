@@ -48,9 +48,7 @@ class MsgDispatcherBase(Recoverable):
             self.load_checkpoint()
 
         while True:
-            print('## waiting command')
             command, data = receive()
-            print(command, data)
             if data:
                 data = json_tricks.loads(data)
 

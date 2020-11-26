@@ -1,10 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-"""
-Experiment configuration structures.
-"""
-
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict
@@ -18,13 +14,8 @@ class LocalExperimentConfig(ExperimentConfig):
 
     _training_service: str = 'local'
 
-    _json_schema = {
-        **ExperimentConfig._json_schema,
-        'use_active_gpu': lambda value: (None, None)
-    }
-
-    def to_json(self) -> Dict[str, Any]:
-        ret = super().to_json()
+    def experiment_config_json(self) -> Dict[str, Any]:
+        ret = super().experiment_config_json()
         ret['clusterMetaData'] = [
             {
                 'key': 'codeDir',
@@ -35,9 +26,12 @@ class LocalExperimentConfig(ExperimentConfig):
                 'value': self.trial_command
             }
         ]
+        #ret['local_config'] = {
+        #    'useActiveGpu': self.use_active_gpu
+        #}
         return ret
 
-    def to_cluster_metadata(self) -> Any:
+    def cluster_metadata_json(self) -> Any:
         return {
             'trial_config': {
                 'command': self.trial_command,
