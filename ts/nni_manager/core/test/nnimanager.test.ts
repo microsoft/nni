@@ -91,7 +91,7 @@ describe('Unit test for nnimanager', function () {
     }
 
     let mockedInfo = {
-        "test": {
+        "unittest": {
             "port": 8080,
             "startTime": 1605246730756,
             "endTime": "N/A",
