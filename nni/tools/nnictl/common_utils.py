@@ -12,6 +12,7 @@ import random
 import ruamel.yaml as yaml
 import psutil
 import filelock
+import glob
 from colorama import Fore
 
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
@@ -98,23 +99,42 @@ def generate_temp_dir():
     os.makedirs(temp_dir)
     return temp_dir
 
-class SimpleFileLock(filelock.SoftFileLock):
+class SimplePreemptiveLock(filelock.SoftFileLock):
     '''this is a lock support check lock expiration, if you do not need check expiration, you can use SoftFileLock'''
-    def __init__(self, lock_file, timeout=-1, stale=-1):
-        super(__class__, self).__init__(lock_file, timeout)
-        self._stale = stale
+    def __init__(self, lock_file, check_interval=-1):
+        super(__class__, self).__init__(lock_file, check_interval)
+        self._lock_file_name = '{}.{}'.format(self._lock_file, os.getpid())
 
     def __enter__(self):
-        count = 0
         while True:
             try:
-                if os.path.isfile(self._lock_file) and time.time() - os.stat(self._lock_file).st_mtime > self._stale:
-                    os.remove(self._lock_file)
                 self.acquire()
                 return self
-            except Exception:
-                print_warning('[{}] fail lock file, auto try again!'.format(count))
-                count += 1
+            except TimeoutError:
+                print_warning('fail lock file, auto try again!')
 
-def get_file_lock(path: string, timeout=-1, stale=-1):
-    return SimpleFileLock(path + '.lock', timeout=timeout, stale=stale)
+    def _acquire(self):
+        open_mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC
+        try:
+            lock_file_names = glob.glob(self._lock_file + '.*')
+            for file_name in lock_file_names:
+                if os.path.exists(file_name) and time.time() - os.stat(file_name).st_mtime < self._timeout:
+                    raise TimeoutError()
+            fd = os.open(self._lock_file_name, open_mode)
+        except (IOError, OSError, TimeoutError):
+            pass
+        else:
+            self._lock_file_fd = fd
+        return None
+
+    def _release(self):
+        os.close(self._lock_file_fd)
+        self._lock_file_fd = None
+        try:
+            os.remove(self._lock_file_name)
+        except OSError:
+            pass
+        return None
+
+def get_file_lock(path: string, check_interval=-1):
+    return SimplePreemptiveLock(path + '.lock', check_interval=-1)

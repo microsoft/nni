@@ -15,6 +15,7 @@ import * as lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
 import * as util from 'util';
+import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
@@ -22,6 +23,7 @@ import { ExperimentParams, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
+import { time } from 'console';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
@@ -425,39 +427,28 @@ function unixPathJoin(...paths: any[]): string {
 }
 
 /**
- * lock a file
- */
-async function withLock(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): Promise<any> {
-    const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock');
-    const deferred = new Deferred<any>();
-    lockfile.lock(lockPath, lockOpts, (err: any) => {
-        if (err) {
-            deferred.reject(err);
-        }
-        try {
-            const result = func(...args);
-            lockfile.unlockSync(lockPath);
-            deferred.resolve(result);
-        } catch (err) {
-            deferred.reject(err);
-        }
-    });
-    return deferred.promise;
-}
-
-/**
  * lock a file sync
  */
 function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): any {
-    const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock');
-    lockfile.lockSync(lockPath, lockOpts);
+    const lockName = path.join(path.dirname(filePath), path.basename(filePath) + `.lock.${process.pid}`);
+    if (typeof lockOpts.stale === 'number'){
+        const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock.*');
+        const lockFileNames: string[] = glob.sync(lockPath);
+        const canLock: boolean = lockFileNames.map((fileName) => {
+            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs > lockOpts.stale;
+        }).filter(isExpired=>isExpired === false).length === 0;
+        if (!canLock) {
+            throw new Error('File has been locked.');
+        }
+    }
+    lockfile.lockSync(lockName, lockOpts);
     const result = func(...args);
-    lockfile.unlockSync(lockPath);
+    lockfile.unlockSync(lockName);
     return result;
 }
 
 export {
     countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLock, withLockSync,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

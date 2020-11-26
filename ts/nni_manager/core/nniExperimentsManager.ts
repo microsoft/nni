@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as assert from 'assert';
 
 import { getLogger, Logger } from '../common/log';
-import { isAlive, withLock, withLockSync, getExperimentsInfoPath, delay } from '../common/utils';
+import { isAlive, withLockSync, getExperimentsInfoPath, delay } from '../common/utils';
 import { ExperimentManager } from '../common/experimentManager';
 import { Deferred } from 'ts-deferred';
 
@@ -35,7 +35,7 @@ class NNIExperimentsManager implements ExperimentManager {
     }
 
     public async getExperimentsInfo(): Promise<JSON> {
-        const fileInfo = await this.readExperimentsInfo();
+        const fileInfo: FileInfo = await this.withLockIterated(this.readExperimentsInfo, 100);
         const experimentsInformation = JSON.parse(fileInfo.buffer.toString());
         const expIdList: Array<string> = Object.keys(experimentsInformation).filter((expId) => {
             return experimentsInformation[expId]['status'] !== 'STOPPED';
@@ -44,7 +44,7 @@ class NNIExperimentsManager implements ExperimentManager {
             return this.checkCrashed(expId, experimentsInformation[expId]['pid']);
         }))).filter(crashedInfo => crashedInfo.isCrashed);
         if (updateList.length > 0){
-            const result = await this.withLock(this.updateAllStatus, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
+            const result = await this.withLockIterated(this.updateAllStatus, 100, updateList.map(crashedInfo => crashedInfo.experimentId), fileInfo.mtime);
             if (result !== undefined) {
                 return JSON.parse(JSON.stringify(Object.keys(result).map(key=>result[key])));
             } else {
@@ -83,27 +83,36 @@ class NNIExperimentsManager implements ExperimentManager {
         } catch (err) {
             this.log.error(err);
             this.log.debug(`Experiment Manager: Retry set key value: ${experimentId} {${key}: ${value}}`);
-            if (err.code === 'EEXIST') {
-                this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 1000, experimentId, key, value);
+            if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
+                this.profileUpdateTimer[key] = setTimeout(this.setExperimentInfo.bind(this), 100, experimentId, key, value);
             }
         }
     }
 
-    private async withLock (func: Function, ...args: any): Promise<any> {
-        return withLock(func.bind(this), this.experimentsPath, {stale: 2 * 1000, retries: 100, retryWait: 100}, ...args);
+    private async withLockIterated (func: Function, retry: number, ...args: any): Promise<any> {
+        if (retry < 0) {
+            throw new Error('Lock file out of retries.');
+        }
+        try {
+            return this.withLockSync(func, ...args);
+        } catch(err) {
+            if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
+                // retry wait is 100ms
+                delay(100);
+                return await this.withLockIterated(func, retry - 1, ...args);
+            }
+            throw err;
+        }
     }
 
     private withLockSync (func: Function, ...args: any): any {
         return withLockSync(func.bind(this), this.experimentsPath, {stale: 2 * 1000}, ...args);
     }
 
-    private async readExperimentsInfo(): Promise<FileInfo> {
-        return this.withLock((path: string) => {
-                const buffer: Buffer = fs.readFileSync(path);
-                const mtime: number = fs.statSync(path).mtimeMs;
-                return {buffer: buffer, mtime: mtime};
-            },
-            this.experimentsPath);
+    private readExperimentsInfo(): FileInfo {
+        const buffer: Buffer = fs.readFileSync(this.experimentsPath);
+        const mtime: number = fs.statSync(this.experimentsPath).mtimeMs;
+        return {buffer: buffer, mtime: mtime};
     }
 
     private async checkCrashed(expId: string, pid: number): Promise<CrashedInfo> {
