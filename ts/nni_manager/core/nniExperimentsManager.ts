@@ -78,7 +78,7 @@ class NNIExperimentsManager implements ExperimentManager {
                 const experimentsInformation = JSON.parse(fs.readFileSync(this.experimentsPath).toString());
                 assert(experimentId in experimentsInformation, `Experiment Manager: Experiment Id ${experimentId} not found, this should not happen`);
                 experimentsInformation[experimentId][key] = value;
-                fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
+                fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation, null, 4));
             });
         } catch (err) {
             this.log.error(err);
@@ -123,7 +123,7 @@ class NNIExperimentsManager implements ExperimentManager {
                     this.log.error(`Experiment Manager: Experiment Id ${expId} not found, this should not happen`);
                 }
             });
-            fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation));
+            fs.writeFileSync(this.experimentsPath, JSON.stringify(experimentsInformation, null, 4));
             return experimentsInformation;
         }
     }
