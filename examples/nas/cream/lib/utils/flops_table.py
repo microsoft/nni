@@ -72,7 +72,7 @@ class FlopsEst(object):
     def get_flops(self, arch):
         flops = 0
         for block_id, block in enumerate(arch):
-            if block is 'LayerChoice1' or block_id is 'LayerChoice23':
+            if block == 'LayerChoice1' or block_id == 'LayerChoice23':
                 continue
             for idx, choice in enumerate(arch[block]):
                 flops += self.flops_dict[block_id][idx] * (1 if choice else 0)

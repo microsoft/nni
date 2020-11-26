@@ -53,6 +53,10 @@ First, build environments for searching.
 
 ```
 pip install -r ./requirements
+
+git clone https://github.com/NVIDIA/apex.git
+cd apex
+python setup.py install --cpp_ext --cuda_ext
 ```
 
 To search for an architecture, you need to configure the parameters `FLOPS_MINIMUM` and `FLOPS_MAXIMUM` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in `./configs/train.yaml`
