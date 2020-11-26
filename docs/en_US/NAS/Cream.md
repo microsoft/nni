@@ -75,21 +75,24 @@ The searched architectures need to be retrained and obtain the final model. The 
 ### II. Retrain
 
 To train searched architectures, you need to configure the parameter `MODEL_SELECTION` to specify the model Flops. To specify which model to train, you should add `MODEL_SELECTION` in `./configs/retrain.yaml`. You can select one from [14,43,112,287,481,604], which stands for different Flops(MB).
-```buildoutcfg
+
+```
 MODEL_SELECTION: 43 # Retrain 43m model
 MODEL_SELECTION: 481 # Retrain 481m model
 ......
 ```
 
 To train random architectures, you need specify `MODEL_SELECTION` to `-1` and configure the parameter `INPUT_ARCH`:
-```buildoutcfg
+
+```
 MODEL_SELECTION: -1 # Train random architectures
 INPUT_ARCH: [[0], [3], [3, 3], [3, 1, 3], [3, 3, 3, 3], [3, 3, 3], [0]] # Random Architectures
 ......
 ```
 
 After adding `MODEL_SELECTION` in `./configs/retrain.yaml`, you need to use the following command to train the model.
-```buildoutcfg
+
+```
 python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./configs/retrain.yaml
 ```
 
