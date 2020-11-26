@@ -88,13 +88,14 @@ def update_quantization_param(bits, rmin, rmax):
     if rmin.is_cuda:
         rmin = torch.min(rmin, torch.Tensor([0]).cuda())
         rmax = torch.max(rmax, torch.Tensor([0]).cuda())
+        qmin = torch.Tensor([0]).cuda()
+        qmax = torch.Tensor([(1 << bits) - 1]).cuda()
     else:
         rmin = torch.min(rmin, torch.Tensor([0]))
         rmax = torch.max(rmax, torch.Tensor([0]))
+        qmin = torch.Tensor([0])
+        qmax = torch.Tensor([(1 << bits) - 1])
 
-    # the min and max quantized values, as floating-point values
-    qmin = 0
-    qmax = (1 << bits) - 1
     # First determine the scale.
     scale = (rmax - rmin) / (qmax - qmin)
 
