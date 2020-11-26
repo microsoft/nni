@@ -46,7 +46,13 @@ describe('Unit test for experiment manager', function () {
 
     it('test getExperimentsInfo', () => {
         return experimentManager.getExperimentsInfo().then(function (experimentsInfo: {[key: string]: any}) {
-            expect(experimentsInfo['test']['status']).to.be.oneOf(['STOPPED', 'ERROR']);
+            new Array(experimentsInfo)
+            for (let idx in experimentsInfo) {
+                if (experimentsInfo[idx]['id'] === 'test') {
+                    expect(experimentsInfo[idx]['status']).to.be.oneOf(['STOPPED', 'ERROR']);
+                    break;
+                }
+            }
         }).catch((error) => {
             assert.fail(error);
         })
