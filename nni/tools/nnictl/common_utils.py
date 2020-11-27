@@ -111,7 +111,7 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
         try:
             lock_file_names = glob.glob(self._lock_file + '.*')
             for file_name in lock_file_names:
-                if os.path.exists(file_name) and time.time() - os.stat(file_name).st_mtime < self._stale:
+                if os.path.exists(file_name) and (self._stale < 0 or time.time() - os.stat(file_name).st_mtime < self._stale):
                     return None
             fd = os.open(self._lock_file_name, open_mode)
         except (IOError, OSError):
