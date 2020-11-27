@@ -179,20 +179,7 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-function getStopSignal(): any {
-    return 'SIGTERM';
-}
-
-function getCtrlCSignal(): any {
-    return 'SIGINT';
-}
-
-process.on(getCtrlCSignal(), async () => {
-    const log: Logger = getLogger();
-    log.info(`Get SIGINT signal!`);
-});
-
-process.on(getStopSignal(), async () => {
+async function cleanUp(): Promise<void> {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {
@@ -206,7 +193,11 @@ process.on(getStopSignal(), async () => {
         hasError = true;
         log.error(`${err.stack}`);
     } finally {
-        await log.close();
+        log.close();
         process.exit(hasError ? 1 : 0);
     }
-});
+}
+
+process.on('SIGTERM', cleanUp);
+process.on('SIGBREAK', cleanUp);
+process.on('SIGINT', cleanUp);
