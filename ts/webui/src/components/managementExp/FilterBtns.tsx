@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { DefaultButton, Icon, Dropdown, DatePicker, DayOfWeek } from '@fluentui/react';
 import { EXPERIMENTSTATUS, PLATFORM } from '../../static/const';
-import DayPickerStrings from './experimentConst';
+import { DayPickerStrings } from './experimentConst';
 import { fillOptions } from './expFunction';
 
 interface FilterBtnsProps {

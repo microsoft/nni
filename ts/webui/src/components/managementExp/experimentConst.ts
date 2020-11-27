@@ -31,4 +31,7 @@ const DayPickerStrings: IDatePickerStrings = {
     yearPickerHeaderAriaLabel: '{0}, select to change the month'
 };
 
-export default DayPickerStrings;
+const MAXSCREENCOLUMNWIDHT = 180;
+const MINSCREENCOLUMNWIDHT = 139;
+
+export { DayPickerStrings, MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT };

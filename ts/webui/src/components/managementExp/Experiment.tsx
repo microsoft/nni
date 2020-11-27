@@ -4,6 +4,7 @@ import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { formatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
+import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
 import NameColumn from './NameColumn';
 import FilterBtns from './FilterBtns';
@@ -139,8 +140,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Name',
             key: 'experimentName',
             fieldName: 'experimentName', // required!
-            minWidth: 100,
-            maxWidth: 130,
+            minWidth: MINSCREENCOLUMNWIDHT,
+            maxWidth: MAXSCREENCOLUMNWIDHT,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -150,8 +151,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 100,
-            maxWidth: 130,
+            minWidth: MINSCREENCOLUMNWIDHT,
+            maxWidth: MAXSCREENCOLUMNWIDHT,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -162,8 +163,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Status',
             key: 'status',
             fieldName: 'status',
-            minWidth: 100,
-            maxWidth: 150,
+            minWidth: MINSCREENCOLUMNWIDHT,
+            maxWidth: MAXSCREENCOLUMNWIDHT,
             isResizable: true,
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
@@ -174,8 +175,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Port',
             key: 'port',
             fieldName: 'port',
-            minWidth: 60,
-            maxWidth: 90,
+            minWidth: MINSCREENCOLUMNWIDHT - 15,
+            maxWidth: MAXSCREENCOLUMNWIDHT - 30,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -189,8 +190,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Platform',
             key: 'platform',
             fieldName: 'platform',
-            minWidth: 110,
-            maxWidth: 130,
+            minWidth: MINSCREENCOLUMNWIDHT - 15,
+            maxWidth: MAXSCREENCOLUMNWIDHT - 30,
             isResizable: true,
             data: 'string',
             onColumnClick: this.onColumnClick,
@@ -200,8 +201,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'Start time',
             key: 'startTime',
             fieldName: 'startTime',
-            minWidth: 140,
-            maxWidth: 160,
+            minWidth: MINSCREENCOLUMNWIDHT + 15,
+            maxWidth: MAXSCREENCOLUMNWIDHT + 30,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -215,8 +216,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             name: 'End time',
             key: 'endTime',
             fieldName: 'endTime',
-            minWidth: 120,
-            maxWidth: 160,
+            minWidth: MINSCREENCOLUMNWIDHT + 15,
+            maxWidth: MAXSCREENCOLUMNWIDHT + 30,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -266,6 +267,9 @@ class Experiment extends React.Component<{}, ExpListState> {
                     searchSource: sortedResult
                 }));
             }
+            this.setState(() => ({
+                searchInputVal: newValue
+            }));
         }
     }
 
@@ -389,9 +393,15 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     // reset
     private setSearchSource(): void {
-        const { searchSource, sortInfo } = this.state;
+        const { sortInfo, searchInputVal, originExperimentList } = this.state;
+        // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
+        const result = originExperimentList.filter(
+            item =>
+                item.experimentName.toLowerCase().includes(searchInputVal.toLowerCase()) ||
+                item.id.toLowerCase().includes(searchInputVal.toLowerCase())
+        );
         this.setState(() => ({
-            source: getSortedSource(searchSource, sortInfo),
+            source: getSortedSource(result, sortInfo),
             selectedStatus: '',
             selectedPlatform: '',
             selectedStartDate: undefined,
