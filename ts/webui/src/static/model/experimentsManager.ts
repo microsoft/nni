@@ -10,17 +10,18 @@ class ExperimentsManager {
     }
 
     public async init(): Promise<void> {
-        await requestAxios(`${MANAGER_IP}/experiments-info`).then(data => {
-            for (const item of data) {
-                if (typeof item.port === 'string') {
-                    item.port = JSON.parse(item.port);
+        await requestAxios(`${MANAGER_IP}/experiments-info`)
+            .then(data => {
+                for (const item of data) {
+                    if (typeof item.port === 'string') {
+                        item.port = JSON.parse(item.port);
+                    }
                 }
-            }
-            this.experimentList = data;
-        })
-        .catch(error => {
-            return [] as AllExperimentList[];
-        });
+                this.experimentList = data;
+            })
+            .catch(_error => {
+                return [] as AllExperimentList[];
+            });
     }
 }
 
