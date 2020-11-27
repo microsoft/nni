@@ -127,8 +127,8 @@ class Logger {
     private log(level: string, param: any[]): void {
         if (!this.readonly) {
             const time = new Date();
-            const isoLocalTime = new Date(time - time.getTimezoneOffset() * 60000).toISOString();
-            const timeStr = isoLocalTime.slice(0, -5).replace('T', ' ');
+            const localTime = new Date(time.getTime() - time.getTimezoneOffset() * 60000);
+            const timeStr = localTime.toISOString().slice(0, -5).replace('T', ' ');
             const logContent = `[${timeStr}] ${level} ${format(param)}\n`;
             if (this.writable && this.bufferSerialEmitter) {
                 const buffer: WritableStreamBuffer = new WritableStreamBuffer();
