@@ -48,7 +48,7 @@ class NNIExperimentsManager implements ExperimentManager {
             if (result !== undefined) {
                 return JSON.parse(JSON.stringify(Object.keys(result).map(key=>result[key])));
             } else {
-                delay(500);
+                await delay(500);
                 return await this.getExperimentsInfo();
             }
         } else {
@@ -97,8 +97,8 @@ class NNIExperimentsManager implements ExperimentManager {
             return this.withLockSync(func, ...args);
         } catch(err) {
             if (err.code === 'EEXIST' || err.message === 'File has been locked.') {
-                // retry wait is 100ms
-                delay(100);
+                // retry wait is 50ms
+                await delay(50);
                 return await this.withLockIterated(func, retry - 1, ...args);
             }
             throw err;

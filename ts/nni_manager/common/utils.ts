@@ -23,7 +23,6 @@ import { ExperimentParams, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
-import { time } from 'console';
 
 function getExperimentRootDir(): string {
     return getExperimentStartupInfo()
