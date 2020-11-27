@@ -56,7 +56,7 @@ class Experiments:
     def __init__(self, home_dir=NNICTL_HOME_DIR):
         os.makedirs(home_dir, exist_ok=True)
         self.experiment_file = os.path.join(home_dir, '.experiment')
-        self.lock = get_file_lock(self.experiment_file, check_interval=2)
+        self.lock = get_file_lock(self.experiment_file, stale=2)
         with self.lock:
             self.experiments = self.read_file()
 

@@ -101,27 +101,20 @@ def generate_temp_dir():
 
 class SimplePreemptiveLock(filelock.SoftFileLock):
     '''this is a lock support check lock expiration, if you do not need check expiration, you can use SoftFileLock'''
-    def __init__(self, lock_file, check_interval=-1):
-        super(__class__, self).__init__(lock_file, check_interval)
+    def __init__(self, lock_file, stale=-1):
+        super(__class__, self).__init__(lock_file, timeout=-1)
         self._lock_file_name = '{}.{}'.format(self._lock_file, os.getpid())
-
-    def __enter__(self):
-        while True:
-            try:
-                self.acquire()
-                return self
-            except TimeoutError:
-                print_warning('fail lock file, auto try again!')
+        self._stale = stale
 
     def _acquire(self):
         open_mode = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_TRUNC
         try:
             lock_file_names = glob.glob(self._lock_file + '.*')
             for file_name in lock_file_names:
-                if os.path.exists(file_name) and time.time() - os.stat(file_name).st_mtime < self._timeout:
-                    raise TimeoutError()
+                if os.path.exists(file_name) and time.time() - os.stat(file_name).st_mtime < self._stale:
+                    return None
             fd = os.open(self._lock_file_name, open_mode)
-        except (IOError, OSError, TimeoutError):
+        except (IOError, OSError):
             pass
         else:
             self._lock_file_fd = fd
@@ -136,5 +129,5 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
             pass
         return None
 
-def get_file_lock(path: string, check_interval=-1):
-    return SimplePreemptiveLock(path + '.lock', check_interval=-1)
+def get_file_lock(path: string, stale=-1):
+    return SimplePreemptiveLock(path + '.lock', stale=-1)
