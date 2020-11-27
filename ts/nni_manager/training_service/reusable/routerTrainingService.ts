@@ -183,7 +183,6 @@ class RouterTrainingService implements TrainingService {
                     this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
             } else if (key === TrialConfigMetadataKey.HETEROGENOUS_CONFIG){
-                console.log('-------------------------------186--------------')
                 this.internalTrainingService = component.get(TrialDispatcher);
                 Container.bind(EnvironmentService)
                     .to(HeteroGenousEnvironmentService)
