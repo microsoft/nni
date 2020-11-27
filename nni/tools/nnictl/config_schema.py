@@ -209,7 +209,7 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-    'paiConfig': {
+    Optional('paiConfig'): {
         'userName': setType('userName', str),
         Or('passWord', 'token', only_one=True): str,
         'host': setType('host', str),
@@ -253,7 +253,7 @@ aml_trial_schema = {
 }
 
 aml_config_schema = {
-    'amlConfig': {
+    Optional('amlConfig'): {
         'subscriptionId': setType('subscriptionId', str),
         'resourceGroup': setType('resourceGroup', str),
         'workspaceName': setType('workspaceName', str),
@@ -265,7 +265,7 @@ aml_config_schema = {
 
 heterogeneous_config_schema = {
     'heterogeneousConfig': {
-        'trainingServicePlatforms': setType('trainingServicePlatforms', str),
+        'trainingServicePlatforms': ['local', 'remote', 'pai', 'aml']
     }
 }
 
@@ -386,7 +386,7 @@ remote_config_schema = {
 }
 
 machine_list_schema = {
-    'machineList': [Or(
+    Optional('machineList'): [Or(
         {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -419,7 +419,8 @@ training_service_schema_dict = {
     'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
-    'heterogeneous': Schema({**common_schema, **common_trial_schema, **heterogeneous_config_schema}),
+    'heterogeneous': Schema({**common_schema, **common_trial_schema, **heterogeneous_config_schema, **machine_list_schema,
+                             **pai_config_schema, **aml_config_schema, **remote_config_schema}),
 }
 
 
@@ -436,6 +437,7 @@ class NNIConfigSchema:
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
         self.validate_eth0_device(experiment_config)
+        self.validate_heterogeneous_platforms(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -545,3 +547,16 @@ class NNIConfigSchema:
                 and not experiment_config.get('nniManagerIp') \
                 and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
+    
+    def validate_heterogeneous_platforms(self, experiment_config):
+        required_config_name_map = {
+            'remote': 'machineList',
+            'aml': 'amlConfig',
+            'pai': 'paiConfig'
+        }
+        if experiment_config.get('trainingServicePlatform') == 'heterogeneous':
+            for platform in experiment_config['heterogeneousConfig']['trainingServicePlatforms']:
+                config_name = required_config_name_map.get(platform)
+                if config_name and not experiment_config.get(config_name):
+                    raise SchemaError('Need to set {0} for {1} in heterogeneous mode!'.format(config_name, platform))
+                

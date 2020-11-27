@@ -295,13 +295,19 @@ def set_heterogeneous_config(experiment_config, port, config_file_name):
     '''set heterogeneous configuration'''
     heterogeneous_config_data = dict()
     heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
-    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms'].split(',')
+    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
     for platform in platform_list:
         if platform == 'aml':
             heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
         elif platform ==  'remote':
-            heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
+            if experiment_config.get('remoteConfig'):
+                heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
+            heterogeneous_config_data['machine_list'] = experiment_config['machineList']
+        elif platform == 'local':
+            heterogeneous_config_data['local_config'] = experiment_config['localConfig']
+        elif platform == 'pai':
+            heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(heterogeneous_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -400,15 +406,20 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'heterogeneous':
         request_data['clusterMetaData'].append(
             {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
-        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms'].split(',')
+        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
         for platform in platform_list:
             if platform == 'aml':
                 request_data['clusterMetaData'].append(
                     {'key': 'aml_config', 'value': experiment_config['amlConfig']})
             elif platform ==  'remote':
                 request_data['clusterMetaData'].append(
-                    {'key': 'remote_config', 'value': experiment_config['remoteConfig']})
-        response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
+                    {'key': 'machine_list', 'value': experiment_config['machineList']})
+            elif platform ==  'local':
+                request_data['clusterMetaData'].append(
+                    {'key': 'local_config', 'value': experiment_config['localConfig']})
+            elif platform ==  'pai':
+                request_data['clusterMetaData'].append(
+                    {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)

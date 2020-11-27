@@ -17,6 +17,7 @@ import { RemoteEnvironmentService } from './remoteEnvironmentService';
 import { LocalEnvironmentService } from './localEnvironmentService';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { randomSelect } from '../../../common/utils';
+import { HeterogenousConfig } from '../heterogenous/heterogenousConfig';
 
 
 /**
@@ -29,6 +30,7 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     private remoteEnvironmentService: RemoteEnvironmentService;
     private localEnvironmentService: LocalEnvironmentService;
     private paiEnvironmentService: OpenPaiEnvironmentService;
+    private heterogenousConfig?: HeterogenousConfig;
 
     private readonly log: Logger = getLogger();
 
@@ -68,6 +70,8 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
             case TrialConfigMetadataKey.LOCAL_CONFIG:
                 this.localEnvironmentService.config(key, value);
                 break;
+            case TrialConfigMetadataKey.HETEROGENOUS_CONFIG:
+                this.heterogenousConfig = <HeterogenousConfig>JSON.parse(value);
             default:
                 this.log.debug(`Heterogenous not support metadata key: '${key}', value: '${value}'`);
         }
@@ -95,23 +99,27 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        const number = randomSelect([0, 1, 2, 3]);
-        switch (number) {
-            case 0:
+        if (this.heterogenousConfig === undefined) {
+            throw new Error('heterogenousConfig not initialized!');
+        }
+        this.heterogenousConfig.trainingServicePlatforms;
+        const platform = randomSelect(this.heterogenousConfig.trainingServicePlatforms);
+        switch (platform) {
+            case 'aml':
                 environment.platform = 'aml';
                 this.amlEnvironmentService.startEnvironment(environment);
                 break;
-            case 1:
+            case 'remote':
                 environment.platform = 'remote';
                 this.remoteEnvironmentService.startEnvironment(environment);
                 break;
-            case 2:
+            case 'local':
                 environment.platform = 'local';
                 this.localEnvironmentService.startEnvironment(environment);
                 break;
-            case 3:
+            case 'pai':
                 environment.platform = 'pai';
-                this.paiEnvironmentService.stopEnvironment(environment);
+                this.paiEnvironmentService.startEnvironment(environment);
                 break;
         }
     }

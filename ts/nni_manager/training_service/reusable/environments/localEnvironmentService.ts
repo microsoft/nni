@@ -4,6 +4,7 @@
 'use strict';
 
 import * as cpp from 'child-process-promise';
+import { EventEmitter } from "events";
 import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -23,6 +24,8 @@ import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive } from '../../../common/utils';
 import { LocalConfig } from '../../local/localTrainingService';
 import { execMkdir, validateCodeDir, runScript, fileExist, execCopydir } from '../../common/util';
+import { FileCommandChannel } from '../channels/fileCommandChannel';
+import { CommandChannel } from "../commandChannel";
 
 
 @component.Singleton
@@ -111,23 +114,22 @@ export class LocalEnvironmentService extends EnvironmentService {
         if (this.localConfig === undefined) {
             throw new Error('Local config is not initialized');
         }
-        const localEnvironment: LocalEnvironmentInformation = environment as LocalEnvironmentInformation;
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
         const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,
             "environment-temp", "envs");
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
-        localEnvironment.runnerWorkingFolder = path.join(localEnvCodeFolder, localEnvironment.id);
-        await execMkdir(localEnvironment.runnerWorkingFolder);
+        environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
+        await execMkdir(environment.runnerWorkingFolder);
         await execCopydir(localTempFolder, localEnvCodeFolder);
-        localEnvironment.command = `cd ${this.experimentRootDir} && \
-${localEnvironment.command} --job_pid_file ${localEnvironment.runnerWorkingFolder}/pid \
-1>${localEnvironment.runnerWorkingFolder}/trialrunner_stdout 2>${localEnvironment.runnerWorkingFolder}/trialrunner_stderr \
-&& echo $? \`date +%s%3N\` >${localEnvironment.runnerWorkingFolder}/code`;
+        environment.command = `cd ${this.experimentRootDir} && \
+${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
         await fs.promises.writeFile(path.join(localEnvCodeFolder, 'nni_run.sh'),
-        localEnvironment.command, { encoding: 'utf8', mode: 0o777 }),
+        environment.command, { encoding: 'utf8', mode: 0o777 }),
         // Execute command in local machine
         runScript(path.join(localEnvCodeFolder, 'nni_run.sh'));
-        localEnvironment.trackingUrl = `${localEnvironment.runnerWorkingFolder}`;
+        environment.trackingUrl = `${environment.runnerWorkingFolder}`;
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {

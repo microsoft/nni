@@ -166,7 +166,7 @@ export namespace ValidationSchemas {
                 useActiveGpu: joi.boolean()
             }),
             heterogeneous_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
-                trainingServicePlatforms: joi.string().min(1),
+                trainingServicePlatforms: joi.array(),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)

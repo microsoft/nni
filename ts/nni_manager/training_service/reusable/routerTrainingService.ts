@@ -24,7 +24,6 @@ import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
 import { LocalConfig, LocalTrainingService } from '../local/localTrainingService';
-import { TrialConfig } from 'training_service/common/trialConfig';
 
 
 /**
@@ -183,11 +182,17 @@ class RouterTrainingService implements TrainingService {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
-            } else if (key === TrialConfigMetadataKey.HETEROGENOUS_CLUSTER_CONFIG){
+            } else if (key === TrialConfigMetadataKey.HETEROGENOUS_CONFIG){
+                console.log('-------------------------------186--------------')
                 this.internalTrainingService = component.get(TrialDispatcher);
                 Container.bind(EnvironmentService)
                     .to(HeteroGenousEnvironmentService)
                     .scope(Scope.Singleton);
+
+                if (this.internalTrainingService === undefined) {
+                    throw new Error("TrainingService is not assigned!");
+                }
+                await this.internalTrainingService.setClusterMetadata(key, value);
             }
         } else {
             await this.internalTrainingService.setClusterMetadata(key, value);

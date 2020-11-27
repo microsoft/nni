@@ -5,14 +5,10 @@
 
 import { EventEmitter } from "events";
 import { delay } from "../../../common/utils";
-import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
 import { AMLCommandChannel } from "./amlCommandChannel";
 import { WebCommandChannel } from "./webCommandChannel";
-
-class HeterogenousRunnerConnection extends RunnerConnection {
-}
 
 export class HeterogenousCommandChannel extends CommandChannel{
     private stopping: boolean = false;
@@ -61,6 +57,8 @@ export class HeterogenousCommandChannel extends CommandChannel{
                 }
                 this.amlCommandChannel.sendCommandInternal(environment, message);
                 break;
+            case 'local':
+            case 'pai':
             case 'remote':
                 if (this.webCommandChannel === undefined) {
                     throw new Error(`webCommandChannel not initialezed!`);
@@ -73,6 +71,6 @@ export class HeterogenousCommandChannel extends CommandChannel{
     }
 
     protected createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
-        return new HeterogenousRunnerConnection(environment);
+        return new RunnerConnection(environment);
     }
 }
