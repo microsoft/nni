@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { DefaultButton, Icon, Dropdown, DatePicker, DayOfWeek } from '@fluentui/react';
-import { EXPERIMENTSTATUS, PLATFORM } from '../../static/const';
+import { EXPERIMENTSTATUS } from '../../static/const';
 import { DayPickerStrings } from './experimentConst';
 import { fillOptions } from './expFunction';
 
 interface FilterBtnsProps {
+    platform: string[];
     selectedStatus: string;
     selectedPlatform: string;
     selectedStartDate: Date;
@@ -22,6 +23,7 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
 
     render(): React.ReactNode {
         const {
+            platform,
             selectedStatus,
             selectedPlatform,
             selectedStartDate,
@@ -47,7 +49,7 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
                     selectedKey={selectedPlatform}
                     onChange={selectPlatform.bind(this)}
                     placeholder='Select an option'
-                    options={fillOptions(PLATFORM)}
+                    options={fillOptions(platform)}
                     className='filter-condition-platform'
                 />
                 <DatePicker

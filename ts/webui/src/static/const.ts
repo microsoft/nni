@@ -25,8 +25,6 @@ const EXPERIMENTSTATUS = [
     'NO_MORE_TRIAL',
     'TUNER_NO_MORE_TRIAL'
 ];
-// 后三个正确吗
-const PLATFORM = ['local', 'remote', 'pai', 'kubeflow', 'aml', 'dlts', 'framework'];
 const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
 const MONACO = {
     readOnly: true,
@@ -77,7 +75,6 @@ export {
     DOWNLOAD_IP,
     trialJobStatus,
     EXPERIMENTSTATUS,
-    PLATFORM,
     COLUMNPro,
     WEBUIDOC,
     CONTROLTYPE,

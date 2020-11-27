@@ -17,6 +17,7 @@ import '../../static/style/tableStatus.css';
 
 interface ExpListState {
     columns: IColumn[];
+    platform: string[];
     errorMessage: string;
     hideFilter: boolean;
     searchInputVal: string;
@@ -34,6 +35,7 @@ class Experiment extends React.Component<{}, ExpListState> {
     constructor(props) {
         super(props);
         this.state = {
+            platform: [],
             columns: this.columns,
             errorMessage: '',
             hideFilter: true,
@@ -55,12 +57,14 @@ class Experiment extends React.Component<{}, ExpListState> {
             source: result,
             originExperimentList: result,
             searchSource: result,
+            platform: EXPERIMENTMANAGER.getPlatformList(),
             errorMessage: EXPERIMENTMANAGER.getExpErrorMessage()
         }));
     }
 
     render(): React.ReactNode {
         const {
+            platform,
             hideFilter,
             selectedStatus,
             source,
@@ -102,6 +106,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                             </Stack>
                             <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
                                 <FilterBtns
+                                    platform={platform}
                                     selectedStatus={selectedStatus}
                                     selectedPlatform={selectedPlatform}
                                     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
