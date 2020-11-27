@@ -3,6 +3,7 @@ import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn } from '@fl
 import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { formatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
+import MessageInfo from '../modals/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
@@ -16,6 +17,7 @@ import '../../static/style/tableStatus.css';
 
 interface ExpListState {
     columns: IColumn[];
+    errorMessage: string;
     hideFilter: boolean;
     searchInputVal: string;
     selectedStatus: string;
@@ -33,6 +35,7 @@ class Experiment extends React.Component<{}, ExpListState> {
         super(props);
         this.state = {
             columns: this.columns,
+            errorMessage: '',
             hideFilter: true,
             searchInputVal: '',
             selectedStatus: '',
@@ -51,15 +54,29 @@ class Experiment extends React.Component<{}, ExpListState> {
         this.setState(() => ({
             source: result,
             originExperimentList: result,
-            searchSource: result
+            searchSource: result,
+            errorMessage: EXPERIMENTMANAGER.getExpErrorMessage()
         }));
     }
 
     render(): React.ReactNode {
-        const { hideFilter, selectedStatus, source, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
+        const {
+            hideFilter,
+            selectedStatus,
+            source,
+            selectedPlatform,
+            selectedStartDate,
+            selectedEndDate,
+            errorMessage
+        } = this.state;
         return (
             <Stack className='nni' style={{ minHeight: window.innerHeight }}>
                 <Hearder />
+                {errorMessage !== undefined ? (
+                    <div className='warning'>
+                        <MessageInfo info={errorMessage} typeInfo='error' />
+                    </div>
+                ) : null}
                 <Stack className='contentBox expBackground'>
                     <Stack className='content'>
                         <Stack className='experimentList'>
@@ -347,7 +364,6 @@ class Experiment extends React.Component<{}, ExpListState> {
                 searchSource,
                 sortInfo
             } = this.state;
-            // 只能set item.key
             const hasStatus = selectedStatus === '' ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
             const hasStartDate = selectedStartDate === undefined ? false : true;

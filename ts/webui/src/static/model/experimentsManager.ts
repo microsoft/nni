@@ -4,9 +4,14 @@ import { requestAxios } from '../function';
 
 class ExperimentsManager {
     private experimentList: AllExperimentList[] = [];
+    private errorMessage: string = '';
 
     public getExperimentList(): AllExperimentList[] {
         return this.experimentList;
+    }
+
+    public getExpErrorMessage(): string {
+        return this.errorMessage;
     }
 
     public async init(): Promise<void> {
@@ -19,8 +24,8 @@ class ExperimentsManager {
                 }
                 this.experimentList = data;
             })
-            .catch(_error => {
-                return [] as AllExperimentList[];
+            .catch(error => {
+                this.errorMessage = error.message;
             });
     }
 }
