@@ -1,6 +1,7 @@
 import logging
+from subprocess import Popen
 import time
-from typing import overload
+from typing import Optional, overload
 
 from nni.runtime.msg_dispatcher import MsgDispatcher
 from nni.tuner import Tuner
@@ -10,7 +11,6 @@ from . import launcher
 from .pipe import Pipe
 from . import rest
 
-from .config import LocalExperimentConfig
 
 class Experiment:
     """

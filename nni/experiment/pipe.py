@@ -12,7 +12,7 @@ if sys.platform == 'win32':
             self.file = None
 
             self._handle = _win32.CreateNamedPipe(
-                path,
+                self.path,
                 _win32.PIPE_ACCESS_DUPLEX,
                 _win32.PIPE_TYPE_MESSAGE | _win32.PIPE_READMODE_MESSAGE | _win32.PIPE_WAIT,
                 1,
@@ -45,16 +45,16 @@ else:
         def __init__(self, experiment_id: str):
             self.path: str = str(management.create_experiment_directory(experiment_id) / 'dispatcher-pipe')
             self.file = None
-    
+
             self._socket = socket.socket(socket.AF_UNIX)
             self._socket.bind(self.path)
             self._socket.listen(1)  # only accepts one connection
-    
+
         def connect(self) -> BufferedIOBase:
-            conn, address = self._socket.accept()
+            conn, _ = self._socket.accept()
             self.file = conn.makefile('rwb')
             return self.file
-    
+
         def close(self) -> None:
             if self.file is not None:
                 self.file.close()

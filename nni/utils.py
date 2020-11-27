@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import copy
 import functools
 from enum import Enum, unique
@@ -9,7 +8,6 @@ import json_tricks
 from schema import And
 
 from . import parameter_expressions
-from .runtime.env_vars import dispatcher_env_vars
 
 
 to_json = functools.partial(json_tricks.dumps, allow_nan=True)
