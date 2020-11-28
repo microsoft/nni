@@ -146,6 +146,11 @@ def _find_node_files():
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
+def _copy_data_files():
+    nni_config_dir = os.path.expanduser('~/.config/nni')
+    if not os.path.exists(nni_config_dir):
+        os.makedirs(nni_config_dir)
+    shutil.copyfile('./deployment/registered_algorithms.yml', os.path.join(nni_config_dir, 'registered_algorithms.yml'))
 
 class BuildTs(Command):
     description = 'build TypeScript modules'
@@ -166,6 +171,7 @@ class Build(build):
         assert release, 'Please set environment variable "NNI_RELEASE=<release_version>"'
         assert os.path.isfile('nni_node/main.js'), 'Please run "build_ts" before "build"'
         assert not os.path.islink('nni_node/main.js'), 'This is a development build'
+        _copy_data_files()
         super().run()
 
 class Develop(develop):
@@ -188,6 +194,7 @@ class Develop(develop):
 
     def run(self):
         setup_ts.build(release=None)
+        _copy_data_files()
         super().run()
 
 class Clean(clean):
