@@ -76,7 +76,7 @@ class AlgoSchema:
         if not builtin_name or not class_args:
             return
         meta = get_builtin_algo_meta(algo_type+'s', builtin_name)
-        if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
+        if meta and 'acceptClassArgs' in meta and meta['acceptClassArgs'] == False:
             raise SchemaError('classArgs is not allowed.')
 
         logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain

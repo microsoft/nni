@@ -6,18 +6,13 @@ import importlib
 import os
 from pathlib import Path
 import sys
-
 import ruamel.yaml as yaml
-
 import nni
-from .constants import BuiltinAlgorithms
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
 
 def get_all_builtin_names(algo_type):
-    """Get all valid builtin names, including:
-    1. BuiltinAlgorithms which is pre-installed.
-    2. User installed packages in <nni_installation_path>/config/installed_packages.yml
+    """Get all valid builtin names registered in <nni_installation_path>/config/installed_packages.yml
 
     Parameters
     ----------
@@ -30,38 +25,9 @@ def get_all_builtin_names(algo_type):
     all builtin tuner names.
     """
     assert algo_type in ALGO_TYPES
-    merged_dict = _get_merged_builtin_dict()
 
-    builtin_names = [x['name'] for x in merged_dict[algo_type]]
-    return builtin_names
+    return [x['builtinName'] for x in read_installed_package_meta()[algo_type]]
 
-def get_not_installable_builtin_names(algo_type=None):
-    """Get builtin names in BuiltinAlgorithms which do not need to be installed
-    and can be used once NNI is installed.
-
-    Parameters
-    ----------
-    algo_type: str | None
-        can be one of 'tuners', 'assessors', 'advisors' or None
-
-    Returns: list of string
-    -------
-    All builtin names of specified type, for example, if algo_type is 'tuners', returns
-    all builtin tuner names.
-    If algo_type is None, returns all builtin names of all types.
-    """
-    if algo_type is None:
-        meta = BuiltinAlgorithms
-    else:
-        assert algo_type in ALGO_TYPES
-        meta = {
-            algo_type: BuiltinAlgorithms[algo_type]
-        }
-    names = []
-    for t in ALGO_TYPES:
-        if t in meta:
-            names.extend([x['name'] for x in meta[t]])
-    return names
 
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
     """ Get meta information of builtin algorithms from:
@@ -81,28 +47,28 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
         alogorithms, for example:
         {
             'name': 'Random',
-            'class_name': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner',
-            'class_args': {
+            'className': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner',
+            'classArgs': {
                 'algorithm_name': 'random_search'
             },
-            'accept_class_args': False,
-            'class_args_validator': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptClassArgsValidator'
+            'acceptClassArgs': False,
+            'classArgsValidator': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptClassArgsValidator'
         }
         If builtin_name is None, returns multiple meta information in a list.
     """
-    merged_dict = _get_merged_builtin_dict()
+    algo_meta = read_installed_package_meta()
 
     if algo_type is None and builtin_name is None:
-        return merged_dict
+        return algo_meta
 
     if algo_type:
         assert algo_type in ALGO_TYPES
-        metas = merged_dict[algo_type]
+        metas = algo_meta[algo_type]
     else:
-        metas = merged_dict['tuners'] + merged_dict['assessors'] + merged_dict['advisors']
+        metas = algo_meta['tuners'] + algo_meta['assessors'] + algo_meta['advisors']
     if builtin_name:
         for m in metas:
-            if m['name'] == builtin_name:
+            if m['builtinName'] == builtin_name:
                 return m
     else:
         return metas
@@ -124,9 +90,9 @@ def get_installed_package_meta(algo_type, builtin_name):
     -------
         Returns meta information of speicified builtin alogorithms, for example:
         {
-            'class_args_validator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator',
-            'class_name': 'nni.smac_tuner.smac_tuner.SMACTuner',
-            'name': 'SMAC'
+            'classArgsValidator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator',
+            'className': 'nni.smac_tuner.smac_tuner.SMACTuner',
+            'builtinName': 'SMAC'
         }
     """
     assert builtin_name is not None
@@ -141,7 +107,7 @@ def get_installed_package_meta(algo_type, builtin_name):
         for algo_type in ALGO_TYPES:
             candidates.extend(config[algo_type])
     for meta in candidates:
-        if meta['name'] == builtin_name:
+        if meta['builtinName'] == builtin_name:
             return meta
     return None
 
@@ -171,7 +137,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
     meta = get_builtin_algo_meta(algo_type, builtin_name)
     if not meta:
         return None, None
-    return _parse_full_class_name(meta['class_name'])
+    return _parse_full_class_name(meta['className'])
 
 def create_validator_instance(algo_type, builtin_name):
     """Create instance of validator class
@@ -191,9 +157,9 @@ def create_validator_instance(algo_type, builtin_name):
     assert algo_type in ALGO_TYPES
     assert builtin_name is not None
     meta = get_builtin_algo_meta(algo_type, builtin_name)
-    if not meta or 'class_args_validator' not in meta:
+    if not meta or 'classArgsValidator' not in meta:
         return None
-    module_name, class_name = _parse_full_class_name(meta['class_args_validator'])
+    module_name, class_name = _parse_full_class_name(meta['classArgsValidator'])
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
 
@@ -229,11 +195,11 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
         2. merge user specified class args together with builtin class args.
         """
         assert algo_meta
-        module_name, class_name = _parse_full_class_name(algo_meta['class_name'])
+        module_name, class_name = _parse_full_class_name(algo_meta['className'])
 
         class_args = {}
-        if 'class_args' in algo_meta:
-            class_args = algo_meta['class_args']
+        if 'classArgs' in algo_meta:
+            class_args = algo_meta['classArgs']
         if input_class_args is not None:
             class_args.update(input_class_args)
 
@@ -310,12 +276,3 @@ def write_package_meta(config):
     config_file = get_package_config_path()
     with open(config_file, 'w') as f:
         f.write(yaml.dump(dict(config), default_flow_style=False))
-
-def _get_merged_builtin_dict():
-    def merge_meta_dict(d1, d2):
-        res = defaultdict(list)
-        for t in ALGO_TYPES:
-            res[t] = d1[t] + d2[t]
-        return res
-
-    return merge_meta_dict(BuiltinAlgorithms, read_installed_package_meta())

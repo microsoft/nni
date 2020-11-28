@@ -13,7 +13,7 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           monitor_experiment, export_trials_data, trial_codegen, webui_url, \
                           get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
                           save_experiment, load_experiment
-from .package_management import package_install, package_uninstall, package_show, package_list
+from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
 from .tensorboard_utils import start_tensorboard, stop_tensorboard
 init(autoreset=True)
@@ -212,26 +212,24 @@ def parse_args():
     parser_log_trial.add_argument('--trial_id', '-T', dest='trial_id', help='find trial log path by id')
     parser_log_trial.set_defaults(func=log_trial)
 
-    #parse package command
-    parser_package = subparsers.add_parser('package', help='control nni tuner and assessor packages')
-    # add subparsers for parser_package
-    parser_package_subparsers = parser_package.add_subparsers()
-    parser_package_install = parser_package_subparsers.add_parser('install', help='install packages')
-    parser_package_install.add_argument('source', nargs='?', help='installation source, can be a directory or whl file')
-    parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed', required=False)
-    parser_package_install.set_defaults(func=package_install)
+    #parse algo command
+    parser_algo = subparsers.add_parser('algo', help='control nni builtin tuner, assessor and advisor algorithms')
+    # add subparsers for parser_algo
+    parser_algo_subparsers = parser_algo.add_subparsers()
+    parser_algo_reg = parser_algo_subparsers.add_parser('register', help='register algorithms as nni builtin algorithm')
+    parser_algo_reg.add_argument('--meta_path', '-m', dest='meta_path', help='path to the meta file', required=True)
+    parser_algo_reg.set_defaults(func=algo_reg)
 
-    parser_package_uninstall = parser_package_subparsers.add_parser('uninstall', help='uninstall packages')
-    parser_package_uninstall.add_argument('name', nargs=1, help='package name to be uninstalled')
-    parser_package_uninstall.set_defaults(func=package_uninstall)
+    parser_algo_unreg = parser_algo_subparsers.add_parser('unregister', help='unregister algorithm')
+    parser_algo_unreg.add_argument('name', nargs=1, help='builtin name of the algorithm')
+    parser_algo_unreg.set_defaults(func=algo_unreg)
 
-    parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
-    parser_package_show.add_argument('name', nargs=1, help='builtin name of the package')
-    parser_package_show.set_defaults(func=package_show)
+    parser_algo_show = parser_algo_subparsers.add_parser('show', help='show the information of algorithm')
+    parser_algo_show.add_argument('name', nargs=1, help='builtin name of the algorithm')
+    parser_algo_show.set_defaults(func=algo_show)
 
-    parser_package_list = parser_package_subparsers.add_parser('list', help='list installed packages')
-    parser_package_list.add_argument('--all', action='store_true', help='list all builtin packages')
-    parser_package_list.set_defaults(func=package_list)
+    parser_algo_list = parser_algo_subparsers.add_parser('list', help='list registered algorithms')
+    parser_algo_list.set_defaults(func=algo_list)
 
     #parse tensorboard command
     parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
