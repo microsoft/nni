@@ -9,7 +9,7 @@ import { INITIALIZED } from '../../../core/commands';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
 
-class WebRunnerConnection extends RunnerConnection {
+export class WebRunnerConnection extends RunnerConnection {
     public readonly clients: WebSocket[] = [];
 
     public async close(): Promise<void> {
@@ -46,11 +46,10 @@ export class WebCommandChannel extends CommandChannel {
         this.webSocketServer = new SocketServer({ port });
 
         this.webSocketServer.on('connection', (client: WebSocket) => {
-            this.log.debug(`WebCommandChannel: received connection`);
+            this.log.info(`WebCommandChannel: received connection`);
             client.onerror = (event): void => {
                 this.log.error(`error on client ${JSON.stringify(event)}`);
             }
-
             this.clients.set(client, undefined);
             client.onmessage = (message): void => {
                 this.receivedWebSocketMessage(client, message);
@@ -84,20 +83,20 @@ export class WebCommandChannel extends CommandChannel {
         }
     }
 
-    protected createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
+    public createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
         return new WebRunnerConnection(environment);
     }
 
     private receivedWebSocketMessage(client: WebSocket, message: MessageEvent): void {
         let connection = this.clients.get(client) as WebRunnerConnection | undefined;
         const rawCommands = message.data.toString();
-
         if (connection === undefined) {
             // undefined means it's expecting initializing message.
             const commands = this.parseCommands(rawCommands);
             let isValid = false;
-            this.log.debug(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
-
+            this.log.info(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
+            
+            
             if (commands.length > 0) {
                 const commandType = commands[0][0];
                 const result = commands[0][1];

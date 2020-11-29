@@ -11,7 +11,7 @@ export enum TrialConfigMetadataKey {
     LOCAL_CONFIG = 'local_config',
     TRIAL_CONFIG = 'trial_config',
     REMOTE_CONFIG = 'remote_config',
-    HETEROGENOUS_CONFIG = 'heterogenous_config',
+    HETEROGENEOUS_CONFIG = 'heterogeneous_config',
     EXPERIMENT_ID = 'experimentId',
     MULTI_PHASE = 'multiPhase',
     RANDOM_SCHEDULER = 'random_scheduler',

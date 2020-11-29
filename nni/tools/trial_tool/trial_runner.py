@@ -25,7 +25,7 @@ def main_loop(args):
     '''main loop logic for trial runner'''
     idle_last_time = datetime.now()
     gpu_refresh_last_time = datetime.now() - timedelta(minutes=1)
-
+    nni_log(LogType.Info, "--------------main loop-----------28-----------------")
     try:
         if args.job_pid_file:
             with open(args.job_pid_file, 'w') as job_file:
@@ -215,7 +215,8 @@ if __name__ == '__main__':
     command_channel = None
     if args.command_channel == "file":
         command_channel = FileChannel(args)
-    elif args.command_channel == 'aml':
+    elif args.command_channel == 'aml' or \
+         args.command_channel == 'heterogeneous' and args.platform == 'aml':
         from .aml_channel import AMLChannel
         command_channel = AMLChannel(args)
     else:

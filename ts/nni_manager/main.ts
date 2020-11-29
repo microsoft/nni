@@ -37,7 +37,7 @@ function initStartupInfo(
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
     if (platformMode === 'local') {
         Container.bind(TrainingService)
-            .to(RouterTrainingService)
+            .to(LocalTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService)

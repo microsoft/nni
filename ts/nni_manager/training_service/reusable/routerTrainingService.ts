@@ -19,7 +19,7 @@ import { LocalEnvironmentService } from './environments/localEnvironmentService'
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
-import { HeteroGenousEnvironmentService } from './environments/heterogenousEnvironmentService';
+import { HeteroGeneousEnvironmentService } from './environments/heterogeneousEnvironmentService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
@@ -103,18 +103,13 @@ class RouterTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
             if (key === TrialConfigMetadataKey.LOCAL_CONFIG) {
-                const config = <LocalConfig>JSON.parse(value);
-                if (config.reuse === true) {
-                    this.log.info(`reuse flag enabled, use EnvironmentManager.`);
-                    this.internalTrainingService = component.get(TrialDispatcher);
+                this.log.info(`reuse flag enabled, use EnvironmentManager.`);
+                this.internalTrainingService = component.get(TrialDispatcher);
 
-                    // TODO to support other serivces later.
-                    Container.bind(EnvironmentService)
-                        .to(LocalEnvironmentService)
-                        .scope(Scope.Singleton);
-                } else {
-                    this.internalTrainingService = component.get(LocalTrainingService);
-                }
+                // TODO to support other serivces later.
+                Container.bind(EnvironmentService)
+                    .to(LocalEnvironmentService)
+                    .scope(Scope.Singleton);
                 if (this.internalTrainingService === undefined) {
                     throw new Error("TrainingService is not assigned!");
                 }
@@ -182,10 +177,10 @@ class RouterTrainingService implements TrainingService {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
-            } else if (key === TrialConfigMetadataKey.HETEROGENOUS_CONFIG){
+            } else if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
                 this.internalTrainingService = component.get(TrialDispatcher);
                 Container.bind(EnvironmentService)
-                    .to(HeteroGenousEnvironmentService)
+                    .to(HeteroGeneousEnvironmentService)
                     .scope(Scope.Singleton);
 
                 if (this.internalTrainingService === undefined) {

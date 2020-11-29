@@ -82,8 +82,7 @@ export class LocalConfig {
     public maxTrialNumPerGpu?: number;
     public gpuIndices?: string;
     public useActiveGpu?: boolean;
-    public reuse?: boolean;
-    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean, reuse?: boolean) {
+    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
         if (gpuIndices !== undefined) {
             this.gpuIndices = gpuIndices;
         }
@@ -93,7 +92,6 @@ export class LocalConfig {
         if (useActiveGpu !== undefined) {
             this.useActiveGpu = useActiveGpu;
         }
-        this.reuse = reuse;
     }
 }
 

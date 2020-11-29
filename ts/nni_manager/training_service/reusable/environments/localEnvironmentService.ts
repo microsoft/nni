@@ -22,7 +22,6 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { StorageService } from '../storageService';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive } from '../../../common/utils';
-import { LocalConfig } from '../../local/localTrainingService';
 import { execMkdir, validateCodeDir, runScript, fileExist, execCopydir } from '../../common/util';
 import { FileCommandChannel } from '../channels/fileCommandChannel';
 import { CommandChannel } from "../commandChannel";
@@ -33,7 +32,6 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger();
     private localTrialConfig: TrialConfig | undefined;
-    private localConfig: LocalConfig | undefined;
     private experimentRootDir: string;
     private experimentId: string;
 
@@ -53,9 +51,6 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
-            case TrialConfigMetadataKey.LOCAL_CONFIG:
-                this.localConfig = <LocalConfig>JSON.parse(value);
-                break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.localTrialConfig = <TrialConfig>JSON.parse(value);
                 break;
@@ -75,6 +70,7 @@ export class LocalEnvironmentService extends EnvironmentService {
     public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
+        console.log(jobpidPath)
         /* eslint-disable require-atomic-updates */
         try {
             // check if pid file exist
@@ -110,9 +106,6 @@ export class LocalEnvironmentService extends EnvironmentService {
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         if (this.localTrialConfig === undefined) {
             throw new Error('Local trial config is not initialized');
-        }
-        if (this.localConfig === undefined) {
-            throw new Error('Local config is not initialized');
         }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
         const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,

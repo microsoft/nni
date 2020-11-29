@@ -115,7 +115,6 @@ def set_trial_config(experiment_config, port, config_file_name):
 def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
     request_data = dict()
-    request_data['local_config'] = {'reuse': False}
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
@@ -303,7 +302,7 @@ def set_heterogeneous_config(experiment_config, port, config_file_name):
             if experiment_config.get('remoteConfig'):
                 heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
             heterogeneous_config_data['machine_list'] = experiment_config['machineList']
-        elif platform == 'local':
+        elif platform == 'local' and experiment_config.get('localConfig'):
             heterogeneous_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
             heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
@@ -414,7 +413,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             elif platform ==  'remote':
                 request_data['clusterMetaData'].append(
                     {'key': 'machine_list', 'value': experiment_config['machineList']})
-            elif platform ==  'local':
+            elif platform ==  'local' and experiment_config.get('localConfig'):
                 request_data['clusterMetaData'].append(
                     {'key': 'local_config', 'value': experiment_config['localConfig']})
             elif platform ==  'pai':

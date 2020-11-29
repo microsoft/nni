@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as component from '../../../common/component';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { HeterogenousCommandChannel } from '../channels/heterogenousCommandChannel';
+import { HeterogenousCommandChannel } from '../channels/heterogeneousCommandChannel';
 import { CommandChannel } from "../commandChannel";
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { AMLEnvironmentService } from './amlEnvironmentService';
@@ -18,13 +18,14 @@ import { LocalEnvironmentService } from './localEnvironmentService';
 import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { randomSelect } from '../../../common/utils';
 import { HeterogenousConfig } from '../heterogenous/heterogenousConfig';
+import { WebCommandChannel } from '../channels/webCommandChannel';
 
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
  */
 @component.Singleton
-export class HeteroGenousEnvironmentService extends EnvironmentService {
+export class HeteroGeneousEnvironmentService extends EnvironmentService {
     
     private amlEnvironmentService: AMLEnvironmentService;
     private remoteEnvironmentService: RemoteEnvironmentService;
@@ -47,31 +48,35 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     }
 
     public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new HeterogenousCommandChannel(commandEmitter);
+        if (this.heterogenousConfig === undefined) {
+            throw new Error('heterogenousConfig not initialized!');
+        }
+        return new HeterogenousCommandChannel(commandEmitter, this.heterogenousConfig.trainingServicePlatforms);
     }
 
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.AML_CLUSTER_CONFIG:
-                this.amlEnvironmentService.config(key, value);
+                await this.amlEnvironmentService.config(key, value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
-                this.remoteEnvironmentService.config(key, value);
+                await this.remoteEnvironmentService.config(key, value);
                 break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG: 
-                this.amlEnvironmentService.config(key, value);
-                this.remoteEnvironmentService.config(key, value);
-                this.paiEnvironmentService.config(key, value);
-                this.localEnvironmentService.config(key, value);
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
+                await this.amlEnvironmentService.config(key, value);
+                await this.remoteEnvironmentService.config(key, value);
+                await this.paiEnvironmentService.config(key, value);
+                await this.localEnvironmentService.config(key, value);
                 break;
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiEnvironmentService.config(key, value);
+                await this.paiEnvironmentService.config(key, value);
                 break;
             case TrialConfigMetadataKey.LOCAL_CONFIG:
-                this.localEnvironmentService.config(key, value);
+                await this.localEnvironmentService.config(key, value);
                 break;
-            case TrialConfigMetadataKey.HETEROGENOUS_CONFIG:
+            case TrialConfigMetadataKey.HETEROGENEOUS_CONFIG:
                 this.heterogenousConfig = <HeterogenousConfig>JSON.parse(value);
+                break;
             default:
                 this.log.debug(`Heterogenous not support metadata key: '${key}', value: '${value}'`);
         }
@@ -102,24 +107,25 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
         if (this.heterogenousConfig === undefined) {
             throw new Error('heterogenousConfig not initialized!');
         }
-        this.heterogenousConfig.trainingServicePlatforms;
+        console.log('traningServicePlatforms: ')
+        console.log(this.heterogenousConfig.trainingServicePlatforms)
         const platform = randomSelect(this.heterogenousConfig.trainingServicePlatforms);
         switch (platform) {
             case 'aml':
                 environment.platform = 'aml';
-                this.amlEnvironmentService.startEnvironment(environment);
+                await this.amlEnvironmentService.startEnvironment(environment);
                 break;
             case 'remote':
                 environment.platform = 'remote';
-                this.remoteEnvironmentService.startEnvironment(environment);
+                await this.remoteEnvironmentService.startEnvironment(environment);
                 break;
             case 'local':
                 environment.platform = 'local';
-                this.localEnvironmentService.startEnvironment(environment);
+                await this.localEnvironmentService.startEnvironment(environment);
                 break;
             case 'pai':
                 environment.platform = 'pai';
-                this.paiEnvironmentService.startEnvironment(environment);
+                await this.paiEnvironmentService.startEnvironment(environment);
                 break;
         }
     }
@@ -127,16 +133,16 @@ export class HeteroGenousEnvironmentService extends EnvironmentService {
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
         switch (environment.platform) {
             case 'aml':
-                this.amlEnvironmentService.stopEnvironment(environment);
+                await this.amlEnvironmentService.stopEnvironment(environment);
                 break;
             case 'remote':
-                this.remoteEnvironmentService.stopEnvironment(environment);
+                await this.remoteEnvironmentService.stopEnvironment(environment);
                 break;
             case 'local':
-                this.localEnvironmentService.stopEnvironment(environment);
+                await this.localEnvironmentService.stopEnvironment(environment);
                 break;
             case 'pai':
-                this.paiEnvironmentService.stopEnvironment(environment);
+                await this.paiEnvironmentService.stopEnvironment(environment);
                 break;
             default:
                 throw new Error(`Heterogenous not support platform '${environment.platform}'`);
