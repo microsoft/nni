@@ -19,7 +19,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 -m pip install -e .[BOHB,PPOTuner]
+      python3 setup.py develop
     displayName: 'Install NNI'
 
   - script: |
@@ -89,7 +89,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 -m pip install -e .[BOHB,PPOTuner]
+      python3 setup.py develop
     displayName: 'Install NNI'
 
   - script: |
@@ -140,7 +140,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 -m pip install -e .[BOHB,PPOTuner]
+      python3 setup.py develop
     displayName: 'Install NNI'
 
   - script: |
