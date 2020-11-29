@@ -1,0 +1,15 @@
+$circle: 10px;
+$bgblue: #0071bc;
+
+.maxmin {
+    margin-top: 40px;
+
+    .circle {
+        width: $circle;
+        height: $circle;
+        border-radius: 50%;
+        background-color: $bgblue;
+        margin-top: 6px;
+        margin-right: 18px;
+    }
+}
