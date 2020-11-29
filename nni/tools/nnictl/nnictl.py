@@ -216,11 +216,11 @@ def parse_args():
     parser_algo = subparsers.add_parser('algo', help='control nni builtin tuner, assessor and advisor algorithms')
     # add subparsers for parser_algo
     parser_algo_subparsers = parser_algo.add_subparsers()
-    parser_algo_reg = parser_algo_subparsers.add_parser('register', help='register algorithms as nni builtin algorithm')
+    parser_algo_reg = parser_algo_subparsers.add_parser('register', aliases=('reg',), help='register algorithms as nni builtin algorithm')
     parser_algo_reg.add_argument('--meta_path', '-m', dest='meta_path', help='path to the meta file', required=True)
     parser_algo_reg.set_defaults(func=algo_reg)
 
-    parser_algo_unreg = parser_algo_subparsers.add_parser('unregister', help='unregister algorithm')
+    parser_algo_unreg = parser_algo_subparsers.add_parser('unregister', aliases=('unreg',), help='unregister algorithm')
     parser_algo_unreg.add_argument('name', nargs=1, help='builtin name of the algorithm')
     parser_algo_unreg.set_defaults(func=algo_unreg)
 

@@ -75,16 +75,16 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
 
     return None
 
-def get_installed_package_meta(algo_type, builtin_name):
+def get_registered_algo_meta(builtin_name, algo_type=None):
     """ Get meta information of user installed algorithms from:
     <nni_installation_path>/config/installed_packages.yml
 
     Parameters
     ----------
-    algo_type: str | None
-        can be one of 'tuners', 'assessors', 'advisors' or None
     builtin_name: str
         builtin name.
+    algo_type: str | None
+        can be one of 'tuners', 'assessors', 'advisors' or None
 
     Returns: dict | None
     -------

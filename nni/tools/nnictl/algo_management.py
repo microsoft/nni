@@ -4,7 +4,7 @@
 import os
 import importlib
 import json
-from nni.tools.package_utils import read_registerd_algo_meta, get_installed_package_meta, \
+from nni.tools.package_utils import read_registerd_algo_meta, get_registered_algo_meta, \
     write_registered_algo_meta, ALGO_TYPES, parse_full_class_name
 from .common_utils import print_error, print_green, get_yml_content
 
@@ -35,13 +35,16 @@ def verify_algo_import(meta):
 def algo_reg(args):
     meta_list = read_reg_meta_list(args.meta_path)
     for meta in meta_list:
+        if get_registered_algo_meta(meta['builtinName']) is not None:
+            print_error('builtinName {} already registered'.format(meta['builtinName']))
+            return
         verify_algo_import(meta)
         save_algo_meta_data(meta)
         print_green('{} registered sucessfully!'.format(meta['builtinName']))
 
 def algo_unreg(args):
     name = args.name[0]
-    meta = get_installed_package_meta(None, name)
+    meta = get_registered_algo_meta(name)
     if meta is None:
         print_error('builtin algorithms {} not found!'.format(name))
         return
@@ -55,7 +58,7 @@ def algo_unreg(args):
 
 def algo_show(args):
     builtin_name = args.name[0]
-    meta = get_installed_package_meta(None, builtin_name)
+    meta = get_registered_algo_meta(builtin_name)
     if meta:
         print(json.dumps(meta, indent=4))
     else:
@@ -79,12 +82,7 @@ def algo_list(args):
 
 def save_algo_meta_data(meta_data):
     meta_data['source'] = 'user'
-
     config = read_registerd_algo_meta()
-
-    if meta_data['builtinName'] in [x['builtinName'] for x in config[meta_data['algoType']+'s']]:
-        raise ValueError('builtinName %s already installed' % meta_data['builtinName'])
-
     config[meta_data['algoType']+'s'].append(meta_data)
     write_registered_algo_meta(config)
 
