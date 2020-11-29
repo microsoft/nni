@@ -114,7 +114,7 @@ def _setup():
             ],
             'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
             'PPOTuner': ['enum34', 'gym']
-        }
+        },
         setup_requires = ['requests'],
 
         entry_points = {
