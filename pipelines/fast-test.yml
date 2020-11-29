@@ -89,7 +89,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python3 -m pip install -e .[BOHB,PPOTuner]
     displayName: 'Install NNI'
 
   - script: |
@@ -99,8 +99,6 @@ jobs:
       python3 -m pip install -U keras==2.1.6
       python3 -m pip install -U gym onnx peewee
       sudo apt-get install swig -y
-      nnictl package install --name=SMAC
-      nnictl package install --name=BOHB
     displayName: 'Install extra dependencies'
 
   - script: |
@@ -142,7 +140,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python3 -m pip install -e .[BOHB,PPOTuner]
     displayName: 'Install NNI'
 
   - script: |
@@ -160,7 +158,6 @@ jobs:
       brew install swig@3
       rm -f /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      nnictl package install --name=SMAC
     displayName: 'Install extra dependencies'
 
   - script: |
