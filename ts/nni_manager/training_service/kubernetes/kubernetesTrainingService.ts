@@ -209,6 +209,13 @@ abstract class KubernetesTrainingService {
             return Promise.reject(error);
         }
 
+        try {
+            await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + getExperimentId().toLowerCase())
+            this.log.info('tensorboard deployment deleted')
+        } catch (error) {
+            this.log.error(`tensorboard deployment deletion failed: ${error.message}`)
+        }
+
         return Promise.resolve();
     }
 
@@ -377,6 +384,5 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve(folderUriInAzure);
     }
-     
 }
 export { KubernetesTrainingService };
