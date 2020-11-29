@@ -212,6 +212,12 @@ interface EventMap {
     [key: string]: () => void;
 }
 
+// table column sort
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
+}
+
 export {
     TableObj,
     TableRecord,
@@ -233,5 +239,6 @@ export {
     NNIManagerStatus,
     EventMap,
     SingleAxis,
-    MultipleAxes
+    MultipleAxes,
+    SortInfo
 };

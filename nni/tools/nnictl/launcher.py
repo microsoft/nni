@@ -129,6 +129,14 @@ def set_local_config(experiment_config, port, config_file_name):
 
     return set_trial_config(experiment_config, port, config_file_name), None
 
+def set_adl_config(experiment_config, port, config_file_name):
+    '''set adl configuration'''
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), None
+
 def set_remote_config(experiment_config, port, config_file_name):
     '''Call setClusterMetadata to pass trial'''
     #set machine_list
@@ -432,7 +440,9 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
     '''call set_cluster_metadata for specific platform'''
     print_normal('Setting {0} config...'.format(platform))
     config_result, err_msg = None, None
-    if platform == 'local':
+    if platform == 'adl':
+        config_result, err_msg = set_adl_config(experiment_config, port, config_file_name)
+    elif platform == 'local':
         config_result, err_msg = set_local_config(experiment_config, port, config_file_name)
     elif platform == 'remote':
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)

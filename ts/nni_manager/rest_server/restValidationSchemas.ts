@@ -33,6 +33,9 @@ export namespace ValidationSchemas {
                 outputDir: joi.string(),
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
+                // ############## adl cpu and memory config ###############
+                memorySize: joi.string(),
+                // ########################################################
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
@@ -94,6 +97,20 @@ export namespace ValidationSchemas {
                         minFailedTaskCount: joi.number(),
                         minSucceededTaskCount: joi.number()
                     })
+                }),
+                imagePullSecrets: joi.array({
+                    name: joi.string().min(1).required()
+                }),
+                // ############## adl ###############
+                adaptive: joi.boolean(),
+                checkpoint: joi.object({
+                    storageClass: joi.string().min(1).required(),
+                    storageSize: joi.string().min(1).required()
+                }),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required(),
+                    containerMountPath: joi.string().min(1).required()
                 })
             }),
             pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase

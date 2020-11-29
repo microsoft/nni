@@ -19,6 +19,7 @@ import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
+import { AdlTrainingService } from './training_service/kubernetes/adl/adlTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
@@ -60,6 +61,10 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         Container.bind(TrainingService)
             .to(DLTSTrainingService)
             .scope(Scope.Singleton);
+    } else if (platformMode === 'adl') {
+        Container.bind(TrainingService)
+            .to(AdlTrainingService)
+            .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
     }
@@ -88,7 +93,11 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
+<<<<<<< HEAD
     <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/heterogeneous> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+=======
+    <adl/local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+>>>>>>> 765bc335375cb3d417d5a287a67c48fe8bef010b
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -108,7 +117,11 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
+<<<<<<< HEAD
 if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'heterogeneous'].includes(mode)) {
+=======
+if (!['adl', 'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
+>>>>>>> 765bc335375cb3d417d5a287a67c48fe8bef010b
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
@@ -168,20 +181,7 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-function getStopSignal(): any {
-    return 'SIGTERM';
-}
-
-function getCtrlCSignal(): any {
-    return 'SIGINT';
-}
-
-process.on(getCtrlCSignal(), async () => {
-    const log: Logger = getLogger();
-    log.info(`Get SIGINT signal!`);
-});
-
-process.on(getStopSignal(), async () => {
+async function cleanUp(): Promise<void> {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {
@@ -195,7 +195,11 @@ process.on(getStopSignal(), async () => {
         hasError = true;
         log.error(`${err.stack}`);
     } finally {
-        await log.close();
+        log.close();
         process.exit(hasError ? 1 : 0);
     }
-});
+}
+
+process.on('SIGTERM', cleanUp);
+process.on('SIGBREAK', cleanUp);
+process.on('SIGINT', cleanUp);
