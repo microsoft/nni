@@ -3,6 +3,8 @@ import {
     DetailsList,
     IDetailsListProps,
     IColumn,
+    Icon,
+    DetailsRow,
     IRenderFunction,
     IDetailsHeaderProps,
     Sticky,
@@ -11,9 +13,10 @@ import {
     ScrollbarVisibility
 } from '@fluentui/react';
 import DefaultMetric from '../../public-child/DefaultMetric';
-import Details from './Details';
-import { convertDuration } from '../../../static/function';
+import OpenRow from '../../public-child/OpenRow';
+import { convertDuration, copyAndSort } from '../../../static/function';
 import { TRIALS } from '../../../static/datamodel';
+import { SortInfo } from '../../../static/interface';
 import { DETAILTABS } from '../../stateless-component/NNItabs';
 import '../../../static/style/succTable.scss';
 import '../../../static/style/tableStatus.css';
@@ -21,12 +24,15 @@ import '../../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    updateOverviewPage: () => void;
 }
 
 interface SuccessTableState {
     columns: IColumn[];
     source: Array<any>;
-    innerWidth: number;
+    expandRowIdList: Set<string>;
+    sortInfo: SortInfo;
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
@@ -35,18 +41,42 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         this.state = {
             columns: this.columns,
             source: TRIALS.table(this.props.trialIds),
-            innerWidth: window.innerWidth
+            sortInfo: { field: '', isDescend: false },
+            expandRowIdList: new Set() // store expanded row's trial id
         };
     }
 
-    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
-        if (props) {
-            return <Details detailsProps={props} />;
+    componentDidUpdate(prevProps: SuccessTableProps): void {
+        if (this.props.trialIds !== prevProps.trialIds) {
+            const { trialIds } = this.props;
+            this.setState(() => ({ source: TRIALS.table(trialIds) }));
         }
-        return null;
-    };
+    }
 
-    onColumnClick = (ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
+    render(): React.ReactNode {
+        const { columns, source, sortInfo } = this.state;
+        const keepSortedSource = copyAndSort(source, sortInfo.field, sortInfo.isDescend);
+        const isNoneData = source.length === 0 ? true : false;
+        return (
+            <div id='succTable'>
+                <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
+                    <DetailsList
+                        columns={columns}
+                        items={keepSortedSource}
+                        setKey='set'
+                        compact={true}
+                        onRenderRow={this.onRenderRow}
+                        onRenderDetailsHeader={this.onRenderDetailsHeader}
+                        selectionMode={0} // close selector function
+                        className='succTable'
+                    />
+                </ScrollablePane>
+                {isNoneData && <div className='succTable-tooltip'>{this.tooltipStr}</div>}
+            </div>
+        );
+    }
+
+    private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { columns, source } = this.state;
         const newColumns: IColumn[] = columns.slice();
         const currColumn: IColumn = newColumns.filter(item => getColumn.key === item.key)[0];
@@ -60,32 +90,51 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             }
         });
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const newItems = this.copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
+        const newItems = copyAndSort(source, currColumn.fieldName!, currColumn.isSortedDescending);
         this.setState({
             columns: newColumns,
-            source: newItems
+            source: newItems,
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            sortInfo: { field: currColumn.fieldName!, isDescend: currColumn.isSortedDescending }
         });
     };
 
-    private copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
-        const key = columnKey as keyof T;
-        return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
-    }
-
-    tooltipStr = (
+    private tooltipStr = (
         <React.Fragment>
             The experiment is running, please wait for the final metric patiently. You could also find status of trial
             job with <span>{DETAILTABS}</span> button.
         </React.Fragment>
     );
 
-    columns = [
+    private columns = [
+        {
+            key: '_expand',
+            name: '',
+            onRender: (item: any): any => (
+                <Icon
+                    aria-hidden={true}
+                    iconName='ChevronRight'
+                    styles={{
+                        root: {
+                            transition: 'all 0.2s',
+                            transform: `rotate(${this.state.expandRowIdList.has(item.id) ? 90 : 0}deg)`
+                        }
+                    }}
+                    className='cursor'
+                    onClick={this.expandTrialId.bind(this, Event, item.id)}
+                />
+            ),
+            fieldName: 'expand',
+            isResizable: false,
+            minWidth: 20,
+            maxWidth: 20
+        },
         {
             name: 'Trial No.',
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
-            minWidth: 65,
-            maxWidth: 119,
+            minWidth: 60,
+            maxWidth: 100,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -95,8 +144,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 65,
-            maxWidth: 119,
+            minWidth: 60,
+            maxWidth: 118,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
@@ -106,7 +155,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 90,
+            minWidth: 85,
             maxWidth: 166,
             isResizable: true,
             fieldName: 'duration',
@@ -121,7 +170,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         {
             name: 'Status',
             key: 'status',
-            minWidth: 108,
+            minWidth: 98,
             maxWidth: 160,
             isResizable: true,
             fieldName: 'status',
@@ -133,7 +182,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'Default metric',
             key: 'accuracy',
             fieldName: 'accuracy',
-            minWidth: 108,
+            minWidth: 100,
             maxWidth: 166,
             isResizable: true,
             data: 'number',
@@ -142,7 +191,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
     ];
 
-    onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
+    private onRenderDetailsHeader: IRenderFunction<IDetailsHeaderProps> = (props, defaultRender) => {
         if (!props) {
             return null;
         }
@@ -156,46 +205,35 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         );
     };
 
-    setInnerWidth = (): void => {
-        this.setState(() => ({ innerWidth: window.innerWidth }));
+    private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
+        const { expandRowIdList } = this.state;
+        if (props) {
+            return (
+                <div>
+                    <div>
+                        <DetailsRow {...props} />
+                    </div>
+                    {Array.from(expandRowIdList).map(
+                        item => item === props.item.id && <OpenRow key={item} trialId={item} />
+                    )}
+                </div>
+            );
+        }
+        return null;
     };
 
-    componentDidMount(): void {
-        window.addEventListener('resize', this.setInnerWidth);
-    }
-    componentWillUnmount(): void {
-        window.removeEventListener('resize', this.setInnerWidth);
-    }
-
-    componentDidUpdate(prevProps: SuccessTableProps): void {
-        if (this.props.trialIds !== prevProps.trialIds) {
-            const { trialIds } = this.props;
-            this.setState(() => ({ source: TRIALS.table(trialIds) }));
+    private expandTrialId = (_event: any, id: string): void => {
+        const { expandRowIdList } = this.state;
+        const { updateOverviewPage } = this.props;
+        const copyExpandList = expandRowIdList;
+        if (copyExpandList.has(id)) {
+            copyExpandList.delete(id);
+        } else {
+            copyExpandList.add(id);
         }
-    }
-
-    render(): React.ReactNode {
-        const { columns, source } = this.state;
-        const isNoneData = source.length === 0 ? true : false;
-
-        return (
-            <div id='succTable'>
-                <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
-                    <DetailsList
-                        columns={columns}
-                        items={source}
-                        setKey='set'
-                        compact={true}
-                        onRenderRow={this.onRenderRow}
-                        onRenderDetailsHeader={this.onRenderDetailsHeader}
-                        selectionMode={0} // close selector function
-                        className='succTable'
-                    />
-                </ScrollablePane>
-                {isNoneData && <div className='succTable-tooltip'>{this.tooltipStr}</div>}
-            </div>
-        );
-    }
+        this.setState(() => ({ expandRowIdList: copyExpandList }));
+        updateOverviewPage();
+    };
 }
 
 export default SuccessTable;

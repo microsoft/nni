@@ -110,6 +110,11 @@ export class MockedNNIManager extends Manager {
 
         return deferred.promise;
     }
+
+    public getTrialJobMessage(trialJobId: string): string | undefined {
+        return "TEST-MESSAGE"
+    }
+
     public stopExperiment(): Promise<void> {
         throw new MethodNotImplementedError();
     }

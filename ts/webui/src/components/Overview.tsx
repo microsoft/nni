@@ -168,8 +168,11 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </Stack>
                                     <div className='overviewChart'>
                                         <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} />
+                                        <SuccessTable
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            updateOverviewPage={updateOverviewPage}
+                                        />
                                     </div>
-                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.trialJobId)} />
                                 </div>
                                 <div className='overviewCommand1'>
                                     <Command1 />

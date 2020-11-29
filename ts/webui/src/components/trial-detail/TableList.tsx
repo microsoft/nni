@@ -15,8 +15,8 @@ import {
 import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
-import { convertDuration, formatTimestamp } from '../../static/function';
-import { TableObj } from '../../static/interface';
+import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
+import { TableObj, SortInfo } from '../../static/interface';
 import '../../static/style/search.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
@@ -55,36 +55,6 @@ const searchOptionLiterals = {
 };
 
 const defaultDisplayedColumns = ['sequenceId', 'id', 'duration', 'status', 'latestAccuracy'];
-
-interface SortInfo {
-    field: string;
-    isDescend?: boolean;
-}
-
-function _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
-    const key = columnKey as keyof T;
-    return items.slice(0).sort(function(a: T, b: T): any {
-        if (
-            a[key] === undefined ||
-            Object.is(a[key], NaN) ||
-            Object.is(a[key], Infinity) ||
-            Object.is(a[key], -Infinity) ||
-            typeof a[key] === 'object'
-        ) {
-            return 1;
-        }
-        if (
-            b[key] === undefined ||
-            Object.is(b[key], NaN) ||
-            Object.is(b[key], Infinity) ||
-            Object.is(b[key], -Infinity) ||
-            typeof b[key] === 'object'
-        ) {
-            return -1;
-        }
-        return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
-    });
-}
 
 function _inferColumnTitle(columnKey: string): string {
     if (columnKey === 'sequenceId') {
@@ -238,7 +208,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         const { sortInfo } = this.state;
         if (sortInfo.field !== '') {
-            return _copyAndSort(items, sortInfo.field, sortInfo.isDescend);
+            return copyAndSort(items, sortInfo.field, sortInfo.isDescend);
         } else {
             return items;
         }
@@ -255,6 +225,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <Icon
                             aria-hidden={true}
                             iconName='ChevronRight'
+                            className='cursor'
                             styles={{
                                 root: {
                                     transition: 'all 0.2s',
