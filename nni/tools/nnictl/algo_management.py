@@ -48,7 +48,10 @@ def algo_unreg(args):
     name = args.name[0]
     meta = get_installed_package_meta(None, name)
     if meta is None:
-        print_error('package {} not found!'.format(name))
+        print_error('builtin algorithms {} not found!'.format(name))
+        return
+    if meta['source'] == 'nni':
+        print_error('{} is provided by nni, can not be unregistered!'.format(name))
         return
     if remove_algo_meta_data(name):
         print_green('{} unregistered sucessfully!'.format(name))

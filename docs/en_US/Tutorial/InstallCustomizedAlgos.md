@@ -1,9 +1,9 @@
-**How to install customized algorithms as builtin tuners, assessors and advisors**
+**How to register customized algorithms as builtin tuners, assessors and advisors**
 ===
 
 ## Overview
 
-NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/HyperbandAdvisor.md) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via `nnictl package install --name <name>` after NNI is installed. You can check these extra algorithms via `nnictl package list` command.
+NNI provides a lot of [builtin tuners](../Tuner/BuiltinTuner.md), [advisors](../Tuner/HyperbandAdvisor.md) and [assessors](../Assessor/BuiltinAssessor.md) can be used directly for Hyper Parameter Optimization, and some extra algorithms can be registered via `nnictl algo register --meta <path_to_meta_file>` after NNI is installed. You can check builtin algorithms via `nnictl algo list` command.
 
 NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of [customized tuners](../Tuner/CustomizeTuner.md)/[advisors](../Tuner/CustomizeAdvisor.md)/[assessors](../Assessor/CustomizeAssessor.md).
 
@@ -13,8 +13,8 @@ tuner:
   builtinTunerName: mytuner
 ```
 
-## Install customized algorithms as builtin tuners, assessors and advisors
-You can follow below steps to build a customized tuner/assessor/advisor, and install it into NNI as builtin algorithm.
+## Register customized algorithms as builtin tuners, assessors and advisors
+You can follow below steps to build a customized tuner/assessor/advisor, and register it into NNI as builtin algorithm.
 
 ### 1. Create a customized tuner/assessor/advisor
 Reference following instructions to create:
@@ -48,56 +48,43 @@ class MedianstopClassArgsValidator(ClassArgsValidator):
 ```
 The validator will be invoked before experiment is started to check whether the classArgs fields are valid for your customized algorithms.
 
-### 3. Prepare package installation source
-In order to be installed as builtin tuners, assessors and advisors, the customized algorithms need to be packaged as installable source which can be recognized by `pip` command, under the hood nni calls `pip` command to install the package.
-Besides being a common pip source, the package needs to provide meta information in the `classifiers` field.
-Format of classifiers field is a following:
+### 3. Install your customized algorithms into python environment
+Firstly, the customized algorithms need to be prepared as a python package. Then you can install the package into python environment via:
+* Run command `python setup.py develop` from the package directory, this command will install the package in development mode, this is recommended if your algorithm is under development.
+* Run command `python setup.py bdist_wheel` from the package directory, this command build a whl file which is a pip installation source. Then run `pip install <wheel file>` to install it.
+
+
+### 4. Prepare meta file
+
+Create a yaml file with following keys as meta file:
+* `algoType`: type of algorithms, could be one of `tuner`, `assessor`, `advisor`
+* `builtinName`: builtin name used in experiment configuration file
+* `className`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
+* `classArgsValidator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
+
+Following is an example of the yaml file:
+
+```yaml
+algoType: tuner
+builtinName: demotuner
+className: demo_tuner.DemoTuner
+classArgsValidator: demo_tuner.MyClassArgsValidator
+
 ```
-NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full class name of class args validator>
+
+### 5. Register customized algorithms into NNI
+Run following command to register the customized algorithms as builtin algorithms in NNI:
+
+```bash
+nnictl algo register --meta <path_to_meta_file>
 ```
-* `type`: type of algorithms, could be one of `tuner`, `assessor`, `advisor`
-* `builtin name`: builtin name used in experiment configuration file
-* `full class name of tuner`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
-* `full class name of class args validator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
+The `<path_to_meta_file>` is the path to the yaml file your created in above section.
 
-Following is an example of classfiers in package's `setup.py`:
-
-```python
-    classifiers = [
-        'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: ',
-        'NNI Package :: tuner :: demotuner :: demo_tuner.DemoTuner :: demo_tuner.MyClassArgsValidator'
-    ],
-```
-
-Once you have the meta info in `setup.py`, you can build your pip installation source via:
-* Run command `python setup.py develop` from the package directory, this command will build the directory as a pip installation source.
-* Run command `python setup.py bdist_wheel` from the package directory, this command build a whl file which is a pip installation source.
-
-NNI will look for the classifier starts with `NNI Package` to retrieve the package meta information while the package being installed with `nnictl package install <source>` command.
 
 Reference [customized tuner example](../Tuner/InstallCustomizedTuner.md) for a full example.
 
-### 4. Install customized algorithms package into NNI
 
-If your installation source is prepared as a directory with `python setup.py develop`, you can install the package by following command:
-
-`nnictl package install <installation source directory>`
-
-For example:
-
-`nnictl package install nni/examples/tuners/customized_tuner/`
-
-If your installation source is prepared as a whl file with `python setup.py bdist_wheel`, you can install the package by following command:
-
-`nnictl package install <whl file path>`
-
-For example:
-
-`nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl`
-
-## 5. Use the installed builtin algorithms in experiment
+## 6. Use the installed builtin algorithms in experiment
 Once your customized algorithms is installed, you can use it in experiment configuration file the same way as other builtin tuners/assessors/advisors, for example:
 
 ```yaml
@@ -109,56 +96,42 @@ tuner:
 ```
 
 
-## Manage packages using `nnictl package`
+## Manage builtin algorithms using `nnictl algo`
 
-### List installed packages
+### List builtin algorithms
 
-Run following command to list the installed packages:
+Run following command to list the registered builtin algorithms:
 
-```
-nnictl package list
+```bash
+nnictl algo list
 +-----------------+------------+-----------+--------=-------------+------------------------------------------+
-|      Name       |    Type    | Installed |      Class Name      |               Module Name                |
+|      Name       |    Type    | Source    |      Class Name      |               Module Name                |
 +-----------------+------------+-----------+----------------------+------------------------------------------+
-| demotuner       | tuners     | Yes       | DemoTuner            | demo_tuner                               |
-| SMAC            | tuners     | No        | SMACTuner            | nni.smac_tuner.smac_tuner                |
-| PPOTuner        | tuners     | No        | PPOTuner             | nni.ppo_tuner.ppo_tuner                  |
-| BOHB            | advisors   | Yes       | BOHB                 | nni.bohb_advisor.bohb_advisor            |
-+-----------------+------------+-----------+----------------------+------------------------------------------+
-```
-
-Run following command to list all packages, including the builtin packages can not be uninstalled.
-
-```
-nnictl package list --all
-+-----------------+------------+-----------+--------=-------------+------------------------------------------+
-|      Name       |    Type    | Installed |      Class Name      |               Module Name                |
-+-----------------+------------+-----------+----------------------+------------------------------------------+
-| TPE             | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
-| Random          | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
-| Anneal          | tuners     | Yes       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
-| Evolution       | tuners     | Yes       | EvolutionTuner       | nni.evolution_tuner.evolution_tuner      |
-| BatchTuner      | tuners     | Yes       | BatchTuner           | nni.batch_tuner.batch_tuner              |
-| GridSearch      | tuners     | Yes       | GridSearchTuner      | nni.gridsearch_tuner.gridsearch_tuner    |
-| NetworkMorphism | tuners     | Yes       | NetworkMorphismTuner | nni.networkmorphism_tuner.networkmo...   |
-| MetisTuner      | tuners     | Yes       | MetisTuner           | nni.metis_tuner.metis_tuner              |
-| GPTuner         | tuners     | Yes       | GPTuner              | nni.gp_tuner.gp_tuner                    |
-| PBTTuner        | tuners     | Yes       | PBTTuner             | nni.pbt_tuner.pbt_tuner                  |
-| SMAC            | tuners     | No        | SMACTuner            | nni.smac_tuner.smac_tuner                |
-| PPOTuner        | tuners     | No        | PPOTuner             | nni.ppo_tuner.ppo_tuner                  |
-| Medianstop      | assessors  | Yes       | MedianstopAssessor   | nni.medianstop_assessor.medianstop_...   |
-| Curvefitting    | assessors  | Yes       | CurvefittingAssessor | nni.curvefitting_assessor.curvefitt...   |
-| Hyperband       | advisors   | Yes       | Hyperband            | nni.hyperband_advisor.hyperband_adv...   |
-| BOHB            | advisors   | Yes       | BOHB                 | nni.bohb_advisor.bohb_advisor            |
+| TPE             | tuners     | nni       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Random          | tuners     | nni       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Anneal          | tuners     | nni       | HyperoptTuner        | nni.hyperopt_tuner.hyperopt_tuner        |
+| Evolution       | tuners     | nni       | EvolutionTuner       | nni.evolution_tuner.evolution_tuner      |
+| BatchTuner      | tuners     | nni       | BatchTuner           | nni.batch_tuner.batch_tuner              |
+| GridSearch      | tuners     | nni       | GridSearchTuner      | nni.gridsearch_tuner.gridsearch_tuner    |
+| NetworkMorphism | tuners     | nni       | NetworkMorphismTuner | nni.networkmorphism_tuner.networkmo...   |
+| MetisTuner      | tuners     | nni       | MetisTuner           | nni.metis_tuner.metis_tuner              |
+| GPTuner         | tuners     | nni       | GPTuner              | nni.gp_tuner.gp_tuner                    |
+| PBTTuner        | tuners     | nni       | PBTTuner             | nni.pbt_tuner.pbt_tuner                  |
+| SMAC            | tuners     | nni       | SMACTuner            | nni.smac_tuner.smac_tuner                |
+| PPOTuner        | tuners     | nni       | PPOTuner             | nni.ppo_tuner.ppo_tuner                  |
+| Medianstop      | assessors  | nni       | MedianstopAssessor   | nni.medianstop_assessor.medianstop_...   |
+| Curvefitting    | assessors  | nni       | CurvefittingAssessor | nni.curvefitting_assessor.curvefitt...   |
+| Hyperband       | advisors   | nni       | Hyperband            | nni.hyperband_advisor.hyperband_adv...   |
+| BOHB            | advisors   | nni       | BOHB                 | nni.bohb_advisor.bohb_advisor            |
 +-----------------+------------+-----------+----------------------+------------------------------------------+
 ```
 
-### Uninstall package
+### Unregister builtin algorithms
 
 Run following command to uninstall an installed package:
 
-`nnictl package uninstall <builtin name>`
+`nnictl algo unregister <builtin name>`
 
 For example:
 
-`nnictl package uninstall demotuner`
+`nnictl algo unregister demotuner`
