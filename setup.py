@@ -156,7 +156,10 @@ def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 def _copy_data_files():
-    nni_config_dir = os.path.expanduser('~/.config/nni')
+    if _using_conda_or_virtual_environment():
+        nni_config_dir = os.path.join(sys.prefix, 'nni')
+    else:
+        nni_config_dir = os.path.expanduser('~/.config/nni')
     if not os.path.exists(nni_config_dir):
         os.makedirs(nni_config_dir)
     shutil.copyfile('./deployment/registered_algorithms.yml', os.path.join(nni_config_dir, 'registered_algorithms.yml'))

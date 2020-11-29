@@ -253,13 +253,19 @@ def create_customized_class_instance(class_params):
 
     return instance
 
+def _using_conda_or_virtual_environment():
+    return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
+
 def get_registered_algo_config_path():
     # FIXME: this might not be the desired location
     #config_dir = Path(nni.__path__[0]).parent / 'nni_config'
-    config_dir = os.path.expanduser('~/.config/nni')
-    if not os.path.exists(config_dir):
+    if _using_conda_or_virtual_environment():
+        nni_config_dir = os.path.join(sys.prefix, 'nni')
+    else:
+        nni_config_dir = os.path.expanduser('~/.config/nni')
+    if not os.path.exists(nni_config_dir):
         os.makedirs(config_dir, exist_ok=True)
-    return os.path.join(config_dir, 'registered_algorithms.yml')
+    return os.path.join(nni_config_dir, 'registered_algorithms.yml')
 
 def read_registerd_algo_meta():
     config_file = get_registered_algo_config_path()
