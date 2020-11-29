@@ -4,13 +4,16 @@
 import csv
 import logging
 
-__all__ = ['ChannelDependency', 'GroupDependency', 'CatPaddingDependency', 'InputChannelDependency']
+__all__ = ['ChannelDependency', 'GroupDependency',
+           'CatPaddingDependency', 'InputChannelDependency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
-RESHAPE_OPS = [CAT_TYPE, 'aten::view', 'aten::reshape', 'aten::flatten', 'aten::mean']
+RESHAPE_OPS = [CAT_TYPE, 'aten::view',
+               'aten::reshape', 'aten::flatten', 'aten::mean']
+
 
 class Dependency:
     def __init__(self, model=None, dummy_input=None, traced_model=None):
@@ -34,6 +37,7 @@ class Dependency:
     def export(self, filepath):
         raise NotImplementedError
 
+
 class ChannelDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
@@ -50,7 +54,8 @@ class ChannelDependency(Dependency):
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
         """
-        super(ChannelDependency, self).__init__(model, dummy_input, traced_model)
+        super(ChannelDependency, self).__init__(
+            model, dummy_input, traced_model)
 
     def _get_parent_layers(self, node):
         """
@@ -71,7 +76,7 @@ class ChannelDependency(Dependency):
         queue.append(node)
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear':
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear' or curnode.op_type == 'ConvTranspose2d':
                 # find the first met conv
                 parent_layers.append(curnode.name)
                 continue
@@ -118,7 +123,6 @@ class ChannelDependency(Dependency):
             # save the dependencies
             for _node in dependency_set:
                 self.dependency[_node] = dependency_set
-
 
     def export(self, filepath):
         """
@@ -185,6 +189,7 @@ class ChannelDependency(Dependency):
             d_sets.append(tmp_set)
         return d_sets
 
+
 def reshape_break_channel_dependency(op_node):
     """
     The reshape operations such as (reshape, view, flatten) may break
@@ -212,6 +217,7 @@ def reshape_break_channel_dependency(op_node):
     in_channel = in_shape[1]
     out_channel = out_shape[1]
     return in_channel != out_channel
+
 
 class InputChannelDependency(ChannelDependency):
     """
@@ -242,7 +248,8 @@ class InputChannelDependency(ChannelDependency):
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
         """
-        super(InputChannelDependency, self).__init__(model, dummy_input, traced_model)
+        super(InputChannelDependency, self).__init__(
+            model, dummy_input, traced_model)
 
     def _get_following_convs(self, tensor):
         queue = []
@@ -250,14 +257,14 @@ class InputChannelDependency(ChannelDependency):
         queue.extend(self.graph.input_to_node[tensor])
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear':
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear' or curnode.op_type == 'ConvTranspose2d':
                 # find the first met conv
                 key_layers.append(curnode.name)
                 continue
             elif curnode.op_type in RESHAPE_OPS:
                 # check if the reshape operation will break the channel dependency
                 if reshape_break_channel_dependency(curnode):
-                # reshape operations also breaks the dependency relationship
+                    # reshape operations also breaks the dependency relationship
                     continue
             successors = self.graph.find_successors(curnode.unique_name)
             successors = [self.graph.name_to_node[name] for name in successors]
@@ -290,7 +297,8 @@ class InputChannelDependency(ChannelDependency):
 
 class CatPaddingDependency(ChannelDependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
-        super(CatPaddingDependency, self).__init__(model, dummy_input, traced_model)
+        super(CatPaddingDependency, self).__init__(
+            model, dummy_input, traced_model)
 
     def build_dependency(self):
         """
@@ -347,6 +355,7 @@ class CatPaddingDependency(ChannelDependency):
                 row.extend(list(layers))
                 csv_w.writerow(row)
 
+
 class GroupDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
@@ -388,7 +397,7 @@ class GroupDependency(Dependency):
         queue = predeessors
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d':
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'ConvTranspose2d':
                 # find the first met conv
                 parent_layers.append(curnode.name)
                 continue
@@ -412,7 +421,8 @@ class GroupDependency(Dependency):
         group : int
             the number of the groups of the target conv layer.
         """
-        cpp_conv = list(filter(lambda x: x.kind() == CONV_TYPE, node_group.node_cpps))
+        cpp_conv = list(filter(lambda x: x.kind() ==
+                               CONV_TYPE, node_group.node_cpps))
         assert len(cpp_conv) == 1
         cpp_conv = cpp_conv[0]
         inputs = list(cpp_conv.inputs())
@@ -447,7 +457,8 @@ class GroupDependency(Dependency):
                 if node.name in self.dependency:
                     # the conv layer whose group is larger than 1 will require that
                     # it's number of output channel to be divisible by the number of group.
-                    self.dependency[node.name] = max(self.dependency[node.name], group)
+                    self.dependency[node.name] = max(
+                        self.dependency[node.name], group)
                 else:
                     self.dependency[node.name] = group
                 if group > 1:
@@ -456,7 +467,8 @@ class GroupDependency(Dependency):
                     parent_convs = self._get_parent_convs(node)
                     for parent in parent_convs:
                         if parent in self.dependency:
-                            self.dependency[parent] = max(self.dependency[parent], group)
+                            self.dependency[parent] = max(
+                                self.dependency[parent], group)
                         else:
                             self.dependency[parent] = group
         return self.dependency
@@ -484,6 +496,7 @@ class GroupDependency(Dependency):
             for name in self.dependency:
                 group = self.dependency[name]
                 csv_w.writerow([name, group])
+
     @property
     def dependency_sets(self):
         return self.dependency
