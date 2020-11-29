@@ -12,7 +12,7 @@ import nni
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
 
 def get_all_builtin_names(algo_type):
-    """Get all valid builtin names registered in <nni_installation_path>/config/installed_packages.yml
+    """Get all builtin names of registered algorithms of specified type
 
     Parameters
     ----------
