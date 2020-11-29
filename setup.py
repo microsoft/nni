@@ -107,6 +107,14 @@ def _setup():
 
         python_requires = '>=3.6',
         install_requires = dependencies,
+        extras_require = {
+            'SMAC': [
+                'git+https://github.com/QuanluZhang/ConfigSpace.git',
+                'git+https://github.com/QuanluZhang/SMAC3.git'
+            ],
+            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
+            'PPOTuner': ['enum34', 'gym']
+        }
         setup_requires = ['requests'],
 
         entry_points = {

@@ -4,8 +4,8 @@ advisors:
   className: nni.algorithms.hpo.hyperband_advisor.hyperband_advisor.Hyperband
   source: nni
 - builtinName: BOHB
-  classArgsValidator: nni.bohb_advisor.bohb_advisor.BOHBClassArgsValidator
-  className: nni.bohb_advisor.bohb_advisor.BOHB
+  classArgsValidator: nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHBClassArgsValidator
+  className: nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHB
   source: nni
 assessors:
 - builtinName: Medianstop
@@ -18,12 +18,12 @@ assessors:
   source: nni
 tuners:
 - builtinName: PPOTuner
-  classArgsValidator: nni.ppo_tuner.ppo_tuner.PPOClassArgsValidator
-  className: nni.ppo_tuner.ppo_tuner.PPOTuner
+  classArgsValidator: nni.algorithms.hpo.ppo_tuner.ppo_tuner.PPOClassArgsValidator
+  className: nni.algorithms.hpo.ppo_tuner.ppo_tuner.PPOTuner
   source: nni
 - builtinName: SMAC
-  classArgsValidator: nni.smac_tuner.smac_tuner.SMACClassArgsValidator
-  className: nni.smac_tuner.smac_tuner.SMACTuner
+  classArgsValidator: nni.algorithms.hpo.smac_tuner.smac_tuner.SMACClassArgsValidator
+  className: nni.algorithms.hpo.smac_tuner.smac_tuner.SMACTuner
   source: nni
 - builtinName: TPE
   classArgs:

@@ -9,6 +9,11 @@ setuptools.setup(
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.6',
+    classifiers = [
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: '
+    ],
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'NNI control for Neural Network Intelligence project',
