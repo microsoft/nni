@@ -75,6 +75,8 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
         cmds += ['--log_level', log_level]
     if mode in ['resume', 'view']:
         cmds += ['--experiment_id', experiment_id]
+    else:
+        cmds += ['--experiment_id', '_debug_']
     if foreground:
         cmds += ['--foreground', 'true']
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -84,6 +86,7 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
         stderr_file.write(log_header)
+        print('## [nnictl] cmds:', cmds)
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
             if foreground:
@@ -134,6 +137,14 @@ def set_local_config(experiment_config, port, config_file_name):
                     fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
             return False, err_message
 
+    return set_trial_config(experiment_config, port, config_file_name), None
+
+def set_adl_config(experiment_config, port, config_file_name):
+    '''set adl configuration'''
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), None
 
 def set_remote_config(experiment_config, port, config_file_name):
@@ -378,6 +389,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    print('## experiment config:')
+    print(request_data)
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
@@ -393,7 +406,9 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
     '''call set_cluster_metadata for specific platform'''
     print_normal('Setting {0} config...'.format(platform))
     config_result, err_msg = None, None
-    if platform == 'local':
+    if platform == 'adl':
+        config_result, err_msg = set_adl_config(experiment_config, port, config_file_name)
+    elif platform == 'local':
         config_result, err_msg = set_local_config(experiment_config, port, config_file_name)
     elif platform == 'remote':
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)

@@ -247,6 +247,7 @@ This is suggested when you have limited computational resources but have a relat
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
 * **R** (*int, optional, default = 60*) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
 * **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials.
+* **exec_mode** (*serial or parallelism, optional, default = parallelism*) - If 'parallelism', the tuner will try to use available resources to start new bucket immediately. If 'serial', the tuner will only start new bucket after the current bucket is done.
 
 **Example Configuration:**
 

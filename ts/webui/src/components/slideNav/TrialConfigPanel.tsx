@@ -1,23 +1,29 @@
 import * as React from 'react';
-import { Stack, Panel, Pivot, PivotItem, PrimaryButton } from '@fluentui/react';
-import { EXPERIMENT } from '../../../static/datamodel';
+import { Stack, Panel, PrimaryButton } from '@fluentui/react';
+import { EXPERIMENT } from '../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';
-import { MONACO } from '../../../static/const';
-import { AppContext } from '../../../App';
-import { convertDuration, convertTimeAsUnit } from '../../../static/function';
-import { prettyStringify } from '../../../static/json_util';
+import { MONACO } from '../../static/const';
+import { AppContext } from '../../App';
+import { convertDuration, convertTimeAsUnit, caclMonacoEditorHeight } from '../../static/function';
+import { prettyStringify } from '../../static/json_util';
 import lodash from 'lodash';
-import '../../../static/style/logDrawer.scss';
+import '../../static/style/logDrawer.scss';
 
 interface LogDrawerProps {
     hideConfigPanel: () => void;
-    activeTab?: string;
+    panelName: string;
 }
 
 interface LogDrawerState {
     panelInnerHeight: number;
     innerWidth: number;
 }
+
+/**
+ * search space
+ * config
+ * model
+ */
 
 class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
     constructor(props: LogDrawerProps) {
@@ -43,11 +49,9 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
     }
 
     render(): React.ReactNode {
-        const { hideConfigPanel, activeTab } = this.props;
+        const { hideConfigPanel, panelName } = this.props;
         const { panelInnerHeight, innerWidth } = this.state;
-        // [marginTop 16px] + [Search space 46px] +
-        // button[height: 32px, marginTop: 45px, marginBottom: 25px] + [padding-bottom: 20px]
-        const monacoEditorHeight = panelInnerHeight - 184;
+        const monacoEditorHeight = caclMonacoEditorHeight(panelInnerHeight);
         const blacklist = [
             'id',
             'logDir',
@@ -83,12 +87,10 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                                 isLightDismiss={true}
                                 onLightDismissClick={hideConfigPanel}
                             >
-                                <div className='log-tab-body'>
-                                    <Pivot
-                                        initialSelectedKey={activeTab}
-                                        style={{ minHeight: 190, paddingTop: '16px' }}
-                                    >
-                                        <PivotItem headerText='Search space' itemKey='search space'>
+                                <div className='panel'>
+                                    {panelName === 'search space' ? (
+                                        <div>
+                                            <div className='panelName'>Search space</div>
                                             <MonacoEditor
                                                 height={monacoEditorHeight}
                                                 language='json'
@@ -96,22 +98,22 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
                                                 value={prettyStringify(EXPERIMENT.searchSpace, prettyWidth, 2)}
                                                 options={MONACO}
                                             />
-                                        </PivotItem>
-                                        <PivotItem headerText='Config' itemKey='config'>
-                                            <div className='profile'>
-                                                <MonacoEditor
-                                                    width='100%'
-                                                    height={monacoEditorHeight}
-                                                    language='json'
-                                                    theme='vs-light'
-                                                    value={showProfile}
-                                                    options={MONACO}
-                                                />
-                                            </div>
-                                        </PivotItem>
-                                    </Pivot>
+                                        </div>
+                                    ) : (
+                                        <div className='profile'>
+                                            <div className='panelName'>Config</div>
+                                            <MonacoEditor
+                                                width='100%'
+                                                height={monacoEditorHeight}
+                                                language='json'
+                                                theme='vs-light'
+                                                value={showProfile}
+                                                options={MONACO}
+                                            />
+                                        </div>
+                                    )}
+                                    <PrimaryButton text='Close' className='configClose' onClick={hideConfigPanel} />
                                 </div>
-                                <PrimaryButton text='Close' className='configClose' onClick={hideConfigPanel} />
                             </Panel>
                         </Stack>
                     );

@@ -9,6 +9,8 @@ from .common_utils import print_error
 
 def rest_put(url, data, timeout, show_error=False):
     '''Call rest put method'''
+    print('## [nnictl] PUT', url)
+    print(data)
     try:
         response = requests.put(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                 data=data, timeout=timeout)
@@ -20,6 +22,8 @@ def rest_put(url, data, timeout, show_error=False):
 
 def rest_post(url, data, timeout, show_error=False):
     '''Call rest post method'''
+    print('## [nnictl] POST', url)
+    print(data)
     try:
         response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)

@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 from functools import cmp_to_key
+import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
 from pyhdfs import HdfsClient
@@ -21,6 +22,7 @@ from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
+from .common_utils import print_green
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -372,6 +374,40 @@ def log_stderr(args):
     '''get stderr log'''
     log_internal(args, 'stderr')
 
+def log_trial_adl_helper(args, experiment_id):
+    # adljob_id format should be consistent to the one in "adlTrainingService.ts":
+    #   const adlJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
+    adlJobName = "nni-exp-{}-trial-{}".format(experiment_id, args.trial_id).lower()
+    print_warning('Note that no log will show when trial is pending or done (succeeded or failed). '
+                  'You can retry the command.')
+    print_green('>>> Trial log streaming:')
+    try:
+        subprocess.run(
+            [
+                "kubectl", "logs",
+                "-l", "adaptdl/job=%s" % adlJobName,
+                "-f"  # Follow the stream
+            ],  # TODO: support remaining argument, uncomment the lines in nnictl.py
+        )  # TODO: emulate tee behaviors, not necessary tho.
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        print_error('Error! Please check kubectl:')
+        traceback.print_exc()
+        exit(1)
+    finally:
+        print_green('<<< [adlJobName:%s]' % adlJobName)
+        nni_manager_collection_path = os.path.expanduser('~/nni-experiments/%s/trials/%s/stdout_log_collection.log' %
+                                                         (experiment_id, args.trial_id))
+        print_green('>>> (Optional) How to persist the complete trial log locally:')
+        print(
+            'Please ensure `logCollection: http` '
+            'exists in the experiment configuration yaml. '
+            'After trial done, you can check it from the file below: \n  %s'
+            % nni_manager_collection_path
+        )
+
+
 def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
@@ -388,16 +424,24 @@ def log_trial(args):
         if response and check_response(response):
             content = json.loads(response.text)
             for trial in content:
-                trial_id_list.append(trial.get('id'))
+                trial_id_list.append(trial.get('trialJobId'))
                 if trial.get('logPath'):
-                    trial_id_path_dict[trial.get('id')] = trial['logPath']
+                    trial_id_path_dict[trial.get('trialJobId')] = trial['logPath']
     else:
         print_error('Restful server is not running...')
+        exit(1)
+    is_adl = nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl'
+    if is_adl and not args.trial_id:
+        print_error('Trial ID is required to retrieve the log for adl. Please specify it with "--trial_id".')
         exit(1)
     if args.trial_id:
         if args.trial_id not in trial_id_list:
             print_error('Trial id {0} not correct, please check your command!'.format(args.trial_id))
             exit(1)
+        if is_adl:
+            log_trial_adl_helper(args, nni_config.get_config('experimentId'))
+            # adl has its own way to log trial, and it thus returns right after the helper returns
+            return
         if trial_id_path_dict.get(args.trial_id):
             print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
         else:
@@ -429,7 +473,7 @@ def webui_nas(args):
         if sys.platform == 'win32':
             node_command = os.path.join(entry_dir, 'node.exe')
         else:
-            node_command = 'node'
+            node_command = os.path.join(entry_dir, 'node')
         cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
         subprocess.run(cmds, cwd=entry_dir)
     except KeyboardInterrupt:
@@ -674,7 +718,7 @@ def show_experiment_info():
                 content = json.loads(response.text)
                 for index, value in enumerate(content):
                     content[index] = convert_time_stamp_to_date(value)
-                    print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), \
+                    print(TRIAL_MONITOR_CONTENT % (content[index].get('trialJobId'), content[index].get('startTime'), \
                           content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
@@ -747,7 +791,7 @@ def export_trials_data(args):
                 return
             intermediate_results = groupby_trial_id(json.loads(intermediate_results_response.text))
             for record in content:
-                record['intermediate'] = intermediate_results[record['id']]
+                record['intermediate'] = intermediate_results[record['trialJobId']]
         if args.type == 'json':
             with open(args.path, 'w') as file:
                 file.write(json.dumps(content))
@@ -759,9 +803,9 @@ def export_trials_data(args):
                     formated_record['intermediate'] = '[' + ','.join(record['intermediate']) + ']'
                 record_value = json.loads(record['value'])
                 if not isinstance(record_value, (float, int)):
-                    formated_record.update({**record['parameter'], **record_value, **{'id': record['id']}})
+                    formated_record.update({**record['parameter'], **record_value, **{'trialJobId': record['trialJobId']}})
                 else:
-                    formated_record.update({**record['parameter'], **{'reward': record_value, 'id': record['id']}})
+                    formated_record.update({**record['parameter'], **{'reward': record_value, 'trialJobId': record['trialJobId']}})
                 trial_records.append(formated_record)
             if not trial_records:
                 print_error('No trial results collected! Please check your trial log...')

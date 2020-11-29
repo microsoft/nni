@@ -387,8 +387,7 @@ class OpEvo(Tuner):
         self.population = Population(search_space,
                                      self.mutate_rate,
                                      self.optimize_mode)
-        self.logger.debug('Total search space volume: '
-                          + str(self.population.volume))
+        self.logger.debug('Total search space volume: ', str(self.population.volume))
 
         if not self.serve_list:
             self.serve_list = self.population.get_offspring(

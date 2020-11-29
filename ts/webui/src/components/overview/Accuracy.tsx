@@ -11,7 +11,6 @@ import 'echarts/lib/component/title';
 interface AccuracyProps {
     accuracyData: object;
     accNodata: string;
-    height: number;
 }
 
 class Accuracy extends React.Component<AccuracyProps, {}> {
@@ -20,17 +19,10 @@ class Accuracy extends React.Component<AccuracyProps, {}> {
     }
 
     render(): React.ReactNode {
-        const { accNodata, accuracyData, height } = this.props;
+        const { accNodata, accuracyData } = this.props;
         return (
-            <div style={{ position: 'relative' }}>
-                <ReactEcharts
-                    option={accuracyData}
-                    style={{
-                        height: height,
-                        margin: '0 auto'
-                    }}
-                    theme='my_theme'
-                />
+            <div className='defaultMetricContainer'>
+                <ReactEcharts option={accuracyData} theme='my_theme' />
                 <div className='showMess'>{accNodata}</div>
             </div>
         );

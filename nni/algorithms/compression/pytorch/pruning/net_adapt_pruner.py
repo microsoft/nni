@@ -73,7 +73,7 @@ class NetAdaptPruner(Pruner):
     optimize_mode : str
         optimize mode, `maximize` or `minimize`, by default `maximize`.
     base_algo : str
-        Base pruning algorithm. `level`, `l1` or `l2`, by default `l1`. Given the sparsity distribution among the ops,
+        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among the ops,
         the assigned `base_algo` is used to decide which filters/channels/weights to prune.
     sparsity_per_iteration : float
         sparsity to prune in each iteration.
@@ -125,7 +125,7 @@ class NetAdaptPruner(Pruner):
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
             }], model, _logger)
-        elif self._base_algo in ['l1', 'l2']:
+        elif self._base_algo in ['l1', 'l2', 'fpgm']:
             schema = CompressorSchema([{
                 'sparsity': And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
@@ -149,7 +149,7 @@ class NetAdaptPruner(Pruner):
                 return config_list_updated
 
         # if op_name is not in self._config_list_generated, create a new json item
-        if self._base_algo in ['l1', 'l2']:
+        if self._base_algo in ['l1', 'l2', 'fpgm']:
             config_list_updated.append(
                 {'sparsity': sparsity, 'op_types': ['Conv2d'], 'op_names': [op_name]})
         elif self._base_algo == 'level':

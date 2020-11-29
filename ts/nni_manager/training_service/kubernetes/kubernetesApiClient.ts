@@ -19,6 +19,94 @@ class GeneralK8sClient {
         this.client.loadSpec();
     }
 
+    private matchStorageClass(response: any): string {
+        const adlSupportedProvisioners: RegExp[] = [
+            new RegExp("microk8s.io/hostpath"),
+            new RegExp(".*cephfs.csi.ceph.com"),
+            new RegExp(".*azure.*"),
+            new RegExp("\\b" + "efs" + "\\b")
+        ]
+        const templateLen = adlSupportedProvisioners.length,
+              responseLen = response.items.length
+        let i = 0,
+            j = 0;
+        for (; i < responseLen; i++) {
+            const provisioner: string = response.items[i].provisioner
+            for (; j < templateLen; j++) {
+                if (provisioner.match(adlSupportedProvisioners[j])) {
+                    return response.items[i].metadata.name;
+                }
+            }
+        }
+        return "Not Found!";
+    }
+
+    public async getStorageClass(): Promise<string> {
+        let result: Promise<string>;
+        const response: any = await this.client.apis["storage.k8s.io"].v1beta1.storageclasses.get()
+        const storageClassType: string = this.matchStorageClass(response.body)
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            if (storageClassType != "Not Found!") {
+                result = Promise.resolve(storageClassType);
+            }
+            else {
+                result = Promise.reject("No StorageClasses are supported!")
+            }
+        } else {
+            result = Promise.reject(`List storageclasses failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
+    public async createDeployment(deploymentManifest: any): Promise<string> {
+        let result: Promise<string>;
+        const response: any = await this.client.apis.apps.v1.namespaces('default').deployments.post({ body: deploymentManifest })
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(response.body.metadata.uid);
+        } else {
+            result = Promise.reject(`Create deployment failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
+    public async deleteDeployment(deploymentName: string): Promise<boolean> {
+        let result: Promise<boolean>;
+        // TODO: change this hard coded deployment name after demo
+        const response: any = await this.client.apis.apps.v1.namespaces('default')
+          .deployment(deploymentName).delete();
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Delete deployment failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
+    public async createConfigMap(configMapManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;
+        const response: any = await this.client.api.v1.namespaces('default')
+          .configmaps.post({body: configMapManifest});
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create configMap failed, statusCode is ${response.statusCode}`);
+        }
+
+        return result;
+    }
+
+    public async createPersistentVolumeClaim(pvcManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;
+        const response: any = await this.client.api.v1.namespaces('default')
+          .persistentvolumeclaims.post({body: pvcManifest});
+        if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create pvc failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces('default').secrets
@@ -77,7 +165,7 @@ abstract class KubernetesCRDClient {
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
-            result = Promise.reject(`Create kubernetes job failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubernetesApiClient createKubernetesJob failed, statusCode is ${response.statusCode}`);
         }
 
         return result;
@@ -91,7 +179,7 @@ abstract class KubernetesCRDClient {
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
         } else {
-            result = Promise.reject(`KubeflowOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubernetesApiClient getKubernetesJob failed, statusCode is ${response.statusCode}`);
         }
 
         return result;
@@ -115,7 +203,7 @@ abstract class KubernetesCRDClient {
                 result = Promise.resolve(true);
             } else {
                 result = Promise.reject(
-                    `KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
+                    `KubernetesApiClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
             }
         } catch (err) {
             result = Promise.reject(err);

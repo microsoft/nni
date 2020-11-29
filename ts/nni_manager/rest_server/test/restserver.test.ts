@@ -57,7 +57,7 @@ describe('Unit test for rest server', () => {
                 assert.fail(err.message);
             } else {
                 expect(res.statusCode).to.equal(200);
-                expect(JSON.parse(body).id).to.equal('1234');
+                expect(JSON.parse(body).trialJobId).to.equal('1234');
             }
             done();
         });

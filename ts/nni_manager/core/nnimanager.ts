@@ -9,7 +9,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
@@ -23,7 +23,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, IpcInterface } from './ipcInterface';
+import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 
 /**
  * NNIManager which implements Manager interface
@@ -68,6 +68,11 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
+
+        const pipe = getDispatcherPipe();
+        if (pipe !== null) {
+            this.dispatcher = createDispatcherPipeInterface(pipe);
+        }
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -231,7 +236,7 @@ class NNIManager implements Manager {
         // Check the final status for WAITING and RUNNING jobs
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.trialJobId)));
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -304,7 +309,7 @@ class NNIManager implements Manager {
             // FIXME: can this be undefined?
             trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
         ));
-        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.trialJobId));
 
         const allMetrics = await this.dataStore.getMetricData();
         return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
@@ -343,6 +348,14 @@ class NNIManager implements Manager {
 
     public getStatus(): NNIManagerStatus {
         return this.status;
+    }
+
+    public getTrialJobMessage(trialJobId: string): string | undefined {
+        const trialJob = this.trialJobs.get(trialJobId);
+        if (trialJob !== undefined){
+            return trialJob.message
+        }
+        return undefined
     }
 
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
@@ -500,6 +513,10 @@ class NNIManager implements Manager {
                 this.log.info(`Trial job ${trialJobDetail.id} status changed from ${oldTrialJobDetail.status} to ${trialJobDetail.status}`);
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
+            }
+            const newTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if (newTrialJobDetail !== undefined) {
+                newTrialJobDetail.message = trialJobDetail.message;
             }
             let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {
@@ -677,12 +694,16 @@ class NNIManager implements Manager {
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
-        this.log.debug(`NNIManager received trial job metrics: ${metric}`);
-        await this.dataStore.storeMetricData(metric.id, metric.data);
-        if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
+        this.log.debug(`NNIManager received trial job metrics: ${JSON.stringify(metric)}`);
+        if (this.trialJobs.has(metric.id)){
+            await this.dataStore.storeMetricData(metric.id, metric.data);
+            if (this.dispatcher === undefined) {
+                throw new Error('Error: tuner has not been setup');
+            }
+            this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
+        } else {
+            this.log.warning(`NNIManager received non-existent trial job metrics: ${metric}`);
         }
-        this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
     }
 
     private requestTrialJobs(jobNum: number): void {

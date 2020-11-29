@@ -9,11 +9,9 @@ import json_tricks
 
 from .common import multi_thread_enabled
 from .env_vars import dispatcher_env_vars
-from ..utils import init_dispatcher_logger
 from ..recoverable import Recoverable
 from .protocol import CommandType, receive
 
-init_dispatcher_logger()
 
 _logger = logging.getLogger(__name__)
 

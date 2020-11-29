@@ -10,7 +10,7 @@ from .rest_utils import rest_get, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
+from .common_utils import print_normal, print_warning, print_error, print_green, detect_process, detect_port, check_tensorboard_version
 from .nnictl_utils import check_experiment_id, check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
@@ -19,7 +19,7 @@ def parse_log_path(args, trial_content):
     path_list = []
     host_list = []
     for trial in trial_content:
-        if args.trial_id and args.trial_id != 'all' and trial.get('id') != args.trial_id:
+        if args.trial_id and args.trial_id != 'all' and trial.get('trialJobId') != args.trial_id:
             continue
         pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
         match = re.search(pattern, trial['logPath'])
@@ -40,7 +40,7 @@ def copy_data_from_remote(args, nni_config, trial_content, path_list, host_list,
         machine_dict[machine['ip']] = {'port': machine['port'], 'passwd': machine['passwd'], 'username': machine['username'],
                                        'sshKeyPath': machine.get('sshKeyPath'), 'passphrase': machine.get('passphrase')}
     for index, host in enumerate(host_list):
-        local_path = os.path.join(temp_nni_path, trial_content[index].get('id'))
+        local_path = os.path.join(temp_nni_path, trial_content[index].get('trialJobId'))
         local_path_list.append(local_path)
         print_normal('Copying log data from %s to %s' % (host + ':' + path_list[index], local_path))
         sftp = create_ssh_sftp_client(host, machine_dict[host]['port'], machine_dict[host]['username'], machine_dict[host]['passwd'],
@@ -110,14 +110,36 @@ def stop_tensorboard(args):
     else:
         print_error('No tensorboard configuration!')
 
+def adl_tensorboard_helper(args):
+    '''start tensorboard on adl'''
+    import subprocess
+    if args.trial_id is not None:
+        print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
+    cmd = "kubectl port-forward --address 0.0.0.0 deployment/{} {}:{}".format(
+        "adaptdl-tensorboard" + "-" + args.id.lower(),
+        args.port,
+        6006
+    )
+    print_green('Tensorboard is accessible at 0.0.0.0:{port} or localhost:{port}'.format(port=args.port))
+    subprocess.run(args=cmd, shell=True)
 
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if not experiment_id:
+        return
+    if args.id is None:
+        args.id = experiment_id
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
+    if experiment_dict[args.id]["status"] == "STOPPED":
+        print_error("Experiment {} is stopped...".format(args.id))
+        return
     config_file_name = experiment_dict[experiment_id]['fileName']
     nni_config = Config(config_file_name)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
+        adl_tensorboard_helper(args)
+        return
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
