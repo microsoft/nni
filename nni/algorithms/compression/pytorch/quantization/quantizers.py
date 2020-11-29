@@ -192,13 +192,17 @@ class QAT_Quantizer(Quantizer):
             quantization bits length
         op : torch.nn.Module
             target module
-        real_val : float
+        real_val : Tensor
             real value to be quantized
 
         Returns
         -------
-        float
+        Tensor
         """
+        if real_val.is_cuda:
+            op.zero_point = op.zero_point.cuda()
+            op.scale = op.scale.cuda()
+
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
         qmax = (1 << bits) - 1
