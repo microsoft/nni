@@ -29,55 +29,8 @@ def get_all_builtin_names(algo_type):
     return [x['builtinName'] for x in read_registerd_algo_meta()[algo_type]]
 
 
-def get_builtin_algo_meta(algo_type=None, builtin_name=None):
-    """ Get meta information of builtin algorithms from:
-    1. Pre-installed BuiltinAlgorithms
-    2. User installed packages in <nni_installation_path>/config/installed_packages.yml
-
-    Parameters
-    ----------
-    algo_type: str | None
-        can be one of 'tuners', 'assessors', 'advisors' or None
-    builtin_name: str | None
-        builtin name.
-
-    Returns: dict | list of dict | None
-    -------
-        If builtin_name is specified, returns meta information of speicified builtin
-        alogorithms, for example:
-        {
-            'name': 'Random',
-            'className': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner',
-            'classArgs': {
-                'algorithm_name': 'random_search'
-            },
-            'acceptClassArgs': False,
-            'classArgsValidator': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptClassArgsValidator'
-        }
-        If builtin_name is None, returns multiple meta information in a list.
-    """
-    algo_meta = read_registerd_algo_meta()
-
-    if algo_type is None and builtin_name is None:
-        return algo_meta
-
-    if algo_type:
-        assert algo_type in ALGO_TYPES
-        metas = algo_meta[algo_type]
-    else:
-        metas = algo_meta['tuners'] + algo_meta['assessors'] + algo_meta['advisors']
-    if builtin_name:
-        for m in metas:
-            if m['builtinName'] == builtin_name:
-                return m
-    else:
-        return metas
-
-    return None
-
 def get_registered_algo_meta(builtin_name, algo_type=None):
-    """ Get meta information of user installed algorithms from:
-    <nni_installation_path>/config/installed_packages.yml
+    """ Get meta information of registered algorithms.
 
     Parameters
     ----------
@@ -134,7 +87,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
     """
     assert algo_type in ALGO_TYPES
     assert builtin_name is not None
-    meta = get_builtin_algo_meta(algo_type, builtin_name)
+    meta = get_registered_algo_meta(builtin_name, algo_type)
     if not meta:
         return None, None
     return parse_full_class_name(meta['className'])
@@ -156,7 +109,7 @@ def create_validator_instance(algo_type, builtin_name):
     """
     assert algo_type in ALGO_TYPES
     assert builtin_name is not None
-    meta = get_builtin_algo_meta(algo_type, builtin_name)
+    meta = get_registered_algo_meta(builtin_name, algo_type)
     if not meta or 'classArgsValidator' not in meta:
         return None
     module_name, class_name = parse_full_class_name(meta['classArgsValidator'])
@@ -205,7 +158,7 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
 
         return module_name, class_name, class_args
 
-    algo_meta = get_builtin_algo_meta(algo_type, builtin_name)
+    algo_meta = get_registered_algo_meta(builtin_name, algo_type)
     module_name, class_name, class_args = parse_algo_meta(algo_meta, input_class_args)
 
     if importlib.util.find_spec(module_name) is None:
