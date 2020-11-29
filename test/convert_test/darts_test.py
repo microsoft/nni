@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import torch
@@ -21,12 +22,15 @@ if __name__ == '__main__':
     script_module = torch.jit.script(base_model)
 
     model = convert_to_graph(script_module, base_model, recorded_module_args)
-    #code_script = model_to_pytorch_script(model)
-    #print(code_script)
-    print("Model: ", model)
+    '''graph_ir = model._dump()
+    with open('graph.json', 'w') as outfile:
+        json.dump(graph_ir, outfile)'''
+    code_script = model_to_pytorch_script(model)
+    print(code_script)
+    '''print("Model: ", model)
     graph_ir = model._dump()
     print(graph_ir)
-    visualize_model(graph_ir)
+    visualize_model(graph_ir)'''
 
     # TODO: new interface
     #exp = Experiment()
@@ -41,8 +45,7 @@ if __name__ == '__main__':
                   'maxTrialNum': 10,
                   'trainingServicePlatform': 'local'
                 }
-    applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}},
-                        {'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_1'}}]
+    applied_mutators = []
     training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
         "dataset_cls": "CIFAR10",
         "dataset_kwargs": {
@@ -59,8 +62,11 @@ if __name__ == '__main__':
             "max_epochs": 1
         }
     }}
-    strategy = {'filename': 'simple_strategy', 'funcname': 'simple_startegy', 'args': {}}
+    strategy = {'filename': 'inline_mutators_strategy', 'funcname': 'inline_mutators_startegy', 'args': {}}
     exp = Experiment()
     exp.tmp_start_retiarii(graph_ir, training_approach,
                            applied_mutators, strategy,
                            exp_config)'''
+    # start weight sharing experiment (i.e., start_weight_sharing_experiment),
+    # and users can specify the name of weight sharing trainer without specifying trainer, strategy, and applied mutators.
+    # we manage a mapping from weight sharing algorithms to training_approach and strategy

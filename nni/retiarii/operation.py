@@ -120,6 +120,33 @@ class PyTorchOperation(Operation):
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
+        elif self.type == 'aten::__getitem__':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}[{inputs[1]}]'
+        elif self.type == 'aten::append':
+            assert len(inputs) == 2
+            return f'{inputs[0]}.append({inputs[1]})'
+        elif self.type == 'aten::cat':
+            assert len(inputs) == 2
+            return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
+        elif self.type == 'aten::add':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]} + {inputs[1]}'
+        elif self.type == 'aten::slice':
+            # aten::slice(s) can be merged together
+            print('zql: ', inputs)
+            assert len(inputs) == 5
+            #slice_str = ' '.join([':,' for idx in range(inputs[1])])
+            # FIXME: merge constants, and fix this error
+            slice_str = '---, '
+            slice_str += f'{inputs[2]}:{inputs[3]}:{inputs[4]}'
+            return f'{output} = {inputs[0]}[{slice_str}]'
+        elif self.type == 'aten::size':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}.size({inputs[1]})'
+        elif self.type == 'aten::view':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}.view({inputs[1]})'
         else:
             raise RuntimeError('unsupported operation type: {}'.format(self.type))
 

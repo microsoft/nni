@@ -28,6 +28,7 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
     ignore_first : bool
         if it is true, skip the first input
     """
+    is_single_input = (len([_input for _input in node.inputs()]) - (1 if ignore_first else 0)) == 1
     new_node_input_idx = 0
     for _input in node.inputs():
         if ignore_first:
@@ -57,7 +58,10 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
 
         # handle destination node
         dst_node = new_node
-        dst_node_idx = new_node_input_idx
+        if is_single_input:
+            dst_node_idx = None
+        else:
+            dst_node_idx = new_node_input_idx
 
         # create edge
         ir_graph.add_edge(head=(src_node, src_node_idx), tail=(dst_node, dst_node_idx))
@@ -211,6 +215,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 assert submodule.kind() == 'prim::GetAttr'
                 assert submodule.hasAttribute('name')
                 submodule_name = submodule.s('name')
+                print('zql type: ', submodule_type_str)
                 #assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules['cells']._modules["0"])
                 if submodule.inputsAt(0).debugName() == 'self':
                     assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules.keys())
