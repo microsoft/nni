@@ -25,7 +25,6 @@ def main_loop(args):
     '''main loop logic for trial runner'''
     idle_last_time = datetime.now()
     gpu_refresh_last_time = datetime.now() - timedelta(minutes=1)
-    nni_log(LogType.Info, "--------------main loop-----------28-----------------")
     try:
         if args.job_pid_file:
             with open(args.job_pid_file, 'w') as job_file:

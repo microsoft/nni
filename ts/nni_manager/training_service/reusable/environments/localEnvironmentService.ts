@@ -42,7 +42,7 @@ export class LocalEnvironmentService extends EnvironmentService {
     }
 
     public get environmentMaintenceLoopInterval(): number {
-        return 5000;
+        return 1000;
     }
 
     public get hasStorageService(): boolean {
