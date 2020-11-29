@@ -214,6 +214,8 @@ def get_registered_algo_config_path():
     #config_dir = Path(nni.__path__[0]).parent / 'nni_config'
     if _using_conda_or_virtual_environment():
         nni_config_dir = os.path.join(sys.prefix, 'nni')
+    elif sys.platform == 'win32':
+        nni_config_dir = os.getenv('APPDATA')
     else:
         nni_config_dir = os.path.expanduser('~/.config/nni')
     if not os.path.exists(nni_config_dir):

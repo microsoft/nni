@@ -158,6 +158,8 @@ def _using_conda_or_virtual_environment():
 def _copy_data_files():
     if _using_conda_or_virtual_environment():
         nni_config_dir = os.path.join(sys.prefix, 'nni')
+    elif sys.platform == 'win32':
+        nni_config_dir = os.getenv('APPDATA')
     else:
         nni_config_dir = os.path.expanduser('~/.config/nni')
     if not os.path.exists(nni_config_dir):
