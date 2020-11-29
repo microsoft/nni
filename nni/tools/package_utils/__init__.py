@@ -264,7 +264,7 @@ def get_registered_algo_config_path():
     else:
         nni_config_dir = os.path.expanduser('~/.config/nni')
     if not os.path.exists(nni_config_dir):
-        os.makedirs(config_dir, exist_ok=True)
+        os.makedirs(nni_config_dir, exist_ok=True)
     return os.path.join(nni_config_dir, 'registered_algorithms.yml')
 
 def read_registerd_algo_meta():
