@@ -26,7 +26,7 @@ def get_all_builtin_names(algo_type):
     """
     assert algo_type in ALGO_TYPES
 
-    return [x['builtinName'] for x in read_installed_package_meta()[algo_type]]
+    return [x['builtinName'] for x in read_registerd_algo_meta()[algo_type]]
 
 
 def get_builtin_algo_meta(algo_type=None, builtin_name=None):
@@ -56,7 +56,7 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
         }
         If builtin_name is None, returns multiple meta information in a list.
     """
-    algo_meta = read_installed_package_meta()
+    algo_meta = read_registerd_algo_meta()
 
     if algo_type is None and builtin_name is None:
         return algo_meta
@@ -98,7 +98,7 @@ def get_installed_package_meta(algo_type, builtin_name):
     assert builtin_name is not None
     if algo_type:
         assert algo_type in ALGO_TYPES
-    config = read_installed_package_meta()
+    config = read_registerd_algo_meta()
 
     candidates = []
     if algo_type:
@@ -111,7 +111,7 @@ def get_installed_package_meta(algo_type, builtin_name):
             return meta
     return None
 
-def _parse_full_class_name(full_class_name):
+def parse_full_class_name(full_class_name):
     if not full_class_name:
         return None, None
     parts = full_class_name.split('.')
@@ -137,7 +137,7 @@ def get_builtin_module_class_name(algo_type, builtin_name):
     meta = get_builtin_algo_meta(algo_type, builtin_name)
     if not meta:
         return None, None
-    return _parse_full_class_name(meta['className'])
+    return parse_full_class_name(meta['className'])
 
 def create_validator_instance(algo_type, builtin_name):
     """Create instance of validator class
@@ -159,7 +159,7 @@ def create_validator_instance(algo_type, builtin_name):
     meta = get_builtin_algo_meta(algo_type, builtin_name)
     if not meta or 'classArgsValidator' not in meta:
         return None
-    module_name, class_name = _parse_full_class_name(meta['classArgsValidator'])
+    module_name, class_name = parse_full_class_name(meta['classArgsValidator'])
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
 
@@ -195,7 +195,7 @@ def create_builtin_class_instance(builtin_name, input_class_args, algo_type):
         2. merge user specified class args together with builtin class args.
         """
         assert algo_meta
-        module_name, class_name = _parse_full_class_name(algo_meta['className'])
+        module_name, class_name = parse_full_class_name(algo_meta['className'])
 
         class_args = {}
         if 'classArgs' in algo_meta:
@@ -253,7 +253,7 @@ def create_customized_class_instance(class_params):
 
     return instance
 
-def get_package_config_path():
+def get_registered_algo_config_path():
     # FIXME: this might not be the desired location
     #config_dir = Path(nni.__path__[0]).parent / 'nni_config'
     config_dir = os.path.expanduser('~/.config/nni')
@@ -261,8 +261,8 @@ def get_package_config_path():
         os.makedirs(config_dir, exist_ok=True)
     return os.path.join(config_dir, 'registered_algorithms.yml')
 
-def read_installed_package_meta():
-    config_file = get_package_config_path()
+def read_registerd_algo_meta():
+    config_file = get_registered_algo_config_path()
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.Loader)
@@ -273,7 +273,7 @@ def read_installed_package_meta():
             config[t] = []
     return config
 
-def write_package_meta(config):
-    config_file = get_package_config_path()
+def write_registered_algo_meta(config):
+    config_file = get_registered_algo_config_path()
     with open(config_file, 'w') as f:
         f.write(yaml.dump(dict(config), default_flow_style=False))

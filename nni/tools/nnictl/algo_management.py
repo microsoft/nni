@@ -3,11 +3,12 @@
 
 import os
 from collections import defaultdict
+import importlib
 import json
 import pkginfo
 import nni
-from nni.tools.package_utils import read_installed_package_meta, get_installed_package_meta, \
-    write_package_meta, ALGO_TYPES
+from nni.tools.package_utils import read_registerd_algo_meta, get_installed_package_meta, \
+    write_registered_algo_meta, ALGO_TYPES, parse_full_class_name
 from .common_utils import print_error, print_green, get_yml_content
 
 PACKAGE_TYPES = ['tuner', 'assessor', 'advisor']
@@ -24,25 +25,35 @@ def read_reg_meta_list(meta_path):
         assert 'className' in meta
     return meta_list
 
+def verify_algo_import(meta):
+    def _do_verify_import(fullName):
+        module_name, class_name = parse_full_class_name(fullName)
+        class_module = importlib.import_module(module_name)
+        getattr(class_module, class_name)
+
+    _do_verify_import(meta['className'])
+
+    if meta.get('classArgsValidator'):
+        _do_verify_import(meta['classArgsValidator'])
+
 def algo_reg(args):
-    print(args)
     meta_list = read_reg_meta_list(args.meta_path)
-    print(meta_list)
     for meta in meta_list:
-        save_package_meta_data(meta)
+        verify_algo_import(meta)
+        save_algo_meta_data(meta)
+        print_green('{} registered sucessfully!'.format(meta['builtinName']))
 
 def algo_unreg(args):
     '''uninstall packages'''
     name = args.name[0]
     meta = get_installed_package_meta(None, name)
-    print(meta)
     if meta is None:
         print_error('package {} not found!'.format(name))
         return
-    if remove_package_meta_data(name):
-        print_green('{} uninstalled sucessfully!'.format(name))
+    if remove_algo_meta_data(name):
+        print_green('{} unregistered sucessfully!'.format(name))
     else:
-        print_error('Failed to uninstall {}!'.format(name))
+        print_error('Failed to unregistered {}!'.format(name))
 
 def algo_show(args):
     '''show specified packages'''
@@ -54,7 +65,7 @@ def algo_show(args):
         print_error('package {} not found'.format(builtin_name))
 
 def algo_list(args):
-    meta = read_installed_package_meta()
+    meta = read_registerd_algo_meta()
     print('+-----------------+------------+-----------+--------=-------------+------------------------------------------+')
     print('|      Name       |    Type    |   source  |      Class Name      |               Module Name                |')
     print('+-----------------+------------+-----------+----------------------+------------------------------------------+')
@@ -69,22 +80,22 @@ def algo_list(args):
     print('+-----------------+------------+-----------+----------------------+------------------------------------------+')
 
 
-def save_package_meta_data(meta_data):
+def save_algo_meta_data(meta_data):
     assert meta_data['algoType'] in PACKAGE_TYPES
     assert 'builtinName' in meta_data
     assert 'className' in meta_data
     meta_data['source'] = 'user'
 
-    config = read_installed_package_meta()
+    config = read_registerd_algo_meta()
 
     if meta_data['builtinName'] in [x['builtinName'] for x in config[meta_data['algoType']+'s']]:
         raise ValueError('builtinName %s already installed' % meta_data['builtinName'])
 
     config[meta_data['algoType']+'s'].append(meta_data)
-    write_package_meta(config)
+    write_registered_algo_meta(config)
 
-def remove_package_meta_data(name):
-    config = read_installed_package_meta()
+def remove_algo_meta_data(name):
+    config = read_registerd_algo_meta()
 
     updated = False
     for t in ALGO_TYPES:
@@ -93,6 +104,6 @@ def remove_package_meta_data(name):
                 config[t].remove(meta)
                 updated = True
     if updated:
-        write_package_meta(config)
+        write_registered_algo_meta(config)
         return True
     return False
