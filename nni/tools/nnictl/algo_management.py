@@ -2,16 +2,11 @@
 # Licensed under the MIT license.
 
 import os
-from collections import defaultdict
 import importlib
 import json
-import pkginfo
-import nni
 from nni.tools.package_utils import read_registerd_algo_meta, get_installed_package_meta, \
     write_registered_algo_meta, ALGO_TYPES, parse_full_class_name
 from .common_utils import print_error, print_green, get_yml_content
-
-PACKAGE_TYPES = ['tuner', 'assessor', 'advisor']
 
 def read_reg_meta_list(meta_path):
     content = get_yml_content(meta_path)
@@ -21,6 +16,7 @@ def read_reg_meta_list(meta_path):
         meta_list = [content]
     for meta in meta_list:
         assert 'algoType' in meta
+        assert meta['algoType'] in ['tuner', 'assessor', 'advisor']
         assert 'builtinName' in meta
         assert 'className' in meta
     return meta_list
@@ -44,7 +40,6 @@ def algo_reg(args):
         print_green('{} registered sucessfully!'.format(meta['builtinName']))
 
 def algo_unreg(args):
-    '''uninstall packages'''
     name = args.name[0]
     meta = get_installed_package_meta(None, name)
     if meta is None:
@@ -59,7 +54,6 @@ def algo_unreg(args):
         print_error('Failed to unregistered {}!'.format(name))
 
 def algo_show(args):
-    '''show specified packages'''
     builtin_name = args.name[0]
     meta = get_installed_package_meta(None, builtin_name)
     if meta:
@@ -84,9 +78,6 @@ def algo_list(args):
 
 
 def save_algo_meta_data(meta_data):
-    assert meta_data['algoType'] in PACKAGE_TYPES
-    assert 'builtinName' in meta_data
-    assert 'className' in meta_data
     meta_data['source'] = 'user'
 
     config = read_registerd_algo_meta()
