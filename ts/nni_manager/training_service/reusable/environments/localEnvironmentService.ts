@@ -22,7 +22,7 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { StorageService } from '../storageService';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive } from '../../../common/utils';
-import { execMkdir, validateCodeDir, runScript, fileExist, execCopydir } from '../../common/util';
+import { execMkdir, validateCodeDir, runScript, execCopydir } from '../../common/util';
 import { FileCommandChannel } from '../channels/fileCommandChannel';
 import { CommandChannel } from "../commandChannel";
 
@@ -55,13 +55,13 @@ export class LocalEnvironmentService extends EnvironmentService {
                 this.localTrialConfig = <TrialConfig>JSON.parse(value);
                 break;
             default:
-                this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
+                this.log.debug(`Local mode does not proccess metadata key: '${key}', value: '${value}'`);
         }
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const tasks: Promise<void>[] = [];
-        environments.forEach(async (environment) => {
+        environments.forEach((environment) => {
             tasks.push(this.refreshEnvironment(environment));
         });
         await Promise.all(tasks);
@@ -70,11 +70,10 @@ export class LocalEnvironmentService extends EnvironmentService {
     public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
-        console.log(jobpidPath)
         /* eslint-disable require-atomic-updates */
         try {
             // check if pid file exist
-            const pidExist = await fileExist(jobpidPath);
+            const pidExist = await fs.existsSync(jobpidPath);
             if (!pidExist) {
                 return;
             }

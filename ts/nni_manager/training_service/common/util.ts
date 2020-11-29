@@ -95,16 +95,6 @@ export async function execMkdir(directory: string, share: boolean = false): Prom
     return Promise.resolve();
 }
 
-export async function fileExist(filePath: string): Promise<boolean> {
-    let cmdresult: cpp.childProcessPromise.Result;
-    if (process.platform === 'win32') {
-        cmdresult = await cpp.exec(`powershell.exe Get-Content "${filePath}" -Tail 1`);
-    } else {
-        cmdresult = await cpp.exec(`test -e ${filePath} && echo True || echo False`);
-    }
-    return cmdresult.stdout !== undefined && cmdresult.stdout.trim() === 'True'   
-}
-
 /**
  * copy files to the directory
  * @param source

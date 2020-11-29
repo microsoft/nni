@@ -406,19 +406,15 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
         platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+        request_dict = {
+            'aml': {'key': 'aml_config', 'value': experiment_config.get('amlConfig')},
+            'remote': {'key': 'machine_list', 'value': experiment_config.get('machineList')},
+            'pai': {'key': 'pai_config', 'value': experiment_config.get('paiConfig')},
+            'local': {'key': 'local_config', 'value': experiment_config.get('localConfig')}
+        }
         for platform in platform_list:
-            if platform == 'aml':
-                request_data['clusterMetaData'].append(
-                    {'key': 'aml_config', 'value': experiment_config['amlConfig']})
-            elif platform ==  'remote':
-                request_data['clusterMetaData'].append(
-                    {'key': 'machine_list', 'value': experiment_config['machineList']})
-            elif platform ==  'local' and experiment_config.get('localConfig'):
-                request_data['clusterMetaData'].append(
-                    {'key': 'local_config', 'value': experiment_config['localConfig']})
-            elif platform ==  'pai':
-                request_data['clusterMetaData'].append(
-                    {'key': 'pai_config', 'value': experiment_config['paiConfig']})
+            if request_dict.get(platform):
+                request_data['clusterMetaData'].append(request_dict[platform])
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)

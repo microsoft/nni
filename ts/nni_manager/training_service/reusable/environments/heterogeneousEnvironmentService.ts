@@ -84,6 +84,7 @@ export class HeteroGeneousEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const tasks: Promise<void>[] = [];
+        const openPaiEnvironments: EnvironmentInformation[] = [];
         environments.forEach(async (environment) => {
             switch (environment.platform) {
                 case 'aml':
@@ -95,11 +96,18 @@ export class HeteroGeneousEnvironmentService extends EnvironmentService {
                 case 'local':
                     tasks.push(this.localEnvironmentService.refreshEnvironment(environment));
                     break;
-                // TODO: refresh pai
+                case 'pai':
+                    openPaiEnvironments.push(environment);
+                    break;
                 default:
                     throw new Error(`Heterogenous not support platform: '${environment.platform}'`);
             }
         });
+        // OpenPai only support refreshEnvironmentsStatus
+        if (openPaiEnvironments.length) {
+            tasks.push(this.paiEnvironmentService.refreshEnvironmentsStatus(openPaiEnvironments));
+        }
+
         await Promise.all(tasks);
     }
 
