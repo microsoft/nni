@@ -9,7 +9,7 @@ from nni.nas.benchmarks.constants import DATABASE_DIR
 # DATABASE_DIR = "/mnt/c/Users/v-ayanmao/repo/nni/nni/nas/benchmarks/nlp"
 print("@DATABASE_DIR : ", DATABASE_DIR)
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nlp.db'), autoconnect=True)
-print("DATABASE_DIR : ", DATABASE_DIR)
+print("@@DATABASE_DIR : ", DATABASE_DIR)
 
 class NlpTrialConfig(Model):
     """
@@ -20,7 +20,7 @@ class NlpTrialConfig(Model):
     arch: dict
         aka recepie in NAS-NLP-Benchmark repo
     dataset: str
-        Dataset used. Could be ``PTB`` or ``WikiText-2``.
+        Dataset used. Could be ``ptb`` or ``wikitext-2``.
     """
     arch = JSONField(json_dumps=json_dumps, index=True)
     dataset = CharField(max_length=15, index=True, choices=[
