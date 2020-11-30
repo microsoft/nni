@@ -19,7 +19,7 @@ echo "Downloading NLP[2/2] ptb_data.zip..."
 if [ -f "ptb_data.zip" ]; then
     echo "ptb_data.zip found. Skip download."
 else
-    wget -O ptb_data.zip https://github.com/fmsnew/nas-bench-nlp-release/blob/master/train_logs_single_run/logs.zip?raw=true
+    wget -O ptb_data.zip https://github.com/fmsnew/nas-bench-nlp-release/blob/master/train_logs_multi_runs/logs.zip?raw=true
 fi
 unzip ptb_data.zip
 cd ..
