@@ -4,7 +4,6 @@
 import copy
 import dataclasses
 from pathlib import Path
-import sys
 from typing import Any, Dict, Optional, Type, TypeVar
 
 from ruamel import yaml
@@ -139,7 +138,7 @@ class ConfigBase:
             if rule is not None:
                 try:
                     result = rule(value)
-                except Exception as e:
+                except Exception:
                     raise ValueError(f'{class_name}: {key} has bad value {repr(value)}')
 
                 if isinstance(result, bool):

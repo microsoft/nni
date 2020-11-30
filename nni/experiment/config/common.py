@@ -108,7 +108,6 @@ _validation_rules = {
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
-    'experiment_working_directory': lambda value: Path(value).mkdir(parents=True, exist_ok=True) or True,
     'tuner_gpu_indices': lambda value: all(i >= 0 for i in value) and len(value) == len(set(value)),
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }

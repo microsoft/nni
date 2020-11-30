@@ -5,7 +5,6 @@
 Miscellaneous utility functions.
 """
 
-import dataclasses
 import math
 import os.path
 from pathlib import Path
@@ -27,7 +26,7 @@ def canonical_path(path: Optional[PathLike]) -> Optional[str]:
 def count(*values) -> int:
     return sum(value is not None and value is not False for value in values)
 
-def training_service_config_factory(platform: str) -> 'TrainingServiceConfig':
+def training_service_config_factory(platform: str): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
     for cls in TrainingServiceConfig.__subclasses__():
         if cls.platform == platform:
