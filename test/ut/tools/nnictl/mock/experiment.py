@@ -35,7 +35,7 @@ def stop_mock_experiment():
 def generate_args_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('id', nargs='?')
-    parser.add_argument('--port', '-p', dest='port')
+    parser.add_argument('--port', '-p', type=int, dest='port')
     parser.add_argument('--all', '-a', action='store_true')
     parser.add_argument('--head', type=int)
     parser.add_argument('--tail', type=int)
