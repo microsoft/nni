@@ -86,7 +86,7 @@ class TransposeModel(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(3, 20, 5)
-        self.conv2 = nn.ConvTranspose2d(20, 50, 5)
+        self.conv2 = nn.ConvTranspose2d(20, 50, 5, groups=2)
         self.bn1 = nn.BatchNorm2d(self.conv1.out_channels)
         self.bn2 = nn.BatchNorm2d(self.conv2.out_channels)
         self.fc1 = nn.Linear(8 * 8 * 50, 500)
