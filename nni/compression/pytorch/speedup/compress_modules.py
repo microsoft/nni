@@ -177,8 +177,7 @@ def replace_conv2d(conv, mask):
             # group should be pruned evenly.
             assert len(current_input_index) == in_channels_group, \
                 'Input channels of each group are not pruned evenly'
-            current_input_index = torch.tensor(current_input_index).to(
-                tmp_weight_data.device)  # pylint: disable=not-callable
+            current_input_index = torch.tensor(current_input_index).to(tmp_weight_data.device)  # pylint: disable=not-callable
             f_start = groupid * filter_step
             f_end = (groupid + 1) * filter_step
             new_conv.weight.data[f_start:f_end] = torch.index_select(
@@ -267,8 +266,7 @@ def replace_convtranspose2d(convtrans, mask):
                     " Donnot support removing the whole group filter except in the depth-wise conv temporarily")
             assert len(current_output_index) == out_channel_group, \
                 'Output channel of each group should be the same after pruning'
-            current_output_index = torch.tensor(
-                current_output_index).to(tmp_weight_data.device)
+            current_output_index = torch.tensor(current_output_index).to(tmp_weight_data.device) # pylint: disable=not-callable
             new_start = groupid * new_in_per_group
             new_end = (groupid + 1) * new_in_per_group
             new_convtrans.weight.data[new_start:new_end] = torch.index_select(
