@@ -4,6 +4,7 @@
 import copy
 import dataclasses
 from pathlib import Path
+import sys
 from typing import Any, Dict, Optional, Type, TypeVar
 
 from ruamel import yaml
@@ -103,7 +104,7 @@ class ConfigBase:
                 setattr(ret, key, rule(value))
             elif isinstance(value, ConfigBase):
                 setattr(ret, key, value.canonical())
-                # value will be copied twice, should not be a performance issue though
+                # value will be copied twice, should not be a performance issue anyway
         return ret
 
     def validate(self) -> None:
@@ -120,23 +121,26 @@ class ConfigBase:
             if value == dataclasses.MISSING:
                 raise ValueError(f'{class_name}: {key} is not set')
 
-            # check type
-            # TODO
+            # check type (TODO)
             type_name = str(field.type).replace('typing.', '')
-            if type_name.startswith('Optional[') and value is None:
-                continue
+            optional = any([
+                type_name.startswith('Optional['),
+                type_name.startswith('Union[') and 'NoneType' in type_name,
+                type_name == 'Any'
+            ])
+            if value is None:
+                if optional:
+                    continue
+                else:
+                    raise ValueError(f'{class_name}: {key} cannot be None')
 
             # check value
             rule = config._validation_rules.get(key)
             if rule is not None:
-                exception = None
                 try:
                     result = rule(value)
                 except Exception as e:
-                    exception = e  # raise it later to make the stack trace clear
-
-                if exception is not None:
-                    ValueError('{class_name}: {key} has bad value {repr(value)}', *exception.args)
+                    raise ValueError(f'{class_name}: {key} has bad value {repr(value)}')
 
                 if isinstance(result, bool):
                     if not result:

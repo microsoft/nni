@@ -47,7 +47,7 @@ class TrainingServiceConfig(ConfigBase):
 
 @dataclass(init=False)
 class ExperimentConfig(ConfigBase):
-    experiment_name: Optional[str]
+    experiment_name: Optional[str] = None
     search_space_file: Optional[PathLike] = None
     search_space: Any = None
     trial_command: Union[str, List[str]]
@@ -101,8 +101,8 @@ _canonical_rules = {
 }
 
 _validation_rules = {
-    'search_space_file': lambda value: (Path(value).is_file(), '"{value}" does not exist or is not regular file'),
-    'trial_code_directory': lambda value: (Path(value).is_dir(), '"{value}" does not exist or is not directory'),
+    'search_space_file': lambda value: (Path(value).is_file(), f'"{value}" does not exist or is not regular file'),
+    'trial_code_directory': lambda value: (Path(value).is_dir(), f'"{value}" does not exist or is not directory'),
     'trial_concurrency': lambda value: value > 0,
     'trial_gpu_number': lambda value: value >= 0,
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
@@ -110,7 +110,7 @@ _validation_rules = {
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'experiment_working_directory': lambda value: Path(value).mkdir(parents=True, exist_ok=True) or True,
     'tuner_gpu_indices': lambda value: all(i >= 0 for i in value) and len(value) == len(set(value)),
-    'training_service': lambda value: (type(value) is not TrainingService, 'cannot be abstract base class')
+    'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
 def _validate_for_exp(config: ExperimentConfig) -> None:
@@ -127,11 +127,11 @@ def _validate_for_exp(config: ExperimentConfig) -> None:
 def _validate_for_nnictl(config: ExperimentConfig) -> None:
     # validate experiment for normal launching approach
     if config.use_annotation:
-        if util.count(config.search_space, config.search_space_file) != 1:
-            raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
-    else:
         if util.count(config.search_space, config.search_space_file) != 0:
             raise ValueError('ExperimentConfig: search_space and search_space_file must not be set with annotationn')
+    else:
+        if util.count(config.search_space, config.search_space_file) != 1:
+            raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
     if util.count(config.tuner, config.advisor) != 1:
         raise ValueError('ExperimentConfig: tuner and advisor must be set one')
 

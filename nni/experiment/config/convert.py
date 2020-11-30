@@ -6,6 +6,7 @@ from .common import ExperimentConfig
 from . import util
 
 def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
+    config.validate()
     data = config.json()
 
     ts = data.pop('trainingService')
