@@ -452,8 +452,9 @@ class GroupDependency(Dependency):
             filters should be divisible to.
         """
         for node in self.graph.nodes_py.nodes_op:
-            if node.op_type == 'Conv2d':
+            if node.op_type == 'Conv2d' or node.op_type == 'ConvTranspose2d':
                 group = self._get_conv_groups(node)
+
                 if node.name in self.dependency:
                     # the conv layer whose group is larger than 1 will require that
                     # it's number of output channel to be divisible by the number of group.

@@ -207,7 +207,7 @@ class GroupMaskConflict(MaskFix):
                     pos = gm[i]
                     self.masks[layername]['weight'][pos] = torch.ones(
                         shape[1:])
-                    if hasattr(self.masks[layername], 'bias'):
+                    if 'bias' in self.masks[layername] and self.masks[layername]['bias'] is not None:
                         self.masks[layername]['bias'][pos] = 1
         return self.masks
 
