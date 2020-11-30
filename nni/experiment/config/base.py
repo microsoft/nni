@@ -38,7 +38,7 @@ class ConfigBase:
     # It will be prepended with class name and field name in exception message.
     _validation_rules = {}  # type: ignore
 
-    def __init__(self, _base_path: Optional[Path] = None, **kwargs):
+    def __init__(self, *, _base_path: Optional[Path] = None, **kwargs):
         """
         Initialize a config object and set some fields.
 
@@ -48,13 +48,21 @@ class ConfigBase:
         If a field is missing and don't have default value, it will be set to `dataclasses.MISSING`.
         """
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
+        if _base_path is None:
+            _base_path = Path()
         for field in dataclasses.fields(self):
             value = kwargs.pop(util.case_insensitive(field.name), field.default)
-            # relative paths loaded from config file are not relative to pwd
-            if value is not None and 'Path' in str(field.type):
-                value = Path(value).expanduser()
-                if not value.is_absolute():
-                    value = _base_path / value
+            if value is not None and value != dataclasses.MISSING:
+                # relative paths loaded from config file are not relative to pwd
+                if 'Path' in str(field.type):
+                    value = Path(value).expanduser()
+                    if not value.is_absolute():
+                        value = _base_path / value
+                # convert nested dict to config type
+                if isinstance(value, dict):
+                    cls = util.strip_optional(field.type)
+                    if isinstance(cls, type) and issubclass(cls, ConfigBase):
+                        value = cls(**value, _base_path=_base_path)
             setattr(self, field.name, value)
         if kwargs:
             cls = type(self).__name__
@@ -79,7 +87,7 @@ class ConfigBase:
         """
         return dataclasses.asdict(
             self.canonical(),
-            dict_factory = lambda items: dict((util.camel_case(k), v) for k, v in items)
+            dict_factory = lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
         )
 
     def canonical(self: T) -> T:

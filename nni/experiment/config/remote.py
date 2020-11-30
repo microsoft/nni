@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
 
 from .base import ConfigBase, PathLike
 from .common import TrainingServiceConfig
@@ -44,7 +44,7 @@ class RemoteMachineConfig(ConfigBase):
 
 @dataclass(init=False)
 class RemoteTrainingServiceConfig(TrainingServiceConfig):
-    platform: Literal['remote'] = 'remote'
+    platform: str = 'remote'
     machine_list: List[RemoteMachineConfig]
 
     _validation_rules = {

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import List, Literal, Optional, Union
+from typing import List, Optional, Union
 
 from .common import TrainingServiceConfig
 
@@ -10,7 +10,7 @@ __all__ = ['LocalTrainingServiceConfig']
 
 @dataclass(init=False)
 class LocalTrainingServiceConfig(TrainingServiceConfig):
-    platform: Literal['local'] = 'local'
+    platform: str = 'local'
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None

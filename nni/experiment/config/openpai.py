@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import Literal
 
 from .common import TrainingServiceConfig
 from . import util
@@ -11,7 +10,7 @@ __all__ = ['OpenPaiTrainingServiceConfig']
 
 @dataclass(init=False)
 class OpenPaiTrainingServiceConfig(TrainingServiceConfig):
-    platform: Literal['openpai'] = 'openpai'
+    platform: str = 'openpai'
     host: str
     username: str
     token: str
@@ -28,6 +27,7 @@ class OpenPaiTrainingServiceConfig(TrainingServiceConfig):
     }
 
     _validation_rules = {
+        'platform': lambda value: (value == 'openpai', 'cannot be modified'),
         'trial_cpu_number': lambda value: value > 0,
         'trial_memory_size': lambda value: util.parse_size(value) > 0
     }

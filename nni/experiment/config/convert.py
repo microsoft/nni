@@ -19,27 +19,40 @@ def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
         data['versionCheck'] = False
     data['maxTrialNum'] = data.pop('maxTrialNumber', 99999)
     data['trainingServicePlatform'] = ts['platform']
-    if 'searchSpace' in data:
+    ss = data.pop('searchSpace', None)
+    ss_file = data.pop('searchSpaceFile', None)
+    if ss is not None:
         ss_file = NamedTemporaryFile('w', delete=False)
-        json.dump(ss_file, data.pop('searchSpace'))
+        json.dump(ss, ss_file, indent=4)
         data['searchSpacePath'] = ss_file.name
-    elif 'searchSpaceFile' in data:
-        data['searchSpacePath'] = data.pop('searchSpaceFile')
+    elif ss_file is not None:
+        data['searchSpacePath'] = ss_file
     if 'experimentWorkingDirectory' in data:
         data['logDir'] = data.pop('experimentWorkingDirectory')
 
-    #for algo in ['tuner', 'assessor', 'advisor']:
-    #    FIXME: check what to do with algorithm metadata PR
+    for algo_type in ['tuner', 'assessor', 'advisor']:
+        algo = data.get(algo_type)
+        if algo is None:
+            continue
+        if algo['name'] is not None:  # builtin
+            algo['builtin' + algo_type.title() + 'Name'] = algo.pop('name')
+            algo.pop('className', None)
+            algo.pop('codeDirectory', None)
+        else:
+            algo.pop('name', None)
+            class_name_parts = algo.pop('className').split('.')
+            algo['codeDir'] = algo.pop('codeDirectory', '') + '/'.join(class_name_parts[:-2])
+            algo['classFileName'] = class_name_parts[-2] + '.py'
+            algo['className'] = class_name_parts[-1]
 
-    if 'tunerGpuIndices' in data:
-        indices = _convert_gpu_indices(data.pop('tunerGpuIndices'))
-        if indices is not None:
-            data['tuner']['gpuIndicies'] = indices
+    tuner_gpu_indices = _convert_gpu_indices(data.pop('tunerGpuIndices', None))
+    if tuner_gpu_indices is not None:
+        data['tuner']['gpuIndicies'] = tuner_gpu_indices
 
     data['trial'] = {
         'command': ' && '.join(data.pop('trialCommand')),
-        'codDir': data.pop('trialCodeDirectory'),
-        'gpuNum': data.pop('trialGpuNumber')
+        'codeDir': data.pop('trialCodeDirectory'),
+        'gpuNum': data.pop('trialGpuNumber', '')
     }
 
     if ts['platform'] == 'local':

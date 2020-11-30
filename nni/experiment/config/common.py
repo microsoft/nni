@@ -3,92 +3,84 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from .base import ConfigBase, PathLike
 from . import util
 
 __all__ = [
-    'BasicExperimentConfig',
     'ExperimentConfig',
-    'FullExperimentConfig',
+    'AlgorithmConfig',
+    'CustomAlgorithmConfig',
     'TrainingServiceConfig',
 ]
 
-ExperimentConfig = Union['BasicExperimentConfig', 'FullExperimentConfig']
+
+@dataclass(init=False)
+class _AlgorithmConfig(ConfigBase):
+    name: Optional[str] = None
+    class_name: Optional[str] = None
+    code_directory: Optional[PathLike] = None
+    class_args: Optional[Dict[str, Any]] = None
+
+    def validate(self):
+        super().validate()
+        _validate_algo(self)
+
+
+@dataclass(init=False)
+class AlgorithmConfig(_AlgorithmConfig):
+    name: str
+    class_args: Optional[Dict[str, Any]] = None
+
+
+@dataclass(init=False)
+class CustomAlgorithmConfig(_AlgorithmConfig):
+    class_name: str
+    class_directory: Optional[PathLike] = None
+    class_args: Optional[Dict[str, Any]] = None
 
 
 class TrainingServiceConfig(ConfigBase):
     platform: str
 
-    def __init__(self, **kwargs):
-        if type(self) is TrainingServiceConfig:
-            raise NotImplementedError('This class is abstract')
-        super().__init__()
-
 
 @dataclass(init=False)
-class AlgorithmConfig(ConfigBase):
-    registered_name: Optional[str]
-    class_name: Optional[str]
-    code_directory: Optional[PathLike]
-    class_arguments: Dict[str, Any]
-
-    def validate(self):
-        super().validate()
-        if self.registered_name is None:
-            if self.class_name is None:
-                raise ValueError('name or class_name must be set')
-            if self.code_directory is not None and not Path(self.code_directory).is_dir():
-                raise ValueError(f'code_directory "{self.code_directory}" does not exist or is not directory')
-        else:
-            if self.class_name is not None or self.code_directory is not None:
-                raise ValueError(f'When registered_name is specified, class_name and code_directory cannot be used')
-
-
-@dataclass(init=False)
-class BasicExperimentConfig(ConfigBase):
-    experiment_name: Optional[str]
-    search_space: Any
-    trial_command: Union[str, List[str]]
-    trial_code_directory: PathLike = '.'
-    trial_concurrency: int
-    trial_gpu_number: Optional[int] = None
-    max_experiment_duration: Optional[str] = None
-    max_trial_number: Optional[int] = None
-    training_service: TrainingServiceConfig
-
-    @property
-    def _canonical_rules(self):
-        return _canonical_rules
-
-    @property
-    def _validation_rules(self):
-        return _validation_rules
-
-
-# not subclassing BasicExperimentConfig, for readability
-@dataclass(init=False)
-class FullExperimentConfig(ConfigBase):
+class ExperimentConfig(ConfigBase):
     experiment_name: Optional[str]
     search_space_file: Optional[PathLike] = None
     search_space: Any = None
     trial_command: Union[str, List[str]]
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
-    trial_gpu_number: Optional[int] = None
+    trial_gpu_number: int = 0
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     use_annotation: bool = False
     debug: bool = False
-    log_level: Optional[Literal["trace", "debug", "info", "warning", "error", "fatal"]] = None
+    log_level: Optional[str] = None
     experiment_working_directory: Optional[PathLike] = None
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
-    tuner: Optional[AlgorithmConfig] = None
-    accessor: Optional[AlgorithmConfig] = None
-    advisor: Optional[AlgorithmConfig] = None
+    tuner: Optional[_AlgorithmConfig] = None
+    accessor: Optional[_AlgorithmConfig] = None
+    advisor: Optional[_AlgorithmConfig] = None
     training_service: TrainingServiceConfig
+
+    def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
+        super().__init__(**kwargs)
+        if training_service_platform is not None:
+            assert 'training_service' not in kwargs
+            self.training_service = util.training_service_config_factory(training_service_platform)
+
+    def validate(self, initialized_tuner: bool = False) -> None:
+        super().validate()
+        if initialized_tuner:
+            _validate_for_exp(self)
+        else:
+            _validate_for_nnictl(self)
+
+## End of public API ##
 
     @property
     def _canonical_rules(self):
@@ -97,16 +89,6 @@ class FullExperimentConfig(ConfigBase):
     @property
     def _validation_rules(self):
         return _validation_rules
-
-    def validate(self) -> None:
-        super().validate()
-        ss_cnt = sum([
-            self.search_space_file is not None,
-            self.search_space is not None,
-            bool(self.use_annotation)
-        ])
-        if ss_cnt != 1:
-            raise ValueError("One and only one of search_space_file, search_space, and use_annotation must be set")
 
 
 _canonical_rules = {
@@ -125,6 +107,41 @@ _validation_rules = {
     'trial_gpu_number': lambda value: value >= 0,
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
+    'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'experiment_working_directory': lambda value: Path(value).mkdir(parents=True, exist_ok=True) or True,
-    'tuner_gpu_indices': lambda value: all(i >= 0 for i in value) and len(value) == len(set(value))
+    'tuner_gpu_indices': lambda value: all(i >= 0 for i in value) and len(value) == len(set(value)),
+    'training_service': lambda value: (type(value) is not TrainingService, 'cannot be abstract base class')
 }
+
+def _validate_for_exp(config: ExperimentConfig) -> None:
+    # validate experiment for nni.Experiment, where tuner is already initialized outside
+    if config.use_annotation:
+        raise ValueError('ExperimentConfig: annotation is not supported in this mode')
+    if util.count(config.search_space, config.search_space_file) != 1:
+        raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
+    if util.count(config.tuner, config.accessor, config.advisor) != 0:
+        raise ValueError('ExperimentConfig: tuner, accessor, and advisor must not be set in for this mode')
+    if config.tuner_gpu_indices is not None:
+        raise ValueError('ExperimentConfig: tuner_gpu_indices is not supported in this mode')
+
+def _validate_for_nnictl(config: ExperimentConfig) -> None:
+    # validate experiment for normal launching approach
+    if config.use_annotation:
+        if util.count(config.search_space, config.search_space_file) != 1:
+            raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
+    else:
+        if util.count(config.search_space, config.search_space_file) != 0:
+            raise ValueError('ExperimentConfig: search_space and search_space_file must not be set with annotationn')
+    if util.count(config.tuner, config.advisor) != 1:
+        raise ValueError('ExperimentConfig: tuner and advisor must be set one')
+
+def _validate_algo(algo: AlgorithmConfig) -> None:
+    if algo.name is None:
+        if algo.class_name is None:
+            raise ValueError('Missing algorithm name')
+        if algo.code_directory is not None and not Path(algo.code_directory).is_dir():
+            raise ValueError(f'code_directory "{algo.code_directory}" does not exist or is not directory')
+    else:
+        if algo.class_name is not None or algo.code_directory is not None:
+            raise ValueError(f'When name is set for registered algorithm, class_name and code_directory cannot be used')
+    # TODO: verify algorithm installation and class args
