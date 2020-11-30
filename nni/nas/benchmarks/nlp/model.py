@@ -6,10 +6,7 @@ from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
 from nni.nas.benchmarks.utils import json_dumps
 from nni.nas.benchmarks.constants import DATABASE_DIR
 
-# DATABASE_DIR = "/mnt/c/Users/v-ayanmao/repo/nni/nni/nas/benchmarks/nlp"
-print("@DATABASE_DIR : ", DATABASE_DIR)
 db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nlp.db'), autoconnect=True)
-print("@@DATABASE_DIR : ", DATABASE_DIR)
 
 class NlpTrialConfig(Model):
     """

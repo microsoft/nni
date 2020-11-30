@@ -1,7 +1,6 @@
 import json
 import os
 import argparse
-import numpy as np
 import tqdm
 
 from .model import db, NlpTrialConfig, NlpTrialStats, NlpIntermediateStats
@@ -11,17 +10,14 @@ def main():
     parser.add_argument('input_dir', help='Path to extracted NLP data dir.')
     args = parser.parse_args()
     
-    with db:
-        print("@begin to create tables")
+    with db, tqdm.tqdm(total=len(os.listdir(args.input_dir)), desc="creating tables") as pbar:
         db.create_tables([NlpTrialConfig, NlpTrialStats, NlpIntermediateStats])
-        print(db)
    
         for json_idx, json_file in enumerate(os.listdir(args.input_dir)):
+            pbar.update(1)
             if json_file.endswith('.json'):
                 log_path = os.path.join(args.input_dir, json_file)
                 cur = json.load(open(log_path, 'r'))
-                # if json_idx%100 == 0:
-                #     print(json_idx)
                 arch = json.loads(cur['recepie'])
                 unested_arch = {}
                 for k in arch.keys():
