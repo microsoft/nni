@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
+from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 
 _logger = logging.getLogger(__name__)
 
@@ -191,35 +192,61 @@ class StructuredMutableTreeNode:
                     yield self.mutable
 
 
-def replace_layer_choice(root_module, init_fn):
-    from nni.nas.pytorch.mutables import LayerChoice
 
-    replaced_modules = []
+def _replace_module_with_type(root_module, init_fn, type, modules):
+    if modules is None:
+        modules = dict()
 
     def apply(m):
         for name, child in m.named_children():
-            if isinstance(child, LayerChoice):
+            if isinstance(child, type):
+                assert child.key not in modules, f'Duplicate mutables found: {child.key}'
                 setattr(m, name, init_fn(child))
-                replaced_modules.append(getattr(m, name))
+                modules[child.key] = getattr(m, name)
             else:
                 apply(child)
 
     apply(root_module)
-    return replaced_modules
+    return modules
 
 
-def replace_input_choice(root_module, init_fn):
-    from nni.nas.pytorch.mutables import InputChoice
+def replace_layer_choice(root_module, init_fn, modules=None):
+    """
+    Replace layer choice modules with modules that are initiated with init_fn.
 
-    replaced_modules = []
+    Parameters
+    ----------
+    root_module : nn.Module
+        Root module to traverse.
+    init_fn : Callable
+        Initializing function.
+    modules : dict, optional
+        Update the replaced modules into the dict and check duplicate if provided.
 
-    def apply(m):
-        for name, child in m.named_children():
-            if isinstance(child, InputChoice):
-                setattr(m, name, init_fn(child))
-                replaced_modules.append(getattr(m, name))
-            else:
-                apply(child)
+    Returns
+    -------
+    Dict[str, nn.Module]
+        A map from layer choice keys (names) to replaced modules.
+    """
+    return _replace_module_with_type(root_module, init_fn, LayerChoice, modules)
 
-    apply(root_module)
-    return replaced_modules
+
+def replace_input_choice(root_module, init_fn, modules=None):
+    """
+    Replace input choice modules with modules that are initiated with init_fn.
+
+    Parameters
+    ----------
+    root_module : nn.Module
+        Root module to traverse.
+    init_fn : Callable
+        Initializing function.
+    modules : dict, optional
+        Update the replaced modules into the dict and check duplicate if provided.
+
+    Returns
+    -------
+    Dict[str, nn.Module]
+        A map from input choice keys (names) to replaced modules.
+    """
+    return _replace_module_with_type(root_module, init_fn, InputChoice, modules)
