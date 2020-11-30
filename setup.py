@@ -134,8 +134,8 @@ def _find_python_packages():
 
 def _find_node_files():
     if not os.path.exists('nni_node'):
-        if release and 'built_ts' not in sys.argv:
-            sys.exit('ERROR: To build a release version, run "python setup.py built_ts" first')
+        if release and 'build_ts' not in sys.argv:
+            sys.exit('ERROR: To build a release version, run "python setup.py build_ts" first')
         return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
