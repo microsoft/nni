@@ -2,27 +2,32 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import Literal
 
-from .base import ConfigBase, PathLike
 from .common import TrainingServiceConfig
+from . import util
 
-__all__ = ['OpenPaiConfig']
-
+__all__ = ['OpenPaiTrainingServiceConfig']
 
 @dataclass(init=False)
-class OpenPaiConfig(TrainingServiceConfig):
+class OpenPaiTrainingServiceConfig(TrainingServiceConfig):
+    platform: Literal['openpai'] = 'openpai'
     host: str
-    user_name: str
+    username: str
     token: str
     trial_cpu_number: int = 1
-    trial_memory: str
-    docker_image: str = 'msranni/nni'
-    docker_auth_file: Optional[PathLike] = None  # FIXME
+    trial_memory_size: str
+    docker_image: str = 'msranni/nni:latest'
+    reuse_mode: bool = False
 
     _training_service: str = 'openpai'
 
-    _field_validation_rules = [
-        ('trial_cpu_number', lambda val, _: val > 0),
-        ('trial_memory', lambda val, _: unit.parse_size(val) > 0)
-    ]
+    _canonical_rules = {
+        'host': lambda value: value.split('://', 1)[1] if '://' in value else value,
+        'trial_memory_size': lambda value: str(util.parse_size(value)) + 'mb'
+    }
+
+    _validation_rules = {
+        'trial_cpu_number': lambda value: value > 0,
+        'trial_memory_size': lambda value: util.parse_size(value) > 0
+    }

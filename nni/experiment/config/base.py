@@ -1,32 +1,44 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
+import dataclasses
+from pathlib import Path
+from typing import Any, Dict, Optional, Type, TypeVar
+
+from ruamel import yaml
+
+from . import util
+
+__all__ = ['ConfigBase', 'PathLike']
+
+T = TypeVar('T', bound='ConfigBase')
+
+PathLike = util.PathLike
+
 class ConfigBase:
     """
-    Base class of all config classes.
+    Base class of config classes.
 
-    Subclasses may override:
-
-      - `_field_validation_rules`
-      - `_class_validation_rules`
-      - `from_json()`
-      - `json()`
+    Subclass may override `_canonical_rules` and `_validation_rules`,
+    and `validate()` if the logic is complex.
     """
 
-    # Dict from field name to validation rule.
-    # A validation rule is a callable, whose parameters are `(field_value, config_object)`,
-    # and return value should either be `valid` (bool), or `(valid, error_message)`.
-    # A rule is invoked only when `field_value` has correct type and is not None.
-    # `error_message` will be attached to the exception raised when `valid` is False,
-    # and it will be prepended with class name and field name.
-    _field_validation_rules = {}  # don't add type hint so dataclass won't treat it as field
+    # Rules to convert field value to canonical format.
+    # The key is field name.
+    # The value is callable `value -> canonical_value`
+    # It is not type-hinted so dataclass won't treat it as field
+    _canonical_rules = {}  # type: ignore
 
-    # List of class-wise validation ruels.
-    # Similar to `_field_validation_rules`, a rule is a callable, whose parameter is `config_object`,
-    # and return value should either be `valid`, or `(valid, error_message)`.
-    _class_validation_rules = []  # don't add type hint so dataclass won't treat it as field
+    # Rules to validate field value.
+    # The key is field name.
+    # The value is callable `value -> valid` or `value -> (valid, error_message)`
+    # The rule will be called with canonical format and is only called when `value` is not None.
+    # `error_message` is used when `valid` is False.
+    # It will be prepended with class name and field name in exception message.
+    _validation_rules = {}  # type: ignore
 
-    def __init__(self, **kwargs):
+    def __init__(self, _base_path: Optional[Path] = None, **kwargs):
         """
         Initialize a config object and set some fields.
 
@@ -38,6 +50,11 @@ class ConfigBase:
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
         for field in dataclasses.fields(self):
             value = kwargs.pop(util.case_insensitive(field.name), field.default)
+            # relative paths loaded from config file are not relative to pwd
+            if value is not None and 'Path' in str(field.type):
+                value = Path(value).expanduser()
+                if not value.is_absolute():
+                    value = _base_path / value
             setattr(self, field.name, value)
         if kwargs:
             cls = type(self).__name__
@@ -45,25 +62,15 @@ class ConfigBase:
             raise ValueError(f'{cls}: Unrecognized fields {fields}')
 
     @classmethod
-    def load(cls, path: PathLike) -> cls:
+    def load(cls: Type[T], path: PathLike) -> T:
         """
-        Load a config object from YAML or JSON file.
-        The file is assumed to be YAML unless `path` endswith ".json" (case-insensitive).
+        Load config from YAML (or JSON) file.
+        Keys in YAML file can either be camelCase or snake_case.
         """
-        if str(path).lower().endswith('.json'):
-            data = json.load(open(path))
-        data = yaml.load(open(path))
+        data = yaml.safe_load(open(path))
         if not isinstance(data, dict):
-            raise ValueError(f'Content of config file {path} is not a JSON object')
-        return cls.from_json()(data)
-
-    @classmethod
-    def from_json(cls, json_object: Dict[str, Any]) -> cls:
-        """
-        Create config from JSON object.
-        The keys of `json_object` can either be snake_case or camelCase.
-        """
-        return cls(**json_object)
+            raise ValueError(f'Content of config file {path} is not a dict/object')
+        return cls(**data, _base_path=Path(path).parent)
 
     def json(self) -> Dict[str, Any]:
         """
@@ -71,22 +78,39 @@ class ConfigBase:
         The keys of returned object will be camelCase.
         """
         return dataclasses.asdict(
-            self,
+            self.canonical(),
             dict_factory = lambda items: dict((util.camel_case(k), v) for k, v in items)
         )
+
+    def canonical(self: T) -> T:
+        """
+        Returns a deep copy, where the fields supporting multiple formats are converted to the canonical format.
+        Noticeably, relative path may be converted to absolute path.
+        """
+        ret = copy.deepcopy(self)
+        for field in dataclasses.fields(ret):
+            key, value = field.name, getattr(ret, field.name)
+            rule = ret._canonical_rules.get(key)
+            if rule is not None:
+                setattr(ret, key, rule(value))
+            elif isinstance(value, ConfigBase):
+                setattr(ret, key, value.canonical())
+                # value will be copied twice, should not be a performance issue though
+        return ret
 
     def validate(self) -> None:
         """
         Validate the config object and raise Exception if it's ill-formed.
         """
-        cls = type(self).__name__
+        class_name = type(self).__name__
+        config = self.canonical()
 
-        for field in dataclasses.fields(self):
-            key, value = field.name, getattr(self, field.name)
+        for field in dataclasses.fields(config):
+            key, value = field.name, getattr(config, field.name)
 
             # check existence
             if value == dataclasses.MISSING:
-                raise ValueError(f'{cls}: {key} is not set')
+                raise ValueError(f'{class_name}: {key} is not set')
 
             # check type
             # TODO
@@ -95,26 +119,24 @@ class ConfigBase:
                 continue
 
             # check value
-            rule = self._field_validation_rules.get(key)
+            rule = config._validation_rules.get(key)
             if rule is not None:
+                exception = None
                 try:
-                    result = rule(value, self)
+                    result = rule(value)
                 except Exception as e:
-                    msg = f'{cls}: {key} has bad value {repr(value)}'
-                    raise ValueError(e)(msg, *e.args).with_traceback(e)
+                    exception = e  # raise it later to make the stack trace clear
+
+                if exception is not None:
+                    ValueError('{class_name}: {key} has bad value {repr(value)}', *exception.args)
 
                 if isinstance(result, bool):
                     if not result:
-                        raise ValueError(f'{cls}: {key} ({repr(value)}) is out of range')
+                        raise ValueError(f'{class_name}: {key} ({repr(value)}) is out of range')
                 else:
                     if not result[0]:
-                        raise ValueError(f'{cls}: {key} {result[1]}')
+                        raise ValueError(f'{class_name}: {key} {result[1]}')
 
             # check nested config
             if isinstance(value, ConfigBase):
                 value.validate()
-
-        for rule in _class_validation_rules:
-            valid, msg = rule(self)
-            if not valid:
-                raise ValueError(msg)

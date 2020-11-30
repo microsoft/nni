@@ -2,25 +2,25 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import List, Optional, Union
+from typing import List, Literal, Optional, Union
 
-from .common import ExperimentConfig, TrainingServiceConfig
+from .common import TrainingServiceConfig
 
-__all__ = ['LocalConfig']
-
+__all__ = ['LocalTrainingServiceConfig']
 
 @dataclass(init=False)
-class LocalConfig(TrainingServiceConfig):
+class LocalTrainingServiceConfig(TrainingServiceConfig):
+    platform: Literal['local'] = 'local'
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
 
-    _training_service: str = 'local'
-
-    _validation_rules = {
-        'max_trial_number_per_gpu': lambda: val, _: val > 0,
-        'gpu_indices': lambda val, _: isinstance(val, str) or (all(i >= 0 for i in val) and len(val) == len(set(val)))
+    _canonical_rules = {
+        'gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value
     }
 
-    def _cluster_metadata(self, exp: ExperimentConfig) -> Any:
-        ...  # for Experiment.start() only
+    _validation_rules = {
+        'platform': lambda value: (value == 'local', 'cannot be modified'),
+        'max_trial_number_per_gpu': lambda value: value > 0,
+        'gpu_indices': lambda value: all(idx >= 0 for idx in value) and len(value) == len(set(value))
+    }
