@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
 import logging
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.nas.pytorch.mutables import LayerChoice
 
 from ..interface import BaseOneShotTrainer
 from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
@@ -44,7 +42,7 @@ class ProxylessLayerChoice(nn.Module):
     def __init__(self, ops):
         super(ProxylessLayerChoice, self).__init__()
         self.ops = nn.ModuleList(ops)
-        self._arch_parameters = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
+        self.alpha = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
         self._binary_gates = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
         self.sampled = None
 
@@ -76,7 +74,7 @@ class ProxylessLayerChoice(nn.Module):
         )
 
     def resample(self):
-        probs = F.softmax(self._arch_parameters, dim=-1)
+        probs = F.softmax(self.alpha, dim=-1)
         sample = torch.multinomial(probs, 1)[0].item()
         self.sampled = sample
         with torch.no_grad():
@@ -86,17 +84,20 @@ class ProxylessLayerChoice(nn.Module):
     def finalize_grad(self):
         binary_grads = self._binary_gates.grad
         with torch.no_grad():
-            if self._arch_parameters.grad is None:
-                self._arch_parameters.grad = torch.zeros_like(self._arch_parameters.data)
-            probs = F.softmax(self._arch_parameters, dim=-1)
+            if self.alpha.grad is None:
+                self.alpha.grad = torch.zeros_like(self.alpha.data)
+            probs = F.softmax(self.alpha, dim=-1)
             for i in range(len(self.ops)):
                 for j in range(len(self.ops)):
-                    self._arch_parameters.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
+                    self.alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
 
+    def export(self):
+        return torch.argmax(self.alpha).item()
 
 
 class ProxylessInputChoice(nn.Module):
-    ...
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError('Input choice is not supported for ProxylessNAS.')
 
 
 class ProxylessTrainer(BaseOneShotTrainer):
@@ -127,13 +128,11 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Step count per logging.
     arc_learning_rate : float
         Learning rate of architecture parameters.
-    unrolled : float
-        ``True`` if using second order optimization, else first order optimization.
     """
     def __init__(self, model, loss, metrics,
                  num_epochs, dataset_train, dataset_valid,
                  learning_rate=2.5E-3, batch_size=64, workers=4, device=None, log_frequency=None,
-                 arc_learning_rate=3.0E-4, unrolled=False):
+                 arc_learning_rate=3.0E-4):
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -145,12 +144,13 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
 
-        self.proxyless_modules = replace_layer_choice(self.model, ProxylessLayerChoice) + replace_input_choice(self.mode, ProxylessInputChoice)
+        self.nas_modules = []
+        replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
+        replace_input_choice(self.mode, ProxylessInputChoice, self.nas_modules)
 
         self.model_optim = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-        self.ctrl_optim = torch.optim.Adam([c.alpha for c in self.proxyless_modules], arc_learning_rate, betas=(0.5, 0.999),
+        self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
-        self.unrolled = unrolled
 
         n_train = len(self.dataset_train)
         split = n_train // 2
@@ -177,17 +177,17 @@ class ProxylessTrainer(BaseOneShotTrainer):
             val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
             # 1) train architecture parameters
-            for module in self.proxyless_modules:
+            for _, module in self.nas_modules:
                 module.resample()
             self.ctrl_optim.zero_grad()
             logits, loss = self._logits_and_loss(val_X, val_y)
             loss.backward()
-            for module in self.proxyless_modules:
+            for _, module in self.nas_modules:
                 module.finalize_grad()
             self.ctrl_optim.step()
 
             # 2) train model parameters
-            for module in self.proxyless_modules:
+            for _, module in self.nas_modules:
                 module.resample()
             self.model_optim.zero_grad()
             logits, loss = self._logits_and_loss(trn_X, trn_y)
@@ -210,6 +210,10 @@ class ProxylessTrainer(BaseOneShotTrainer):
         for i in range(self.epochs):
             self.train_one_epoch(i)
 
+    @torch.no_grad()
     def export(self):
-        # TODO
-        ...
+        result = dict()
+        for name, module in self.nas_modules:
+            if name not in result:
+                result[name] = module.export()
+        return result

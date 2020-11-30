@@ -36,7 +36,7 @@ class DartsLayerChoice(nn.Module):
                 continue
             yield name, p
 
-    def resample(self):
+    def export(self):
         return torch.argmax(self.alpha).item()
 
 
@@ -61,7 +61,7 @@ class DartsInputChoice(nn.Module):
                 continue
             yield name, p
 
-    def resample(self):
+    def export(self):
         return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
 
 
@@ -267,5 +267,5 @@ class DartsTrainer(BaseOneShotTrainer):
         result = dict()
         for name, module in self.nas_modules:
             if name not in result:
-                result[name] = module.resample()
+                result[name] = module.export()
         return result

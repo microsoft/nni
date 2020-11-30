@@ -1,13 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import copy
 import logging
 import random
 
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.mutables import LayerChoice
 
 from ..interface import BaseOneShotTrainer
 from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
@@ -113,7 +111,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
             module.sampled = random.randint(0, len(module) - 1)
         # TODO: remember key and return
 
-    def train_one_epoch(self, epoch):
+    def _train_one_epoch(self, epoch):
         self.model.train()
         meters = AverageMeterGroup()
         for step, (x, y) in enumerate(self.train_loader):
@@ -132,7 +130,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
                 _logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                              self.num_epochs, step + 1, len(self.train_loader), meters)
 
-    def validate_one_epoch(self, epoch):
+    def _validate_one_epoch(self, epoch):
         self.model.eval()
         meters = AverageMeterGroup()
         with torch.no_grad():
@@ -147,6 +145,11 @@ class SinglePathTrainer(BaseOneShotTrainer):
                 if self.log_frequency is not None and step % self.log_frequency == 0:
                     _logger.info("Epoch [%s/%s] Validation Step [%s/%s]  %s", epoch + 1,
                                  self.num_epochs, step + 1, len(self.valid_loader), meters)
+
+    def fit(self):
+        for i in range(self.num_epochs):
+            self._train_one_epoch(i)
+            self._validate_one_epoch(i)
 
     def export(self):
         return self._resample()
