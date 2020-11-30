@@ -1,5 +1,3 @@
-# FIXME: WIP
-
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
@@ -197,7 +195,7 @@ class EnasTrainer(BaseOneShotTrainer):
 
     def __init__(self, model, loss, metrics, reward_function,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 batch_size=64, workers=4, device=None, log_frequency=None, callbacks=None,
+                 batch_size=64, workers=4, device=None, log_frequency=None,
                  grad_clip=5., entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
                  ctrl_lr=0.00035, ctrl_steps_aggregate=20, reinforce_controller_kwargs=None):
         self.model = model
@@ -230,7 +228,6 @@ class EnasTrainer(BaseOneShotTrainer):
         self.baseline_decay = baseline_decay
         self.baseline = 0.
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
-        self.aux_weight = aux_weight
 
         self.init_dataloader()
 

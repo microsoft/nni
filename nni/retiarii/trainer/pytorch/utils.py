@@ -123,86 +123,15 @@ class AverageMeter:
         return fmtstr.format(**self.__dict__)
 
 
-class StructuredMutableTreeNode:
-    """
-    A structured representation of a search space.
-    A search space comes with a root (with `None` stored in its `mutable`), and a bunch of children in its `children`.
-    This tree can be seen as a "flattened" version of the module tree. Since nested mutable entity is not supported yet,
-    the following must be true: each subtree corresponds to a ``MutableScope`` and each leaf corresponds to a
-    ``Mutable`` (other than ``MutableScope``).
-
-    Parameters
-    ----------
-    mutable : nni.nas.pytorch.mutables.Mutable
-        The mutable that current node is linked with.
-    """
-
-    def __init__(self, mutable):
-        self.mutable = mutable
-        self.children = []
-
-    def add_child(self, mutable):
-        """
-        Add a tree node to the children list of current node.
-        """
-        self.children.append(StructuredMutableTreeNode(mutable))
-        return self.children[-1]
-
-    def type(self):
-        """
-        Return the ``type`` of mutable content.
-        """
-        return type(self.mutable)
-
-    def __iter__(self):
-        return self.traverse()
-
-    def traverse(self, order="pre", deduplicate=True, memo=None):
-        """
-        Return a generator that generates a list of mutables in this tree.
-
-        Parameters
-        ----------
-        order : str
-            pre or post. If pre, current mutable is yield before children. Otherwise after.
-        deduplicate : bool
-            If true, mutables with the same key will not appear after the first appearance.
-        memo : dict
-            An auxiliary dict that memorize keys seen before, so that deduplication is possible.
-
-        Returns
-        -------
-        generator of Mutable
-        """
-        if memo is None:
-            memo = set()
-        assert order in ["pre", "post"]
-        if order == "pre":
-            if self.mutable is not None:
-                if not deduplicate or self.mutable.key not in memo:
-                    memo.add(self.mutable.key)
-                    yield self.mutable
-        for child in self.children:
-            for m in child.traverse(order=order, deduplicate=deduplicate, memo=memo):
-                yield m
-        if order == "post":
-            if self.mutable is not None:
-                if not deduplicate or self.mutable.key not in memo:
-                    memo.add(self.mutable.key)
-                    yield self.mutable
-
-
-
 def _replace_module_with_type(root_module, init_fn, type, modules):
     if modules is None:
-        modules = dict()
+        modules = []
 
     def apply(m):
         for name, child in m.named_children():
             if isinstance(child, type):
-                assert child.key not in modules, f'Duplicate mutables found: {child.key}'
                 setattr(m, name, init_fn(child))
-                modules[child.key] = getattr(m, name)
+                modules.append((child.key, getattr(m, name)))
             else:
                 apply(child)
 
@@ -225,8 +154,8 @@ def replace_layer_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    Dict[str, nn.Module]
-        A map from layer choice keys (names) to replaced modules.
+    List[Tuple[str, nn.Module]]
+        A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, LayerChoice, modules)
 
@@ -246,7 +175,7 @@ def replace_input_choice(root_module, init_fn, modules=None):
 
     Returns
     -------
-    Dict[str, nn.Module]
-        A map from input choice keys (names) to replaced modules.
+    List[Tuple[str, nn.Module]]
+        A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, InputChoice, modules)
