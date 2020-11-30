@@ -20,10 +20,8 @@ def main():
             if json_file.endswith('.json'):
                 log_path = os.path.join(args.input_dir, json_file)
                 cur = json.load(open(log_path, 'r'))
-                if json_idx%100 == 0:
-                    print(json_idx)
-                if json_idx == 8:
-                    break
+                # if json_idx%100 == 0:
+                #     print(json_idx)
                 arch = json.loads(cur['recepie'])
                 unested_arch = {}
                 for k in arch.keys():
