@@ -11,13 +11,16 @@ import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import * as lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
 import * as util from 'util';
+import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentParams, Manager } from './manager';
+import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
 
@@ -41,6 +44,10 @@ function getDefaultDatabaseDir(): string {
 
 function getCheckpointDir(): string {
     return path.join(getExperimentRootDir(), 'checkpoint');
+}
+
+function getExperimentsInfoPath(): string {
+    return path.join(os.homedir(), 'nni-experiments', '.experiment');
 }
 
 function mkDirP(dirPath: string): Promise<void> {
@@ -184,6 +191,7 @@ function prepareUnitTest(): void {
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
+    Container.snapshot(ExperimentManager);
 
     const logLevel: string = parseArg(['--log_level', '-ll']);
     if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
@@ -211,6 +219,7 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentStartupInfo);
+    Container.restore(ExperimentManager);
 }
 
 let cachedipv4Address: string = '';
@@ -416,8 +425,29 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
+/**
+ * lock a file sync
+ */
+function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): any {
+    const lockName = path.join(path.dirname(filePath), path.basename(filePath) + `.lock.${process.pid}`);
+    if (typeof lockOpts.stale === 'number'){
+        const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock.*');
+        const lockFileNames: string[] = glob.sync(lockPath);
+        const canLock: boolean = lockFileNames.map((fileName) => {
+            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs > lockOpts.stale;
+        }).filter(isExpired=>isExpired === false).length === 0;
+        if (!canLock) {
+            throw new Error('File has been locked.');
+        }
+    }
+    lockfile.lockSync(lockName, lockOpts);
+    const result = func(...args);
+    lockfile.unlockSync(lockName);
+    return result;
+}
+
 export {
-    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
+    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

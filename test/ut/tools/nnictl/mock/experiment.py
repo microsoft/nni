@@ -11,9 +11,9 @@ from nni.tools.nnictl.nnictl_utils import get_yml_content
 
 def create_mock_experiment():
     nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment('xOpEwA5w', '8080', '1970/01/1 01:01:01', 'aGew0x',
+    nnictl_experiment_config.add_experiment('xOpEwA5w', '8080', 123456,
                                             'local', 'example_sklearn-classification')
-    nni_config = Config('aGew0x')
+    nni_config = Config('xOpEwA5w')
     # mock process
     cmds = ['sleep', '3600000']
     process = Popen(cmds, stdout=PIPE, stderr=STDOUT)
