@@ -62,7 +62,7 @@ class DartsInputChoice(nn.Module):
             yield name, p
 
     def resample(self):
-        return torch.argsort(-self.alpha).numpy().tolist()[:self.n_chosen]
+        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
 
 
 class DartsTrainer(BaseOneShotTrainer):
@@ -262,9 +262,10 @@ class DartsTrainer(BaseOneShotTrainer):
         for i in range(self.num_epochs):
             self._train_one_epoch(i)
 
+    @torch.no_grad()
     def export(self):
         result = dict()
-        for name, module in self.nas_modules.items():
+        for name, module in self.nas_modules:
             if name not in result:
                 result[name] = module.resample()
         return result

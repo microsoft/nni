@@ -48,9 +48,17 @@ class Cell(nn.Module):
         ], key=cell_name + "_op")
 
     def forward(self, prev_layers):
-        chosen_input, chosen_mask = self.input_choice(prev_layers)
-        cell_out = self.op_choice(chosen_input)
-        return cell_out, chosen_mask
+        from nni.retiarii.trainer.pytorch.random import PathSamplingInputChoice
+        out = self.input_choice(prev_layers)
+        if isinstance(self.input_choice, PathSamplingInputChoice):
+            # Retiarii pattern
+            sampled = self.input_choice.sampled
+            return out, torch.tensor([i == sampled or (isinstance(sampled, list) and i in sampled)
+                                      for i in range(len(self.input_choice))], dtype=torch.bool)
+        else:
+            chosen_input, chosen_mask = out
+            cell_out = self.op_choice(chosen_input)
+            return cell_out, chosen_mask
 
 
 class Node(mutables.MutableScope):
@@ -71,7 +79,7 @@ class Calibration(nn.Module):
         self.process = None
         if in_channels != out_channels:
             self.process = StdConv(in_channels, out_channels)
-    
+
     def forward(self, x):
         if self.process is None:
             return x
@@ -83,7 +91,7 @@ class ReductionLayer(nn.Module):
         super().__init__()
         self.reduce0 = FactorizedReduce(in_channels_pp, out_channels, affine=False)
         self.reduce1 = FactorizedReduce(in_channels_p, out_channels, affine=False)
-    
+
     def forward(self, pprev, prev):
         return self.reduce0(pprev), self.reduce1(prev)
 
@@ -109,7 +117,7 @@ class ENASLayer(nn.Module):
         nn.init.kaiming_normal_(self.final_conv_w)
 
     def forward(self, pprev, prev):
-        pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)    
+        pprev_, prev_ = self.preproc0(pprev), self.preproc1(prev)
 
         prev_nodes_out = [pprev_, prev_]
         nodes_used_mask = torch.zeros(self.num_nodes + 2, dtype=torch.bool, device=prev.device)

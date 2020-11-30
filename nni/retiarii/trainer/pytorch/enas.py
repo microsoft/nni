@@ -45,6 +45,9 @@ class ReinforceField:
         self.total = total
         self.choose_one = choose_one
 
+    def __repr__(self):
+        return f'ReinforceField(name={self.name}, total={self.total}, choose_one={self.choose_one})'
+
 
 class ReinforceController(nn.Module):
     """
@@ -70,6 +73,7 @@ class ReinforceController(nn.Module):
 
     def __init__(self, fields, lstm_size=64, lstm_num_layers=1, tanh_constant=1.5,
                  skip_target=0.4, temperature=None, entropy_reduction='sum'):
+        super(ReinforceController, self).__init__()
         self.fields = fields
         self.lstm_size = lstm_size
         self.lstm_num_layers = lstm_num_layers
@@ -126,20 +130,25 @@ class ReinforceController(nn.Module):
         if field.choose_one:
             sampled = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
             log_prob = self.cross_entropy_loss(logit, sampled)
-            self._inputs = self.embedding(sampled)
+            self._inputs = self.embedding[field.name](sampled)
         else:
+            logit = logit.view(-1, 1)
             logit = torch.cat([-logit, logit], 1)  # pylint: disable=invalid-unary-operand-type
             sampled = torch.multinomial(F.softmax(logit, dim=-1), 1).view(-1)
             skip_prob = torch.sigmoid(logit)
             kl = torch.sum(skip_prob * torch.log(skip_prob / self.skip_targets))
             self.sample_skip_penalty += kl
             log_prob = self.cross_entropy_loss(logit, sampled)
-            self._inputs = (sum(self.embedding[s] for s in sampled) / (1. + torch.sum(sampled))).unsqueeze(0)
+            sampled = sampled.nonzero().view(-1)
+            if sampled.sum().item():
+                self._inputs = (torch.sum(self.embedding[field.name](sampled.view(-1)), 0) / (1. + torch.sum(sampled))).unsqueeze(0)
+            else:
+                self._inputs = torch.zeros(1, self.lstm_size, device=self.embedding[field.name].weight.device)
 
+        sampled = sampled.detach().numpy().tolist()
         self.sample_log_prob += self.entropy_reduction(log_prob)
         entropy = (log_prob * torch.exp(-log_prob)).detach()  # pylint: disable=invalid-unary-operand-type
         self.sample_entropy += self.entropy_reduction(entropy)
-        sampled = sampled.detach().numpy().tolist()
         if len(sampled) == 1:
             sampled = sampled[0]
         return sampled
@@ -163,10 +172,8 @@ class EnasTrainer(BaseOneShotTrainer):
         The optimizer used for optimizing the model.
     num_epochs : int
         Number of epochs planned for training.
-    dataset_train : Dataset
+    dataset : Dataset
         Dataset for training. Will be split for training weights and architecture weights.
-    dataset_valid : Dataset
-        Dataset for testing.
     batch_size : int
         Batch size.
     workers : int
@@ -189,33 +196,37 @@ class EnasTrainer(BaseOneShotTrainer):
         Number of steps that will be aggregated into one mini-batch for RL controller.
     ctrl_steps : int
         Number of mini-batches for each epoch of RL controller learning.
-    reinforce_controller_kwargs : float
+    ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     """
 
     def __init__(self, model, loss, metrics, reward_function,
-                 optimizer, num_epochs, dataset_train, dataset_valid,
+                 optimizer, num_epochs, dataset,
                  batch_size=64, workers=4, device=None, log_frequency=None,
                  grad_clip=5., entropy_weight=0.0001, skip_weight=0.8, baseline_decay=0.999,
-                 ctrl_lr=0.00035, ctrl_steps_aggregate=20, reinforce_controller_kwargs=None):
+                 ctrl_lr=0.00035, ctrl_steps_aggregate=20, ctrl_kwargs=None):
         self.model = model
         self.loss = loss
         self.metrics = metrics
+        self.optimizer = optimizer
         self.num_epochs = num_epochs
-        self.dataset_train = dataset_train
-        self.dataset_valid = dataset_valid
+        self.dataset = dataset
         self.batch_size = batch_size
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
 
-        self.nas_modules = dict()
+        self.nas_modules = []
         replace_layer_choice(self.model, PathSamplingLayerChoice, self.nas_modules)
         replace_input_choice(self.model, PathSamplingInputChoice, self.nas_modules)
+        for _, module in self.nas_modules:
+            module.to(self.device)
+        self.model.to(self.device)
+
         self.nas_fields = [ReinforceField(name, len(module),
-                                          isinstance(module, PathSamplingLayerChoice) or module.num_chosen == 1)
-                           for name, module in self.nas_modules.items()]
-        self.controller = ReinforceController(self.nas_fields, **(reinforce_controller_kwargs or {}))
+                                          isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
+                           for name, module in self.nas_modules]
+        self.controller = ReinforceController(self.nas_fields, **(ctrl_kwargs or {}))
 
         self.grad_clip = grad_clip
         self.reward_function = reward_function
@@ -232,21 +243,21 @@ class EnasTrainer(BaseOneShotTrainer):
         self.init_dataloader()
 
     def init_dataloader(self):
-        n_train = len(self.dataset_train)
-        split = n_train // 10
+        n_train = len(self.dataset)
+        split = n_train // 2
         indices = list(range(n_train))
         train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:-split])
         valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[-split:])
-        self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
+        self.train_loader = torch.utils.data.DataLoader(self.dataset,
                                                         batch_size=self.batch_size,
                                                         sampler=train_sampler,
                                                         num_workers=self.workers)
-        self.valid_loader = torch.utils.data.DataLoader(self.dataset_train,
+        self.valid_loader = torch.utils.data.DataLoader(self.dataset,
                                                         batch_size=self.batch_size,
                                                         sampler=valid_sampler,
                                                         num_workers=self.workers)
 
-    def train_model(self, epoch):
+    def _train_model(self, epoch):
         self.model.train()
         self.controller.eval()
         meters = AverageMeterGroup()
@@ -254,7 +265,7 @@ class EnasTrainer(BaseOneShotTrainer):
             x, y = to_device(x, self.device), to_device(y, self.device)
             self.optimizer.zero_grad()
 
-            self.resample()
+            self._resample()
             logits = self.model(x)
             metrics = self.metrics(logits, y)
             loss = self.loss(logits, y)
@@ -267,60 +278,59 @@ class EnasTrainer(BaseOneShotTrainer):
 
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 _logger.info('Model Epoch [%d/%d] Step [%d/%d]  %s', epoch + 1,
-                             self.num_epochs, step, self.child_steps, meters)
+                             self.num_epochs, step + 1, len(self.train_loader), meters)
 
-    def train_controller(self, epoch):
+    def _train_controller(self, epoch):
         self.model.eval()
         self.controller.train()
         meters = AverageMeterGroup()
+        self.ctrl_optim.zero_grad()
         for ctrl_step, (x, y) in enumerate(self.valid_loader):
-            self.ctrl_optim.zero_grad()
-            for step in range(1, self.ctrl_steps_aggregate + 1):
-                x, y = next(self.valid_loader)
-                x, y = to_device(x, self.device), to_device(y, self.device)
+            x, y = to_device(x, self.device), to_device(y, self.device)
 
-                self.resample()
-                with torch.no_grad():
-                    logits = self.model(x)
-                self._write_graph_status()
-                metrics = self.metrics(logits, y)
-                reward = self.reward_function(logits, y)
-                if self.entropy_weight:
-                    reward += self.entropy_weight * self.ctrl.sample_entropy.item()
-                self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
-                loss = self.ctrl.sample_log_prob * (reward - self.baseline)
-                if self.skip_weight:
-                    loss += self.skip_weight * self.ctrl.sample_skip_penalty
-                metrics['reward'] = reward
-                metrics['loss'] = loss.item()
-                metrics['ent'] = self.ctrl.sample_entropy.item()
-                metrics['log_prob'] = self.ctrl.sample_log_prob.item()
-                metrics['baseline'] = self.baseline
-                metrics['skip'] = self.ctrl.sample_skip_penalty
+            self._resample()
+            with torch.no_grad():
+                logits = self.model(x)
+            metrics = self.metrics(logits, y)
+            reward = self.reward_function(logits, y)
+            if self.entropy_weight:
+                reward += self.entropy_weight * self.controller.sample_entropy.item()
+            self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
+            loss = self.controller.sample_log_prob * (reward - self.baseline)
+            if self.skip_weight:
+                loss += self.skip_weight * self.controller.sample_skip_penalty
+            metrics['reward'] = reward
+            metrics['loss'] = loss.item()
+            metrics['ent'] = self.controller.sample_entropy.item()
+            metrics['log_prob'] = self.controller.sample_log_prob.item()
+            metrics['baseline'] = self.baseline
+            metrics['skip'] = self.controller.sample_skip_penalty
 
-                loss /= self.ctrl_steps_aggregate
-                loss.backward()
-                meters.update(metrics)
+            loss /= self.ctrl_steps_aggregate
+            loss.backward()
+            meters.update(metrics)
 
-                cur_step = step + (ctrl_step - 1) * self.ctrl_steps_aggregate
-                if self.log_frequency is not None and cur_step % self.log_frequency == 0:
-                    _logger.info('RL Epoch [%d/%d] Step [%d/%d] [%d/%d]  %s', epoch + 1, self.num_epochs,
-                                 ctrl_step, self.ctrl_steps, step, self.ctrl_steps_aggregate,
-                                 meters)
+            if (ctrl_step + 1) % self.ctrl_steps_aggregate == 0:
+                if self.grad_clip > 0:
+                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
+                self.ctrl_optim.step()
+                self.ctrl_optim.zero_grad()
 
-            if self.grad_clip > 0:
-                nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
-            self.ctrl_optim.step()
+            if self.log_frequency is not None and ctrl_step % self.log_frequency == 0:
+                _logger.info('RL Epoch [%d/%d] Step [%d/%d]  %s', epoch + 1, self.num_epochs,
+                             ctrl_step + 1, len(self.valid_loader), meters)
 
-    def resample(self):
+    def _resample(self):
         result = self.controller.resample()
-        for name, module in self.nas_modules.items():
+        for name, module in self.nas_modules:
             module.sampled = result[name]
 
     def fit(self):
         for i in range(self.num_epochs):
-            self.train_model(i)
-            self.train_controller(i)
+            self._train_model(i)
+            self._train_controller(i)
 
     def export(self):
-        return self.controller.resample()
+        self.controller.eval()
+        with torch.no_grad():
+            return self.controller.resample()

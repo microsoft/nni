@@ -18,33 +18,40 @@ _logger = logging.getLogger(__name__)
 
 class PathSamplingLayerChoice(nn.Module):
     def __init__(self, layer_choice):
+        super(PathSamplingLayerChoice, self).__init__()
         self.op_names = []
-        for name, module in layer_choice.named_modules():
+        for name, module in layer_choice.named_children():
             self.add_module(name, module)
+            self.op_names.append(name)
+        assert self.op_names, 'There has to be at least one op to choose from.'
         self.sampled = None  # sampled can be either a list of indices or an index
 
     def forward(self, *args, **kwargs):
-        assert self.sampled, 'At least one path needs to be sampled before fprop.'
+        assert self.sampled is not None, 'At least one path needs to be sampled before fprop.'
         if isinstance(self.sampled, list):
             return sum([getattr(self, self.op_names[i])(*args, **kwargs) for i in self.sampled])
         else:
-            return self.op_names[self.sampled](*args, **kwargs)
+            return getattr(self, self.op_names[self.sampled])(*args, **kwargs)
 
-    def __length__(self):
+    def __len__(self):
         return len(self.op_names)
 
 
 class PathSamplingInputChoice(nn.Module):
     def __init__(self, input_choice):
-        self.num_candidates = input_choice.num_candidates
+        super(PathSamplingInputChoice, self).__init__()
+        self.n_candidates = input_choice.n_candidates
+        self.n_chosen = input_choice.n_chosen
         self.sampled = None
 
     def forward(self, input_tensors):
-        # TODO implement other ways including concatenate and single choice...
-        return sum([input_tensors[i] for i in self.sampled])
+        if isinstance(self.sampled, list):
+            return sum([input_tensors[t] for t in self.sampled])
+        else:
+            return input_tensors[self.sampled]
 
-    def __length__(self):
-        return self.num_candidates
+    def __len__(self):
+        return self.n_candidates
 
 
 class SinglePathTrainer(BaseOneShotTrainer):
@@ -76,14 +83,11 @@ class SinglePathTrainer(BaseOneShotTrainer):
         automatic detects GPU and selects GPU first.
     log_frequency : int
         Number of mini-batches to log metrics.
-    callbacks : list of Callback
-        Callbacks to plug into the trainer. See Callbacks.
     """
 
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None,
-                 callbacks=None):
+                 mutator=None, batch_size=64, workers=4, device=None, log_frequency=None):
         self.model = model
         self.loss = loss
         self.metrics = metrics
