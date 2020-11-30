@@ -214,10 +214,10 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             trialJobId, form, codeDir, outputDir)
         const cleanupScriptTemplate: string =
 `#!/bin/bash
-ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | xargs kill -2
+ps aux | grep "python3 -m nni.tools.trial_tool.trial_keeper" | awk '{print $2}' | xargs kill -2
 while true;
 do
-    proc=\`ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | grep "" -c\`
+    proc=\`ps aux | grep "python3 -m nni.tools.trial_tool.trial_keeper" | awk '{print $2}' | grep "" -c\`
     if (( $proc == 1  )); then
         exit 0
     else
@@ -281,7 +281,7 @@ export NNI_TRIAL_SEQ_ID={4}
 mkdir -p $NNI_OUTPUT_DIR
 {5}
 echo '{6}' > $NNI_CODE_DIR/{7}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' \
+python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
 --nnimanager_ip {9} --nnimanager_port {10} \
 --nni_manager_version '{11}' --log_collection '{12}'
 `;
