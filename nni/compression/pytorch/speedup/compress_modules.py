@@ -272,7 +272,7 @@ def replace_convtranspose2d(convtrans, mask):
             new_start = groupid * new_in_per_group
             new_end = (groupid + 1) * new_in_per_group
             new_convtrans.weight.data[new_start:new_end] = torch.index_select(
-                tmp_weight_data[start:end], 1, current_output_index)
+                tmp_weight_data[new_start:new_end], 1, current_output_index)
     else:
         new_convtrans.weight.data.copy_(tmp_weight_data)
     if convtrans.bias is not None:
