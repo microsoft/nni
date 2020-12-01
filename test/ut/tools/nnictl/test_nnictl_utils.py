@@ -46,7 +46,7 @@ class CommonUtilsTestCase(TestCase):
     @responses.activate
     def test_get_config_file_name(self):
         args = generate_args()
-        self.assertEqual('aGew0x', get_config_filename(args))
+        self.assertEqual('xOpEwA5w', get_config_filename(args))
     
     @responses.activate
     def test_get_experiment_port(self):

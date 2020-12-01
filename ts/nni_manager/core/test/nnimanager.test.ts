@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as fs from 'fs';
 import * as os from 'os';
 import { assert, expect } from 'chai';
 import { Container, Scope } from 'typescript-ioc';
@@ -10,9 +11,10 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { Database, DataStore } from '../../common/datastore';
 import { Manager, ExperimentProfile} from '../../common/manager';
+import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { NNIDataStore } from '../nniDataStore';
+import { NNIExperimentsManager } from '../nniExperimentsManager';
 import { NNIManager } from '../nnimanager';
 import { SqlDB } from '../sqlDatabase';
 import { MockedTrainingService } from './mockedTrainingService';
@@ -25,6 +27,7 @@ async function initContainer(): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
+    Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
     await component.get<DataStore>(DataStore).init();
 }
 
@@ -87,9 +90,26 @@ describe('Unit test for nnimanager', function () {
         revision: 0
     }
 
+    let mockedInfo = {
+        "unittest": {
+            "port": 8080,
+            "startTime": 1605246730756,
+            "endTime": "N/A",
+            "status": "INITIALIZED",
+            "platform": "local",
+            "experimentName": "testExp",
+            "tag": [], "pid": 11111,
+            "webuiUrl": [],
+            "logDir": null
+        }
+    }
+
 
     before(async () => {
         await initContainer();
+        fs.writeFileSync('.experiment.test', JSON.stringify(mockedInfo));
+        const experimentsManager: ExperimentManager = component.get(ExperimentManager);
+        experimentsManager.setExperimentPath('.experiment.test');
         nniManager = component.get(Manager);
         const expId: string = await nniManager.startExperiment(experimentParams);
         assert.strictEqual(expId, 'unittest');

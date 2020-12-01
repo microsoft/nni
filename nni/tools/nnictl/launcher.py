@@ -23,10 +23,11 @@ from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SU
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
 
-def get_log_path(config_file_name):
+def get_log_path(experiment_id):
     '''generate stdout and stderr log path'''
-    stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
-    stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+    os.makedirs(os.path.join(NNICTL_HOME_DIR, experiment_id, 'log'), exist_ok=True)
+    stdout_full_path = os.path.join(NNICTL_HOME_DIR, experiment_id, 'log', 'nnictl_stdout.log')
+    stderr_full_path = os.path.join(NNICTL_HOME_DIR, experiment_id, 'log', 'nnictl_stderr.log')
     return stdout_full_path, stderr_full_path
 
 def print_log_content(config_file_name):
@@ -38,7 +39,7 @@ def print_log_content(config_file_name):
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
 
-def start_rest_server(port, platform, mode, config_file_name, foreground=False, experiment_id=None, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None):
     '''Run nni manager process'''
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
@@ -63,7 +64,8 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
         node_command = os.path.join(entry_dir, 'node.exe')
     else:
         node_command = os.path.join(entry_dir, 'node')
-    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform]
+    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform, \
+            '--experiment_id', experiment_id]
     if mode == 'view':
         cmds += ['--start_mode', 'resume']
         cmds += ['--readonly', 'true']
@@ -73,15 +75,12 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
         cmds += ['--log_dir', log_dir]
     if log_level is not None:
         cmds += ['--log_level', log_level]
-    if mode in ['resume', 'view']:
-        cmds += ['--experiment_id', experiment_id]
-    else:
-        cmds += ['--experiment_id', '_debug_']
     if foreground:
         cmds += ['--foreground', 'true']
-    stdout_full_path, stderr_full_path = get_log_path(config_file_name)
+    stdout_full_path, stderr_full_path = get_log_path(experiment_id)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
-        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        start_time = time.time()
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
         #add time information in the header of log files
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
@@ -98,7 +97,7 @@ def start_rest_server(port, platform, mode, config_file_name, foreground=False, 
                 process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE)
             else:
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
-    return process, str(time_now)
+    return process, int(start_time * 1000)
 
 def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
@@ -437,9 +436,9 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
 
-def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
+def launch_experiment(args, experiment_config, mode, experiment_id):
     '''follow steps to start rest server and start experiment'''
-    nni_config = Config(config_file_name)
+    nni_config = Config(experiment_id)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
@@ -450,15 +449,15 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         module_name, _ = get_builtin_module_class_name('advisors', package_name)
     if package_name and module_name:
         try:
-            stdout_full_path, stderr_full_path = get_log_path(config_file_name)
+            stdout_full_path, stderr_full_path = get_log_path(experiment_id)
             with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
                 check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=stdout_file, stderr=stderr_file)
         except CalledProcessError:
             print_error('some errors happen when import package %s.' %(package_name))
-            print_log_content(config_file_name)
+            print_log_content(experiment_id)
             if package_name in INSTALLABLE_PACKAGE_META:
                 print_error('If %s is not installed, it should be installed through '\
-                            '\'nnictl package install --name %s\''%(package_name, package_name))
+                            '\'nnictl package install --name %s\'' % (package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
@@ -470,7 +469,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
-                                                 mode, config_file_name, foreground, experiment_id, log_dir, log_level)
+                                                 mode, experiment_id, foreground, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -496,7 +495,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_normal('Successfully started Restful server!')
     else:
         print_error('Restful server start failed!')
-        print_log_content(config_file_name)
+        print_log_content(experiment_id)
         try:
             kill_command(rest_process.pid)
         except Exception:
@@ -505,21 +504,25 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     if mode != 'view':
         # set platform configuration
         set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
-                            config_file_name, rest_process)
+                            experiment_id, rest_process)
 
     # start a new experiment
     print_normal('Starting experiment...')
+    # save experiment information
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
-    response = set_experiment(experiment_config, mode, args.port, config_file_name)
+    response = set_experiment(experiment_config, mode, args.port, experiment_id)
     if response:
         if experiment_id is None:
             experiment_id = json.loads(response.text).get('experiment_id')
-        nni_config.set_config('experimentId', experiment_id)
     else:
         print_error('Start experiment failed!')
-        print_log_content(config_file_name)
+        print_log_content(experiment_id)
         try:
             kill_command(rest_process.pid)
         except Exception:
@@ -530,12 +533,6 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     else:
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
-
-    # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
@@ -549,8 +546,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
 def create_experiment(args):
     '''start a new experiment'''
-    config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    nni_config = Config(config_file_name)
+    experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    nni_config = Config(experiment_id)
+    nni_config.set_config('experimentId', experiment_id)
     config_path = os.path.abspath(args.config)
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
@@ -565,9 +563,9 @@ def create_experiment(args):
     nni_config.set_config('experimentConfig', experiment_config)
     nni_config.set_config('restServerPort', args.port)
     try:
-        launch_experiment(args, experiment_config, 'new', config_file_name)
+        launch_experiment(args, experiment_config, 'new', experiment_id)
     except Exception as exception:
-        nni_config = Config(config_file_name)
+        nni_config = Config(experiment_id)
         restServerPid = nni_config.get_config('restServerPid')
         if restServerPid:
             kill_command(restServerPid)
@@ -594,17 +592,13 @@ def manage_stopped_experiment(args, mode):
             exit(1)
         experiment_id = args.id
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
-    nni_config = Config(experiment_dict[experiment_id]['fileName'])
+    nni_config = Config(experiment_id)
     experiment_config = nni_config.get_config('experimentConfig')
-    experiment_id = nni_config.get_config('experimentId')
-    new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    new_nni_config = Config(new_config_file_name)
-    new_nni_config.set_config('experimentConfig', experiment_config)
-    new_nni_config.set_config('restServerPort', args.port)
+    nni_config.set_config('restServerPort', args.port)
     try:
-        launch_experiment(args, experiment_config, mode, new_config_file_name, experiment_id)
+        launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:
-        nni_config = Config(new_config_file_name)
+        nni_config = Config(experiment_id)
         restServerPid = nni_config.get_config('restServerPid')
         if restServerPid:
             kill_command(restServerPid)
