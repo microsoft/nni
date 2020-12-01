@@ -9,7 +9,8 @@ from .base import ConfigBase, PathLike
 from .common import TrainingServiceConfig
 from . import util
 
-__all__ = ['RemoteMachineConfig', 'RemoteTrainingServiceConfig']
+__all__ = ['RemoteConfig', 'RemoteMachineConfig']
+
 
 @dataclass(init=False)
 class RemoteMachineConfig(ConfigBase):
@@ -19,7 +20,6 @@ class RemoteMachineConfig(ConfigBase):
     password: Optional[str] = None
     ssh_key_file: PathLike = '~/.ssh/id_rsa'
     ssh_passphrase: Optional[str] = None
-    reuse_mode: bool = False
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
@@ -43,9 +43,10 @@ class RemoteMachineConfig(ConfigBase):
             raise ValueError(f'Password is not provided and cannot find SSH key file "{self.ssh_key_file}"')
 
 @dataclass(init=False)
-class RemoteTrainingServiceConfig(TrainingServiceConfig):
+class RemoteConfig(TrainingServiceConfig):
     platform: str = 'remote'
     machine_list: List[RemoteMachineConfig]
+    reuse_mode: bool = False
 
     _validation_rules = {
         'platform': lambda value: (value == 'remote', 'cannot be modified')

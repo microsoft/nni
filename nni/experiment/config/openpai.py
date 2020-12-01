@@ -6,10 +6,10 @@ from dataclasses import dataclass
 from .common import TrainingServiceConfig
 from . import util
 
-__all__ = ['OpenPaiTrainingServiceConfig']
+__all__ = ['OpenPaiConfig']
 
 @dataclass(init=False)
-class OpenPaiTrainingServiceConfig(TrainingServiceConfig):
+class OpenPaiConfig(TrainingServiceConfig):
     platform: str = 'openpai'
     host: str
     username: str

@@ -6,10 +6,10 @@ from typing import List, Optional, Union
 
 from .common import TrainingServiceConfig
 
-__all__ = ['LocalTrainingServiceConfig']
+__all__ = ['LocalConfig']
 
 @dataclass(init=False)
-class LocalTrainingServiceConfig(TrainingServiceConfig):
+class LocalConfig(TrainingServiceConfig):
     platform: str = 'local'
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1
