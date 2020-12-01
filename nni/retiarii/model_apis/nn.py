@@ -22,6 +22,12 @@ def get_records():
     global _records
     return _records
 
+def add_record(name, value):
+    global _records
+    if _records is not None:
+        assert name not in _records, '{} already in _records'.format(name)
+        _records[name] = value
+
 
 class Placeholder(nn.Module):
     def __init__(self, label, related_info):

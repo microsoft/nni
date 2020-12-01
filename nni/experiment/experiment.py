@@ -179,8 +179,11 @@ class RetiariiExperiment(Experiment):
         script_module = torch.jit.script(self.base_model)
         base_model = convert_to_graph(script_module, self.base_model, self.recorded_module_args)
         
+        assert id(self.trainer) in self.recorded_module_args
+        trainer_config = self.recorded_module_args[id(self.trainer)]
+
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy, args=(base_model, self.applied_mutators, self.trainer)).start()
+        Thread(target=self.strategy, args=(base_model, self.applied_mutators, trainer_config)).start()
         _logger.info('Strategy started!')
 
     def start(self, config: ExperimentConfig, port: int = 8080, debug: bool = False) -> None:

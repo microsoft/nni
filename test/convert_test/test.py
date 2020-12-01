@@ -8,6 +8,7 @@ from nni.retiarii.converter.graph_gen import convert_to_graph
 from nni.retiarii.converter.visualize import visualize_model
 from nni.retiarii import nn
 from nni.retiarii.codegen.pytorch import model_to_pytorch_script
+from nni.retiarii.trainer import PyTorchImageClassificationTrainer
 
 from base_mnasnet import MNASNet
 from nni.experiment import RetiariiExperiment, ExperimentConfig
@@ -24,6 +25,11 @@ if __name__ == '__main__':
     nn.enable_record_args()
     base_model = MNASNet(0.5, _DEFAULT_DEPTHS, _DEFAULT_CONVOPS, _DEFAULT_KERNEL_SIZES,
                     _DEFAULT_NUM_LAYERS, _DEFAULT_SKIPS)
+    trainer = PyTorchImageClassificationTrainer(base_model, dataset_cls="CIFAR10",
+            dataset_kwargs={"root": "data/cifar10", "download": True},
+            dataloader_kwargs={"batch_size": 32},
+            optimizer_kwargs={"lr": 1e-3},
+            trainer_kwargs={"max_epochs": 1})
     recorded_module_args = nn.get_records()
     nn.disable_record_args()
     print(recorded_module_args)
@@ -37,7 +43,7 @@ if __name__ == '__main__':
     #visualize_model(graph_ir)
 
     # new interface
-    training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
+    '''training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
         "dataset_cls": "CIFAR10",
         "dataset_kwargs": {
                 "root": "data/cifar10",
@@ -52,11 +58,11 @@ if __name__ == '__main__':
         "trainer_kwargs": {
             "max_epochs": 1
         }
-    }}
+    }}'''
     applied_mutators = []
     applied_mutators.append(BlockMutator('mutable_0'))
     applied_mutators.append(BlockMutator('mutable_1'))
-    exp = RetiariiExperiment(base_model, training_approach, applied_mutators, simple_startegy, recorded_module_args)
+    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy, recorded_module_args)
     exp_config = ExperimentConfig.create_template('local')
     exp_config.experiment_name = 'mnasnet_search'
     exp_config.trial_concurrency = 2
