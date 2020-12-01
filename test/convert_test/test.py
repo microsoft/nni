@@ -43,25 +43,10 @@ if __name__ == '__main__':
     #visualize_model(graph_ir)
 
     # new interface
-    '''training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
-        "dataset_cls": "CIFAR10",
-        "dataset_kwargs": {
-                "root": "data/cifar10",
-                "download": True
-        },
-        "dataloader_kwargs": {
-            "batch_size": 32
-        },
-        "optimizer_kwargs": {
-            "lr": 1e-3
-        },
-        "trainer_kwargs": {
-            "max_epochs": 1
-        }
-    }}'''
     applied_mutators = []
     applied_mutators.append(BlockMutator('mutable_0'))
     applied_mutators.append(BlockMutator('mutable_1'))
+
     exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy, recorded_module_args)
     exp_config = ExperimentConfig.create_template('local')
     exp_config.experiment_name = 'mnasnet_search'
