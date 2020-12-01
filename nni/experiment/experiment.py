@@ -157,7 +157,7 @@ class Experiment:
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: 'nn.Module', trainer: 'BaseTrainer',
-                 applied_mutators: List['Mutator'], strategy: Union[str, Callable],
+                 applied_mutators: List['Mutator'], strategy: 'BaseStrategy',
                  recorded_module_args = None):
         self.config: ExperimentConfig = None
         self.port: Optional[int] = None
@@ -172,8 +172,6 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-        self.strategy = utils.import_(strategy) if isinstance(strategy, str) else strategy
-
     def _start_strategy(self):
         import torch
         script_module = torch.jit.script(self.base_model)
@@ -183,7 +181,7 @@ class RetiariiExperiment(Experiment):
         trainer_config = self.recorded_module_args[id(self.trainer)]
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy, args=(base_model, self.applied_mutators, trainer_config)).start()
+        Thread(target=self.strategy.run, args=(base_model, self.applied_mutators, trainer_config)).start()
         _logger.info('Strategy started!')
 
     def start(self, config: ExperimentConfig, port: int = 8080, debug: bool = False) -> None:

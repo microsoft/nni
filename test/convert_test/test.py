@@ -13,7 +13,7 @@ from nni.retiarii.trainer import PyTorchImageClassificationTrainer
 from base_mnasnet import MNASNet
 from nni.experiment import RetiariiExperiment, ExperimentConfig
 
-from simple_strategy import simple_startegy
+from simple_strategy import SimpleStrategy
 from mutator import BlockMutator
 
 if __name__ == '__main__':
@@ -47,12 +47,14 @@ if __name__ == '__main__':
     applied_mutators.append(BlockMutator('mutable_0'))
     applied_mutators.append(BlockMutator('mutable_1'))
 
+    simple_startegy = SimpleStrategy()
+
     exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy, recorded_module_args)
     exp_config = ExperimentConfig.create_template('local')
     exp_config.experiment_name = 'mnasnet_search'
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 10
     exp_config.search_space = {}
-    exp_config.trial_command = 'python3 -m nni.retiarii.trial_entry'
+    exp_config.trial_command = 'python3 -m nni.retiarii.trial_entry' # FIXME: hide this configuration, redesign experiment config for NAS
     exp_config.trial_code_directory = '../..'
     exp.run(exp_config, 8081, debug=True)
