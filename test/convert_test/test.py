@@ -65,34 +65,3 @@ if __name__ == '__main__':
     exp_config.trial_command = 'python3 -m nni.retiarii.trial_entry'
     exp_config.trial_code_directory = '../..'
     exp.run(exp_config, 8081, debug=True)
-
-    '''exp_config = {'authorName': 'nni',
-                  'experimentName': 'naive',
-                  'trialConcurrency': 3,
-                  'maxExecDuration': '1h',
-                  'maxTrialNum': 10,
-                  'trainingServicePlatform': 'local'
-                }
-    applied_mutators = [{'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_0'}},
-                        {'filepath': os.path.join(os.getcwd(), 'mutator.py'), 'classname': 'BlockMutator', 'args': {'target': 'mutable_1'}}]
-    training_approach = {'modulename': 'nni.retiarii.trainer.PyTorchImageClassificationTrainer', 'args': {
-        "dataset_cls": "CIFAR10",
-        "dataset_kwargs": {
-                "root": "data/cifar10",
-                "download": True
-        },
-        "dataloader_kwargs": {
-            "batch_size": 32
-        },
-        "optimizer_kwargs": {
-            "lr": 1e-3
-        },
-        "trainer_kwargs": {
-            "max_epochs": 1
-        }
-    }}
-    strategy = {'filename': 'simple_strategy', 'funcname': 'simple_startegy', 'args': {}}
-    exp = Experiment()
-    exp.tmp_start_retiarii(graph_ir, training_approach,
-                           applied_mutators, strategy,
-                           exp_config)'''
