@@ -15,7 +15,12 @@ class NlpTrialConfig(Model):
     Attributes
     ----------
     arch: dict
-        aka recepie in NAS-NLP-Benchmark repo
+        aka recepie in NAS-NLP-Benchmark repo (https://github.com/fmsnew/nas-bench-nlp-release).
+        an arch has multiple Node, Node_input_n and Node_op.
+        ``Node`` can be ``node_n`` or ``h_new_n`` or ``f/i/o/j(_act)`` etc. (n is an int number and need not to be consecutive)
+        ``Node_input_n`` can be ``Node`` or ``x`` etc.
+        ``Node_op`` can be ``linear`` or ``activation_sigm`` or ``activation_tanh`` or ``elementwise_prod`` or ``elementwise_sum`` or ``activation_leaky_relu`` etc.
+        e.g. {"h_new_0_input_0":"node_3","h_new_0_input_1":"x","h_new_0_op":"linear","node_2_input_0":"x","node_2_input_1":"h_prev_0","node_2_op":"linear","node_3_input_0":"node_2","node_3_op":"activation_leaky_relu"}
     dataset: str
         Dataset used. Could be ``ptb`` or ``wikitext-2``.
     """
