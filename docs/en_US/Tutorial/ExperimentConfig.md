@@ -260,6 +260,8 @@ Specifies the platform to run the experiment, including __local__, __remote__, _
 
 * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/). For detail please refer to [Kubeflow Docs](../TrainingService/KubeflowMode.md)
 
+* __adl__ submit trial jobs to [AdaptDL](https://www.kubeflow.org/docs/about/kubeflow/), NNI support AdaptDL on Kubernetes cluster. For detail please refer to [AdaptDL Docs](../TrainingService/AdaptDLMode.md)
+
 * TODO: explain frameworkcontroller.
 
 ### searchSpacePath

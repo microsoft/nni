@@ -262,6 +262,37 @@ function formatComplexTypeValue(value: any): string | number {
     }
 }
 
+function caclMonacoEditorHeight(height): number {
+    // [Search space 56px] + [marginBottom 18px] +
+    // button[height: 32px, marginTop: 45px, marginBottom: 7px]
+    // panel own padding-bottom: 20px;
+    return height - 178;
+}
+
+function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
+    const key = columnKey as keyof T;
+    return items.slice(0).sort(function(a: T, b: T): any {
+        if (
+            a[key] === undefined ||
+            Object.is(a[key], NaN) ||
+            Object.is(a[key], Infinity) ||
+            Object.is(a[key], -Infinity) ||
+            typeof a[key] === 'object'
+        ) {
+            return 1;
+        }
+        if (
+            b[key] === undefined ||
+            Object.is(b[key], NaN) ||
+            Object.is(b[key], Infinity) ||
+            Object.is(b[key], -Infinity) ||
+            typeof b[key] === 'object'
+        ) {
+            return -1;
+        }
+        return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
+    });
+}
 export {
     convertTime,
     convertDuration,
@@ -280,5 +311,7 @@ export {
     isArrayType,
     requestAxios,
     isNaNorInfinity,
-    formatComplexTypeValue
+    formatComplexTypeValue,
+    caclMonacoEditorHeight,
+    copyAndSort
 };

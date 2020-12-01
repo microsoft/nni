@@ -72,7 +72,9 @@ dependencies = [
     'colorama',
     'scikit-learn>=0.23.2',
     'pkginfo',
-    'websockets'
+    'websockets',
+    'filelock',
+    'prettytable'
 ]
 
 

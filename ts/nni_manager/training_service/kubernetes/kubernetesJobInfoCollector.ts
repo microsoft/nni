@@ -23,21 +23,16 @@ export class KubernetesJobInfoCollector {
         this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
 
-    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined): Promise<void> {
+    public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined): Promise<void[]> {
         assert(kubernetesCRDClient !== undefined);
         const updateKubernetesTrialJobs: Promise<void>[] = [];
         for (const [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
             if (kubernetesTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            // Since Kubeflow needs some delay to schedule jobs, we provide 20 seconds buffer time to check kubeflow job's status
-            if (Date.now() - kubernetesTrialJob.submitTime < 20 * 1000) {
-                return Promise.resolve();
-            }
             updateKubernetesTrialJobs.push(this.retrieveSingleTrialJobInfo(kubernetesCRDClient, kubernetesTrialJob));
         }
-
-        await Promise.all(updateKubernetesTrialJobs);
+        return Promise.all(updateKubernetesTrialJobs);
     }
 
     protected async retrieveSingleTrialJobInfo(_kubernetesCRDClient: KubernetesCRDClient | undefined,

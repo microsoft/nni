@@ -6,24 +6,29 @@ export const Command1 = (): any => {
     const tuner = EXPERIMENT.profile.params.tuner;
     const advisor = EXPERIMENT.profile.params.advisor;
     const assessor = EXPERIMENT.profile.params.assessor;
-    let title = '';
-    let builtinName = '';
+    const title: string[] = [];
+    const builtinName: string[] = [];
     if (tuner !== undefined) {
-        title = title.concat('Tuner');
+        title.push('Tuner');
         if (tuner.builtinTunerName !== undefined) {
-            builtinName = builtinName.concat(tuner.builtinTunerName);
+            builtinName.push(tuner.builtinTunerName);
         }
     }
+
     if (advisor !== undefined) {
-        title = title.concat('/ Assessor');
+        title.push('Advisor');
         if (advisor.builtinAdvisorName !== undefined) {
-            builtinName = builtinName.concat(advisor.builtinAdvisorName);
+            builtinName.push(advisor.builtinAdvisorName);
+        }
+        if (advisor.className !== undefined) {
+            builtinName.push(advisor.className);
         }
     }
+
     if (assessor !== undefined) {
-        title = title.concat('/ Addvisor');
+        title.push('Assessor');
         if (assessor.builtinAssessorName !== undefined) {
-            builtinName = builtinName.concat(assessor.builtinAssessorName);
+            builtinName.push(assessor.builtinAssessorName);
         }
     }
 
@@ -32,8 +37,8 @@ export const Command1 = (): any => {
             <div>
                 <p className='command'>Training platform</p>
                 <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
-                <p className='lineMargin'>{title}</p>
-                <div className='nowrap'>{builtinName}</div>
+                <p className='lineMargin'>{title.join('/')}</p>
+                <div className='nowrap'>{builtinName.join('/')}</div>
             </div>
         </div>
     );
