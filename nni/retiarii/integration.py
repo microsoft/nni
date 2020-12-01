@@ -44,7 +44,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     final_metric_callback
     """
-    def __init__(self, strategy: Union[str, Callable]):
+    def __init__(self):
         super(RetiariiAdvisor, self).__init__()
         register_advisor(self)  # register the current advisor as the "global only" advisor
         self.search_space = None
@@ -55,11 +55,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.intermediate_metric_callback: Callable[[int, MetricData], None] = None
         self.final_metric_callback: Callable[[int, MetricData], None] = None
 
-        self.strategy = utils.import_(strategy) if isinstance(strategy, str) else strategy
         self.parameters_count = 0
-        _logger.info('Starting strategy...')
-        threading.Thread(target=self.strategy).start()
-        _logger.info('Strategy started!')
 
     def handle_initialize(self, data):
         """callback for initializing the advisor
