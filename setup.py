@@ -111,7 +111,7 @@ def _setup():
         extras_require = {
             'SMAC': [
                 'ConfigSpaceNNI @ git+https://github.com/QuanluZhang/ConfigSpace.git',
-                'SMAC3 @ git+https://github.com/QuanluZhang/SMAC3.git'
+                'smac @ git+https://github.com/QuanluZhang/SMAC3.git'
             ],
             'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
             'PPOTuner': ['enum34', 'gym']
