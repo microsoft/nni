@@ -110,7 +110,7 @@ def _setup():
         install_requires = dependencies,
         extras_require = {
             'SMAC': [
-                'ConfigSpace @ git+https://github.com/QuanluZhang/ConfigSpace.git',
+                'ConfigSpaceNNI @ git+https://github.com/QuanluZhang/ConfigSpace.git',
                 'SMAC3 @ git+https://github.com/QuanluZhang/SMAC3.git'
             ],
             'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
