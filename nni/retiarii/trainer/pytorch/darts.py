@@ -77,12 +77,16 @@ class DartsTrainer(BaseOneShotTrainer):
         Receives logits and ground truth label, return a loss tensor.
     metrics : callable
         Receives logits and ground truth label, return a dict of metrics.
+    optimizer : Optimizer
+        The optimizer used for optimizing the model.
     num_epochs : int
         Number of epochs planned for training.
     dataset : Dataset
         Dataset for training. Will be split for training weights and architecture weights.
     grad_clip : float
         Gradient clipping. Set to 0 to disable. Default: 5.
+    learning_rate : float
+        Learning rate to optimize the model.
     batch_size : int
         Batch size.
     workers : int
@@ -97,7 +101,7 @@ class DartsTrainer(BaseOneShotTrainer):
         ``True`` if using second order optimization, else first order optimization.
     """
 
-    def __init__(self, model, loss, metrics,
+    def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, grad_clip=5.,
                  learning_rate=2.5E-3, batch_size=64, workers=4,
                  device=None, log_frequency=None,
@@ -119,7 +123,7 @@ class DartsTrainer(BaseOneShotTrainer):
         for _, module in self.nas_modules:
             module.to(self.device)
 
-        self.model_optim = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
+        self.model_optim = optimizer
         self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate, betas=(0.5, 0.999),
                                            weight_decay=1.0E-3)
         self.unrolled = unrolled

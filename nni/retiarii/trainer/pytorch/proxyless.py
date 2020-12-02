@@ -79,6 +79,7 @@ class ProxylessLayerChoice(nn.Module):
         self.sampled = sample
         with torch.no_grad():
             self._binary_gates.zero_()
+            self._binary_gates.grad = torch.zeros_like(self._binary_gates.data)
             self._binary_gates.data[sample] = 1.0
 
     def finalize_grad(self):
@@ -112,12 +113,14 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Receives logits and ground truth label, return a loss tensor.
     metrics : callable
         Receives logits and ground truth label, return a dict of metrics.
+    optimizer : Optimizer
+        The optimizer used for optimizing the model.
     num_epochs : int
         Number of epochs planned for training.
-    dataset_train : Dataset
+    dataset : Dataset
         Dataset for training. Will be split for training weights and architecture weights.
-    dataset_valid : Dataset
-        Dataset for testing.
+    warmup_epochs : int
+        Number of epochs to warmup model parameters.
     batch_size : int
         Batch size.
     workers : int
@@ -129,45 +132,49 @@ class ProxylessTrainer(BaseOneShotTrainer):
     arc_learning_rate : float
         Learning rate of architecture parameters.
     """
-    def __init__(self, model, loss, metrics,
-                 num_epochs, dataset_train, dataset_valid,
-                 learning_rate=2.5E-3, batch_size=64, workers=4, device=None, log_frequency=None,
-                 arc_learning_rate=3.0E-4):
+
+    def __init__(self, model, loss, metrics, optimizer,
+                 num_epochs, dataset, warmup_epochs=0,
+                 batch_size=64, workers=4, device=None, log_frequency=None,
+                 arc_learning_rate=1.0E-3):
         self.model = model
         self.loss = loss
         self.metrics = metrics
+        self.optimizer = optimizer
         self.num_epochs = num_epochs
-        self.dataset_train = dataset_train
-        self.dataset_valid = dataset_valid
+        self.warmup_epochs = warmup_epochs
+        self.dataset = dataset
         self.batch_size = batch_size
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
+        self.model.to(self.device)
 
         self.nas_modules = []
         replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
-        replace_input_choice(self.mode, ProxylessInputChoice, self.nas_modules)
+        replace_input_choice(self.model, ProxylessInputChoice, self.nas_modules)
+        for _, module in self.nas_modules:
+            module.to(self.device)
 
-        self.model_optim = torch.optim.SGD(self.model.parameters(), lr=learning_rate)
-        self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate, betas=(0.5, 0.999),
-                                           weight_decay=1.0E-3)
+        self.optimizer = optimizer
+        self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate,
+                                           weight_decay=0, betas=(0, 0.999), eps=1e-8)
+        self._init_dataloader()
 
-        n_train = len(self.dataset_train)
+    def _init_dataloader(self):
+        n_train = len(self.dataset)
         split = n_train // 2
         indices = list(range(n_train))
         train_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[:split])
         valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(indices[split:])
-        self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+        self.train_loader = torch.utils.data.DataLoader(self.dataset,
+                                                        batch_size=self.batch_size,
                                                         sampler=train_sampler,
-                                                        num_workers=workers)
-        self.valid_loader = torch.utils.data.DataLoader(self.dataset_train,
-                                                        batch_size=batch_size,
+                                                        num_workers=self.workers)
+        self.valid_loader = torch.utils.data.DataLoader(self.dataset,
+                                                        batch_size=self.batch_size,
                                                         sampler=valid_sampler,
-                                                        num_workers=workers)
-        self.test_loader = torch.utils.data.DataLoader(self.dataset_valid,
-                                                       batch_size=batch_size,
-                                                       num_workers=workers)
+                                                        num_workers=self.workers)
 
     def _train_one_epoch(self, epoch):
         self.model.train()
@@ -176,30 +183,30 @@ class ProxylessTrainer(BaseOneShotTrainer):
             trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
             val_X, val_y = val_X.to(self.device), val_y.to(self.device)
 
-            # 1) train architecture parameters
-            for _, module in self.nas_modules:
-                module.resample()
-            self.ctrl_optim.zero_grad()
-            logits, loss = self._logits_and_loss(val_X, val_y)
-            loss.backward()
-            for _, module in self.nas_modules:
-                module.finalize_grad()
-            self.ctrl_optim.step()
+            if epoch >= self.warmup_epochs:
+                # 1) train architecture parameters
+                for _, module in self.nas_modules:
+                    module.resample()
+                self.ctrl_optim.zero_grad()
+                logits, loss = self._logits_and_loss(val_X, val_y)
+                loss.backward()
+                for _, module in self.nas_modules:
+                    module.finalize_grad()
+                self.ctrl_optim.step()
 
             # 2) train model parameters
             for _, module in self.nas_modules:
                 module.resample()
-            self.model_optim.zero_grad()
+            self.optimizer.zero_grad()
             logits, loss = self._logits_and_loss(trn_X, trn_y)
             loss.backward()
-            self.model_optim.step()
-
+            self.optimizer.step()
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 _logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
-                            self.num_epochs, step + 1, len(self.train_loader), meters)
+                             self.num_epochs, step + 1, len(self.train_loader), meters)
 
     def _logits_and_loss(self, X, y):
         logits = self.model(X)
@@ -207,8 +214,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
         return logits, loss
 
     def fit(self):
-        for i in range(self.epochs):
-            self.train_one_epoch(i)
+        for i in range(self.num_epochs):
+            self._train_one_epoch(i)
 
     @torch.no_grad()
     def export(self):

@@ -68,10 +68,10 @@ class SinglePathTrainer(BaseOneShotTrainer):
         Optimizer that optimizes the model.
     num_epochs : int
         Number of epochs of training.
-    train_loader : iterable
-        Data loader of training. Raise ``StopIteration`` when one epoch is exhausted.
-    dataset_valid : iterable
-        Data loader of validation. Raise ``StopIteration`` when one epoch is exhausted.
+    dataset_train : Dataset
+        Dataset of training.
+    dataset_valid : Dataset
+        Dataset of validation.
     batch_size : int
         Batch size.
     workers: int
@@ -89,6 +89,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
         self.model = model
         self.loss = loss
         self.metrics = metrics
+        self.optimizer = optimizer
         self.num_epochs = num_epochs
         self.dataset_train = dataset_train
         self.dataset_valid = dataset_valid
@@ -96,9 +97,14 @@ class SinglePathTrainer(BaseOneShotTrainer):
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
+        self.model.to(self.device)
 
-        self.sampling_modules = replace_layer_choice(self.model, PathSamplingLayerChoice)
-        self.sampling_modules += replace_input_choice(self.mode, PathSamplingInputChoice)
+        self.nas_modules = []
+        replace_layer_choice(self.model, PathSamplingLayerChoice, self.nas_modules)
+        replace_input_choice(self.model, PathSamplingInputChoice, self.nas_modules)
+        for _, module in self.nas_modules:
+            module.to(self.device)
+
         self.train_loader = torch.utils.data.DataLoader(self.dataset_train,
                                                         batch_size=batch_size,
                                                         num_workers=workers)
@@ -107,9 +113,12 @@ class SinglePathTrainer(BaseOneShotTrainer):
                                                         num_workers=workers)
 
     def _resample(self):
-        for module in self.sampling_modules:
-            module.sampled = random.randint(0, len(module) - 1)
-        # TODO: remember key and return
+        result = {}
+        for name, module in self.nas_modules:
+            if name not in result:
+                result[name] = random.randint(0, len(module) - 1)
+            module.sampled = result[name]
+        return result
 
     def _train_one_epoch(self, epoch):
         self.model.train()
@@ -117,7 +126,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
         for step, (x, y) in enumerate(self.train_loader):
             x, y = x.to(self.device), y.to(self.device)
             self.optimizer.zero_grad()
-            self.mutator.reset()
+            self._resample()
             logits = self.model(x)
             loss = self.loss(logits, y)
             loss.backward()
@@ -136,7 +145,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
         with torch.no_grad():
             for step, (x, y) in enumerate(self.valid_loader):
                 x, y = x.to(self.device), y.to(self.device)
-                self.mutator.reset()
+                self._resample()
                 logits = self.model(x)
                 loss = self.loss(logits, y)
                 metrics = self.metrics(logits, y)

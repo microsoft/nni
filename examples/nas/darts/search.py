@@ -59,6 +59,7 @@ if __name__ == "__main__":
             model=model,
             loss=criterion,
             metrics=lambda output, target: accuracy(output, target, topk=(1,)),
+            optimizer=optim,
             num_epochs=args.epochs,
             dataset=dataset_train,
             batch_size=args.batch_size,
