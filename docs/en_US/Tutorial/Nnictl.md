@@ -21,7 +21,7 @@ nnictl support commands:
 * [nnictl log](#log)
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
-* [nnictl package](#package)
+* [nnictl algo](#algo)
 * [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
@@ -805,7 +805,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Description
 
-    Show the detailed information of specified packages.
+    Show the detailed information of specified registered algorithms.
 
   * Usage
 

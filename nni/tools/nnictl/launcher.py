@@ -452,10 +452,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         except CalledProcessError:
             print_error('some errors happen when import package %s.' %(package_name))
             print_log_content(experiment_id)
-            #if package_name in INSTALLABLE_PACKAGE_META:
-            #    print_error('If %s is not installed, it should be installed through '\
-            #                '\'nnictl package install --name %s\'' % (package_name, package_name))
-            #exit(1)
+            if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
+                print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
