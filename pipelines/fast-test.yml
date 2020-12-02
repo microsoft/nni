@@ -19,7 +19,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python3 -m pip install -e .[SMAC,BOHB,PPOTuner]
     displayName: 'Install NNI'
 
   - script: |
@@ -93,7 +93,7 @@ jobs:
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python3 -m pip install -e .[SMAC,BOHB,PPOTuner]
     displayName: 'Install NNI'
 
   - script: |
