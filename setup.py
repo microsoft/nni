@@ -73,6 +73,7 @@ dependencies = [
     'scikit-learn>=0.23.2',
     'pkginfo',
     'websockets',
+    'filelock',
     'prettytable'
 ]
 
