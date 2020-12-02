@@ -281,3 +281,4 @@ Below is the status of all trials. Specifically:
 * [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
 * [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [How to run an experiment on Kubernetes through AdaptDL?](../TrainingService/AdaptDLMode.md)

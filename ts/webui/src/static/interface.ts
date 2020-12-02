@@ -131,7 +131,7 @@ interface MetricDataRecord {
 }
 
 interface TrialJobInfo {
-    id: string;
+    trialJobId: string;
     sequenceId: number;
     status: string;
     startTime?: number;
@@ -212,6 +212,12 @@ interface EventMap {
     [key: string]: () => void;
 }
 
+// table column sort
+interface SortInfo {
+    field: string;
+    isDescend?: boolean;
+}
+
 export {
     TableObj,
     TableRecord,
@@ -233,5 +239,6 @@ export {
     NNIManagerStatus,
     EventMap,
     SingleAxis,
-    MultipleAxes
+    MultipleAxes,
+    SortInfo
 };

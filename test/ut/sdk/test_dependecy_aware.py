@@ -47,7 +47,6 @@ def generate_random_sparsity_v2(model):
     return cfg_list
 
 
-@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
     def test_dependency_aware_pruning(self):

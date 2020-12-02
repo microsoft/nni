@@ -97,6 +97,21 @@ def get_sequence_id():
 
 _intermediate_seq = 0
 
+
+def overwrite_intermediate_seq(value):
+    """
+    Overwrite intermediate sequence value.
+
+    Parameters
+    ----------
+    value:
+        int
+    """
+    assert isinstance(value, int)
+    global _intermediate_seq
+    _intermediate_seq = value
+
+
 def report_intermediate_result(metric):
     """
     Reports intermediate result to NNI.
