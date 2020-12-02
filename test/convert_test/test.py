@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     simple_startegy = SimpleStrategy()
 
-    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy, tca.recorded_arguments)
+    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy, tca)
     exp_config = ExperimentConfig.create_template('local')
     exp_config.experiment_name = 'mnasnet_search'
     exp_config.trial_concurrency = 2

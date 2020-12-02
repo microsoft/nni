@@ -158,7 +158,7 @@ class Experiment:
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: 'nn.Module', trainer: 'BaseTrainer',
                  applied_mutators: List['Mutator'], strategy: 'BaseStrategy',
-                 recorded_module_args = None):
+                 tca: 'TraceClassArguments' = None):
         self.config: ExperimentConfig = None
         self.port: Optional[int] = None
 
@@ -166,7 +166,7 @@ class RetiariiExperiment(Experiment):
         self.trainer = trainer
         self.applied_mutators = applied_mutators
         self.strategy = strategy
-        self.recorded_module_args = recorded_module_args # FIXME: remove this argument
+        self.recorded_module_args = tca.recorded_arguments # FIXME: remove this argument
 
         self._dispatcher = RetiariiAdvisor()
         self._proc: Optional[Popen] = None
