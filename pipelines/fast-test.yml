@@ -40,7 +40,7 @@ jobs:
       python3 -m pip install -U gym onnx peewee thop
       python3 -m pip install -U sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
-      python3 -m pip install -e .[SMAC,BOHB,PPOTuner]
+      python3 -m pip install -e .[SMAC,BOHB]
     displayName: 'Install extra dependencies'
 
   - script: |
@@ -100,7 +100,7 @@ jobs:
       python3 -m pip install -U keras==2.1.6
       python3 -m pip install -U gym onnx peewee
       sudo apt-get install swig -y
-      python3 -m pip install -e .[SMAC,BOHB,PPOTuner]
+      python3 -m pip install -e .[SMAC,BOHB]
     displayName: 'Install extra dependencies'
 
   - script: |
