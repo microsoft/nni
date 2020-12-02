@@ -181,6 +181,8 @@ Some compression algorithms use epochs to control the progress of compression (e
 
 ### Export Compressed Model
 
+#### Export Pruning Model
+
 You can easily export the compressed model using the following API if you are pruning your model, ```state_dict``` of the sparse model weights will be stored in ```model.pth```, which can be loaded by ```torch.load('model.pth')```. In this exported ```model.pth```, the masked weights are zero.
 
 ```
@@ -193,4 +195,18 @@ pruner.export_model(model_path='model.pth')
 pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
 ```
 
+#### Export Quantized Model
+
+You can export the quantized model directly by using ```torch.save``` api and the quantized model can be loaded by ```torch.load``` without any extra modification. The following example shows the normal proceduce of saving and loading quantized model in QAT.
+```
+# save quantized model
+torch.save(model.state_dict(), "res.pkt")
+
+# simulate model loading procedure
+model_1 = Mnist()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+quantizer = QAT_Quantizer(model, configure_list, optimizer)
+quantizer.compress()
+model_1.load_state_dict(torch.load("res.pkt"))
+```
 If you want to really speed up the compressed model, please refer to [NNI model speedup](./ModelSpeedup.md) for details.
