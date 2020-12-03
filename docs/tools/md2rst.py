@@ -21,15 +21,28 @@ def single_line_process(line):
     # https://github.com/sphinx-doc/sphinx/issues/3921
     line = re.sub(r'(`.*? <.*?>`)_', r'\1__', line)
     # inline emphasis
-    line = re.sub(r'\*\*\\ (.*?)\\ \*\*', r'\*\*\1\*\*', line)
-    line = re.sub(r'\*(.*?)\\ \*', r'\*\1\*', line)
-    line = re.sub(r'\*\*(.*?) \*\*', r'\*\*\1\*\*', line)
+    line = re.sub(r'\*\*\\ (.*?)\\ \*\*', r'**\1**', line)
+    line = re.sub(r'\*(.*?)\\ \*', r'*\1*', line)
+    line = re.sub(r'\*\*(.*?) \*\*', r'**\1**', line)
+    line = re.sub(r'\\\*\\\*(.*?)\*\*', r'**\1**', line)
+    line = re.sub(r'\\\*\\\*(.*?)\*\*\\ ', r'**\1**', line)
     line = line.replace(r'\* - `\**', r'* - `**')
+    line = re.sub(r'\\\* \*\*(.*?)\*\* \(\\\*(.*?)\*\\ \)', r'* \1 (\2)', line)
+    line = re.sub(r'\<(.*)\.md(\>|#)', r'<\1\2', line)
+
+    # special case (per line handling)
+    line = line.replace('Nb = |Db|', r'Nb = \|Db\|')
+    line = line.replace('  Here is just a small list of libraries ', '\nHere is just a small list of libraries ')
+    line = line.replace('  Find the data management region in job submission page.', 'Find the data management region in job submission page.')
+    # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
+    if line == '~' * len(line):
+        line = '^' * len(line)
     return line
 
 
 def special_case_replace(full_text):
     replace_pairs = {}
+    replace_pairs['PyTorch\n"""""""'] = '**PyTorch**'
     for file in os.listdir(Path(__file__).parent / 'patches'):
         if 'input' in file:
             with open(Path(__file__).parent / 'patches' / file) as f, \

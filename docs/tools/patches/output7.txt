@@ -1,0 +1,9 @@
+   #. For each filter :math:`F_{i,j}`, calculate the sum of its absolute kernel weights :math:`s_j=\sum_{l=1}^{n_i}\sum|K_l|`.
+
+   #. Sort the filters by :math:`s_j`.
+
+   #. Prune :math:`m` filters with the smallest sum values and their corresponding feature maps. The
+      kernels in the next convolutional layer corresponding to the pruned feature maps are also removed.
+
+   #. A new kernel matrix is created for both the :math:`i`-th and :math:`i+1`-th layers, and the remaining kernel
+      weights are copied to the new model.
