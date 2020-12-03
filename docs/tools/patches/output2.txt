@@ -1,0 +1,24 @@
+   * - 
+     - Recommended
+     - Minimum
+   * - **Operating System**
+     - Ubuntu 16.04 or above
+     -
+   * - **CPU**
+     - Intel® Core™ i5 or AMD Phenom™ II X3 or better
+     - Intel® Core™ i3 or AMD Phenom™ X3 8650
+   * - **GPU**
+     - NVIDIA® GeForce® GTX 660 or better
+     - NVIDIA® GeForce® GTX 460
+   * - **Memory**
+     - 6 GB RAM
+     - 4 GB RAM
+   * - **Storage**
+     - 30 GB available hare drive space
+     -
+   * - **Internet**
+     - Boardband internet connection
+     -
+   * - **Resolution**
+     - 1024 x 768 minimum display resolution
+     -

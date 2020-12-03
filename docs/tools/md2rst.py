@@ -16,8 +16,28 @@ from pathlib import Path
 # /home/v-yugzh/nnidev/docs/en_US/NAS/NasGuide.rst:52: WARNING: undefined label: /nas/advanced.md#extend-the-ability-of-one-shot-trainers (if the link has no caption the label must precede a section header)
 
 def single_line_process(line):
+    if line == ' .. contents::':
+        return '.. contents::'
     # https://github.com/sphinx-doc/sphinx/issues/3921
-    return re.sub(r'(`.*? <.*?>`)_', r'\1__', line)
+    line = re.sub(r'(`.*? <.*?>`)_', r'\1__', line)
+    # inline emphasis
+    line = re.sub(r'\*\*\\ (.*?)\\ \*\*', r'\*\*\1\*\*', line)
+    line = re.sub(r'\*(.*?)\\ \*', r'\*\1\*', line)
+    line = re.sub(r'\*\*(.*?) \*\*', r'\*\*\1\*\*', line)
+    line = line.replace(r'\* - `\**', r'* - `**')
+    return line
+
+
+def special_case_replace(full_text):
+    replace_pairs = {}
+    for file in os.listdir(Path(__file__).parent / 'patches'):
+        if 'input' in file:
+            with open(Path(__file__).parent / 'patches' / file) as f, \
+                    open(Path(__file__).parent / 'patches' / file.replace('input', 'output')) as g:
+                replace_pairs[f.read()] = g.read()
+    for r, s in replace_pairs.items():
+        full_text = full_text.replace(r, s)
+    return full_text
 
 
 for root, dirs, files in os.walk('en_US'):
@@ -28,7 +48,7 @@ for root, dirs, files in os.walk('en_US'):
 
         out = m2r.parse_from_file((root / file).as_posix())
         lines = out.split('\n')
-        if lines[0] == '\n':
+        if lines[0] == '':
             lines = lines[1:]
 
         # remove code-block eval_rst
@@ -38,9 +58,11 @@ for root, dirs, files in os.walk('en_US'):
             if line.strip() == '.. code-block:: eval_rst':
                 space_count = line.index('.')
                 lines[i] = lines[i + 1] = None
+                if i > 0 and lines[i - 1]:
+                    lines[i] = ''  # blank line
                 i += 2
-                while i < len(lines) and lines[i].startswith(' ' * (space_count + 2)):
-                    lines[i] = lines[i][space_count:]
+                while i < len(lines) and (lines[i].startswith(' ' * (space_count + 3)) or lines[i] == ''):
+                    lines[i] = lines[i][space_count + 3:]
                     i += 1
             elif line.strip() == '.. code-block' or line.strip() == '.. code-block::':
                 lines[i] += ':: bash'
@@ -53,6 +75,7 @@ for root, dirs, files in os.walk('en_US'):
         lines = list(map(single_line_process, lines))
 
         out = '\n'.join(lines)
+        out = special_case_replace(out)
 
         with open(root / (Path(file).stem + '.rst'), 'w') as f:
             f.write(out)
