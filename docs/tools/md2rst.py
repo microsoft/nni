@@ -2,8 +2,8 @@ import argparse
 import m2r
 import os
 import re
-import pathlib
-
+import shutil
+from pathlib import Path
 
 # FIXME:
 # /home/v-yugzh/nnidev/docs/en_US/Assessor/BuiltinAssessor.rst:84: WARNING: Inline emphasis start-string without end-string.
@@ -19,13 +19,19 @@ def single_line_process(line):
     # https://github.com/sphinx-doc/sphinx/issues/3921
     return re.sub(r'(`.*? <.*?>`)_', r'\1__', line)
 
+
 for root, dirs, files in os.walk('en_US'):
+    root = Path(root)
     for file in files:
         if not file.endswith('.md'):
             continue
-        out = m2r.parse_from_file((pathlib.Path(root) / file).as_posix())
-        lines = out.split('\n')
 
+        out = m2r.parse_from_file((root / file).as_posix())
+        lines = out.split('\n')
+        if lines[0] == '\n':
+            lines = lines[1:]
+
+        # remove code-block eval_rst
         i = 0
         while i < len(lines):
             line = lines[i]
@@ -48,8 +54,10 @@ for root, dirs, files in os.walk('en_US'):
 
         out = '\n'.join(lines)
 
-        if 'eval_rst' in out:
-            import pdb; pdb.set_trace()
-        with open(pathlib.Path(root) / (pathlib.Path(file).stem + '.rst'), 'w') as f:
+        with open(root / (Path(file).stem + '.rst'), 'w') as f:
             f.write(out)
-        os.remove(pathlib.Path(root) / file)
+
+        # back it up and remove
+        moved_root = Path('archive_en_US') / root.relative_to('en_US')
+        moved_root.mkdir(exist_ok=True)
+        shutil.move(root / file, moved_root / file)
