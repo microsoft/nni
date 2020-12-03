@@ -13,7 +13,7 @@ Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's conte
 ```yaml
 authorName: default
 experimentName: example_mnist
-trialConcurrency: 1
+trialConcurrency: 2
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: heterogeneous
@@ -30,14 +30,11 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  image: msranni/nni
   gpuNum: 1
 heterogeneousConfig:
   trainingServicePlatforms:
     - local
     - remote
-localConfig:
-  reuse: true
 remoteConfig:
   reuse: true
 machineList:
