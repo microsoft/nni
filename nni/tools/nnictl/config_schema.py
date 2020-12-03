@@ -262,6 +262,23 @@ aml_config_schema = {
     }
 }
 
+heterogeneous_trial_schema = {
+    'trial': {
+        'codeDir': setPathCheck('codeDir'),
+        Optional('nniManagerNFSMountPath'): setPathCheck('nniManagerNFSMountPath'),
+        Optional('containerNFSMountPath'): setType('containerNFSMountPath', str),
+        Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
+        'command': setType('command', str),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memoryMB'): setType('memoryMB', int),
+        Optional('image'): setType('image', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('paiStorageConfigName'): setType('paiStorageConfigName', str),
+        Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
+    }
+}
+
 heterogeneous_config_schema = {
     'heterogeneousConfig': {
         'trainingServicePlatforms': ['local', 'remote', 'pai', 'aml']
@@ -443,7 +460,7 @@ training_service_schema_dict = {
     'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
-    'heterogeneous': Schema({**common_schema, **common_trial_schema, **heterogeneous_config_schema, **machine_list_schema,
+    'heterogeneous': Schema({**common_schema, **heterogeneous_trial_schema, **heterogeneous_config_schema, **machine_list_schema,
                              **pai_config_schema, **aml_config_schema, **remote_config_schema}),
 }
 

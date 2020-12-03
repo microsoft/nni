@@ -49,6 +49,10 @@ export class LocalEnvironmentService extends EnvironmentService {
         return false;
     }
 
+    public get getPlatform(): string {
+        return 'local';
+    }
+
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -59,15 +63,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         }
     }
 
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        const tasks: Promise<void>[] = [];
-        environments.forEach((environment) => {
-            tasks.push(this.refreshEnvironment(environment));
-        });
-        await Promise.all(tasks);
-    }
-
-    public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
         /* eslint-disable require-atomic-updates */

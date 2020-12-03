@@ -45,6 +45,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return true;
     }
 
+    public get getPlatform(): string {
+        return 'pai';
+    }
+
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
@@ -85,7 +89,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
     }
 
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
         if (this.paiClusterConfig === undefined) {
@@ -96,7 +100,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         const getJobInfoRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs?username=${this.paiClusterConfig.userName}`,
+            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${environment.envId}`,
             method: 'GET',
             json: true,
             headers: {
@@ -113,47 +117,34 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 this.log.error(`${errorMessage}`);
                 deferred.reject(errorMessage);
             } else {
-                const jobInfos = new Map<string, any>();
-                body.forEach((jobInfo: any) => {
-                    jobInfos.set(jobInfo.name, jobInfo);
-                });
-
-                environments.forEach((environment) => {
-                    if (jobInfos.has(environment.envId)) {
-                        const jobResponse = jobInfos.get(environment.envId);
-                        if (jobResponse && jobResponse.state) {
-                            const oldEnvironmentStatus = environment.status;
-                            switch (jobResponse.state) {
-                                case 'RUNNING':
-                                case 'WAITING':
-                                case 'SUCCEEDED':
-                                    environment.setStatus(jobResponse.state);
-                                    break;
-                                case 'FAILED':
-                                    environment.setStatus(jobResponse.state);
-                                    deferred.reject(`OpenPAI: job ${environment.envId} is failed!`);
-                                    break;
-                                case 'STOPPED':
-                                case 'STOPPING':
-                                    environment.setStatus('USER_CANCELED');
-                                    break;
-                                default:
-                                    this.log.error(`OpenPAI: job ${environment.envId} returns unknown state ${jobResponse.state}.`);
-                                    environment.setStatus('UNKNOWN');
-                            }
-                            if (oldEnvironmentStatus !== environment.status) {
-                                this.log.debug(`OpenPAI: job ${environment.envId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
-                            }
-                        } else {
-                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:${JSON.stringify(jobResponse)}`);
-                            // some error happens, and mark this environment
-                            environment.status = 'FAILED';
-                        }
-                    } else {
-                        this.log.error(`OpenPAI job ${environment.envId} is not found in job list.`);
-                        environment.status = 'UNKNOWN';
+                if (body.jobStatus && body.jobStatus.state) {
+                    const oldEnvironmentStatus = environment.status;
+                    switch (body.jobStatus.state) {
+                        case 'RUNNING':
+                        case 'WAITING':
+                        case 'SUCCEEDED':
+                            environment.setStatus(body.jobStatus.state);
+                            break;
+                        case 'FAILED':
+                            environment.setStatus(body.jobStatus.state);
+                            deferred.reject(`OpenPAI: job ${environment.envId} is failed!`);
+                            break;
+                        case 'STOPPED':
+                        case 'STOPPING':
+                            environment.setStatus('USER_CANCELED');
+                            break;
+                        default:
+                            this.log.error(`OpenPAI: job ${environment.envId} returns unknown state ${body.jobStatus.state}.`);
+                            environment.setStatus('UNKNOWN');
                     }
-                });
+                    if (oldEnvironmentStatus !== environment.status) {
+                        this.log.debug(`OpenPAI: job ${environment.envId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${body.jobStatus.state}.`)
+                    }
+                } else {
+                    this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:${JSON.stringify(body)}`);
+                    // some error happens, and mark this environment
+                    environment.status = 'FAILED';
+                }
                 deferred.resolve();
             }
         });

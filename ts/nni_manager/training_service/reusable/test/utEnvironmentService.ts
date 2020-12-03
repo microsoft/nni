@@ -7,7 +7,7 @@ import { CommandChannel } from "../commandChannel";
 import { UtCommandChannel } from "./utCommandChannel";
 
 export class UtEnvironmentService extends EnvironmentService {
-    private commandChannel: UtCommandChannel | undefined;
+    private utCommandChannel: UtCommandChannel | undefined;
     private allEnvironments = new Map<string, EnvironmentInformation>();
     private hasMoreEnvironmentsInternal = true;
 
@@ -23,6 +23,10 @@ export class UtEnvironmentService extends EnvironmentService {
         return 1;
     }
 
+    public get getPlatform(): string {
+        return 'ut';
+    }
+
     public testSetEnvironmentStatus(environment: EnvironmentInformation, newStatus: EnvironmentStatus): void {
         environment.status = newStatus;
     }
@@ -36,10 +40,10 @@ export class UtEnvironmentService extends EnvironmentService {
     }
 
     public testGetCommandChannel(): UtCommandChannel {
-        if (this.commandChannel === undefined) {
+        if (this.utCommandChannel === undefined) {
             throw new Error(`command channel shouldn't be undefined.`);
         }
-        return this.commandChannel;
+        return this.utCommandChannel;
     }
 
     public testSetNoMoreEnvironment(hasMore: boolean): void {
@@ -51,15 +55,15 @@ export class UtEnvironmentService extends EnvironmentService {
     }
 
     public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        this.commandChannel = new UtCommandChannel(commandEmitter)
-        return this.commandChannel;
+        this.utCommandChannel = new UtCommandChannel(commandEmitter)
+        return this.utCommandChannel;
     }
 
     public async config(_key: string, _value: string): Promise<void> {
         // do nothing
     }
 
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
         // do nothing
     }
 

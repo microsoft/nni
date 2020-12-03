@@ -4,6 +4,7 @@
 'use strict';
 
 import { EventEmitter } from "events";
+import { runScript } from "training_service/common/util";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
@@ -12,7 +13,7 @@ import { CommandChannel } from "./commandChannel";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
-export type Channel = "web" | "file" | "aml" | "ut" | "heterogenous";
+export type Channel = "web" | "file" | "aml" | "ut";
 
 
 export class TrialGpuSummary {
@@ -74,9 +75,8 @@ export class EnvironmentInformation {
     // user can specify how to use GPU resource for an environment, like local and remote.
     public maxTrialNumberPerGpu?: number;
     public useActiveGpu?: boolean;
-    
-    // the running mode for trial jobs, including local, remote, aml, pai etc.
-    public platform: string = "";
+
+    public environmentService?: EnvironmentService;
 
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
@@ -124,10 +124,11 @@ export class EnvironmentInformation {
 }
 
 export abstract class EnvironmentService {
-
+    
+    protected commandChannel: CommandChannel | undefined;
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
+    public abstract refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     
@@ -135,6 +136,12 @@ export abstract class EnvironmentService {
     // in remote mode, this value is set to the length of machine list.
     public get prefetchedEnvironmentCount(): number {
         return 0;
+    }
+
+    public abstract get getPlatform(): string;
+
+    public get getCommandChanneName(): Channel {
+        return 'web';
     }
 
     // It depends on environment pressure and settings
@@ -148,10 +155,6 @@ export abstract class EnvironmentService {
     // 2. If there are consistent error on requested environments, for example, authentication failure on platform.
     public get hasMoreEnvironments(): boolean {
         return true;
-    }
-
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new WebCommandChannel(commandEmitter);
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {

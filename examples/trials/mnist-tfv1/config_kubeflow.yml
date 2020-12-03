@@ -16,6 +16,13 @@ tuner:
     optimize_mode: maximize
 trial:
   codeDir: .
+  ps:
+    replicas: 1
+    command: python3 mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 8192
+    image: msranni/nni:latest
   worker:
     replicas: 1
     command: python3 mnist.py

@@ -42,11 +42,16 @@ export class AMLEnvironmentService extends EnvironmentService {
     }
 
     public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new AMLCommandChannel(commandEmitter);
+        this.commandChannel = new AMLCommandChannel(commandEmitter);
+        return this.commandChannel;
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new AMLEnvironmentInformation(envId, envName);
+    }
+
+    public get getPlatform(): string {
+        return 'aml';
     }
 
     public async config(key: string, value: string): Promise<void> {
@@ -70,7 +75,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
     }
     
-    public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
         const amlClient = (environment as AMLEnvironmentInformation).amlClient;
         if (!amlClient) {
             return Promise.reject('AML client not initialized!');
@@ -98,14 +103,6 @@ export class AMLEnvironmentService extends EnvironmentService {
             default:
                 environment.setStatus('UNKNOWN');
         }
-    }
-
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        const tasks: Promise<void>[] = [];
-        environments.forEach(async (environment) => {
-            tasks.push(this.refreshEnvironment(environment));
-        });
-        await Promise.all(tasks);
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {

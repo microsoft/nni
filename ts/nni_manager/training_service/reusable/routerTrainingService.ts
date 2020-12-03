@@ -19,10 +19,10 @@ import { LocalEnvironmentService } from './environments/localEnvironmentService'
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
-import { HeteroGeneousEnvironmentService } from './environments/heterogeneousEnvironmentService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
+import { HeterogenousConfig } from './heterogenous/heterogenousConfig';
 import { LocalConfig, LocalTrainingService } from '../local/localTrainingService';
 
 
@@ -34,7 +34,6 @@ import { LocalConfig, LocalTrainingService } from '../local/localTrainingService
 class RouterTrainingService implements TrainingService {
     protected readonly log!: Logger;
     private internalTrainingService: TrainingService | undefined;
-    private metaDataCache: Map<string, string> = new Map<string, string>();
 
     constructor() {
         this.log = getLogger();
@@ -102,95 +101,69 @@ class RouterTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
-            if (key === TrialConfigMetadataKey.LOCAL_CONFIG) {
-                this.log.info(`reuse flag enabled, use EnvironmentManager.`);
+            if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
                 this.internalTrainingService = component.get(TrialDispatcher);
-
-                // TODO to support other serivces later.
-                Container.bind(EnvironmentService)
-                    .to(LocalEnvironmentService)
-                    .scope(Scope.Singleton);
+                const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
                 if (this.internalTrainingService === undefined) {
-                    throw new Error("TrainingService is not assigned!");
+                    throw new Error("internalTrainingService not initialized!");
                 }
-                await this.internalTrainingService.setClusterMetadata(key, value);
-            }
-            if (key === TrialConfigMetadataKey.PAI_CLUSTER_CONFIG) {
+                // Initialize storageService for pai
+                if (heterogenousConfig.trainingServicePlatforms.includes('pai')) {
+                    Container.bind(StorageService)
+                    .to(MountedStorageService)
+                    .scope(Scope.Singleton);
+                }
+                await this.internalTrainingService.setClusterMetadata('platform_list', 
+                    heterogenousConfig.trainingServicePlatforms.join(','));
+            } else if (key === TrialConfigMetadataKey.LOCAL_CONFIG) {
+                this.internalTrainingService = component.get(TrialDispatcher);
+                if (this.internalTrainingService === undefined) {
+                    throw new Error("internalTrainingService not initialized!");
+                }
+                await this.internalTrainingService.setClusterMetadata('platform_list', 'local');
+            } else if (key === TrialConfigMetadataKey.PAI_CLUSTER_CONFIG) {
                 const config = <PAIClusterConfig>JSON.parse(value);
                 if (config.reuse === true) {
                     this.log.info(`reuse flag enabled, use EnvironmentManager.`);
                     this.internalTrainingService = component.get(TrialDispatcher);
-
-                    // TODO to support other serivces later.
-                    Container.bind(EnvironmentService)
-                        .to(OpenPaiEnvironmentService)
-                        .scope(Scope.Singleton);
                     // TODO to support other storages later.
                     Container.bind(StorageService)
                         .to(MountedStorageService)
                         .scope(Scope.Singleton);
+                    if (this.internalTrainingService === undefined) {
+                        throw new Error("internalTrainingService not initialized!");
+                    }
+                    await this.internalTrainingService.setClusterMetadata('platform_list', 'pai');
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(PAIK8STrainingService);
                 }
-                for (const [key, value] of this.metaDataCache) {
-                    if (this.internalTrainingService === undefined) {
-                        throw new Error("TrainingService is not assigned!");
-                    }
-                    await this.internalTrainingService.setClusterMetadata(key, value);
-                }
-
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("TrainingService is not assigned!");
-                }
-                await this.internalTrainingService.setClusterMetadata(key, value);
-
-                this.metaDataCache.clear();
             } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
                 this.internalTrainingService = component.get(TrialDispatcher);
-
-                Container.bind(EnvironmentService)
-                    .to(AMLEnvironmentService)
-                    .scope(Scope.Singleton);
-                for (const [key, value] of this.metaDataCache) {
-                    if (this.internalTrainingService === undefined) {
-                        throw new Error("TrainingService is not assigned!");
-                    }
-                    await this.internalTrainingService.setClusterMetadata(key, value);
-                }
-
                 if (this.internalTrainingService === undefined) {
-                    throw new Error("TrainingService is not assigned!");
+                    throw new Error("internalTrainingService not initialized!");
                 }
-                await this.internalTrainingService.setClusterMetadata(key, value);
-
-                this.metaDataCache.clear();
+                await this.internalTrainingService.setClusterMetadata('platform_list', 'aml');
             } else if (key === TrialConfigMetadataKey.REMOTE_CONFIG) {
                 const config = <RemoteConfig>JSON.parse(value);
                 if (config.reuse === true) {
                     this.log.info(`reuse flag enabled, use EnvironmentManager.`);
                     this.internalTrainingService = component.get(TrialDispatcher);
-                    Container.bind(EnvironmentService)
-                        .to(RemoteEnvironmentService)
-                        .scope(Scope.Singleton);
+                    if (this.internalTrainingService === undefined) {
+                        throw new Error("internalTrainingService not initialized!");
+                    }
+                    await this.internalTrainingService.setClusterMetadata('platform_list', 'remote');
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
                     this.internalTrainingService = component.get(RemoteMachineTrainingService);
                 }
-            } else if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
-                this.internalTrainingService = component.get(TrialDispatcher);
-                Container.bind(EnvironmentService)
-                    .to(HeteroGeneousEnvironmentService)
-                    .scope(Scope.Singleton);
-
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("TrainingService is not assigned!");
-                }
-                await this.internalTrainingService.setClusterMetadata(key, value);
             }
-        } else {
-            await this.internalTrainingService.setClusterMetadata(key, value);
         }
+        if (this.internalTrainingService === undefined) {
+            throw new Error("internalTrainingService not initialized!");
+        }
+        await this.internalTrainingService.setClusterMetadata(key, value);
+        
     }
 
     public async getClusterMetadata(key: string): Promise<string> {

@@ -358,6 +358,10 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.logCollection = value;
                 break;
+            case TrialConfigMetadataKey.REMOTE_CONFIG:
+                // Add remote_config in remoteEnvironmentService to set reuse mode, 
+                // this config need to be catched here, otherwise will throw Unknown key exception here
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);

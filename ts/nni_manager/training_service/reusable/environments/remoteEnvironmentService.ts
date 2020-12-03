@@ -63,6 +63,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return false;
     }
 
+    public get getPlatform(): string {
+        return 'remote';
+    }
+
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.MACHINE_LIST:
@@ -135,7 +139,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         await executor.allowPermission(true, nniRootDir);
     }
     
-    public async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
@@ -174,14 +178,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
         } catch (error) {
             this.log.error(`Update job status exception, error is ${error.message}`);
         }
-    }
-
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
-        const tasks: Promise<void>[] = [];
-        environments.forEach(async (environment) => {
-            tasks.push(this.refreshEnvironment(environment));
-        });
-        await Promise.all(tasks);
     }
 
     /**
