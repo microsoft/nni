@@ -29,6 +29,18 @@ We are intensively working on both tool chain and research to make automatic mod
 }
 ```
 
+- [Gandiva: Introspective Cluster Scheduling for Deep Learning](https://www.usenix.org/system/files/osdi18-xiao.pdf)
+
+```bibtex
+@inproceedings{xiao2018gandiva,
+  title={Gandiva: Introspective cluster scheduling for deep learning},
+  author={Xiao, Wencong and Bhardwaj, Romil and Ramjee, Ramachandran and Sivathanu, Muthian and Kwatra, Nipun and Han, Zhenhua and Patel, Pratyush and Peng, Xuan and Zhao, Hanyu and Zhang, Quanlu and others},
+  booktitle={13th $\{$USENIX$\}$ Symposium on Operating Systems Design and Implementation ($\{$OSDI$\}$ 18)},
+  pages={595--610},
+  year={2018}
+}
+```
+
 ## Algorithm Research
 
 ### New Algorithms
