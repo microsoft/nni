@@ -21,19 +21,21 @@ def single_line_process(line):
     # https://github.com/sphinx-doc/sphinx/issues/3921
     line = re.sub(r'(`.*? <.*?>`)_', r'\1__', line)
     # inline emphasis
-    line = re.sub(r'\*\*\\ (.*?)\\ \*\*', r'**\1**', line)
+    line = re.sub(r'\*\*\\ (.*?)\\ \*\*', r' **\1** ', line)
     line = re.sub(r'\*(.*?)\\ \*', r'*\1*', line)
-    line = re.sub(r'\*\*(.*?) \*\*', r'**\1**', line)
+    line = re.sub(r'\*\*(.*?) \*\*', r'**\1** ', line)
     line = re.sub(r'\\\*\\\*(.*?)\*\*', r'**\1**', line)
     line = re.sub(r'\\\*\\\*(.*?)\*\*\\ ', r'**\1**', line)
     line = line.replace(r'\* - `\**', r'* - `**')
-    line = re.sub(r'\\\* \*\*(.*?)\*\* \(\\\*(.*?)\*\\ \)', r'* \1 (\2)', line)
+    line = re.sub(r'\\\* \*\*(.*?)\*\* \(\\\*\s*(.*?)\s*\*\\ \)', r'* \1 (\2)', line)
     line = re.sub(r'\<(.*)\.md(\>|#)', r'<\1\2', line)
 
     # special case (per line handling)
     line = line.replace('Nb = |Db|', r'Nb = \|Db\|')
     line = line.replace('  Here is just a small list of libraries ', '\nHere is just a small list of libraries ')
     line = line.replace('  Find the data management region in job submission page.', 'Find the data management region in job submission page.')
+    line = line.replace('Tuner/InstallCustomizedTuner.md', 'Tuner/InstallCustomizedTuner')
+    line = line.replace('&#10003;', ':raw-html:`&#10003;`')
     # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
     if line == '~' * len(line):
         line = '^' * len(line)
@@ -43,23 +45,39 @@ def single_line_process(line):
 def special_case_replace(full_text):
     replace_pairs = {}
     replace_pairs['PyTorch\n"""""""'] = '**PyTorch**'
+    replace_pairs['Search Space\n============'] = '.. role:: raw-html(raw)\n   :format: html\n\nSearch Space\n============'
     for file in os.listdir(Path(__file__).parent / 'patches'):
-        if 'input' in file:
-            with open(Path(__file__).parent / 'patches' / file) as f, \
-                    open(Path(__file__).parent / 'patches' / file.replace('input', 'output')) as g:
-                replace_pairs[f.read()] = g.read()
+        with open(Path(__file__).parent / 'patches' / file) as f:
+            r, s = f.read().split('%%%%%%\n')
+        replace_pairs[r] = s
     for r, s in replace_pairs.items():
         full_text = full_text.replace(r, s)
     return full_text
 
 
+def process_table(content):
+    content = content.replace('------ |', '------|')
+    lines = []
+    for line in content.split('\n'):
+        if line.startswith('  |'):
+            line = line[2:]
+        lines.append(line)
+    return '\n'.join(lines)
+
+
 for root, dirs, files in os.walk('en_US'):
     root = Path(root)
     for file in files:
-        if not file.endswith('.md'):
+        if not file.endswith('.md') or file == 'Release_v1.0.md':
             continue
 
-        out = m2r.parse_from_file((root / file).as_posix())
+        with open(root / file) as f:
+            md_content = f.read()
+
+        if file == 'Nnictl.md':
+            md_content = process_table(md_content)
+
+        out = m2r.convert(md_content)
         lines = out.split('\n')
         if lines[0] == '':
             lines = lines[1:]
