@@ -46,7 +46,7 @@ export class WebCommandChannel extends CommandChannel {
         this.webSocketServer = new SocketServer({ port });
 
         this.webSocketServer.on('connection', (client: WebSocket) => {
-            this.log.info(`WebCommandChannel: received connection`);
+            this.log.debug(`WebCommandChannel: received connection`);
             client.onerror = (event): void => {
                 this.log.error(`error on client ${JSON.stringify(event)}`);
             }
@@ -69,7 +69,7 @@ export class WebCommandChannel extends CommandChannel {
         // do nothing
     }
 
-    public async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
+    protected async sendCommandInternal(environment: EnvironmentInformation, message: string): Promise<void> {
         if (this.webSocketServer === undefined) {
             throw new Error(`WebCommandChannel: uninitialized!`)
         }
@@ -83,7 +83,7 @@ export class WebCommandChannel extends CommandChannel {
         }
     }
 
-    public createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
+    protected createRunnerConnection(environment: EnvironmentInformation): RunnerConnection {
         return new WebRunnerConnection(environment);
     }
 
@@ -94,9 +94,7 @@ export class WebCommandChannel extends CommandChannel {
             // undefined means it's expecting initializing message.
             const commands = this.parseCommands(rawCommands);
             let isValid = false;
-            this.log.info(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
-            
-            
+            this.log.debug(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
             if (commands.length > 0) {
                 const commandType = commands[0][0];
                 const result = commands[0][1];

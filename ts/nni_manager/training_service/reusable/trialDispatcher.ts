@@ -133,12 +133,7 @@ class TrialDispatcher implements TrainingService {
 
         const trialId: string = uniqueString(5);
 
-      //  const environmentService = component.get<EnvironmentService>(EnvironmentService);
         let trialWorkingFolder: string = "";
-      //  if (environmentService.hasStorageService) {
-      //      const storageService = component.get<StorageService>(StorageService);
-      //      trialWorkingFolder = storageService.joinPath('trials', trialId);
-      //  }
         const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), trialWorkingFolder, form);
 
         this.trials.set(trialId, trialJobDetail);
