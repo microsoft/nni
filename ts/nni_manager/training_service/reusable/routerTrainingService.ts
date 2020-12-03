@@ -13,17 +13,11 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
 import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
-import { EnvironmentService } from './environment';
-import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
-import { LocalEnvironmentService } from './environments/localEnvironmentService';
-import { AMLEnvironmentService } from './environments/amlEnvironmentService';
-import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
 import { RemoteConfig } from './remote/remoteConfig';
 import { HeterogenousConfig } from './heterogenous/heterogenousConfig';
-import { LocalConfig, LocalTrainingService } from '../local/localTrainingService';
 
 
 /**

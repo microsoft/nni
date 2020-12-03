@@ -3,29 +3,17 @@
 
 'use strict';
 
-import * as cpp from 'child-process-promise';
-import { EventEmitter } from "events";
-import * as cp from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as yaml from 'js-yaml';
-import * as request from 'request';
-import { Deferred } from 'ts-deferred';
 import * as tkill from 'tree-kill';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
-import { PAIClusterConfig } from '../../pai/paiConfig';
-import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { StorageService } from '../storageService';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive } from '../../../common/utils';
-import { execMkdir, validateCodeDir, runScript, execCopydir } from '../../common/util';
-import { FileCommandChannel } from '../channels/fileCommandChannel';
-import { CommandChannel } from "../commandChannel";
-
+import { execMkdir, runScript, execCopydir } from '../../common/util';
 
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {

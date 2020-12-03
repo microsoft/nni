@@ -10,7 +10,7 @@ import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
-import { getBasePort, getExperimentId, getPlatform } from '../../common/experimentStartupInfo';
+import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
@@ -28,7 +28,6 @@ import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
 import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
-import { LocalTrainingService } from 'training_service/local/localTrainingService';
 import { LocalEnvironmentService } from './environments/localEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 import { AMLCommandChannel } from './channels/amlCommandChannel';
@@ -133,8 +132,7 @@ class TrialDispatcher implements TrainingService {
 
         const trialId: string = uniqueString(5);
 
-        let trialWorkingFolder: string = "";
-        const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), trialWorkingFolder, form);
+        const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), "", form);
 
         this.trials.set(trialId, trialJobDetail);
 
@@ -195,7 +193,7 @@ class TrialDispatcher implements TrainingService {
         if (this.trialConfig === undefined) {
             throw new Error(`trial config shouldn't be undefined in run()`);
         }
-        for(let environmentService of this.environmentServiceList) {
+        for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
             runnerSettings.nniManagerIP = this.nniManagerIp;
@@ -256,7 +254,7 @@ class TrialDispatcher implements TrainingService {
         await this.prefetchEnvironments();
         this.log.info(`TrialDispatcher: run loop started.`);
         const promiseList: Promise<void>[] = [];
-        for(let commandChannel of this.commandChannelDict.values()) {
+        for(const commandChannel of this.commandChannelDict.values()) {
             promiseList.push(commandChannel.run());
         }
         promiseList.push(this.environmentMaintenanceLoop());
@@ -302,9 +300,9 @@ class TrialDispatcher implements TrainingService {
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.trialConfig.codeDir);
                 break;
-            case TrialConfigMetadataKey.PLATFORM_LIST:
+            case TrialConfigMetadataKey.PLATFORM_LIST: {
                 const platforms: string[] = value.split(",");
-                for(let platform of platforms) {
+                for(const platform of platforms) {
                     let environmentService: EnvironmentService;
                     switch(platform) {
                         case 'local':
@@ -339,9 +337,9 @@ class TrialDispatcher implements TrainingService {
                     }
                     this.environmentServiceList.push(environmentService);
                 }
-                
+            }
         }
-        for(let environmentService of this.environmentServiceList) {
+        for(const environmentService of this.environmentServiceList) {
             await environmentService.config(key, value);
         }
     }
@@ -376,7 +374,7 @@ class TrialDispatcher implements TrainingService {
         }
 
         this.commandEmitter.off("command", this.handleCommand);
-        for(let commandChannel of this.commandChannelDict.values()) {
+        for(const commandChannel of this.commandChannelDict.values()) {
             commandChannel.stop();
         }
     }
@@ -400,7 +398,7 @@ class TrialDispatcher implements TrainingService {
                 }
             }
            
-            for (let environment of environments) {
+            for (const environment of environments) {
                 if (environment.environmentService === undefined) {
                     throw new Error(`${environment.id} do not have environment service!`);
                 }
@@ -636,7 +634,7 @@ class TrialDispatcher implements TrainingService {
                 let requestedCount = 0;
                 let hasMoreEnvironments = false;
                 for (let index = 0; index < neededEnvironmentCount; index++) {
-                    let environmentService: EnvironmentService | undefined = this.selectEnvironmentService();
+                    const environmentService: EnvironmentService | undefined = this.selectEnvironmentService();
                     if (environmentService !== undefined) {
                         hasMoreEnvironments = true;
                         await this.requestEnvironment(environmentService);
@@ -662,7 +660,7 @@ class TrialDispatcher implements TrainingService {
     // Schedule a environment platform for environment
     private selectEnvironmentService(): EnvironmentService | undefined {
         const validEnvironmentServiceList = [];
-        for(let environmentService of this.environmentServiceList){
+        for(const environmentService of this.environmentServiceList){
             if (environmentService.hasMoreEnvironments) {
                 validEnvironmentServiceList.push(environmentService);
             }
@@ -675,7 +673,7 @@ class TrialDispatcher implements TrainingService {
     }
     
     private async prefetchEnvironments (): Promise<void> {
-        for (let environmentService of this.environmentServiceList) {
+        for (const environmentService of this.environmentServiceList) {
             const number = environmentService.prefetchedEnvironmentCount;
             this.log.info(`Initialize environments total number: ${number}`);
             for (let index = 0; index < number; index++) {

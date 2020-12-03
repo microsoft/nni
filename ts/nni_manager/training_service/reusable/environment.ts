@@ -3,12 +3,9 @@
 
 'use strict';
 
-import { EventEmitter } from "events";
-import { runScript } from "training_service/common/util";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
-import { WebCommandChannel } from "./channels/webCommandChannel";
 import { CommandChannel } from "./commandChannel";
 
 
