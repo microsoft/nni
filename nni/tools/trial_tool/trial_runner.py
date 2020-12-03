@@ -187,6 +187,7 @@ if __name__ == '__main__':
     os.environ['NNI_EXP_ID'] = args.exp_id
     os.environ['MULTI_PHASE'] = "true"
     os.environ['NNI_TRIAL_JOB_ID'] = "runner"
+    os.environ['REUSE_MODE'] = "true"
 
     from .log_utils import LogType, RemoteLogger, StdOutputType, nni_log
     from .trial import Trial

@@ -101,13 +101,14 @@ class RouterTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
+            // Need to refactor configuration, remove heterogeneous_config field in the future
             if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
                 this.internalTrainingService = component.get(TrialDispatcher);
                 const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
                 if (this.internalTrainingService === undefined) {
                     throw new Error("internalTrainingService not initialized!");
                 }
-                // Initialize storageService for pai
+                // Initialize storageService for pai, only support singleton for now, need refactor
                 if (heterogenousConfig.trainingServicePlatforms.includes('pai')) {
                     Container.bind(StorageService)
                     .to(MountedStorageService)
