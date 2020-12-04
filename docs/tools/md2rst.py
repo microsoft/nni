@@ -67,7 +67,10 @@ def process_table(content):
 
 
 def process_github_link(line):
-    return re.sub(r'`(\\ ``)?([^`]*?)(``)? \<(.*?)(blob|tree)/v1.9/(.*?)\>`__', r':githublink:`\2 <\6>`', line)
+    line = re.sub(r'`(\\ ``)?([^`]*?)(``)? \<(.*?)(blob|tree)/v1.9/(.*?)\>`__', r':githublink:`\2 <\6>`', line)
+    if 'githublink' in line:
+        line = re.sub(r'\*Example: (.*)\*', r'*Example:* \1', line)
+    return line
 
 
 for root, dirs, files in os.walk('en_US'):

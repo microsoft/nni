@@ -110,7 +110,7 @@ Three steps to start an experiment
    +     "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]}
    + }
 
-*Example: :githublink:`search_space.json <examples/trials/mnist-tfv1/search_space.json>`*
+*Example:* :githublink:`search_space.json <examples/trials/mnist-tfv1/search_space.json>`
 
 **Step 2**\ : Modify your ``Trial`` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -135,7 +135,7 @@ Three steps to start an experiment
    +     params = nni.get_next_parameter()
          run_trial(params)
 
-*Example: :githublink:`mnist.py <examples/trials/mnist-tfv1/mnist.py>`*
+*Example:* :githublink:`mnist.py <examples/trials/mnist-tfv1/mnist.py>`
 
 **Step 3**\ : Define a ``config`` file in YAML which declares the ``path`` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
@@ -160,7 +160,7 @@ Three steps to start an experiment
 
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
-*Example: :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`*
+*Example:* :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`
 
 All the code above is already prepared and stored in :githublink:`examples/trials/mnist-tfv1/ <examples/trials/mnist-tfv1>`.
 
