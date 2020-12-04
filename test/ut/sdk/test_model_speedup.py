@@ -177,7 +177,6 @@ def channel_prune(model):
     pruner.compress()
     pruner.export_model(model_path=MODEL_FILE, mask_path=MASK_FILE)
 
-@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class SpeedupTestCase(TestCase):
     def test_speedup_vgg16(self):
         prune_model_l1(vgg16())
