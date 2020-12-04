@@ -59,7 +59,7 @@ class TrialDispatcher implements TrainingService {
     private environmentServiceList: EnvironmentService[] = [];
     private commandChannelDict: Map<Channel, CommandChannel>;
     private commandEmitter: EventEmitter;
-    private nniManagerIp: string;
+    private nniManagerIp: string | undefined;
 
     // uses to accelerate trial manager loop
     // true means there is updates, and trial loop should run a cycle immediately.
@@ -87,7 +87,6 @@ class TrialDispatcher implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.experimentId = getExperimentId();
         this.experimentRootDir = getExperimentRootDir();
-        this.nniManagerIp = getIPV4Address();
 
         const logLevel = getLogLevel();
         this.log.debug(`current folder ${__dirname}`);
@@ -196,7 +195,7 @@ class TrialDispatcher implements TrainingService {
         for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
-            runnerSettings.nniManagerIP = this.nniManagerIp;
+            runnerSettings.nniManagerIP = this.nniManagerIp === undefined? getIPV4Address() : this.nniManagerIp;
             runnerSettings.nniManagerPort = getBasePort() + 1;
             runnerSettings.commandChannel = environmentService.getCommandChanneName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;

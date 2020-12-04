@@ -4,6 +4,7 @@
 import * as chai from 'chai';
 import * as path from 'path';
 import { Scope } from "typescript-ioc";
+import { EventEmitter } from 'events';
 import * as component from '../../../common/component';
 import { getLogger, Logger } from "../../../common/log";
 import { TrialJobApplicationForm, TrialJobStatus } from '../../../common/trainingService';
@@ -210,7 +211,8 @@ describe('Unit Test for TrialDispatcher', () => {
         trialRunPromise = trialDispatcher.run();
 
         environmentService = component.get(EnvironmentService) as UtEnvironmentService;
-        commandChannel = environmentService.testGetCommandChannel();
+
+        commandChannel = new UtCommandChannel(new EventEmitter());
     });
 
     afterEach(async () => {

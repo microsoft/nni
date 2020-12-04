@@ -6,7 +6,6 @@
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
-import { CommandChannel } from "./commandChannel";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -121,8 +120,7 @@ export class EnvironmentInformation {
 }
 
 export abstract class EnvironmentService {
-    
-    protected commandChannel: CommandChannel | undefined;
+
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void>;

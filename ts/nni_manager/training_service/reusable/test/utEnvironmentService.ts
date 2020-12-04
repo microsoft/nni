@@ -1,13 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
-import { EventEmitter } from "events";
-import { CommandChannel } from "../commandChannel";
-import { UtCommandChannel } from "./utCommandChannel";
+import { Channel, EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
 
 export class UtEnvironmentService extends EnvironmentService {
-    private utCommandChannel: UtCommandChannel | undefined;
     private allEnvironments = new Map<string, EnvironmentInformation>();
     private hasMoreEnvironmentsInternal = true;
 
@@ -27,6 +23,10 @@ export class UtEnvironmentService extends EnvironmentService {
         return 'ut';
     }
 
+    public get getCommandChanneName(): Channel {
+        return 'ut';
+    }
+
     public testSetEnvironmentStatus(environment: EnvironmentInformation, newStatus: EnvironmentStatus): void {
         environment.status = newStatus;
     }
@@ -39,24 +39,12 @@ export class UtEnvironmentService extends EnvironmentService {
         return this.allEnvironments;
     }
 
-    public testGetCommandChannel(): UtCommandChannel {
-        if (this.utCommandChannel === undefined) {
-            throw new Error(`command channel shouldn't be undefined.`);
-        }
-        return this.utCommandChannel;
-    }
-
     public testSetNoMoreEnvironment(hasMore: boolean): void {
         this.hasMoreEnvironmentsInternal = hasMore;
     }
 
     public get hasMoreEnvironments(): boolean {
         return this.hasMoreEnvironmentsInternal;
-    }
-
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        this.utCommandChannel = new UtCommandChannel(commandEmitter)
-        return this.utCommandChannel;
     }
 
     public async config(_key: string, _value: string): Promise<void> {

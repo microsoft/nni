@@ -9,7 +9,7 @@ import { INITIALIZED } from '../../../core/commands';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
 
-export class WebRunnerConnection extends RunnerConnection {
+class WebRunnerConnection extends RunnerConnection {
     public readonly clients: WebSocket[] = [];
 
     public async close(): Promise<void> {
@@ -50,6 +50,7 @@ export class WebCommandChannel extends CommandChannel {
             client.onerror = (event): void => {
                 this.log.error(`error on client ${JSON.stringify(event)}`);
             }
+
             this.clients.set(client, undefined);
             client.onmessage = (message): void => {
                 this.receivedWebSocketMessage(client, message);
@@ -90,11 +91,13 @@ export class WebCommandChannel extends CommandChannel {
     private receivedWebSocketMessage(client: WebSocket, message: MessageEvent): void {
         let connection = this.clients.get(client) as WebRunnerConnection | undefined;
         const rawCommands = message.data.toString();
+
         if (connection === undefined) {
             // undefined means it's expecting initializing message.
             const commands = this.parseCommands(rawCommands);
             let isValid = false;
             this.log.debug(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
+
             if (commands.length > 0) {
                 const commandType = commands[0][0];
                 const result = commands[0][1];

@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { EventEmitter } from "events";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
@@ -14,8 +13,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
-import { AMLCommandChannel } from '../channels/amlCommandChannel';
-import { CommandChannel } from "../commandChannel";
+import { Channel } from '../environment';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 
 
@@ -41,8 +39,8 @@ export class AMLEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new AMLCommandChannel(commandEmitter);
+    public get getCommandChanneName(): Channel {
+        return 'aml';
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
