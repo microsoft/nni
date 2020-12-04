@@ -39,6 +39,7 @@ def single_line_process(line):
     # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
     if line == '~' * len(line):
         line = '^' * len(line)
+    line = line.replace('raw-html-m2r', 'raw-html')
     return line
 
 
@@ -63,6 +64,10 @@ def process_table(content):
             line = line[2:]
         lines.append(line)
     return '\n'.join(lines)
+
+
+def process_github_link(line):
+    return re.sub(r'`(\\ ``)?([^`]*?)(``)? \<(.*?)(blob|tree)/v1.9/(.*?)\>`__', r':githublink:`\2 <\6>`', line)
 
 
 for root, dirs, files in os.walk('en_US'):
@@ -104,6 +109,10 @@ for root, dirs, files in os.walk('en_US'):
         lines = [l for l in lines if l is not None]
 
         lines = list(map(single_line_process, lines))
+
+        if file != 'Release.md':
+            # githublink
+            lines = list(map(process_github_link, lines))
 
         out = '\n'.join(lines)
         out = special_case_replace(out)
