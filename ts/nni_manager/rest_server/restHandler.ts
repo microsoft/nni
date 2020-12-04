@@ -98,8 +98,11 @@ class NNIRestHandler {
 
     private version(router: Router): void {
         router.get('/version', async (req: Request, res: Response) => {
-            const version = await getVersion();
-            res.send(version);
+            getVersion().then((version) => {
+                res.send(version)
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
         });
     }
 
