@@ -55,10 +55,11 @@ class TrialDispatcher implements TrainingService {
 
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
+    // make public for ut
+    public environmentServiceList: EnvironmentService[] = [];
+    public commandChannelDict: Map<Channel, CommandChannel>;
+    public commandEmitter: EventEmitter;
 
-    private environmentServiceList: EnvironmentService[] = [];
-    private commandChannelDict: Map<Channel, CommandChannel>;
-    private commandEmitter: EventEmitter;
     private nniManagerIp: string | undefined;
 
     // uses to accelerate trial manager loop
