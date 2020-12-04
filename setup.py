@@ -77,6 +77,8 @@ dependencies = [
     'prettytable'
 ]
 
+if sys.version_info < (3, 7):
+    dependencies[dependencies.index('numpy')] = 'numpy<1.20'
 
 release = os.environ.get('NNI_RELEASE')
 
