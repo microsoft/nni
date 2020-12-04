@@ -77,7 +77,9 @@ dependencies = [
     'prettytable'
 ]
 
-if sys.version_info < (3, 7):
+if sys.platform == 'win32':
+    dependencies[dependencies.index('numpy')] = 'numpy<1.19.4'
+elif sys.version_info < (3, 7):
     dependencies[dependencies.index('numpy')] = 'numpy<1.20'
 
 release = os.environ.get('NNI_RELEASE')
