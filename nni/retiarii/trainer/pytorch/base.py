@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 
 import nni
 
-from .interface import BaseTrainer
+from ..interface import BaseTrainer
 
 
 def get_default_transform(dataset: str) -> Any:
