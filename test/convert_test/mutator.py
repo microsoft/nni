@@ -10,6 +10,7 @@ _logger = logging.getLogger(__name__)
 
 class BlockMutator(Mutator):
     def __init__(self, target: str):
+        super(BlockMutator, self).__init__()
         self.target = target
 
     def mutate(self, model):

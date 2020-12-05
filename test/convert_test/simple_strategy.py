@@ -7,6 +7,7 @@ from nni.retiarii import Model, submit_models, wait_models
 from nni.retiarii.strategy import BaseStrategy
 from nni.retiarii import Sampler
 
+
 _logger = logging.getLogger(__name__)
 
 class RandomSampler(Sampler):
@@ -21,10 +22,8 @@ class SimpleStrategy(BaseStrategy):
         try:
             _logger.info('stargety start...')
             while True:
-                #model = get_base_model_ir()
                 model = base_model
                 _logger.info('apply mutators...')
-                #applied_mutators = get_specified_mutators()
                 _logger.info('mutators: {}'.format(applied_mutators))
                 random_sampler = RandomSampler()
                 for mutator in applied_mutators:
@@ -33,7 +32,6 @@ class SimpleStrategy(BaseStrategy):
                     model = mutator.apply(model)
                 # get and apply training approach
                 _logger.info('apply training approach...')
-                #trainer = get_trainer()
                 model.apply_trainer(trainer['modulename'], trainer['args'])
                 # run models
                 submit_models(model)

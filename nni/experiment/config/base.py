@@ -99,3 +99,17 @@ class ExperimentConfig:
                 if field.name == '_training_service' and field.default == training_service:
                     return cls()
         raise ValueError(f'Unrecognized training service {training_service}')
+
+
+class RetiariiExpConfig(ExperimentConfig):
+    @staticmethod
+    def create_template(training_service: str) -> 'ExperimentConfig':
+        for cls in ExperimentConfig.__subclasses__():
+            for field in dataclasses.fields(cls):
+                if field.name == '_training_service' and field.default == training_service:
+                    config_obj = cls()
+                    config_obj.search_space = {}
+                    config_obj.trial_command = 'python3 -m nni.retiarii.trial_entry'
+                    # FIXME: update this field
+                    config_obj.trial_code_directory = '../..'
+                    return config_obj
