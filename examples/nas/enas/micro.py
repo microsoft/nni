@@ -52,9 +52,7 @@ class Cell(nn.Module):
         out = self.input_choice(prev_layers)
         if isinstance(self.input_choice, PathSamplingInputChoice):
             # Retiarii pattern
-            sampled = self.input_choice.sampled
-            return out, torch.tensor([i == sampled or (isinstance(sampled, list) and i in sampled)
-                                      for i in range(len(self.input_choice))], dtype=torch.bool)
+            return out, self.input_choice.mask
         else:
             chosen_input, chosen_mask = out
             cell_out = self.op_choice(chosen_input)

@@ -14,7 +14,24 @@ from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
 _logger = logging.getLogger(__name__)
 
 
+def _get_mask(sampled, total):
+    multihot = [i == sampled or (isinstance(sampled, list) and i in sampled) for i in range(total)]
+    return torch.tensor(multihot, dtype=torch.bool)
+
+
 class PathSamplingLayerChoice(nn.Module):
+    """
+    Mixed module, in which fprop is decided by exactly one or multiple (sampled) module.
+    If multiple module is selected, the result will be sumed and returned.
+
+    Attributes
+    ----------
+    sampled : int or list of int
+        Sampled module indices.
+    mask : tensor
+        A multi-hot bool 1D-tensor representing the sampled mask.
+    """
+
     def __init__(self, layer_choice):
         super(PathSamplingLayerChoice, self).__init__()
         self.op_names = []
@@ -34,8 +51,23 @@ class PathSamplingLayerChoice(nn.Module):
     def __len__(self):
         return len(self.op_names)
 
+    @property
+    def mask(self):
+        return _get_mask(self.sampled, len(self))
+
 
 class PathSamplingInputChoice(nn.Module):
+    """
+    Mixed input. Take a list of tensor as input, select some of them and return the sum.
+
+    Attributes
+    ----------
+    sampled : int or list of int
+        Sampled module indices.
+    mask : tensor
+        A multi-hot bool 1D-tensor representing the sampled mask.
+    """
+
     def __init__(self, input_choice):
         super(PathSamplingInputChoice, self).__init__()
         self.n_candidates = input_choice.n_candidates
@@ -50,6 +82,10 @@ class PathSamplingInputChoice(nn.Module):
 
     def __len__(self):
         return self.n_candidates
+
+    @property
+    def mask(self):
+        return _get_mask(self.sampled, len(self))
 
 
 class SinglePathTrainer(BaseOneShotTrainer):
