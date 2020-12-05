@@ -4,8 +4,8 @@ $boxGapPadding: 10px;
 
 .wrapper {
     display: grid;
-    grid-template-columns: repeat(9, 1fr);
-    grid-auto-rows: 97px;
+    grid-template-columns: repeat(8, 1fr);
+    grid-auto-rows: 93px;
 
     > div {
         background: #fff;
@@ -14,59 +14,61 @@ $boxGapPadding: 10px;
         box-sizing: border-box;
     }
 
-    .overviewProgress {
-        grid-column: 2 / 6;
-        grid-row: 1 / 5;
-        display: grid;
-        grid-auto-rows: 70px;
-        margin: 0 $boxGapPadding;
-        padding: 0;
-        background: transparent;
+    .duration,
+    .trialCount {
+        grid-column: 1 / 5;
+        background: #fff;
+        padding: $boxPadding;
+        border-radius: $boxBorderRadius;
+        box-sizing: border-box;
+        margin-top: $boxGapPadding;
 
-        .duration,
-        .trialCount {
-            background: #fff;
-            padding: $boxPadding;
-            border-radius: $boxBorderRadius;
-            box-sizing: border-box;
+        /* for alert message tooltip position */
+        position: relative;
+    }
 
-            /* for alert message tooltip position */
-            position: relative;
-        }
+    .duration {
+        grid-row: 3 / 5;
+        height: 138px;
+    }
 
-        .duration {
-            // grid-row: 1 / 3;
-            height: 139px;
-        }
-
-        .trialCount {
-            margin-top: 79px;
-            height: 239px;
-        }
+    .trialCount {
+        grid-row: 4 / 6;
+        margin-top: 65px;
+        height: 239px;
     }
 
     .overviewCommand1,
     .overviewCommand2 {
+        grid-row-start: 8;
+        margin-top: -59px;
+        margin-right: $boxGapPadding;
         border-radius: 0;
     }
 
     .overviewCommand1 {
-        grid-column-start: 1;
+        grid-column: 1 / 5;
         border-radius: $boxBorderRadius 0 0 $boxBorderRadius;
     }
 
     .overviewCommand2 {
-        grid-column: 2 / 6;
-        margin-right: 10px;
+        grid-column: 2 / 5;
+        margin-right: $boxGapPadding;
         padding-left: 30px;
         border-radius: 0 $boxBorderRadius $boxBorderRadius 0;
     }
 }
 
 .overviewBasicInfo {
-    grid-column-start: 1;
-    grid-row: 1 / 5;
+    grid-column: 1 / 5;
+    grid-row: 1 / 3;
     z-index: 2;
+}
+
+.overviewBasicInfo,
+.duration,
+.trialCount {
+    margin-right: $boxGapPadding;
 }
 
 .basic {
@@ -96,9 +98,10 @@ $boxGapPadding: 10px;
     }
 }
 
-.overviewTable {
-    grid-column: 6 / 10;
-    grid-row: 1 / 11;
+.overviewBestMetric {
+    grid-column: 5 / 9;
+    grid-row: 1 / 9;
+    max-height: 736px;
     overflow: hidden;
 
     .topTrialTitle {
@@ -114,43 +117,33 @@ $boxGapPadding: 10px;
     }
 
     .mincenter {
-        margin: 0 13px 0 10px;
+        margin: 0 13px 0 $boxGapPadding;
     }
 
     .chooseEntry {
-        margin-right: 10px;
+        margin-right: $boxGapPadding;
         line-height: 30px;
     }
 }
 
 .overviewCommand1,
 .overviewCommand2 {
+    grid-row: 7 / 9;
     height: 144px;
     overflow: hidden;
-    margin-top: 10px;
+    margin-top: $boxGapPadding;
 }
-
-$circle: 10px;
-$bgblue: #0071bc;
 
 .overviewChart {
-    grid-column: 1 / 6;
-    grid-row: 7 / 11;
-    margin-right: $boxGapPadding;
-    margin-top: -29px;
-
-    .circle {
-        width: $circle;
-        height: $circle;
-        border-radius: 50%;
-        background-color: $bgblue;
-        margin-top: 6px;
-        margin-right: 18px;
-    }
+    margin-top: 20px;
 }
 
-.showMess {
-    position: absolute;
-    top: 42%;
-    left: 48%;
+.defaultMetricContainer {
+    position: relative;
+
+    .showMess {
+        position: absolute;
+        top: 42%;
+        left: 48%;
+    }
 }

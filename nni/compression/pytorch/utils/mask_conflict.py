@@ -36,9 +36,11 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     # this traced model.
     if traced is None:
         assert model is not None and dummy_input is not None
-        with torch.onnx.set_training(model, False):
-            # We need to trace the model in this way, else it will have problems
-            traced = torch.jit.trace(model, dummy_input)
+        training = model.training
+        model.eval()
+        # We need to trace the model in eval mode
+        traced = torch.jit.trace(model, dummy_input)
+        model.train(training)
 
     fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
     masks = fix_group_mask.fix_mask()

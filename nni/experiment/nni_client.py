@@ -100,10 +100,7 @@ class TrialResult:
         self.value = None
         self.trialJobId = None
         for key in json_obj.keys():
-            if key == 'id':
-                setattr(self, 'trialJobId', json_obj[key])
-            elif hasattr(self, key):
-                setattr(self, key, json_obj[key])
+            setattr(self, key, json_obj[key])
         self.value = json.loads(self.value)
 
     def __repr__(self):
@@ -220,10 +217,7 @@ class TrialJob:
         self.finalMetricData = None
         self.stderrPath = None
         for key in json_obj.keys():
-            if key == 'id':
-                setattr(self, 'trialJobId', json_obj[key])
-            elif hasattr(self, key):
-                setattr(self, key, json_obj[key])
+            setattr(self, key, json_obj[key])
         if self.hyperParameters:
             self.hyperParameters = [TrialHyperParameters(json.loads(e)) for e in self.hyperParameters]
         if self.finalMetricData:

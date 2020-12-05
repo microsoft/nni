@@ -151,12 +151,37 @@ prune_config = {
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
     },
-    'autocompress': {
+    'autocompress_l1': {
         'pruner_class': AutoCompressPruner,
         'config_list': [{
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
+        'base_algo': 'l1',
+        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'evaluator': lambda model: 0.9,
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': []
+    },
+    'autocompress_l2': {
+        'pruner_class': AutoCompressPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'base_algo': 'l2',
+        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'evaluator': lambda model: 0.9,
+        'dummy_input': torch.randn([64, 1, 28, 28]),
+        'validators': []
+    },
+    'autocompress_fpgm': {
+        'pruner_class': AutoCompressPruner,
+        'config_list': [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+        }],
+        'base_algo': 'fpgm',
         'trainer': lambda model, optimizer, criterion, epoch, callback : model,
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
@@ -181,7 +206,7 @@ class Model(nn.Module):
     def forward(self, x):
         return self.fc(self.pool(self.bn1(self.conv1(x))).view(x.size(0), -1))
 
-def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt', 'simulatedannealing', 'admm', 'autocompress'], bias=True):
+def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt', 'simulatedannealing', 'admm', 'autocompress_l1', 'autocompress_l2', 'autocompress_fpgm',], bias=True):
     for pruner_name in pruner_names:
         print('testing {}...'.format(pruner_name))
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -203,8 +228,8 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, evaluator=prune_config[pruner_name]['evaluator'])
         elif pruner_name == 'admm':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
-        elif pruner_name == 'autocompress':
-            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x)
+        elif pruner_name.startswith('autocompress'):
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x, base_algo=prune_config[pruner_name]['base_algo'])
         else:
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
         pruner.compress()
@@ -264,7 +289,6 @@ class SimpleDataset:
     def __len__(self):
         return 1000
 
-@unittest.skipIf(torch.__version__ >= '1.6.0', 'not supported')
 class PrunerTestCase(TestCase):
     def test_pruners(self):
         pruners_test(bias=True)
@@ -273,7 +297,7 @@ class PrunerTestCase(TestCase):
         pruners_test(bias=False)
 
     def test_agp_pruner(self):
-        for pruning_algorithm in ['l1', 'l2', 'taylorfo', 'apoz']:
+        for pruning_algorithm in ['l1', 'l2', 'fpgm', 'taylorfo', 'apoz']:
             _test_agp(pruning_algorithm)
 
         for pruning_algorithm in ['level']:

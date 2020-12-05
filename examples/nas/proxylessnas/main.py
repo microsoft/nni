@@ -9,6 +9,7 @@ from torchvision import transforms
 
 import datasets
 from model import SearchMobileNet
+from nni.algorithms.nas.pytorch.proxylessnas import ProxylessNasTrainer
 from putils import LabelSmoothingLoss, accuracy, get_parameters
 from retrain import Retrain
 
