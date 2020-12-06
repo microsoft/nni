@@ -55,9 +55,14 @@ class ConfigBase:
             if value is not None and value != dataclasses.MISSING:
                 # relative paths loaded from config file are not relative to pwd
                 if 'Path' in str(field.type):
-                    value = Path(value).expanduser()
-                    if not value.is_absolute():
-                        value = _base_path / value
+                    value = Path(value)
+                    if 'Absolute' in str(field.type):
+                        if not value.is_absolute:
+                            raise ValueError(f'Path "{value}" is not absolute')
+                    else:
+                        value = value.expanduser()
+                        if not value.is_absolute():
+                            value = _base_path / value
                 # convert nested dict to config type
                 if isinstance(value, dict):
                     cls = util.strip_optional(field.type)

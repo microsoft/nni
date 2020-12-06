@@ -36,8 +36,6 @@ Mnemonic name of the experiment. This will be shown in web UI and nnictl.
 
 type: ``Optional[str]``
 
-// dev note: It will be set to `N/A` when not provided for now. In future I suggest to show experiment ID in its place when not specified.
-
 
 search space file
 -----------------
@@ -70,7 +68,7 @@ trial command
 
 Command(s) to launch trial.
 
-type: ``Union[str, list[str]]``
+type: ``str``
 
 Bash will be used on Linux and macOS. PowerShell will be used on Windows.
 
@@ -102,11 +100,12 @@ trial gpu number
 
 Number of GPUs used by each trial.
 
-type: ``int``
+type: ``Optional[int]``
 
-default: ``0``
+If set to zero, trials will have no access to any GPU. 
 
-// I thought there was an option to not specify gpu number, meaning all GPUs are visible to each trial. Am I wrong?
+If not specified, trials will be created and scheduled as if they do not use GPU,
+but they can still access all GPUs on the training machine.
 
 
 max experiment duration
@@ -121,7 +120,6 @@ format: ``number + s|m|h|d``
 examples: ``"10m"``, ``"0.5h"``
 
 When time runs out, the experiment will stop creating trials but continue to serve web UI.
-
 
 
 max trial number
@@ -308,7 +306,7 @@ platform
 Constant string ``"local"``.
 
 
-use_active_gpu
+use active gpu
 --------------
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
@@ -463,7 +461,7 @@ trial prepare command
 
 Command(s) to run before launching each trial.
 
-type: ``Optional[Union[str, list[str]]]``
+type: ``Optional[str]``
 
 This is useful if preparing steps vary for different machines.
 
@@ -543,3 +541,35 @@ Enable reuse mode.
 type: ``bool``
 
 default: ``False``
+
+
+nni manager storage mount point
+-------------------------------
+
+`Mount point <path>`_ of storage service (typically NFS) on current machine.
+
+type: ``str``
+
+
+container storage mount point
+-----------------------------
+
+Mount point of storage service (typically NFS) in docker container.
+
+type: ``str``
+
+This must be an absolute path.
+
+
+open pai config
+---------------
+
+Embedded OpenPAI config file.
+
+type: ``Optional[Dict[str, Any]]``
+
+
+open pai config file
+--------------------
+
+`Path`_ to OpenPAI

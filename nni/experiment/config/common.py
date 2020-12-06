@@ -50,7 +50,7 @@ class ExperimentConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space_file: Optional[PathLike] = None
     search_space: Any = None
-    trial_command: Union[str, List[str]]
+    trial_command: str
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
@@ -93,7 +93,6 @@ class ExperimentConfig(ConfigBase):
 
 _canonical_rules = {
     'search_space_file': util.canonical_path,
-    'trial_command': lambda value: [value] if isinstance(value, str) else value,
     'trial_code_directory': util.canonical_path,
     'max_experiment_duration': lambda value: str(util.parse_time(value)) + 's',
     'experiment_working_directory': util.canonical_path,

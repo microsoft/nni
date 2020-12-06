@@ -23,12 +23,11 @@ class RemoteMachineConfig(ConfigBase):
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
-    trial_prepare_command: Optional[Union[str, List[str]]] = None
+    trial_prepare_command: Optional[str] = None
 
     _canonical_rules = {
         'ssh_key_file': util.canonical_path,
         'gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
-        'trial_prepare_command': lambda value: [value] if isinstance(value, str) else value
     }
 
     _validation_rules = {
@@ -45,8 +44,8 @@ class RemoteMachineConfig(ConfigBase):
 @dataclass(init=False)
 class RemoteConfig(TrainingServiceConfig):
     platform: str = 'remote'
-    machine_list: List[RemoteMachineConfig]
     reuse_mode: bool = False
+    machine_list: List[RemoteMachineConfig]
 
     _validation_rules = {
         'platform': lambda value: (value == 'remote', 'cannot be modified')
