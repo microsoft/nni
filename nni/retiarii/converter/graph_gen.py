@@ -212,24 +212,26 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                                                         submodule_obj,
                                                         submodule_full_name, ir_model)
                 else:
-                    # FIXME: check module list
-                    # handle ModuleList
                     # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
                     # %10 : __torch__.darts_model.Cell = prim::GetAttr[name="0"](%8)
                     # %s1.4 : Tensor = prim::CallMethod[name="forward"](%10, %4, %4)
-                    predecessor = submodule.inputsAt(0).node()
-                    assert predecessor.kind() == 'prim::GetAttr'
-                    assert predecessor.hasAttribute('name')
-                    assert predecessor.inputsAt(0).debugName() == 'self'
-                    predecessor_name = predecessor.s('name')
-                    # FIXME: exchange
-                    submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
-                    predecessor_obj = getattr(module, predecessor_name)
-                    submodule_obj = getattr(predecessor_obj, submodule_name)
-                    print('submodule_name: {}, type of submodule: {}'.format(submodule_name, type(submodule_obj)))
-                    print('submodule_type_str: {}, full_name: {}'.format(submodule_type_str, submodule_full_name))
-                    subgraph, sub_m_attrs = convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
-                                                           submodule_obj, submodule_full_name, ir_model)
+                    if submodule.inputsAt(0).type().name() == 'ModuleList':
+                        # handle ModuleList
+                        predecessor = submodule.inputsAt(0).node()
+                        assert predecessor.kind() == 'prim::GetAttr'
+                        assert predecessor.hasAttribute('name')
+                        assert predecessor.inputsAt(0).debugName() == 'self'
+                        predecessor_name = predecessor.s('name')
+                        # FIXME: exchange
+                        submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
+                        predecessor_obj = getattr(module, predecessor_name)
+                        submodule_obj = getattr(predecessor_obj, submodule_name)
+                        print('submodule_name: {}, type of submodule: {}'.format(submodule_name, type(submodule_obj)))
+                        print('submodule_type_str: {}, full_name: {}'.format(submodule_type_str, submodule_full_name))
+                        subgraph, sub_m_attrs = convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
+                                                            submodule_obj, submodule_full_name, ir_model)
+                    else:
+                        raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
                 # TODO: match subgraph with maintained graphs
                 # build cell
@@ -297,6 +299,9 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
 
     return node_index
 
+def merge_aten_slices(ir_graph):
+    ...
+
 def refine_graph(ir_graph):
     """
     Do the following process to simplify graph:
@@ -307,6 +312,7 @@ def refine_graph(ir_graph):
     # some constant is not used, for example, function name as prim::Constant
     remove_unconnected_nodes(ir_graph, targeted_type='prim::Constant')
     remove_unconnected_nodes(ir_graph, targeted_type='prim::GetAttr')
+    merge_aten_slices(ir_graph)
 
 def _handle_layerchoice(module):
     global modules_arg
