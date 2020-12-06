@@ -105,6 +105,7 @@ class PyTorchOperation(Operation):
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+        from .converter.op_types import Type
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
@@ -132,14 +133,13 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::add':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]} + {inputs[1]}'
-        elif self.type == 'aten::slice':
-            # aten::slice(s) can be merged together
-            print('zql: ', inputs)
-            assert len(inputs) == 5
-            #slice_str = ' '.join([':,' for idx in range(inputs[1])])
-            # FIXME: merge constants, and fix this error
-            slice_str = '---, '
-            slice_str += f'{inputs[2]}:{inputs[3]}:{inputs[4]}'
+        elif self.type == Type.MergedSlice:
+            assert (len(inputs) - 1) % 4 == 0
+            slices = []
+            dim = int((len(inputs) - 1) / 4)
+            for i in range(dim):
+                slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
+            slice_str = ','.join(slices)
             return f'{output} = {inputs[0]}[{slice_str}]'
         elif self.type == 'aten::size':
             assert len(inputs) == 2
@@ -147,6 +147,8 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::view':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]}.view({inputs[1]})'
+        elif self.type == 'aten::slice':
+            raise RuntimeError('not supposed to have aten::slice operation')
         else:
             raise RuntimeError('unsupported operation type: {}'.format(self.type))
 

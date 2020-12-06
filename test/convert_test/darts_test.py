@@ -25,6 +25,8 @@ if __name__ == '__main__':
     with open('graph.json', 'w') as outfile:
         json.dump(graph_ir, outfile)'''
     code_script = model_to_pytorch_script(model)
+    with open('graph_code.py', 'w') as outfile:
+        outfile.write(code_script)
     print(code_script)
     '''print("Model: ", model)
     graph_ir = model._dump()

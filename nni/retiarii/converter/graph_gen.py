@@ -300,7 +300,46 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
     return node_index
 
 def merge_aten_slices(ir_graph):
-    ...
+    """
+    if there is aten::slice node, merge the consecutive ones together
+    """
+    head_slice_nodes = []
+    has_slice_node = False
+    for node in ir_graph.hidden_nodes:
+        if node.operation.type == 'aten::slice':
+            has_slice_node = True
+            for pred in node.predecessors:
+                if pred.operation.type not in ['aten::slice', 'prim::Constant']:
+                    head_slice_nodes.append(node)
+                    break
+    if has_slice_node:
+        assert head_slice_nodes
+    
+    for head_node in head_slice_nodes:
+        slot = 0
+        new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), Type.MergedSlice)
+        assert len(head_node.incoming_edges) == 5
+        for edge in head_node.incoming_edges:
+            edge.tail = new_slice_node
+        slot += 5
+        node = head_node
+        while len(node.successors) == 1 and node.successors[0].operation.type == 'aten::slice':
+            suc_node = node.successors[0]
+            assert len(suc_node.incoming_edges) == 5
+            for edge in suc_node.incoming_edges:
+                if edge.tail_slot == 0:
+                    edge.remove()
+                else:
+                    edge.tail = new_slice_node
+                    edge.tail_slot = slot + edge.tail_slot - 1
+            slot += 4
+            ir_graph.hidden_nodes.remove(node)
+            node = suc_node
+        
+        for edge in node.outgoing_edges:
+            edge.head = new_slice_node
+        ir_graph.hidden_nodes.remove(node)
+    
 
 def refine_graph(ir_graph):
     """

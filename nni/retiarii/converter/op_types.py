@@ -12,6 +12,8 @@ class Type:
     ValueChoice = 'ValueChoice'
     Placeholder = 'Placeholder'
 
+    MergedSlice = 'MergedSlice'
+
     # deal with aten op
     BasicOpsPT = {
         'aten::mean': 'Mean',
