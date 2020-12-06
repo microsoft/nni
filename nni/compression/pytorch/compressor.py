@@ -589,8 +589,26 @@ class QuantGrad(torch.autograd.Function):
     """
     Base class for overriding backward function of quantization operation.
     """
+    @classmethod
+    def _quantize(cls, x, scale, zp):
+        r"""Reference function for quantizing x -- non-clamped.
+        """
+        return ((x / scale) + zp).round()
+    @classmethod
+    def get_bits_length(cls, config, quant_type):
+        """
+        get bit for quantize config
+        :param config:
+        :param quant_type:
+        :return:
+        """
+        if isinstance(config["quant_bits"], int):
+            return config["quant_bits"]
+        else:
+            return config["quant_bits"].get(quant_type)
+
     @staticmethod
-    def quant_backward(tensor, grad_output, quant_type):
+    def quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax):
         """
         This method should be overrided by subclass to provide customized backward function,
         default implementation is Straight-Through Estimator
@@ -608,24 +626,35 @@ class QuantGrad(torch.autograd.Function):
         tensor
             gradient of the input of quantization operation
         """
-        return grad_output
+        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
+        mask = (tensor_q >= qmin) * (tensor_q <= qmax)
+        grad_quantize = torch.zeros_like(grad_output)
+        grad_quantize[mask] = grad_output[mask]
+        return grad_quantize
 
     @staticmethod
     def forward(ctx, tensor, quant_type, wrapper, **kwargs):
-        ctx.save_for_backward(tensor, torch.Tensor([quant_type]))
         if quant_type == QuantType.QUANT_INPUT:
-            return wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
+            quant_type = 'input'
+            output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
-            return wrapper.quantizer.quantize_weight(wrapper, **kwargs)
+            quant_type = 'weight'
+            output =  wrapper.quantizer.quantize_weight(wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_OUTPUT:
-            return wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
+            quant_type = 'output'
+            output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:
             raise ValueError("unrecognized QuantType.")
 
+        bits = QuantGrad.get_bits_length(wrapper.config, quant_type)
+        qmin, qmax = torch.Tensor([0], device=tensor.device), torch.Tensor([(1 << bits) - 1], device=tensor.device)
+        ctx.save_for_backward(tensor, wrapper.module.scale, wrapper.module.zero_point, qmin, qmax)
+        return output
+
     @classmethod
     def backward(cls, ctx, grad_output):
-        tensor, quant_type = ctx.saved_variables
-        output = cls.quant_backward(tensor, grad_output, quant_type)
+        tensor, scale, zero_point, qmin, qmax = ctx.saved_variables
+        output = cls.quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax)
         return output, None, None, None
 
 def _check_weight(module):
