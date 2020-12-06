@@ -110,6 +110,6 @@ class RetiariiExpConfig(ExperimentConfig):
                     config_obj = cls()
                     config_obj.search_space = {}
                     config_obj.trial_command = 'python3 -m nni.retiarii.trial_entry'
-                    # FIXME: update this field
+                    # FIXME: expose this field to users
                     config_obj.trial_code_directory = '../..'
                     return config_obj

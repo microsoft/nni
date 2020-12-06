@@ -4,9 +4,9 @@ import torch
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-#from nni.retiarii.converter.graph_gen import convert_to_graph
-#from nni.retiarii.converter.visualize import visualize_model
-#from nni.retiarii.codegen.pytorch import model_to_pytorch_script
+from nni.retiarii.converter.graph_gen import convert_to_graph
+from nni.retiarii.converter.visualize import visualize_model
+from nni.retiarii.codegen.pytorch import model_to_pytorch_script
 
 from nni.retiarii import nn
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer
@@ -35,17 +35,17 @@ if __name__ == '__main__':
                 optimizer_kwargs={"lr": 1e-3},
                 trainer_kwargs={"max_epochs": 1})
 
-    #script_module = torch.jit.script(base_model)
-    #model = convert_to_graph(script_module, base_model, recorded_module_args)
-    #code_script = model_to_pytorch_script(model)
-    #print(code_script)
-    #print("Model: ", model)
-    #graph_ir = model._dump()
-    #print(graph_ir)
-    #visualize_model(graph_ir)
+    script_module = torch.jit.script(base_model)
+    model = convert_to_graph(script_module, base_model, tca.recorded_arguments)
+    code_script = model_to_pytorch_script(model)
+    print(code_script)
+    print("Model: ", model)
+    graph_ir = model._dump()
+    print(graph_ir)
+    visualize_model(graph_ir)
 
     # new interface
-    applied_mutators = []
+    '''applied_mutators = []
     applied_mutators.append(BlockMutator('mutable_0'))
     applied_mutators.append(BlockMutator('mutable_1'))
 
@@ -58,4 +58,4 @@ if __name__ == '__main__':
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 10
 
-    exp.run(exp_config, 8081, debug=True)
+    exp.run(exp_config, 8081, debug=True)'''

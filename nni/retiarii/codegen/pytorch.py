@@ -14,7 +14,7 @@ def model_to_pytorch_script(model: Model) -> str:
         import_pkgs, graph_code = graph_to_pytorch_model(name, cell)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
-    # TODO: set correct PATH for the packages (after launch refactor)
+    # FIXME: set correct PATH for the packages (after launch refactor)
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
     return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
@@ -103,6 +103,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+# FIXME: remove these two lines
 import sys
 sys.path.append("test/convert_test")
 

@@ -10,18 +10,17 @@ from nni.retiarii.converter.visualize import visualize_model
 from nni.retiarii import nn
 from nni.retiarii.codegen.pytorch import model_to_pytorch_script
 
+from nni.retiarii.utils import TraceClassArguments
+
 from darts_model import CNN
 from nni.experiment import Experiment
 
 if __name__ == '__main__':
-    nn.enable_record_args()
-    base_model = CNN(32, 3, 16, 10, 8)
-    recorded_module_args = nn.get_records()
-    nn.disable_record_args()
-    print(recorded_module_args)
-    script_module = torch.jit.script(base_model)
+    with TraceClassArguments() as tca:
+        base_model = CNN(32, 3, 16, 10, 8)
 
-    model = convert_to_graph(script_module, base_model, recorded_module_args)
+    script_module = torch.jit.script(base_model)
+    model = convert_to_graph(script_module, base_model, tca.recorded_arguments)
     '''graph_ir = model._dump()
     with open('graph.json', 'w') as outfile:
         json.dump(graph_ir, outfile)'''
