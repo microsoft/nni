@@ -4,7 +4,10 @@ import logging
 from logging import FileHandler, Formatter, Handler, StreamHandler
 from pathlib import Path
 import sys
+import time
 from typing import Optional
+
+import colorama
 
 from .env_vars import dispatcher_env_vars, trial_env_vars
 
@@ -33,6 +36,11 @@ def init_logger() -> None:
     _init_logger_standalone()
 
 
+def init_logger_experiment() -> None:
+    colorama.init()
+    formatter.format = _colorful_format
+
+
 time_format = '%Y-%m-%d %H:%M:%S'
 
 formatter = Formatter(
@@ -40,14 +48,14 @@ formatter = Formatter(
     time_format
 )
 
-
 def _init_logger_dispatcher() -> None:
     log_level_map = {
         'fatal': logging.CRITICAL,
         'error': logging.ERROR,
         'warning': logging.WARNING,
         'info': logging.INFO,
-        'debug': logging.DEBUG
+        'debug': logging.DEBUG,
+        'trace': 0
     }
 
     log_path = _prepare_log_dir(dispatcher_env_vars.NNI_LOG_DIRECTORY) / 'dispatcher.log'
@@ -93,6 +101,22 @@ def _setup_logger(name: str, handler: Handler, level: int) -> None:
     logger.setLevel(level)
     logger.propagate = False
 
+def _colorful_format(record):
+    if record.levelno >= logging.ERROR:
+        color = colorama.Fore.RED
+    elif record.levelno >= logging.WARNING:
+        color = colorama.Fore.YELLOW
+    elif record.levelno >= logging.INFO:
+        color = colorama.Fore.GREEN
+    else:
+        color = colorama.Fore.BLUE
+    msg = color + (record.msg % record.args) + colorama.Style.RESET_ALL
+    #msg = colorama.Style.BRIGHT + color + (record.msg % record.args) + colorama.Style.RESET_ALL
+    time = formatter.formatTime(record, time_format)
+    if record.levelno < logging.INFO:
+        return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)
+    else:
+        return '[{}] {}'.format(time, msg)
 
 class _LogFileWrapper(TextIOBase):
     # wrap the logger file so that anything written to it will automatically get formatted

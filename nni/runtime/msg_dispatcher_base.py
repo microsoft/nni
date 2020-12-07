@@ -43,7 +43,7 @@ class MsgDispatcherBase(Recoverable):
         """Run the tuner.
         This function will never return unless raise.
         """
-        _logger.info('Start dispatcher')
+        _logger.info('Dispatcher started')
         if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
@@ -75,7 +75,7 @@ class MsgDispatcherBase(Recoverable):
             self.default_worker.join()
             self.assessor_worker.join()
 
-        _logger.info('Terminated by NNI manager')
+        _logger.info('Dispatcher terminiated')
 
     def command_queue_worker(self, command_queue):
         """Process commands in command queues.

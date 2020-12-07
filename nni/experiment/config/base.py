@@ -16,6 +16,9 @@ T = TypeVar('T', bound='ConfigBase')
 
 PathLike = util.PathLike
 
+def _is_missing(obj: Any) -> bool:
+    return isinstance(obj, type(dataclasses.MISSING))
+
 class ConfigBase:
     """
     Base class of config classes.
@@ -49,7 +52,7 @@ class ConfigBase:
             _base_path = Path()
         for field in dataclasses.fields(self):
             value = kwargs.pop(util.case_insensitive(field.name), field.default)
-            if value is not None and value != dataclasses.MISSING:
+            if value is not None and not _is_missing(value):
                 # relative paths loaded from config file are not relative to pwd
                 if 'Path' in str(field.type):
                     value = Path(value).expanduser()
@@ -114,7 +117,7 @@ class ConfigBase:
             key, value = field.name, getattr(config, field.name)
 
             # check existence
-            if value == dataclasses.MISSING:
+            if _is_missing(value):
                 raise ValueError(f'{class_name}: {key} is not set')
 
             # check type (TODO)

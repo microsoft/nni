@@ -2,15 +2,19 @@
 # Licensed under the MIT license.
 
 import json
+import logging
+from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, List
 
 from .common import ExperimentConfig
 from . import util
 
+_logger = logging.getLogger(__name__)
 
-def to_old_yaml(config: ExperimentConfig, for_nnictl: bool = True) -> Dict[str, Any]:
-    config.validate(not for_nnictl)
+
+def to_old_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:
+    config.validate(skip_nnictl)
     data = config.json()
 
     ts = data.pop('trainingService')
@@ -102,7 +106,7 @@ def _convert_gpu_indices(indices):
 
 
 def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
-    experiment_config = to_old_yaml(config)
+    experiment_config = to_old_yaml(config, skip_nnictl=True)
     ret = []
 
     if config.training_service.platform == 'local':
@@ -139,37 +143,44 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
         raise RuntimeError('Unsupported training service ' + config.training_service.platform)
 
     if experiment_config.get('nniManagerIp') is not None:
-        ret.append({'nni_manager_ip': {'nniManagerIp': old_config['nniManagerIp']}})
-    ret.append({'trial_config': old_config['trial']})
+        ret.append({'nni_manager_ip': {'nniManagerIp': experiment_config['nniManagerIp']}})
+    ret.append({'trial_config': experiment_config['trial']})
     return ret
 
 
 def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
-    experiment_config = to_old_yaml(config)
+    experiment_config = to_old_yaml(config, skip_nnictl=True)
     request_data = dict()
     request_data['authorName'] = experiment_config['authorName']
     request_data['experimentName'] = experiment_config['experimentName']
     request_data['trialConcurrency'] = experiment_config['trialConcurrency']
-    request_data['maxExecDuration'] = experiment_config['maxExecDuration']
+    request_data['maxExecDuration'] = util.parse_time(experiment_config['maxExecDuration'])
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
-    request_data['searchSpace'] = experiment_config.get('searchSpace')
+
+    if config.search_space is not None:
+        request_data['searchSpace'] = json.dumps(config.search_space)
+    else:
+        request_data['searchSpace'] = Path(config.search_space_file).read_text()
+
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
         if request_data['advisor'].get('gpuNum'):
-            print_error('gpuNum is deprecated, please use gpuIndices instead.')
+            _logger.warning('gpuNum is deprecated, please use gpuIndices instead.')
         if request_data['advisor'].get('gpuIndices') and isinstance(request_data['advisor'].get('gpuIndices'), int):
             request_data['advisor']['gpuIndices'] = str(request_data['advisor'].get('gpuIndices'))
-    else:
+    elif experiment_config.get('tuner'):
         request_data['tuner'] = experiment_config['tuner']
         if request_data['tuner'].get('gpuNum'):
-            print_error('gpuNum is deprecated, please use gpuIndices instead.')
+            _logger.warning('gpuNum is deprecated, please use gpuIndices instead.')
         if request_data['tuner'].get('gpuIndices') and isinstance(request_data['tuner'].get('gpuIndices'), int):
             request_data['tuner']['gpuIndices'] = str(request_data['tuner'].get('gpuIndices'))
         if 'assessor' in experiment_config:
             request_data['assessor'] = experiment_config['assessor']
             if request_data['assessor'].get('gpuNum'):
-                print_error('gpuNum is deprecated, please remove it from your config file.')
+                _logger.warning('gpuNum is deprecated, please remove it from your config file.')
+    else:
+        request_data['tuner'] = {'builtinTunerName': '_user_created_'}
     #debug mode should disable version check
     if experiment_config.get('debug') is not None:
         request_data['versionCheck'] = not experiment_config.get('debug')

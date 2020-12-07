@@ -1,10 +1,13 @@
 import contextlib
+import logging
 from pathlib import Path
 import socket
 from subprocess import Popen
 import sys
 import time
 from typing import Optional, Tuple
+
+import colorama
 
 import nni.runtime.protocol
 import nni_node
@@ -14,6 +17,8 @@ from .config import convert
 from . import management
 from .pipe import Pipe
 from . import rest
+
+_logger = logging.getLogger('nni.experiment')
 
 
 def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
@@ -27,21 +32,21 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     exp_id = management.generate_experiment_id()
 
     try:
-        print(f'Creating experiment {exp_id}...')
+        _logger.info(f'Creating experiment {colorama.Fore.CYAN}{exp_id}')
         pipe = Pipe(exp_id)
         proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
-        print('Connecting IPC pipe...')
+        _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
-        print('Statring web server...')
+        _logger.info('Statring web server...')
         _check_rest_server(port)
-        print('Setting up...')
+        _logger.info('Setting up...')
         _init_experiment(config, port, debug)  # todo: kill on fail
         return proc, pipe
 
     except Exception as e:
-        print('Create experiment failed')
+        _logger.error('Create experiment failed')
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
@@ -84,11 +89,12 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
 
 
 def _check_rest_server(port: int, retry: int = 3) -> None:
-    for _ in range(retry):
+    for i in range(retry):
         with contextlib.suppress(Exception):
             rest.get(port, '/check-status')
             return
-        print('Timeout, retry...')
+        if i > 0:
+            _logger.warning('Timeout, retry...')
         time.sleep(1)
     rest.get(port, '/check-status')
 

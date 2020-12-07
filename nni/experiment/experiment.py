@@ -1,10 +1,15 @@
 import atexit
 import logging
+import socket
 from subprocess import Popen
 from threading import Thread
 import time
 from typing import Optional, overload
 
+import colorama
+import psutil
+
+import nni.runtime.log
 from nni.runtime.msg_dispatcher import MsgDispatcher
 from nni.tuner import Tuner
 
@@ -12,6 +17,9 @@ from .config import ExperimentConfig
 from . import launcher
 from .pipe import Pipe
 from . import rest
+
+nni.runtime.log.init_logger_experiment()
+_logger = logging.getLogger('nni.experiment')
 
 
 class Experiment:
@@ -113,9 +121,18 @@ class Experiment:
 
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher = MsgDispatcher(tuner, None)
+        self._dispatcher = MsgDispatcher(self.tuner, None)
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
+
+        ips = [self.config.nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
+        _logger.info(msg)
 
         # TODO: register experiment management metadata
 
@@ -124,6 +141,7 @@ class Experiment:
         """
         Stop background experiment.
         """
+        _logger.info('Stopping experiment...')
         atexit.unregister(self.stop)
 
         if self._proc is not None:
