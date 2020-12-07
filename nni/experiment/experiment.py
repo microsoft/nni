@@ -1,5 +1,7 @@
+import atexit
 import logging
 from subprocess import Popen
+from threading import Thread
 import time
 from typing import Optional, overload
 
@@ -62,24 +64,24 @@ class Experiment:
             A tuner instance.
         training_service
             Name of training service.
-            Supported value: "local", "remote", "openpai"/"pai".
+            Supported value: "local", "remote", "openpai".
         """
         ...
 
     def __init__(self, tuner: Tuner, config=None, training_service=None):
         self.config: ExperimentConfig
         self.port: Optional[int] = None
-        self._dispatcher = MsgDispatcher(tuner, None)
+        self.tuner: Tuner = tuner
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
+        self._dispatcher: Optional[MsgDispatcher] = None
+        self._dispatcher_thread: Optional[Thread] = None
 
         if isinstance(config, str):
             config, training_service = None, config
-        if training_service == 'openpai':
-            training_service = 'pai'
 
         if config is None:
-            self.config = ExperimentConfig.create_template(training_service)
+            self.config = ExperimentConfig(training_service)
         else:
             self.config = config
 
@@ -98,6 +100,8 @@ class Experiment:
         debug
             Whether to start in debug mode.
         """
+        atexit.register(self.stop)
+
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 
@@ -107,10 +111,11 @@ class Experiment:
 
         self.port = port  # port will be None if start up failed
 
-        # dispatcher must be created after pipe initialized
+        # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        from threading import Thread
-        Thread(target=self._dispatcher.run).start()
+        self._dispatcher = MsgDispatcher(tuner, None)
+        self._dispatcher_thread = Thread(target=self._dispatcher.run)
+        self._dispatcher_thread.start()
 
         # TODO: register experiment management metadata
 
@@ -119,12 +124,21 @@ class Experiment:
         """
         Stop background experiment.
         """
-        self._proc.kill()
-        self._pipe.close()
+        atexit.unregister(self.stop)
+
+        if self._proc is not None:
+            self._proc.kill()
+        if self._pipe is not None:
+            self._pipe.close()
+        if self._dispatcher_thread is not None:
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
 
         self.port = None
         self._proc = None
         self._pipe = None
+        self._dispatcher = None
+        self._dispatcher_thread = None
 
 
     def run(self, port: int = 8080, debug: bool = False) -> str:

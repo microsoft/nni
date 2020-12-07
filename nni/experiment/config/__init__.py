@@ -1,3 +1,5 @@
-from .base import ExperimentConfig
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
-from .local import LocalExperimentConfig
+from .common import *
+from .local import *
