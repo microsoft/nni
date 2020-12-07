@@ -74,7 +74,8 @@ dependencies = [
     'pkginfo',
     'websockets',
     'filelock',
-    'prettytable'
+    'prettytable',
+    'dataclasses ; python_version < "3.7"'
 ]
 
 if sys.platform == 'win32':
