@@ -85,7 +85,6 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
         stderr_file.write(log_header)
-        print('## [nnictl] cmds:', cmds)
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
             if foreground:

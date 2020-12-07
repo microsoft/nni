@@ -13,7 +13,7 @@ from . import util
 _logger = logging.getLogger(__name__)
 
 
-def to_old_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:
+def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:
     config.validate(skip_nnictl)
     data = config.json()
 
@@ -106,7 +106,7 @@ def _convert_gpu_indices(indices):
 
 
 def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
-    experiment_config = to_old_yaml(config, skip_nnictl=True)
+    experiment_config = to_v1_yaml(config, skip_nnictl=True)
     ret = []
 
     if config.training_service.platform == 'local':
@@ -149,7 +149,7 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
 
 
 def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
-    experiment_config = to_old_yaml(config, skip_nnictl=True)
+    experiment_config = to_v1_yaml(config, skip_nnictl=True)
     request_data = dict()
     request_data['authorName'] = experiment_config['authorName']
     request_data['experimentName'] = experiment_config['experimentName']
