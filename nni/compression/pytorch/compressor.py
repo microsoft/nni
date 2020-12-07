@@ -601,15 +601,26 @@ class QuantGrad(torch.autograd.Function):
             scale for quantizing x
         zero_point : Tensor
             zero_point for quantizing x
+        Returns
+        -------
+        tensor
+            quantized x without clamped
         """
         return ((x / scale) + zero_point).round()
     @classmethod
     def get_bits_length(cls, config, quant_type):
         """
-        get bit for quantize config
-        :param config:
-        :param quant_type:
-        :return:
+        Get bit for quantize config
+        Parameters
+        ----------
+        config : Dict
+            the configuration for quantization
+        quant_type : str
+            quant type
+        Returns
+        -------
+        int
+            n-bit for quantization configuration
         """
         if isinstance(config["quant_bits"], int):
             return config["quant_bits"]
