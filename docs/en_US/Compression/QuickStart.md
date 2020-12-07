@@ -197,16 +197,22 @@ pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='mod
 
 #### Export Quantized Model
 
-You can export the quantized model directly by using ```torch.save``` api and the quantized model can be loaded by ```torch.load``` without any extra modification. The following example shows the normal proceduce of saving and loading quantized model in QAT.
+You can export the quantized model directly by using ```torch.save``` api and the quantized model can be loaded by ```torch.load``` without any extra modification. The following example shows the normal proceduce of saving, loading quantized model and get related parameters in QAT.
 ```
 # save quantized model
 torch.save(model.state_dict(), "quantized_model.pkt")
 
 # simulate model loading procedure
 model_1 = Mnist()
-optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-quantizer = QAT_Quantizer(model, configure_list, optimizer)
+optimizer = torch.optim.SGD(model_1.parameters(), lr=0.01, momentum=0.5)
+quantizer = QAT_Quantizer(model_1, configure_list, optimizer)
 quantizer.compress()
 model_1.load_state_dict(torch.load("quantized_model.pkt"))
+
+# get scale, zero_point and weight of conv1 in model
+conv1 = model_1.conv1
+scale = conv1.module.scale
+zero_point = conv1.module.zero_point
+weight = conv1.module.weight
 ```
 If you want to really speed up the compressed model, please refer to [NNI model speedup](./ModelSpeedup.md) for details.
