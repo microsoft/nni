@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.utils.data
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from nni.compression.torch import LotteryTicketPruner
+from nni.algorithms.compression.pytorch.pruning import LotteryTicketPruner
 
 class fc1(nn.Module):
 

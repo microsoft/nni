@@ -17,6 +17,7 @@ Neural Network Intelligence
     Feature Engineering <feature_engineering>
     References <reference>
     Use Cases and Solutions <CommunitySharings/community_sharings>
+    Research and Publications <ResearchPublications.md>
     FAQ <Tutorial/FAQ>
     How to Contribute <contribution>
     Changelog <Release>

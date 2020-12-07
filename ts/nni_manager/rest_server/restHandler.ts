@@ -12,20 +12,22 @@ import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
+import { ExperimentManager } from '../common/experimentManager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
-import { NNIManager } from "../core/nnimanager";
 
 const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
     private restServer: NNIRestServer;
-    private nniManager: NNIManager;
+    private nniManager: Manager;
+    private experimentsManager: ExperimentManager;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
+        this.experimentsManager = component.get(ExperimentManager);
         this.restServer = rs;
         this.log = getLogger();
     }
@@ -61,6 +63,7 @@ class NNIRestHandler {
         this.getLatestMetricData(router);
         this.getTrialLog(router);
         this.exportData(router);
+        this.getExperimentsInfo(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any) => {
@@ -300,6 +303,16 @@ class NNIRestHandler {
         router.get('/export-data', (req: Request, res: Response) => {
             this.nniManager.exportData().then((exportedData: string) => {
                 res.send(exportedData);
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private getExperimentsInfo(router: Router): void {
+        router.get('/experiments-info', (req: Request, res: Response) => {
+            this.experimentsManager.getExperimentsInfo().then((experimentInfo: JSON) => {
+                res.send(JSON.stringify(experimentInfo));
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
