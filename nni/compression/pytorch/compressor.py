@@ -590,10 +590,19 @@ class QuantGrad(torch.autograd.Function):
     Base class for overriding backward function of quantization operation.
     """
     @classmethod
-    def _quantize(cls, x, scale, zp):
-        r"""Reference function for quantizing x -- non-clamped.
+    def _quantize(cls, x, scale, zero_point):
         """
-        return ((x / scale) + zp).round()
+        Reference function for quantizing x -- non-clamped.
+        Parameters
+        ----------
+        x : Tensor
+            tensor to be quantized
+        scale : Tensor
+            scale for quantizing x
+        zero_point : Tensor
+            zero_point for quantizing x
+        """
+        return ((x / scale) + zero_point).round()
     @classmethod
     def get_bits_length(cls, config, quant_type):
         """
@@ -618,9 +627,15 @@ class QuantGrad(torch.autograd.Function):
             input of quantization operation
         grad_output : Tensor
             gradient of the output of quantization operation
-        quant_type : QuantType
+        scale : Tensor
             the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
             you can define different behavior for different types.
+        zero_point : Tensor
+            zero_point for quantizing tensor
+        qmin : Tensor
+            quant_min for quantizing tensor
+        qmax : Tensor
+            quant_max for quantizng tensor
         Returns
         -------
         tensor
