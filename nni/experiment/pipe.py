@@ -24,8 +24,8 @@ if sys.platform == 'win32':
 
         def connect(self) -> BufferedIOBase:
             _winapi.ConnectNamedPipe(self._handle, _winapi.NULL)
-            fd = msvcrt.open_osfhandle(self._handle)
-            self.file = os.fdopen(fd, 'rwb')
+            fd = msvcrt.open_osfhandle(self._handle, 0)
+            self.file = os.fdopen(fd, 'w+b')
             return self.file
 
         def close(self) -> None:
@@ -52,7 +52,7 @@ else:
 
         def connect(self) -> BufferedIOBase:
             conn, _ = self._socket.accept()
-            self.file = conn.makefile('rwb')
+            self.file = conn.makefile('w+b')
             return self.file
 
         def close(self) -> None:

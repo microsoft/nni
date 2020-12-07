@@ -20,6 +20,8 @@ def init_logger() -> None:
     The detection should work in most cases but for `nnictl` and `nni.experiment`.
     They will be identified as "standalone" mode and must configure the logger by themselves.
     """
+    colorama.init()
+
     if dispatcher_env_vars.SDK_PROCESS == 'dispatcher':
         _init_logger_dispatcher()
         return
@@ -42,7 +44,6 @@ def init_logger_experiment() -> None:
 
     This function will get invoked after `init_logger()`.
     """
-    colorama.init()
     formatter.format = _colorful_format
 
 
