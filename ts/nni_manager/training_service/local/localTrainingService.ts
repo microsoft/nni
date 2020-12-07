@@ -436,7 +436,7 @@ class LocalTrainingService implements TrainingService {
 
     private checkSpecifiedGpuIndices(): void {
         const gpuCount: number = this.gpuScheduler.getSystemGpuCount();
-        if (this.designatedGpuIndices !== undefined) {
+        if (this.designatedGpuIndices !== undefined && gpuCount > 0) {
             for (const index of this.designatedGpuIndices) {
                 if (index >= gpuCount) {
                     throw new Error(`Specified GPU index not found: ${index}`);
