@@ -236,6 +236,14 @@ function formatTimestamp(timestamp?: number, placeholder?: string): string {
     return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
 }
 
+function expformatTimestamp(timestamp: number | string): string {
+    if (typeof timestamp === 'number') {
+        return new Date(timestamp).toLocaleString('en-US');
+    } else {
+        return 'N/A';
+    }
+}
+
 function metricAccuracy(metric: MetricDataRecord): number {
     const data = parseMetrics(metric.data);
     // return typeof data === 'number' ? data : NaN;
@@ -310,6 +318,7 @@ export {
     filterDuration,
     formatAccuracy,
     formatTimestamp,
+    expformatTimestamp,
     metricAccuracy,
     parseMetrics,
     isArrayType,

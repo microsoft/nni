@@ -148,7 +148,6 @@ class NavCon extends React.Component<NavProps, NavState> {
                                     <span>All experiment</span>
                                     {ChevronRightMed}
                                 </div>
-                                {/* <CommandBarButton iconProps={ChevronRightMed} text="All experiment" /> */}
                             </Link>
                         </Stack>
                     </StackItem>

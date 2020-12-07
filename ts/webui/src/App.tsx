@@ -7,7 +7,7 @@ import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
 import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
 import './App.scss';
-import './static/style/common.scss';
+import './static/style/common/common.scss';
 
 interface AppState {
     interval: number;

@@ -8,7 +8,6 @@ import { BestMetricContext } from '../../Overview';
 import { styles } from './basicInfoStyles';
 import '../../../static/style/overview/probar.scss';
 import '../../../static/style/overview/basic.scss';
-import '../../../static/style/common/ellipsis.scss';
 
 export const BasicInfo = (): any => {
     const labelId: string = useId('callout-label');
@@ -24,11 +23,11 @@ export const BasicInfo = (): any => {
 
     return (
         <div>
-            <Stack horizontal horizontalAlign='space-between' className='mess'>
+            <Stack horizontal horizontalAlign='space-between' className='marginTop'>
                 <div className='basic'>
                     <p>Name</p>
                     <div className='ellipsis'>{EXPERIMENT.profile.params.experimentName}</div>
-                    <p className='margin'>ID</p>
+                    <p className='marginTop'>ID</p>
                     <div className='ellipsis'>{EXPERIMENT.profile.id}</div>
                 </div>
                 <div className='basic'>
@@ -77,7 +76,7 @@ export const BasicInfo = (): any => {
                     <BestMetricContext.Consumer>
                         {(value): React.ReactNode => (
                             <Stack className='bestMetric'>
-                                <p className='margin'>Best metric</p>
+                                <p className='marginTop'>Best metric</p>
                                 <div className={EXPERIMENT.status}>
                                     {isNaN(value.bestAccuracy) ? 'N/A' : value.bestAccuracy.toFixed(6)}
                                 </div>
@@ -88,7 +87,7 @@ export const BasicInfo = (): any => {
                 <div className='basic'>
                     <p>Start time</p>
                     <div className='ellipsis'>{formatTimestamp(EXPERIMENT.profile.startTime)}</div>
-                    <p className='margin'>End time</p>
+                    <p className='marginTop'>End time</p>
                     <div className='ellipsis'>{formatTimestamp(EXPERIMENT.profile.endTime)}</div>
                 </div>
             </Stack>

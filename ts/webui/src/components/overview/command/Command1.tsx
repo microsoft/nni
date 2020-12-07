@@ -1,7 +1,7 @@
 import React from 'react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { rightEidtParam } from '../count/commonStyle';
 import '../../../static/style/overview/command.scss';
-import '../../../static/style/common/ellipsis.scss';
 
 export const Command1 = (): any => {
     const tuner = EXPERIMENT.profile.params.tuner;
@@ -34,7 +34,7 @@ export const Command1 = (): any => {
     }
 
     return (
-        <div className='basic'>
+        <div className='basic' style={rightEidtParam}>
             <div>
                 <p className='command'>Training platform</p>
                 <div className='ellipsis'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>

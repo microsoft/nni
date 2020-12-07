@@ -1,9 +1,9 @@
 import React from 'react';
 import { TooltipHost, DirectionalHint } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { leftProgress } from '../count/commonStyle';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import '../../../static/style/overview/command.scss';
-import '../../../static/style/common/ellipsis.scss';
 
 export const Command2 = (): any => {
     const clusterMetaData = EXPERIMENT.profile.params.clusterMetaData;
@@ -22,7 +22,7 @@ export const Command2 = (): any => {
         }
     }
     return (
-        <div className='basic'>
+        <div className='basic' style={leftProgress}>
             <p className='command'>Log directory</p>
             <div className='ellipsis'>
                 <TooltipHost

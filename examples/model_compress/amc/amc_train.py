@@ -15,9 +15,9 @@ import torch.optim as optim
 from tensorboardX import SummaryWriter
 from torchvision.models import resnet
 
-from nni.compression.torch.pruning.amc.lib.net_measure import measure_model
-from nni.compression.torch.pruning.amc.lib.utils import get_output_folder
-from nni.compression.torch import ModelSpeedup
+from nni.algorithms.compression.pytorch.pruning.amc.lib.net_measure import measure_model
+from nni.algorithms.compression.pytorch.pruning.amc.lib.utils import get_output_folder
+from nni.compression.pytorch import ModelSpeedup
 
 from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar

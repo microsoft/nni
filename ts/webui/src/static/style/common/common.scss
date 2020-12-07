@@ -4,10 +4,19 @@
 	text-overflow: ellipsis;
 }
 
-.link{
+.link {
 	outline: none;
 	color: #0071bc;
-	&:active, &:visited{
+	
+	&:active,
+	&:visited {
 		color: #0071bc;
+	}
+}
+
+.cursor {
+	&:hover,
+	& i:hover {
+		cursor: pointer;
 	}
 }

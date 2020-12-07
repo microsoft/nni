@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn } from '@fluentui/react';
 import { ExperimentsManager } from '../../static/model/experimentsManager';
-import { formatTimestamp, copyAndSort } from '../../static/function';
+import { expformatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
 import MessageInfo from '../modals/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
@@ -12,7 +12,6 @@ import FilterBtns from './FilterBtns';
 import '../../App.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
-import '../../static/style/common/ellipsis.scss';
 import '../../static/style/tableStatus.css';
 
 interface ExpListState {
@@ -230,7 +229,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
-                    <div>{formatTimestamp(item.startTime)}</div>
+                    <div>{expformatTimestamp(item.startTime)}</div>
                 </div>
             )
         },
@@ -245,7 +244,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
-                    <div>{formatTimestamp(item.endTime)}</div>
+                    <div>{expformatTimestamp(item.endTime)}</div>
                 </div>
             )
         }
