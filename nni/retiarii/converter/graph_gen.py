@@ -15,7 +15,7 @@ global_seq = 0
 global_graph_id = 0
 modules_arg = None
 
-def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=False):
+def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap, ignore_first=False):
     """
     Parameters
     ----------
@@ -26,6 +26,7 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
     node_index : Dict
     new_node : Node
         newly created ir node corresponding to `node`
+    output_remap : Dict
     ignore_first : bool
         if it is true, skip the first input
     """
@@ -41,6 +42,13 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
             idx = graph_inputs.index(_input)
             src_node = ir_graph.input_node
             src_node_idx = idx
+        elif _input in output_remap:
+            assert output_remap[_input].kind() == 'aten::append'
+            predecessor_node = output_remap[_input]
+            assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
+            src_node_idx = None
+            src_node = node_index[predecessor_node]
+            assert isinstance(src_node, Node)
         else:
             predecessor_node = _input.node()
             assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
@@ -52,8 +60,6 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, ignore_first=F
                 idx = predecessor_outputs.index(_input)
             ir_predecessor_node = node_index[predecessor_node]
             src_node_idx = idx
-            # get source node
-            # the input is output of a basic node
             assert isinstance(ir_predecessor_node, Node)
             src_node = ir_predecessor_node
 
@@ -147,6 +153,13 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
         ir_graph._add_input(_convert_name(_input.debugName()))
 
     node_index = {} # graph node to graph ir node
+
+    # some node does not have output but it modifies a variable, for example aten::append
+    # %17 : Tensor[] = aten::append(%out.1, %16)
+    # %out.1 is updated, and %17 is None
+    # we add output to this type of node and connect it to the following node which uses %out.1
+    # key: tensor (%out.1), value: node (this node)
+    output_remap = {}
 
     def handle_if_node(node):
         """
@@ -248,7 +261,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                     subcell = ir_graph.add_node(submodule_full_name, new_cell)
                 node_index[node] = subcell
                 # connect the cell into graph
-                _add_edge(ir_graph, node, graph_inputs, node_index, subcell, ignore_first=True)
+                _add_edge(ir_graph, node, graph_inputs, node_index, subcell, output_remap, ignore_first=True)
             else:
                 raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
         elif node.kind() == 'prim::CallFunction':
@@ -262,7 +275,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             func_node = ir_graph.add_node(build_full_name(module_name, func_name, global_seq),
                                           '{}.{}'.format(func_type_str, func_name))
             node_index[node] = func_node
-            _add_edge(ir_graph, node, graph_inputs, node_index, func_node, ignore_first=True)
+            _add_edge(ir_graph, node, graph_inputs, node_index, func_node, output_remap, ignore_first=True)
         elif node.kind() == 'prim::Constant':
             new_node = create_prim_constant_node(ir_graph, node, module_name)
             node_index[node] = new_node
@@ -270,13 +283,19 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             global_seq += 1
             new_node = ir_graph.add_node(build_full_name(module_name, Type.ListConstruct, global_seq), node.kind())
             node_index[node] = new_node
-            _add_edge(ir_graph, node, graph_inputs, node_index, new_node)
+            _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
+        elif node.kind() == 'aten::append':
+            global_seq += 1
+            aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
+            node_index[node] = aten_node
+            _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
+            output_remap[node.inputsAt(0)] = node
         elif node.kind().startswith('aten::'):
             # handle aten::XXX
             global_seq += 1
             aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
-            _add_edge(ir_graph, node, graph_inputs, node_index, aten_node)
+            _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
         elif node.kind() == 'prim::GetAttr':
             node_type, attrs = handle_prim_attr_node(node)
             global_seq += 1

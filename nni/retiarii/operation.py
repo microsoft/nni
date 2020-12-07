@@ -126,7 +126,7 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}[{inputs[1]}]'
         elif self.type == 'aten::append':
             assert len(inputs) == 2
-            return f'{inputs[0]}.append({inputs[1]})'
+            return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
         elif self.type == 'aten::cat':
             assert len(inputs) == 2
             return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
