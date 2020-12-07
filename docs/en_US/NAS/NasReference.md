@@ -39,7 +39,7 @@
 ### Random Mutator
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.random.RandomMutator
+..  autoclass:: nni.algorithms.nas.pytorch.random.RandomMutator
     :members:
 ```
 
@@ -74,9 +74,9 @@
 ### Distributed NAS
 
 ```eval_rst
-..  autofunction:: nni.nas.pytorch.classic_nas.get_and_apply_next_architecture
+..  autofunction:: nni.algorithms.nas.pytorch.classic_nas.get_and_apply_next_architecture
 
-..  autoclass:: nni.nas.pytorch.classic_nas.mutator.ClassicMutator
+..  autoclass:: nni.algorithms.nas.pytorch.classic_nas.mutator.ClassicMutator
     :members:
 ```
 

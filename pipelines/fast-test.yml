@@ -1,0 +1,221 @@
+# To reduce debug cost, steps are sorted differently on each platform,
+# so that a bug in any module will cause at least one platform to fail quickly.
+
+jobs:
+- job: 'ubuntu_latest'
+  pool:
+    # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
+    vmImage: 'ubuntu-18.04'
+
+  # This platform tests lint and doc first.
+
+  steps:
+  - script: |
+      set -e
+      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install -U pytest coverage
+      python3 -m pip install -U pylint flake8
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+    displayName: 'Install Python tools'
+
+  - script: |
+      python3 setup.py develop
+    displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn eslint
+      cd ../webui
+      yarn eslint
+    displayName: 'ESLint'
+
+  - script: |
+      set -e
+      sudo apt-get install -y pandoc
+      python3 -m pip install -U --upgrade pygments
+      python3 -m pip install -U torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U tensorflow==2.3.1
+      python3 -m pip install -U keras==2.4.2
+      python3 -m pip install -U gym onnx peewee thop
+      python3 -m pip install -U sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      sudo apt-get install swig -y
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      set -e
+      python3 -m pylint --rcfile pylintrc nni
+      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+    displayName: 'pylint and flake8'
+
+  - script: |
+      cd docs/en_US
+      sphinx-build -M html . _build -W --keep-going -T
+    displayName: 'Check Sphinx documentation'
+
+  - script: |
+      cd test
+      python3 -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      CI=true yarn test
+    displayName: 'TypeScript unit test'
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+
+- job: 'ubuntu_legacy'
+  pool:
+    vmImage: 'ubuntu-18.04'
+
+  # This platform runs integration test first.
+
+  steps:
+  - script: |
+      set -e
+      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install -U pytest coverage
+      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+    displayName: 'Install Python tools'
+
+  - script: |
+      python3 setup.py develop
+    displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install -U tensorflow==1.15.2
+      python3 -m pip install -U keras==2.1.6
+      python3 -m pip install -U gym onnx peewee
+      sudo apt-get install swig -y
+      nnictl package install --name=SMAC
+      nnictl package install --name=BOHB
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+  - script: |
+      cd test
+      python3 -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      set -e
+      cd ts/nni_manager
+      yarn test
+      cd ../nasui
+      CI=true yarn test
+    displayName: 'TypeScript unit test'
+
+
+- job: 'macos'
+  pool:
+    vmImage: 'macOS-10.15'
+
+  # This platform runs TypeScript unit test first.
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python
+
+  - script: |
+      set -e
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      python -m pip install -U --upgrade pip setuptools wheel
+      python -m pip install -U pytest coverage
+    displayName: 'Install Python tools'
+
+  - script: |
+      python3 setup.py develop
+    displayName: 'Install NNI'
+
+  - script: |
+      set -e
+      export CI=true
+      (cd ts/nni_manager && yarn test)
+      (cd ts/nasui && yarn test)
+    displayName: 'TypeScript unit test'
+
+  - script: |
+      set -e
+      # pytorch Mac binary does not support CUDA, default is cpu version
+      python3 -m pip install -U torchvision==0.6.0 torch==1.5.0
+      python3 -m pip install -U tensorflow==2.3.1
+      brew install swig@3
+      rm -f /usr/local/bin/swig
+      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      nnictl package install --name=SMAC
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      cd test
+      python3 -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+
+# FIXME: Windows UT is still under debugging
+
+- job: 'windows'
+  pool:
+    vmImage: 'windows-2019'
+
+  # This platform runs Python unit test first.
+
+  steps:
+  - script: |
+      python -m pip install -U --upgrade pip setuptools
+      python -m pip install -U pytest coverage
+    displayName: 'Install Python tools'
+
+  - script: |
+      python setup.py develop --no-user
+    displayName: 'Install NNI'
+
+  - script: |
+      python -m pip install -U scikit-learn==0.23.2
+      python -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install -U tensorflow==2.3.1
+    displayName: 'Install extra dependencies'
+
+  - script: |
+      cd test
+      python -m pytest ut
+    displayName: 'Python unit test'
+
+  - script: |
+      cd ts/nni_manager
+      yarn test
+    displayName: 'TypeScript unit test'
+
+  - script: |
+      cd test
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+    displayName: 'Simple integration test'
+
+
+trigger:
+  branches:
+    exclude: [ l10n_master ]

@@ -1,0 +1,83 @@
+$barHeight: 56px;
+
+.navOptions {
+    .ms-Button-icon {
+        color: #fff;
+
+        &:hover {
+            color: #fff;
+        }
+    }
+
+    .ms-Button--commandBar {
+        background-color: #0071bc;
+        user-select: none;
+
+        &:hover,
+        &:active {
+            color: #fff;
+
+            .ms-Button-icon {
+                color: #fff;
+            }
+        }
+
+        .ms-Button-textContainer {
+            color: #fff;
+        }
+
+        .ms-Button-menuIcon {
+            color: #fff;
+            background-color: transparent;
+        }
+    }
+}
+
+.nav {
+    height: $barHeight;
+    line-height: $barHeight;
+
+    /* desktop mode useful */
+    .desktop-logo {
+        position: relative;
+        top: 6px;
+    }
+
+    &-refresh {
+        position: relative;
+        display: flex;
+    }
+
+    &-refresh-num {
+        position: absolute;
+        top: -13px;
+        left: 17px;
+        color: #fff;
+        font-size: 12px;
+    }
+}
+
+/* overview and detail tabs common style */
+a.common-tabs {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    color: #b8c7ce;
+    text-decoration: none;
+}
+
+.common-tabs:visited,
+.selected:hover {
+    color: #fff;
+    text-decoration: none;
+}
+
+.common-tabs:hover,
+.selected {
+    color: #fff;
+    border-bottom: 1px solid #fff;
+}
+
+.left-right-margin {
+    margin-left: 20px;
+    margin-right: 20px;
+}

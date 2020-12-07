@@ -14,11 +14,11 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      source install.sh
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
-      cd src/nni_manager
+      cd ts/nni_manager
       yarn eslint
       # uncomment following 2 lines to enable webui eslint
       cd ../webui
@@ -27,6 +27,7 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
+      python3 -m pip install pygments --user --upgrade
       python3 -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
       python3 -m pip install tensorflow==2.2.0 --user
       python3 -m pip install keras==2.4.2 --user
@@ -44,10 +45,10 @@ jobs:
       cd test
       python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple test'
-  - script: |
-      cd docs/en_US/
-      sphinx-build -M html . _build -W
-    displayName: 'Sphinx Documentation Build check'
+  #- script: |
+  #    cd docs/en_US/
+  #    sphinx-build -M html . _build -W
+  #  displayName: 'Sphinx Documentation Build check'
 
 - job: 'ubuntu_1804_python36_legacy_torch_tf'
   pool:
@@ -63,7 +64,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install python tools'
   - script: |
-      source install.sh
+      python3 setup.py develop
     displayName: 'Install nni toolkit via source code'
   - script: |
       set -e
@@ -77,18 +78,14 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       set -e
-      python3 -m pylint --rcfile pylintrc nni_annotation
-      python3 -m pylint --rcfile pylintrc nni_cmd
-      python3 -m pylint --rcfile pylintrc nni_gpu_tool
-      python3 -m pylint --rcfile pylintrc nni_trial_tool
       python3 -m pylint --rcfile pylintrc nni
-      python3 -m pylint --rcfile pylintrc nnicli
     displayName: 'Run pylint'
   - script: |
       set -e
       python3 -m pip install flake8 --user
-      EXCLUDES=./src/nni_manager/,./src/webui,./tools/nni_annotation/testcase/,./examples/trials/mnist-nas/*/mnist*.py,./examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 . --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'Run flake8 tests to find Python syntax errors and undefined names'
   - script: |
       cd test
@@ -100,57 +97,58 @@ jobs:
     displayName: 'Simple test'
 
 
-- job: 'macos_1015_python37'
-  pool:
-    vmImage: 'macOS-10.15'
-
-  steps:
-  - script: |
-      echo "##vso[task.setvariable variable=PATH]/usr/local/Cellar/python@3.7/3.7.8_1/bin:${HOME}/Library/Python/3.7/bin:${PATH}"
-      python3 -m pip install --upgrade pip setuptools
-    displayName: 'Install python tools'
-  - script: |
-      echo "network-timeout 600000" >> ${HOME}/.yarnrc
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
-  - script: |
-      set -e
-      # pytorch Mac binary does not support CUDA, default is cpu version
-      python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
-      python3 -m pip install tensorflow==1.15.2 --user
-      brew install swig@3
-      rm -f /usr/local/bin/swig
-      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      nnictl package install --name=SMAC
-    displayName: 'Install dependencies'
-  - script: |
-      cd test
-      source scripts/unittest.sh
-    displayName: 'Unit test'
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple test'
-
-- job: 'win2016_python37'
-  pool:
-    vmImage: 'vs2017-win2016'
-
-  steps:
-  - script: |
-      powershell.exe -file install.ps1
-    displayName: 'Install nni toolkit via source code'
-  - script: |
-      python -m pip install scikit-learn==0.23.2 --user
-      python -m pip install keras==2.1.6 --user
-      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
-      python -m pip install tensorflow==1.15.2 --user
-    displayName: 'Install dependencies'
-  - script: |
-      cd test
-      powershell.exe -file scripts/unittest.ps1
-    displayName: 'unit test'
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple test'
+#- job: 'macos_latest_python38'
+#  pool:
+#    vmImage: 'macOS-latest'
+#
+#  steps:
+#  - script: |
+#      export PYTHON38_BIN_DIR=/usr/local/Cellar/python@3.8/`ls /usr/local/Cellar/python@3.8`/bin
+#      echo "##vso[task.setvariable variable=PATH]${PYTHON38_BIN_DIR}:${HOME}/Library/Python/3.8/bin:${PATH}"
+#      python3 -m pip install --upgrade pip setuptools
+#    displayName: 'Install python tools'
+#  - script: |
+#      echo "network-timeout 600000" >> ${HOME}/.yarnrc
+#      source install.sh
+#    displayName: 'Install nni toolkit via source code'
+#  - script: |
+#      set -e
+#      # pytorch Mac binary does not support CUDA, default is cpu version
+#      python3 -m pip install torchvision==0.6.0 torch==1.5.0 --user
+#      python3 -m pip install tensorflow==2.2 --user
+#      brew install swig@3
+#      rm -f /usr/local/bin/swig
+#      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+#      nnictl package install --name=SMAC
+#    displayName: 'Install dependencies'
+#  - script: |
+#      cd test
+#      source scripts/unittest.sh
+#    displayName: 'Unit test'
+#  - script: |
+#      cd test
+#      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+#    displayName: 'Simple test'
+#
+#- job: 'win2016_python37'
+#  pool:
+#    vmImage: 'vs2017-win2016'
+#
+#  steps:
+#  - script: |
+#      powershell.exe -file install.ps1
+#    displayName: 'Install nni toolkit via source code'
+#  - script: |
+#      python -m pip install scikit-learn==0.23.2 --user
+#      python -m pip install keras==2.1.6 --user
+#      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html --user
+#      python -m pip install tensorflow==1.15.2 --user
+#    displayName: 'Install dependencies'
+#  - script: |
+#      cd test
+#      powershell.exe -file scripts/unittest.ps1
+#    displayName: 'unit test'
+#  - script: |
+#      cd test
+#      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+#    displayName: 'Simple test'

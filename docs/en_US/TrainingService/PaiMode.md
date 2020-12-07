@@ -2,25 +2,27 @@
 ===
 NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
+[toc]
+
 ## Setup environment
 
-Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).   
+**Step 1. Install NNI, follow the install guide [here](../Tutorial/QuickStart.md).**   
 
-Step 2. Get token.
+**Step 2. Get token.**
 
 Open web portal of OpenPAI, and click `My profile` button in the top-right side.
-![](../../img/pai_profile.jpg)
+<img src="../../img/pai_profile.jpg" style="zoom: 80%;" />
 
 Click `copy` button in the page to copy a jwt token.
-![](../../img/pai_token.jpg)
+<img src="../../img/pai_token.jpg" style="zoom:67%;" />
 
-Step 3. Mount NFS storage to local machine.  
+**Step 3. Mount NFS storage to local machine.**  
 
   Click `Submit job` button in web portal.
-![](../../img/pai_job_submission_page.jpg)
+<img src="../../img/pai_job_submission_page.jpg" style="zoom: 50%;" />
 
   Find the data management region in job submission page.
-![](../../img/pai_data_management_page.jpg)  
+<img src="../../img/pai_data_management_page.jpg" style="zoom: 33%;" />  
 
 The `Preview container paths` is the NFS host and path that OpenPAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the OpenPAI's NFS storage.  
 For example, use the following command:
@@ -33,9 +35,9 @@ You could use the following configuration in your NNI's config file:
 
 ```yaml
 nniManagerNFSMountPath: /local/mnt
-```    
+```
 
-Step 4. Get OpenPAI's storage config name and nniManagerMountPath
+**Step 4. Get OpenPAI's storage config name and nniManagerMountPath**
 
 The `Team share storage` field is storage configuration used to specify storage value in OpenPAI. You can get `paiStorageConfigName` and `containerNFSMountPath` field in `Team share storage`, for example:
 
@@ -44,7 +46,10 @@ paiStorageConfigName: confignfs-data
 containerNFSMountPath: /mnt/confignfs-data
 ```
 
+
+
 ## Run an experiment
+
 Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
 
 ```yaml
@@ -88,9 +93,11 @@ paiConfig:
 
 Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like `10.10.5.1`, the default http protocol in NNI is `http`, if your PAI's cluster enabled https, please use the uri in `https://10.10.5.1` format.
 
+
+
 ### Trial configurations
 
-Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), `trial` configuration in pai mode have these additional keys:
+Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMode.md), `trial` configuration in pai mode has the following additional keys:
 
 * cpuNum
 
@@ -104,7 +111,7 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
 
   Optional key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
 
-  We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
+  We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/v1.9/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config file specified in `paiConfigPath` field.
 
 * virtualCluster
 
@@ -135,6 +142,8 @@ Compared with [LocalMode](LocalMode.md) and [RemoteMachineMode](RemoteMachineMod
   1. The job name in OpenPAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is nni_exp_${this.experimentId}_trial_${trialJobId}.
 
   2. If users set multiple taskRoles in OpenPAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error.
+
+
 
 ### OpenPAI configurations
 
@@ -171,17 +180,23 @@ Notice: In pai mode, NNIManager will start a rest server and listen on a port wh
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
 
 Expand a trial information in trial list view, click the logPath link like:
-![](../../img/nni_webui_joblist.jpg)
+<img src="../../img/nni_webui_joblist.jpg" style="zoom: 30%;" />
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-![](../../img/nni_trial_hdfs_output.jpg)
+<img src="../../img/nni_trial_hdfs_output.jpg" style="zoom: 80%;" />
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
+
+
 ## data management
+
 Before using NNI to start your experiment, users should set the corresponding mount data path in your nniManager machine. OpenPAI has their own storage(NFS, AzureBlob ...), and the storage will used in OpenPAI will be mounted to the container when it start a job. Users should set the OpenPAI storage type by `paiStorageConfigName` field to choose a storage in OpenPAI. Then users should mount the storage to their nniManager machine, and set the `nniManagerNFSMountPath` field in configuration file, NNI will generate bash files and copy data in `codeDir` to the `nniManagerNFSMountPath` folder, then NNI will start a trial job. The data in `nniManagerNFSMountPath` will be sync to OpenPAI storage, and will be mounted to OpenPAI's container. The data path in container is set in `containerNFSMountPath`, NNI will enter this folder first, and then run scripts to start a trial job. 
 
+
+
 ## version check
+
 NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.
 Check policy:
 
@@ -190,4 +205,5 @@ Check policy:
 3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.
 
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
-![](../../img/version_check.png)
+
+<img src="../../img/version_check.png" style="zoom: 80%;" />

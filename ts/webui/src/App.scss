@@ -1,0 +1,65 @@
+.nni {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #212121;
+    font-size: 14px;
+    background: #f2f2f2;
+}
+
+.header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 56px;
+    background: #0071bc;
+    border-right: 1px solid #ccc;
+    z-index: 1000;
+}
+
+.headerCon {
+    width: 90%;
+    margin: 0 auto;
+}
+
+.contentBox {
+    width: 100%;
+}
+
+.content {
+    width: 87%;
+    margin: 0 auto;
+    min-width: 1200px;
+
+    /* nav bar: 56 + marginTop: 18 */
+    margin-top: 74px;
+    margin-bottom: 30px;
+}
+
+.bottomDiv {
+    margin-bottom: 10px;
+}
+
+.bgNNI {
+    background-color: #fff;
+}
+
+.borderRight {
+    margin-right: 10px;
+}
+
+/* office-fabric-ui */
+.ms-Pivot-linkContent {
+    height: 44px;
+}
+
+.ms-Callout-main {
+    p {
+        font-weight: 500;
+        color: #fff;
+    }
+}
+
+.warning {
+    padding-bottom: 15px;
+    background-color: #f2f2f2;
+}

@@ -19,7 +19,7 @@ trainer = ProxylessNasTrainer(model,
 trainer.train()
 trainer.export(args.arch_path)
 ```
-The complete example code can be found [here](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas).
+The complete example code can be found [here](https://github.com/microsoft/nni/tree/v1.9/examples/nas/proxylessnas).
 
 **Input arguments of ProxylessNasTrainer**
 
@@ -50,7 +50,7 @@ The complete example code can be found [here](https://github.com/microsoft/nni/t
 
 The implementation on NNI is based on the [offical implementation](https://github.com/mit-han-lab/ProxylessNAS). The official implementation supports two training approaches: gradient descent and RL based, and support different targeted hardware, including 'mobile', 'cpu', 'gpu8', 'flops'. In our current implementation on NNI, gradient descent training approach is supported, but has not supported different hardwares. The complete support is ongoing.
 
-Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in [example code](https://github.com/microsoft/nni/tree/master/examples/nas/proxylessnas) using [NNI NAS interface](NasGuide.md), and put the training approach in [SDK](https://github.com/microsoft/nni/tree/master/src/sdk/pynni/nni/nas/pytorch/proxylessnas).
+Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in [example code](https://github.com/microsoft/nni/tree/v1.9/examples/nas/proxylessnas) using [NNI NAS interface](NasGuide.md), and put the training approach in [SDK](https://github.com/microsoft/nni/tree/v1.9/src/sdk/pynni/nni/nas/pytorch/proxylessnas).
 
 ![](../../img/proxylessnas.png)
 

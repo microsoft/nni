@@ -6,8 +6,9 @@ from os import remove
 import subprocess
 import json
 import requests
-from nnicli import Experiment
-from utils import METRICS_URL
+from nni.experiment import Experiment
+from nni.tools.nnictl.updater import load_search_space
+from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
 
 class ITValidator:
@@ -32,6 +33,17 @@ class ExportValidator(ITValidator):
             print('\n'.join(f.readlines()))
             print('\n\n')
         remove('report.json')
+
+class ImportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        import_data_file_path = kwargs.get('import_data_file_path')
+        proc = subprocess.run(['nnictl', 'experiment', 'import', exp_id, '-f', import_data_file_path])
+        assert proc.returncode == 0, \
+            '`nnictl experiment import {0} -f {1}` failed with code {2}'.format(exp_id, import_data_file_path, proc.returncode)
+        imported_data = requests.get(GET_IMPORTED_DATA_URL).json()
+        origin_data = load_search_space(import_data_file_path).replace(' ', '')
+        assert origin_data in imported_data
 
 class MetricsValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):

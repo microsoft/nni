@@ -19,14 +19,14 @@ Installation on Linux and macOS follow the same instructions, given below.
   Prerequisites: `python 64-bit >=3.6`, `git`, `wget`
 
   ```bash
-  git clone -b v1.8 https://github.com/Microsoft/nni.git
+  git clone -b v1.9 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
 
 ### Use NNI in a docker image
 
-  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/v1.9/deployment/docker/README.md) to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## Verify installation
 
@@ -35,7 +35,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
 * Download the examples via cloning the source code.
 
   ```bash
-  git clone -b v1.8 https://github.com/Microsoft/nni.git
+  git clone -b v1.9 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -118,3 +118,4 @@ Due to potential programming changes, the minimum system requirements of NNI may
 * [How to run an experiment on OpenPAI?](../TrainingService/PaiMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](../TrainingService/KubeflowMode.md)
 * [How to run an experiment on Kubernetes through FrameworkController?](../TrainingService/FrameworkControllerMode.md)
+* [How to run an experiment on Kubernetes through AdaptDL?](../TrainingService/AdaptDLMode.md)

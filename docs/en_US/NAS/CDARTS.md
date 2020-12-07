@@ -1,10 +1,11 @@
+
 # CDARTS
 
 ## Introduction
 
-CDARTS builds a cyclic feedback mechanism between the search and evaluation networks. First, the search network generates an initial topology for evaluation, so that the weights of the evaluation network can be optimized. Second, the architecture topology in the search network is further optimized by the label supervision in classification, as well as the regularization from the evaluation network through feature distillation. Repeating the above cycle results in a joint optimization of the search and evaluation networks, and thus enables the evolution of the topology to fit the final evaluation network.
+[CDARTS](https://arxiv.org/pdf/2006.10724.pdf) builds a cyclic feedback mechanism between the search and evaluation networks. First, the search network generates an initial topology for evaluation, so that the weights of the evaluation network can be optimized. Second, the architecture topology in the search network is further optimized by the label supervision in classification, as well as the regularization from the evaluation network through feature distillation. Repeating the above cycle results in a joint optimization of the search and evaluation networks, and thus enables the evolution of the topology to fit the final evaluation network.
 
-In implementation of `CdartsTrainer`, it first instantiates two models and two mutators (one for each). The first model is the so-called "search network", which is mutated with a `RegularizedDartsMutator` -- a mutator with subtle differences with `DartsMutator`. The second model is the "evaluation network", which is mutated with a discrete mutator that leverages the previous search network mutator, to sample a single path each time. Trainers train models and mutators alternatively. Users can refer to [references](#reference) if they are interested in more details on these trainers and mutators.
+In implementation of `CdartsTrainer`, it first instantiates two models and two mutators (one for each). The first model is the so-called "search network", which is mutated with a `RegularizedDartsMutator` -- a mutator with subtle differences with `DartsMutator`. The second model is the "evaluation network", which is mutated with a discrete mutator that leverages the previous search network mutator, to sample a single path each time. Trainers train models and mutators alternatively. Users can refer to [paper](https://arxiv.org/pdf/2006.10724.pdf) if they are interested in more details on these trainers and mutators.
 
 ## Reproduction Results
 
@@ -43,15 +44,16 @@ bash run_retrain_cifar.sh
 ### PyTorch
 
 ```eval_rst
-..  autoclass:: nni.nas.pytorch.cdarts.CdartsTrainer
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.CdartsTrainer
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedDartsMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedDartsMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.DartsDiscreteMutator
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.DartsDiscreteMutator
     :members:
 
-..  autoclass:: nni.nas.pytorch.cdarts.RegularizedMutatorParallel
+..  autoclass:: nni.algorithms.nas.pytorch.cdarts.RegularizedMutatorParallel
     :members:
 ```
+
