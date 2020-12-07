@@ -3,7 +3,7 @@ import os
 import sys
 
 if sys.platform == 'win32':
-    import _win32
+    import _winapi
     import msvcrt
 
     class WindowsPipe:
@@ -11,19 +11,19 @@ if sys.platform == 'win32':
             self.path: str = r'\\.\pipe\nni-' + experiment_id
             self.file = None
 
-            self._handle = _win32.CreateNamedPipe(
+            self._handle = _winapi.CreateNamedPipe(
                 self.path,
-                _win32.PIPE_ACCESS_DUPLEX,
-                _win32.PIPE_TYPE_MESSAGE | _win32.PIPE_READMODE_MESSAGE | _win32.PIPE_WAIT,
+                _winapi.PIPE_ACCESS_DUPLEX,
+                _winapi.PIPE_TYPE_MESSAGE | _winapi.PIPE_READMODE_MESSAGE | _winapi.PIPE_WAIT,
                 1,
                 8192,
                 8192,
                 0,
-                _win32.NULL
+                _winapi.NULL
             )
 
         def connect(self) -> BufferedIOBase:
-            _win32.ConnectNamedPipe(self._handle, _win32.NULL)
+            _winapi.ConnectNamedPipe(self._handle, _winapi.NULL)
             fd = msvcrt.open_osfhandle(self._handle)
             self.file = os.fdopen(fd, 'rwb')
             return self.file
@@ -31,7 +31,7 @@ if sys.platform == 'win32':
         def close(self) -> None:
             if self.file is not None:
                 self.file.close()
-            _win32.CloseHandle(self._handle)
+            _winapi.CloseHandle(self._handle)
 
     Pipe = WindowsPipe
 
