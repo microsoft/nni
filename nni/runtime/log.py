@@ -37,6 +37,11 @@ def init_logger() -> None:
 
 
 def init_logger_experiment() -> None:
+    """
+    Initialize logger for `nni.experiment.Experiment`.
+
+    This function will get invoked after `init_logger()`.
+    """
     colorama.init()
     formatter.format = _colorful_format
 
@@ -111,7 +116,6 @@ def _colorful_format(record):
     else:
         color = colorama.Fore.BLUE
     msg = color + (record.msg % record.args) + colorama.Style.RESET_ALL
-    #msg = colorama.Style.BRIGHT + color + (record.msg % record.args) + colorama.Style.RESET_ALL
     time = formatter.formatTime(record, time_format)
     if record.levelno < logging.INFO:
         return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)

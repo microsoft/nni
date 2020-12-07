@@ -42,7 +42,7 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
         _logger.info('Statring web server...')
         _check_rest_server(port)
         _logger.info('Setting up...')
-        _init_experiment(config, port, debug)  # todo: kill on fail
+        _init_experiment(config, port, debug)
         return proc, pipe
 
     except Exception as e:

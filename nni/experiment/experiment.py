@@ -24,10 +24,7 @@ _logger = logging.getLogger('nni.experiment')
 
 class Experiment:
     """
-    Controls an NNI experiment.
-
-    You may either create a new NNI experiment with construtor and `Experiment.start()`,
-    # TODO: or control an existing experiment with `Experiment.connect()`.
+    Create and stop an NNI experiment.
 
     Attributes
     ----------
@@ -47,7 +44,7 @@ class Experiment:
         Parameters
         ----------
         tuner
-            A tuner instance.  # TODO: accessor / advisor
+            A tuner instance.
         config
             Experiment configuration.
         """
