@@ -200,7 +200,7 @@ def replace_convtranspose2d(convtrans, mask):
     conv layers. The layout of the weight is [N_in, N_out, ksize_1, ksize_2]
     Parameters
     ----------
-    conv : torch.nn.ConvTranspose2d
+    convtrans : torch.nn.ConvTranspose2d
         The conv2d module to be replaced
     mask : ModuleMasks
         The masks of this module
