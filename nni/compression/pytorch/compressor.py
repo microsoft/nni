@@ -620,7 +620,7 @@ class QuantGrad(torch.autograd.Function):
         Returns
         -------
         int
-            n-bit for quantization configuration
+            n-bits for quantization configuration
         """
         if isinstance(config["quant_bits"], int):
             return config["quant_bits"]
