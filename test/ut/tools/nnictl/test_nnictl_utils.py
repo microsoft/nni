@@ -1,10 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import os
 import sys
+
+sys.path.append(os.path.dirname(__file__))
 from mock.restful_server import init_response
-from mock.experiment import create_mock_experiment, stop_mock_experiment, generate_args_parser, \
-generate_args
+from mock.experiment import create_mock_experiment, stop_mock_experiment, generate_args_parser, generate_args
+
 from nni.tools.nnictl.nnictl_utils import get_experiment_time, get_experiment_status, \
 check_experiment_id, parse_ids, get_config_filename, get_experiment_port, check_rest, \
 trial_ls, list_experiment
@@ -46,7 +49,7 @@ class CommonUtilsTestCase(TestCase):
     @responses.activate
     def test_get_config_file_name(self):
         args = generate_args()
-        self.assertEqual('aGew0x', get_config_filename(args))
+        self.assertEqual('xOpEwA5w', get_config_filename(args))
     
     @responses.activate
     def test_get_experiment_port(self):

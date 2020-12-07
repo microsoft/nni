@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import DoReFaQuantizer
+from nni.algorithms.compression.pytorch.quantization import DoReFaQuantizer
 
 
 class Mnist(torch.nn.Module):

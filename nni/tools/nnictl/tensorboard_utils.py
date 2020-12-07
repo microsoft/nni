@@ -11,7 +11,7 @@ from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
 from .common_utils import print_normal, print_warning, print_error, print_green, detect_process, detect_port, check_tensorboard_version
-from .nnictl_utils import check_experiment_id, check_experiment_id
+from .nnictl_utils import check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
 def parse_log_path(args, trial_content):
@@ -95,8 +95,7 @@ def stop_tensorboard(args):
     experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
+    nni_config = Config(experiment_id)
     tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
     if tensorboard_pid_list:
         for tensorboard_pid in tensorboard_pid_list:
@@ -136,7 +135,7 @@ def start_tensorboard(args):
         print_error("Experiment {} is stopped...".format(args.id))
         return
     config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
+    nni_config = Config(args.id)
     if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
         adl_tensorboard_helper(args)
         return
