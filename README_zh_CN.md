@@ -10,7 +10,7 @@
 
 **NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.md)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.md)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.md)以及[模型压缩](docs/zh_CN/Compressor/Overview.md)。
 
-NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)， [DLWorkspace](docs/zh_CN/TrainingService/DLTSMode.md) (又称 DLTS), [AML](docs/zh_CN/TrainingService/AMLMode.md) (Azure Machine Learning), [AdaptDL](docs/en_US/TrainingService/AdaptDLMode.md) (又称 ADL) 以及其它环境。
+NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.md)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.md)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.md)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.md)，[基于 K8S 的 FrameworkController（如，AKS 等)](docs/zh_CN/TrainingService/FrameworkControllerMode.md)， [DLWorkspace](docs/zh_CN/TrainingService/DLTSMode.md) (又称 DLTS)</a>, [AML](docs/zh_CN/TrainingService/AMLMode.md) (Azure Machine Learning) 以及其它环境。
 
 ## **使用场景**
 
@@ -166,13 +166,11 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
         <li><a href="docs/zh_CN/TrainingService/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/zh_CN/TrainingService/AMLMode.md">AML(Azure Machine Learning)</a></li>
         <li><b>基于 Kubernetes 的平台</b></li>
-        <ul>
-          <li><a href="docs/zh_CN/TrainingService/PaiMode.md">OpenPAI</a></li>
-          <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
-          <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
-          <li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>
-          <li><a href="docs/en_US/TrainingService/AdaptDLMode.md">AdaptDL (又称 ADL) </a></li>
-        </ul>
+            <ul><li><a href="docs/zh_CN/TrainingService/PaiMode.md">OpenPAI</a></li>
+            <li><a href="docs/zh_CN/TrainingService/KubeflowMode.md">Kubeflow</a></li>
+            <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.md">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
+            </ul>
+            <ul><li><a href="docs/zh_CN/TrainingService/DLTSMode.md">DLWorkspace (又称 DLTS)</a></li>
       </ul>
       </td>
     </tr>
