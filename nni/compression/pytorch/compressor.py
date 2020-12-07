@@ -627,10 +627,9 @@ class QuantGrad(torch.autograd.Function):
             gradient of the input of quantization operation
         """
         tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
-        mask = (tensor_q >= qmin) * (tensor_q <= qmax)
-        grad_quantize = torch.zeros_like(grad_output)
-        grad_quantize[mask] = grad_output[mask]
-        return grad_quantize
+        mask = (tensor_q < qmin) | (tensor_q > qmax)
+        grad_output[mask] = 0
+        return grad_output
 
     @staticmethod
     def forward(ctx, tensor, quant_type, wrapper, **kwargs):
