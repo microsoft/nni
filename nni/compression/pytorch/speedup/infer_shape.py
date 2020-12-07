@@ -230,7 +230,7 @@ Infer input and output shape of a module/function from its weight mask
 infer_from_mask = {
     'BatchNorm2d': lambda module_masks, mask: batchnorm2d_mask(module_masks, mask),
     'Conv2d': lambda module_masks, mask: conv2d_mask(module_masks, mask),
-    'Conv2dTranspose2d': lambda module_masks, mask: convtranspose2d_mask(module_masks, mask),
+    'ConvTranspose2d': lambda module_masks, mask: convtranspose2d_mask(module_masks, mask),
     'Linear': lambda module_masks, mask, shape: linear_mask(module_masks, mask, shape)
 }
 
