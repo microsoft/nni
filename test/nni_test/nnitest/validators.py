@@ -6,7 +6,7 @@ from os import remove
 import subprocess
 import json
 import requests
-from nni.experiment import ExternalExperiment
+from nni.experiment import ExternalExperiment as Experiment
 from nni.tools.nnictl.updater import load_search_space
 from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
