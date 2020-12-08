@@ -18,6 +18,7 @@
 
 .headerCon {
     width: 90%;
+    max-width: 1490px;
     margin: 0 auto;
 }
 
@@ -29,9 +30,10 @@
     width: 87%;
     margin: 0 auto;
     min-width: 1200px;
+    max-width: 1490px;
 
-    /* nav bar: 56 + marginTop: 18 */
-    margin-top: 74px;
+    /* nav bar: 56 + marginTop: 24 */
+    margin-top: 80px;
     margin-bottom: 30px;
 }
 
