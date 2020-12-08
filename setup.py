@@ -77,6 +77,10 @@ dependencies = [
     'prettytable'
 ]
 
+if sys.platform == 'win32':
+    dependencies[dependencies.index('numpy')] = 'numpy<1.19.4'
+elif sys.version_info < (3, 7):
+    dependencies[dependencies.index('numpy')] = 'numpy<1.20'
 
 release = os.environ.get('NNI_RELEASE')
 
@@ -102,7 +106,7 @@ def _setup():
 
         packages = _find_python_packages(),
         package_data = {
-            'nni': ['**/requirements.txt'],
+            'nni': _find_requirements_txt(),  # must do this manually due to setuptools issue #1806
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
@@ -140,15 +144,22 @@ def _find_python_packages():
             packages.append(dirpath.replace('/', '.'))
     return sorted(packages) + ['nni_node']
 
+def _find_requirements_txt():
+    requirement_files = []
+    for dirpath, dirnames, filenames in os.walk('nni'):
+        if 'requirements.txt' in filenames:
+            requirement_files.append(os.path.join(dirpath[len('nni/'):], 'requirements.txt'))
+    return requirement_files
+
 def _find_node_files():
     if not os.path.exists('nni_node'):
-        if release and 'built_ts' not in sys.argv:
-            sys.exit('ERROR: To build a release version, run "python setup.py built_ts" first')
+        if release and 'build_ts' not in sys.argv:
+            sys.exit('ERROR: To build a release version, run "python setup.py build_ts" first')
         return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
         for filename in filenames:
-            files.append((dirpath + '/' + filename)[len('nni_node/'):])
+            files.append(os.path.join(dirpath[len('nni_node/'):], filename))
     if '__init__.py' in files:
         files.remove('__init__.py')
     return sorted(files)
@@ -183,9 +194,10 @@ class BuildTs(Command):
 
 class Build(build):
     def run(self):
-        assert release, 'Please set environment variable "NNI_RELEASE=<release_version>"'
-        assert os.path.isfile('nni_node/main.js'), 'Please run "build_ts" before "build"'
-        assert not os.path.islink('nni_node/main.js'), 'This is a development build'
+        if not release:
+            sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
+        if os.path.islink('nni_node/main.js'):
+            sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
         _copy_data_files()
         super().run()
 
@@ -244,4 +256,5 @@ _temp_files = [
 ]
 
 
-_setup()
+if __name__ == '__main__':
+    _setup()

@@ -50,7 +50,7 @@ def parse_args():
     # parse start command
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
-    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_start.set_defaults(func=create_experiment)
@@ -58,7 +58,7 @@ def parse_args():
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
-    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_resume.set_defaults(func=resume_experiment)
@@ -66,7 +66,7 @@ def parse_args():
     # parse view command
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
     parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
-    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command
@@ -93,7 +93,7 @@ def parse_args():
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
     parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
-    parser_stop.add_argument('--port', '-p', dest='port', help='the port of restful server')
+    parser_stop.add_argument('--port', '-p', dest='port', type=int, help='the port of restful server')
     parser_stop.add_argument('--all', '-a', action='store_true', help='stop all of experiments')
     parser_stop.set_defaults(func=stop_experiment)
 
@@ -237,7 +237,7 @@ def parse_args():
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
     parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
-    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
+    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, type=int, help='the port to start tensorboard')
     parser_tensorboard_start.set_defaults(func=start_tensorboard)
     parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
     parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
