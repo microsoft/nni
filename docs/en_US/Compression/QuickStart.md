@@ -203,14 +203,15 @@ You can export the quantized model directly by using ```torch.save``` api and th
 torch.save(model.state_dict(), "quantized_model.pkt")
 
 # simulate model loading procedure
-model_1 = Mnist()
-optimizer = torch.optim.SGD(model_1.parameters(), lr=0.01, momentum=0.5)
-quantizer = QAT_Quantizer(model_1, configure_list, optimizer)
+qmodel_load = Mnist()
+optimizer = torch.optim.SGD(qmodel_load.parameters(), lr=0.01, momentum=0.5)
+quantizer = QAT_Quantizer(qmodel_load, configure_list, optimizer)
 quantizer.compress()
-model_1.load_state_dict(torch.load("quantized_model.pkt"))
+# load quantized model
+qmodel_load.load_state_dict(torch.load("quantized_model.pkt"))
 
-# get scale, zero_point and weight of conv1 in model
-conv1 = model_1.conv1
+# get scale, zero_point and weight of conv1 in loaded model
+conv1 = qmodel_load.conv1
 scale = conv1.module.scale
 zero_point = conv1.module.zero_point
 weight = conv1.module.weight
