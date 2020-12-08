@@ -156,19 +156,23 @@ class Experiment:
         self._dispatcher_thread = None
 
 
-    def run(self, port: int = 8080, debug: bool = False) -> str:
+    def run(self, port: int = 8080, debug: bool = False) -> bool:
         """
         Run the experiment.
 
         This function will block until experiment finish or error.
+
+        Return `True` when experiment done; or return `False` when experiment failed.
         """
         self.start(port, debug)
         try:
             while True:
                 time.sleep(10)
                 status = self.get_status()
-                if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
-                    return status
+                if status == 'STOPPED':
+                    return True
+                if status == 'ERROR':
+                    return False
         finally:
             self.stop()
 
