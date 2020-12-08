@@ -133,9 +133,9 @@ export abstract class EnvironmentService {
         return 0;
     }
 
-    public abstract get getPlatform(): string;
+    public abstract get getName(): string;
 
-    public get getCommandChanneName(): Channel {
+    public get getCommandChannelName(): Channel {
         return 'web';
     }
 

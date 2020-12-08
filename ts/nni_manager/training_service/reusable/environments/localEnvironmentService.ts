@@ -37,7 +37,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public get getPlatform(): string {
+    public get getName(): string {
         return 'local';
     }
 

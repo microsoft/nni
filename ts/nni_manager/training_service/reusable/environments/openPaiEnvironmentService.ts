@@ -45,7 +45,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return true;
     }
 
-    public get getPlatform(): string {
+    public get getName(): string {
         return 'pai';
     }
 

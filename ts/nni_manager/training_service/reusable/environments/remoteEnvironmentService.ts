@@ -63,7 +63,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public get getPlatform(): string {
+    public get getName(): string {
         return 'remote';
     }
 

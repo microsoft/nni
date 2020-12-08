@@ -47,7 +47,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         return new AMLEnvironmentInformation(envId, envName);
     }
 
-    public get getPlatform(): string {
+    public get getName(): string {
         return 'aml';
     }
 
