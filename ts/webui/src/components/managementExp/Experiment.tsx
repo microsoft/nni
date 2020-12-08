@@ -178,7 +178,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding id'>{item.id}</div>
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
         },
         {
             name: 'Status',

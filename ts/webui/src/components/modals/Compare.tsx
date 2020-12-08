@@ -58,14 +58,14 @@ class Compare extends React.Component<CompareProps, {}> {
         super(props);
     }
 
-    private _generateTooltipSummary(row: Item, metricKey: string): string {
-        return renderToString(
+    private _generateTooltipSummary = (row: Item, metricKey: string): string =>
+        renderToString(
             <div className='tooldetailAccuracy'>
+                <div>Trial No.: {row.sequenceId}</div>
                 <div>Trial ID: {row.id}</div>
                 <div>Default metric: {row.metrics.get(metricKey) || 'N/A'}</div>
             </div>
         );
-    }
 
     private _intermediates(items: Item[], metricKey: string): React.ReactNode {
         // Precondition: make sure `items` is not empty
