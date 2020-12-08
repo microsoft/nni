@@ -1,5 +1,6 @@
 import React from 'react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { rightEidtParam } from '../count/commonStyle';
 import '../../../static/style/overview/command.scss';
 
 export const Command1 = (): any => {
@@ -33,7 +34,7 @@ export const Command1 = (): any => {
     }
 
     return (
-        <div className='basic'>
+        <div className='basic' style={rightEidtParam}>
             <div>
                 <p className='command'>Training platform</p>
                 <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
