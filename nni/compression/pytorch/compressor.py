@@ -580,9 +580,9 @@ class QuantType:
     """
     Enum class for quantization type.
     """
-    QUANT_INPUT = 0
-    QUANT_WEIGHT = 1
-    QUANT_OUTPUT = 2
+    QUANT_INPUT = 'input'
+    QUANT_WEIGHT = 'weight'
+    QUANT_OUTPUT = 'output'
 
 
 class QuantGrad(torch.autograd.Function):
@@ -660,13 +660,10 @@ class QuantGrad(torch.autograd.Function):
     @staticmethod
     def forward(ctx, tensor, quant_type, wrapper, **kwargs):
         if quant_type == QuantType.QUANT_INPUT:
-            quant_type = 'input'
             output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
-            quant_type = 'weight'
             output =  wrapper.quantizer.quantize_weight(wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_OUTPUT:
-            quant_type = 'output'
             output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:
             raise ValueError("unrecognized QuantType.")
