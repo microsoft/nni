@@ -120,6 +120,7 @@ interface Intermedia {
     type: string;
     data: Array<number | object>; // intermediate data
     hyperPara: object; // each trial hyperpara value
+    trialNum: number;
 }
 
 interface MetricDataRecord {

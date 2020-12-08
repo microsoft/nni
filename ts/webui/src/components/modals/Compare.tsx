@@ -84,7 +84,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 trigger: 'item',
                 enterable: true,
                 position: (point: number[], data: TooltipForIntermediate): [number, number] => {
-                    if (data.dataIndex < length / 2) {
+                    if (data.dataIndex < xAxisMax / 2) {
                         return [point[0], 80];
                     } else {
                         return [point[0] - 300, 80];
