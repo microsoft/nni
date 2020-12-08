@@ -265,17 +265,28 @@ class SpeedupTestCase(TestCase):
             orig_model.backbone2.fc1.in_features * SPARSITY)
 
     def test_convtranspose_model(self):
-        model = TransposeModel()
+        ori_model = TransposeModel()
         dummy_input = torch.rand(1, 3, 8, 8)
         config_list = [{'sparsity': 0.5, 'op_types': ['Conv2d']}]
-        pruner = L1FilterPruner(model, config_list)
+        pruner = L1FilterPruner(ori_model, config_list)
         pruner.compress()
-        model(dummy_input)
+        ori_model(dummy_input)
         pruner.export_model(MODEL_FILE, MASK_FILE)
         pruner._unwrap_model()
-        ms = ModelSpeedup(model, dummy_input, MASK_FILE)
+        new_model = TransposeModel()
+        state_dict = torch.load(MODEL_FILE)
+        new_model.load_state_dict(state_dict)
+        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE)
         ms.speedup_model()
-        model(dummy_input)
+        zero_bn_bias(ori_model)
+        zero_bn_bias(new_model)
+        ori_out = ori_model(dummy_input)
+        new_out = new_model(dummy_input)
+        ori_sum = torch.sum(ori_out)
+        speeded_sum = torch.sum(new_out)
+        print('Tanspose Speedup Test: ori_sum={} speedup_sum={}'.format(ori_sum, speeded_sum))
+        assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
+                (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     # FIXME: This test case might fail randomly, no idea why
     # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282

@@ -248,7 +248,7 @@ def replace_convtranspose2d(convtrans, mask):
     else:
         tmp_weight_data = convtrans.weight.data
     # we need to handle the output channel group by group like the conv layer
-    out_step = int(convtrans.out_channels) / convtrans.groups
+    out_step = int(convtrans.out_channels) / int(convtrans.groups)
     out_channel_group = int(out_channels/groups)
     new_in_per_group = int(in_channels/groups)
 
