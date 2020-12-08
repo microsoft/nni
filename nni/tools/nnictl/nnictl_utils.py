@@ -129,7 +129,7 @@ def parse_ids(args):
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
-            if str(experiment_dict[key]['port']) == args.port:
+            if experiment_dict[key]['port'] == args.port:
                 result_list.append(key)
         if args.id and result_list and args.id != result_list[0]:
             print_error('Experiment id and resful server port not match')

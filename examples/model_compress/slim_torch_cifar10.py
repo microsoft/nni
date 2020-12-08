@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import SlimPruner
+from nni.algorithms.compression.pytorch.pruning import SlimPruner
 from models.cifar10.vgg import VGG
 
 def updateBN(model):
