@@ -1,12 +1,20 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import json
+import logging
+from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from .common import ExperimentConfig
 from . import util
 
-def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
-    config.validate()
+_logger = logging.getLogger(__name__)
+
+
+def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:
+    config.validate(skip_nnictl)
     data = config.json()
 
     ts = data.pop('trainingService')
@@ -51,7 +59,7 @@ def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
         data['tuner']['gpuIndicies'] = tuner_gpu_indices
 
     data['trial'] = {
-        'command': ' && '.join(data.pop('trialCommand')),
+        'command': data.pop('trialCommand'),
         'codeDir': data.pop('trialCodeDirectory'),
         'gpuNum': data.pop('trialGpuNumber', '')
     }
@@ -68,7 +76,7 @@ def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
         data['remoteConfig'] = {'reuse': ts['reuseMode']}
         data['machineList'] = []
         for machine in ts['machineList']:
-            machine = {
+            data['machineList'].append({
                 'ip': machine['host'],
                 'username': machine['user'],
                 'passwd': machine['password'],
@@ -77,24 +85,204 @@ def to_old_yaml(config: ExperimentConfig) -> Dict[str, Any]:
                 'gpuIndices': _convert_gpu_indices(machine['gpuIndices']),
                 'maxTrialNumPerGpu': machine['maxTrialNumPerGpu'],
                 'useActiveGpu': machine['useActiveGpu'],
-                'preCommand': ' && '.join(machine['trialPrepareCommand'])
-            }
-            prepare_command = machine['trialPrepareCommand']
-            if prepare_command is not None:
-                machine['preCommand'] = ' && '.join(prepare_command)
+                'preCommand': machine['trialPrepareCommand']
+            })
 
     elif ts['platform'] == 'pai':
-        data['trial']['cpuNum'] = ts['trialCpuNumber']
-        data['trial']['memoryMB'] = util.parse_size(ts['trialMemorySize'])
         data['trial']['image'] = ts['docker_image']
+        data['trial']['nniManagerNFSMountPath'] = ts['local_storage_mount_point']
+        data['trial']['containerNFSMountPath'] = ts['container_storage_mount_point']
         data['paiConfig'] = {
             'userName': ts['username'],
             'token': ts['token'],
             'host': 'https://' + ts['host'],
             'reuse': ts['reuseMode']
         }
+        if 'openPaiConfigFile' in ts:
+            data['paiConfig']['paiConfigPath'] = ts['openPaiConfigFile']
+        elif 'openPaiConfig' in ts:
+            conf_file = NamedTemporaryFile('w', delete=False)
+            json.dump(ts['openPaiConfig'], conf_file, indent=4)
+            data['paiConfig']['paiConfigPath'] = conf_file.name
+
+    elif ts['platform'] == 'aml':
+        data['trial']['image'] = ts['docker_image']
+        data['amlConfig'] = dict(ts)
+        data['amlConfig'].pop('platform')
+        data['amlConfig'].pop('docker_image')
+
+    elif ts['platform'] == 'kubeflow':
+        data['trial'].pop('command')
+        data['trial'].pop('gpuNum')
+        data['kubeflowConfig'] = dict(ts['storage'])
+        data['kubeflowConfig']['operator'] = ts['operator']
+        data['kubeflowConfig']['apiVersion'] = ts['apiVersion']
+        data['trial']['worker'] = _convert_kubeflow_role(ts['worker'])
+        if ts.get('parameterServer') is not None:
+            if ts['operator'] == 'tf-operator':
+                data['trial']['ps'] = _convert_kubeflow_role(ts['parameter_server'])
+            else:
+                data['trial']['master'] = _convert_kubeflow_role(ts['parameter_server'])
+
+    elif ts['platform'] == 'frameworkcontroller':
+        data['trial'].pop('command')
+        data['trial'].pop('gpuNum')
+        data['frameworkcontrollerConfig'] = dict(ts['storage'])
+        data['frameworkcontrollerConfig']['serviceAccountName'] = ts['serviceAccountName']
+        data['trial']['taskRoles'] = [_convert_fxctl_role(r) for r in ts['taskRoles']]
+
+    elif ts['platform'] == 'adl':
+        data['trial']['image'] = ts['dockerImage']
 
     return data
 
 def _convert_gpu_indices(indices):
     return ','.join(str(idx) for idx in indices) if indices is not None else None
+
+def _convert_kubeflow_role(data):
+    return {
+        'replicas': data['replicas'],
+        'command': data['command'],
+        'gpuNum': data['gpuNumber'],
+        'cpuNum': data['cpuNumber'],
+        'memoryMB': util.parse_size(data['memorySize']),
+        'image': data['dockerImage']
+    }
+
+def _convert_fxctl_role(data):
+    return {
+        'name': data['name'],
+        'taskNum': data['taskNumber'],
+        'command': data['command'],
+        'gpuNum': data['gpuNumber'],
+        'cpuNum': data['cpuNumber'],
+        'memoryMB': util.parse_size(data['memorySize']),
+        'image': data['dockerImage'],
+        'frameworkAttemptCompletionPolicy': {
+            'minFailedTaskCount': data['attemptCompletionMinFailedTasks'],
+            'minSucceededTaskCount': data['attemptCompletionMinSucceededTasks']
+        }
+    }
+
+
+def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
+    experiment_config = to_v1_yaml(config, skip_nnictl=True)
+    ret = []
+
+    if config.training_service.platform == 'local':
+        request_data = dict()
+        request_data['local_config'] = experiment_config['localConfig']
+        if request_data['local_config']:
+            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
+                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
+                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
+            if request_data['local_config'].get('useActiveGpu'):
+                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
+        ret.append(request_data)
+
+    elif config.training_service.platform == 'remote':
+        request_data = dict()
+        if experiment_config.get('remoteConfig'):
+            request_data['remote_config'] = experiment_config['remoteConfig']
+        else:
+            request_data['remote_config'] = {'reuse': False}
+        request_data['machine_list'] = experiment_config['machineList']
+        if request_data['machine_list']:
+            for i in range(len(request_data['machine_list'])):
+                if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
+                    request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
+        ret.append(request_data)
+
+    elif config.training_service.platform == 'openpai':
+        pai_config_data = dict()
+        pai_config_data['pai_config'] = experiment_config['paiConfig']
+        ret.append(pai_config_data)
+
+    else:
+        raise RuntimeError('Unsupported training service ' + config.training_service.platform)
+
+    if experiment_config.get('nniManagerIp') is not None:
+        ret.append({'nni_manager_ip': {'nniManagerIp': experiment_config['nniManagerIp']}})
+    ret.append({'trial_config': experiment_config['trial']})
+    return ret
+
+
+def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
+    experiment_config = to_v1_yaml(config, skip_nnictl=True)
+    request_data = dict()
+    request_data['authorName'] = experiment_config['authorName']
+    request_data['experimentName'] = experiment_config['experimentName']
+    request_data['trialConcurrency'] = experiment_config['trialConcurrency']
+    request_data['maxExecDuration'] = util.parse_time(experiment_config['maxExecDuration'])
+    request_data['maxTrialNum'] = experiment_config['maxTrialNum']
+
+    if config.search_space is not None:
+        request_data['searchSpace'] = json.dumps(config.search_space)
+    elif config.search_space_file is not None:
+        request_data['searchSpace'] = Path(config.search_space_file).read_text()
+
+    request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
+    if experiment_config.get('advisor'):
+        request_data['advisor'] = experiment_config['advisor']
+        if request_data['advisor'].get('gpuNum'):
+            _logger.warning('gpuNum is deprecated, please use gpuIndices instead.')
+        if request_data['advisor'].get('gpuIndices') and isinstance(request_data['advisor'].get('gpuIndices'), int):
+            request_data['advisor']['gpuIndices'] = str(request_data['advisor'].get('gpuIndices'))
+    elif experiment_config.get('tuner'):
+        request_data['tuner'] = experiment_config['tuner']
+        if request_data['tuner'].get('gpuNum'):
+            _logger.warning('gpuNum is deprecated, please use gpuIndices instead.')
+        if request_data['tuner'].get('gpuIndices') and isinstance(request_data['tuner'].get('gpuIndices'), int):
+            request_data['tuner']['gpuIndices'] = str(request_data['tuner'].get('gpuIndices'))
+        if 'assessor' in experiment_config:
+            request_data['assessor'] = experiment_config['assessor']
+            if request_data['assessor'].get('gpuNum'):
+                _logger.warning('gpuNum is deprecated, please remove it from your config file.')
+    else:
+        request_data['tuner'] = {'builtinTunerName': '_user_created_'}
+    #debug mode should disable version check
+    if experiment_config.get('debug') is not None:
+        request_data['versionCheck'] = not experiment_config.get('debug')
+    #validate version check
+    if experiment_config.get('versionCheck') is not None:
+        request_data['versionCheck'] = experiment_config.get('versionCheck')
+    if experiment_config.get('logCollection'):
+        request_data['logCollection'] = experiment_config.get('logCollection')
+    request_data['clusterMetaData'] = []
+    if experiment_config['trainingServicePlatform'] == 'local':
+        request_data['clusterMetaData'].append(
+            {'key':'codeDir', 'value':experiment_config['trial']['codeDir']})
+        request_data['clusterMetaData'].append(
+            {'key': 'command', 'value': experiment_config['trial']['command']})
+    elif experiment_config['trainingServicePlatform'] == 'remote':
+        request_data['clusterMetaData'].append(
+            {'key': 'machine_list', 'value': experiment_config['machineList']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+        if not experiment_config.get('remoteConfig'):
+            # set default value of reuse in remoteConfig to False
+            experiment_config['remoteConfig'] = {'reuse': False}
+        request_data['clusterMetaData'].append(
+            {'key': 'remote_config', 'value': experiment_config['remoteConfig']})
+    elif experiment_config['trainingServicePlatform'] == 'pai':
+        request_data['clusterMetaData'].append(
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'kubeflow':
+        request_data['clusterMetaData'].append(
+            {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
+        request_data['clusterMetaData'].append(
+            {'key': 'frameworkcontroller_config', 'value': experiment_config['frameworkcontrollerConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'aml':
+        request_data['clusterMetaData'].append(
+            {'key': 'aml_config', 'value': experiment_config['amlConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    return request_data

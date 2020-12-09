@@ -16,10 +16,12 @@ T = TypeVar('T', bound='ConfigBase')
 
 PathLike = util.PathLike
 
+def _is_missing(obj: Any) -> bool:
+    return isinstance(obj, type(dataclasses.MISSING))
+
 class ConfigBase:
     """
     Base class of config classes.
-
     Subclass may override `_canonical_rules` and `_validation_rules`,
     and `validate()` if the logic is complex.
     """
@@ -41,10 +43,8 @@ class ConfigBase:
     def __init__(self, *, _base_path: Optional[Path] = None, **kwargs):
         """
         Initialize a config object and set some fields.
-
         Name of keyword arguments can either be snake_case or camelCase.
         They will be converted to snake_case automatically.
-
         If a field is missing and don't have default value, it will be set to `dataclasses.MISSING`.
         """
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
@@ -52,17 +52,12 @@ class ConfigBase:
             _base_path = Path()
         for field in dataclasses.fields(self):
             value = kwargs.pop(util.case_insensitive(field.name), field.default)
-            if value is not None and value != dataclasses.MISSING:
+            if value is not None and not _is_missing(value):
                 # relative paths loaded from config file are not relative to pwd
                 if 'Path' in str(field.type):
-                    value = Path(value)
-                    if 'Absolute' in str(field.type):
-                        if not value.is_absolute:
-                            raise ValueError(f'Path "{value}" is not absolute')
-                    else:
-                        value = value.expanduser()
-                        if not value.is_absolute():
-                            value = _base_path / value
+                    value = Path(value).expanduser()
+                    if not value.is_absolute():
+                        value = _base_path / value
                 # convert nested dict to config type
                 if isinstance(value, dict):
                     cls = util.strip_optional(field.type)
@@ -122,7 +117,7 @@ class ConfigBase:
             key, value = field.name, getattr(config, field.name)
 
             # check existence
-            if value == dataclasses.MISSING:
+            if _is_missing(value):
                 raise ValueError(f'{class_name}: {key} is not set')
 
             # check type (TODO)

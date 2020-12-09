@@ -94,7 +94,7 @@ class ExperimentConfig(ConfigBase):
 _canonical_rules = {
     'search_space_file': util.canonical_path,
     'trial_code_directory': util.canonical_path,
-    'max_experiment_duration': lambda value: str(util.parse_time(value)) + 's',
+    'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
     'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value
 }
