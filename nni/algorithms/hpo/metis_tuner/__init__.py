@@ -1,1 +1,1 @@
-from .metis_tuner import MetisTuner
+from .metis_tuner import MetisTuner, MetisClassArgsValidator

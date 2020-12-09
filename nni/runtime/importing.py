@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import contextlib
+import importlib
 import sys
 
 
@@ -9,6 +11,7 @@ def _lazy_import(caller, imports):
         _lazy_import_36(caller, imports)
     else:
         _lazy_import_37(caller, imports)
+
 
 def _shortcut(caller, module_list):
     if sys.version_info < (3, 7):
@@ -26,16 +29,19 @@ def _lazy_import_37(caller, imports):
             lookup_table[symbol] = defining_module_name
     sys.modules[caller].__getattr__ = lambda symbol: _lazy_import_getattr(caller, lookup_table, symbol)
 
+
 def _shortcut_37(caller, module_list):
     if isinstance(module_list, str):
         module_list = [module_list]
     sys.modules[caller].__getattr__ = lambda symbol: _shortcut_getattr(caller, module_list, symbol)
+
 
 def _lazy_import_getattr(caller, lookup_table, symbol):
     if symbol not in lookup_table:
         raise AttributeError(f"Module '{caller}' has no attribute '{symbol}'")
     defining_module = _import_relative(caller, lookup_table[symbol])
     return getattr(defining_module, symbol)
+
 
 def _shortcut_getattr(caller, lookup_list, symbol):
     for defining_caller in lookup_list:
@@ -54,6 +60,7 @@ def _lazy_import_36(caller, imports):
                 symbols = [symbols]
             for symbol in symbols:
                 setattr(caller_module, symbol, getattr(defining_module, symbol))
+
 
 def _shortcut_36(caller, module_list):
     caller_module = sys.modules[caller]
