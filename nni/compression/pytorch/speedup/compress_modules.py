@@ -194,7 +194,7 @@ def replace_conv2d(conv, mask):
 
 def replace_convtranspose2d(convtrans, mask):
     """
-    We need a anthor replace function for
+    We need anothor replace function for
     convtranspose2d, because the layout of
     the weight is different from traditional
     conv layers. The layout of the weight is [N_in, N_out, ksize_1, ksize_2]
