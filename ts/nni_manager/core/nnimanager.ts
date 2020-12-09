@@ -9,7 +9,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
@@ -24,7 +24,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, IpcInterface } from './ipcInterface';
+import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 
 /**
  * NNIManager which implements Manager interface
@@ -71,6 +71,11 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
+
+        const pipe = getDispatcherPipe();
+        if (pipe !== null) {
+            this.dispatcher = createDispatcherPipeInterface(pipe);
+        }
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -694,7 +699,7 @@ class NNIManager implements Manager {
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
-        this.log.debug(`NNIManager received trial job metrics: ${metric}`);
+        this.log.debug(`NNIManager received trial job metrics: ${JSON.stringify(metric)}`);
         if (this.trialJobs.has(metric.id)){
             await this.dataStore.storeMetricData(metric.id, metric.data);
             if (this.dispatcher === undefined) {
