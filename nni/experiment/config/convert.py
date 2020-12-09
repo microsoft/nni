@@ -195,9 +195,19 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
         ret.append(request_data)
 
     elif config.training_service.platform == 'openpai':
-        pai_config_data = dict()
-        pai_config_data['pai_config'] = experiment_config['paiConfig']
-        ret.append(pai_config_data)
+        ret.append({'pai_config': experiment_config['paiConfig']})
+
+    elif config.training_service.platform == 'aml':
+        ret.append({'aml_config': experiment_config['amlConfig']})
+
+    elif config.training_service.platform == 'kubeflow':
+        ret.append({'kubeflow_config': experiment_config['kubeflowConfig']})
+
+    elif config.training_service.platform == 'frameworkcontroller':
+        ret.append({'frameworkcontroller_config': experiment_config['frameworkcontrollerConfig']})
+
+    elif config.training_service.platform == 'adl':
+        pass
 
     else:
         raise RuntimeError('Unsupported training service ' + config.training_service.platform)
