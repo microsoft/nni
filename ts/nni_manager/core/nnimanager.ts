@@ -9,12 +9,13 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
+import { ExperimentManager } from '../common/experimentManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
@@ -23,7 +24,7 @@ import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
-import { createDispatcherInterface, IpcInterface } from './ipcInterface';
+import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 
 /**
  * NNIManager which implements Manager interface
@@ -31,6 +32,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
+    private experimentManager: ExperimentManager;
     private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private log: Logger;
@@ -49,6 +51,7 @@ class NNIManager implements Manager {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.trainingService = component.get(TrainingService);
+        this.experimentManager = component.get(ExperimentManager);
         assert(this.trainingService);
         this.dispatcherPid = 0;
         this.waitingTrials = [];
@@ -68,6 +71,11 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
+
+        const pipe = getDispatcherPipe();
+        if (pipe !== null) {
+            this.dispatcher = createDispatcherPipeInterface(pipe);
+        }
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -467,7 +475,9 @@ class NNIManager implements Manager {
             }
         }
         await this.trainingService.cleanUp();
-        this.experimentProfile.endTime = Date.now();
+        if (this.experimentProfile.endTime === undefined) {
+            this.setEndtime();
+        }
         await this.storeExperimentProfile();
         this.setStatus('STOPPED');
     }
@@ -596,7 +606,7 @@ class NNIManager implements Manager {
                     assert(allFinishedTrialJobNum <= waitSubmittedToFinish);
                     if (allFinishedTrialJobNum >= waitSubmittedToFinish) {
                         this.setStatus('DONE');
-                        this.experimentProfile.endTime = Date.now();
+                        this.setEndtime();
                         await this.storeExperimentProfile();
                         // write this log for travis CI
                         this.log.info('Experiment done.');
@@ -689,7 +699,7 @@ class NNIManager implements Manager {
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
-        this.log.debug(`NNIManager received trial job metrics: ${metric}`);
+        this.log.debug(`NNIManager received trial job metrics: ${JSON.stringify(metric)}`);
         if (this.trialJobs.has(metric.id)){
             await this.dataStore.storeMetricData(metric.id, metric.data);
             if (this.dispatcher === undefined) {
@@ -796,6 +806,7 @@ class NNIManager implements Manager {
             this.log.error(err.stack);
         }
         this.status.errors.push(err.message);
+        this.setEndtime();
         this.setStatus('ERROR');
     }
 
@@ -803,7 +814,13 @@ class NNIManager implements Manager {
         if (status !== this.status.status) {
             this.log.info(`Change NNIManager status from: ${this.status.status} to: ${status}`);
             this.status.status = status;
+            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'status', this.status.status);
         }
+    }
+
+    private setEndtime(): void {
+        this.experimentProfile.endTime = Date.now();
+        this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
     }
 
     private createEmptyExperimentProfile(): ExperimentProfile {

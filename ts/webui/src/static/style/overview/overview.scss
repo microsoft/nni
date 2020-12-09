@@ -1,149 +1,138 @@
-$boxPadding: 20px;
+$boxPadding: 24px;
 $boxBorderRadius: 5px;
 $boxGapPadding: 10px;
 
 .wrapper {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-auto-rows: 93px;
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	grid-auto-rows: 102px;
 
-    > div {
-        background: #fff;
-        padding: $boxPadding;
-        border-radius: $boxBorderRadius;
-        box-sizing: border-box;
-    }
+	> div {
+		background: #fff;
+		padding: $boxPadding;
+		border-radius: $boxBorderRadius;
+		box-sizing: border-box;
+	}
 
-    .duration,
-    .trialCount {
-        grid-column: 1 / 5;
-        background: #fff;
-        padding: $boxPadding;
-        border-radius: $boxBorderRadius;
-        box-sizing: border-box;
-        margin-top: $boxGapPadding;
+	.duration,
+	.trialCount {
+		grid-column: 1 / 5;
+		background: #fff;
+		padding: $boxPadding;
+		border-radius: $boxBorderRadius;
+		box-sizing: border-box;
+		margin-top: $boxGapPadding;
 
-        /* for alert message tooltip position */
-        position: relative;
-    }
+		/* for alert message tooltip position */
+		position: relative;
+	}
 
-    .duration {
-        grid-row: 3 / 5;
-        height: 138px;
-    }
+	.duration {
+		grid-row: 3 / 5;
+		height: 158px;
+	}
 
-    .trialCount {
-        grid-row: 4 / 6;
-        margin-top: 65px;
-        height: 239px;
-    }
+	.trialCount {
+		grid-row: 5 / 8;
+		margin-top: -26px;
+		height: 273px;
+	}
 
-    .overviewCommand1,
-    .overviewCommand2 {
-        grid-row-start: 8;
-        margin-top: -59px;
-        margin-right: $boxGapPadding;
-        border-radius: 0;
-    }
-
-    .overviewCommand1 {
-        grid-column: 1 / 5;
-        border-radius: $boxBorderRadius 0 0 $boxBorderRadius;
-    }
-
-    .overviewCommand2 {
-        grid-column: 2 / 5;
-        margin-right: $boxGapPadding;
-        padding-left: 30px;
-        border-radius: 0 $boxBorderRadius $boxBorderRadius 0;
-    }
+	.overviewCommand {
+		grid-column: 1 / 5;
+		grid-row-start: 8;
+		margin-top: -50px;
+		height: 158px;
+		margin-right: $boxGapPadding;
+		border-radius: $boxBorderRadius;
+	}
 }
 
 .overviewBasicInfo {
-    grid-column: 1 / 5;
-    grid-row: 1 / 3;
-    z-index: 2;
+	grid-column: 1 / 5;
+	grid-row: 1 / 3;
+	z-index: 2;
 }
 
 .overviewBasicInfo,
 .duration,
 .trialCount {
-    margin-right: $boxGapPadding;
+	margin-right: $boxGapPadding;
 }
 
 .basic {
-    line-height: 21px;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+	line-height: 21px;
+	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
-    p {
-        font-size: 14px;
-        color: #8f8f8f;
-        margin-top: 20px;
+	p {
+		color: #8f8f8f;
+		font-size: 14px;
+		font-weight: normal;
 
-        span {
-            color: #484848;
-        }
-    }
+		span {
+			color: #484848;
+		}
+	}
 
-    div {
-        font-size: 16px;
-        font-weight: 500;
-        color: #484848;
-    }
+	div {
+		font-size: 16px;
+		font-weight: 500;
+		color: #484848;
+	}
 
-    .nowrap {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-    }
+	.nowrap {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
 }
 
 .overviewBestMetric {
-    grid-column: 5 / 9;
-    grid-row: 1 / 9;
-    max-height: 736px;
-    overflow: hidden;
+	grid-column: 5 / 9;
+	grid-row: 1 / 10;
+	max-height: 822px;
+	overflow: hidden;
 
-    .topTrialTitle {
-        width: 72%;
-    }
+	.topTrialTitle {
+		width: 72%;
+	}
 
-    .active {
-        background: #d2d0ce;
-    }
+	.active {
+		background: #d2d0ce;
+	}
 
-    .max {
-        margin-left: 7px;
-    }
+	.max {
+		margin-left: 7px;
+	}
 
-    .mincenter {
-        margin: 0 13px 0 $boxGapPadding;
-    }
+	.mincenter {
+		margin: 0 13px 0 $boxGapPadding;
+	}
 
-    .chooseEntry {
-        margin-right: $boxGapPadding;
-        line-height: 30px;
-    }
+	.chooseEntry {
+		margin-right: $boxGapPadding;
+		line-height: 30px;
+	}
 }
 
 .overviewCommand1,
 .overviewCommand2 {
-    grid-row: 7 / 9;
-    height: 144px;
-    overflow: hidden;
-    margin-top: $boxGapPadding;
+	grid-row: 7 / 9;
+	height: 144px;
+	overflow: hidden;
+	margin-top: $boxGapPadding;
 }
 
 .overviewChart {
-    margin-top: 20px;
+	margin-top: 20px;
 }
 
 .defaultMetricContainer {
-    position: relative;
+	position: relative;
 
-    .showMess {
-        position: absolute;
-        top: 42%;
-        left: 48%;
-    }
+	.showMess {
+		position: absolute;
+		top: 42%;
+		left: 48%;
+	}
 }
