@@ -8,15 +8,20 @@ import { Client1_10, config } from 'kubernetes-client';
 import { getLogger, Logger } from '../../common/log';
 
 /**
- * Generict Kubernetes client, target version >= 1.9
+ * Generic Kubernetes client, target version >= 1.9
  */
 class GeneralK8sClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
+    protected namespace: string = 'default';
 
     constructor() {
         this.client = new Client1_10({ config: config.fromKubeconfig(), version: '1.9'});
         this.client.loadSpec();
+    }
+
+    public set setNamespace(namespace: string) {
+        this.namespace = namespace;
     }
 
     private matchStorageClass(response: any): string {
@@ -60,7 +65,8 @@ class GeneralK8sClient {
 
     public async createDeployment(deploymentManifest: any): Promise<string> {
         let result: Promise<string>;
-        const response: any = await this.client.apis.apps.v1.namespaces('default').deployments.post({ body: deploymentManifest })
+        const response: any = await this.client.apis.apps.v1.namespaces(this.namespace)
+          .deployments.post({ body: deploymentManifest })
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body.metadata.uid);
         } else {
@@ -72,7 +78,7 @@ class GeneralK8sClient {
     public async deleteDeployment(deploymentName: string): Promise<boolean> {
         let result: Promise<boolean>;
         // TODO: change this hard coded deployment name after demo
-        const response: any = await this.client.apis.apps.v1.namespaces('default')
+        const response: any = await this.client.apis.apps.v1.namespaces(this.namespace)
           .deployment(deploymentName).delete();
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
@@ -84,7 +90,7 @@ class GeneralK8sClient {
 
     public async createConfigMap(configMapManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response: any = await this.client.api.v1.namespaces('default')
+        const response: any = await this.client.api.v1.namespaces(this.namespace)
           .configmaps.post({body: configMapManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
@@ -97,7 +103,7 @@ class GeneralK8sClient {
 
     public async createPersistentVolumeClaim(pvcManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response: any = await this.client.api.v1.namespaces('default')
+        const response: any = await this.client.api.v1.namespaces(this.namespace)
           .persistentvolumeclaims.post({body: pvcManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
@@ -109,8 +115,8 @@ class GeneralK8sClient {
 
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response: any = await this.client.api.v1.namespaces('default').secrets
-          .post({body: secretManifest});
+        const response: any = await this.client.api.v1.namespaces(this.namespace)
+          .secrets.post({body: secretManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {

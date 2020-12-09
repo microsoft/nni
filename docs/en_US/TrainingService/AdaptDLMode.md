@@ -52,6 +52,7 @@ trialConcurrency: 2
 maxTrialNum: 2
 
 trial:
+  namespace: <k8s_namespace>
   adaptive: false # optional.
   image: <image_tag>
   imagePullSecrets:  # optional
@@ -79,6 +80,7 @@ IP address of the machine with NNI manager (NNICTL) that launches NNI experiment
 * **logCollection**: *Recommended* to set as `http`. It will collect the trial logs on cluster back to your machine via http.
 * **tuner**: It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**: It defines the specs of an `adl` trial.
+  * **namespace**: (*Optional*) Kubernetes namespace to launch the trials. Default to `default` namespace.
   * **adaptive**: (*Optional*) Boolean for AdaptDL trainer. While `true`, it the job is preemptible and adaptive.
   * **image**: Docker image for the trial
   * **imagePullSecret**: (*Optional*) If you are using a private registry,

@@ -58,6 +58,8 @@ export class AdlTrialConfig extends KubernetesTrialConfig {
 
     public readonly image: string;
 
+    public readonly namespace?: string;
+
     public readonly imagePullSecrets?: ImagePullSecretConfig[];
 
     public readonly nfs?: NFSConfig;
@@ -72,7 +74,8 @@ export class AdlTrialConfig extends KubernetesTrialConfig {
 
     constructor(codeDir: string,
                 command: string, gpuNum: number,
-                image: string, imagePullSecrets?: ImagePullSecretConfig[],
+                image: string, namespace?: string,
+                imagePullSecrets?: ImagePullSecretConfig[],
                 nfs?: NFSConfig, checkpoint?: CheckpointConfig,
                 cpuNum?: number, memorySize?: string,
                 adaptive?: boolean
@@ -81,6 +84,7 @@ export class AdlTrialConfig extends KubernetesTrialConfig {
         this.command = command;
         this.gpuNum = gpuNum;
         this.image = image;
+        this.namespace = namespace
         this.imagePullSecrets = imagePullSecrets;
         this.nfs = nfs;
         this.checkpoint = checkpoint;
