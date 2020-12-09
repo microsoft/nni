@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Annotated, Any, Dict, Optional
+from typing import Any, Dict, Optional
 
 from .base import PathLike
 from .common import TrainingServiceConfig
@@ -19,7 +19,7 @@ class OpenPaiConfig(TrainingServiceConfig):
     token: str
     docker_image: str = 'msranni/nni:latest'
     local_storage_mount_point: PathLike
-    container_storage_mount_point: Annotated[PathLike, 'Absolute']
+    container_storage_mount_point: str
     reuse_mode: bool = False
 
     open_pai_config: Optional[Dict[str, Any]]
@@ -28,13 +28,13 @@ class OpenPaiConfig(TrainingServiceConfig):
     _canonical_rules = {
         'host': lambda value: value.split('://', 1)[1] if '://' in value else value,  # type: ignore
         'local_storage_mount_point': util.canonical_path,
-        'container_storage_mount_point': lambda value: str(value),
         'open_pai_config_file': util.canonical_path
     }
 
     _validation_rules = {
         'platform': lambda value: (value == 'openpai', 'cannot be modified'),
         'local_storage_mount_point': lambda value: Path(value).is_dir(),
+        'container_storage_mount_point': lambda value: Path(value).is_absolute(),
         'open_pai_config_file': lambda value: Path(value).is_file()
     }
 
