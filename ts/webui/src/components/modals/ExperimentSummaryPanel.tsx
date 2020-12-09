@@ -39,7 +39,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
         const interResultList = TRIALS.getMetricsList();
         Object.keys(trialMessagesArr).map(item => {
             // not deal with trial's hyperParameters
-            const trialId = trialMessagesArr[item].jobId;
+            const trialId = trialMessagesArr[item].trialJobId;
             // add intermediate result message
             trialMessagesArr[item].intermediate = [];
             Object.keys(interResultList).map(key => {
@@ -94,7 +94,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
         return (
             <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={closeExpDrawer}>
                 <div className='panel'>
-                    <div className='panelName'>Experiment summary</div>
+                    <div className='panelName'>Summary</div>
                     <MonacoEditor
                         width='100%'
                         height={monacoEditorHeight}
