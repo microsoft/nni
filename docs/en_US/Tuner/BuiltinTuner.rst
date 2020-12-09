@@ -13,43 +13,44 @@ Currently, we support the following algorithms:
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Tuner
      - Brief Introduction of Algorithm
-   * - `**TPE** <#TPE>`__
+   * - `TPE <#TPE>`__
      - The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. `Reference Paper <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
-   * - `**Random Search** <#Random>`__
+   * - `Random Search <#Random>`__
      - In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters. `Reference Paper <http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf>`__
-   * - `**Anneal** <#Anneal>`__
+   * - `Anneal <#Anneal>`__
      - This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.
-   * - `**Naïve Evolution** <#Evolution>`__
+   * - `Naïve Evolution <#Evolution>`__
      - Naïve Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naïve Evolution requires many trials to work, but it's very simple and easy to expand new features. `Reference paper <https://arxiv.org/pdf/1703.01041.pdf>`__
-   * - `**SMAC** <#SMAC>`__
+   * - `SMAC <#SMAC>`__
      - SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC needs to be installed by ``nnictl package`` command. `Reference Paper, <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `GitHub Repo <https://github.com/automl/SMAC3>`__
-   * - `**Batch tuner** <#Batch>`__
+   * - `Batch tuner <#Batch>`__
      - Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.
-   * - `**Grid Search** <#GridSearch>`__
+   * - `Grid Search <#GridSearch>`__
      - Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, randint.
-   * - `**Hyperband** <#Hyperband>`__
+   * - `Hyperband <#Hyperband>`__
      - Hyperband tries to use limited resources to explore as many configurations as possible and returns the most promising ones as a final result. The basic idea is to generate many configurations and run them for a small number of trials. The half least-promising configurations are thrown out, the remaining are further trained along with a selection of new configurations. The size of these populations is sensitive to resource constraints (e.g. allotted search time). `Reference Paper <https://arxiv.org/pdf/1603.06560.pdf>`__
-   * - `**Network Morphism** <#NetworkMorphism>`__
+   * - `Network Morphism <#NetworkMorphism>`__
      - Network Morphism provides functions to automatically search for deep learning architectures. It generates child networks that inherit the knowledge from their parent network which it is a morph from. This includes changes in depth, width, and skip-connections. Next, it estimates the value of a child network using historic architecture and metric pairs. Then it selects the most promising one to train. `Reference Paper <https://arxiv.org/abs/1806.10282>`__
-   * - `**Metis Tuner** <#MetisTuner>`__
+   * - `Metis Tuner <#MetisTuner>`__
      - Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. `Reference Paper <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__
-   * - `**BOHB** <#BOHB>`__
+   * - `BOHB <#BOHB>`__
      - BOHB is a follow-up work to Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Bayesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. `Reference Paper <https://arxiv.org/abs/1807.01774>`__
-   * - `**GP Tuner** <#GPTuner>`__
+   * - `GP Tuner <#GPTuner>`__
      - Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. `Reference Paper <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__\ , `Github Repo <https://github.com/fmfn/BayesianOptimization>`__
-   * - `**PPO Tuner** <#PPOTuner>`__
+   * - `PPO Tuner <#PPOTuner>`__
      - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
-   * - `**PBT Tuner** <#PBTTuner>`__
+   * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. `Reference Paper <https://arxiv.org/abs/1711.09846v1>`__
 
 
 Usage of Built-in Tuners
 ------------------------
 
-Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and** classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
+Using a built-in tuner provided by the NNI SDK requires one to declare the **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
 Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners need to be installed using ``nnictl package``\ , like SMAC.
 

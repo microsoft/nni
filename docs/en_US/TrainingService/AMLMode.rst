@@ -14,7 +14,7 @@ Step 3. Install the Azure CLI on your machine, follow the install guide `here <h
 
 Step 4. Authenticate to your Azure subscription from the CLI. To authenticate interactively, open a command line or terminal and use the following command:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    az login
 
@@ -34,7 +34,7 @@ Step 6. Create an AML cluster as the computeTarget.
 
 Step 7. Open a command line and install AML package environment.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python3 -m pip install azureml
    python3 -m pip install azureml-sdk
@@ -81,7 +81,7 @@ Compared with `LocalMode <LocalMode>`__ trial configuration in aml mode have the
 * image
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
-    .. code-block:::: bash
+    .. code-block:: bash
 
        Note: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
 
@@ -116,7 +116,7 @@ The required information of amlConfig could be found in the downloaded ``config.
 
 Run the following commands to start the example experiment:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
    cd nni/examples/trials/mnist-tfv1

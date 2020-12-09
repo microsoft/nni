@@ -118,7 +118,7 @@ Citing OpEvo
 
 If you feel OpEvo is helpful, please consider citing the paper as follows:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    @misc{gao2020opevo,
        title={OpEvo: An Evolutionary Method for Tensor Operator Optimization},

@@ -25,7 +25,7 @@ In the dependency-aware mode(\ ``dependency_aware`` is set ``True``\ ), the prun
 
 Take the dependency-aware mode of L1Filter Pruner as an example. Specifically, the pruner will calculate the L1 norm (for example) sum of all the layers in the dependency set for each channel. Obviously, the number of channels that can actually be pruned of this dependency set in the end is determined by the minimum sparsity of layers in this dependency set(denoted by ``min_sparsity``\ ). According to the L1 norm sum of each channel, the pruner will prune the same ``min_sparsity`` channels for all the layers. Next, the pruner will additionally prune ``sparsity`` - ``min_sparsity`` channels for each convolutional layer based on its own L1 norm of each channel. For example, suppose the output channels of ``conv1`` , ``conv2`` are added together and the configured sparsities of ``conv1`` and ``conv2`` are 0.3, 0.2 respectively. In this case, the ``dependency-aware pruner`` will 
 
-.. code-block:::: bash
+.. code-block:: bash
 
    - First, prune the same 20% of channels for `conv1` and `conv2` according to L1 norm sum of `conv1` and `conv2`. 
    - Second, the pruner will additionally prune 10% channels for `conv1` according to the L1 norm of each channel of `conv1`.

@@ -14,7 +14,7 @@ Usage
 
 First you need to install dependency:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    pip install lightgbm
 

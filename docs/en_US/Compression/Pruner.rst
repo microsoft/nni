@@ -564,7 +564,7 @@ AutoCompress Pruner
 
 For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
 
-.. code-block:::: bash
+.. code-block:: bash
 
        1. Generate sparsities distribution using SimulatedAnnealingPruner
        2. Perform ADMM-based structured pruning to generate pruning result for the next round.
@@ -766,7 +766,7 @@ Sensitivity Pruner
 
 For each round, SensitivityPruner prunes the model based on the sensitivity to the accuracy of each layer until meeting the final configured sparsity of the whole model:
 
-.. code-block:::: bash
+.. code-block:: bash
 
        1. Analyze the sensitivity of each layer in the current state of the model.
        2. Prune each layer according to the sensitivity.

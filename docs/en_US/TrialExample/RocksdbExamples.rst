@@ -106,6 +106,7 @@ Following table lists the best trials and corresponding parameters and metric ob
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Tuner
      - Best trial

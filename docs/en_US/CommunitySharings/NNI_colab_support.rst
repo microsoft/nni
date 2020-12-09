@@ -9,7 +9,7 @@ How to Open NNI's Web UI on Google Colab
 
 #. Install required packages and softwares.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ! pip install nni # install nni
    ! wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip # download ngrok and unzip it
@@ -20,14 +20,14 @@ How to Open NNI's Web UI on Google Colab
 
 #. Register a ngrok account `here <https://ngrok.com/>`__\ , then connect to your account using your authtoken.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ! ./ngrok authtoken <your-authtoken>
 
 
 #. Start an NNI example on a port bigger than 1024, then start ngrok with the same port. If you want to use gpu, make sure gpuNum >= 1 in config.yml. Use ``get_ipython()`` to start ngrok since it will be stuck if you use ``! ngrok http 5000 &``.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ! nnictl create --config nni_repo/nni/examples/trials/mnist-pytorch/config.yml --port 5000 &
    get_ipython().system_raw('./ngrok http 5000 &')
@@ -35,7 +35,7 @@ How to Open NNI's Web UI on Google Colab
 
 #. Check the public url.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ! curl -s http://localhost:4040/api/tunnels # don't change the port number 4040
 

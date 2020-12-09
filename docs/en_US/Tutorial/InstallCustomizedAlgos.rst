@@ -69,7 +69,7 @@ In order to be installed as builtin tuners, assessors and advisors, the customiz
 Besides being a common pip source, the package needs to provide meta information in the ``classifiers`` field.
 Format of classifiers field is a following:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    NNI Package :: <type> :: <builtin name> :: <full class name of tuner> :: <full class name of class args validator>
 
@@ -140,7 +140,7 @@ List installed packages
 
 Run following command to list the installed packages:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl package list
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
@@ -154,7 +154,7 @@ Run following command to list the installed packages:
 
 Run following command to list all packages, including the builtin packages can not be uninstalled.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl package list --all
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+

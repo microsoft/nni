@@ -143,7 +143,7 @@ to the weight parameter of modules. 'input' means applying quantization operatio
 
 bits length of quantization, key is the quantization type, value is the quantization bits length, eg. 
 
-.. code-block:::: bash
+.. code-block:: bash
 
    {
        quant_bits: {
@@ -154,7 +154,7 @@ bits length of quantization, key is the quantization type, value is the quantiza
 
 when the value is int type, all quantization types share same bits length. eg. 
 
-.. code-block:::: bash
+.. code-block:: bash
 
    {
        quant_bits: 8, # weight or output quantization are all 8 bits
@@ -162,7 +162,7 @@ when the value is int type, all quantization types share same bits length. eg.
 
 The following example shows a more complete ``config_list``\ , it uses ``op_names`` (or ``op_types``\ ) to specify the target layers along with the quantization bits for those layers.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    configure_list = [{
            'quant_types': ['weight'],        
@@ -199,7 +199,7 @@ Export Compressed Model
 
 You can easily export the compressed model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    pruner.export_model(model_path='model.pth')
 

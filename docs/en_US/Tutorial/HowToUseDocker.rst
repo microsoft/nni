@@ -23,7 +23,7 @@ If you have installed the Docker package in your local machine, you can start a 
 
 For example, you could start a new Docker container from the following command:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    docker run -i -t -p [hostPort]:[containerPort] [image]
 
@@ -37,7 +37,7 @@ For more information about Docker commands, please `refer to this <https://docs.
 
 Note:
 
-.. code-block:::: bash
+.. code-block:: bash
 
       NNI only supports Ubuntu and MacOS systems in local mode for the moment, please use correct Docker image type. If you want to use gpu in a Docker container, please use nvidia-docker.
 
@@ -50,7 +50,7 @@ If you start your own Docker image, you may need to install the NNI package firs
 
 If you want to run NNI's official examples, you may need to clone the NNI repo in GitHub using
 
-.. code-block:::: bash
+.. code-block:: bash
 
    git clone https://github.com/Microsoft/nni.git
 
@@ -72,7 +72,7 @@ To make sure your Docker container can be connected by NNI experiments, you shou
 
 Note:
 
-.. code-block:::: bash
+.. code-block:: text
 
    NNI's official image msranni/nni does not support SSH servers for the time being; you should build your own Docker image with an SSH configuration or use other images as a remote server.
 
@@ -83,7 +83,7 @@ An SSH server needs a port; you need to expose Docker's SSH port to NNI as the c
 
 For example, you could start your Docker container using the following commands:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    docker run -dit -p [hostPort]:[containerPort] [image]
 
@@ -92,7 +92,7 @@ For more information about Docker commands, please `refer to this <https://docs.
 
 Note:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    If you use your own Docker image as a remote server, please make sure that this image has a basic python environment and an NNI SDK runtime environment. If you want to use a GPU in a Docker container, please use nvidia-docker.
 

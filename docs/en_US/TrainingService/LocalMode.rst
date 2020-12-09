@@ -17,7 +17,7 @@ You have an implementation for MNIST classifer using convolutional layers, the P
 
 To enable NNI API, make the following changes:
 
-.. code-block:::: bash
+..
 
    1.1 Declare NNI API
        Include `import nni` in your trial code to use NNI APIs.
@@ -48,7 +48,7 @@ We had made the changes and saved it to ``mnist.py``.
 
 **NOTE**\ :
 
-.. code-block:::: bash
+.. code-block:: bash
 
    accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
    assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
@@ -61,7 +61,7 @@ We had made the changes and saved it to ``mnist.py``.
 
 The hyper-parameters used in ``Step 1.2 - Get predefined parameters`` is defined in a ``search_space.json`` file like below:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    {
        "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -83,7 +83,7 @@ Refer to `define search space <../Tutorial/SearchSpaceSpec>`__ to learn more abo
 
 To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
 
-.. code-block:::: bash
+.. code-block:: bash
 
    useAnnotation: false
    searchSpacePath: /path/to/your/search_space.json
@@ -105,7 +105,7 @@ To run an experiment in NNI, you only needed:
 
 Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run ``ls ~/nni/examples/trials`` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
 
-.. code-block:::: bash
+.. code-block:: bash
 
      python ~/nni/examples/trials/mnist-annotation/mnist.py
 
@@ -114,7 +114,7 @@ This command will be filled in the YAML configure file below. Please refer to `h
 
 **Prepare tuner**\ : NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to `here <../Tuner/CustomizeTuner>`__\ ), but for simplicity, here we choose a tuner provided by NNI as below:
 
-.. code-block:::: bash
+.. code-block:: bash
 
      tuner:
        builtinTunerName: TPE
@@ -161,7 +161,7 @@ Here *useAnnotation* is true because this trial example uses our python annotati
 
 With all these steps done, we can run the experiment with the following command:
 
-.. code-block:::: bash
+.. code-block:: bash
 
      nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
 
@@ -180,7 +180,7 @@ The following steps assume that you have 4 NVIDIA GPUs installed at local and `t
 
 **Prepare configure file**\ : NNI provides a demo configuration file for the setting above, ``cat ~/nni/examples/trials/mnist-annotation/config_gpu.yml`` to see it. The trailConcurrency and gpuNum are different from the basic configure file:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ...
 
@@ -196,7 +196,7 @@ The following steps assume that you have 4 NVIDIA GPUs installed at local and `t
 
 We can run the experiment with the following command:
 
-.. code-block:::: bash
+.. code-block:: bash
 
      nnictl create --config ~/nni/examples/trials/mnist-annotation/config_gpu.yml
 

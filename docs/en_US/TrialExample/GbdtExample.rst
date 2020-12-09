@@ -75,7 +75,7 @@ Given the features and label in train data, we train a GBDT regression model and
 3.1 Install all the requirments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:::: bash
+.. code-block:: bash
 
    pip install lightgbm
    pip install pandas

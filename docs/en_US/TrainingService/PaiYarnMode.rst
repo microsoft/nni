@@ -88,7 +88,7 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
     Optional key. Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, `Refer <https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial#specification>`__.\ :raw-html:`<br>`
     The config schema in NNI is shown below:
 
-    .. code-block:::: bash
+    .. code-block:: bash
 
        portList:
        - label: test
@@ -117,7 +117,7 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
 NNI support two kind of authorization method in paiYarn, including password and paiYarn token, `refer <https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API#2-authentication>`__. The authorization is configured in ``paiYarnConfig`` field.\ :raw-html:`<br>`
 For password authorization, the ``paiYarnConfig`` schema is:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    paiYarnConfig:
      userName: your_paiYarn_nni_user
@@ -126,7 +126,7 @@ For password authorization, the ``paiYarnConfig`` schema is:
 
 For paiYarn token authorization, the ``paiYarnConfig`` schema is:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    paiYarnConfig:
      userName: your_paiYarn_nni_user
@@ -135,7 +135,7 @@ For paiYarn token authorization, the ``paiYarnConfig`` schema is:
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_paiYarn.yml), then run the following command
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl create --config exp_paiYarn.yml
 

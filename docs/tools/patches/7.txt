@@ -18,7 +18,7 @@
          :alt: 
        filters with the smallest sum values and their corresponding feature maps. The
         kernels in the next convolutional layer corresponding to the pruned feature maps are also
-      .. code-block:::: bash
+      .. code-block:: bash
 
          removed.
 

@@ -65,7 +65,7 @@ You need to first download the `ImageNet-2012 <http://www.image-net.org/>`__ to 
 
 Put the imagenet data in ``./data``. It should be like following:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    ./data/imagenet/train
    ./data/imagenet/val
@@ -79,7 +79,7 @@ I. Search
 
 First, build environments for searching.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    pip install -r ./requirements
 
@@ -89,7 +89,7 @@ First, build environments for searching.
 
 To search for an architecture, you need to configure the parameters ``FLOPS_MINIMUM`` and ``FLOPS_MAXIMUM`` to specify the desired model flops, such as [0,600]MB flops. You can specify the flops interval by changing these two parameters in ``./configs/train.yaml``
 
-.. code-block:::: bash
+.. code-block:: bash
 
    FLOPS_MINIMUM: 0 # Minimum Flops of Architecture
    FLOPS_MAXIMUM: 600 # Maximum Flops of Architecture
@@ -98,7 +98,7 @@ For example, if you expect to search an architecture with model flops <= 200M, p
 
 After you specify the flops of the architectures you would like to search, you can search an architecture now by running:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python -m torch.distributed.launch --nproc_per_node=8 ./train.py --cfg ./configs/train.yaml
 
@@ -109,7 +109,7 @@ II. Retrain
 
 To train searched architectures, you need to configure the parameter ``MODEL_SELECTION`` to specify the model Flops. To specify which model to train, you should add ``MODEL_SELECTION`` in ``./configs/retrain.yaml``. You can select one from [14,43,112,287,481,604], which stands for different Flops(MB).
 
-.. code-block:::: bash
+.. code-block:: bash
 
    MODEL_SELECTION: 43 # Retrain 43m model
    MODEL_SELECTION: 481 # Retrain 481m model
@@ -117,7 +117,7 @@ To train searched architectures, you need to configure the parameter ``MODEL_SEL
 
 To train random architectures, you need specify ``MODEL_SELECTION`` to ``-1`` and configure the parameter ``INPUT_ARCH``\ :
 
-.. code-block:::: bash
+.. code-block:: bash
 
    MODEL_SELECTION: -1 # Train random architectures
    INPUT_ARCH: [[0], [3], [3, 3], [3, 1, 3], [3, 3, 3, 3], [3, 3, 3], [0]] # Random Architectures
@@ -125,7 +125,7 @@ To train random architectures, you need specify ``MODEL_SELECTION`` to ``-1`` an
 
 After adding ``MODEL_SELECTION`` in ``./configs/retrain.yaml``\ , you need to use the following command to train the model.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python -m torch.distributed.launch --nproc_per_node=8 ./retrain.py --cfg ./configs/retrain.yaml
 
@@ -134,7 +134,7 @@ III. Test
 
 To test our trained of models, you need to use ``MODEL_SELECTION`` in ``./configs/test.yaml`` to specify which model to test.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    MODEL_SELECTION: 43 # test 43m model
    MODEL_SELECTION: 481 # test 470m model
@@ -142,7 +142,7 @@ To test our trained of models, you need to use ``MODEL_SELECTION`` in ``./config
 
 After specifying the flops of the model, you need to write the path to the resume model in ``./test.sh``.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    RESUME_PATH: './43.pth.tar'
    RESUME_PATH: './481.pth.tar'
@@ -152,6 +152,6 @@ We provide 14M/43M/114M/287M/481M/604M pretrained models in `google drive <https
 
 After downloading the pretrained models and adding ``MODEL_SELECTION`` and ``RESUME_PATH`` in './configs/test.yaml', you need to use the following command to test the model.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python -m torch.distributed.launch --nproc_per_node=8 ./test.py --cfg ./configs/test.yaml

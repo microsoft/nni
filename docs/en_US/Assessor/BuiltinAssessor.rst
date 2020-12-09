@@ -16,9 +16,9 @@ Currently, we support the following Assessors:
 
    * - Assessor
      - Brief Introduction of Algorithm
-   * - `**Medianstop** <#MedianStop>`__
+   * - `Medianstop <#MedianStop>`__
      - Medianstop is a simple early stopping rule. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S. `Reference Paper <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__
-   * - `**Curvefitting** <#Curvefitting>`__
+   * - `Curvefitting <#Curvefitting>`__
      - Curve Fitting Assessor is an LPA (learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of the final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve. `Reference Paper <http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf>`__
 
 

@@ -78,7 +78,7 @@ Take the later situation as an example. If you write a customized tuner who's __
 
 Here we can see it is a dispatcher error. So we can check dispatcher's log, which might look like:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    [2019-02-19 19:36:45] DEBUG (nni.main/MainThread) START
    [2019-02-19 19:36:47] ERROR (nni.main/MainThread) __init__() missing 1 required positional arguments: 'optimize_mode'

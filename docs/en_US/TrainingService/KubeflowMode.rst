@@ -16,7 +16,7 @@ Prerequisite for on-premises Kubernetes Service
 #. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in ``root_squash option``\ , otherwise permission issue may raise when NNI copy files to NFS. Refer this `page <https://linux.die.net/man/5/exports>`__ to learn what root_squash option is), or**Azure File Storage**.
 #. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
 
-.. code-block:::: bash
+.. code-block:: bash
 
     apt-get install nfs-common
 

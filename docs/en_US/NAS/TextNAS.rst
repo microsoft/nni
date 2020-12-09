@@ -8,7 +8,7 @@ This is the implementation of the TextNAS algorithm proposed in the paper `TextN
 
 The search space of TextNAS contains: 
 
-.. code-block:::: bash
+.. code-block:: bash
 
    * 1-D convolutional operator with filter size 1, 3, 5, 7 
    * recurrent operator (bi-directional GRU) 
@@ -23,7 +23,7 @@ Preparation
 
 Prepare the word vectors and SST dataset, and organize them in data directory as shown below:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    textnas
    ├── data

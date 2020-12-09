@@ -27,7 +27,7 @@ To avoid storage and legality issues, we do not provide any prepared databases. 
 #. 
    Clone NNI to your machine and enter ``examples/nas/benchmarks`` directory.
 
-   .. code-block:::: bash
+   .. code-block:: bash
 
       git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
       cd nni/examples/nas/benchmarks

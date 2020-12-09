@@ -5,13 +5,13 @@ NNI's command line tool **nnictl** support auto-completion, i.e., you can comple
 
 For example, if the current command is
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl cre
 
 By pressing the ``tab`` key, it will be completed to
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl create
 
@@ -20,7 +20,7 @@ For now, auto-completion will not be enabled by default if you install NNI throu
 Step 1. Download ``bash-completion``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:::: bash
+.. code-block:: bash
 
    cd ~
    wget https://raw.githubusercontent.com/microsoft/nni/{nni-version}/tools/bash-completion
@@ -32,13 +32,13 @@ Step 2. Install the script
 
 If you are running a root account and want to install this script for all the users
 
-.. code-block:::: bash
+.. code-block:: bash
 
    install -m644 ~/bash-completion /usr/share/bash-completion/completions/nnictl
 
 If you just want to install this script for your self
 
-.. code-block:::: bash
+.. code-block:: bash
 
    mkdir -p ~/.bash_completion.d
    install -m644 ~/bash-completion ~/.bash_completion.d/nnictl

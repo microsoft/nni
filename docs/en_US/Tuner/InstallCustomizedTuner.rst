@@ -39,7 +39,7 @@ Check the installed package
 
 Then run command ``nnictl package list``\ , you should be able to see that demotuner is installed:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    +-----------------+------------+-----------+--------=-------------+------------------------------------------+
    |      Name       |    Type    | Installed |      Class Name      |               Module Name                |

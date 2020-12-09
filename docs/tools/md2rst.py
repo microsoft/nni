@@ -5,15 +5,6 @@ import re
 import shutil
 from pathlib import Path
 
-# FIXME:
-# /home/v-yugzh/nnidev/docs/en_US/Assessor/BuiltinAssessor.rst:84: WARNING: Inline emphasis start-string without end-string.
-# /home/v-yugzh/nnidev/docs/en_US/Compression/Overview.rst:5: WARNING: The "contents" directive may not be used within topics or body elements.
-# /home/v-yugzh/nnidev/docs/en_US/Compression/Pruner.rst:223: WARNING: Block quote ends without a blank line; unexpected unindent.
-# /home/v-yugzh/nnidev/docs/en_US/Compression/Pruner.rst:734: WARNING: Title level inconsistent:
-# /home/v-yugzh/nnidev/docs/en_US/SupportedFramework_Library.rst:76: WARNING: Definition list ends without a blank line; unexpected unindent.
-# /home/v-yugzh/nnidev/docs/en_US/Tuner/HyperbandAdvisor.rst:65: WARNING: Error parsing content block for the "list-table" directive: uniform two-level bullet list expected, but row 7 does not contain the same number of items as row 1 (5 vs 6).
-# /home/v-yugzh/nnidev/docs/en_US/Tutorial/HowToUseDocker.rst:83: WARNING: Inline strong start-string without end-string.
-# /home/v-yugzh/nnidev/docs/en_US/NAS/NasGuide.rst:52: WARNING: undefined label: /nas/advanced.md#extend-the-ability-of-one-shot-trainers (if the link has no caption the label must precede a section header)
 
 def single_line_process(line):
     if line == ' .. contents::':
@@ -29,6 +20,9 @@ def single_line_process(line):
     line = line.replace(r'\* - `\**', r'* - `**')
     line = re.sub(r'\\\* \*\*(.*?)\*\* \(\\\*\s*(.*?)\s*\*\\ \)', r'* \1 (\2)', line)
     line = re.sub(r'\<(.*)\.md(\>|#)', r'<\1\2', line)
+    line = re.sub(r'`\*\*(.*?)\*\* <#(.*?)>`__', r'`\1 <#\2>`__', line)
+
+    line = line.replace('.. code-block:::: bash', '.. code-block:: bash')
 
     # special case (per line handling)
     line = line.replace('Nb = |Db|', r'Nb = \|Db\|')
@@ -36,6 +30,7 @@ def single_line_process(line):
     line = line.replace('  Find the data management region in job submission page.', 'Find the data management region in job submission page.')
     line = line.replace('Tuner/InstallCustomizedTuner.md', 'Tuner/InstallCustomizedTuner')
     line = line.replace('&#10003;', ':raw-html:`&#10003;`')
+    line = line.replace(' **builtinTunerName** and** classArgs**', '**builtinTunerName** and **classArgs**')
     # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
     if line == '~' * len(line):
         line = '^' * len(line)

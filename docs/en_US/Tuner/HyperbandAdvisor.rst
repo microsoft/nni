@@ -36,7 +36,7 @@ If you want to reproduce these results, refer to the example under ``examples/tr
 
 To use Hyperband, you should add the following spec in your experiment's YAML config file:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    advisor:
      #choice: Hyperband

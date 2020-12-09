@@ -76,7 +76,7 @@ Output example
 The following lines are the example csv file exported from SensitivityAnalysis. The first line is constructed by 'layername' and sparsity list. Here the sparsity value means how much weight SensitivityAnalysis prune for each layer. Each line below records the model accuracy when this layer is under different sparsities. Note that, due to the early_stop option, some layers may
 not have model accuracies/losses under all sparsities, for example, its accuracy drop has already exceeded the threshold set by the user.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    layername,0.05,0.1,0.2,0.3,0.4,0.5,0.7,0.85,0.95
    features.0,0.54566,0.46308,0.06978,0.0374,0.03024,0.01512,0.00866,0.00492,0.00184
@@ -118,7 +118,7 @@ Output Example
 
 The following lines are the output example of torchvision.models.resnet18 exported by ChannelDependency. The layers at the same line have output channel dependencies with each other. For example, layer1.1.conv2, conv1, and layer1.0.conv2 have output channel dependencies with each other, which means the output channel(filters) numbers of these three layers should be same with each other, otherwise, the model may have shape conflict. 
 
-.. code-block:::: bash
+.. code-block:: bash
 
    Dependency Set,Convolutional Layers
    Set 1,layer1.1.conv2,layer1.0.conv2,conv1
@@ -139,7 +139,7 @@ MaskConflict
 
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
    fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
@@ -154,7 +154,7 @@ We support two modes to collect information of modules. The first mode is ``defa
 Usage
 ^^^^^
 
-.. code-block:::: bash
+.. code-block:: python
 
    from nni.compression.pytorch.utils.counter import count_flops_params
 

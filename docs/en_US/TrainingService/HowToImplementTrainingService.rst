@@ -24,7 +24,7 @@ Folder structure of code
 
 NNI's folder structure is shown below:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nni
      |- deployment
@@ -59,7 +59,7 @@ NNI's folder structure is shown below:
 Function annotation of TrainingService
 --------------------------------------
 
-.. code-block:::: bash
+.. code-block:: bash
 
    abstract class TrainingService {
        public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
@@ -82,7 +82,7 @@ The parent class of TrainingService has a few abstract functions, users need to 
 
 ClusterMetadata is the data related to platform details, for examples, the ClusterMetadata defined in remote machine server is:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    export class RemoteMachineMeta {
        public readonly ip : string;
@@ -117,7 +117,7 @@ This function will return the metadata value according to the values, it could b
 
 SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    interface TrialJobDetail {
        readonly id: string;

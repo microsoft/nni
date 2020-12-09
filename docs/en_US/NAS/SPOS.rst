@@ -27,7 +27,7 @@ Prepare ImageNet in the standard format (follow the script `here <https://gist.g
 
 After preparation, it's expected to have the following code structure:
 
-.. code-block:::: bash
+.. code-block:: bash
 
    spos
    ├── architecture_final.json
@@ -50,7 +50,7 @@ After preparation, it's expected to have the following code structure:
 Step 1. Train Supernet
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python supernet.py
 
@@ -67,7 +67,7 @@ In order to make the tuner aware of the flops limit and have the ability to calc
 
 To have a search space ready for NNI framework, first run
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl ss_gen -t "python tester.py"
 
@@ -77,7 +77,7 @@ By default, it will use ``checkpoint-150000.pth.tar`` downloaded previously. In 
 
 Then search with evolution tuner.
 
-.. code-block:::: bash
+.. code-block:: bash
 
    nnictl create --config config_search.yml
 
@@ -86,7 +86,7 @@ The final architecture exported from every epoch of evolution can be found in ``
 Step 3. Train from Scratch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:::: bash
+.. code-block:: bash
 
    python scratch.py
 

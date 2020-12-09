@@ -363,7 +363,7 @@ tuner
 
 Required.
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and** classArgs**. Another way is to use users' own tuner file, in which case** codeDirectory**\ ,** classFileName**\ ,** className** and** classArgs** are needed. *Users must choose exactly one way.*
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set**builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case** codeDirectory**\ ,** classFileName**\ ,** className** and** classArgs** are needed. *Users must choose exactly one way.*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
