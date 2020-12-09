@@ -16,21 +16,21 @@ export class AdlJobInfoCollector extends KubernetesJobInfoCollector {
         super(jobMap);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: AdlClientV1 | undefined,
+    protected async retrieveSingleTrialJobInfo(adlClient: AdlClientV1 | undefined,
                                                kubernetesTrialJob: KubernetesTrialJobDetail): Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
         }
 
-        if (kubernetesCRDClient === undefined) {
-            return Promise.reject('kubernetesCRDClient is undefined');
+        if (adlClient === undefined) {
+            return Promise.reject('AdlClient is undefined');
         }
 
         let kubernetesJobInfo: any;
         let kubernetesPodsInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
-            kubernetesPodsInfo = await kubernetesCRDClient.getKubernetesPods(kubernetesTrialJob.kubernetesJobName);
+            kubernetesJobInfo = await adlClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
+            kubernetesPodsInfo = await adlClient.getKubernetesPods(kubernetesTrialJob.kubernetesJobName);
         } catch (error) {
             // Notice: it maynot be a 'real' error since cancel trial job can also cause getKubernetesJob failed.
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);

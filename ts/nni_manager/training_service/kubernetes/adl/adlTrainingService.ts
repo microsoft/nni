@@ -39,7 +39,6 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         super();
         this.adlJobInfoCollector = new AdlJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
-        this.kubernetesCRDClient = AdlClientFactory.createClient();
         this.configmapTemplateStr = fs.readFileSync(
             './config/adl/adaptdl-nni-configmap-template.json', 'utf8');
         this.jobTemplateStr = fs.readFileSync('./config/adl/adaptdljob-template.json', 'utf8');
@@ -294,6 +293,18 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
         return Promise.resolve(runScript);
     }
 
+    public async cleanUp(): Promise<void> {
+        super.cleanUp();
+
+        // Delete Tensorboard deployment
+        try {
+            await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + this.experimentId.toLowerCase())
+            this.log.info('tensorboard deployment deleted')
+        } catch (error) {
+            this.log.error(`tensorboard deployment deletion failed: ${error.message}`)
+        }
+    }
+
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         this.log.info('SetCluster ' + key + ', ' +value);
         switch (key) {
@@ -302,6 +313,12 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
+                let k8s_namespace: string = 'default';
+                if (this.adlTrialConfig.namespace !== undefined) {
+                    k8s_namespace = this.adlTrialConfig.namespace
+                }
+                this.genericK8sClient.setNamespace = k8s_namespace;
+                this.kubernetesCRDClient = AdlClientFactory.createClient(k8s_namespace);
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');

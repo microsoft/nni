@@ -17,6 +17,7 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
+  namespace: default
   command: python3 /cifar10/main_adl.py
   codeDir: /cifar10
   gpuNum: 1
