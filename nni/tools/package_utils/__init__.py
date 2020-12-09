@@ -81,12 +81,12 @@ def get_builtin_algo_meta(algo_type=None, builtin_name=None):
         alogorithms, for example:
         {
             'name': 'Random',
-            'class_name': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptTuner',
+            'class_name': 'nni.hyperopt_tuner.HyperoptTuner',
             'class_args': {
                 'algorithm_name': 'random_search'
             },
             'accept_class_args': False,
-            'class_args_validator': 'nni.hyperopt_tuner.hyperopt_tuner.HyperoptClassArgsValidator'
+            'class_args_validator': 'nni.hyperopt_tuner.HyperoptClassArgsValidator'
         }
         If builtin_name is None, returns multiple meta information in a list.
     """
