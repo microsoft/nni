@@ -1,9 +1,8 @@
 import functools
-import json
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import NlpTrialStats, NlpTrialConfig, NlpIntermediateStats
+from .model import NlpTrialStats, NlpTrialConfig
 
 def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=False):
     """
@@ -13,8 +12,7 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
     ----------
     arch : dict or None
         If a dict, it is in the format that is described in
-        :class:`nni.nas.benchmark.nlp.NlpTrialConfig`. Only trial stats
-        matched will be returned. 
+        :class:`nni.nas.benchmark.nlp.NlpTrialConfig`. Only trial stats matched will be returned. 
         If none, all architectures in the database will be matched.
     dataset : str or None
         If specified, can be one of the dataset available in :class:`nni.nas.benchmark.nasbench201.Nb201TrialConfig`.
@@ -63,4 +61,3 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
         else:
             yield model_to_dict(trial)
     # print("end query")    
-

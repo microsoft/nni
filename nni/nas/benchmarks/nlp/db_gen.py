@@ -9,11 +9,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dir', help='Path to extracted NLP data dir.')
     args = parser.parse_args()
-    
     with db, tqdm.tqdm(total=len(os.listdir(args.input_dir)), desc="creating tables") as pbar:
         db.create_tables([NlpTrialConfig, NlpTrialStats, NlpIntermediateStats])
-   
-        for json_idx, json_file in enumerate(os.listdir(args.input_dir)):
+        json_files = os.listdir(args.input_dir)
+        for json_file in json_files:
             pbar.update(1)
             if json_file.endswith('.json'):
                 log_path = os.path.join(args.input_dir, json_file)
@@ -27,7 +26,8 @@ def main():
                         unested_arch['{}_input_{}'.format(k, i)] = arch[k]['input'][i]
                 config = NlpTrialConfig.create(arch=unested_arch, dataset=cur['data'][5:])
                 if cur['status'] == 'OK':
-                    trial_stats = NlpTrialStats.create(config=config, train_loss=cur['train_losses'][-1], val_loss=cur['val_losses'][-1], test_loss=cur['test_losses'][-1], training_time=cur['wall_times'][-1])
+                    trial_stats = NlpTrialStats.create(config=config, train_loss=cur['train_losses'][-1], val_loss=cur['val_losses'][-1], 
+                                                       test_loss=cur['test_losses'][-1], training_time=cur['wall_times'][-1])
                     epochs = 50
                     intermediate_stats = []
                     for epoch in range(epochs):

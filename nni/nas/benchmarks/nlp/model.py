@@ -19,8 +19,10 @@ class NlpTrialConfig(Model):
         an arch has multiple Node, Node_input_n and Node_op.
         ``Node`` can be ``node_n`` or ``h_new_n`` or ``f/i/o/j(_act)`` etc. (n is an int number and need not to be consecutive)
         ``Node_input_n`` can be ``Node`` or ``x`` etc.
-        ``Node_op`` can be ``linear`` or ``activation_sigm`` or ``activation_tanh`` or ``elementwise_prod`` or ``elementwise_sum`` or ``activation_leaky_relu`` etc.
-        e.g. {"h_new_0_input_0":"node_3","h_new_0_input_1":"x","h_new_0_op":"linear","node_2_input_0":"x","node_2_input_1":"h_prev_0","node_2_op":"linear","node_3_input_0":"node_2","node_3_op":"activation_leaky_relu"}
+        ``Node_op`` can be ``linear`` or ``activation_sigm`` or ``activation_tanh`` or ``elementwise_prod`` 
+        or ``elementwise_sum`` or ``activation_leaky_relu`` ...
+        e.g., {"h_new_0_input_0":"node_3","h_new_0_input_1":"x","h_new_0_op":"linear","node_2_input_0":"x",
+        "node_2_input_1":"h_prev_0","node_2_op":"linear","node_3_input_0":"node_2","node_3_op":"activation_leaky_relu"}
     dataset: str
         Dataset used. Could be ``ptb`` or ``wikitext-2``.
     """
@@ -35,7 +37,7 @@ class NlpTrialConfig(Model):
 
 class NlpTrialStats(Model):
     """
-    Computation statistics for NAS-NLP-Benchmark. 
+    Computation statistics for NAS-NLP-Benchmark.
     Each corresponds to one trial result after 50 epoch.
 
     Attributes
@@ -51,7 +53,6 @@ class NlpTrialStats(Model):
     training_time : float
         Time elapsed in seconds. aka wall_time in in NAS-NLP-Benchmark repo.
     """
-
     config = ForeignKeyField(NlpTrialConfig, backref='trial_stats', index=True)
     train_loss = FloatField(null=True)
     val_loss = FloatField(null=True)
@@ -63,7 +64,7 @@ class NlpTrialStats(Model):
 
 class NlpIntermediateStats(Model):
     """
-    Computation statistics for NAS-NLP-Benchmark. 
+    Computation statistics for NAS-NLP-Benchmark.
     Each corresponds to one trial result after 50 epoch.
 
     Attributes
@@ -78,7 +79,6 @@ class NlpIntermediateStats(Model):
         Final loss on test data. Could be NaN (None).
     training_time : float
         Time elapsed in seconds. aka wall_time in in NAS-NLP-Benchmark repo.
-    
     """
     trial = ForeignKeyField(NlpTrialStats, backref='intermediates', index=True)
     current_epoch = IntegerField(index=True)
