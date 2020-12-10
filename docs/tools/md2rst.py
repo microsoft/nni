@@ -22,7 +22,7 @@ def single_line_process(line):
     line = re.sub(r'\<(.*)\.md(\>|#)', r'<\1.rst\2', line)
     line = re.sub(r'`\*\*(.*?)\*\* <#(.*?)>`__', r'`\1 <#\2>`__', line)
     line = re.sub(r'\*\* (classArgs|stop|FLOPS.*?|pruned.*?|large.*?|path|preCommand|2D.*?|codeDirectory|ps|worker|Tuner|Assessor)\*\*',
-                  '**\1**', line)
+                  r' **\1**', line)
 
     line = line.replace('.. code-block:::: bash', '.. code-block:: bash')
 
@@ -33,6 +33,7 @@ def single_line_process(line):
     line = line.replace('Tuner/InstallCustomizedTuner.md', 'Tuner/InstallCustomizedTuner')
     line = line.replace('&#10003;', ':raw-html:`&#10003;`')
     line = line.replace(' **builtinTunerName** and** classArgs**', '**builtinTunerName** and **classArgs**')
+    line = line.replace('`\ ``nnictl ss_gen`` <../Tutorial/Nnictl.rst>`__', '`nnictl ss_gen <../Tutorial/Nnictl.rst>`__')
     # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
     if line == '~' * len(line):
         line = '^' * len(line)

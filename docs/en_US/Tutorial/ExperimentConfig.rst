@@ -363,7 +363,7 @@ tuner
 
 Required.
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and****. Another way is to use users' own tuner file, in which case****\ ,** classFileName**\ ,** className** and**** are needed. *Users must choose exactly one way.*
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs** are needed. *Users must choose exactly one way.*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
@@ -417,7 +417,7 @@ If **includeIntermediateResults** is true, the last intermediate result of the t
 assessor
 ^^^^^^^^
 
-Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and****. Another way is to use users' own assessor file, and users need to set****\ ,** classFileName**\ ,** className** and****. *Users must choose exactly one way.*
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs**. *Users must choose exactly one way.*
 
 By default, there is no assessor enabled.
 
@@ -461,7 +461,7 @@ advisor
 
 Optional.
 
-Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and****. Another way is to use users' own advisor file, and need to set****\ ,** classFileName**\ ,** className** and****.
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs**.
 
 When advisor is enabled, settings of tuners and advisors will be bypassed.
 
@@ -563,44 +563,44 @@ In Kubeflow mode, the following keys are required.
 
 
   * 
-    **replicas**\ : The replica number of**** role.
+    **replicas**\ : The replica number of **ps** role.
 
   * 
-    **command**\ : The run script in****\ 's container.
+    **command**\ : The run script in **ps**\ 's container.
 
   * 
-    **gpuNum**\ : The gpu number to be used in**** container.
+    **gpuNum**\ : The gpu number to be used in **ps** container.
 
   * 
-    **cpuNum**\ : The cpu number to be used in**** container.
+    **cpuNum**\ : The cpu number to be used in **ps** container.
 
   * 
     **memoryMB**\ : The memory size of the container.
 
   * 
-    **image**\ : The image to be used in****.
+    **image**\ : The image to be used in **ps**.
 
 * 
   **worker**\ : An optional configuration for kubeflow's tensorflow-operator.
 
 
   * 
-    **replicas**\ : The replica number of**** role.
+    **replicas**\ : The replica number of **worker** role.
 
   * 
-    **command**\ : The run script in****\ 's container.
+    **command**\ : The run script in **worker**\ 's container.
 
   * 
-    **gpuNum**\ : The gpu number to be used in**** container.
+    **gpuNum**\ : The gpu number to be used in **worker** container.
 
   * 
-    **cpuNum**\ : The cpu number to be used in**** container.
+    **cpuNum**\ : The cpu number to be used in **worker** container.
 
   * 
     **memoryMB**\ : The memory size of the container.
 
   * 
-    **image**\ : The image to be used in****.
+    **image**\ : The image to be used in **worker**.
 
 localConfig
 ^^^^^^^^^^^
@@ -707,7 +707,7 @@ Optional. String.
 
 Specifies the pre-command that will be executed before the remote machine executes other commands. Users can configure the experimental environment on remote machine by setting **preCommand**. If there are multiple commands need to execute, use ``&&`` to connect them, such as ``preCommand: command1 && command2 && ...``.
 
-**Note**\ : Because**** will execute before other commands each time, it is strongly not recommended to set**** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+**Note**\ : Because **preCommand** will execute before other commands each time, it is strongly not recommended to set **preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
 
 remoteConfig
 ^^^^^^^^^^^^

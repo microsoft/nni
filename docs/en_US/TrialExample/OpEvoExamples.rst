@@ -33,7 +33,7 @@ We prepared a dockerfile for setting up experiment environments. Before starting
 Run Experiments:
 ----------------
 
-Three representative kinds of tensor operators, **matrix multiplication**\ ,** batched matrix multiplication** and****\ , are chosen from BERT and AlexNet, and tuned with NNI. The ``Trial`` code for all tensor operators is ``/root/compiler_auto_tune_stable.py``\ , and ``Search Space`` files and ``config`` files for each tuning algorithm locate in ``/root/experiments/``\ , which are categorized by tensor operators. Here ``/root`` refers to the root of the container.
+Three representative kinds of tensor operators, **matrix multiplication**\ ,** batched matrix multiplication** and **2D convolution**\ , are chosen from BERT and AlexNet, and tuned with NNI. The ``Trial`` code for all tensor operators is ``/root/compiler_auto_tune_stable.py``\ , and ``Search Space`` files and ``config`` files for each tuning algorithm locate in ``/root/experiments/``\ , which are categorized by tensor operators. Here ``/root`` refers to the root of the container.
 
 For tuning the operators of matrix multiplication, please run below commands from ``/root``\ :
 

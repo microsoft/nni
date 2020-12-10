@@ -50,7 +50,7 @@ Currently, we support the following algorithms:
 Usage of Built-in Tuners
 ------------------------
 
-Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and**** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
+Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
 Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners need to be installed using ``nnictl package``\ , like SMAC.
 
@@ -508,7 +508,7 @@ PPO Tuner
    Built-in Tuner Name: **PPOTuner**
 
 
-Note that the only acceptable types within the search space are ``layer_choice`` and ``input_choice``. For ``input_choice``\ , ``n_chosen`` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command `\ ``nnictl ss_gen`` <../Tutorial/Nnictl.rst>`__.
+Note that the only acceptable types within the search space are ``layer_choice`` and ``input_choice``. For ``input_choice``\ , ``n_chosen`` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command `nnictl ss_gen <../Tutorial/Nnictl.rst>`__.
 
 **Suggested scenario**
 

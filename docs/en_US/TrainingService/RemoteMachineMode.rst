@@ -216,4 +216,4 @@ If you want multiple commands to be executed, you can use ``&&`` to connect thes
 
    preCommand: command1 && command2 && command3
 
-**Note**\ : Because**** will execute before other commands each time, it is strongly not recommended to set**** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+**Note**\ : Because **preCommand** will execute before other commands each time, it is strongly not recommended to set **preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
