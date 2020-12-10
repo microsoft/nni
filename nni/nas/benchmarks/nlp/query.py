@@ -6,7 +6,7 @@ from .model import NlpTrialStats, NlpTrialConfig
 
 def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=False):
     """
-    Query trial stats of NLP given conditions.
+    Query trial stats of NLP benchmark given conditions.
 
     Parameters
     ----------
@@ -15,9 +15,9 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
         :class:`nni.nas.benchmark.nlp.NlpTrialConfig`. Only trial stats matched will be returned.
         If none, all architectures in the database will be matched.
     dataset : str or None
-        If specified, can be one of the dataset available in :class:`nni.nas.benchmark.nasbench201.Nb201TrialConfig`.
+        If specified, can be one of the dataset available in :class:`nni.nas.benchmark.nlp.NlpTrialConfig`.
         Otherwise a wildcard.
-    reduction : str or None
+    reduction : str or None, default set to be None.
         If 'none' or None, all trial stats will be returned directly.
         If 'mean', fields in trial stats will be averaged given the same trial config.
         Please note that some trial configs have multiple runs which make "reduction" meaningful, while some may not.
@@ -49,7 +49,6 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
     if dataset is not None:
         conditions.append(NlpTrialConfig.dataset == dataset)
 
-    # print("begin query")
     for trial in query.where(functools.reduce(lambda a, b: a & b, conditions)):
         if include_intermediates:
             data = model_to_dict(trial)
@@ -60,4 +59,3 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
             yield data
         else:
             yield model_to_dict(trial)
-    # print("end query")    

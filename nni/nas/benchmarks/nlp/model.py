@@ -65,7 +65,7 @@ class NlpTrialStats(Model):
 class NlpIntermediateStats(Model):
     """
     Computation statistics for NAS-NLP-Benchmark.
-    Each corresponds to one trial result after 50 epoch.
+    Each corresponds to one trial result for 1-50 epoch.
 
     Attributes
     ----------

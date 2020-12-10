@@ -29,7 +29,7 @@ cd nni/examples/nas/benchmarks
 ```
 Replace `${NNI_VERSION}` with a released version name or branch name, e.g., `v1.9`.
 
-2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201` or `nds` or `nlp`.
+2. Install dependencies via `pip3 install -r xxx.requirements.txt`. `xxx` can be `nasbench101`, `nasbench201`, `nds` or `nlp`.
 3. Generate the database via `./xxx.sh`. The directory that stores the benchmark file can be configured with `NASBENCHMARK_DIR` environment variable, which defaults to `~/.nni/nasbenchmark`. Note that the NAS-Bench-201 dataset will be downloaded from a google drive.
 
 Please make sure there is at least 10GB free disk space and note that the conversion process can take up to hours to complete.
@@ -165,7 +165,7 @@ Here is a list of available operators used in NDS.
 
 [Paper link](https://arxiv.org/abs/2006.07116) &nbsp; &nbsp; [Open-source](https://github.com/fmsnew/nas-bench-nlp-release)
 
-The paper "NAS-Bench-NLP: Neural Architecture Search Benchmark for Natural Language Processing"  have provided search space of recurrent neural networks on the text datasets and trained 14k architectures within it, and have conducted both intrinsic and extrinsic evaluation of the trained models using datasets for semantic relatedness and language understanding evaluation. There are 2 data sets - PTB and wikitext-2. In the end, the precomputed results(ptb_single_run + ptb_multi_run + wikitext-2) can be utilized. 
+The paper "NAS-Bench-NLP: Neural Architecture Search Benchmark for Natural Language Processing"  have provided search space of recurrent neural networks on the text datasets and trained 14k architectures within it, and have conducted both intrinsic and extrinsic evaluation of the trained models using datasets for semantic relatedness and language understanding evaluation. There are 2 datasets - PTB and wikitext-2. In the end, the precomputed results(ptb_single_run + ptb_multi_run + wikitext-2) can be utilized. 
 
 ### API Documentation
 
