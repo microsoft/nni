@@ -311,15 +311,16 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
-                var namespace: string = 'default';
+                let namespace: string = 'default';
                 if (this.adlTrialConfig.namespace !== undefined) {
                     namespace = this.adlTrialConfig.namespace;
                 }
                 this.genericK8sClient.setNamespace = namespace;
                 this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
                 break;
+            }
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
