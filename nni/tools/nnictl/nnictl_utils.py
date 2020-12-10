@@ -854,8 +854,8 @@ def save_experiment(args):
     except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
-    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, args.id, 'log')
-    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, args.id, 'log'))
+    nnictl_log_dir = os.path.join(NNICTL_HOME_DIR, args.id, 'log')
+    shutil.copytree(nnictl_log_dir, os.path.join(temp_nnictl_dir, args.id, 'log'))
     shutil.copy(os.path.join(NNICTL_HOME_DIR, args.id, '.config'), os.path.join(temp_nnictl_dir, args.id, '.config'))
 
     # Step3. Copy code dir
