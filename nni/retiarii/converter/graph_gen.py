@@ -92,14 +92,15 @@ def handle_prim_attr_node(node):
 def _remove_mangle(module_type_str):
     return re.sub('\\.___torch_mangle_\\d+', '', module_type_str)
 
-def remove_unconnected_nodes(ir_graph, targeted_type):
+def remove_unconnected_nodes(ir_graph, targeted_type=None):
     """
     Parameters
     ----------
     ir_graph : Graph
         our ir graph representation
     targeted_type : str
-        nodes with ```targeted_type``` will be removed from graph is their fanout is 0
+        nodes with ```targeted_type``` will be removed from graph if their fanout is 0.
+        ```None``` means removing all the nodes whose fanout is 0.
     """
     # build index of outputs of Node(s)
     node_fanout = set()
@@ -111,7 +112,9 @@ def remove_unconnected_nodes(ir_graph, targeted_type):
     for hidden_node in ir_graph.hidden_nodes:
         if hidden_node.id not in node_fanout:
             assert isinstance(hidden_node, Node)
-            if hidden_node.operation.type == targeted_type:
+            if targeted_type is None:
+                to_removes.append(hidden_node)
+            elif hidden_node.operation.type == targeted_type:
                 to_removes.append(hidden_node)
 
     for hidden_node in to_removes:
@@ -216,6 +219,12 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                 submodule_name = submodule.s('name')
 
                 if submodule.inputsAt(0).debugName() == 'self':
+                    # module is usually instantiated in __init__.
+                    # when calling a module in forward,
+                    # prim::GetAttr is used to obtain the module in torch script.
+                    # therefore, we do this check for a module. example below:
+                    # %25 : __torch__.xxx = prim::GetAttr[name="input_switch"](%self)
+                    # %27 : Tensor = prim::CallMethod[name="forward"](%25, %out.1)
                     assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules.keys())
 
                     submodule_full_name = build_full_name(module_name, submodule_name)
@@ -238,8 +247,6 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                         submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
                         predecessor_obj = getattr(module, predecessor_name)
                         submodule_obj = getattr(predecessor_obj, submodule_name)
-                        print('submodule_name: {}, type of submodule: {}'.format(submodule_name, type(submodule_obj)))
-                        print('submodule_type_str: {}, full_name: {}'.format(submodule_type_str, submodule_full_name))
                         subgraph, sub_m_attrs = convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
                                                             submodule_obj, submodule_full_name, ir_model)
                     else:
@@ -305,7 +312,6 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             last_block_node = handle_if_node(node)
             node_index[node] = last_block_node
         elif node.kind() == 'prim::Loop':
-            print('mygraph: ', sm_graph)
             raise RuntimeError('Loop has not been supported yet!')
         else:
             raise RuntimeError('Unsupported kind: {}'.format(node.kind()))
@@ -319,7 +325,9 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
 
 def merge_aten_slices(ir_graph):
     """
-    if there is aten::slice node, merge the consecutive ones together
+    if there is aten::slice node, merge the consecutive ones together.
+    ```x[:, :, 1:, 1:]``` in python code will be converted into 4 node in torch script,
+    each node has 5 inputs: tensor, dim, x, y, z (i.e., x:y:z)
     """
     head_slice_nodes = []
     has_slice_node = False
@@ -364,7 +372,6 @@ def refine_graph(ir_graph):
     Do the following process to simplify graph:
     1. remove unconnected constant node
     2. remove unconnected getattr node
-    3. FIXME: merge slice
     """
     # some constant is not used, for example, function name as prim::Constant
     remove_unconnected_nodes(ir_graph, targeted_type='prim::Constant')

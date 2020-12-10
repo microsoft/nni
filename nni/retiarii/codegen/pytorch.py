@@ -52,23 +52,23 @@ def _format_inputs(node: Node) -> List[str]:
                 inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
     return inputs
 
-def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
-    def _remove_prefix(names):
-        """
-        variables name (full name space) is too long,
-        shorten the name by removing the prefix ```graph_name```
-        """
-        if isinstance(names, list):
-            converted_names = []
-            for name in names:
-                if name.startswith(graph_name):
-                    converted_names.append(name[len(graph_name):])
-                else:
-                    converted_names.append(name)
-            return converted_names
-        else:
-            return names[len(graph_name):] if names.startswith(graph_name) else names
+def _remove_prefix(names, graph_name):
+    """
+    variables name (full name space) is too long,
+    shorten the name by removing the prefix ```graph_name```
+    """
+    if isinstance(names, list):
+        converted_names = []
+        for name in names:
+            if name.startswith(graph_name):
+                converted_names.append(name[len(graph_name):])
+            else:
+                converted_names.append(name)
+        return converted_names
+    else:
+        return names[len(graph_name):] if names.startswith(graph_name) else names
 
+def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     nodes = graph.nodes
     # handle module node and function node differently
     # only need to generate code for module here
@@ -79,7 +79,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
-            node_code = node.operation.to_init_code(_remove_prefix(node.name))
+            node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
             if node_code is not None:
                 node_codes.append(node_code)
 
@@ -95,12 +95,12 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
     for node in sorted_nodes:
         if node.operation:
             inputs = _format_inputs(node)
-            inputs = _remove_prefix(inputs)
-            node_name = _remove_prefix(node.name)
+            inputs = _remove_prefix(inputs, graph_name)
+            node_name = _remove_prefix(node.name, graph_name)
             edge_codes.append(node.operation.to_forward_code(node_name, node_name, inputs))
 
     output_names = _format_inputs(graph.output_node)
-    output_names = _remove_prefix(output_names)
+    output_names = _remove_prefix(output_names, graph_name)
     if not output_names:
         raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))
     output_code = ', '.join(output_names)
