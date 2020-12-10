@@ -5,7 +5,6 @@ import os
 import json
 import shutil
 import time
-from nni.experiment.config import ExperimentConfig, convert
 from .constants import NNICTL_HOME_DIR
 from .command_utils import print_error
 from .common_utils import get_file_lock
@@ -17,11 +16,6 @@ class Config:
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
-        try:
-            config = ExperimentConfig(**self.config)
-            self.config = convert.to_v1_yaml(config)
-        except Exception:
-            pass
 
     def get_all_config(self):
         '''get all of config values'''

@@ -62,7 +62,10 @@ class ConfigBase:
                 if isinstance(value, dict):
                     cls = util.strip_optional(field.type)
                     if isinstance(cls, type) and issubclass(cls, ConfigBase):
-                        value = cls(**value, _base_path=_base_path)
+                        if cls.__name__ == 'TrainingServiceConfig':
+                            value = util.training_service_config_factory(**value, _base_path=_base_path)
+                        else:
+                            value = cls(**value, _base_path=_base_path)
             setattr(self, field.name, value)
         if kwargs:
             cls = type(self).__name__

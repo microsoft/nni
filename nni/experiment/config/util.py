@@ -26,11 +26,11 @@ def canonical_path(path: Optional[PathLike]) -> Optional[str]:
 def count(*values) -> int:
     return sum(value is not None and value is not False for value in values)
 
-def training_service_config_factory(platform: str): # -> TrainingServiceConfig
+def training_service_config_factory(platform: str, **kwargs): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
     for cls in TrainingServiceConfig.__subclasses__():
         if cls.platform == platform:
-            return cls()
+            return cls(**kwargs)
     raise ValueError(f'Unrecognized platform {platform}')
 
 def strip_optional(type_hint):
