@@ -66,7 +66,7 @@ trial:
     path: /
     containerMountPath: /nfs
   checkpoint: # optional
-    storageClass: dfs
+    storageClass: microk8s-hostpath
     storageSize: 1Gi
 ```
 
@@ -79,21 +79,18 @@ IP address of the machine with NNI manager (NNICTL) that launches NNI experiment
 * **logCollection**: *Recommended* to set as `http`. It will collect the trial logs on cluster back to your machine via http.
 * **tuner**: It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**: It defines the specs of an `adl` trial.
-  * **adaptive**: (*Optional*) Boolean for AdaptDL trainer. While `true`, it the job is preemptible and adaptive.
-  * **image**: Docker image for the trial
-  * **imagePullSecret**: (*Optional*) If you are using a private registry,
-  you need to provide the secret to successfully pull the image.
-  * **codeDir**: the working directory of the container. `.` means the default working directory defined by the image.
-  * **command**: the bash command to start the trial
-  * **gpuNum**: the number of GPUs requested for this trial. It must be non-negative integer.
-  * **cpuNum**: (*Optional*) the number of CPUs requested for this trial.  It must be non-negative integer.
-  * **memorySize**: (*Optional*) the size of memory requested for this trial. It must follow the Kubernetes
-  [default format](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory).
-  * **nfs**: (*Optional*) mounting external storage. For more information about using NFS please check the below paragraph.
-  * **checkpoint**: (*Optional*) storage settings for model checkpoints.
-    * **storageClass**: check [Kubernetes storage documentation](https://kubernetes.io/docs/concepts/storage/storage-classes/) for how to use the appropriate `storageClass`.
-    * **storageSize**: this value should be large enough to fit your model's checkpoints, or it could cause disk quota exceeded error.
-
+    * **adaptive**: (*Optional*) Boolean for AdaptDL trainer. While `true`, it the job is preemptible and adaptive.
+    * **image**: Docker image for the trial
+    * **imagePullSecret**: (*Optional*) If you are using a private registry,
+    you need to provide the secret to successfully pull the image.
+    * **codeDir**: the working directory of the container. `.` means the default working directory defined by the image.
+    * **command**: the bash command to start the trial
+    * **gpuNum**: the number of GPUs requested for this trial. It must be non-negative integer.
+    * **cpuNum**: (*Optional*) the number of CPUs requested for this trial.  It must be non-negative integer.
+    * **memorySize**: (*Optional*) the size of memory requested for this trial. It must follow the Kubernetes
+    [default format](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory).
+    * **nfs**: (*Optional*) mounting external storage. For more information about using NFS please check the below paragraph.
+    * **checkpoint** (*Optional*) [storage settings](https://kubernetes.io/docs/concepts/storage/storage-classes/) for AdaptDL internal checkpoints. You can keep it optional if you are not dev users.
 
 ### NFS Storage
 
