@@ -72,7 +72,7 @@ Here is a template configuration specification to use AdaptDL as a training serv
        path: /
        containerMountPath: /nfs
      checkpoint: # optional
-       storageClass: microk8s-hostpath
+       storageClass: dfs
        storageSize: 1Gi
 
 Those configs not mentioned below, are following the
@@ -86,6 +86,7 @@ Those configs not mentioned below, are following the
 * **tuner**\ : It supports the Tuun tuner and all NNI built-in tuners (only except for the checkpoint feature of the NNI PBT tuners).
 * **trial**\ : It defines the specs of an ``adl`` trial.
 
+  * **namespace**\: (*Optional*\ ) Kubernetes namespace to launch the trials. Default to ``default`` namespace.
   * **adaptive**\ : (*Optional*\ ) Boolean for AdaptDL trainer. While ``true``\ , it the job is preemptible and adaptive.
   * **image**\ : Docker image for the trial
   * **imagePullSecret**\ : (*Optional*\ ) If you are using a private registry,
@@ -97,7 +98,10 @@ Those configs not mentioned below, are following the
   * **memorySize**\ : (*Optional*\ ) the size of memory requested for this trial. It must follow the Kubernetes
     `default format <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#meaning-of-memory>`__.
   * **nfs**\ : (*Optional*\ ) mounting external storage. For more information about using NFS please check the below paragraph.
-  * **checkpoint** (*Optional*\ ) `storage settings <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for AdaptDL internal checkpoints. You can keep it optional if you are not dev users.
+  * **checkpoint** (*Optional*\ ) storage settings for model checkpoints.
+
+    * **storageClass**\ : check `Kubernetes storage documentation <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for how to use the appropriate ``storageClass``.
+    * **storageSize**\ : this value should be large enough to fit your model's checkpoints, or it could cause disk quota exceeded error.
 
 NFS Storage
 ^^^^^^^^^^^
