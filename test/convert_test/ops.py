@@ -131,3 +131,8 @@ class FactorizedReduce(nn.Module):
         out = torch.cat([self.conv1(x), self.conv2(x[:, :, 1:, 1:])], dim=1)
         out = self.bn(out)
         return out
+
+slice: t, 0, 0, 27134691234723974912803749, 1
+slice: t, 1, 0, 27134691234723974912803749, 1
+slice: t, 2, 1, 27134691234723974912803749, 1
+slice: t, 3, 1, 27134691234723974912803749, 1

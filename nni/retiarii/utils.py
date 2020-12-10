@@ -1,5 +1,5 @@
 import traceback
-from .model_apis.nn import enable_record_args, get_records, disable_record_args
+from .nn.pytorch import enable_record_args, get_records, disable_record_args
 
 def import_(target: str, allow_none: bool = False) -> 'Any':
     if target is None:

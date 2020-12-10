@@ -1,6 +1,6 @@
 import abc
 import inspect
-from ..model_apis.nn import add_record
+from ..nn.pytorch import add_record
 from typing import *
 
 

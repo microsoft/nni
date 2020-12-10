@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from nni.retiarii import nn
+import nni.retiarii.nn.pytorch as nn
 
 # Paper suggests 0.9997 momentum, for TensorFlow. Equivalent PyTorch momentum is
 # 1.0 - tensorflow.

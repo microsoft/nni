@@ -1,7 +1,8 @@
 import inspect
 import logging
+import torch
 import torch.nn as nn
-
+from typing import (Any, Tuple, List, Optional)
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -27,6 +28,36 @@ def add_record(name, value):
     if _records is not None:
         assert name not in _records, '{} already in _records'.format(name)
         _records[name] = value
+
+
+class LayerChoice(nn.Module):
+    def __init__(self, candidate_ops: List, label: str = None):
+        super(LayerChoice, self).__init__()
+        self.candidate_ops = candidate_ops
+        self.label = label
+
+    def forward(self, x):
+        return x
+
+class InputChoice(nn.Module):
+    def __init__(self, n_chosen: int = 1, reduction: str = 'sum', label: str = None):
+        super(InputChoice, self).__init__()
+        self.n_chosen = n_chosen
+        self.reduction = reduction
+        self.label = label
+
+    def forward(self, candidate_inputs: List['Tensor']) -> 'Tensor':
+        # fake return
+        return torch.tensor(candidate_inputs)
+
+class ValueChoice:
+    """
+    The instance of this class can only be used as input argument,
+    when instantiating a pytorch module.
+    TODO: can also be used in training approach
+    """
+    def __init__(self, candidate_values: List[Any]):
+        self.candidate_values = candidate_values
 
 
 class Placeholder(nn.Module):

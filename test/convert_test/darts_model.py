@@ -6,7 +6,7 @@ import torch.nn as torch_nn
 from typing import (List, Optional)
 
 import ops
-from nni.retiarii import nn
+import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import LayerChoice, InputChoice
 
 

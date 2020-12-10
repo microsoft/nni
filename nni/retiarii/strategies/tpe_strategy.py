@@ -3,11 +3,11 @@ import logging
 import random
 import os
 
-from nni.retiarii import Model, submit_models, wait_models
-from nni.retiarii.strategy import BaseStrategy
-from nni.retiarii import Sampler
+from .. import Model, submit_models, wait_models
+from .. import Sampler
+from .strategy import BaseStrategy
 
-from nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
+from ...algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 
 _logger = logging.getLogger(__name__)
 

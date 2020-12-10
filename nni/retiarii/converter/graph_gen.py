@@ -4,8 +4,7 @@ import torch
 
 from ..graph import Graph, Node, Edge, Model
 from ..operation import Cell, Operation
-from ..model_apis.nn import Placeholder
-from ..model_apis.inline_mutators import LayerChoice, InputChoice
+from ..nn.pytorch import Placeholder, LayerChoice, InputChoice
 
 from .op_types import MODULE_EXCEPT_LIST, Type
 from .utils import build_full_name, _convert_name

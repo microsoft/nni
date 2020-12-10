@@ -16,7 +16,8 @@ from base_mnasnet import MNASNet
 from nni.experiment import RetiariiExperiment, RetiariiExpConfig
 
 #from simple_strategy import SimpleStrategy
-from tpe_strategy import TPEStrategy
+#from tpe_strategy import TPEStrategy
+from nni.retiarii.strategies import TPEStrategy
 from mutator import BlockMutator
 
 if __name__ == '__main__':
