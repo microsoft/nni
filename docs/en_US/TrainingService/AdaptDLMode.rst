@@ -101,7 +101,7 @@ Those configs not mentioned below, are following the
   * **checkpoint** (*Optional*\ ) storage settings for model checkpoints.
 
     * **storageClass**\ : check `Kubernetes storage documentation <https://kubernetes.io/docs/concepts/storage/storage-classes/>`__ for how to use the appropriate ``storageClass``.
-    * **storageSize**\ : this value should be large enough to fit your model's checkpoints, or it could cause disk quota exceeded error.
+    * **storageSize**\ : this value should be large enough to fit your model's checkpoints, or it could cause "disk quota exceeded" error.
 
 NFS Storage
 ^^^^^^^^^^^
