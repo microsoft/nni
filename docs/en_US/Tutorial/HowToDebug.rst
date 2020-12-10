@@ -4,12 +4,12 @@
 Overview
 --------
 
-There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to `Overview <../Overview>`__.
+There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to `Overview <../Overview.rst>`__.
 
 
 * **NNI controller**\ : NNI controller (nnictl) is the nni command-line tool that is used to manage experiments (e.g., start an experiment).
 * **nnimanager**\ : nnimanager is the core of NNI, whose log is important when the whole experiment fails (e.g., no webUI or training service fails)
-* **Dispatcher**\ : Dispatcher calls the methods of** Tuner** and** Assessor**. Logs of dispatcher are related to the tuner or assessor code.
+* **Dispatcher**\ : Dispatcher calls the methods of**** and****. Logs of dispatcher are related to the tuner or assessor code.
 
   * **Tuner**\ : Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
   * **Assessor**\ : Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
@@ -27,7 +27,7 @@ NNI controller
 
 All possible errors that happen when launching an NNI experiment can be found here.
 
-You can use ``nnictl log stderr`` to find error information. For more options please refer to `NNICTL <Nnictl>`__
+You can use ``nnictl log stderr`` to find error information. For more options please refer to `NNICTL <Nnictl.rst>`__
 
 Experiment Root Directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,7 +36,7 @@ Every experiment has a root folder, which is shown on the right-top corner of we
 
 ..
 
-   For flexibility, we also offer a ``logDir`` option in your configuration, which specifies the directory to store all experiments (defaults to ``~/nni-experiments``\ ). Please refer to `Configuration <ExperimentConfig>`__ for more details.
+   For flexibility, we also offer a ``logDir`` option in your configuration, which specifies the directory to store all experiments (defaults to ``~/nni-experiments``\ ). Please refer to `Configuration <ExperimentConfig.rst>`__ for more details.
 
 
 Under that directory, there is another directory named ``log``\ , where ``nnimanager.log`` and ``dispatcher.log`` are placed.

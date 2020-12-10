@@ -9,7 +9,7 @@ for feature selection.
 1) This approach extends a recent result on the estimation of
 learnability in the sublinear data regime by showing that the calculation can be performed iteratively (i.e., in mini-batches) and in **linear time and space** with respect to both the number of features D and the sample size N. 
 
-2) This, along with a discrete-to-continuous relaxation of the search domain, allows for an **efficient, gradient-based** search algorithm among feature subsets for very** large datasets**.
+2) This, along with a discrete-to-continuous relaxation of the search domain, allows for an **efficient, gradient-based** search algorithm among feature subsets for very****.
 
 3) Crucially, this algorithm is capable of finding **higher-order correlations** between features and targets for both the N > D and N < D regimes, as opposed to approaches that do not consider such interactions and/or only consider one regime.
 

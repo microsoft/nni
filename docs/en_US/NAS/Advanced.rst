@@ -35,7 +35,7 @@ To demonstrate what mutators are for, we need to know how one-shot NAS normally 
 
 Finally, mutators provide a method called ``mutator.export()`` that export a dict with architectures to the model. Note that currently this dict this a mapping from keys of mutables to tensors of selection. So in order to dump to json, users need to convert the tensors explicitly into python list.
 
-Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See `Trainers <./NasReference>`__ for details.
+Meanwhile, NNI provides some useful tools so that users can implement trainers more easily. See `Trainers <./NasReference.rst>`__ for details.
 
 Implement New Mutators
 ----------------------
@@ -98,9 +98,9 @@ For advanced usages, e.g., users want to manipulate the way modules in ``LayerCh
 Implemented a Distributed NAS Tuner
 -----------------------------------
 
-Before learning how to write a distributed NAS tuner, users should first learn how to write a general tuner. read `Customize Tuner <../Tuner/CustomizeTuner>`__ for tutorials.
+Before learning how to write a distributed NAS tuner, users should first learn how to write a general tuner. read `Customize Tuner <../Tuner/CustomizeTuner.rst>`__ for tutorials.
 
-When users call "\ `nnictl ss_gen <../Tutorial/Nnictl>`__\ " to generate search space file, a search space file like this will be generated:
+When users call "\ `nnictl ss_gen <../Tutorial/Nnictl.rst>`__\ " to generate search space file, a search space file like this will be generated:
 
 .. code-block:: json
 
@@ -133,4 +133,4 @@ This is the exact search space tuners will receive in ``update_search_space``. I
        }
    }
 
-Send it through ``generate_parameters``\ , and the tuner would look like any HPO tuner. Refer to `SPOS <./SPOS>`__ example code for an example.
+Send it through ``generate_parameters``\ , and the tuner would look like any HPO tuner. Refer to `SPOS <./SPOS.rst>`__ example code for an example.

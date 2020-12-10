@@ -61,6 +61,7 @@ input tensor: ``torch.randn(64, 3, 32, 32)``
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Times
      - Mask Latency
@@ -94,6 +95,7 @@ too large variance
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Times
      - Mask Latency
@@ -129,6 +131,7 @@ input tensor: ``torch.randn(64, 3, 32, 32)``
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Times
      - Mask Latency
@@ -161,6 +164,7 @@ input tensor: ``torch.randn(64, 3, 32, 32)``
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Times
      - Mask Latency

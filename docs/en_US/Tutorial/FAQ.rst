@@ -36,7 +36,7 @@ Please try the following solutions in turn:
 Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Your machine don't have eth0 device, please set `nniManagerIp <ExperimentConfig>`__ in your config file manually.
+Your machine don't have eth0 device, please set `nniManagerIp <ExperimentConfig.rst>`__ in your config file manually.
 
 Exceed the MaxDuration but didn't stop
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ Probably it's a problem with your network config. Here is a checklist.
 NNI on Windows problems
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Please refer to `NNI on Windows <InstallationWin>`__
+Please refer to `NNI on Windows <InstallationWin.rst>`__
 
 More FAQ issues
 ^^^^^^^^^^^^^^^

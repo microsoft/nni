@@ -11,7 +11,7 @@
        apt-get install nfs-common
 
 #. 
-   Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart>`__.
+   Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 %%%%%%
 #. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this `guideline <https://kubernetes.io/docs/setup/>`__ to set up Kubernetes
 #. Download, set up, and deploy **Kubeflow** to your Kubernetes cluster. Follow this `guideline <https://www.kubeflow.org/docs/started/getting-started/>`__ to setup Kubeflow.

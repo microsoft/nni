@@ -17,6 +17,7 @@ The above-mentioned example is meant to reproduce the results in the paper, we d
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - 
      - In paper

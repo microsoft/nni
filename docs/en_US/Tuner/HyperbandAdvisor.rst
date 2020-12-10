@@ -15,7 +15,7 @@ Second, this implementation fully leverages Hyperband's internal parallelism. Sp
 
 Or if you want to set ``exec_mode`` with ``serial`` according to the original algorithm. In this mode, the next bucket will start strictly after the current bucket.
 
-``parallelism`` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under ``serial`` mode. The advantage of ``parallelism`` mode is to make full use of resources, which may reduce the experiment duration multiple times. The following two pictures are the results of quick verification using `nas-bench-201 <../NAS/Benchmarks>`__\ , picture above is in ``parallelism`` mode, picture below is in ``serial`` mode.
+``parallelism`` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under ``serial`` mode. The advantage of ``parallelism`` mode is to make full use of resources, which may reduce the experiment duration multiple times. The following two pictures are the results of quick verification using `nas-bench-201 <../NAS/Benchmarks.rst>`__\ , picture above is in ``parallelism`` mode, picture below is in ``serial`` mode.
 
 
 .. image:: ../../img/hyperband_parallelism.png
@@ -63,6 +63,7 @@ Here is a concrete example of ``R=81`` and ``eta=3``\ :
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * -
      - s=4

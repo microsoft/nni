@@ -61,7 +61,7 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 
 *Implemented code directory: :githublink:`main.py <examples/trials/cifar10_pytorch/main.py>`*
 
-You can also use your previous code directly, refer to `How to define a trial <Trials>`__ for modify.
+You can also use your previous code directly, refer to `How to define a trial <Trials.rst>`__ for modify.
 
 **Config**
 

@@ -15,6 +15,7 @@ This is CDARTS based on the NNI platform, which currently supports CIFAR10 searc
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Runs
      - Paper

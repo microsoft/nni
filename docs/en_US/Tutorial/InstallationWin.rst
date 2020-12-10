@@ -25,7 +25,7 @@ In most cases, you can install and upgrade NNI from pip package. It's easy and f
 
 If you are interested in special or the latest code versions, you can install NNI through source code.
 
-If you want to contribute to NNI, refer to `setup development environment <SetupNniDeveloperEnvironment>`__.
+If you want to contribute to NNI, refer to `setup development environment <SetupNniDeveloperEnvironment.rst>`__.
 
 
 * 
@@ -96,7 +96,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
    -----------------------------------------------------------------------
 
 
-* Open the ``Web UI url`` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. `Here <../Tutorial/WebUI>`__ are more Web UI pages.
+* Open the ``Web UI url`` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. `Here <../Tutorial/WebUI.rst>`__ are more Web UI pages.
 
 
 .. image:: ../../img/webui_overview_page.png
@@ -117,6 +117,7 @@ Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * -
      - Recommended
@@ -191,24 +192,24 @@ SMAC is not supported currently; for the specific reason refer to this `GitHub i
 Use Windows as a remote worker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Refer to `Remote Machine mode <../TrainingService/RemoteMachineMode>`__.
+Refer to `Remote Machine mode <../TrainingService/RemoteMachineMode.rst>`__.
 
 Segmentation fault (core dumped) when installing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Refer to `FAQ <FAQ>`__.
+Refer to `FAQ <FAQ.rst>`__.
 
 Further reading
 ---------------
 
 
-* `Overview <../Overview>`__
-* `Use command line tool nnictl <Nnictl>`__
-* `Use NNIBoard <WebUI>`__
-* `Define search space <SearchSpaceSpec>`__
-* `Config an experiment <ExperimentConfig>`__
-* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode>`__
-* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode>`__
-* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode>`__
-* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode>`__
-* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode>`__
+* `Overview <../Overview.rst>`__
+* `Use command line tool nnictl <Nnictl.rst>`__
+* `Use NNIBoard <WebUI.rst>`__
+* `Define search space <SearchSpaceSpec.rst>`__
+* `Config an experiment <ExperimentConfig.rst>`__
+* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode.rst>`__
+* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode.rst>`__
+* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode.rst>`__
+* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode.rst>`__
+* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode.rst>`__

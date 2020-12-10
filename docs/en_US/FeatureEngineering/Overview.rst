@@ -6,8 +6,8 @@ We are glad to announce the alpha release for Feature Engineering toolkit on top
 For now, we support the following feature selector:
 
 
-* `GradientFeatureSelector <./GradientFeatureSelector>`__
-* `GBDTSelector <./GBDTSelector>`__
+* `GradientFeatureSelector <./GradientFeatureSelector.rst>`__
+* `GBDTSelector <./GBDTSelector.rst>`__
 
 These selectors are suitable for tabular data(which means it doesn't include image, speech and text data).
 
@@ -259,6 +259,7 @@ Benchmark
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Dataset
      - All Features + LR (acc, time, memory)
@@ -312,8 +313,8 @@ Reference and Feedback
 ----------------------
 
 
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement>`__ for this feature in GitHub;
-* To know more about :githublink:`Neural Architecture Search with NNI <docs/en_US/NAS/Overview>`\ ;
-* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview>`\ ;
-* To know more about :githublink:`Hyperparameter Tuning with NNI <docs/en_US/Tuner/BuiltinTuner>`\ ;
+* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
+* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;
+* To know more about :githublink:`Neural Architecture Search with NNI <docs/en_US/NAS/Overview.rst>`\ ;
+* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview.rst>`\ ;
+* To know more about :githublink:`Hyperparameter Tuning with NNI <docs/en_US/Tuner/BuiltinTuner.rst>`\ ;

@@ -1,7 +1,7 @@
 One-shot NAS algorithms
 =======================
 
-Besides `classic NAS algorithms <./ClassicNas>`__\ , users also apply more advanced one-shot NAS algorithms to find better models from a search space. There are lots of related works about one-shot NAS algorithms, such as `SMASH <https://arxiv.org/abs/1708.05344>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1808.05377>`__\ , `FBNet <https://arxiv.org/abs/1812.03443>`__\ , `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__\ , `SPOS <https://arxiv.org/abs/1904.00420>`__\ , `Single-Path NAS <https://arxiv.org/abs/1904.02877>`__\ ,  `Understanding One-shot <http://proceedings.mlr.press/v80/bender18a>`__ and `GDAS <https://arxiv.org/abs/1910.04465>`__. One-shot NAS algorithms usually build a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
+Besides `classic NAS algorithms <./ClassicNas.rst>`__\ , users also apply more advanced one-shot NAS algorithms to find better models from a search space. There are lots of related works about one-shot NAS algorithms, such as `SMASH <https://arxiv.org/abs/1708.05344>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1808.05377>`__\ , `FBNet <https://arxiv.org/abs/1812.03443>`__\ , `ProxylessNAS <https://arxiv.org/abs/1812.00332>`__\ , `SPOS <https://arxiv.org/abs/1904.00420>`__\ , `Single-Path NAS <https://arxiv.org/abs/1904.02877>`__\ ,  `Understanding One-shot <http://proceedings.mlr.press/v80/bender18a>`__ and `GDAS <https://arxiv.org/abs/1910.04465>`__. One-shot NAS algorithms usually build a supernet containing every candidate in the search space as its subnetwork, and in each step, a subnetwork or combination of several subnetworks is trained.
 
 Currently, several one-shot NAS methods are supported on NNI. For example, ``DartsTrainer``\ , which uses SGD to train architecture weights and model weights iteratively, and ``ENASTrainer``\ , which `uses a controller to train the model <https://arxiv.org/abs/1802.03268>`__. New and more efficient NAS trainers keep emerging in research community and some will be implemented in future releases of NNI.
 
@@ -44,13 +44,13 @@ Each one-shot NAS algorithm implements a trainer, for which users can find usage
    trainer.train()  # training
    trainer.export(file="model_dir/final_architecture.json")  # export the final architecture to file
 
-``model`` is the one with `user defined search space <./WriteSearchSpace>`__. Then users should prepare training data and model evaluation metrics. To search from the defined search space, a one-shot algorithm is instantiated, called trainer (e.g., EnasTrainer). The trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usage requirements and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible.
+``model`` is the one with `user defined search space <./WriteSearchSpace.rst>`__. Then users should prepare training data and model evaluation metrics. To search from the defined search space, a one-shot algorithm is instantiated, called trainer (e.g., EnasTrainer). The trainer exposes a few arguments that you can customize. For example, the loss function, the metrics function, the optimizer, and the datasets. These should satisfy most usage requirements and we do our best to make sure our built-in trainers work on as many models, tasks, and datasets as possible.
 
 **Note that** when using one-shot NAS algorithms, there is no need to start an NNI experiment. Users can directly run this Python script (i.e., ``train.py``\ ) through ``python3 train.py`` without ``nnictl``. After training, users can export the best one of the found models through ``trainer.export()``.
 
-Each trainer in NNI has its targeted scenario and usage. Some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps). Most trainers do not have support for distributed training: they won't wrap your model with ``DataParallel`` or ``DistributedDataParallel`` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to `customize your trainer <./Advanced#extend-the-ability-of-one-shot-trainers>`__.
+Each trainer in NNI has its targeted scenario and usage. Some trainers have the assumption that the task is a classification task; some trainers might have a different definition of "epoch" (e.g., an ENAS epoch = some child steps + some controller steps). Most trainers do not have support for distributed training: they won't wrap your model with ``DataParallel`` or ``DistributedDataParallel`` to do that. So after a few tryouts, if you want to actually use the trainers on your very customized applications, you might need to `customize your trainer <./Advanced.rst#extend-the-ability-of-one-shot-trainers>`__.
 
-Furthermore, one-shot NAS can be visualized with our NAS UI. `See more details. <./Visualization>`__
+Furthermore, one-shot NAS can be visualized with our NAS UI. `See more details. <./Visualization.rst>`__
 
 Retrain with Exported Architecture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,4 +85,4 @@ For example,
 
 After applying, the model is then fixed and ready for final training. The model works as a single model, and unused parameters and modules are pruned.
 
-Also, refer to `DARTS <./DARTS>`__ for code exemplifying retraining.
+Also, refer to `DARTS <./DARTS.rst>`__ for code exemplifying retraining.

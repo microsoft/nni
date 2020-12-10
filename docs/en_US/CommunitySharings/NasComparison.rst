@@ -27,6 +27,7 @@ To avoid over-fitting in **CIFAR-10**\ , we also compare the models in the other
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Dataset
      - Training Size
@@ -71,6 +72,7 @@ NAS Performance
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - NAS
      - AutoKeras (%)
@@ -122,6 +124,7 @@ The best or average results reported in the paper:
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - NAS
      - AutoKeras(%)

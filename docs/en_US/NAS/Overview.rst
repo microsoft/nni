@@ -23,6 +23,7 @@ The procedure of classic NAS algorithms is similar to hyper-parameter tuning, us
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name
      - Brief Introduction of Algorithm
@@ -32,7 +33,7 @@ The procedure of classic NAS algorithms is similar to hyper-parameter tuning, us
      - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
 
 
-Please refer to `here <ClassicNas>`__ for the usage of classic NAS algorithms.
+Please refer to `here <ClassicNas.rst>`__ for the usage of classic NAS algorithms.
 
 Supported One-shot NAS Algorithms
 ---------------------------------
@@ -41,6 +42,7 @@ NNI currently supports the one-shot NAS algorithms listed below and is adding mo
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name
      - Brief Introduction of Algorithm
@@ -69,9 +71,9 @@ Here are some common dependencies to run the examples. PyTorch needs to be above
 * PyTorch 1.2+
 * git
 
-Please refer to `here <NasGuide>`__ for the usage of one-shot NAS algorithms.
+Please refer to `here <NasGuide.rst>`__ for the usage of one-shot NAS algorithms.
 
-One-shot NAS can be visualized with our visualization tool. Learn more details `here <./Visualization>`__.
+One-shot NAS can be visualized with our visualization tool. Learn more details `here <./Visualization.rst>`__.
 
 Search Space Zoo
 ----------------
@@ -81,10 +83,10 @@ NNI provides some predefined search space which can be easily reused. By stackin
 Search Space Zoo contains the following NAS cells:
 
 
-* `DartsCell <./SearchSpaceZoo#DartsCell>`__
-* `ENAS micro <./SearchSpaceZoo#ENASMicroLayer>`__
-* `ENAS macro <./SearchSpaceZoo#ENASMacroLayer>`__
-* `NAS Bench 201 <./SearchSpaceZoo#nas-bench-201>`__
+* `DartsCell <./SearchSpaceZoo.rst#DartsCell>`__
+* `ENAS micro <./SearchSpaceZoo.rst#ENASMicroLayer>`__
+* `ENAS macro <./SearchSpaceZoo.rst#ENASMacroLayer>`__
+* `NAS Bench 201 <./SearchSpaceZoo.rst#nas-bench-201>`__
 
 Using NNI API to Write Your Search Space
 ----------------------------------------
@@ -95,16 +97,16 @@ The programming interface of designing and searching a model is often demanded i
 #. When designing a neural network, there may be multiple operation choices on a layer, sub-model, or connection, and it's undetermined which one or combination performs best. So, it needs an easy way to express the candidate layers or sub-models.
 #. When applying NAS on a neural network, it needs a unified way to express the search space of architectures, so that it doesn't need to update trial code for different search algorithms.
 
-For using NNI NAS, we suggest users to first go through `the tutorial of NAS API for building search space <./WriteSearchSpace>`__.
+For using NNI NAS, we suggest users to first go through `the tutorial of NAS API for building search space <./WriteSearchSpace.rst>`__.
 
 NAS Visualization
 -----------------
 
-To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to `the document of NAS visualization <./Visualization>`__ for how to use it.
+To help users track the process and status of how the model is searched under specified search space, we developed a visualization tool. It visualizes search space as a super-net and shows importance of subnets and layers/operations, as well as how the importance changes along with the search process. Please refer to `the document of NAS visualization <./Visualization.rst>`__ for how to use it.
 
 Reference and Feedback
 ----------------------
 
 
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement>`__ for this feature in GitHub.
+* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
+* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub.

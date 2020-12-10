@@ -35,7 +35,7 @@ The experiments are performed with the following pruners/datasets/models:
     For the pruners with scheduling, ``L1Filter Pruner`` is used as the base algorithm. That is to say, after the sparsities distribution is decided by the scheduling algorithm, ``L1Filter Pruner`` is used to performn real pruning.
 
   * 
-    All the pruners listed above are implemented in :githublink:`nni <docs/en_US/Compression/Overview>`.
+    All the pruners listed above are implemented in :githublink:`nni <docs/en_US/Compression/Overview.rst>`.
 
 Experiment Result
 -----------------
@@ -92,7 +92,7 @@ Implementation Details
   The experiment results are all collected with the default configuration of the pruners in nni, which means that when we call a pruner class in nni, we don't change any default class arguments.
 
 * 
-  Both FLOPs and the number of parameters are counted with :githublink:`Model FLOPs/Parameters Counter <docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter>` after :githublink:`model speed up <docs/en_US/Compression/ModelSpeedup>`.
+  Both FLOPs and the number of parameters are counted with :githublink:`Model FLOPs/Parameters Counter <docs/en_US/Compression/CompressionUtils.md#model-flopsparameters-counter>` after :githublink:`model speed up <docs/en_US/Compression/ModelSpeedup.rst>`.
   This avoids potential issues of counting them of masked models.
 
 * 

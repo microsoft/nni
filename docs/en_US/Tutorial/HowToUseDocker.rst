@@ -46,7 +46,7 @@ Step 3: Run NNI in a Docker container
 
 If you start a Docker image using NNI's official image ``msranni/nni``\ , you can directly start NNI experiments by using the ``nnictl`` command. Our official image has NNI's running environment and basic python and deep learning frameworks preinstalled.
 
-If you start your own Docker image, you may need to install the NNI package first; please refer to `NNI installation <InstallationLinux>`__.
+If you start your own Docker image, you may need to install the NNI package first; please refer to `NNI installation <InstallationLinux.rst>`__.
 
 If you want to run NNI's official examples, you may need to clone the NNI repo in GitHub using
 
@@ -56,12 +56,12 @@ If you want to run NNI's official examples, you may need to clone the NNI repo i
 
 then you can enter ``nni/examples/trials`` to start an experiment.
 
-After you prepare NNI's environment, you can start a new experiment using the ``nnictl`` command. `See here <QuickStart>`__.
+After you prepare NNI's environment, you can start a new experiment using the ``nnictl`` command. `See here <QuickStart.rst>`__.
 
 Using Docker on a remote platform
 ---------------------------------
 
-NNI supports starting experiments in `remoteTrainingService <../TrainingService/RemoteMachineMode>`__\ , and running trial jobs on remote machines. As Docker can start an independent Ubuntu system as an SSH server, a Docker container can be used as the remote machine in NNI's remote mode.
+NNI supports starting experiments in `remoteTrainingService <../TrainingService/RemoteMachineMode.rst>`__\ , and running trial jobs on remote machines. As Docker can start an independent Ubuntu system as an SSH server, a Docker container can be used as the remote machine in NNI's remote mode.
 
 Step 1: Setting a Docker environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -99,7 +99,7 @@ Note:
 Step 3: Run NNI experiments
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can set your config file as a remote platform and set the ``machineList`` configuration to connect to your Docker SSH server; `refer to this <../TrainingService/RemoteMachineMode>`__. Note that you should set the correct ``port``\ , ``username``\ , and ``passWd`` or ``sshKeyPath`` of your host machine.
+You can set your config file as a remote platform and set the ``machineList`` configuration to connect to your Docker SSH server; `refer to this <../TrainingService/RemoteMachineMode.rst>`__. Note that you should set the correct ``port``\ , ``username``\ , and ``passWd`` or ``sshKeyPath`` of your host machine.
 
 ``port:`` The host machine's port, mapping to Docker's SSH port.
 
@@ -109,4 +109,4 @@ You can set your config file as a remote platform and set the ``machineList`` co
 
 ``sshKeyPath:`` The path of the private key of the Docker container.
 
-After the configuration of the config file, you could start an experiment, `refer to this <QuickStart>`__.
+After the configuration of the config file, you could start an experiment, `refer to this <QuickStart.rst>`__.

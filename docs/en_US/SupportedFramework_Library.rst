@@ -50,7 +50,7 @@ Supported AI Frameworks
 * :raw-html:`<b>[Chainer]</b>` https://chainer.org/
 * :raw-html:`<b>[Theano]</b>` https://pypi.org/project/Theano/ :raw-html:`<br/>`
 
-You are encouraged to `contribute more examples <Tutorial/Contributing>`__ for other NNI users. 
+You are encouraged to `contribute more examples <Tutorial/Contributing.rst>`__ for other NNI users. 
 
 Supported Library
 -----------------
@@ -74,6 +74,6 @@ NNI also supports all libraries written in python.Here are some common libraries
     <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
     </ul>`
 
-Here is just a small list of libraries that supported by NNI. If you are interested in NNI, you can refer to the `tutorial <TrialExample/Trials>`__ to complete your own hacks.
+Here is just a small list of libraries that supported by NNI. If you are interested in NNI, you can refer to the `tutorial <TrialExample/Trials.rst>`__ to complete your own hacks.
 
-In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer `Write a Trial Run on NNI <TrialExample/Trials.md>`__. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to `here <Tutorial/Contributing>`__.
+In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer `Write a Trial Run on NNI <TrialExample/Trials.md>`__. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to `here <Tutorial/Contributing.rst>`__.

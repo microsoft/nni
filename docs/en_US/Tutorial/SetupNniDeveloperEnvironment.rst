@@ -69,4 +69,4 @@ All changes are merged to master branch from your forked repo. The description o
 
 We will review the changes as soon as possible. Once it passes review, we will merge it to master branch.
 
-For more contribution guidelines and coding styles, you can refer to the `contributing document <Contributing>`__.
+For more contribution guidelines and coding styles, you can refer to the `contributing document <Contributing.rst>`__.

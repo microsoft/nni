@@ -12,7 +12,7 @@ NNI supports running an experiment on `OpenPAI <https://github.com/Microsoft/pai
 Setup environment
 -----------------
 
-**Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart>`__.**   
+**Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.**   
 
 **Step 2. Get token.**
 
@@ -102,7 +102,7 @@ Note: You should set ``trainingServicePlatform: pai`` in NNI config YAML file if
 Trial configurations
 ^^^^^^^^^^^^^^^^^^^^
 
-Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachineMode>`__\ , ``trial`` configuration in pai mode has the following additional keys:
+Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , ``trial`` configuration in pai mode has the following additional keys:
 
 
 * 

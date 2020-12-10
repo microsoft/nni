@@ -292,13 +292,13 @@ Specifies the platform to run the experiment, including **local**\ ,** remote**\
   **remote** submit trial jobs to remote ubuntu machines, and** machineList** field should be filed in order to set up SSH connection to remote machine.
 
 * 
-  **pai**  submit trial jobs to `OpenPAI <https://github.com/Microsoft/pai>`__ of Microsoft. For more details of pai configuration, please refer to `Guide to PAI Mode <../TrainingService/PaiMode>`__
+  **pai**  submit trial jobs to `OpenPAI <https://github.com/Microsoft/pai>`__ of Microsoft. For more details of pai configuration, please refer to `Guide to PAI Mode <../TrainingService/PaiMode.rst>`__
 
 * 
-  **kubeflow** submit trial jobs to `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI support kubeflow based on normal kubernetes and `azure kubernetes <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__. For detail please refer to `Kubeflow Docs <../TrainingService/KubeflowMode>`__
+  **kubeflow** submit trial jobs to `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI support kubeflow based on normal kubernetes and `azure kubernetes <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__. For detail please refer to `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__
 
 * 
-  **adl** submit trial jobs to `AdaptDL <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI support AdaptDL on Kubernetes cluster. For detail please refer to `AdaptDL Docs <../TrainingService/AdaptDLMode>`__
+  **adl** submit trial jobs to `AdaptDL <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI support AdaptDL on Kubernetes cluster. For detail please refer to `AdaptDL Docs <../TrainingService/AdaptDLMode.rst>`__
 
 * 
   TODO: explain frameworkcontroller.
@@ -363,14 +363,14 @@ tuner
 
 Required.
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set**builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case** codeDirectory**\ ,** classFileName**\ ,** className** and** classArgs** are needed. *Users must choose exactly one way.*
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and****. Another way is to use users' own tuner file, in which case****\ ,** classFileName**\ ,** className** and**** are needed. *Users must choose exactly one way.*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
 
 Required if using built-in tuners. String.
 
-Specifies the name of system tuner, NNI sdk provides different tuners introduced `here <../Tuner/BuiltinTuner>`__.
+Specifies the name of system tuner, NNI sdk provides different tuners introduced `here <../Tuner/BuiltinTuner.rst>`__.
 
 codeDir
 ^^^^^^^
@@ -398,7 +398,7 @@ classArgs
 
 Optional. Key-value pairs. Default: empty.
 
-Specifies the arguments of tuner algorithm. Please refer to `this file <../Tuner/BuiltinTuner>`__ for the configurable arguments of each built-in tuner.
+Specifies the arguments of tuner algorithm. Please refer to `this file <../Tuner/BuiltinTuner.rst>`__ for the configurable arguments of each built-in tuner.
 
 gpuIndices
 ^^^^^^^^^^
@@ -417,7 +417,7 @@ If **includeIntermediateResults** is true, the last intermediate result of the t
 assessor
 ^^^^^^^^
 
-Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and** classArgs**. Another way is to use users' own assessor file, and users need to set** codeDirectory**\ ,** classFileName**\ ,** className** and** classArgs**. *Users must choose exactly one way.*
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and****. Another way is to use users' own assessor file, and users need to set****\ ,** classFileName**\ ,** className** and****. *Users must choose exactly one way.*
 
 By default, there is no assessor enabled.
 
@@ -426,7 +426,7 @@ builtinAssessorName
 
 Required if using built-in assessors. String.
 
-Specifies the name of built-in assessor, NNI sdk provides different assessors introduced `here <../Assessor/BuiltinAssessor>`__.
+Specifies the name of built-in assessor, NNI sdk provides different assessors introduced `here <../Assessor/BuiltinAssessor.rst>`__.
 
 codeDir
 ^^^^^^^
@@ -461,14 +461,14 @@ advisor
 
 Optional.
 
-Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and** classArgs**. Another way is to use users' own advisor file, and need to set** codeDirectory**\ ,** classFileName**\ ,** className** and** classArgs**.
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and****. Another way is to use users' own advisor file, and need to set****\ ,** classFileName**\ ,** className** and****.
 
 When advisor is enabled, settings of tuners and advisors will be bypassed.
 
 builtinAdvisorName
 ^^^^^^^^^^^^^^^^^^
 
-Specifies the name of a built-in advisor. NNI sdk provides `BOHB <../Tuner/BohbAdvisor.md>`__ and `Hyperband <../Tuner/HyperbandAdvisor>`__.
+Specifies the name of a built-in advisor. NNI sdk provides `BOHB <../Tuner/BohbAdvisor.md>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__.
 
 codeDir
 ^^^^^^^
@@ -544,13 +544,13 @@ In PAI mode, the following keys are required.
   **image**\ : Required string. Set the image to be used in pai.
 
 * 
-  **authFile**\ : Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. `Reference <https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job>`__.
+  **authFile**\ : Optional string. Used to provide Docker registry which needs authentication for image pull in PAI. `Reference <https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.rst#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job>`__.
 
 * 
   **shmMB**\ : Optional integer. Shared memory size of container.
 
 * 
-  **portList**\ : List of key-values pairs with ``label``\ , ``beginAt``\ , ``portNumber``. See `job tutorial of PAI <https://github.com/microsoft/pai/blob/master/docs/job_tutorial>`__ for details.
+  **portList**\ : List of key-values pairs with ``label``\ , ``beginAt``\ , ``portNumber``. See `job tutorial of PAI <https://github.com/microsoft/pai/blob/master/docs/job_tutorial.rst>`__ for details.
 
 In Kubeflow mode, the following keys are required.
 
@@ -563,44 +563,44 @@ In Kubeflow mode, the following keys are required.
 
 
   * 
-    **replicas**\ : The replica number of** ps** role.
+    **replicas**\ : The replica number of**** role.
 
   * 
-    **command**\ : The run script in** ps**\ 's container.
+    **command**\ : The run script in****\ 's container.
 
   * 
-    **gpuNum**\ : The gpu number to be used in** ps** container.
+    **gpuNum**\ : The gpu number to be used in**** container.
 
   * 
-    **cpuNum**\ : The cpu number to be used in** ps** container.
+    **cpuNum**\ : The cpu number to be used in**** container.
 
   * 
     **memoryMB**\ : The memory size of the container.
 
   * 
-    **image**\ : The image to be used in** ps**.
+    **image**\ : The image to be used in****.
 
 * 
   **worker**\ : An optional configuration for kubeflow's tensorflow-operator.
 
 
   * 
-    **replicas**\ : The replica number of** worker** role.
+    **replicas**\ : The replica number of**** role.
 
   * 
-    **command**\ : The run script in** worker**\ 's container.
+    **command**\ : The run script in****\ 's container.
 
   * 
-    **gpuNum**\ : The gpu number to be used in** worker** container.
+    **gpuNum**\ : The gpu number to be used in**** container.
 
   * 
-    **cpuNum**\ : The cpu number to be used in** worker** container.
+    **cpuNum**\ : The cpu number to be used in**** container.
 
   * 
     **memoryMB**\ : The memory size of the container.
 
   * 
-    **image**\ : The image to be used in** worker**.
+    **image**\ : The image to be used in****.
 
 localConfig
 ^^^^^^^^^^^
@@ -707,7 +707,7 @@ Optional. String.
 
 Specifies the pre-command that will be executed before the remote machine executes other commands. Users can configure the experimental environment on remote machine by setting **preCommand**. If there are multiple commands need to execute, use ``&&`` to connect them, such as ``preCommand: command1 && command2 && ...``.
 
-**Note**\ : Because** preCommand** will execute before other commands each time, it is strongly not recommended to set** preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+**Note**\ : Because**** will execute before other commands each time, it is strongly not recommended to set**** that will make changes to system, i.e. ``mkdir`` or ``touch``.
 
 remoteConfig
 ^^^^^^^^^^^^

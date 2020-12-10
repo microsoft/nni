@@ -149,6 +149,7 @@ We also compared the case of using parallel optimization and not using parallel 
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - 
      - concurrency=80

@@ -10,7 +10,7 @@ The original ``pai`` mode is modificated to ``paiYarn`` mode, which is a distrib
 Setup environment
 -----------------
 
-Install NNI, follow the install guide `here <../Tutorial/QuickStart>`__.
+Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
 Run an experiment
 -----------------
@@ -52,7 +52,7 @@ Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's con
 
 Note: You should set ``trainingServicePlatform: paiYarn`` in NNI config YAML file if you want to start experiment in paiYarn mode.
 
-Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachineMode>`__\ , trial configuration in paiYarn mode have these additional keys:
+Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , trial configuration in paiYarn mode have these additional keys:
 
 
 * cpuNum
@@ -78,14 +78,14 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
 
 * authFile
 
-  * Optional key, Set the auth file path for private registry while using paiYarn mode, `Refer <https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job>`__\ , you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
+  * Optional key, Set the auth file path for private registry while using paiYarn mode, `Refer <https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.rst#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job>`__\ , you can prepare the authFile and simply provide the local path of this file, NNI will upload this file to HDFS for you.
 
 * 
   portList  
 
 
   * 
-    Optional key. Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, `Refer <https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial#specification>`__.\ :raw-html:`<br>`
+    Optional key. Set the portList configuration of OpenpaiYarn, it specifies a list of port used in container, `Refer <https://github.com/microsoft/paiYarn/blob/b2324866d0280a2d22958717ea6025740f71b9f0/docs/job_tutorial.rst#specification>`__.\ :raw-html:`<br>`
     The config schema in NNI is shown below:
 
     .. code-block:: bash
@@ -114,7 +114,7 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
          beginAt: 0
          portNumber: 1
 
-NNI support two kind of authorization method in paiYarn, including password and paiYarn token, `refer <https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API#2-authentication>`__. The authorization is configured in ``paiYarnConfig`` field.\ :raw-html:`<br>`
+NNI support two kind of authorization method in paiYarn, including password and paiYarn token, `refer <https://github.com/microsoft/paiYarn/blob/b6bd2ab1c8890f91b7ac5859743274d2aa923c22/docs/rest-server/API.rst#2-authentication>`__. The authorization is configured in ``paiYarnConfig`` field.\ :raw-html:`<br>`
 For password authorization, the ``paiYarnConfig`` schema is:
 
 .. code-block:: bash
@@ -170,7 +170,7 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 data management
 ---------------
 
-If your training data is not too large, it could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the `guidance <https://github.com/microsoft/paiYarn/blob/master/docs/user/storage>`__ to mount the data folder in container.
+If your training data is not too large, it could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the `guidance <https://github.com/microsoft/paiYarn/blob/master/docs/user/storage.rst>`__ to mount the data folder in container.
 
 If you also want to save trial's other output into HDFS, like model files, you can use environment variable ``NNI_OUTPUT_DIR`` in your trial code to save your own output files, and NNI SDK will copy all the files in ``NNI_OUTPUT_DIR`` from trial's container to HDFS, the target path is ``hdfs://host:port/{username}/nni/{experiments}/{experimentId}/trials/{trialId}/nnioutput``
 

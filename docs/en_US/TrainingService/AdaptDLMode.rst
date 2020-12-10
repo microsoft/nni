@@ -14,7 +14,7 @@ Prerequisite for Kubernetes Service
 #. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the** KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
 #. If your NNI trial job needs GPU resource, you should follow this `guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure **Nvidia device plugin for Kubernetes**.
 #. (Optional) Prepare a **NFS server** and export a general purpose mount as external storage.
-#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart>`__.
+#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
 Verify Prerequisites
 ^^^^^^^^^^^^^^^^^^^^
@@ -111,7 +111,7 @@ The ``adl`` training service can then mount it to the kubernetes for every trial
 
 * **server**\ : NFS server address, e.g. IP address or domain
 * **path**\ : NFS server export path, i.e. the absolute path in NFS that can be mounted to trials
-* **containerMountPath**\ : In container absolute path to mount the NFS** path** above,
+* **containerMountPath**\ : In container absolute path to mount the NFS**** above,
   so that every trial will have the access to the NFS.
   In the trial containers, you can access the NFS with this path.
 

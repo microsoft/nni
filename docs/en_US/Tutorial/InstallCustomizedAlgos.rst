@@ -4,9 +4,9 @@
 Overview
 --------
 
-NNI provides a lot of `builtin tuners <../Tuner/BuiltinTuner.md>`__\ , `advisors <../Tuner/HyperbandAdvisor.md>`__ and `assessors <../Assessor/BuiltinAssessor>`__ can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via ``nnictl package install --name <name>`` after NNI is installed. You can check these extra algorithms via ``nnictl package list`` command.
+NNI provides a lot of `builtin tuners <../Tuner/BuiltinTuner.md>`__\ , `advisors <../Tuner/HyperbandAdvisor.md>`__ and `assessors <../Assessor/BuiltinAssessor.rst>`__ can be used directly for Hyper Parameter Optimization, and some extra algorithms can be installed via ``nnictl package install --name <name>`` after NNI is installed. You can check these extra algorithms via ``nnictl package list`` command.
 
-NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of `customized tuners <../Tuner/CustomizeTuner.md>`__\ /\ `advisors <../Tuner/CustomizeAdvisor.md>`__\ /\ `assessors <../Assessor/CustomizeAssessor>`__.
+NNI also provides the ability to build your own customized tuners, advisors and assessors. To use the customized algorithm, users can simply follow the spec in experiment config file to properly reference the algorithm, which has been illustrated in the tutorials of `customized tuners <../Tuner/CustomizeTuner.md>`__\ /\ `advisors <../Tuner/CustomizeAdvisor.md>`__\ /\ `assessors <../Assessor/CustomizeAssessor.rst>`__.
 
 NNI also allows users to install the customized algorithm as a builtin algorithm, in order for users to use the algorithm in the same way as NNI builtin tuners/advisors/assessors. More importantly, it becomes much easier for users to share or distribute their implemented algorithm to others. Customized tuners/advisors/assessors can be installed into NNI as builtin algorithms, once they are installed into NNI, you can use your customized algorithms the same way as builtin tuners/advisors/assessors in your experiment configuration file. For example, you built a customized tuner and installed it into NNI using a builtin name ``mytuner``\ , then you can use this tuner in your configuration file like below:
 
@@ -26,9 +26,9 @@ You can follow below steps to build a customized tuner/assessor/advisor, and ins
 Reference following instructions to create:
 
 
-* `customized tuner <../Tuner/CustomizeTuner>`__
-* `customized assessor <../Assessor/CustomizeAssessor>`__
-* `customized advisor <../Tuner/CustomizeAdvisor>`__
+* `customized tuner <../Tuner/CustomizeTuner.rst>`__
+* `customized assessor <../Assessor/CustomizeAssessor.rst>`__
+* `customized advisor <../Tuner/CustomizeAdvisor.rst>`__
 
 2. (Optional) Create a validator to validate classArgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,7 +98,7 @@ Once you have the meta info in ``setup.py``\ , you can build your pip installati
 
 NNI will look for the classifier starts with ``NNI Package`` to retrieve the package meta information while the package being installed with ``nnictl package install <source>`` command.
 
-Reference `customized tuner example <../Tuner/InstallCustomizedTuner>`__ for a full example.
+Reference `customized tuner example <../Tuner/InstallCustomizedTuner.rst>`__ for a full example.
 
 4. Install customized algorithms package into NNI
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

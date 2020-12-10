@@ -61,6 +61,7 @@ nnictl create
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -144,6 +145,7 @@ nnictl resume
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -203,6 +205,7 @@ nnictl view
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -254,6 +257,7 @@ nnictl stop
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -339,6 +343,7 @@ nnictl update
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -386,6 +391,7 @@ nnictl update
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -436,6 +442,7 @@ nnictl update
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -486,6 +493,7 @@ nnictl update
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -543,6 +551,7 @@ nnictl trial
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -584,6 +593,7 @@ nnictl trial
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -635,6 +645,7 @@ nnictl top
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -677,6 +688,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -710,6 +722,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -743,6 +756,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -776,6 +790,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -813,6 +828,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -871,6 +887,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -953,6 +970,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1007,6 +1025,7 @@ Manage experiment information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1075,6 +1094,7 @@ Manage platform information
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1131,6 +1151,7 @@ Manage log
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1189,6 +1210,7 @@ Manage log
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1234,6 +1256,7 @@ Manage log
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1276,6 +1299,7 @@ Manage webui
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1314,6 +1338,7 @@ Manage tensorboard
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1366,6 +1391,7 @@ Manage tensorboard
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1407,7 +1433,7 @@ Manage package
 
        nnictl package install <installation source>
 
-    Reference `Install customized algorithms <InstallCustomizedAlgos>`__ to prepare the installation source.
+    Reference `Install customized algorithms <InstallCustomizedAlgos.rst>`__ to prepare the installation source.
 
   * 
     Example
@@ -1475,6 +1501,7 @@ Manage package
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required
@@ -1560,6 +1587,7 @@ Generate search space
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name, shorthand
      - Required

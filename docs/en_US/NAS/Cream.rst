@@ -18,6 +18,7 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model (M Flops)
      - 8Gpus

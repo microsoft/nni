@@ -13,6 +13,7 @@ Currently, we support the following Assessors:
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Assessor
      - Brief Introduction of Algorithm
@@ -25,7 +26,7 @@ Currently, we support the following Assessors:
 Usage of Builtin Assessors
 --------------------------
 
-Usage of builtin assessors provided by the NNI SDK requires one to declare the  **builtinAssessorName** and** classArgs** in the ``config.yml`` file. In this part, we will introduce the details of usage and the suggested scenarios, classArg requirements, and an example for each assessor.
+Usage of builtin assessors provided by the NNI SDK requires one to declare the  **builtinAssessorName** and**** in the ``config.yml`` file. In this part, we will introduce the details of usage and the suggested scenarios, classArg requirements, and an example for each assessor.
 
 Note: Please follow the provided format when writing your ``config.yml`` file.
 
@@ -41,12 +42,12 @@ Median Stop Assessor
 
 **Suggested scenario**
 
-It's applicable in a wide range of performance curves, thus, it can be used in various scenarios to speed up the tuning progress. `Detailed Description <./MedianstopAssessor>`__
+It's applicable in a wide range of performance curves, thus, it can be used in various scenarios to speed up the tuning progress. `Detailed Description <./MedianstopAssessor.rst>`__
 
 **classArgs requirements:**
 
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', assessor will** stop** the trial with smaller expectation. If 'minimize', assessor will** stop** the trial with larger expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', assessor will**** the trial with smaller expectation. If 'minimize', assessor will**** the trial with larger expectation.
 * **start_step** (*int, optional, default = 0*\ ) - A trial is determined to be stopped or not only after receiving start_step number of reported intermediate results.
 
 **Usage example:**
@@ -74,7 +75,7 @@ Curve Fitting Assessor
 
 **Suggested scenario**
 
-It's applicable in a wide range of performance curves, thus, it can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance. `Detailed Description <./CurvefittingAssessor>`__
+It's applicable in a wide range of performance curves, thus, it can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance. `Detailed Description <./CurvefittingAssessor.rst>`__
 
 **Note**\ , according to the original paper, only incremental functions are supported. Therefore this assessor can only be used to maximize optimization metrics. For example, it can be used for accuracy, but not for loss.
 

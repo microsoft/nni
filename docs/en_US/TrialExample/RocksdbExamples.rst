@@ -8,7 +8,7 @@ Overview
 
 The performance of RocksDB is highly contingent on its tuning. However, because of the complexity of its underlying technology and a large number of configurable parameters, a good configuration is sometimes hard to obtain. NNI can help to address this issue. NNI supports many kinds of tuning algorithms to search the best configuration of RocksDB, and support many kinds of environments like local machine, remote servers and cloud. 
 
-This example illustrates how to use NNI to search the best configuration of RocksDB for a ``fillrandom`` benchmark supported by a benchmark tool ``db_bench``\ , which is an official benchmark tool provided by RocksDB itself. Therefore, before running this example, please make sure NNI is installed and `\ ``db_bench`` <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ is in your ``PATH``. Please refer to `here <../Tutorial/QuickStart.md>`__ for detailed information about installation and preparing of NNI environment, and `here <https://github.com/facebook/rocksdb/blob/master/INSTALL>`__ for compiling RocksDB as well as ``db_bench``.
+This example illustrates how to use NNI to search the best configuration of RocksDB for a ``fillrandom`` benchmark supported by a benchmark tool ``db_bench``\ , which is an official benchmark tool provided by RocksDB itself. Therefore, before running this example, please make sure NNI is installed and `\ ``db_bench`` <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ is in your ``PATH``. Please refer to `here <../Tutorial/QuickStart.md>`__ for detailed information about installation and preparing of NNI environment, and `here <https://github.com/facebook/rocksdb/blob/master/INSTALL.rst>`__ for compiling RocksDB as well as ``db_bench``.
 
 We also provide a simple script :githublink:`db_bench_installation.sh <examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh>` helping to compile and install ``db_bench`` as well as its dependencies on Ubuntu. Installing RocksDB on other systems can follow the same procedure.
 
@@ -24,7 +24,7 @@ Search Space
 
 For simplicity, this example tunes three parameters, ``write_buffer_size``\ , ``min_write_buffer_num`` and ``level0_file_num_compaction_trigger``\ , for writing 16M keys with 20 Bytes of key size and 100 Bytes of value size randomly, based on writing operations per second (OPS). ``write_buffer_size`` sets the size of a single memtable. Once memtable exceeds this size, it is marked immutable and a new one is created. ``min_write_buffer_num`` is the minimum number of memtables to be merged before flushing to storage. Once the number of files in level 0 reaches ``level0_file_num_compaction_trigger``\ , level 0 to level 1 compaction is triggered.
 
-In this example, the search space is specified by a ``search_space.json`` file as shown below. Detailed explanation of search space could be found `here <../Tutorial/SearchSpaceSpec>`__.
+In this example, the search space is specified by a ``search_space.json`` file as shown below. Detailed explanation of search space could be found `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
 .. code-block:: json
 
@@ -48,7 +48,7 @@ In this example, the search space is specified by a ``search_space.json`` file a
 Benchmark code
 ^^^^^^^^^^^^^^
 
-Benchmark code should receive a configuration from NNI manager, and report the corresponding benchmark result back. Following NNI APIs are designed for this purpose. In this example, writing operations per second (OPS) is used as a performance metric. Please refer to `here <Trials>`__ for detailed information.
+Benchmark code should receive a configuration from NNI manager, and report the corresponding benchmark result back. Following NNI APIs are designed for this purpose. In this example, writing operations per second (OPS) is used as a performance metric. Please refer to `here <Trials.rst>`__ for detailed information.
 
 
 * Use ``nni.get_next_parameter()`` to get next system configuration.
@@ -59,7 +59,7 @@ Benchmark code should receive a configuration from NNI manager, and report the c
 Config file
 ^^^^^^^^^^^
 
-One could start a NNI experiment with a config file. A config file for NNI is a ``yaml`` file usually including experiment settings (\ ``trialConcurrency``\ , ``maxExecDuration``\ , ``maxTrialNum``\ , ``trial gpuNum``\ , etc.), platform settings (\ ``trainingServicePlatform``\ , etc.), path settings (\ ``searchSpacePath``\ , ``trial codeDir``\ , etc.) and tuner settings (\ ``tuner``\ , ``tuner optimize_mode``\ , etc.). Please refer to `here <../Tutorial/QuickStart>`__ for more information.
+One could start a NNI experiment with a config file. A config file for NNI is a ``yaml`` file usually including experiment settings (\ ``trialConcurrency``\ , ``maxExecDuration``\ , ``maxTrialNum``\ , ``trial gpuNum``\ , etc.), platform settings (\ ``trainingServicePlatform``\ , etc.), path settings (\ ``searchSpacePath``\ , ``trial codeDir``\ , etc.) and tuner settings (\ ``tuner``\ , ``tuner optimize_mode``\ , etc.). Please refer to `here <../Tutorial/QuickStart.rst>`__ for more information.
 
 Here is an example of tuning RocksDB with SMAC algorithm:
 
@@ -69,7 +69,7 @@ Here is an example of tuning RocksDB with TPE algorithm:
 
 *code directory: :githublink:`example/trials/systems/rocksdb-fillrandom/config_tpe.yml <examples/trials/systems/rocksdb-fillrandom/config_tpe.yml>`*
 
-Other tuners can be easily adopted in the same way. Please refer to `here <../Tuner/BuiltinTuner>`__ for more information.
+Other tuners can be easily adopted in the same way. Please refer to `here <../Tuner/BuiltinTuner.rst>`__ for more information.
 
 Finally, we could enter the example folder and start the experiment using following commands:
 

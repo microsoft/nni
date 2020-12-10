@@ -7,7 +7,7 @@ HyperParameter Tuning with NNI Built-in Tuners
 
 To fit a machine/deep learning model into different tasks/problems, hyperparameters always need to be tuned. Automating the process of hyperparaeter tuning always requires a good tuning algorithm. NNI has provided state-of-the-art tuning algorithms as part of our built-in tuners and makes them easy to use. Below is the brief summary of NNI's current built-in tuners:
 
-Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an `article <../CommunitySharings/HpoComparison>`__ comparing different Tuners on several problems.
+Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario, and an example configuration. A link for a detailed description of each algorithm is located at the end of the suggested scenario for each tuner. Here is an `article <../CommunitySharings/HpoComparison.rst>`__ comparing different Tuners on several problems.
 
 Currently, we support the following algorithms:
 
@@ -50,7 +50,7 @@ Currently, we support the following algorithms:
 Usage of Built-in Tuners
 ------------------------
 
-Using a built-in tuner provided by the NNI SDK requires one to declare the **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
+Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and**** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
 Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners need to be installed using ``nnictl package``\ , like SMAC.
 
@@ -66,14 +66,14 @@ TPE
 
 **Suggested scenario**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./HyperoptTuner>`__
+TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./HyperoptTuner.rst>`__
 
 **classArgs Requirements:**
 
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
 
-Note: We have optimized the parallelism of TPE for large-scale trial concurrency. For the principle of optimization or turn-on optimization, please refer to `TPE document <./HyperoptTuner>`__.
+Note: We have optimized the parallelism of TPE for large-scale trial concurrency. For the principle of optimization or turn-on optimization, please refer to `TPE document <./HyperoptTuner.rst>`__.
 
 **Example Configuration:**
 
@@ -99,7 +99,7 @@ Random Search
 
 **Suggested scenario**
 
-Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./HyperoptTuner>`__
+Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./HyperoptTuner.rst>`__
 
 **Example Configuration:**
 
@@ -123,7 +123,7 @@ Anneal
 
 **Suggested scenario**
 
-Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. `Detailed Description <./HyperoptTuner>`__
+Anneal is suggested when each trial does not take very long and you have enough computation resources (very similar to Random Search). It's also useful when the variables in the search space can be sample from some prior distribution. `Detailed Description <./HyperoptTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -154,7 +154,7 @@ Naïve Evolution
 
 **Suggested scenario**
 
-Its computational resource requirements are relatively high. Specifically, it requires a large initial population to avoid falling into a local optimum. If your trial is short or leverages assessor, this tuner is a good choice. It is also suggested when your trial code supports weight transfer; that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training process. `Detailed Description <./EvolutionTuner>`__
+Its computational resource requirements are relatively high. Specifically, it requires a large initial population to avoid falling into a local optimum. If your trial is short or leverages assessor, this tuner is a good choice. It is also suggested when your trial code supports weight transfer; that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training process. `Detailed Description <./EvolutionTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -200,7 +200,7 @@ SMAC needs to be installed by following command before the first usage. As a rem
 
 **Suggested scenario**
 
-Similar to TPE, SMAC is also a black-box tuner that can be tried in various scenarios and is suggested when computational resources are limited. It is optimized for discrete hyperparameters, thus, it's suggested when most of your hyperparameters are discrete. `Detailed Description <./SmacTuner>`__
+Similar to TPE, SMAC is also a black-box tuner that can be tried in various scenarios and is suggested when computational resources are limited. It is optimized for discrete hyperparameters, thus, it's suggested when most of your hyperparameters are discrete. `Detailed Description <./SmacTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -232,7 +232,7 @@ Batch Tuner
 
 **Suggested scenario**
 
-If the configurations you want to try have been decided beforehand, you can list them in search space file (using ``choice``\ ) and run them using batch tuner. `Detailed Description <./BatchTuner>`__
+If the configurations you want to try have been decided beforehand, you can list them in search space file (using ``choice``\ ) and run them using batch tuner. `Detailed Description <./BatchTuner.rst>`__
 
 **Example Configuration:**
 
@@ -277,7 +277,7 @@ Grid Search
 
 Note that the only acceptable types within the search space are ``choice``\ , ``quniform``\ , and ``randint``.
 
-This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. `Detailed Description <./GridsearchTuner>`__
+This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. `Detailed Description <./GridsearchTuner.rst>`__
 
 **Example Configuration:**
 
@@ -301,7 +301,7 @@ Hyperband
 
 **Suggested scenario**
 
-This is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. For example, when models that are more accurate early on in training are also more accurate later on. `Detailed Description <./HyperbandAdvisor>`__
+This is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. For example, when models that are more accurate early on in training are also more accurate later on. `Detailed Description <./HyperbandAdvisor.rst>`__
 
 **classArgs Requirements:**
 
@@ -341,7 +341,7 @@ NetworkMorphism requires :githublink:`PyTorch <examples/trials/network_morphism/
 
 **Suggested scenario**
 
-This is suggested when you want to apply deep learning methods to your task but you have no idea how to choose or design a network. You may modify this :githublink:`example <examples/trials/network_morphism/cifar10/cifar10_keras.py>` to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate, or optimizer. Currently, this tuner only supports the computer vision domain. `Detailed Description <./NetworkmorphismTuner>`__
+This is suggested when you want to apply deep learning methods to your task but you have no idea how to choose or design a network. You may modify this :githublink:`example <examples/trials/network_morphism/cifar10/cifar10_keras.py>` to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate, or optimizer. Currently, this tuner only supports the computer vision domain. `Detailed Description <./NetworkmorphismTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -382,7 +382,7 @@ Note that the only acceptable types of search space types are ``quniform``\ , ``
 
 **Suggested scenario**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on subsequent trials. Here is an :githublink:`example <examples/trials/auto-gbdt/search_space_metis.json>` on the use of Metis. Users only need to send the final result, such as ``accuracy``\ , to the tuner by calling the NNI SDK. `Detailed Description <./MetisTuner>`__
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on subsequent trials. Here is an :githublink:`example <examples/trials/auto-gbdt/search_space_metis.json>` on the use of Metis. Users only need to send the final result, such as ``accuracy``\ , to the tuner by calling the NNI SDK. `Detailed Description <./MetisTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -421,7 +421,7 @@ BOHB advisor requires `ConfigSpace <https://github.com/automl/ConfigSpace>`__ pa
 
 **Suggested scenario**
 
-Similar to Hyperband, BOHB is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. In this case, it may converge to a better configuration than Hyperband due to its usage of Bayesian optimization. `Detailed Description <./BohbAdvisor>`__
+Similar to Hyperband, BOHB is suggested when you have limited computational resources but have a relatively large search space. It performs well in scenarios where intermediate results can indicate good or bad final results to some extent. In this case, it may converge to a better configuration than Hyperband due to its usage of Bayesian optimization. `Detailed Description <./BohbAdvisor.rst>`__
 
 **classArgs Requirements:**
 
@@ -465,7 +465,7 @@ Note that the only acceptable types within the search space are ``randint``\ , `
 
 **Suggested scenario**
 
-As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, GP Tuner uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) to solve and common tools can be employed to solve it. Therefore, GP Tuner is most adequate for situations where the function to be optimized is very expensive to evaluate. GP can be used when computational resources are limited. However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. `Detailed Description <./GPTuner>`__
+As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, GP Tuner uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) to solve and common tools can be employed to solve it. Therefore, GP Tuner is most adequate for situations where the function to be optimized is very expensive to evaluate. GP can be used when computational resources are limited. However, GP Tuner has a computational cost that grows at *O(N^3)* due to the requirement of inverting the Gram matrix, so it's not suitable when lots of trials are needed. `Detailed Description <./GPTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -508,11 +508,11 @@ PPO Tuner
    Built-in Tuner Name: **PPOTuner**
 
 
-Note that the only acceptable types within the search space are ``layer_choice`` and ``input_choice``. For ``input_choice``\ , ``n_chosen`` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command `\ ``nnictl ss_gen`` <../Tutorial/Nnictl>`__.
+Note that the only acceptable types within the search space are ``layer_choice`` and ``input_choice``. For ``input_choice``\ , ``n_chosen`` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command `\ ``nnictl ss_gen`` <../Tutorial/Nnictl.rst>`__.
 
 **Suggested scenario**
 
-PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the :githublink:`mnist-nas <examples/trials/mnist-nas>` example. `See details <./PPOTuner>`__
+PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the :githublink:`mnist-nas <examples/trials/mnist-nas>` example. `See details <./PPOTuner.rst>`__
 
 **classArgs Requirements:**
 
@@ -551,7 +551,7 @@ PBT Tuner
 
 **Suggested scenario**
 
-Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. `See details <./PBTTuner>`__
+Population Based Training (PBT) bridges and extends parallel search methods and sequential optimization methods. It requires relatively small computation resource, by inheriting weights from currently good-performing ones to explore better ones periodically. With PBTTuner, users finally get a trained model, rather than a configuration that could reproduce the trained model by training the model from scratch. This is because model weights are inherited periodically through the whole search process. PBT can also be seen as a training approach. If you don't need to get a specific configuration, but just expect a good model, PBTTuner is a good choice. `See details <./PBTTuner.rst>`__
 
 **classArgs requirements:**
 
@@ -572,14 +572,14 @@ Population Based Training (PBT) bridges and extends parallel search methods and 
      classArgs:
        optimize_mode: maximize
 
-Note that, to use this tuner, your trial code should be modified accordingly, please refer to `the document of PBTTuner <./PBTTuner>`__ for details.
+Note that, to use this tuner, your trial code should be modified accordingly, please refer to `the document of PBTTuner <./PBTTuner.rst>`__ for details.
 
 **Reference and Feedback**
 ------------------------------
 
 
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement>`__ for this feature in GitHub;
-* To know more about :githublink:`Feature Engineering with NNI <docs/en_US/FeatureEngineering/Overview>`\ ;
-* To know more about :githublink:`NAS with NNI <docs/en_US/NAS/Overview>`\ ;
-* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview>`\ ;
+* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
+* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;
+* To know more about :githublink:`Feature Engineering with NNI <docs/en_US/FeatureEngineering/Overview.rst>`\ ;
+* To know more about :githublink:`NAS with NNI <docs/en_US/NAS/Overview.rst>`\ ;
+* To know more about :githublink:`Model Compression with NNI <docs/en_US/Compression/Overview.rst>`\ ;

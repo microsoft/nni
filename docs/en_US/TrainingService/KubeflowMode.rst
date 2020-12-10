@@ -250,6 +250,6 @@ Once a trial job is completed, you can go to NNI WebUI's overview page (like htt
 version check
 -------------
 
-NNI support version check feature in since version 0.6, `refer <PaiMode>`__
+NNI support version check feature in since version 0.6, `refer <PaiMode.rst>`__
 
 Any problems when using NNI in Kubeflow mode, please create issues on `NNI Github repo <https://github.com/Microsoft/nni>`__.

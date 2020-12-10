@@ -13,7 +13,7 @@ Requirements
   Make sure the default environment of remote machines meets requirements of your trial code. If the default environment does not meet the requirements, the setup script can be added into ``command`` field of NNI config.
 
 * 
-  Make sure remote machines can be accessed through SSH from the machine which runs ``nnictl`` command. It supports both password and key authentication of SSH. For advanced usages, please refer to `machineList part of configuration <../Tutorial/ExperimentConfig>`__.
+  Make sure remote machines can be accessed through SSH from the machine which runs ``nnictl`` command. It supports both password and key authentication of SSH. For advanced usages, please refer to `machineList part of configuration <../Tutorial/ExperimentConfig.rst>`__.
 
 * 
   Make sure the NNI version on each machine is consistent.
@@ -25,14 +25,14 @@ Linux
 ^^^^^
 
 
-* Follow `installation <../Tutorial/InstallationLinux>`__ to install NNI on the remote machine.
+* Follow `installation <../Tutorial/InstallationLinux.rst>`__ to install NNI on the remote machine.
 
 Windows
 ^^^^^^^
 
 
 * 
-  Follow `installation <../Tutorial/InstallationWin>`__ to install NNI on the remote machine.
+  Follow `installation <../Tutorial/InstallationWin.rst>`__ to install NNI on the remote machine.
 
 * 
   Install and start ``OpenSSH Server``.
@@ -77,6 +77,7 @@ e.g. there are three machines, which can be logged in with username and password
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - IP
      - Username
@@ -215,4 +216,4 @@ If you want multiple commands to be executed, you can use ``&&`` to connect thes
 
    preCommand: command1 && command2 && command3
 
-**Note**\ : Because** preCommand** will execute before other commands each time, it is strongly not recommended to set** preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+**Note**\ : Because**** will execute before other commands each time, it is strongly not recommended to set**** that will make changes to system, i.e. ``mkdir`` or ``touch``.

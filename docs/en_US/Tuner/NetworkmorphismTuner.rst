@@ -6,7 +6,7 @@ Network Morphism Tuner on NNI
 
 `Autokeras <https://arxiv.org/abs/1806.10282>`__ is a popular autoML tool using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its `code <https://github.com/jhfjhfj1/autokeras>`__\ , we implemented our Network Morphism method on the NNI platform.
 
-If you want to know more about network morphism trial usage, please see the :githublink:`Readme.md <examples/trials/network_morphism/README>`.
+If you want to know more about network morphism trial usage, please see the :githublink:`Readme.md <examples/trials/network_morphism/README.rst>`.
 
 2. Usage
 --------

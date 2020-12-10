@@ -51,7 +51,7 @@ NNI treats AutoFeatureENG as a two-steps-task, feature generation exploration an
 04 Feature Exploration
 ----------------------
 
-For feature derivation, NNI offers many operations which could automatically generate new features, which list \ `as following <https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp>`__\  :
+For feature derivation, NNI offers many operations which could automatically generate new features, which list \ `as following <https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.rst>`__\  :
 
 **count**\ : Count encoding is based on replacing categories with their counts computed on the train set, also named frequency encoding.
 

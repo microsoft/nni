@@ -13,7 +13,7 @@ Below we divide the introduction of the BOHB process into two parts:
 HB (Hyperband)
 ^^^^^^^^^^^^^^
 
-We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving. For more details, you can refer to the `Hyperband in NNI <HyperbandAdvisor>`__ and the `reference paper for Hyperband <https://arxiv.org/abs/1603.06560>`__. This procedure is summarized by the pseudocode below.
+We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving. For more details, you can refer to the `Hyperband in NNI <HyperbandAdvisor.rst>`__ and the `reference paper for Hyperband <https://arxiv.org/abs/1603.06560>`__. This procedure is summarized by the pseudocode below.
 
 
 .. image:: ../../img/bohb_1.png

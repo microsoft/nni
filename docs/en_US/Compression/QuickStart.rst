@@ -22,7 +22,7 @@ Write a configuration to specify the layers that you want to prune. The followin
        'op_types': ['BatchNorm2d'],
    }]
 
-The specification of configuration can be found `here <#specification-of-config-list>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner>`__ for details, and adjust the configuration accordingly.
+The specification of configuration can be found `here <#specification-of-config-list>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
 
 Choose a compression algorithm
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,7 +57,7 @@ Masks do not provide real speedup of your model. The model should be speeded up 
    from nni.compression.pytorch import apply_compression_results
    apply_compression_results(model, 'mask_vgg19_cifar10.pth')
 
-Please refer to `here <ModelSpeedup>`__ for detailed description.
+Please refer to `here <ModelSpeedup.rst>`__ for detailed description.
 
 Detailed Usage Guide
 --------------------
@@ -82,7 +82,7 @@ Tensorflow code
    pruner = LevelPruner(tf.get_default_graph(), config_list)
    pruner.compress()
 
-You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.md>`__ and `Quantizer <./Quantizer.md>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample>`__
+You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.md>`__ and `Quantizer <./Quantizer.md>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
 
 A compression algorithm is first instantiated with a ``config_list`` passed in. The specification of this ``config_list`` will be described later.
 
@@ -104,7 +104,7 @@ There are different keys in a ``dict``. Some of them are common keys supported b
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
-Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.md>`__ and `quantization algorithms <./Quantizer>`__ for the keys allowed by each algorithm.
+Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.md>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
 A simple example of configuration is shown below:
 
@@ -209,4 +209,4 @@ You can easily export the compressed model using the following API if you are pr
 
    pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
 
-If you want to really speed up the compressed model, please refer to `NNI model speedup <./ModelSpeedup>`__ for details.
+If you want to really speed up the compressed model, please refer to `NNI model speedup <./ModelSpeedup.rst>`__ for details.

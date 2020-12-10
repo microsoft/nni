@@ -8,15 +8,15 @@ Comparison of Hyperparameter Optimization (HPO) algorithms on several problems.
 Hyperparameter Optimization algorithms are list below:
 
 
-* `Random Search <../Tuner/BuiltinTuner>`__
-* `Grid Search <../Tuner/BuiltinTuner>`__
-* `Evolution <../Tuner/BuiltinTuner>`__
-* `Anneal <../Tuner/BuiltinTuner>`__
-* `Metis <../Tuner/BuiltinTuner>`__
-* `TPE <../Tuner/BuiltinTuner>`__
-* `SMAC <../Tuner/BuiltinTuner>`__
-* `HyperBand <../Tuner/BuiltinTuner>`__
-* `BOHB <../Tuner/BuiltinTuner>`__
+* `Random Search <../Tuner/BuiltinTuner.rst>`__
+* `Grid Search <../Tuner/BuiltinTuner.rst>`__
+* `Evolution <../Tuner/BuiltinTuner.rst>`__
+* `Anneal <../Tuner/BuiltinTuner.rst>`__
+* `Metis <../Tuner/BuiltinTuner.rst>`__
+* `TPE <../Tuner/BuiltinTuner.rst>`__
+* `SMAC <../Tuner/BuiltinTuner.rst>`__
+* `HyperBand <../Tuner/BuiltinTuner.rst>`__
+* `BOHB <../Tuner/BuiltinTuner.rst>`__
 
 All algorithms run in NNI local environment.
 
@@ -39,7 +39,7 @@ AutoGBDT Example
 Problem Description
 ^^^^^^^^^^^^^^^^^^^
 
-Nonconvex problem on the hyper-parameter search of `AutoGBDT <../TrialExample/GbdtExample>`__ example.
+Nonconvex problem on the hyper-parameter search of `AutoGBDT <../TrialExample/GbdtExample.rst>`__ example.
 
 Search Space
 ^^^^^^^^^^^^
@@ -80,6 +80,7 @@ Results
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Algorithm
      - Best loss
@@ -298,6 +299,7 @@ fillrandom' Benchmark
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Best IOPS (Repeat 1)
@@ -342,6 +344,7 @@ Figure:
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Best IOPS (Repeat 1)

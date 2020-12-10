@@ -31,7 +31,7 @@ Install NNI through source code
 Use NNI in a docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  You can also install NNI in a docker image. Please follow the instructions :githublink:`here <deployment/docker/README>` to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command ``docker pull msranni/nni:latest``.
+  You can also install NNI in a docker image. Please follow the instructions :githublink:`here <deployment/docker/README.rst>` to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command ``docker pull msranni/nni:latest``.
 
 Verify installation
 -------------------
@@ -83,7 +83,7 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
    -----------------------------------------------------------------------
 
 
-* Open the ``Web UI url`` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. `Here <../Tutorial/WebUI>`__ are more Web UI pages.
+* Open the ``Web UI url`` in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. `Here <../Tutorial/WebUI.rst>`__ are more Web UI pages.
 
 
 .. image:: ../../img/webui_overview_page.png
@@ -107,6 +107,7 @@ Linux
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - 
      - Recommended
@@ -139,6 +140,7 @@ macOS
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * -
      - Recommended
@@ -170,14 +172,14 @@ Further reading
 ---------------
 
 
-* `Overview <../Overview>`__
-* `Use command line tool nnictl <Nnictl>`__
-* `Use NNIBoard <WebUI>`__
-* `Define search space <SearchSpaceSpec>`__
-* `Config an experiment <ExperimentConfig>`__
-* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode>`__
-* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode>`__
-* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode>`__
-* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode>`__
-* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode>`__
-* `How to run an experiment on Kubernetes through AdaptDL? <../TrainingService/AdaptDLMode>`__
+* `Overview <../Overview.rst>`__
+* `Use command line tool nnictl <Nnictl.rst>`__
+* `Use NNIBoard <WebUI.rst>`__
+* `Define search space <SearchSpaceSpec.rst>`__
+* `Config an experiment <ExperimentConfig.rst>`__
+* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode.rst>`__
+* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode.rst>`__
+* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode.rst>`__
+* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode.rst>`__
+* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode.rst>`__
+* `How to run an experiment on Kubernetes through AdaptDL? <../TrainingService/AdaptDLMode.rst>`__

@@ -17,7 +17,7 @@ You can easily compress a model with NNI compression. Take pruning for example, 
 
 The 'default' op_type stands for the module types defined in :githublink:`default_layers.py <src/sdk/pynni/nni/compression/pytorch/default_layers.py>` for pytorch.
 
-Therefore ``{ 'sparsity': 0.8, 'op_types': ['default'] }``\ means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ``pruner.compress()`` called, the model is compressed with masks and after that you can normally fine tune this model and** pruned weights won't be updated** which have been masked.
+Therefore ``{ 'sparsity': 0.8, 'op_types': ['default'] }``\ means that **all layers with specified op_types will be compressed with the same 0.8 sparsity**. When ``pruner.compress()`` called, the model is compressed with masks and after that you can normally fine tune this model and**** which have been masked.
 
 Then, make this automatic
 -------------------------

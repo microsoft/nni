@@ -137,7 +137,7 @@ If you like to tune ``num_leaves``\ , ``learning_rate``\ , ``bagging_fraction`` 
        "bagging_freq":{"_type":"choice","_value":[1, 2, 4, 8, 10]}
    }
 
-More support variable type you could reference `here <../Tutorial/SearchSpaceSpec>`__.
+More support variable type you could reference `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
 3.4 Add SDK of nni into your code.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

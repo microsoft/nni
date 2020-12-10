@@ -28,6 +28,7 @@ Pruning algorithms compress the original network by removing redundant weights o
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name
      - Brief Introduction of Algorithm
@@ -63,7 +64,7 @@ Pruning algorithms compress the original network by removing redundant weights o
      - AMC: AutoML for Model Compression and Acceleration on Mobile Devices `Reference Paper <https://arxiv.org/pdf/1802.03494.pdf>`__
 
 
-You can refer to this :githublink:`benchmark <docs/en_US/CommunitySharings/ModelCompressionComparison>` for the performance of these pruners on some benchmark problems.
+You can refer to this :githublink:`benchmark <docs/en_US/CommunitySharings/ModelCompressionComparison.rst>` for the performance of these pruners on some benchmark problems.
 
 Quantization Algorithms
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -72,6 +73,7 @@ Quantization algorithms compress the original network by reducing the number of 
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Name
      - Brief Introduction of Algorithm
@@ -88,29 +90,29 @@ Quantization algorithms compress the original network by reducing the number of 
 Automatic Model Compression
 ---------------------------
 
-Given targeted compression ratio, it is pretty hard to obtain the best compressed ratio in a one shot manner. An automatic model compression algorithm usually need to explore the compression space by compressing different layers with different sparsities. NNI provides such algorithms to free users from specifying sparsity of each layer in a model. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Detailed document can be found `here <./AutoPruningUsingTuners>`__.
+Given targeted compression ratio, it is pretty hard to obtain the best compressed ratio in a one shot manner. An automatic model compression algorithm usually need to explore the compression space by compressing different layers with different sparsities. NNI provides such algorithms to free users from specifying sparsity of each layer in a model. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Detailed document can be found `here <./AutoPruningUsingTuners.rst>`__.
 
 Model Speedup
 -------------
 
-The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Model Speedup can be found `here <./ModelSpeedup>`__.
+The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Model Speedup can be found `here <./ModelSpeedup.rst>`__.
 
 Compression Utilities
 ---------------------
 
-Compression utilities include some useful tools for users to understand and analyze the model they want to compress. For example, users could check sensitivity of each layer to pruning. Users could easily calculate the FLOPs and parameter size of a model. Please refer to `here <./CompressionUtils>`__ for a complete list of compression utilities.
+Compression utilities include some useful tools for users to understand and analyze the model they want to compress. For example, users could check sensitivity of each layer to pruning. Users could easily calculate the FLOPs and parameter size of a model. Please refer to `here <./CompressionUtils.rst>`__ for a complete list of compression utilities.
 
 Customize Your Own Compression Algorithms
 -----------------------------------------
 
-NNI model compression leaves simple interface for users to customize a new compression algorithm. The design philosophy of the interface is making users focus on the compression logic while hiding framework specific implementation details from users. The detailed tutorial for customizing a new compression algorithm (pruning algorithm or quantization algorithm) can be found `here <./Framework>`__.
+NNI model compression leaves simple interface for users to customize a new compression algorithm. The design philosophy of the interface is making users focus on the compression logic while hiding framework specific implementation details from users. The detailed tutorial for customizing a new compression algorithm (pruning algorithm or quantization algorithm) can be found `here <./Framework.rst>`__.
 
 Reference and Feedback
 ----------------------
 
 
-* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report>`__ for this feature in GitHub;
-* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement>`__ for this feature in GitHub;
-* To know more about `Feature Engineering with NNI <../FeatureEngineering/Overview>`__\ ;
-* To know more about `NAS with NNI <../NAS/Overview>`__\ ;
-* To know more about `Hyperparameter Tuning with NNI <../Tuner/BuiltinTuner>`__\ ;
+* To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
+* To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;
+* To know more about `Feature Engineering with NNI <../FeatureEngineering/Overview.rst>`__\ ;
+* To know more about `NAS with NNI <../NAS/Overview.rst>`__\ ;
+* To know more about `Hyperparameter Tuning with NNI <../Tuner/BuiltinTuner.rst>`__\ ;

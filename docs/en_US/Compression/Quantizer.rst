@@ -71,7 +71,7 @@ You can view example for more information
 User configuration for QAT Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart>`__.
+common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart.rst>`__.
 
 configuration needed by this algorithm :
 
@@ -116,7 +116,7 @@ You can view example for more information
 User configuration for DoReFa Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart>`__.
+common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart.rst>`__.
 
 configuration needed by this algorithm :
 
@@ -162,7 +162,7 @@ You can view example :githublink:`examples/model_compress/BNN_quantizer_cifar10.
 User configuration for BNN Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart>`__.
+common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart.rst>`__.
 
 configuration needed by this algorithm :
 
@@ -173,6 +173,7 @@ We implemented one of the experiments in `Binarized Neural Networks: Training De
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Accuracy

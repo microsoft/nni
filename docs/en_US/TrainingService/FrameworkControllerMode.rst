@@ -37,7 +37,7 @@ Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/mas
 Design
 ------
 
-Please refer the design of `Kubeflow training service <KubeflowMode>`__\ , FrameworkController training service pipeline is similar.
+Please refer the design of `Kubeflow training service <KubeflowMode.rst>`__\ , FrameworkController training service pipeline is similar.
 
 Example
 -------
@@ -115,14 +115,14 @@ Trial configuration in frameworkcontroller mode have the following configuration
   * cpuNum: the number of cpu device used in container.
   * memoryMB: the memory limitaion to be specified in container.
   * image: the docker image used to create pod and run the program.
-  * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the `user-manual <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual#frameworkattemptcompletionpolicy>`__ to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, The completion policy could helps stop ps.
+  * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the `user-manual <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.rst#frameworkattemptcompletionpolicy>`__ to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, The completion policy could helps stop ps.
 
 How to run example
 ------------------
 
-After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on FrameworkController is similar to Kubeflow, please refer the `document <KubeflowMode>`__ for more information.
+After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on FrameworkController is similar to Kubeflow, please refer the `document <KubeflowMode.rst>`__ for more information.
 
 version check
 -------------
 
-NNI support version check feature in since version 0.6, `refer <PaiMode>`__
+NNI support version check feature in since version 0.6, `refer <PaiMode.rst>`__

@@ -109,6 +109,7 @@ Search Space Types Supported by Each Tuner
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - 
      - choice

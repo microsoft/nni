@@ -6,7 +6,7 @@ NNI supports running an experiment on `AML <https://azure.microsoft.com/en-us/se
 Setup environment
 -----------------
 
-Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart>`__.   
+Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.   
 
 Step 2. Create an Azure account/subscription using this `link <https://azure.microsoft.com/en-us/free/services/machine-learning/>`__. If you already have an Azure account/subscription, skip this step.
 
@@ -75,7 +75,7 @@ Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's con
 
 Note: You should set ``trainingServicePlatform: aml`` in NNI config YAML file if you want to start experiment in aml mode.
 
-Compared with `LocalMode <LocalMode>`__ trial configuration in aml mode have these additional keys:
+Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have these additional keys:
 
 
 * image

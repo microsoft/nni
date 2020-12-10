@@ -28,7 +28,7 @@ An example is shown below:
        "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
    }
 
-Refer to `SearchSpaceSpec.md <../Tutorial/SearchSpaceSpec>`__ to learn more about search spaces. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+Refer to `SearchSpaceSpec.md <../Tutorial/SearchSpaceSpec.rst>`__ to learn more about search spaces. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
 
 Step 2 - Update model code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,7 +57,7 @@ Step 2 - Update model code
 
    nni.report_intermediate_result(metrics)
 
-``metrics`` can be any python object. If users use the NNI built-in tuner/assessor, ``metrics`` can only have two formats: 1) a number e.g., float, int, or 2) a dict object that has a key named ``default`` whose value is a number. These ``metrics`` are reported to `assessor <../Assessor/BuiltinAssessor>`__. Often, ``metrics`` includes the periodically evaluated loss or accuracy.
+``metrics`` can be any python object. If users use the NNI built-in tuner/assessor, ``metrics`` can only have two formats: 1) a number e.g., float, int, or 2) a dict object that has a key named ``default`` whose value is a number. These ``metrics`` are reported to `assessor <../Assessor/BuiltinAssessor.rst>`__. Often, ``metrics`` includes the periodically evaluated loss or accuracy.
 
 
 * Report performance of the configuration
@@ -66,7 +66,7 @@ Step 2 - Update model code
 
    nni.report_final_result(metrics)
 
-``metrics`` can also be any python object. If users use the NNI built-in tuner/assessor, ``metrics`` follows the same format rule as that in ``report_intermediate_result``\ , the number indicates the model's performance, for example, the model's accuracy, loss etc. These ``metrics`` are reported to `tuner <../Tuner/BuiltinTuner>`__.
+``metrics`` can also be any python object. If users use the NNI built-in tuner/assessor, ``metrics`` follows the same format rule as that in ``report_intermediate_result``\ , the number indicates the model's performance, for example, the model's accuracy, loss etc. These ``metrics`` are reported to `tuner <../Tuner/BuiltinTuner.rst>`__.
 
 Step 3 - Enable NNI API
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,7 +78,7 @@ To enable NNI API mode, you need to set useAnnotation to *false* and provide the
    useAnnotation: false
    searchSpacePath: /path/to/your/search_space.json
 
-You can refer to `here <../Tutorial/ExperimentConfig>`__ for more information about how to set up experiment configurations.
+You can refer to `here <../Tutorial/ExperimentConfig.rst>`__ for more information about how to set up experiment configurations.
 
 *Please refer to `here <https://nni.readthedocs.io/en/latest/sdk_reference.html>`__ for more APIs (e.g., ``nni.get_sequence_id()``\ ) provided by NNI.*
 
@@ -141,7 +141,7 @@ It's worth noting that, as these newly added codes are merely annotations, you c
 * ``@nni.variable`` will affect its following line which should be an assignment statement whose left-hand side must be the same as the keyword ``name`` in the ``@nni.variable`` statement.
 * ``@nni.report_intermediate_result``\ /\ ``@nni.report_final_result`` will send the data to assessor/tuner at that line.
 
-For more information about annotation syntax and its usage, please refer to `Annotation <../Tutorial/AnnotationSpec>`__.
+For more information about annotation syntax and its usage, please refer to `Annotation <../Tutorial/AnnotationSpec.rst>`__.
 
 Step 2 - Enable NNI Annotation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,7 +169,7 @@ NNI supports a standalone mode for trial code to run without starting an NNI exp
 
 You can try standalone mode with the :githublink:`mnist example <examples/trials/mnist-tfv1>`. Simply run ``python3 mnist.py`` under the code directory. The trial code should successfully run with the default hyperparameter values.
 
-For more information on debugging, please refer to `How to Debug <../Tutorial/HowToDebug>`__
+For more information on debugging, please refer to `How to Debug <../Tutorial/HowToDebug.rst>`__
 
 Where are my trials?
 --------------------
@@ -200,7 +200,7 @@ Other Modes
 
 When running trials on other platforms like remote machine or PAI, the environment variable ``NNI_OUTPUT_DIR`` only refers to the output directory of the trial, while the trial code and ``run.sh`` might not be there. However, the ``trial.log`` will be transmitted back to the local machine in the trial's directory, which defaults to ``~/nni-experiments/$experiment_id$/trials/$trial_id$/``
 
-For more information, please refer to `HowToDebug <../Tutorial/HowToDebug>`__.
+For more information, please refer to `HowToDebug <../Tutorial/HowToDebug.rst>`__.
 
 :raw-html:`<a name="more-examples"></a>`
 
@@ -208,9 +208,9 @@ More Trial Examples
 -------------------
 
 
-* `MNIST examples <MnistExamples>`__
-* `Finding out best optimizer for Cifar10 classification <Cifar10Examples>`__
-* `How to tune Scikit-learn on NNI <SklearnExamples>`__
-* `Automatic Model Architecture Search for Reading Comprehension. <SquadEvolutionExamples>`__
-* `Tuning GBDT on NNI <GbdtExample>`__
-* `Tuning RocksDB on NNI <RocksdbExamples>`__
+* `MNIST examples <MnistExamples.rst>`__
+* `Finding out best optimizer for Cifar10 classification <Cifar10Examples.rst>`__
+* `How to tune Scikit-learn on NNI <SklearnExamples.rst>`__
+* `Automatic Model Architecture Search for Reading Comprehension. <SquadEvolutionExamples.rst>`__
+* `Tuning GBDT on NNI <GbdtExample.rst>`__
+* `Tuning RocksDB on NNI <RocksdbExamples.rst>`__

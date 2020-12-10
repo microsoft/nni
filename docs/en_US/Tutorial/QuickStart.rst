@@ -29,7 +29,7 @@ Windows
 Enable NNI Command-line Auto-Completion (Optional)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After the installation, you may want to enable the auto-completion feature for **nnictl** commands. Please refer to this `tutorial <../CommunitySharings/AutoCompletion>`__.
+After the installation, you may want to enable the auto-completion feature for **nnictl** commands. Please refer to this `tutorial <../CommunitySharings/AutoCompletion.rst>`__.
 
 "Hello World" example on MNIST
 ------------------------------
@@ -225,7 +225,7 @@ After you start your experiment in NNI successfully, you can find a message in t
 
    The Web UI urls are: [Your IP]:8080
 
-Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ>`__.
+Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ.rst>`__.
 
 View summary page
 ^^^^^^^^^^^^^^^^^
@@ -306,13 +306,13 @@ Related Topic
 -------------
 
 
-* `Try different Tuners <../Tuner/BuiltinTuner>`__
-* `Try different Assessors <../Assessor/BuiltinAssessor>`__
-* `How to use command line tool nnictl <Nnictl>`__
-* `How to write a trial <../TrialExample/Trials>`__
-* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode>`__
-* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode>`__
-* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode>`__
-* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode>`__
-* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode>`__
-* `How to run an experiment on Kubernetes through AdaptDL? <../TrainingService/AdaptDLMode>`__
+* `Try different Tuners <../Tuner/BuiltinTuner.rst>`__
+* `Try different Assessors <../Assessor/BuiltinAssessor.rst>`__
+* `How to use command line tool nnictl <Nnictl.rst>`__
+* `How to write a trial <../TrialExample/Trials.rst>`__
+* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode.rst>`__
+* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode.rst>`__
+* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode.rst>`__
+* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode.rst>`__
+* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode.rst>`__
+* `How to run an experiment on Kubernetes through AdaptDL? <../TrainingService/AdaptDLMode.rst>`__

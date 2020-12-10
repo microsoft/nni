@@ -10,7 +10,7 @@
        apt-get install nfs-common
 
 #. 
-   Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart>`__.
+   Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 %%%%%%
 #. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this `guideline <https://kubernetes.io/docs/setup/>`__ to set up Kubernetes
 #. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the**KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.

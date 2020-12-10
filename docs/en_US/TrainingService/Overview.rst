@@ -6,7 +6,7 @@ What is Training Service?
 
 NNI training service is designed to allow users to focus on AutoML itself, agnostic to the underlying computing infrastructure where the trials are actually run. When migrating from one cluster to another (e.g., local machine to Kubeflow), users only need to tweak several configurations, and the experiment can be easily scaled.
 
-Users can use training service provided by NNI, to run trial jobs on `local machine <./LocalMode.md>`__\ , `remote machines <./RemoteMachineMode.md>`__\ , and on clusters like `PAI <./PaiMode.md>`__\ , `Kubeflow <./KubeflowMode.md>`__\ , `AdaptDL <./AdaptDLMode.md>`__\ , `FrameworkController <./FrameworkControllerMode.md>`__\ , `DLTS <./DLTSMode.md>`__ and `AML <./AMLMode>`__. These are called *built-in training services*.
+Users can use training service provided by NNI, to run trial jobs on `local machine <./LocalMode.md>`__\ , `remote machines <./RemoteMachineMode.md>`__\ , and on clusters like `PAI <./PaiMode.md>`__\ , `Kubeflow <./KubeflowMode.md>`__\ , `AdaptDL <./AdaptDLMode.md>`__\ , `FrameworkController <./FrameworkControllerMode.md>`__\ , `DLTS <./DLTSMode.md>`__ and `AML <./AMLMode.rst>`__. These are called *built-in training services*.
 
 If the computing resource customers try to use is not listed above, NNI provides interface that allows users to build their own training service easily. Please refer to "\ `how to implement training service <./HowToImplementTrainingService>`__\ " for details.
 
@@ -24,24 +24,25 @@ Built-in Training Services
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - TrainingService
      - Brief Introduction
-   * - `**Local** <./LocalMode>`__
+   * - `**Local** <./LocalMode.rst>`__
      - NNI supports running an experiment on local machine, called local mode. Local mode means that NNI will run the trial jobs and nniManager process in same machine, and support gpu schedule function for trial jobs.
-   * - `**Remote** <./RemoteMachineMode>`__
+   * - `**Remote** <./RemoteMachineMode.rst>`__
      - NNI supports running an experiment on multiple machines through SSH channel, called remote mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code. NNI will submit the trial jobs in remote machine, and schedule suitable machine with enough gpu resource if specified.
-   * - `**PAI** <./PaiMode>`__
+   * - `**PAI** <./PaiMode.rst>`__
      - NNI supports running an experiment on `OpenPAI <https://github.com/Microsoft/pai>`__ (aka PAI), called PAI mode. Before starting to use NNI PAI mode, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In PAI mode, your trial program will run in PAI's container created by Docker.
-   * - `**Kubeflow** <./KubeflowMode>`__
+   * - `**Kubeflow** <./KubeflowMode.rst>`__
      - NNI supports running experiment on `Kubeflow <https://github.com/kubeflow/kubeflow>`__\ , called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a Kubernetes cluster, either on-premises or `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , a Ubuntu machine on which `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster. If you are not familiar with Kubernetes, `here <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ is a good start. In kubeflow mode, your trial program will run as Kubeflow job in Kubernetes cluster.
-   * - `**AdaptDL** <./AdaptDLMode>`__
+   * - `**AdaptDL** <./AdaptDLMode.rst>`__
      - NNI supports running experiment on `AdaptDL <https://github.com/petuum/adaptdl>`__\ , called AdaptDL mode. Before starting to use NNI kubeflow mode, you should have a Kubernetes cluster.
-   * - `**FrameworkController** <./FrameworkControllerMode>`__
+   * - `**FrameworkController** <./FrameworkControllerMode.rst>`__
      - NNI supports running experiment using `FrameworkController <https://github.com/Microsoft/frameworkcontroller>`__\ , called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, you don't need to install Kubeflow for specific deep learning framework like tf-operator or pytorch-operator. Now you can use FrameworkController as the training service to run NNI experiment.
-   * - `**DLTS** <./DLTSMode>`__
+   * - `**DLTS** <./DLTSMode.rst>`__
      - NNI supports running experiment using `DLTS <https://github.com/microsoft/DLWorkspace.git>`__\ , which is an open source toolkit, developed by Microsoft, that allows AI scientists to spin up an AI cluster in turn-key fashion.
-   * - `**AML** <./AMLMode>`__
+   * - `**AML** <./AMLMode.rst>`__
      - NNI supports running an experiment on `AML <https://azure.microsoft.com/en-us/services/machine-learning/>`__ , called aml mode.
 
 

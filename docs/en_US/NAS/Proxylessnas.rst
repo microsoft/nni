@@ -9,7 +9,7 @@ The paper `ProxylessNAS: Direct Neural Architecture Search on Target Task and Ha
 Usage
 -----
 
-To use ProxylessNAS training/searching approach, users need to specify search space in their model using `NNI NAS interface <NasGuide>`__\ , e.g., ``LayerChoice``\ , ``InputChoice``. After defining and instantiating the model, the following work can be leaved to ProxylessNasTrainer by instantiating the trainer and passing the model to it.
+To use ProxylessNAS training/searching approach, users need to specify search space in their model using `NNI NAS interface <NasGuide.rst>`__\ , e.g., ``LayerChoice``\ , ``InputChoice``. After defining and instantiating the model, the following work can be leaved to ProxylessNasTrainer by instantiating the trainer and passing the model to it.
 
 .. code-block:: python
 

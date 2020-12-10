@@ -117,6 +117,7 @@ We implemented one of the experiments in `'Learning Efficient Convolutional Netw
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Error(paper/ours)
@@ -154,7 +155,7 @@ FPGMPruner prune filters with the smallest geometric median.
    Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance. 
 
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
 Usage
 ^^^^^
@@ -207,7 +208,7 @@ This is an one-shot pruner, In `'PRUNING FILTERS FOR EFFICIENT CONVNETS' <https:
       weights are copied to the new model.
 
 
-In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference `dependency-aware mode <./DependencyAware>`__.
+In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference `dependency-aware mode <./DependencyAware.rst>`__.
 
 Usage
 ^^^^^
@@ -235,6 +236,7 @@ We implemented one of the experiments in `'PRUNING FILTERS FOR EFFICIENT CONVNET
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Error(paper/ours)
@@ -259,7 +261,7 @@ L2Filter Pruner
 
 This is a structured pruning algorithm that prunes the filters with the smallest L2 norm of the weights. It is implemented as a one-shot pruner.
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
 Usage
 ^^^^^
@@ -295,7 +297,7 @@ The APoZ is defined as:
    :alt: 
 
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
 Usage
 ^^^^^
@@ -330,7 +332,7 @@ ActivationMeanRankFilter Pruner
 
 ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper\ `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
 Usage
 ^^^^^
@@ -376,7 +378,7 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
    :alt: 
 
 
-We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware>`__ for more details.
+We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
 Usage
 ^^^^^
@@ -645,6 +647,7 @@ We implemented one of the experiments in `AMC: AutoML for Model Compression and 
 
 .. list-table::
    :header-rows: 1
+   :widths: auto
 
    * - Model
      - Top 1 acc.(paper/ours)

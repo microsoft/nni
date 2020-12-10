@@ -9,7 +9,7 @@ The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimizat
 Parallel TPE optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-TPE approaches were actually run asynchronously in order to make use of multiple compute nodes and to avoid wasting time waiting for trial evaluations to complete. The original algorithm design was optimized for sequential computation. If we were to use TPE with much concurrency, its performance will be bad. We have optimized this case using the Constant Liar algorithm. For these principles of optimization, please refer to our `research blog <../CommunitySharings/ParallelizingTpeSearch>`__.
+TPE approaches were actually run asynchronously in order to make use of multiple compute nodes and to avoid wasting time waiting for trial evaluations to complete. The original algorithm design was optimized for sequential computation. If we were to use TPE with much concurrency, its performance will be bad. We have optimized this case using the Constant Liar algorithm. For these principles of optimization, please refer to our `research blog <../CommunitySharings/ParallelizingTpeSearch.rst>`__.
 
 Usage
 ^^^^^

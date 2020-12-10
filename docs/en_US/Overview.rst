@@ -50,11 +50,11 @@ For each experiment, the user only needs to define a search space and update a f
 
 ..
 
-   Step 1: `Define search space <Tutorial/SearchSpaceSpec>`__
+   Step 1: `Define search space <Tutorial/SearchSpaceSpec.rst>`__
 
-   Step 2: `Update model codes <TrialExample/Trials>`__
+   Step 2: `Update model codes <TrialExample/Trials.rst>`__
 
-   Step 3: `Define Experiment <Tutorial/ExperimentConfig>`__
+   Step 3: `Define Experiment <Tutorial/ExperimentConfig.rst>`__
 
 
 
@@ -65,7 +65,7 @@ For each experiment, the user only needs to define a search space and update a f
    </p>
 
 
-For more details about how to run an experiment, please refer to `Get Started <Tutorial/QuickStart>`__.
+For more details about how to run an experiment, please refer to `Get Started <Tutorial/QuickStart.rst>`__.
 
 Core Features
 -------------
@@ -77,12 +77,12 @@ NNI also provides algorithm toolkits for machine learning and deep learning, esp
 Hyperparameter Tuning
 ^^^^^^^^^^^^^^^^^^^^^
 
-This is a core and basic feature of NNI, we provide many popular `automatic tuning algorithms <Tuner/BuiltinTuner.md>`__ (i.e., tuner) and `early stop algorithms <Assessor/BuiltinAssessor.md>`__ (i.e., assessor). You can follow `Quick Start <Tutorial/QuickStart>`__ to tune your model (or system). Basically, there are the above three steps and then starting an NNI experiment.
+This is a core and basic feature of NNI, we provide many popular `automatic tuning algorithms <Tuner/BuiltinTuner.md>`__ (i.e., tuner) and `early stop algorithms <Assessor/BuiltinAssessor.md>`__ (i.e., assessor). You can follow `Quick Start <Tutorial/QuickStart.rst>`__ to tune your model (or system). Basically, there are the above three steps and then starting an NNI experiment.
 
 General NAS Framework
 ^^^^^^^^^^^^^^^^^^^^^
 
-This NAS framework is for users to easily specify candidate neural architectures, for example, one can specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides a simple interface for another type of user (e.g., NAS algorithm researchers) to implement new NAS algorithms. A detailed description of NAS and its usage can be found `here <NAS/Overview>`__.
+This NAS framework is for users to easily specify candidate neural architectures, for example, one can specify multiple candidate operations (e.g., separable conv, dilated conv) for a single layer, and specify possible skip connections. NNI will find the best candidate automatically. On the other hand, the NAS framework provides a simple interface for another type of user (e.g., NAS algorithm researchers) to implement new NAS algorithms. A detailed description of NAS and its usage can be found `here <NAS/Overview.rst>`__.
 
 NNI has support for many one-shot NAS algorithms such as ENAS and DARTS through NNI trial SDK. To use these algorithms you do not have to start an NNI experiment. Instead, import an algorithm in your trial code and simply run your trial code. If you want to tune the hyperparameters in the algorithms or want to run multiple instances, you can choose a tuner and start an NNI experiment.
 
@@ -95,12 +95,12 @@ NNI provides an easy-to-use model compression framework to compress deep neural 
 inference speed without losing performance significantlly. Model compression on NNI includes pruning algorithms and quantization algorithms. NNI provides many pruning and
 quantization algorithms through NNI trial SDK. Users can directly use them in their trial code and run the trial code without starting an NNI experiment. Users can also use NNI model compression framework to customize their own pruning and quantization algorithms.
 
-A detailed description of model compression and its usage can be found `here <Compression/Overview>`__.
+A detailed description of model compression and its usage can be found `here <Compression/Overview.rst>`__.
 
 Automatic Feature Engineering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Automatic feature engineering is for users to find the best features for their tasks. A detailed description of automatic feature engineering and its usage can be found `here <FeatureEngineering/Overview>`__. It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code. 
+Automatic feature engineering is for users to find the best features for their tasks. A detailed description of automatic feature engineering and its usage can be found `here <FeatureEngineering/Overview.rst>`__. It is supported through NNI trial SDK, which means you do not have to create an NNI experiment. Instead, simply import a built-in auto-feature-engineering algorithm in your trial code and directly run your trial code. 
 
 The auto-feature-engineering algorithms usually have a bunch of hyperparameters themselves. If you want to automatically tune those hyperparameters, you can leverage hyperparameter tuning of NNI, that is, choose a tuning algorithm (i.e., tuner) and start an NNI experiment for it.
 
@@ -108,16 +108,16 @@ Learn More
 ----------
 
 
-* `Get started <Tutorial/QuickStart>`__
-* `How to adapt your trial code on NNI? <TrialExample/Trials>`__
-* `What are tuners supported by NNI? <Tuner/BuiltinTuner>`__
-* `How to customize your own tuner? <Tuner/CustomizeTuner>`__
-* `What are assessors supported by NNI? <Assessor/BuiltinAssessor>`__
-* `How to customize your own assessor? <Assessor/CustomizeAssessor>`__
-* `How to run an experiment on local? <TrainingService/LocalMode>`__
-* `How to run an experiment on multiple machines? <TrainingService/RemoteMachineMode>`__
-* `How to run an experiment on OpenPAI? <TrainingService/PaiMode>`__
-* `Examples <TrialExample/MnistExamples>`__
-* `Neural Architecture Search on NNI <NAS/Overview>`__
-* `Model Compression on NNI <Compression/Overview>`__
-* `Automatic feature engineering on NNI <FeatureEngineering/Overview>`__
+* `Get started <Tutorial/QuickStart.rst>`__
+* `How to adapt your trial code on NNI? <TrialExample/Trials.rst>`__
+* `What are tuners supported by NNI? <Tuner/BuiltinTuner.rst>`__
+* `How to customize your own tuner? <Tuner/CustomizeTuner.rst>`__
+* `What are assessors supported by NNI? <Assessor/BuiltinAssessor.rst>`__
+* `How to customize your own assessor? <Assessor/CustomizeAssessor.rst>`__
+* `How to run an experiment on local? <TrainingService/LocalMode.rst>`__
+* `How to run an experiment on multiple machines? <TrainingService/RemoteMachineMode.rst>`__
+* `How to run an experiment on OpenPAI? <TrainingService/PaiMode.rst>`__
+* `Examples <TrialExample/MnistExamples.rst>`__
+* `Neural Architecture Search on NNI <NAS/Overview.rst>`__
+* `Model Compression on NNI <Compression/Overview.rst>`__
+* `Automatic feature engineering on NNI <FeatureEngineering/Overview.rst>`__

@@ -91,4 +91,4 @@ retrain
 Reference
 ---------
 
-TextNAS directly uses EnasTrainer, please refer to `ENAS <./ENAS>`__ for the trainer APIs.
+TextNAS directly uses EnasTrainer, please refer to `ENAS <./ENAS.rst>`__ for the trainer APIs.

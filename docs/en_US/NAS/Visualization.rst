@@ -4,7 +4,7 @@ NAS Visualization (Experimental)
 Built-in Trainers Support
 -------------------------
 
-Currently, only ENAS and DARTS support visualization. Examples of `ENAS <./ENAS.md>`__ and `DARTS <./DARTS>`__ has demonstrated how to enable visualization in your code, namely, adding this before ``trainer.train()``\ :
+Currently, only ENAS and DARTS support visualization. Examples of `ENAS <./ENAS.md>`__ and `DARTS <./DARTS.rst>`__ has demonstrated how to enable visualization in your code, namely, adding this before ``trainer.train()``\ :
 
 .. code-block:: python
 
@@ -21,7 +21,7 @@ You don't have to wait until your program finishes to launch NAS UI, but it's im
 Visualize a Customized Trainer
 ------------------------------
 
-If you are interested in how to customize a trainer, please read this `doc <./Advanced#extend-the-ability-of-one-shot-trainers>`__.
+If you are interested in how to customize a trainer, please read this `doc <./Advanced.rst#extend-the-ability-of-one-shot-trainers>`__.
 
 You should do two modifications to an existing trainer to enable visualization:
 
@@ -83,4 +83,4 @@ Limitations
 Feedback
 --------
 
-NAS UI is currently experimental. We welcome your feedback. `Here <https://github.com/microsoft/nni/pull/2085>`__ we have listed all the to-do items of NAS UI in the future. Feel free to comment (or `submit a new issue <https://github.com/microsoft/nni/issues/new?template=enhancement>`__\ ) if you have other suggestions.
+NAS UI is currently experimental. We welcome your feedback. `Here <https://github.com/microsoft/nni/pull/2085>`__ we have listed all the to-do items of NAS UI in the future. Feel free to comment (or `submit a new issue <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__\ ) if you have other suggestions.
