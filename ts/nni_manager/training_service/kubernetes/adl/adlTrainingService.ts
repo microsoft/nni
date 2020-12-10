@@ -313,12 +313,12 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
-                let k8s_namespace: string = 'default';
+                let namespace: string = 'default';
                 if (this.adlTrialConfig.namespace !== undefined) {
-                    k8s_namespace = this.adlTrialConfig.namespace
+                    namespace = this.adlTrialConfig.namespace
                 }
-                this.genericK8sClient.setNamespace = k8s_namespace;
-                this.kubernetesCRDClient = AdlClientFactory.createClient(k8s_namespace);
+                this.genericK8sClient.setNamespace = namespace;
+                this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
