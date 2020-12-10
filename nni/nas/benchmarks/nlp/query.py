@@ -6,7 +6,7 @@ from .model import NlpTrialStats, NlpTrialConfig
 
 def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=False):
     """
-    Query trial stats of NLP benchmark given conditions.
+    Query trial stats of NLP benchmark given conditions, including config(arch + dataset) and training results after 50 epoch.
 
     Parameters
     ----------
@@ -17,7 +17,7 @@ def query_nlp_trial_stats(arch, dataset, reduction=None, include_intermediates=F
     dataset : str or None
         If specified, can be one of the dataset available in :class:`nni.nas.benchmark.nlp.NlpTrialConfig`.
         Otherwise a wildcard.
-    reduction : str or None, default set to be None.
+    reduction : str or None
         If 'none' or None, all trial stats will be returned directly.
         If 'mean', fields in trial stats will be averaged given the same trial config.
         Please note that some trial configs have multiple runs which make "reduction" meaningful, while some may not.
