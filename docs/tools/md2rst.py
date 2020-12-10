@@ -25,6 +25,11 @@ def single_line_process(line):
                   r' **\1**', line)
 
     line = line.replace('.. code-block:::: bash', '.. code-block:: bash')
+    line = line.replace('raw-html-m2r', 'raw-html')
+    line = line.replace('[toc]', '.. toctree::')
+
+    # image
+    line = re.sub(r'\:raw\-html\:`\<img src\=\"(.*?)\" style\=\"zoom\: ?(\d+)\%\;\" \/\>`', r'\n.. image:: \1\n   :scale: \2%', line)
 
     # special case (per line handling)
     line = line.replace('Nb = |Db|', r'Nb = \|Db\|')
@@ -34,10 +39,12 @@ def single_line_process(line):
     line = line.replace('&#10003;', ':raw-html:`&#10003;`')
     line = line.replace(' **builtinTunerName** and** classArgs**', '**builtinTunerName** and **classArgs**')
     line = line.replace('`\ ``nnictl ss_gen`` <../Tutorial/Nnictl.rst>`__', '`nnictl ss_gen <../Tutorial/Nnictl.rst>`__')
+    line = line.replace('**Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.**',
+                        '**Step 1. Install NNI, follow the install guide** `here <../Tutorial/QuickStart.rst>`__.')
+    line = line.replace('*Please refer to `here ', 'Please refer to `here ')
     # line = line.replace('\* **optimize_mode** ', '* **optimize_mode** ')
     if line == '~' * len(line):
         line = '^' * len(line)
-    line = line.replace('raw-html-m2r', 'raw-html')
     return line
 
 
@@ -68,6 +75,7 @@ def process_github_link(line):
     line = re.sub(r'`(\\ ``)?([^`]*?)(``)? \<(.*?)(blob|tree)/v1.9/(.*?)\>`__', r':githublink:`\2 <\6>`', line)
     if 'githublink' in line:
         line = re.sub(r'\*Example: (.*)\*', r'*Example:* \1', line)
+    line = line.replace('https://nni.readthedocs.io/en/latest', '')
     return line
 
 

@@ -80,7 +80,7 @@ To enable NNI API mode, you need to set useAnnotation to *false* and provide the
 
 You can refer to `here <../Tutorial/ExperimentConfig.rst>`__ for more information about how to set up experiment configurations.
 
-*Please refer to `here <https://nni.readthedocs.io/en/latest/sdk_reference.html>`__ for more APIs (e.g., ``nni.get_sequence_id()``\ ) provided by NNI.*
+Please refer to `here </sdk_reference.html>`__ for more APIs (e.g., ``nni.get_sequence_id()``\ ) provided by NNI.
 
 :raw-html:`<a name="nni-annotation"></a>`
 

@@ -76,7 +76,7 @@ Here is a template configuration specification to use AdaptDL as a training serv
        storageSize: 1Gi
 
 Those configs not mentioned below, are following the
-`default specs defined in the NNI doc <https://nni.readthedocs.io/en/latest/Tutorial/ExperimentConfig.html#configuration-spec>`__.
+`default specs defined in the NNI doc </Tutorial/ExperimentConfig.html#configuration-spec>`__.
 
 
 * **trainingServicePlatform**\ : Choose ``adl`` to use the Kubernetes cluster with AdaptDL scheduler.

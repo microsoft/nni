@@ -7,28 +7,36 @@
 
 NNI supports running an experiment on `OpenPAI <https://github.com/Microsoft/pai>`__\ , called pai mode. Before starting to use NNI pai mode, you should have an account to access an `OpenPAI <https://github.com/Microsoft/pai>`__ cluster. See `here <https://github.com/Microsoft/pai#how-to-deploy>`__ if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
-[toc]
+.. toctree::
 
 Setup environment
 -----------------
 
-**Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>`__.**   
+**Step 1. Install NNI, follow the install guide** `here <../Tutorial/QuickStart.rst>`__.   
 
 **Step 2. Get token.**
 
 Open web portal of OpenPAI, and click ``My profile`` button in the top-right side.
-:raw-html:`<img src="../../img/pai_profile.jpg" style="zoom: 80%;" />`
+
+.. image:: ../../img/pai_profile.jpg
+   :scale: 80%
 
 Click ``copy`` button in the page to copy a jwt token.
-:raw-html:`<img src="../../img/pai_token.jpg" style="zoom:67%;" />`
+
+.. image:: ../../img/pai_token.jpg
+   :scale: 67%
 
 **Step 3. Mount NFS storage to local machine.**  
 
 Click ``Submit job`` button in web portal.
-:raw-html:`<img src="../../img/pai_job_submission_page.jpg" style="zoom: 50%;" />`
+
+.. image:: ../../img/pai_job_submission_page.jpg
+   :scale: 50%
 
 Find the data management region in job submission page.
-:raw-html:`<img src="../../img/pai_data_management_page.jpg" style="zoom: 33%;" />`  
+
+.. image:: ../../img/pai_data_management_page.jpg
+   :scale: 33%  
 
 The ``Preview container paths`` is the NFS host and path that OpenPAI provided, you need to mount the corresponding host and path to your local machine first, then NNI could use the OpenPAI's NFS storage.\ :raw-html:`<br>`
 For example, use the following command:
@@ -207,10 +215,14 @@ Notice: In pai mode, NNIManager will start a rest server and listen on a port wh
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
 
 Expand a trial information in trial list view, click the logPath link like:
-:raw-html:`<img src="../../img/nni_webui_joblist.jpg" style="zoom: 30%;" />`
+
+.. image:: ../../img/nni_webui_joblist.jpg
+   :scale: 30%
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-:raw-html:`<img src="../../img/nni_trial_hdfs_output.jpg" style="zoom: 80%;" />`
+
+.. image:: ../../img/nni_trial_hdfs_output.jpg
+   :scale: 80%
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
@@ -232,4 +244,6 @@ Check policy:
 
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
 
-:raw-html:`<img src="../../img/version_check.png" style="zoom: 80%;" />`
+
+.. image:: ../../img/version_check.png
+   :scale: 80%
