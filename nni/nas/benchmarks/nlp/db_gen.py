@@ -26,7 +26,7 @@ def main():
                         unested_arch['{}_input_{}'.format(k, i)] = arch[k]['input'][i]
                 config = NlpTrialConfig.create(arch=unested_arch, dataset=cur['data'][5:])
                 if cur['status'] == 'OK':
-                    trial_stats = NlpTrialStats.create(config=config, train_loss=cur['train_losses'][-1], val_loss=cur['val_losses'][-1], \ 
+                    trial_stats = NlpTrialStats.create(config=config, train_loss=cur['train_losses'][-1], val_loss=cur['val_losses'][-1],
                                                        test_loss=cur['test_losses'][-1], training_time=cur['wall_times'][-1])
                     epochs = 50
                     intermediate_stats = []
