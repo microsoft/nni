@@ -257,7 +257,9 @@ class LocalTrainingService implements TrainingService {
         const pid = trialJob.pid;
         setTimeout(((pid: number) => {
             tkill(pid, 'SIGKILL', (err) => {
-                this.log.warning(`cancel trial job {pid: ${pid}} failed: ${err?.message}`);
+                if (err){
+                    this.log.warning(`cancel trial job {pid: ${pid}} failed: ${err.message}`);
+                }
             });
         }).bind(this), 5 * 1000, pid);
 
