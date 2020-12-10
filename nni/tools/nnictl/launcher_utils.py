@@ -63,14 +63,16 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         expand_path(experiment_config['trial'], 'paiConfigPath')
 
-    #if users use relative path, convert it to absolute path
+    # If users use relative path, convert it to absolute path.
     root_path = os.path.dirname(config_path)
     if experiment_config.get('searchSpacePath'):
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
     if experiment_config.get('logDir'):
         parse_relative_path(root_path, experiment_config, 'logDir')
     if experiment_config.get('trial'):
-        parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
+        # In AdaptDL mode, 'codeDir' shouldn't be parsed because it points to the path in the container.
+        if experiment_config.get('trainingServicePlatform') != 'adl':
+            parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
         if experiment_config['trial'].get('authFile'):
             parse_relative_path(root_path, experiment_config['trial'], 'authFile')
         if experiment_config['trial'].get('ps'):
