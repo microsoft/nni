@@ -261,7 +261,7 @@ class LocalTrainingService implements TrainingService {
                     this.log.warning(`cancel trial job {pid: ${pid}} failed: ${err.message}`);
                 }
             });
-        }).bind(this), 5 * 1000, pid);
+        }).bind(this), 1000, pid);
 
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
