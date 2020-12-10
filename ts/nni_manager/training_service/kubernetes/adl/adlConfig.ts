@@ -84,7 +84,7 @@ export class AdlTrialConfig extends KubernetesTrialConfig {
         this.command = command;
         this.gpuNum = gpuNum;
         this.image = image;
-        this.namespace = namespace
+        this.namespace = namespace;
         this.imagePullSecrets = imagePullSecrets;
         this.nfs = nfs;
         this.checkpoint = checkpoint;

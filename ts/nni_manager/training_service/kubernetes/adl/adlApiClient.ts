@@ -17,7 +17,7 @@ class AdlClientV1 extends KubernetesCRDClient {
 
     public constructor(namespace: string) {
         super();
-        this.namespace = namespace
+        this.namespace = namespace;
         this.crdSchema = JSON.parse(fs.readFileSync('./config/adl/adaptdl-crd-v1.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }

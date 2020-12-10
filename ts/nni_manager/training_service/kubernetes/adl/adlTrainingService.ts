@@ -298,10 +298,10 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
 
         // Delete Tensorboard deployment
         try {
-            await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + this.experimentId.toLowerCase())
-            this.log.info('tensorboard deployment deleted')
+            await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + this.experimentId.toLowerCase());
+            this.log.info('tensorboard deployment deleted');
         } catch (error) {
-            this.log.error(`tensorboard deployment deletion failed: ${error.message}`)
+            this.log.error(`tensorboard deployment deletion failed: ${error.message}`);
         }
     }
 
@@ -313,9 +313,9 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
-                let namespace: string = 'default';
+                var namespace: string = 'default';
                 if (this.adlTrialConfig.namespace !== undefined) {
-                    namespace = this.adlTrialConfig.namespace
+                    namespace = this.adlTrialConfig.namespace;
                 }
                 this.genericK8sClient.setNamespace = namespace;
                 this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
