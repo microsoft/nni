@@ -84,15 +84,23 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
         if self._use_cuda:
             self.model.cuda()
         self._loss_fn = nn.CrossEntropyLoss()
-        self._dataset = getattr(datasets, dataset_cls)(transform=get_default_transform(dataset_cls),
-                                                       **(dataset_kwargs or {}))
+        self._train_dataset = getattr(datasets, dataset_cls)(train=True,
+                                                             transform=get_default_transform(
+                                                                 dataset_cls),
+                                                             **(dataset_kwargs or {}))
+        self._val_dataset = getattr(datasets, dataset_cls)(train=False,
+                                                           transform=get_default_transform(
+                                                               dataset_cls),
+                                                           **(dataset_kwargs or {}))
         self._optimizer = getattr(torch.optim, optimizer_cls)(
             model.parameters(), **(optimizer_kwargs or {}))
         self._trainer_kwargs = trainer_kwargs or {'max_epochs': 10}
 
         # TODO: we will need at least two (maybe three) data loaders in future.
-        self._dataloader = DataLoader(
-            self._dataset, **(dataloader_kwargs or {}))
+        self._train_dataloader = DataLoader(
+            self._train_dataset, **(dataloader_kwargs or {}))
+        self._val_dataloader = DataLoader(
+            self._val_dataset, **(dataloader_kwargs or {}))
 
     def _accuracy(self, input, target):
         _, predict = torch.max(input.data, 1)
@@ -138,12 +146,12 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
 
     def _validate(self):
         validation_outputs = []
-        for i, batch in enumerate(self._dataloader):
+        for i, batch in enumerate(self._val_dataloader):
             validation_outputs.append(self.validation_step(batch, i))
         return self.validation_epoch_end(validation_outputs)
 
     def _train(self):
-        for i, batch in enumerate(self._dataloader):
+        for i, batch in enumerate(self._train_dataloader):
             loss = self.training_step(batch, i)
             loss.backward()
 
@@ -180,11 +188,13 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                                                                    dataset_cls),
                                                                **(dataset_kwargs or {}))
                 val_dataset = getattr(datasets, dataset_cls)(train=False,
-                                                               transform=get_default_transform(
-                                                                   dataset_cls),
-                                                               **(dataset_kwargs or {}))
-                train_dataloader = DataLoader(train_dataset, **(dataloader_kwargs or {}))
-                val_dataloader = DataLoader(val_dataset, **(dataloader_kwargs or {}))
+                                                             transform=get_default_transform(
+                                                                 dataset_cls),
+                                                             **(dataset_kwargs or {}))
+                train_dataloader = DataLoader(
+                    train_dataset, **(dataloader_kwargs or {}))
+                val_dataloader = DataLoader(
+                    val_dataset, **(dataloader_kwargs or {}))
                 self._train_datasets.append(train_dataset)
                 self._train_dataloaders.append(train_dataloader)
 
@@ -268,7 +278,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         return loss
 
     def _validate(self):
-        all_val_outputs = {idx : [] for idx in range(self.n_model)}
+        all_val_outputs = {idx: [] for idx in range(self.n_model)}
         for batch_idx, multi_model_batch in enumerate(zip(*self._val_dataloaders)):
             xs = []
             ys = []
@@ -279,7 +289,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                 ys.append(y)
             if len(ys) != len(xs):
                 raise ValueError('len(ys) should be equal to len(xs)')
-            
+
             y_hats = self.multi_model(*xs)
 
             for output_idx, yhat in enumerate(y_hats):
@@ -298,7 +308,8 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                 #             [output_idx]['model_id']] = loss.item()
         report_acc = {}
         for idx in all_val_outputs:
-            avg_acc = np.mean([x['val_acc'] for x in all_val_outputs[idx]]).item()
+            avg_acc = np.mean([x['val_acc']
+                               for x in all_val_outputs[idx]]).item()
             report_acc[self.kwargs['model_kwargs'][idx]['model_id']] = avg_acc
         nni.report_intermediate_result(report_acc)
         return report_acc
@@ -317,7 +328,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
     def validation_step_after_model(self, x, y, y_hat):
         acc = self._accuracy(y_hat, y)
         return {'val_acc': acc}
-    
+
     def _accuracy(self, input, target):
         _, predict = torch.max(input.data, 1)
         correct = predict.eq(target.data).cpu().sum().item()
