@@ -134,7 +134,6 @@ def start_tensorboard(args):
     if experiment_dict[args.id]["status"] == "STOPPED":
         print_error("Experiment {} is stopped...".format(args.id))
         return
-    config_file_name = experiment_dict[experiment_id]['fileName']
     nni_config = Config(args.id)
     if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
         adl_tensorboard_helper(args)

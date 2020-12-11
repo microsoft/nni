@@ -61,7 +61,6 @@ dependencies = [
     'hyperopt==0.1.2',
     'json_tricks',
     'netifaces',
-    'numpy',
     'psutil',
     'ruamel.yaml',
     'requests',
@@ -74,13 +73,12 @@ dependencies = [
     'pkginfo',
     'websockets',
     'filelock',
-    'prettytable'
+    'prettytable',
+    'dataclasses ; python_version < "3.7"',
+    'numpy < 1.19.4 ; sys_platform == "win32"',
+    'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
+    'numpy ; sys.platform != "win32" and python_version >= "3.7"'
 ]
-
-if sys.platform == 'win32':
-    dependencies[dependencies.index('numpy')] = 'numpy<1.19.4'
-elif sys.version_info < (3, 7):
-    dependencies[dependencies.index('numpy')] = 'numpy<1.20'
 
 release = os.environ.get('NNI_RELEASE')
 
@@ -140,7 +138,7 @@ def _setup():
 def _find_python_packages():
     packages = []
     for dirpath, dirnames, filenames in os.walk('nni'):
-        if '/__pycache__' not in dirpath:
+        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath:
             packages.append(dirpath.replace('/', '.'))
     return sorted(packages) + ['nni_node']
 
@@ -203,14 +201,16 @@ class Build(build):
 
 class Develop(develop):
     user_options = develop.user_options + [
-        ('no-user', None, 'Prevent automatically adding "--user"')
+        ('no-user', None, 'Prevent automatically adding "--user"'),
+        ('skip-ts', None, 'Prevent building TypeScript modules')
     ]
 
-    boolean_options = develop.boolean_options + ['no-user']
+    boolean_options = develop.boolean_options + ['no-user', 'skip-ts']
 
     def initialize_options(self):
         super().initialize_options()
         self.no_user = None
+        self.skip_ts = None
 
     def finalize_options(self):
         # if `--user` or `--no-user` is explicitly set, do nothing
@@ -220,7 +220,8 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
-        setup_ts.build(release=None)
+        if not self.skip_ts:
+            setup_ts.build(release=None)
         _copy_data_files()
         super().run()
 
