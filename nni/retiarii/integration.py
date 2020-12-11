@@ -123,7 +123,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
     def _process_value(value) -> Any:  # hopefully a float
         value = json_tricks.loads(value)
         if isinstance(value, dict):
-            return value['default']
+            if 'default' in value:
+                return value['default']
+            else:
+                return value
         return value
 
 

@@ -150,7 +150,7 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
         else:
-            raise RuntimeError('unsupported operation type: {}'.format(self.type))
+            raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 
 class TensorFlowOperation(Operation):
     def _to_class_name(self) -> str:

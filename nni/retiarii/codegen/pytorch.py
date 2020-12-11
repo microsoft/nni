@@ -7,11 +7,12 @@ from ..operation import Operation, Cell
 _logger = logging.getLogger(__name__)
 
 
-def model_to_pytorch_script(model: Model) -> str:
+
+def model_to_pytorch_script(model: Model, placement = None) -> str:
     graphs = []
     total_pkgs = set()
     for name, cell in model.graphs.items():
-        import_pkgs, graph_code = graph_to_pytorch_model(name, cell)
+        import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement = placement)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
     # FIXME: set correct PATH for the packages (after launch refactor)
@@ -23,6 +24,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
     _logger.info('sorted_incoming_edges: {}'.format(edges))
     if not edges:
         return []
+    _logger.info(f'all tail_slots are None: {[edge.tail_slot for edge in edges]}')
     if all(edge.tail_slot is None for edge in edges):
         return edges
     if all(isinstance(edge.tail_slot, int) for edge in edges):
@@ -68,12 +70,14 @@ def _remove_prefix(names, graph_name):
     else:
         return names[len(graph_name):] if names.startswith(graph_name) else names
 
-def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
-    nodes = graph.nodes
+def graph_to_pytorch_model(graph_name: str, graph: Graph, placement = None) -> str:
+    nodes = graph.topo_sort()  # FIXME: topological sort is needed here
+
     # handle module node and function node differently
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
+    placement_codes = []
     for node in nodes:
         if node.operation:
             pkg_name = node.operation.get_import_pkg()
@@ -81,7 +85,10 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph) -> str:
                 import_pkgs.add(pkg_name)
             node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
             if node_code is not None:
-                node_codes.append(node_code)
+                if placement and node in placement and len(node_code) > 0:
+                    node_codes.append(f"{node_code}.to('{placement[node].device}')")
+                else:
+                    node_codes.append(node_code)
 
     if graph.input_node.operation.io_names is None:
         input_code = '*_inputs'

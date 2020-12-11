@@ -5,6 +5,7 @@ Model representation.
 import copy
 from enum import Enum
 import json
+from collections import defaultdict
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
@@ -50,6 +51,10 @@ class TrainingConfig:
             'module': self.module,
             'kwargs': self.kwargs
         }
+
+    def __eq__(self, other):
+        return self.module == other.module and \
+            self.kwargs == other.kwargs
 
 
 class Model:
@@ -310,6 +315,13 @@ class Graph:
         Returns nodes whose operation is specified typed.
         """
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
+        
+    def get_node_by_id(self, id: int) -> Optional['Node']:
+        """
+        Returns the node which has specified name; or returns `None` if no node has this name.
+        """
+        found = [node for node in self.nodes if node.id == id]
+        return found[0] if found else None
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.label == label]
@@ -355,8 +367,8 @@ class Graph:
     def __eq__(self, other: object) -> bool:
         return self is other
 
-    def _fork_to(self, model: Model) -> 'Graph':
-        new_graph = Graph(model, self.id, self.name, _internal=True)._register()
+    def _fork_to(self, model: Model, name_prefix='') -> 'Graph':
+        new_graph = Graph(model, self.id, name_prefix+self.name, _internal=True)._register()
         # TODO: use node copy instead
         new_graph.input_node.operation.io_names = self.input_node.operation.io_names
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
@@ -556,7 +568,6 @@ class Node:
             ret['label'] = self.label
         return ret
 
-
 class Edge:
     """
     A tensor, or "data flow", between two nodes.
@@ -638,6 +649,6 @@ class IllegalGraphError(ValueError):
     @staticmethod
     def _debug_dump_graph(graph):
         if isinstance(graph, Graph):
-            graph = graph.dump()
+            graph = graph._dump()
         with open('generated/debug.json', 'w') as dump_file:
             json.dump(graph, dump_file, indent=4)

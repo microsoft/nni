@@ -23,10 +23,10 @@
 
     "stem": {
         "nodes": {
-            "conv1": {"operation": {"type": "Conv2d", "parameters": {"out_channels": 32, "in_channels": 1, "kernel_size": 5}}},
-            "pool1": {"operation": {"type": "MaxPool2d", "parameters": {"kernel_size": 2}}},
-            "conv2": {"operation": {"type": "Conv2d", "parameters": {"out_channels": 64, "in_channels": 32, "kernel_size": 5}}},
-            "pool2": {"operation": {"type": "MaxPool2d", "parameters": {"kernel_size": 2}}}
+            "conv1": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 32, "in_channels": 1, "kernel_size": 5}}},
+            "pool1": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}},
+            "conv2": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 64, "in_channels": 32, "kernel_size": 5}}},
+            "pool2": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}}
         },
 
         "edges": [
@@ -41,6 +41,7 @@
     "_training_config": {
         "module": "nni.retiarii.trainer.PyTorchImageClassificationTrainer",
         "kwargs": {
+            "dataset_cls": "MNIST",
             "dataset_kwargs": {
                 "root": "data/mnist",
                 "download": true
@@ -48,6 +49,7 @@
             "dataloader_kwargs": {
                 "batch_size": 32
             },
+            "optimizer_cls" : "SGD",
             "optimizer_kwargs": {
                 "lr": 1e-3
             },
