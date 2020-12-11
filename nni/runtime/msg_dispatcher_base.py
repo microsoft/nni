@@ -25,11 +25,11 @@ class MsgDispatcherBase(Recoverable):
     """
 
     def __init__(self):
+        self.stopping = False
         if multi_thread_enabled():
             self.pool = ThreadPool()
             self.thread_results = []
         else:
-            self.stopping = False
             self.default_command_queue = Queue()
             self.assessor_command_queue = Queue()
             self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
@@ -43,11 +43,11 @@ class MsgDispatcherBase(Recoverable):
         """Run the tuner.
         This function will never return unless raise.
         """
-        _logger.info('Start dispatcher')
+        _logger.info('Dispatcher started')
         if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
-        while True:
+        while not self.stopping:
             command, data = receive()
             if data:
                 data = json_tricks.loads(data)
@@ -75,7 +75,7 @@ class MsgDispatcherBase(Recoverable):
             self.default_worker.join()
             self.assessor_worker.join()
 
-        _logger.info('Terminated by NNI manager')
+        _logger.info('Dispatcher terminiated')
 
     def command_queue_worker(self, command_queue):
         """Process commands in command queues.

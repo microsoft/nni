@@ -8,7 +8,7 @@ import time
 import torch
 import torch.nn as nn
 from torchvision.models import resnet
-from nni.compression.torch import AMCPruner
+from nni.algorithms.compression.pytorch.pruning import AMCPruner
 from data import get_split_dataset
 from utils import AverageMeter, accuracy
 
