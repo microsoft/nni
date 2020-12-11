@@ -166,6 +166,9 @@ def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 def _copy_data_files():
+    # after installation, nni needs to find this location in nni.tools.package_utils.get_registered_algo_config_path
+    # since we can not import nni here, we need to ensure get_registered_algo_config_path use the same
+    # logic here to retrieve registered_algorithms.yml
     if _using_conda_or_virtual_environment():
         nni_config_dir = os.path.join(sys.prefix, 'nni')
     elif sys.platform == 'win32':

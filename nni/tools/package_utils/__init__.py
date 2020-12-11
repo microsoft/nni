@@ -210,8 +210,10 @@ def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 def get_registered_algo_config_path():
-    # FIXME: this might not be the desired location
-    #config_dir = Path(nni.__path__[0]).parent / 'nni_config'
+    # Find the path for registered_algorithms.yml for this nni installation,
+    # the registered_algorithms.yml is copied into this location in setup.py,
+    # so we need to ensure that we use the same logic as setup.py to find the location.
+
     if _using_conda_or_virtual_environment():
         nni_config_dir = os.path.join(sys.prefix, 'nni')
     elif sys.platform == 'win32':

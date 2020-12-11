@@ -216,7 +216,15 @@ def parse_args():
     parser_algo = subparsers.add_parser('algo', help='control nni builtin tuner, assessor and advisor algorithms')
     # add subparsers for parser_algo
     parser_algo_subparsers = parser_algo.add_subparsers()
-    parser_algo_reg = parser_algo_subparsers.add_parser('register', aliases=('reg',), help='register algorithms as nni builtin algorithm')
+    parser_algo_reg = parser_algo_subparsers.add_parser(
+        'register',
+        aliases=('reg',),
+        help='''register algorithms as nni builtin algorithm, for example:
+            nnictl reg --meta_path <path_to_meta_file>
+            where <path_to_meta_file> is the path to a meta data in yml format,
+            reference the nni document and examples/tuners/customized_tuner example
+            for the format of the yml file.'''
+    )
     parser_algo_reg.add_argument('--meta_path', '-m', dest='meta_path', help='path to the meta file', required=True)
     parser_algo_reg.set_defaults(func=algo_reg)
 
@@ -230,6 +238,17 @@ def parse_args():
 
     parser_algo_list = parser_algo_subparsers.add_parser('list', help='list registered algorithms')
     parser_algo_list.set_defaults(func=algo_list)
+
+    # To show message that nnictl package command is replaced by nnictl algo, to be remove in the future release.
+    def show_messsage_for_nnictl_package(args):
+        print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
+
+    parser_package_subparsers = subparsers.add_parser('package', help='control nni tuner and assessor packages').add_subparsers()
+    parser_package_subparsers.add_parser('install', help='install packages').set_defaults(func=show_messsage_for_nnictl_package)
+    parser_package_subparsers.add_parser('uninstall', help='uninstall packages').set_defaults(func=show_messsage_for_nnictl_package)
+    parser_package_subparsers.add_parser('show', help='show the information of packages').set_defaults(
+        func=show_messsage_for_nnictl_package)
+    parser_package_subparsers.add_parser('list', help='list installed packages').set_defaults(func=show_messsage_for_nnictl_package)
 
     #parse tensorboard command
     parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
