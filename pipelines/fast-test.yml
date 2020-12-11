@@ -2,18 +2,18 @@
 # so that a bug in any module will cause at least one platform to fail quickly.
 
 jobs:
-- job: 'ubuntu_latest'
+- job: ubuntu_latest
   pool:
     # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
-    vmImage: 'ubuntu-18.04'
+    vmImage: ubuntu-18.04
 
   # This platform tests lint and doc first.
 
   steps:
-  - task: usepythonversion@0
+  - task: UsePythonVersion@0
     inputs:
-      versionspec: 3.9
-    displayname: configure python
+      versionSpec: 3.9
+    displayName: Configure Python version
 
   - script: |
       set -e
@@ -21,11 +21,11 @@ jobs:
       python -m pip install --upgrade pytest coverage
       python -m pip install --upgrade pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: 'Install Python tools'
+    displayName: Install Python tools
 
   - script: |
       python setup.py develop
-    displayName: 'Install NNI'
+    displayName: Install NNI
 
   - script: |
       set -e
@@ -33,7 +33,7 @@ jobs:
       yarn eslint
       cd ../webui
       yarn eslint
-    displayName: 'ESLint'
+    displayName: ESLint
 
   - script: |
       set -e
@@ -46,7 +46,7 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
-    displayName: 'Install extra dependencies'
+    displayName: Install extra dependencies
 
   - script: |
       set -e
@@ -54,17 +54,17 @@ jobs:
       python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
       python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-    displayName: 'pylint and flake8'
+    displayName: pylint and flake8
 
   - script: |
       cd docs/en_US
       sphinx-build -M html . _build -W --keep-going -T
-    displayName: 'Check Sphinx documentation'
+    displayName: Check Sphinx documentation
 
   - script: |
       cd test
       python -m pytest ut
-    displayName: 'Python unit test'
+    displayName: Python unit test
 
   - script: |
       set -e
@@ -72,36 +72,36 @@ jobs:
       yarn test
       cd ../nasui
       CI=true yarn test
-    displayName: 'TypeScript unit test'
+    displayName: TypeScript unit test
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple integration test'
+    displayName: Simple integration test
 
 
-- job: 'ubuntu_legacy'
+- job: ubuntu_legacy
   pool:
-    vmImage: 'ubuntu-18.04'
+    vmImage: ubuntu-18.04
 
   # This platform runs integration test first.
 
   steps:
-  - task: usepythonversion@0
+  - task: UsePythonVersion@0
     inputs:
-      versionspec: 3.6
-    displayname: configure python
+      versionSpec: 3.6
+    displayName: Configure Python version
 
   - script: |
       set -e
       python -m pip install --upgrade pip setuptools
       python -m pip install pytest coverage
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: 'Install Python tools'
+    displayName: Install Python tools
 
   - script: |
       python setup.py develop
-    displayName: 'Install NNI'
+    displayName: Install NNI
 
   - script: |
       set -e
@@ -112,17 +112,17 @@ jobs:
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
-    displayName: 'Install extra dependencies'
+    displayName: Install extra dependencies
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple integration test'
+    displayName: Simple integration test
 
   - script: |
       cd test
       python -m pytest ut
-    displayName: 'Python unit test'
+    displayName: Python unit test
 
   - script: |
       set -e
@@ -130,38 +130,38 @@ jobs:
       yarn test
       cd ../nasui
       CI=true yarn test
-    displayName: 'TypeScript unit test'
+    displayName: TypeScript unit test
 
 
-- job: 'macos'
+- job: macos
   pool:
-    vmImage: 'macOS-10.15'
+    vmImage: macOS-10.15
 
   # This platform runs TypeScript unit test first.
 
   steps:
-  - task: usepythonversion@0
+  - task: UsePythonVersion@0
     inputs:
-      versionspec: 3.8
-    displayname: configure python
+      versionSpec: 3.8
+    displayName: Configure Python version
 
   - script: |
       set -e
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       python -m pip install --upgrade pip setuptools wheel
       python -m pip install pytest coverage
-    displayName: 'Install Python tools'
+    displayName: Install Python tools
 
   - script: |
       python setup.py develop
-    displayName: 'Install NNI'
+    displayName: Install NNI
 
   - script: |
       set -e
       export CI=true
       (cd ts/nni_manager && yarn test)
       (cd ts/nasui && yarn test)
-    displayName: 'TypeScript unit test'
+    displayName: TypeScript unit test
 
   - script: |
       set -e
@@ -172,62 +172,62 @@ jobs:
       rm -f /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
       nnictl package install --name=SMAC
-    displayName: 'Install extra dependencies'
+    displayName: Install extra dependencies
 
   - script: |
       cd test
       python -m pytest ut
-    displayName: 'Python unit test'
+    displayName: Python unit test
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple integration test'
+    displayName: Simple integration test
 
 
 # FIXME: Windows UT is still under debugging
 
-- job: 'windows'
+- job: windows
   pool:
-    vmImage: 'windows-2019'
+    vmImage: windows-2019
 
   # This platform runs Python unit test first.
 
   steps:
-  - task: usepythonversion@0
+  - task: UsePythonVersion@0
     inputs:
-      versionspec: 3.8
-    displayname: configure python
+      versionSpec: 3.8
+    displayName: Configure Python version
 
   - script: |
       python -m pip install --upgrade pip setuptools
       python -m pip install pytest coverage
-    displayName: 'Install Python tools'
+    displayName: Install Python tools
 
   - script: |
       python setup.py develop --no-user
-    displayName: 'Install NNI'
+    displayName: Install NNI
 
   - script: |
       python -m pip install scikit-learn==0.23.2
       python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python -m pip install tensorflow==2.3.1
-    displayName: 'Install extra dependencies'
+    displayName: Install extra dependencies
 
   - script: |
       cd test
       python -m pytest ut
-    displayName: 'Python unit test'
+    displayName: Python unit test
 
   - script: |
       cd ts/nni_manager
       yarn test
-    displayName: 'TypeScript unit test'
+    displayName: TypeScript unit test
 
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: 'Simple integration test'
+    displayName: Simple integration test
 
 
 trigger:
