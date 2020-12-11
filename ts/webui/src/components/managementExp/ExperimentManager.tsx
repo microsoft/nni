@@ -166,7 +166,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <NameColumn port={item.port} expName={item.experimentName} />
+            onRender: (item: any): React.ReactNode => (
+                <NameColumn port={item.port} status={item.status} expName={item.experimentName} />
+            )
         },
         {
             name: 'ID',
@@ -203,7 +205,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
-                    <div>{item.port}</div>
+                    <div>{item.port !== undefined ? item.port : '--'}</div>
                 </div>
             )
         },

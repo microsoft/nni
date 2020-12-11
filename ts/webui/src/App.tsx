@@ -7,7 +7,7 @@ import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
 import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
 import './App.scss';
-import './static/style/common/common.scss';
+import './static/style/common.scss';
 
 interface AppState {
     interval: number;
@@ -31,13 +31,13 @@ export const AppContext = React.createContext({
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeColumn: (_val: string[]) => {},
+    changeColumn: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMetricGraphMode: (_val: 'max' | 'min') => {},
+    changeMetricGraphMode: (_val: 'max' | 'min'): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeMaxDurationUnit: (_val: string) => {},
+    changeMaxDurationUnit: (_val: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    changeEntries: (_val: string) => {},
+    changeEntries: (_val: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     updateOverviewPage: () => {}
 });

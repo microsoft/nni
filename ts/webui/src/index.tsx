@@ -4,7 +4,7 @@ import App from './App';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/Overview'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
-const Experiment = lazy(() => import('./components/managementExp/Experiment'));
+const Experiment = lazy(() => import('./components/managementExp/ExperimentManager'));
 import './index.css';
 import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';

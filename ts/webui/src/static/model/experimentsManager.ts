@@ -24,10 +24,12 @@ class ExperimentsManager {
             .then(data => {
                 const platforms: Set<string> = new Set();
                 for (const item of data) {
-                    if (typeof item.port === 'string') {
-                        item.port = JSON.parse(item.port);
-                        platforms.add(item.platform);
+                    if (item.port !== undefined) {
+                        if (typeof item.port === 'string') {
+                            item.port = JSON.parse(item.port);
+                        }
                     }
+                    platforms.add(item.platform);
                 }
                 this.experimentList = data;
                 this.platform = Array.from(platforms);
