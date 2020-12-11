@@ -727,8 +727,7 @@ class TrialDispatcher implements TrainingService {
         }
         if (environment.environmentService.hasStorageService) {	
             const storageService = component.get<StorageService>(StorageService);	
-            let trialWorkingFolder = storageService.joinPath('trials', trial.id);
-            trial.workingDirectory = trialWorkingFolder;	
+            trial.workingDirectory = storageService.joinPath('trials', trial.id);
         }	
         trial.settings = {
             trialId: trial.id,
