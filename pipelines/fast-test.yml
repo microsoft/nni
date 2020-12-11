@@ -50,12 +50,8 @@ jobs:
 
   - script: |
       set -e
-      python3 -m pylint --version
-      echo "## A ##"
       python3 -m pylint --rcfile pylintrc nni
-      echo "## B ##"
       python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-      echo "## C ##"
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
       python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: pylint and flake8
