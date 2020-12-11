@@ -6,6 +6,7 @@ from subprocess import Popen, PIPE, STDOUT
 import sys
 from unittest import TestCase, main, skipIf
 
+sys.path.append(str(Path(__file__).parent))
 from mock.restful_server import init_response
 
 from nni.tools.nnictl.command_utils import kill_command

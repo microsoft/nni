@@ -14,10 +14,10 @@ from torchvision import datasets, transforms
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 from models.cifar10.resnet import ResNet18, ResNet50
-from nni.compression.torch import L1FilterPruner, L2FilterPruner, FPGMPruner
-from nni.compression.torch import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
-from nni.compression.torch import ModelSpeedup
-from nni.compression.torch.utils.counter import count_flops_params
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner
+from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
+from nni.compression.pytorch import ModelSpeedup
+from nni.compression.pytorch.utils.counter import count_flops_params
 
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):

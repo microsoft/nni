@@ -1,4 +1,5 @@
 import contextlib
+import logging
 from pathlib import Path
 import socket
 from subprocess import Popen
@@ -6,40 +7,46 @@ import sys
 import time
 from typing import Optional, Tuple
 
+import colorama
+
 import nni.runtime.protocol
 import nni_node
 
 from .config import ExperimentConfig
+from .config import convert
 from . import management
 from .pipe import Pipe
 from . import rest
+
+_logger = logging.getLogger('nni.experiment')
 
 
 def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
     pipe = None
     proc = None
 
-    config.validate()
+    config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
-    if config._training_service == 'pai':
+    if config.training_service.platform == 'openpai':
         _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
     exp_id = management.generate_experiment_id()
 
     try:
-        print(f'Creating experiment {exp_id}...')
+        _logger.info(f'Creating experiment {colorama.Fore.CYAN}{exp_id}')
         pipe = Pipe(exp_id)
         proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
+        _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
-        print('Statring web server...')
+        _logger.info('Statring web server...')
         _check_rest_server(port)
-        print('Setting up...')
-        _init_experiment(config, port, debug)  # todo: kill on fail
+        _logger.info('Setting up...')
+        _init_experiment(config, port, debug)
         return proc, pipe
 
     except Exception as e:
-        print('Create experiment failed')
+        _logger.error('Create experiment failed')
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
@@ -58,9 +65,13 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
 
 
 def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Popen:
+    ts = config.training_service.platform
+    if ts == 'openpai':
+        ts = 'pai'
+
     args = {
         'port': port,
-        'mode': config._training_service,
+        'mode': ts,
         'experiment_id': experiment_id,
         'start_mode': 'new',
         'log_level': 'debug' if debug else 'info',
@@ -77,15 +88,18 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     return Popen(cmd, cwd=node_dir)
 
 
-def _check_rest_server(port: int, retry: int = 10) -> None:
-    for _ in range(retry):
+def _check_rest_server(port: int, retry: int = 3) -> None:
+    for i in range(retry):
         with contextlib.suppress(Exception):
             rest.get(port, '/check-status')
             return
+        if i > 0:
+            _logger.warning('Timeout, retry...')
         time.sleep(1)
     rest.get(port, '/check-status')
 
 
 def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
-    rest.put(port, '/experiment/cluster-metadata', config.cluster_metadata_json())
-    rest.post(port, '/experiment', config.experiment_config_json())
+    for cluster_metadata in convert.to_cluster_metadata(config):
+        rest.put(port, '/experiment/cluster-metadata', cluster_metadata)
+    rest.post(port, '/experiment', convert.to_rest_json(config))

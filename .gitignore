@@ -81,6 +81,7 @@ typings/
 __pycache__
 build
 *.egg-info
+.eggs/
 setup.pye
 **/__init__.pye
 **/.ipynb_checkpoints
