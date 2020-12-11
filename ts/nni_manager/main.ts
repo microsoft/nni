@@ -31,9 +31,9 @@ import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
-    logDirectory: string, experimentLogLevel: string, readonly: boolean): void {
+    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly);
+    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -157,7 +157,9 @@ if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
 }
 const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
 
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly);
+const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
+
+initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
 
 mkDirP(getLogDir())
     .then(async () => {

@@ -8,6 +8,7 @@ import { getBasePort, getExperimentId } from "../../../common/experimentStartupI
 import { INITIALIZED } from '../../../core/commands';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
+import { EventEmitter } from "events";
 
 class WebRunnerConnection extends RunnerConnection {
     public readonly clients: WebSocket[] = [];
@@ -29,7 +30,7 @@ class WebRunnerConnection extends RunnerConnection {
 
 export class WebCommandChannel extends CommandChannel {
     private readonly expId: string = getExperimentId();
-
+    private static commandChannel: WebCommandChannel;
     private webSocketServer: SocketServer | undefined;
     private clients: Map<WebSocket, WebRunnerConnection | undefined> = new Map<WebSocket, WebRunnerConnection | undefined>();
 
@@ -39,6 +40,18 @@ export class WebCommandChannel extends CommandChannel {
 
     public async config(_key: string, _value: any): Promise<void> {
         // do nothing
+    }
+    
+    // Set WebCommandChannel as singleton mode, one experiment could only start one webCommandChannel instance
+    private constructor(commandEmitter: EventEmitter) {
+        super(commandEmitter);
+    }
+
+    public static getInstance(commandEmitter: EventEmitter) {
+        if (!this.commandChannel) {
+            this.commandChannel = new WebCommandChannel(commandEmitter);
+        }
+        return this.commandChannel;
     }
 
     public async start(): Promise<void> {

@@ -3,9 +3,6 @@
 
 import * as chai from 'chai';
 import * as path from 'path';
-import { Scope } from "typescript-ioc";
-import { EventEmitter } from 'events';
-import * as component from '../../../common/component';
 import { getLogger, Logger } from "../../../common/log";
 import { TrialJobApplicationForm, TrialJobStatus } from '../../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, uniqueString } from '../../../common/utils';
@@ -212,9 +209,9 @@ describe('Unit Test for TrialDispatcher', () => {
         trialDispatcher.environmentServiceList = environmentServiceList;
         // set ut command channel
         commandChannel = new UtCommandChannel(trialDispatcher.commandEmitter);
-        let commandChannelDict: Map<Channel, CommandChannel> = new Map<Channel, CommandChannel>();
-        commandChannelDict.set('ut', commandChannel);
-        trialDispatcher.commandChannelDict = commandChannelDict;
+        environmentService.commandChannel = commandChannel;
+        trialDispatcher.commandChannelSet = new Set<CommandChannel>().add(environmentService.getCommandChannel);
+        trialDispatcher.environmentMaintenceLoopInterval = 1000;
 
         trialRunPromise = trialDispatcher.run();
     });

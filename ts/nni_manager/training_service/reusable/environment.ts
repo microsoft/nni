@@ -6,6 +6,9 @@
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
+import { CommandChannel } from "./commandChannel";
+import { WebCommandChannel } from './channels/webCommandChannel';
+import { EventEmitter } from "events";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -123,9 +126,11 @@ export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
-    public abstract refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void>;
+    public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    // Make public for ut
+    public commandChannel: CommandChannel | undefined;
     
     // It is used to set prefetched environment count, default value is 0 for OpenPAI and AML mode,
     // in remote mode, this value is set to the length of machine list.
@@ -134,9 +139,17 @@ export abstract class EnvironmentService {
     }
 
     public abstract get getName(): string;
+    
+    // Initialize command channel, use WebCommandChannel as default command channel
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = WebCommandChannel.getInstance(eventEmitter);
+    }
 
-    public get getCommandChannelName(): Channel {
-        return 'web';
+    public get getCommandChannel(): CommandChannel {
+        if (this.commandChannel === undefined) {
+            throw new Error("Command channel not initialized!");
+        }
+        return this.commandChannel;
     }
 
     // It depends on environment pressure and settings

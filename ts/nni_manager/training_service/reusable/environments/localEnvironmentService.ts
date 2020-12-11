@@ -30,7 +30,7 @@ export class LocalEnvironmentService extends EnvironmentService {
     }
 
     public get environmentMaintenceLoopInterval(): number {
-        return 1000;
+        return 100;
     }
 
     public get hasStorageService(): boolean {
@@ -51,39 +51,41 @@ export class LocalEnvironmentService extends EnvironmentService {
         }
     }
 
-    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
-        const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
-        const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
-        /* eslint-disable require-atomic-updates */
-        try {
-            // check if pid file exist
-            const pidExist = await fs.existsSync(jobpidPath);
-            if (!pidExist) {
-                return;
-            }
-            const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
-            const alive: boolean = await isAlive(pid);
-            environment.status = 'RUNNING';
-            // if the process of jobpid is not alive any more
-            if (!alive) {
-                if (fs.existsSync(runnerReturnCodeFilePath)) {
-                    const runnerReturnCode: string = await fs.promises.readFile(runnerReturnCodeFilePath, 'utf8');
-                    const match: RegExpMatchArray | null = runnerReturnCode.trim()
-                        .match(/^-?(\d+)\s+(\d+)$/);
-                    if (match !== null) {
-                        const { 1: code } = match;
-                        // Update trial job's status based on result code
-                        if (parseInt(code, 10) === 0) {
-                            environment.setStatus('SUCCEEDED');
-                        } else {
-                            environment.setStatus('FAILED');
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        environments.forEach(async (environment) => {
+            const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
+            const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
+            /* eslint-disable require-atomic-updates */
+            try {
+                // check if pid file exist
+                const pidExist = await fs.existsSync(jobpidPath);
+                if (!pidExist) {
+                    return;
+                }
+                const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
+                const alive: boolean = await isAlive(pid);
+                environment.status = 'RUNNING';
+                // if the process of jobpid is not alive any more
+                if (!alive) {
+                    if (fs.existsSync(runnerReturnCodeFilePath)) {
+                        const runnerReturnCode: string = await fs.promises.readFile(runnerReturnCodeFilePath, 'utf8');
+                        const match: RegExpMatchArray | null = runnerReturnCode.trim()
+                            .match(/^-?(\d+)\s+(\d+)$/);
+                        if (match !== null) {
+                            const { 1: code } = match;
+                            // Update trial job's status based on result code
+                            if (parseInt(code, 10) === 0) {
+                                environment.setStatus('SUCCEEDED');
+                            } else {
+                                environment.setStatus('FAILED');
+                            }
                         }
                     }
                 }
+            } catch (error) {
+                this.log.error(`Update job status exception, error is ${error.message}`);
             }
-        } catch (error) {
-            this.log.error(`Update job status exception, error is ${error.message}`);
-        }
+        });
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {

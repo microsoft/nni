@@ -9,8 +9,16 @@ from torchvision import datasets, transforms
 
 from models.cifar10.vgg import VGG
 import nni
-from nni.compression.torch import LevelPruner, SlimPruner, FPGMPruner, L1FilterPruner, \
-    L2FilterPruner, AGPPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner
+from nni.algorithms.compression.pytorch.pruning import (
+    LevelPruner,
+    SlimPruner,
+    FPGMPruner,
+    L1FilterPruner,
+    L2FilterPruner,
+    AGPPruner,
+    ActivationMeanRankFilterPruner,
+    ActivationAPoZRankFilterPruner
+)
 
 prune_config = {
     'level': {

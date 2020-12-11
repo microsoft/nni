@@ -15,6 +15,8 @@ import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
 import { Channel } from '../environment';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { EventEmitter } from "events";
+import { AMLCommandChannel } from '../channels/amlCommandChannel';
 
 
 /**
@@ -38,9 +40,9 @@ export class AMLEnvironmentService extends EnvironmentService {
     public get hasStorageService(): boolean {
         return false;
     }
-
-    public get getCommandChanneName(): Channel {
-        return 'aml';
+    
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = new AMLCommandChannel(eventEmitter);
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
@@ -72,34 +74,36 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
     }
     
-    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
-        const amlClient = (environment as AMLEnvironmentInformation).amlClient;
-        if (!amlClient) {
-            return Promise.reject('AML client not initialized!');
-        }
-        const newStatus = await amlClient.updateStatus(environment.status);
-        switch (newStatus.toUpperCase()) {
-            case 'WAITING':
-            case 'QUEUED':
-                environment.setStatus('WAITING');
-                break;
-            case 'RUNNING':
-                environment.setStatus('RUNNING');
-                break;
-            case 'COMPLETED':
-            case 'SUCCEEDED':
-                environment.setStatus('SUCCEEDED');
-                break;
-            case 'FAILED':
-                environment.setStatus('FAILED');
-                return Promise.reject(`AML: job ${environment.envId} is failed!`);
-            case 'STOPPED':
-            case 'STOPPING':
-                environment.setStatus('USER_CANCELED');
-                break;
-            default:
-                environment.setStatus('UNKNOWN');
-        }
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        environments.forEach(async (environment) => {
+            const amlClient = (environment as AMLEnvironmentInformation).amlClient;
+            if (!amlClient) {
+                return Promise.reject('AML client not initialized!');
+            }
+            const newStatus = await amlClient.updateStatus(environment.status);
+            switch (newStatus.toUpperCase()) {
+                case 'WAITING':
+                case 'QUEUED':
+                    environment.setStatus('WAITING');
+                    break;
+                case 'RUNNING':
+                    environment.setStatus('RUNNING');
+                    break;
+                case 'COMPLETED':
+                case 'SUCCEEDED':
+                    environment.setStatus('SUCCEEDED');
+                    break;
+                case 'FAILED':
+                    environment.setStatus('FAILED');
+                    return Promise.reject(`AML: job ${environment.envId} is failed!`);
+                case 'STOPPED':
+                case 'STOPPING':
+                    environment.setStatus('USER_CANCELED');
+                    break;
+                default:
+                    environment.setStatus('UNKNOWN');
+            }
+        });
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {

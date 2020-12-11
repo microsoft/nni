@@ -2,6 +2,8 @@
 // Licensed under the MIT license.
 
 import { Channel, EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
+import { EventEmitter } from 'events';
+import { UtCommandChannel } from "./utCommandChannel";
 
 export class UtEnvironmentService extends EnvironmentService {
     private allEnvironments = new Map<string, EnvironmentInformation>();
@@ -19,12 +21,12 @@ export class UtEnvironmentService extends EnvironmentService {
         return 1;
     }
 
-    public get getPlatform(): string {
+    public get getName(): string {
         return 'ut';
     }
 
-    public get getCommandChanneName(): Channel {
-        return 'ut';
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = new UtCommandChannel(eventEmitter);
     }
 
     public testSetEnvironmentStatus(environment: EnvironmentInformation, newStatus: EnvironmentStatus): void {
@@ -51,7 +53,7 @@ export class UtEnvironmentService extends EnvironmentService {
         // do nothing
     }
 
-    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         // do nothing
     }
 

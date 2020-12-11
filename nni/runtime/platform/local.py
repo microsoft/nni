@@ -7,7 +7,6 @@ import json
 import time
 import subprocess
 
-from ..common import init_logger
 from ..env_vars import trial_env_vars
 from nni.utils import to_json
 
@@ -22,10 +21,6 @@ if not os.path.exists(_outputdir):
 
 _reuse_mode = trial_env_vars.REUSE_MODE
 _nni_platform = trial_env_vars.NNI_PLATFORM
-_nni_trial_job_id = trial_env_vars.NNI_TRIAL_JOB_ID
-if _nni_platform == 'local' and _reuse_mode not in ('true', 'True'):
-    _log_file_path = os.path.join(_outputdir, 'trial.log')
-    init_logger(_log_file_path)
 
 _multiphase = trial_env_vars.MULTI_PHASE
 

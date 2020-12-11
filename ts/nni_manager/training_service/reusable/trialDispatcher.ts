@@ -30,9 +30,6 @@ import { AMLEnvironmentService } from './environments/amlEnvironmentService';
 import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
 import { LocalEnvironmentService } from './environments/localEnvironmentService';
 import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
-import { AMLCommandChannel } from './channels/amlCommandChannel';
-import { WebCommandChannel } from './channels/webCommandChannel';
-import { FileCommandChannel } from './channels/fileCommandChannel';
 
 
 /**
@@ -57,8 +54,9 @@ class TrialDispatcher implements TrainingService {
     private readonly environments: Map<string, EnvironmentInformation>;
     // make public for ut
     public environmentServiceList: EnvironmentService[] = [];
-    public commandChannelDict: Map<Channel, CommandChannel>;
+    public commandChannelSet: Set<CommandChannel>;
     public commandEmitter: EventEmitter;
+    public environmentMaintenceLoopInterval: number = -1;
 
     private nniManagerIp: string | undefined;
 
@@ -72,7 +70,6 @@ class TrialDispatcher implements TrainingService {
     // uses to save if user like to reuse environment
     private reuseEnvironment: boolean = true;
     private logCollection: string = '';
-    private environmentMaintenceLoopInterval: number = 5000;
 
     private gpuScheduler: GpuScheduler;
 
@@ -84,10 +81,10 @@ class TrialDispatcher implements TrainingService {
         this.log = getLogger();
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();
-        this.commandChannelDict = new Map<Channel, CommandChannel>();
         this.metricsEmitter = new EventEmitter();
         this.experimentId = getExperimentId();
         this.experimentRootDir = getExperimentRootDir();
+        this.commandChannelSet = new Set<CommandChannel>();
 
         const logLevel = getLogLevel();
         this.log.debug(`current folder ${__dirname}`);
@@ -154,12 +151,7 @@ class TrialDispatcher implements TrainingService {
             "trialId": trialJobId,
             "parameters": form.hyperParameters,
         }
-        const commandChannel: CommandChannel | undefined = 
-            this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-        if (commandChannel === undefined) {
-            throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-        }
-        await commandChannel.sendCommand(environment, SEND_TRIAL_JOB_PARAMETER, message);
+        await environment.environmentService.getCommandChannel.sendCommand(environment, SEND_TRIAL_JOB_PARAMETER, message);
 
         return trialDetail;
     }
@@ -173,12 +165,7 @@ class TrialDispatcher implements TrainingService {
                 {
                     const environment = trial.environment;
                     if (environment && environment.environmentService) {
-                        const commandChannel: CommandChannel | undefined = 
-                        this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-                        if (commandChannel === undefined) {
-                            throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-                        }
-                        await commandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
+                        await environment.environmentService.getCommandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
                         trial.isEarlyStopped = isEarlyStopped;
                         trial.status = trial.isEarlyStopped === true ?
                             'EARLY_STOPPED' : 'USER_CANCELED';
@@ -198,7 +185,7 @@ class TrialDispatcher implements TrainingService {
             const runnerSettings: RunnerSettings = new RunnerSettings();
             runnerSettings.nniManagerIP = this.nniManagerIp === undefined? getIPV4Address() : this.nniManagerIp;
             runnerSettings.nniManagerPort = getBasePort() + 1;
-            runnerSettings.commandChannel = environmentService.getCommandChannelName;
+            runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;
             runnerSettings.command = this.trialConfig.command;
             runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
@@ -206,13 +193,8 @@ class TrialDispatcher implements TrainingService {
             runnerSettings.platform = environmentService.getName;
             runnerSettings.experimentId = this.experimentId;
 
-            const commandChannel: CommandChannel | undefined = 
-                this.commandChannelDict.get(environmentService.getCommandChannelName);
-            if (commandChannel === undefined) {
-                throw new Error(`${environmentService.getCommandChannelName} command channel not initialized!`);
-            }
-            await commandChannel.start();
-            this.log.info(`TrialDispatcher: started channel: ${commandChannel.constructor.name}`);
+            await environmentService.getCommandChannel.start();
+            this.log.info(`TrialDispatcher: started channel: ${environmentService.getCommandChannel.constructor.name}`);
     
             this.log.info(`TrialDispatcher: copying code and settings.`);
             let storageService: StorageService;
@@ -254,7 +236,7 @@ class TrialDispatcher implements TrainingService {
         await this.prefetchEnvironments();
         this.log.info(`TrialDispatcher: run loop started.`);
         const promiseList: Promise<void>[] = [];
-        for(const commandChannel of this.commandChannelDict.values()) {
+        for(const commandChannel of this.commandChannelSet) {
             promiseList.push(commandChannel.run());
         }
         promiseList.push(this.environmentMaintenanceLoop());
@@ -320,21 +302,10 @@ class TrialDispatcher implements TrainingService {
                         default:
                             throw new Error(`${platform} not supported!`);
                     }
-                    if (!this.commandChannelDict.has(environmentService.getCommandChannelName)) {
-                        switch(environmentService.getCommandChannelName) {
-                            case 'aml':
-                                this.commandChannelDict.set('aml', new AMLCommandChannel(this.commandEmitter));
-                                break;
-                            case 'web':
-                                this.commandChannelDict.set('web', new WebCommandChannel(this.commandEmitter));
-                                break;
-                            case 'file':
-                                this.commandChannelDict.set('file', new FileCommandChannel(this.commandEmitter));
-                                break;
-                            default:
-                                throw new Error(`Unsupported channel ${environmentService.getCommandChannelName}`);
-                        }
-                    }
+                    environmentService.initCommandChannel(this.commandEmitter);
+                    this.environmentMaintenceLoopInterval =
+                      Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);
+                    this.commandChannelSet.add(environmentService.getCommandChannel);
                     this.environmentServiceList.push(environmentService);
                 }
             }
@@ -364,18 +335,12 @@ class TrialDispatcher implements TrainingService {
                     throw new Error(`${environment.id} do not have environmentService!`);
                 }
                 await environment.environmentService.stopEnvironment(environment);
-                const commandChannel: CommandChannel | undefined = 
-                    this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-                if (commandChannel === undefined) {
-                    throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-                }
                 this.log.info(`stopped environment ${environment.id}.`);
             }
         }
-
         this.commandEmitter.off("command", this.handleCommand);
-        for(const commandChannel of this.commandChannelDict.values()) {
-            commandChannel.stop();
+        for (const commandChannel of this.commandChannelSet) {
+            await commandChannel.stop();
         }
     }
 
@@ -389,20 +354,41 @@ class TrialDispatcher implements TrainingService {
                     if (environment.environmentService === undefined) {
                         throw new Error(`${environment.id} do not have environment service!`);
                     }
-                    const commandChannel: CommandChannel | undefined = 
-                        this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-                    if (commandChannel === undefined) {
-                        throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-                    }
-                    await commandChannel.close(environment);
+                    await environment.environmentService.getCommandChannel.close(environment);
                 }
             }
-           
+            // Group environments according to environmentService
+            const environmentServiceDict: Map<EnvironmentService, EnvironmentInformation[]> =
+                new Map<EnvironmentService, EnvironmentInformation[]>();
             for (const environment of environments) {
                 if (environment.environmentService === undefined) {
                     throw new Error(`${environment.id} do not have environment service!`);
                 }
-                await environment.environmentService.refreshEnvironmentStatus(environment);
+                if (!environmentServiceDict.has(environment.environmentService)) {
+                    environmentServiceDict.set(environment.environmentService, [environment]);
+                } else {
+                    let environmentsList: EnvironmentInformation[] | undefined = environmentServiceDict.get(environment.environmentService);
+                    if (environmentsList === undefined) {
+                        throw new Error(`Environment list not initialized!`);
+                    }
+                    environmentsList.push(environment);
+                    environmentServiceDict.set(environment.environmentService, environmentsList);
+                }
+            }
+            // Refresh all environments
+            let taskList: Promise<void>[] = [];
+            for (const environmentService of environmentServiceDict.keys()) {
+                const environmentsList: EnvironmentInformation[] | undefined = environmentServiceDict.get(environmentService);
+                if (environmentsList) {
+                    taskList.push(environmentService.refreshEnvironmentsStatus(environmentsList));
+                }
+            }
+            await Promise.all(taskList);
+
+            for (const environment of environments) {
+                if (environment.environmentService === undefined) {
+                    throw new Error(`${environment.id} do not have environment service!`);
+                }
                 const oldIsAlive = environment.isAlive;
                 switch (environment.status) {
                     case 'WAITING':
@@ -419,6 +405,9 @@ class TrialDispatcher implements TrainingService {
                 }
             }
             this.shouldUpdateTrials = true;
+            if (this.environmentMaintenceLoopInterval === -1) {
+                throw new Error("EnvironmentMaintenceLoopInterval not initialized!");
+            }
             await delay(this.environmentMaintenceLoopInterval);
         }
     }
@@ -482,12 +471,7 @@ class TrialDispatcher implements TrainingService {
                                 // for example, in horovod, it's just sleep command, has no impact on trial result.
                                 if (environment.nodeCount > completedCount) {
                                     this.log.info(`stop partial completed trial ${trial.id}`);
-                                    const commandChannel: CommandChannel | undefined = 
-                                    this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-                                    if (commandChannel === undefined) {
-                                        throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-                                    }
-                                    await commandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
+                                    await environment.environmentService.getCommandChannel.sendCommand(environment, KILL_TRIAL_JOB, trial.id);
                                 }
                                 for (const node of trial.nodes.values()) {
                                     if (node.status === "FAILED") {
@@ -705,12 +689,7 @@ class TrialDispatcher implements TrainingService {
         } else {
             environment.isAlive = true;
         }
-        const commandChannel: CommandChannel | undefined = 
-            this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-        if (commandChannel === undefined) {
-            throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-        }
-        await commandChannel.open(environment);
+        await environment.environmentService.getCommandChannel.open(environment);
         this.log.info(`requested environment ${environment.id} and job id is ${environment.envId}.`);
     }
 
@@ -743,6 +722,14 @@ class TrialDispatcher implements TrainingService {
         environment.runningTrialCount++;
         environment.assignedTrialCount++;
         trial.environment = environment;
+        if (environment.environmentService === undefined) {
+            throw new Error(`${environment.id} environmentService not initialized!`);
+        }
+        if (environment.environmentService.hasStorageService) {	
+            const storageService = component.get<StorageService>(StorageService);	
+            let trialWorkingFolder = storageService.joinPath('trials', trial.id);
+            trial.workingDirectory = trialWorkingFolder;	
+        }	
         trial.settings = {
             trialId: trial.id,
             gpuIndices: gpuIndices,
@@ -754,12 +741,7 @@ class TrialDispatcher implements TrainingService {
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} does not have environment service!`);
         }
-        const commandChannel: CommandChannel | undefined = 
-            this.commandChannelDict.get(environment.environmentService.getCommandChannelName);
-        if (commandChannel === undefined) {
-            throw new Error(`${environment.environmentService.getCommandChannelName} command channel not initialized!`);
-        }
-        await commandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
+        await environment.environmentService.getCommandChannel.sendCommand(trial.environment, NEW_TRIAL_JOB, trial.settings);
     }
     
     /**

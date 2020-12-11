@@ -171,6 +171,7 @@ class TrialManager {
         let updated = false;
         requestAxios(`${MANAGER_IP}/trial-jobs`)
             .then(data => {
+                this.trialJobList = data;
                 for (const trialInfo of data as TrialJobInfo[]) {
                     if (this.trials.has(trialInfo.trialJobId)) {
                         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

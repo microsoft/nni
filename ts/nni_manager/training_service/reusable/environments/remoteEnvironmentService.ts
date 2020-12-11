@@ -138,8 +138,16 @@ export class RemoteEnvironmentService extends EnvironmentService {
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
         await executor.allowPermission(true, nniRootDir);
     }
-    
-    public async refreshEnvironmentStatus(environment: EnvironmentInformation): Promise<void> {
+
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {	
+        const tasks: Promise<void>[] = [];	
+        environments.forEach(async (environment) => {	
+            tasks.push(this.refreshEnvironment(environment));	
+        });	
+        await Promise.all(tasks);	
+    }
+
+    private async refreshEnvironment(environment: EnvironmentInformation): Promise<void> {
         const executor = await this.getExecutor(environment.id);
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
