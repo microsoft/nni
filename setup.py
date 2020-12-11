@@ -65,7 +65,6 @@ dependencies = [
     'ruamel.yaml',
     'requests',
     'responses',
-    'scipy',
     'schema',
     'PythonWebHDFS',
     'colorama',
@@ -77,7 +76,9 @@ dependencies = [
     'dataclasses ; python_version < "3.7"',
     'numpy < 1.19.4 ; sys_platform == "win32"',
     'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
-    'numpy ; sys.platform != "win32" and python_version >= "3.7"'
+    'numpy ; sys.platform != "win32" and python_version >= "3.7"',
+    'scipy < 1.6 ; python_version < "3.7"',
+    'scipy ; python_version >= "3.7"',
 ]
 
 release = os.environ.get('NNI_RELEASE')
