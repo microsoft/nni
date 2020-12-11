@@ -2,39 +2,25 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Dict
+from typing import List, Optional, Union
 
-from .base import ExperimentConfig
+from .common import TrainingServiceConfig
 
+__all__ = ['LocalConfig']
 
 @dataclass(init=False)
-class LocalExperimentConfig(ExperimentConfig):
-    use_active_gpu: bool = False
+class LocalConfig(TrainingServiceConfig):
+    platform: str = 'local'
+    use_active_gpu: bool
+    max_trial_number_per_gpu: int = 1
+    gpu_indices: Optional[Union[List[int], str]] = None
 
-    _training_service: str = 'local'
+    _canonical_rules = {
+        'gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value
+    }
 
-    def experiment_config_json(self) -> Dict[str, Any]:
-        ret = super().experiment_config_json()
-        ret['clusterMetaData'] = [
-            {
-                'key': 'codeDir',
-                'value': str(Path(self.trial_code_directory).resolve())
-            },
-            {
-                'key': 'command',
-                'value': self.trial_command
-            }
-        ]
-        #ret['local_config'] = {
-        #    'useActiveGpu': self.use_active_gpu
-        #}
-        return ret
-
-    def cluster_metadata_json(self) -> Any:
-        return {
-            'trial_config': {
-                'command': self.trial_command,
-                'codeDir': str(Path(self.trial_code_directory).resolve())
-            }
-        }
+    _validation_rules = {
+        'platform': lambda value: (value == 'local', 'cannot be modified'),
+        'max_trial_number_per_gpu': lambda value: value > 0,
+        'gpu_indices': lambda value: all(idx >= 0 for idx in value) and len(value) == len(set(value))
+    }

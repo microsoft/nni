@@ -22,5 +22,6 @@ experiment.config.max_trial_number = 5
 experiment.config.search_space = search_space
 experiment.config.trial_command = 'python3 mnist.py'
 experiment.config.trial_code_directory = Path(__file__).parent
+experiment.config.training_service.use_active_gpu = True
 
-experiment.run(8081, debug=True)
+experiment.run(8081)

@@ -6,7 +6,7 @@ import { convertDuration, convertTimeAsUnit } from '../../../static/function';
 import { EditExperimentParam } from './EditExperimentParam';
 import { ExpDurationContext } from './ExpDurationContext';
 import { EditExpeParamContext } from './context';
-import { leftProgress, durationItem2, progressHeight } from './commonStyle';
+import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
 import '../../../static/style/overview/count.scss';
 
 export const ExpDuration = (): any => (
@@ -46,7 +46,7 @@ export const ExpDuration = (): any => (
                             <span>{`${maxExecDurationStr} ${maxDurationUnit}`}</span>
                         </div>
                     </div>
-                    <div style={durationItem2}>
+                    <div style={rightEidtParam}>
                         <EditExpeParamContext.Provider
                             value={{
                                 editType: CONTROLTYPE[0],
