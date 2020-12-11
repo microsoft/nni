@@ -1,4 +1,5 @@
 import abc
+from typing import *
 
 
 class BaseTrainer(abc.ABC):
@@ -19,4 +20,16 @@ class BaseTrainer(abc.ABC):
 
     @abc.abstractmethod
     def fit(self) -> None:
+        pass
+
+
+class BaseOneShotTrainer(BaseTrainer):
+    """
+    Build many (possibly all) architectures into a full graph, search (with train) and export the best.
+
+    It has an extra ``export`` function that exports an object representing the final searched architecture.
+    """
+
+    @abc.abstractmethod
+    def export(self) -> Any:
         pass

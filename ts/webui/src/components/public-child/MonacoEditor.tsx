@@ -27,7 +27,7 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
     render(): React.ReactNode {
         const { content, loading, height } = this.props;
         return (
-            <div className='just-for-log'>
+            <React.Fragment>
                 {loading ? (
                     <Spinner
                         label='Wait, wait...'
@@ -46,7 +46,7 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
                 ) : (
                     <MonacoEditor width='100%' height={height} language='json' value={content} options={DRAWEROPTION} />
                 )}
-            </div>
+            </React.Fragment>
         );
     }
 }

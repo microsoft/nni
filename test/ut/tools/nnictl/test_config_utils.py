@@ -19,7 +19,7 @@ class CommonUtilsTestCase(TestCase):
     
     def test_update_experiment(self):
         experiment = Experiments(HOME_PATH)
-        experiment.add_experiment('xOpEwA5w', 8081, 'N/A', 'aGew0x', 'local', 'test', endTime='N/A', status='INITIALIZED')
+        experiment.add_experiment('xOpEwA5w', 8081, 'N/A', 'local', 'test', endTime='N/A', status='INITIALIZED')
         self.assertTrue('xOpEwA5w' in experiment.get_all_experiments())
         experiment.remove_experiment('xOpEwA5w')
         self.assertFalse('xOpEwA5w' in experiment.get_all_experiments())

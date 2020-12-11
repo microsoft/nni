@@ -3,7 +3,8 @@
 
 from pathlib import Path
 from subprocess import Popen, PIPE, STDOUT
-from unittest import TestCase, main
+import sys
+from unittest import TestCase, main, skipIf
 
 from mock.restful_server import init_response
 
@@ -28,8 +29,12 @@ class CommonUtilsTestCase(TestCase):
         content = get_json_content(str(json_path))
         self.assertEqual(content, {'field':'test'})
 
+    @skipIf(sys.platform == 'win32', 'FIXME: Fails randomly on Windows, cannot reproduce locally')
     def test_detect_process(self):
-        cmds = ['sleep', '360000']
+        if sys.platform == 'win32':
+            cmds = ['timeout', '360000']
+        else:
+            cmds = ['sleep', '360000']
         process = Popen(cmds, stdout=PIPE, stderr=STDOUT)
         self.assertTrue(detect_process(process.pid))
         kill_command(process.pid)

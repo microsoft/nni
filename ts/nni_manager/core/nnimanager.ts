@@ -15,6 +15,7 @@ import {
     ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
+import { ExperimentManager } from '../common/experimentManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
@@ -31,6 +32,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
+    private experimentManager: ExperimentManager;
     private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private log: Logger;
@@ -49,6 +51,7 @@ class NNIManager implements Manager {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
         this.trainingService = component.get(TrainingService);
+        this.experimentManager = component.get(ExperimentManager);
         assert(this.trainingService);
         this.dispatcherPid = 0;
         this.waitingTrials = [];
@@ -231,7 +234,7 @@ class NNIManager implements Manager {
         // Check the final status for WAITING and RUNNING jobs
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
-            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+            .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.trialJobId)));
 
         // Collect generated trials and imported trials
         const finishedTrialData: string = await this.exportData();
@@ -304,7 +307,7 @@ class NNIManager implements Manager {
             // FIXME: can this be undefined?
             trial.sequenceId !== undefined && minSeqId <= trial.sequenceId && trial.sequenceId <= maxSeqId
         ));
-        const targetTrialIds = new Set(targetTrials.map(trial => trial.id));
+        const targetTrialIds = new Set(targetTrials.map(trial => trial.trialJobId));
 
         const allMetrics = await this.dataStore.getMetricData();
         return allMetrics.filter(metric => targetTrialIds.has(metric.trialJobId));
@@ -343,6 +346,14 @@ class NNIManager implements Manager {
 
     public getStatus(): NNIManagerStatus {
         return this.status;
+    }
+
+    public getTrialJobMessage(trialJobId: string): string | undefined {
+        const trialJob = this.trialJobs.get(trialJobId);
+        if (trialJob !== undefined){
+            return trialJob.message
+        }
+        return undefined
     }
 
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
@@ -459,7 +470,9 @@ class NNIManager implements Manager {
             }
         }
         await this.trainingService.cleanUp();
-        this.experimentProfile.endTime = Date.now();
+        if (this.experimentProfile.endTime === undefined) {
+            this.setEndtime();
+        }
         await this.storeExperimentProfile();
         this.setStatus('STOPPED');
     }
@@ -500,6 +513,10 @@ class NNIManager implements Manager {
                 this.log.info(`Trial job ${trialJobDetail.id} status changed from ${oldTrialJobDetail.status} to ${trialJobDetail.status}`);
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
+            }
+            const newTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if (newTrialJobDetail !== undefined) {
+                newTrialJobDetail.message = trialJobDetail.message;
             }
             let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {
@@ -584,7 +601,7 @@ class NNIManager implements Manager {
                     assert(allFinishedTrialJobNum <= waitSubmittedToFinish);
                     if (allFinishedTrialJobNum >= waitSubmittedToFinish) {
                         this.setStatus('DONE');
-                        this.experimentProfile.endTime = Date.now();
+                        this.setEndtime();
                         await this.storeExperimentProfile();
                         // write this log for travis CI
                         this.log.info('Experiment done.');
@@ -678,11 +695,15 @@ class NNIManager implements Manager {
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
         this.log.debug(`NNIManager received trial job metrics: ${metric}`);
-        await this.dataStore.storeMetricData(metric.id, metric.data);
-        if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
+        if (this.trialJobs.has(metric.id)){
+            await this.dataStore.storeMetricData(metric.id, metric.data);
+            if (this.dispatcher === undefined) {
+                throw new Error('Error: tuner has not been setup');
+            }
+            this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
+        } else {
+            this.log.warning(`NNIManager received non-existent trial job metrics: ${metric}`);
         }
-        this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
     }
 
     private requestTrialJobs(jobNum: number): void {
@@ -780,6 +801,7 @@ class NNIManager implements Manager {
             this.log.error(err.stack);
         }
         this.status.errors.push(err.message);
+        this.setEndtime();
         this.setStatus('ERROR');
     }
 
@@ -787,7 +809,13 @@ class NNIManager implements Manager {
         if (status !== this.status.status) {
             this.log.info(`Change NNIManager status from: ${this.status.status} to: ${status}`);
             this.status.status = status;
+            this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'status', this.status.status);
         }
+    }
+
+    private setEndtime(): void {
+        this.experimentProfile.endTime = Date.now();
+        this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
     }
 
     private createEmptyExperimentProfile(): ExperimentProfile {
