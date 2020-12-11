@@ -85,6 +85,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         log_header = LOG_HEADER % str(time_now)
         stdout_file.write(log_header)
         stderr_file.write(log_header)
+        print('## [nnictl] cmds:', cmds)
         if sys.platform == 'win32':
             from subprocess import CREATE_NEW_PROCESS_GROUP
             if foreground:
@@ -387,6 +388,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    print('## experiment config:')
+    print(request_data)
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response

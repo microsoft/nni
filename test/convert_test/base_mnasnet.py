@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from nni.retiarii import nn
+import nni.retiarii.nn.pytorch as nn
 
 # Paper suggests 0.9997 momentum, for TensorFlow. Equivalent PyTorch momentum is
 # 1.0 - tensorflow.
@@ -126,7 +126,8 @@ class MNASNet(nn.Module):
 
     def __init__(self, alpha, depths, convops, kernel_sizes, num_layers,
                  skips, num_classes=1000, dropout=0.2):
-        super(MNASNet, self).__init__()
+        super(MNASNet, self).__init__(alpha, depths, convops, kernel_sizes, num_layers,
+                 skips, num_classes, dropout)
         assert alpha > 0.0
         assert len(depths) == len(convops) == len(kernel_sizes) == len(num_layers) == len(skips) == 7
         self.alpha = alpha
@@ -286,32 +287,6 @@ class MobileConv(nn.Module):
         if self.skip == 'identity':
             out = out + x
         return out
-
-#====================Training approach
-'''
-import sdk
-from sdk.mutators.builtin_mutators import ModuleMutator
-import datasets
-
-class ModelTrain(sdk.Trainer):
-    def __init__(self, device='cuda'):
-        super(ModelTrain, self).__init__()
-        self.device = torch.device(device)
-        self.data_provider = datasets.ImagenetDataProvider(save_path="/data/v-yugzh/imagenet",
-                                                    train_batch_size=32,
-                                                    test_batch_size=32,
-                                                    valid_size=None,
-                                                    n_worker=4,
-                                                    resize_scale=0.08,
-                                                    distort_color='normal')
-
-    def train_dataloader(self):
-        return self.data_provider.train
-
-    def val_dataloader(self):
-        return self.data_provider.valid
-'''
-#====================Experiment config
 
 # mnasnet0_5
 ir_module = _InvertedResidual(16, 16, 3, 1, 1, True)

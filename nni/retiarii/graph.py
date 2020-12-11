@@ -339,13 +339,21 @@ class Graph:
         while curr_nodes:
             curr_node = curr_nodes.pop(0)
             sorted_nodes.append(curr_node)
-            for successor in curr_node.successors:
+            # use successor_slots because a node may connect to another node multiple times
+            # to different slots
+            for successor_slot in curr_node.successor_slots:
+                successor = successor_slot[0]
                 node_to_fanin[successor] -= 1
                 if node_to_fanin[successor] == 0:
                     curr_nodes.append(successor)
 
         for key in node_to_fanin:
-            assert node_to_fanin[key] == 0
+            assert node_to_fanin[key] == 0, '{}, fanin: {}, predecessor: {}, edges: {}, fanin: {}, keys: {}'.format(key,
+                node_to_fanin[key],
+                key.predecessors[0],
+                self.edges,
+                node_to_fanin.values(),
+                node_to_fanin.keys())
 
         return sorted_nodes
 
@@ -484,6 +492,10 @@ class Node:
     @property
     def successors(self) -> List['Node']:
         return sorted(set(edge.tail for edge in self.outgoing_edges), key=(lambda node: node.id))
+
+    @property
+    def successor_slots(self) -> List[Tuple['Node', Union[int, None]]]:
+        return set((edge.tail, edge.tail_slot) for edge in self.outgoing_edges)
 
     @property
     def incoming_edges(self) -> List['Edge']:

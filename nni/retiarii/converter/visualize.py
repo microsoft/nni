@@ -34,6 +34,6 @@ def convert_to_visualize(graph_ir, vgraph):
                 subgraph.edge(src, dst)
 
 def visualize_model(graph_ir):
-    vgraph = graphviz.Digraph('G', filename='vgraph', format='png')
+    vgraph = graphviz.Digraph('G', filename='vgraph', format='jpg')
     convert_to_visualize(graph_ir, vgraph)
     vgraph.render()

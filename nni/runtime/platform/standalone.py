@@ -4,8 +4,6 @@
 import logging
 import json_tricks
 
-from ..common import init_standalone_logger
-
 __all__ = [
     'get_next_parameter',
     'get_experiment_id',
@@ -14,7 +12,6 @@ __all__ = [
     'send_metric',
 ]
 
-init_standalone_logger()
 _logger = logging.getLogger('nni')
 
 
