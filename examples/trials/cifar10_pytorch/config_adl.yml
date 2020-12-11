@@ -1,0 +1,32 @@
+authorName: default
+experimentName: example_pytorch_cifar10
+trialConcurrency: 1
+maxExecDuration: 100h
+maxTrialNum: 10
+nniManagerIp: {replace_with_your_ip}
+trainingServicePlatform: adl
+searchSpacePath: search_space_adl.json
+logCollection: http
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 /cifar10/main_adl.py
+  codeDir: /cifar10
+  gpuNum: 1
+  image: {replace_with_the_image_that_has_adaptdl_installed}
+  # optional
+  imagePullSecrets:
+    - name: {secret}
+  adaptive: true
+  checkpoint:
+    storageClass: dfs
+    storageSize: 1Gi
+  cpuNum: 1
+  memorySize: 1Gi

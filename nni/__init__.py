@@ -3,6 +3,9 @@
 
 __version__ = '999.0.0-developing'
 
+from .runtime.log import init_logger
+init_logger()
+
 from .runtime.env_vars import dispatcher_env_vars
 from .utils import ClassArgsValidator
 

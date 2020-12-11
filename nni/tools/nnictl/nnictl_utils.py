@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 from functools import cmp_to_key
+import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
 from pyhdfs import HdfsClient
@@ -21,6 +22,7 @@ from .config_utils import Config, Experiments
 from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
+from .common_utils import print_green
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
@@ -28,7 +30,7 @@ def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
     response = rest_get(experiment_url(port), REST_TIME_OUT)
     if response and check_response(response):
-        content = convert_time_stamp_to_date(json.loads(response.text))
+        content = json.loads(response.text)
         return content.get('startTime'), content.get('endTime')
     return None, None
 
@@ -48,20 +50,11 @@ def update_experiment():
     for key in experiment_dict.keys():
         if isinstance(experiment_dict[key], dict):
             if experiment_dict[key].get('status') != 'STOPPED':
-                nni_config = Config(experiment_dict[key]['fileName'])
+                nni_config = Config(key)
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
                     continue
-                rest_port = nni_config.get_config('restServerPort')
-                startTime, endTime = get_experiment_time(rest_port)
-                if startTime:
-                    experiment_config.update_experiment(key, 'startTime', startTime)
-                if endTime:
-                    experiment_config.update_experiment(key, 'endTime', endTime)
-                status = get_experiment_status(rest_port)
-                if status:
-                    experiment_config.update_experiment(key, 'status', status)
 
 def check_experiment_id(args, update=True):
     '''check if the id is valid
@@ -136,7 +129,7 @@ def parse_ids(args):
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
-            if str(experiment_dict[key]['port']) == args.port:
+            if experiment_dict[key]['port'] == args.port:
                 result_list.append(key)
         if args.id and result_list and args.id != result_list[0]:
             print_error('Experiment id and resful server port not match')
@@ -182,9 +175,7 @@ def get_config_filename(args):
     if experiment_id is None:
         print_error('Please set correct experiment id.')
         exit(1)
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['fileName']
+    return experiment_id
 
 def get_experiment_port(args):
     '''get the port of experiment'''
@@ -226,11 +217,9 @@ def stop_experiment(args):
         exit(1)
     experiment_id_list = parse_ids(args)
     if experiment_id_list:
-        experiment_config = Experiments()
-        experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
-            nni_config = Config(experiment_dict[experiment_id]['fileName'])
+            nni_config = Config(experiment_id)
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 kill_command(rest_pid)
@@ -243,9 +232,6 @@ def stop_experiment(args):
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
             print_normal('Stop experiment success.')
-            experiment_config.update_experiment(experiment_id, 'status', 'STOPPED')
-            time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-            experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))
 
 def trial_ls(args):
     '''List trial'''
@@ -372,6 +358,40 @@ def log_stderr(args):
     '''get stderr log'''
     log_internal(args, 'stderr')
 
+def log_trial_adl_helper(args, experiment_id):
+    # adljob_id format should be consistent to the one in "adlTrainingService.ts":
+    #   const adlJobName: string = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
+    adlJobName = "nni-exp-{}-trial-{}".format(experiment_id, args.trial_id).lower()
+    print_warning('Note that no log will show when trial is pending or done (succeeded or failed). '
+                  'You can retry the command.')
+    print_green('>>> Trial log streaming:')
+    try:
+        subprocess.run(
+            [
+                "kubectl", "logs",
+                "-l", "adaptdl/job=%s" % adlJobName,
+                "-f"  # Follow the stream
+            ],  # TODO: support remaining argument, uncomment the lines in nnictl.py
+        )  # TODO: emulate tee behaviors, not necessary tho.
+    except KeyboardInterrupt:
+        pass
+    except Exception:
+        print_error('Error! Please check kubectl:')
+        traceback.print_exc()
+        exit(1)
+    finally:
+        print_green('<<< [adlJobName:%s]' % adlJobName)
+        nni_manager_collection_path = os.path.expanduser('~/nni-experiments/%s/trials/%s/stdout_log_collection.log' %
+                                                         (experiment_id, args.trial_id))
+        print_green('>>> (Optional) How to persist the complete trial log locally:')
+        print(
+            'Please ensure `logCollection: http` '
+            'exists in the experiment configuration yaml. '
+            'After trial done, you can check it from the file below: \n  %s'
+            % nni_manager_collection_path
+        )
+
+
 def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
@@ -394,10 +414,18 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
+    is_adl = nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl'
+    if is_adl and not args.trial_id:
+        print_error('Trial ID is required to retrieve the log for adl. Please specify it with "--trial_id".')
+        exit(1)
     if args.trial_id:
         if args.trial_id not in trial_id_list:
             print_error('Trial id {0} not correct, please check your command!'.format(args.trial_id))
             exit(1)
+        if is_adl:
+            log_trial_adl_helper(args, nni_config.get_config('experimentId'))
+            # adl has its own way to log trial, and it thus returns right after the helper returns
+            return
         if trial_id_path_dict.get(args.trial_id):
             print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
         else:
@@ -509,7 +537,7 @@ def experiment_clean(args):
         else:
             break
     for experiment_id in experiment_id_list:
-        nni_config = Config(experiment_dict[experiment_id]['fileName'])
+        nni_config = Config(experiment_id)
         platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
         experiment_id = nni_config.get_config('experimentId')
         if platform == 'remote':
@@ -624,18 +652,15 @@ def experiment_list(args):
                                                               experiment_dict[key]['status'],
                                                               experiment_dict[key]['port'],
                                                               experiment_dict[key].get('platform'),
-                                                              experiment_dict[key]['startTime'],
-                                                              experiment_dict[key]['endTime'])
+                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
+                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
     return experiment_id_list
 
 def get_time_interval(time1, time2):
     '''get the interval of two times'''
     try:
-        #convert time to timestamp
-        time1 = time.mktime(time.strptime(time1, '%Y/%m/%d %H:%M:%S'))
-        time2 = time.mktime(time.strptime(time2, '%Y/%m/%d %H:%M:%S'))
-        seconds = (datetime.fromtimestamp(time2) - datetime.fromtimestamp(time1)).seconds
+        seconds = int((time2 - time1) / 1000)
         #convert seconds to day:hour:minute:second
         days = seconds / 86400
         seconds %= 86400
@@ -664,8 +689,8 @@ def show_experiment_info():
         return
     for key in experiment_id_list:
         print(EXPERIMENT_MONITOR_INFO % (key, experiment_dict[key]['status'], experiment_dict[key]['port'], \
-             experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], \
-             get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
+              experiment_dict[key].get('platform'), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'], \
+              get_time_interval(experiment_dict[key]['startTime'], experiment_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiment_dict[key]['port'])
         if running:
@@ -806,7 +831,7 @@ def save_experiment(args):
         print_error('Can only save stopped experiment!')
         exit(1)
     print_normal('Saving...')
-    nni_config = Config(experiment_dict[args.id]['fileName'])
+    nni_config = Config(args.id)
     logDir = os.path.join(NNI_HOME_DIR, args.id)
     if nni_config.get_config('logDir'):
         logDir = os.path.join(nni_config.get_config('logDir'), args.id)
@@ -829,8 +854,8 @@ def save_experiment(args):
     except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
-    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, experiment_dict[args.id]['fileName'])
-    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, experiment_dict[args.id]['fileName']))
+    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, args.id)
+    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, args.id))
 
     # Step3. Copy code dir
     if args.saveCodeDir:
@@ -903,20 +928,20 @@ def load_experiment(args):
         print_error('Invalid: experiment id already exist!')
         shutil.rmtree(temp_root_dir)
         exit(1)
-    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))):
+    if not os.path.exists(os.path.join(nnictl_temp_dir, experiment_id)):
         print_error('Invalid: experiment metadata does not exist!')
         shutil.rmtree(temp_root_dir)
         exit(1)
 
     # Step2. Copy nnictl metadata
-    src_path = os.path.join(nnictl_temp_dir, experiment_metadata.get('fileName'))
-    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_metadata.get('fileName'))
+    src_path = os.path.join(nnictl_temp_dir, experiment_id)
+    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_id)
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
     shutil.copytree(src_path, dest_path)
 
     # Step3. Copy experiment data
-    nni_config = Config(experiment_metadata.get('fileName'))
+    nni_config = Config(experiment_id)
     nnictl_exp_config = nni_config.get_config('experimentConfig')
     if args.logDir:
         logDir = args.logDir
@@ -983,13 +1008,15 @@ def load_experiment(args):
     experiment_config.add_experiment(experiment_id,
                                      experiment_metadata.get('port'),
                                      experiment_metadata.get('startTime'),
-                                     experiment_metadata.get('fileName'),
                                      experiment_metadata.get('platform'),
                                      experiment_metadata.get('experimentName'),
                                      experiment_metadata.get('endTime'),
-                                     experiment_metadata.get('status'))
+                                     experiment_metadata.get('status'),
+                                     experiment_metadata.get('tag'),
+                                     experiment_metadata.get('pid'),
+                                     experiment_metadata.get('webUrl'),
+                                     experiment_metadata.get('logDir'))
     print_normal('Load experiment %s succsss!' % experiment_id)
 
     # Step6. Cleanup temp data
     shutil.rmtree(temp_root_dir)
-

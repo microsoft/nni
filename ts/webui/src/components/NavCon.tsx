@@ -157,7 +157,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                         </div>
                         <CommandBarButton
                             iconProps={{ iconName: 'ShowResults' }}
-                            text='Experiment summary'
+                            text='Summary'
                             onClick={this.showExpcontent}
                         />
                         <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />

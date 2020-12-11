@@ -12,12 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-from recommonmark.transform import AutoStructify
-from recommonmark.parser import CommonMarkParser
 import os
+import subprocess
 import sys
-sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
-sys.path.insert(1, os.path.abspath('../../src/sdk/pycli'))
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information ---------------------------------------------------
@@ -43,12 +41,12 @@ release = 'v1.9'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
-    'sphinx_markdown_tables',
     'sphinxarg.ext',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'nbsphinx',
+    'sphinx.ext.extlinks',
 ]
 
 # Add mock modules
@@ -59,12 +57,7 @@ templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
-#
-source_parsers = {
-    '.md': CommonMarkParser
-}
-
-source_suffix = ['.rst', '.md']
+source_suffix = ['.rst']
 
 # The master toctree document.
 master_doc = 'contents'
@@ -197,12 +190,14 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+# external links (for github code)
+# Reference the code via :githublink:`path/to/your/example/code.py`
+git_commit_id = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().strip()
+
+extlinks = {
+    'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
+}
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_config_value('recommonmark_config', {
-        'enable_eval_rst': True,
-        'enable_auto_toc_tree': False,
-    }, True)
-    app.add_transform(AutoStructify)
     app.add_stylesheet('css/custom.css')

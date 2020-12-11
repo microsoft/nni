@@ -28,7 +28,7 @@ import json
 import requests
 
 __all__ = [
-    'Experiment',
+    'ExternalExperiment',
     'TrialResult',
     'TrialMetricData',
     'TrialHyperParameters',
@@ -228,7 +228,7 @@ class TrialJob:
                     .format(self.trialJobId, self.status, self.hyperParameters, self.logPath,
                             self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
 
-class Experiment:
+class ExternalExperiment:
     def __init__(self):
         self._endpoint = None
         self._exp_id = None

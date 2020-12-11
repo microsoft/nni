@@ -219,8 +219,7 @@ def run_epoch(batches, answer_net, is_training):
             loss, _, = sess.run(
                 [answer_net.loss, answer_net.train_op], feed_dict=feed_dict)
             if count % 100 == 0:
-                logger.debug('%d %g except:%g, loss:%g' %
-                             (count, used, used / count * len(batches), loss))
+                logger.debug('%d %g except:%g, loss:%g', count, used, used / count * len(batches), loss)
             loss_sum += loss
         else:
             feed_dict = {answer_net.query_word: query,
@@ -240,8 +239,7 @@ def run_epoch(batches, answer_net, is_training):
             contexts += context
             ids = np.concatenate((ids, sample_id))
             if count % 100 == 0:
-                logger.debug('%d %g except:%g' %
-                             (count, used, used / count * len(batches)))
+                logger.debug('%d %g except:%g', count, used, used / count * len(batches))
     loss = loss_sum / len(batches)
     if is_training:
         return loss
@@ -333,7 +331,7 @@ def train_with_graph(p_graph, qp_pairs, dev_qp_pairs):
                 train_batches = data.get_batches(qp_pairs, cfg.batch_size)
                 train_loss = run_epoch(train_batches, train_model, True)
                 logger.debug('epoch ' + str(epoch) +
-                             ' loss: ' + str(train_loss))
+                             ' loss: ', str(train_loss))
                 dev_batches = list(data.get_batches(
                     dev_qp_pairs, cfg.batch_size))
                 _, position1, position2, ids, contexts = run_epoch(
@@ -369,8 +367,7 @@ def train_with_graph(p_graph, qp_pairs, dev_qp_pairs):
                         with open(os.path.join(save_path, 'epoch%d.score' % epoch), 'wb') as file:
                             pickle.dump(
                                 (position1, position2, ids, contexts), file)
-                logger.debug('epoch %d acc %g bestacc %g' %
-                             (epoch, acc, bestacc))
+                logger.debug('epoch %d acc %g bestacc %g', epoch, acc, bestacc)
                 if patience <= iter:
                     break
             logger.debug('save done.')
