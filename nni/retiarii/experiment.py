@@ -22,7 +22,7 @@ class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space: Any = '' # TODO: remove
     trial_command: str = 'python3 -m nni.retiarii.trial_entry'
-    trial_code_directory: PathLike = '../..' # FIXME: expose this field to users
+    trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
     max_experiment_duration: Optional[str] = None
