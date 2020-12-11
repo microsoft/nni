@@ -1,9 +1,11 @@
 import time
+import os
 import importlib.util
 from typing import *
 
 from ..graph import Model, ModelStatus
 from .base import BaseExecutionEngine
+from .cgo_engine import CGOExecutionEngine
 from .interface import *
 from .listener import DefaultListener
 
@@ -21,7 +23,10 @@ def get_execution_engine() -> BaseExecutionEngine:
     """
     global _execution_engine
     if _execution_engine is None:
-        _execution_engine = BaseExecutionEngine()
+        if os.environ.get('CGO') == 'true':
+            _execution_engine = CGOExecutionEngine()
+        else:
+            _execution_engine = BaseExecutionEngine()
     return _execution_engine
 
 

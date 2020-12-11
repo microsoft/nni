@@ -120,8 +120,12 @@ class PyTorchOperation(Operation):
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
+        elif self.type == 'aten::size':
+            return f'{output} = {inputs[0]}.size({inputs[1]})'
+        elif self.type == 'aten::view':
+            return f'{output} = {inputs[0]}.view({inputs[1]})'
         else:
-            raise RuntimeError('unsupported operation type: {}'.format(self.type))
+            raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 
 class TensorFlowOperation(Operation):
     def _to_class_name(self) -> str:
