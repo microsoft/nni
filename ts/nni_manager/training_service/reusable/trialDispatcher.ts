@@ -21,15 +21,11 @@ import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
-import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary, Channel } from './environment';
+import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary, EnvironmentServiceFactory } from './environment';
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDetail } from './trial';
-import { AMLEnvironmentService } from './environments/amlEnvironmentService';
-import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
-import { LocalEnvironmentService } from './environments/localEnvironmentService';
-import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 
 
 /**
@@ -285,23 +281,7 @@ class TrialDispatcher implements TrainingService {
             case TrialConfigMetadataKey.PLATFORM_LIST: {
                 const platforms: string[] = value.split(",");
                 for(const platform of platforms) {
-                    let environmentService: EnvironmentService;
-                    switch(platform) {
-                        case 'local':
-                            environmentService = new LocalEnvironmentService();
-                            break;
-                        case 'remote':
-                            environmentService = new RemoteEnvironmentService();
-                            break;
-                        case 'aml':
-                            environmentService = new AMLEnvironmentService();
-                            break;
-                        case 'pai':
-                            environmentService = new OpenPaiEnvironmentService();
-                            break;
-                        default:
-                            throw new Error(`${platform} not supported!`);
-                    }
+                    let environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
                     environmentService.initCommandChannel(this.commandEmitter);
                     this.environmentMaintenceLoopInterval =
                       Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);

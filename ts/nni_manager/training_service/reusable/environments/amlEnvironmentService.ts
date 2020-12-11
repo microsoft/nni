@@ -20,7 +20,7 @@ import { AMLCommandChannel } from '../channels/amlCommandChannel';
 
 
 /**
- * Collector AML jobs info from AML cluster, and update pai job status locally
+ * Collector AML jobs info from AML cluster, and update aml job status locally
  */
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
@@ -40,7 +40,7 @@ export class AMLEnvironmentService extends EnvironmentService {
     public get hasStorageService(): boolean {
         return false;
     }
-    
+
     public initCommandChannel(eventEmitter: EventEmitter): void {
         this.commandChannel = new AMLCommandChannel(eventEmitter);
     }
@@ -73,7 +73,7 @@ export class AMLEnvironmentService extends EnvironmentService {
                 this.log.debug(`AML not proccessed metadata key: '${key}', value: '${value}'`);
         }
     }
-    
+
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         environments.forEach(async (environment) => {
             const amlClient = (environment as AMLEnvironmentInformation).amlClient;
