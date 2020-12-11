@@ -6,8 +6,13 @@
 
 .link {
 	outline: none;
-	color: #0071bc;
+	color: #333 !important;
+	text-decoration: none;
 	
+	&:hover {
+		color: #0071bc !important;
+		text-decoration: underline;
+	}
 	&:active,
 	&:visited {
 		color: #0071bc;

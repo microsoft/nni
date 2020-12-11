@@ -7,11 +7,12 @@ import MessageInfo from '../modals/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
-import NameColumn from './NameColumn';
+import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import '../../App.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
+import '../../static/style/overview/probar.scss';
 import '../../static/style/tableStatus.css';
 
 interface ExpListState {
@@ -166,9 +167,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <NameColumn port={item.port} status={item.status} expName={item.experimentName} />
-            )
+            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.experimentName}</div>
         },
         {
             name: 'ID',
@@ -180,7 +179,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
+            onRender: (item: any): React.ReactNode => <NameColumn port={item.port} status={item.status} id={item.id} />
         },
         {
             name: 'Status',
