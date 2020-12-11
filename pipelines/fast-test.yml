@@ -10,16 +10,16 @@ jobs:
   # This platform tests lint and doc first.
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  #- task: UsePythonVersion@0
+  #  inputs:
+  #    versionSpec: 3.8
+  #  displayName: Configure Python version
 
   - script: |
       set -e
       python3 -m pip install --upgrade pip setuptools
-      python3 -m pip install -U pytest coverage
-      python3 -m pip install -U pylint flake8
+      python3 -m pip install pytest coverage
+      python3 -m pip install pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: Install Python tools
 
@@ -42,7 +42,7 @@ jobs:
       python3 -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python3 -m pip install --upgrade tensorflow
       python3 -m pip install --upgrade gym onnx peewee thop
-      python3 -m pip install -U sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
