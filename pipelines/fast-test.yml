@@ -10,16 +10,21 @@ jobs:
   # This platform tests lint and doc first.
 
   steps:
+  - task: usepythonversion@0
+    inputs:
+      versionspec: 3.9
+    displayname: configure python
+
   - script: |
       set -e
-      python3 -m pip install -U --upgrade pip setuptools
-      python3 -m pip install -U pytest coverage
-      python3 -m pip install -U pylint flake8
+      python -m pip install --upgrade pip setuptools
+      python -m pip install --upgrade pytest coverage
+      python -m pip install --upgrade pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python setup.py develop
     displayName: 'Install NNI'
 
   - script: |
@@ -33,12 +38,11 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
-      python3 -m pip install -U --upgrade pygments
-      python3 -m pip install -U torch==1.7.0+cpu torchvision==0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python3 -m pip install -U tensorflow==2.3.1
-      python3 -m pip install -U keras==2.4.2
-      python3 -m pip install -U gym onnx peewee thop
-      python3 -m pip install -U sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      python -m pip install --upgrade pygments
+      python -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install --upgrade tensorflow
+      python -m pip install --upgrade gym onnx peewee thop
+      python -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
@@ -46,10 +50,10 @@ jobs:
 
   - script: |
       set -e
-      python3 -m pylint --rcfile pylintrc nni
-      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      python -m pylint --rcfile pylintrc nni
+      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: 'pylint and flake8'
 
   - script: |
@@ -59,7 +63,7 @@ jobs:
 
   - script: |
       cd test
-      python3 -m pytest ut
+      python -m pytest ut
     displayName: 'Python unit test'
 
   - script: |
@@ -72,7 +76,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
 
 
@@ -83,23 +87,28 @@ jobs:
   # This platform runs integration test first.
 
   steps:
+  - task: usepythonversion@0
+    inputs:
+      versionspec: 3.6
+    displayname: configure python
+
   - script: |
       set -e
-      python3 -m pip install -U --upgrade pip setuptools
-      python3 -m pip install -U pytest coverage
+      python -m pip install --upgrade pip setuptools
+      python -m pip install pytest coverage
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python setup.py develop
     displayName: 'Install NNI'
 
   - script: |
       set -e
-      python3 -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python3 -m pip install -U tensorflow==1.15.2
-      python3 -m pip install -U keras==2.1.6
-      python3 -m pip install -U gym onnx peewee
+      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install tensorflow==1.15.4
+      python -m pip install keras==2.1.6
+      python -m pip install gym onnx peewee
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
@@ -107,12 +116,12 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
 
   - script: |
       cd test
-      python3 -m pytest ut
+      python -m pytest ut
     displayName: 'Python unit test'
 
   - script: |
@@ -131,20 +140,20 @@ jobs:
   # This platform runs TypeScript unit test first.
 
   steps:
-  - task: UsePythonVersion@0
+  - task: usepythonversion@0
     inputs:
-      versionSpec: 3.8
-    displayName: Configure Python
+      versionspec: 3.8
+    displayname: configure python
 
   - script: |
       set -e
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      python -m pip install -U --upgrade pip setuptools wheel
-      python -m pip install -U pytest coverage
+      python -m pip install --upgrade pip setuptools wheel
+      python -m pip install pytest coverage
     displayName: 'Install Python tools'
 
   - script: |
-      python3 setup.py develop
+      python setup.py develop
     displayName: 'Install NNI'
 
   - script: |
@@ -157,8 +166,8 @@ jobs:
   - script: |
       set -e
       # pytorch Mac binary does not support CUDA, default is cpu version
-      python3 -m pip install -U torchvision==0.6.0 torch==1.5.0
-      python3 -m pip install -U tensorflow==2.3.1
+      python -m pip install torchvision==0.6.0 torch==1.5.0
+      python -m pip install tensorflow==2.3.1
       brew install swig@3
       rm -f /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
@@ -167,12 +176,12 @@ jobs:
 
   - script: |
       cd test
-      python3 -m pytest ut
+      python -m pytest ut
     displayName: 'Python unit test'
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: 'Simple integration test'
 
 
@@ -185,9 +194,14 @@ jobs:
   # This platform runs Python unit test first.
 
   steps:
+  - task: usepythonversion@0
+    inputs:
+      versionspec: 3.8
+    displayname: configure python
+
   - script: |
-      python -m pip install -U --upgrade pip setuptools
-      python -m pip install -U pytest coverage
+      python -m pip install --upgrade pip setuptools
+      python -m pip install pytest coverage
     displayName: 'Install Python tools'
 
   - script: |
@@ -195,9 +209,9 @@ jobs:
     displayName: 'Install NNI'
 
   - script: |
-      python -m pip install -U scikit-learn==0.23.2
-      python -m pip install -U torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python -m pip install -U tensorflow==2.3.1
+      python -m pip install scikit-learn==0.23.2
+      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install tensorflow==2.3.1
     displayName: 'Install extra dependencies'
 
   - script: |
