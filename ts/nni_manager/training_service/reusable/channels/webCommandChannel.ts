@@ -47,7 +47,7 @@ export class WebCommandChannel extends CommandChannel {
         super(commandEmitter);
     }
 
-    public static getInstance(commandEmitter: EventEmitter) {
+    public static getInstance(commandEmitter: EventEmitter): CommandChannel {
         if (!this.commandChannel) {
             this.commandChannel = new WebCommandChannel(commandEmitter);
         }

@@ -281,7 +281,7 @@ class TrialDispatcher implements TrainingService {
             case TrialConfigMetadataKey.PLATFORM_LIST: {
                 const platforms: string[] = value.split(",");
                 for(const platform of platforms) {
-                    let environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
+                    const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
                     environmentService.initCommandChannel(this.commandEmitter);
                     this.environmentMaintenceLoopInterval =
                       Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);
@@ -347,7 +347,7 @@ class TrialDispatcher implements TrainingService {
                 if (!environmentServiceDict.has(environment.environmentService)) {
                     environmentServiceDict.set(environment.environmentService, [environment]);
                 } else {
-                    let environmentsList: EnvironmentInformation[] | undefined = environmentServiceDict.get(environment.environmentService);
+                    const environmentsList: EnvironmentInformation[] | undefined = environmentServiceDict.get(environment.environmentService);
                     if (environmentsList === undefined) {
                         throw new Error(`Environment list not initialized!`);
                     }
@@ -356,7 +356,7 @@ class TrialDispatcher implements TrainingService {
                 }
             }
             // Refresh all environments
-            let taskList: Promise<void>[] = [];
+            const taskList: Promise<void>[] = [];
             for (const environmentService of environmentServiceDict.keys()) {
                 const environmentsList: EnvironmentInformation[] | undefined = environmentServiceDict.get(environmentService);
                 if (environmentsList) {

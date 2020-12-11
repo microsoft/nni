@@ -13,7 +13,6 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
-import { Channel } from '../environment';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { EventEmitter } from "events";
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
