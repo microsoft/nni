@@ -10,10 +10,10 @@ jobs:
   # This platform tests lint and doc first.
 
   steps:
-  #- task: UsePythonVersion@0
-  #  inputs:
-  #    versionSpec: 3.8
-  #  displayName: Configure Python version
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.7
+    displayName: Configure Python version
 
   - script: |
       set -e
