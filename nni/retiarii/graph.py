@@ -169,11 +169,6 @@ class Model:
             matched_nodes.extend(nodes)
         return matched_nodes
 
-    def get_by_name(self, name: str) -> Union['Graph', 'Node']:
-        """
-        Find the graph or node that have the given name space name.
-        """
-
 
 class ModelStatus(Enum):
     """
