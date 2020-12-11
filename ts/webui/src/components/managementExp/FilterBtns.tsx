@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { DefaultButton, Icon, Dropdown, DatePicker, DayOfWeek } from '@fluentui/react';
 import { EXPERIMENTSTATUS } from '../../static/const';
-import { DayPickerStrings } from './experimentConst';
 import { fillOptions } from './expFunction';
 
 interface FilterBtnsProps {
@@ -55,7 +54,6 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
                 <DatePicker
                     label='Start time'
                     firstDayOfWeek={DayOfWeek.Sunday}
-                    strings={DayPickerStrings}
                     showMonthPickerAsOverlay={true}
                     placeholder='Select a date...'
                     ariaLabel='Select a date'
@@ -65,7 +63,6 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
                 <DatePicker
                     label='End time'
                     firstDayOfWeek={DayOfWeek.Sunday}
-                    strings={DayPickerStrings}
                     showMonthPickerAsOverlay={true}
                     placeholder='Select a date...'
                     ariaLabel='Select a date'
