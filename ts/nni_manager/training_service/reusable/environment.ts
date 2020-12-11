@@ -134,7 +134,7 @@ export abstract class EnvironmentService {
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
     // Make public for ut
-    public commandChannel: CommandChannel | undefined;
+    protected commandChannel: CommandChannel | undefined;
     
     // It is used to set prefetched environment count, default value is 0 for OpenPAI and AML mode,
     // in remote mode, this value is set to the length of machine list.

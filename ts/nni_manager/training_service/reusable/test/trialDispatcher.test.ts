@@ -208,8 +208,8 @@ describe('Unit Test for TrialDispatcher', () => {
         environmentServiceList.push(environmentService);
         trialDispatcher.environmentServiceList = environmentServiceList;
         // set ut command channel
-        commandChannel = new UtCommandChannel(trialDispatcher.commandEmitter);
-        environmentService.commandChannel = commandChannel;
+        environmentService.initCommandChannel(trialDispatcher.commandEmitter);
+        commandChannel = environmentService.getCommandChannel as UtCommandChannel;
         trialDispatcher.commandChannelSet = new Set<CommandChannel>().add(environmentService.getCommandChannel);
         trialDispatcher.environmentMaintenceLoopInterval = 1000;
 
