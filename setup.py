@@ -111,6 +111,14 @@ def _setup():
 
         python_requires = '>=3.6',
         install_requires = dependencies,
+        extras_require = {
+            'SMAC': [
+                'ConfigSpaceNNI @ git+https://github.com/QuanluZhang/ConfigSpace.git',
+                'smac @ git+https://github.com/QuanluZhang/SMAC3.git'
+            ],
+            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
+            'PPOTuner': ['enum34', 'gym']
+        },
         setup_requires = ['requests'],
 
         entry_points = {
@@ -158,6 +166,19 @@ def _find_node_files():
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
+def _copy_data_files():
+    # after installation, nni needs to find this location in nni.tools.package_utils.get_registered_algo_config_path
+    # since we can not import nni here, we need to ensure get_registered_algo_config_path use the same
+    # logic here to retrieve registered_algorithms.yml
+    if _using_conda_or_virtual_environment():
+        nni_config_dir = os.path.join(sys.prefix, 'nni')
+    elif sys.platform == 'win32':
+        nni_config_dir = os.path.join(os.getenv('APPDATA'), 'nni')
+    else:
+        nni_config_dir = os.path.expanduser('~/.config/nni')
+    if not os.path.exists(nni_config_dir):
+        os.makedirs(nni_config_dir)
+    shutil.copyfile('./deployment/registered_algorithms.yml', os.path.join(nni_config_dir, 'registered_algorithms.yml'))
 
 class BuildTs(Command):
     description = 'build TypeScript modules'
@@ -179,6 +200,7 @@ class Build(build):
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+        _copy_data_files()
         super().run()
 
 class Develop(develop):
@@ -204,6 +226,7 @@ class Develop(develop):
     def run(self):
         if not self.skip_ts:
             setup_ts.build(release=None)
+        _copy_data_files()
         super().run()
 
 class Clean(clean):

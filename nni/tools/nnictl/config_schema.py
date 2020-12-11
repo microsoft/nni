@@ -6,7 +6,7 @@ import logging
 import os
 import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
+from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_registered_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
 from .common_utils import get_yml_content, print_warning
 
@@ -75,8 +75,8 @@ class AlgoSchema:
     def validate_class_args(self, class_args, algo_type, builtin_name):
         if not builtin_name or not class_args:
             return
-        meta = get_builtin_algo_meta(algo_type+'s', builtin_name)
-        if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
+        meta = get_registered_algo_meta(builtin_name, algo_type+'s')
+        if meta and 'acceptClassArgs' in meta and meta['acceptClassArgs'] == False:
             raise SchemaError('classArgs is not allowed.')
 
         logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain

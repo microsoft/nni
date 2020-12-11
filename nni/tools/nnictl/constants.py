@@ -61,27 +61,6 @@ TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
 
 TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
-INSTALLABLE_PACKAGE_META = {
-    'SMAC': {
-        'type': 'tuner',
-        'class_name': 'nni.algorithms.hpo.smac_tuner.smac_tuner.SMACTuner',
-        'code_sub_dir': 'smac_tuner',
-        'class_args_validator': 'nni.algorithms.hpo.smac_tuner.smac_tuner.SMACClassArgsValidator'
-    },
-    'BOHB': {
-        'type': 'advisor',
-        'class_name': 'nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHB',
-        'code_sub_dir': 'bohb_advisor',
-        'class_args_validator': 'nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHBClassArgsValidator'
-    },
-    'PPOTuner': {
-        'type': 'tuner',
-        'class_name': 'nni.algorithms.hpo.ppo_tuner.ppo_tuner.PPOTuner',
-        'code_sub_dir': 'ppo_tuner',
-        'class_args_validator': 'nni.algorithms.hpo.ppo_tuner.ppo_tuner.PPOClassArgsValidator'
-    }
-}
-
 TUNERS_SUPPORTING_IMPORT_DATA = {
     'TPE',
     'Anneal',

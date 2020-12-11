@@ -44,8 +44,7 @@ jobs:
       python3 -m pip install --upgrade gym onnx peewee thop
       python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
-      nnictl package install --name=SMAC
-      nnictl package install --name=BOHB
+      python3 -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
   - script: |
@@ -110,8 +109,7 @@ jobs:
       python -m pip install keras==2.1.6
       python -m pip install gym onnx peewee
       sudo apt-get install swig -y
-      nnictl package install --name=SMAC
-      nnictl package install --name=BOHB
+      python -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
   - script: |
@@ -171,7 +169,7 @@ jobs:
       brew install swig@3
       rm -f /usr/local/bin/swig
       ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      nnictl package install --name=SMAC
+      python -m pip install -e .[SMAC]
     displayName: Install extra dependencies
 
   - script: |
