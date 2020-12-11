@@ -10,6 +10,7 @@ from torchvision import datasets, transforms
 import nni
 
 from ..interface import BaseTrainer
+from ...utils import register_trainer
 
 
 def get_default_transform(dataset: str) -> Any:
@@ -41,7 +42,7 @@ def get_default_transform(dataset: str) -> Any:
     # unsupported dataset, return None
     return None
 
-
+@register_trainer()
 class PyTorchImageClassificationTrainer(BaseTrainer):
     """
     Image classification trainer for PyTorch.
@@ -78,9 +79,9 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
             Keyword arguments passed to trainer. Will be passed to Trainer class in future. Currently,
             only the key ``max_epochs`` is useful.
         """
-        super(PyTorchImageClassificationTrainer, self).__init__(model,
-                 dataset_cls, dataset_kwargs, dataloader_kwargs,
-                 optimizer_cls, optimizer_kwargs, trainer_kwargs)
+        #super(PyTorchImageClassificationTrainer, self).__init__(model,
+        #         dataset_cls, dataset_kwargs, dataloader_kwargs,
+        #         optimizer_cls, optimizer_kwargs, trainer_kwargs)
         self._use_cuda = torch.cuda.is_available()
         self.model = model
         if self._use_cuda:
