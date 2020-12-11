@@ -105,6 +105,7 @@ class PyTorchOperation(Operation):
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+        from .converter.op_types import Type
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
@@ -120,10 +121,34 @@ class PyTorchOperation(Operation):
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
+        elif self.type == 'aten::__getitem__':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}[{inputs[1]}]'
+        elif self.type == 'aten::append':
+            assert len(inputs) == 2
+            return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
+        elif self.type == 'aten::cat':
+            assert len(inputs) == 2
+            return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
+        elif self.type == 'aten::add':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]} + {inputs[1]}'
+        elif self.type == Type.MergedSlice:
+            assert (len(inputs) - 1) % 4 == 0
+            slices = []
+            dim = int((len(inputs) - 1) / 4)
+            for i in range(dim):
+                slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
+            slice_str = ','.join(slices)
+            return f'{output} = {inputs[0]}[{slice_str}]'
         elif self.type == 'aten::size':
+            assert len(inputs) == 2
             return f'{output} = {inputs[0]}.size({inputs[1]})'
         elif self.type == 'aten::view':
+            assert len(inputs) == 2
             return f'{output} = {inputs[0]}.view({inputs[1]})'
+        elif self.type == 'aten::slice':
+            raise RuntimeError('not supposed to have aten::slice operation')
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 

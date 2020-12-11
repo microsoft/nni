@@ -73,9 +73,9 @@ class Mutator:
         sampler_backup = self.sampler
         recorder = _RecorderSampler()
         self.sampler = recorder
-        self.apply(model)
+        new_model = self.apply(model)
         self.sampler = sampler_backup
-        return recorder.recorded_candidates
+        return recorder.recorded_candidates, new_model
 
 
     def mutate(self, model: Model) -> None:

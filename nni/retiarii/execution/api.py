@@ -13,8 +13,7 @@ _execution_engine = None
 _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
-           'submit_models', 'wait_models', 'query_available_resources',
-           'get_base_model_ir', 'get_specified_mutators', 'get_trainer']
+           'submit_models', 'wait_models', 'query_available_resources']
 
 
 def get_execution_engine() -> BaseExecutionEngine:
@@ -44,27 +43,6 @@ def _get_search_space() -> 'Dict':
         if engine.get_search_space() is not None:
             break
     return engine.get_search_space()
-
-def get_base_model_ir() -> 'Model':
-    search_space = _get_search_space()
-    return Model._load(search_space['base_model_ir'])
-
-def get_specified_mutators() -> List['Mutator']:
-    search_space = _get_search_space()
-    applied_mutators = []
-    for each in search_space['applied_mutators']:
-        spec = importlib.util.spec_from_file_location("module.name", each['filepath'])
-        m = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(m)
-        #m.BlockMutator()
-        class_constructor = getattr(m, each['classname'])
-        mutator = class_constructor(**each['args'])
-        applied_mutators.append(mutator)
-    return applied_mutators
-
-def get_trainer() -> 'BaseTrainer':
-    search_space = _get_search_space()
-    return search_space['training_approach']
 
 def submit_models(*models: Model) -> None:
     engine = get_execution_engine()

@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from nni.compression.torch import QAT_Quantizer
+from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 
 
 class Mnist(torch.nn.Module):

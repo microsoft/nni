@@ -106,6 +106,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         Initialize the model, hand it over to trainer.
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
+        # FIXME: update this part to dump code to a correct path!!!
         with open('_generated_model.py', 'w') as f:
             f.write(graph_data.model_script)
         trainer_cls = utils.import_(graph_data.training_module)

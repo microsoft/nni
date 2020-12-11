@@ -26,10 +26,9 @@ import subprocess
 import re
 import json
 import requests
-import yaml
 
 __all__ = [
-    'Experiment',
+    'ExternalExperiment',
     'TrialResult',
     'TrialMetricData',
     'TrialHyperParameters',
@@ -229,7 +228,7 @@ class TrialJob:
                     .format(self.trialJobId, self.status, self.hyperParameters, self.logPath,
                             self.startTime, self.endTime, self.finalMetricData, self.stderrPath)
 
-class Experiment:
+class ExternalExperiment:
     def __init__(self):
         self._endpoint = None
         self._exp_id = None
@@ -259,38 +258,6 @@ class Experiment:
                 self._port = 8080
             self._endpoint = 'http://localhost:{}'.format(self._port)
             self._exp_id = self.get_experiment_profile()['id']
-
-    def tmp_start_retiarii(self, graph_ir, training_approach,
-                           applied_mutators, strategy, exp_config):
-        # prepare search space file which includes base graph IR and mutators
-        search_space = {}
-        search_space['base_model_ir'] = graph_ir
-        search_space['applied_mutators'] = applied_mutators
-        search_space['training_approach'] = training_approach
-        with open('search_space.json', 'w') as f:
-            json.dump(search_space, f)
-        # add advisor config to exp_config
-        exp_config['searchSpacePath'] = 'search_space.json'
-        exp_config['useAnnotation'] = False
-        exp_config['advisor'] = {
-            'codeDir': '.',
-            'classFileName': 'advisor_entry.py',
-            'className': 'RetiariiAdvisor',
-            'classArgs': {
-                'strategy': '{}.{}'.format(strategy['filename'], strategy['funcname'])
-            }
-        }
-        # add trial config to exp_config
-        exp_config['trial'] = {
-            'command': 'python3 -m nni.retiarii.trial_entry',
-            'codeDir': '../..',
-            'gpuNum': 0
-        }
-        # dump exp_config to nni.yml
-        with open('nni.yml', 'w') as f:
-            yaml.dump(exp_config, f)
-        # start experiment
-        self.start_experiment('nni.yml')
 
     def start_experiment(self, config_file, port=None, debug=False):
         """

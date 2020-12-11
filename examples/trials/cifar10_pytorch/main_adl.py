@@ -146,7 +146,7 @@ def valid(epoch):
         writer.add_scalar("Accuracy/Valid", stats["accuracy"], epoch)
 
         if adaptdl.env.replica_rank() == 0:
-            nni.report_intermediate_result(stats["accuracy"], accum=stats)
+            nni.report_intermediate_result(stats["accuracy"])
 
         print("Valid:", stats)
         return stats["accuracy"]

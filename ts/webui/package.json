@@ -47,6 +47,7 @@
     "react-monaco-editor": "^0.32.1",
     "react-paginate": "^6.3.2",
     "react-pagination": "^1.0.0",
+    "react-responsive": "^8.1.1",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "react-table": "^7.0.0-rc.15",
