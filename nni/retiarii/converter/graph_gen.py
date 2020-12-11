@@ -6,7 +6,7 @@ from ..graph import Graph, Node, Edge, Model
 from ..operation import Cell, Operation
 from ..nn.pytorch import Placeholder, LayerChoice, InputChoice
 
-from .op_types import MODULE_EXCEPT_LIST, Type
+from .op_types import MODULE_EXCEPT_LIST, OpTypeName, BasicOpsPT
 from .utils import build_full_name, _convert_name
 
 
@@ -80,7 +80,7 @@ def create_prim_constant_node(ir_graph, node, module_name):
     if node.outputsAt(0).toIValue() is not None:
         attrs = {'value': node.outputsAt(0).toIValue()}
     global_seq += 1
-    new_node = ir_graph.add_node(build_full_name(module_name, Type.Constant, global_seq),
+    new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Constant, global_seq),
                                  node.kind(), attrs)
     return new_node
 
@@ -287,25 +287,25 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             node_index[node] = new_node
         elif node.kind() == 'prim::ListConstruct':
             global_seq += 1
-            new_node = ir_graph.add_node(build_full_name(module_name, Type.ListConstruct, global_seq), node.kind())
+            new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListConstruct, global_seq), node.kind())
             node_index[node] = new_node
             _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
         elif node.kind() == 'aten::append':
             global_seq += 1
-            aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
+            aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
             _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             output_remap[node.inputsAt(0)] = node
         elif node.kind().startswith('aten::'):
             # handle aten::XXX
             global_seq += 1
-            aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
+            aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
             _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
         elif node.kind() == 'prim::GetAttr':
             node_type, attrs = handle_prim_attr_node(node)
             global_seq += 1
-            new_node = ir_graph.add_node(build_full_name(module_name, Type.Attr, global_seq),
+            new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
                                             node_type, attrs)
             node_index[node] = new_node
         elif node.kind() == 'prim::If':
@@ -343,7 +343,7 @@ def merge_aten_slices(ir_graph):
     
     for head_node in head_slice_nodes:
         slot = 0
-        new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), Type.MergedSlice)
+        new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), OpTypeName.MergedSlice)
         assert len(head_node.incoming_edges) == 5
         for edge in head_node.incoming_edges:
             edge.tail = new_slice_node
@@ -425,13 +425,14 @@ def convert_module(script_module, module, module_name, ir_model):
     # NOTE: have not supported nested LayerChoice, i.e., a candidate module
     # also has LayerChoice or InputChoice or ValueChoice
     original_type_name = script_module.original_name
-    if original_type_name == Type.LayerChoice:
+    print('zql: ', original_type_name, type(OpTypeName.LayerChoice))
+    if original_type_name == OpTypeName.LayerChoice:
         m_attrs = _handle_layerchoice(module)
         return None, m_attrs
-    if original_type_name == Type.InputChoice:
+    if original_type_name == OpTypeName.InputChoice:
         m_attrs = _handle_inputchoice(module)
         return None, m_attrs
-    if original_type_name in Type.Placeholder:
+    if original_type_name == OpTypeName.Placeholder:
         m_attrs = modules_arg[id(module)]
         return None, m_attrs
     if original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
