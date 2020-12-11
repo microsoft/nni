@@ -10,21 +10,21 @@ jobs:
   # This platform tests lint and doc first.
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  #- task: UsePythonVersion@0
+  #  inputs:
+  #    versionSpec: 3.8
+  #  displayName: Configure Python version
 
   - script: |
       set -e
-      python -m pip install --upgrade pip setuptools
-      python -m pip install pytest coverage
-      python -m pip install pylint flake8
+      python3 -m pip install --upgrade pip setuptools
+      python3 -m pip install -U pytest coverage
+      python3 -m pip install -U pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: Install Python tools
 
   - script: |
-      python setup.py develop
+      python3 setup.py develop
     displayName: Install NNI
 
   - script: |
@@ -38,11 +38,11 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
-      python -m pip install --upgrade pygments
-      python -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python -m pip install --upgrade tensorflow
-      python -m pip install --upgrade gym onnx peewee thop
-      python -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      python3 -m pip install --upgrade pygments
+      python3 -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python3 -m pip install --upgrade tensorflow
+      python3 -m pip install --upgrade gym onnx peewee thop
+      python3 -m pip install -U sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
       nnictl package install --name=BOHB
@@ -50,14 +50,14 @@ jobs:
 
   - script: |
       set -e
-      python -m pylint --version
+      python3 -m pylint --version
       echo "## A ##"
-      python -m pylint --rcfile pylintrc nni
+      python3 -m pylint --rcfile pylintrc nni
       echo "## B ##"
-      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       echo "## C ##"
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: pylint and flake8
 
   - script: |
@@ -67,7 +67,7 @@ jobs:
 
   - script: |
       cd test
-      python -m pytest ut
+      python3 -m pytest ut
     displayName: Python unit test
 
   - script: |
@@ -80,7 +80,7 @@ jobs:
 
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: Simple integration test
 
 
