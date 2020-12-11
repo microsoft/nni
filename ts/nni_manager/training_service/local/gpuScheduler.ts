@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { getLogger, Logger } from '../../common/log';
-import { delay } from '../../common/utils';
+import { delay, uniqueString } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 import { execKill, execMkdir, execRemove, execTail, runGpuMetricsCollector } from '../common/util';
 
@@ -58,12 +58,12 @@ class GPUScheduler {
         return [];
     }
 
-    public getSystemGpuCount(): number {
+    public getSystemGpuCount(): number | undefined{
         if (this.gpuSummary !== undefined) {
             return this.gpuSummary.gpuCount;
         }
 
-        return 0;
+        return undefined;
     }
 
     public async stop(): Promise<void> {
