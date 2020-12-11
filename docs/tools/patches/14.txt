@@ -1,0 +1,5 @@
+:raw-html:`<div >
+    <img src="https://github.com/microsoft/Cream/blob/main/demo/intro.jpg" width="800"/>
+</div>`
+%%%%%%
+:raw-html:`<div ><img src="https://github.com/microsoft/Cream/blob/main/demo/intro.jpg" width="800"/></div>`

@@ -1,0 +1,7 @@
+.. code-block:: bash
+
+   NNI's official image msranni/nni does not support SSH servers for the time being; you should build your own Docker image with an SSH configuration or use other images as a remote server.
+%%%%%%
+.. code-block:: text
+
+   NNI's official image msranni/nni does not support SSH servers for the time being; you should build your own Docker image with an SSH configuration or use other images as a remote server.

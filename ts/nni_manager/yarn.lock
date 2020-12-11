@@ -279,6 +279,11 @@
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.3.tgz#bdfd69d61e464dcc81b25159c270d75a73c1a636"
 
+"@types/lockfile@^1.0.0":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/lockfile/-/lockfile-1.0.1.tgz#434a3455e89843312f01976e010c60f1bcbd56f7"
+  integrity sha512-65WZedEm4AnOsBDdsapJJG42MhROu3n4aSSiu87JXF/pSdlubxZxp3S1yz3kTfkJ2KBPud4CpjoHVAptOm9Zmw==
+
 "@types/mime@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
