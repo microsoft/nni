@@ -464,6 +464,7 @@ def convert_module(script_module, module, module_name, ir_model):
 
     ir_graph._register()
 
+    # FIXME: check whether id(module) exist
     return ir_graph, modules_arg[id(module)]
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
