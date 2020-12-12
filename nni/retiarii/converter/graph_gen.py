@@ -1,4 +1,5 @@
 import json_tricks
+import logging
 import re
 import torch
 
@@ -9,6 +10,7 @@ from ..nn.pytorch import Placeholder, LayerChoice, InputChoice
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName, BasicOpsPT
 from .utils import build_full_name, _convert_name
 
+_logger = logging.getLogger(__name__)
 
 global_seq = 0
 global_graph_id = 0
@@ -425,7 +427,6 @@ def convert_module(script_module, module, module_name, ir_model):
     # NOTE: have not supported nested LayerChoice, i.e., a candidate module
     # also has LayerChoice or InputChoice or ValueChoice
     original_type_name = script_module.original_name
-    print('zql: ', original_type_name, type(OpTypeName.LayerChoice))
     if original_type_name == OpTypeName.LayerChoice:
         m_attrs = _handle_layerchoice(module)
         return None, m_attrs
@@ -437,6 +438,7 @@ def convert_module(script_module, module, module_name, ir_model):
         return None, m_attrs
     if original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
         # this is a basic module from pytorch, no need to parse its graph
+        assert id(module) in modules_arg, f'{original_type_name} arguments are not recorded'
         m_attrs = modules_arg[id(module)]
         return None, m_attrs
 
@@ -464,7 +466,9 @@ def convert_module(script_module, module, module_name, ir_model):
 
     ir_graph._register()
 
-    # FIXME: check whether id(module) exist
+    if id(module) not in modules_arg:
+        raise RuntimeError(f'{original_type_name} arguments are not recorded, \
+            you may forget to decorate this class with @register_module()')
     return ir_graph, modules_arg[id(module)]
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
