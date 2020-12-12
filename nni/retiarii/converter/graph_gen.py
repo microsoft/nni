@@ -468,7 +468,7 @@ def convert_module(script_module, module, module_name, ir_model):
 
     if id(module) not in modules_arg:
         raise RuntimeError(f'{original_type_name} arguments are not recorded, \
-            you may forget to decorate this class with @register_module()')
+            you might have forgotten to decorate this class with @register_module()')
     return ir_graph, modules_arg[id(module)]
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
