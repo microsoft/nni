@@ -22,7 +22,6 @@ class TPESampler(Sampler):
         search_space = {}
         for i, each in enumerate(sample_space):
             search_space[str(i)] = {'_type': 'choice', '_value': each}
-        #print('zql search space', search_space)
         self.tpe_tuner.update_search_space(search_space)
 
     def generate_samples(self, model_id):
@@ -43,7 +42,6 @@ class TPEStrategy(BaseStrategy):
         self.tpe_sampler = TPESampler()
         self.model_id = 0
 
-    # FIXME: remove trainer from arguments
     def run(self, base_model, applied_mutators):
         sample_space = []
         new_model = base_model
@@ -63,9 +61,6 @@ class TPEStrategy(BaseStrategy):
                     _logger.info('mutate model...')
                     mutator.bind_sampler(self.tpe_sampler)
                     model = mutator.apply(model)
-                # get and apply training approach
-                #_logger.info('apply training approach...')
-                #model.apply_trainer(trainer['modulename'], trainer['args'])
                 # run models
                 submit_models(model)
                 wait_models(model)

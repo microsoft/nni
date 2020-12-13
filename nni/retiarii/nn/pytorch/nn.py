@@ -118,16 +118,7 @@ def wrap_module(original_class):
     original_class.__init__ = __init__ # Set the class' __init__ to the new one
     return original_class
 
-'''Conv2d = wrap_module(nn.Conv2d)
-BatchNorm2d = wrap_module(nn.BatchNorm2d)
-ReLU = wrap_module(nn.ReLU)
-Dropout = wrap_module(nn.Dropout)
-Linear = wrap_module(nn.Linear)
-MaxPool2d = wrap_module(nn.MaxPool2d)
-AvgPool2d = wrap_module(nn.AvgPool2d)
-Identity = wrap_module(nn.Identity)
-AdaptiveAvgPool2d = wrap_module(nn.AdaptiveAvgPool2d)'''
-
+# TODO: support different versions of pytorch
 Identity = wrap_module(nn.Identity)
 Linear = wrap_module(nn.Linear)
 Conv1d = wrap_module(nn.Conv1d)
