@@ -385,10 +385,13 @@ def _handle_layerchoice(module):
 
     m_attrs = {}
     candidates = module.candidate_ops
+    choices = []
     for i, cand in enumerate(candidates):
         assert id(cand) in modules_arg, 'id not exist: {}'.format(id(cand))
         assert isinstance(modules_arg[id(cand)], dict)
-        m_attrs[f'choice_{i}'] = modules_arg[id(cand)]
+        cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
+        choices.append({'type': cand_type, 'parameters': modules_arg[id(cand)]})
+    m_attrs[f'choices'] = choices
     m_attrs['label'] = module.label
     return m_attrs
 
@@ -469,7 +472,12 @@ def convert_module(script_module, module, module_name, ir_model):
     if id(module) not in modules_arg:
         raise RuntimeError(f'{original_type_name} arguments are not recorded, \
             you might have forgotten to decorate this class with @register_module()')
-    return ir_graph, modules_arg[id(module)]
+    # TODO: if we parse this module, it means we will create a graph (module class)
+    # for this module. Then it is not necessary to record this module's arguments
+    # return ir_graph, modules_arg[id(module)].
+    # That is, we can refactor this part, to allow users to annotate which module 
+    # should not be parsed further.
+    return ir_graph, {}
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
     """

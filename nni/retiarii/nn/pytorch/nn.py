@@ -76,6 +76,15 @@ class Placeholder(nn.Module):
     def forward(self, x):
         return x
 
+class ChosenInputs(nn.Module):
+    def __init__(self, chosen: int):
+        super().__init__()
+        self.chosen = chosen
+
+    def forward(self, candidate_inputs):
+        # TODO: support multiple chosen inputs
+        return candidate_inputs[self.chosen]
+
 # the following are pytorch modules
 
 class Module(nn.Module):

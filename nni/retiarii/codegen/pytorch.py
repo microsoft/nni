@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 
 
 def model_to_pytorch_script(model: Model, placement = None) -> str:
+    # TODO: support GPU
     graphs = []
     total_pkgs = set()
     for name, cell in model.graphs.items():

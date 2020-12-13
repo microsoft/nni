@@ -4,18 +4,12 @@ import torch
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-from nni.retiarii.converter.graph_gen import convert_to_graph
-from nni.retiarii.converter.visualize import visualize_model
-from nni.retiarii.codegen.pytorch import model_to_pytorch_script
 
-from nni.retiarii import nn
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer
 
 from base_mnasnet import MNASNet
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
 
-#from simple_strategy import SimpleStrategy
-#from tpe_strategy import TPEStrategy
 from nni.retiarii.strategies import TPEStrategy
 from mutator import BlockMutator
 
@@ -33,15 +27,6 @@ if __name__ == '__main__':
             dataloader_kwargs={"batch_size": 32},
             optimizer_kwargs={"lr": 1e-3},
             trainer_kwargs={"max_epochs": 1})
-
-    '''script_module = torch.jit.script(base_model)
-    model = convert_to_graph(script_module, base_model, tca.recorded_arguments)
-    code_script = model_to_pytorch_script(model)
-    print(code_script)
-    print("Model: ", model)
-    graph_ir = model._dump()
-    print(graph_ir)
-    visualize_model(graph_ir)'''
 
     # new interface
     applied_mutators = []

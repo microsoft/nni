@@ -14,6 +14,7 @@ from ..experiment.config import util
 from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter.graph_gen import convert_to_graph
+from .mutator import LayerChoiceMutator, InputChoiceMutator
 
 _logger = logging.getLogger(__name__)
 
@@ -86,6 +87,23 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+    def _process_inline_mutation(self, base_model):
+        """
+        the mutators are order independent
+        """
+        lc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
+        ic_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
+        if not lc_nodes and not ic_nodes:
+            return None
+        applied_mutators = []
+        for node in lc_nodes:
+            mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
+            applied_mutators.append(mutator)
+        for node in ic_nodes:
+            mutator = InputChoiceMutator(node.name, node.operation.parameters['n_chosen'])
+            applied_mutators.append(mutator)
+        return applied_mutators
+
     def _start_strategy(self):
         import torch
         script_module = torch.jit.script(self.base_model)
@@ -93,9 +111,18 @@ class RetiariiExperiment(Experiment):
 
         assert id(self.trainer) in self.recorded_module_args
         trainer_config = self.recorded_module_args[id(self.trainer)]
+        base_model.apply_trainer(trainer_config['modulename'], trainer_config['args'])
+
+        # handle inline mutations
+        mutators = self._process_inline_mutation(base_model)
+        if mutators is not None and self.applied_mutators:
+            raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, \
+                do not use mutators when you use LayerChoice/InputChoice')
+        if mutators is not None:
+            self.applied_mutators = mutators
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy.run, args=(base_model, self.applied_mutators, trainer_config)).start()
+        Thread(target=self.strategy.run, args=(base_model, self.applied_mutators)).start()
         _logger.info('Strategy started!')
 
     def start(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> None:
