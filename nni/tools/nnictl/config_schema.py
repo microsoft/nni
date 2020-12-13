@@ -268,6 +268,7 @@ adl_trial_schema = {
         'command': setType('command', str),
         'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
         'image': setType('image', str),
+        Optional('namespace'): setType('namespace', str),
         Optional('imagePullSecrets'): [{
             'name': setType('name', str)
         }],
