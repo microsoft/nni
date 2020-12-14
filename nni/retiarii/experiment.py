@@ -5,16 +5,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
+from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
-from .mutator import LayerChoiceMutator, InputChoiceMutator
+from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
+from .trainer.interface import BaseTrainer
+from .strategies.strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
 
@@ -72,8 +75,8 @@ _validation_rules = {
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: 'nn.Module', trainer: 'BaseTrainer',
-                 applied_mutators: List['Mutator'], strategy: 'BaseStrategy'):
+    def __init__(self, base_model: Model, trainer: BaseTrainer,
+                 applied_mutators: Mutator, strategy: BaseStrategy):
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 

@@ -58,7 +58,7 @@ class InputChoice(nn.Module):
         if n_candidates or choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 
-    def forward(self, candidate_inputs: List['Tensor']) -> 'Tensor':
+    def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
         # fake return
         return torch.tensor(candidate_inputs)  # pylint: disable=not-callable
 

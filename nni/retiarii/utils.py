@@ -1,8 +1,9 @@
-from collections import defaultdict
 import inspect
+from collections import defaultdict
+from typing import Any
 
 
-def import_(target: str, allow_none: bool = False) -> 'Any':
+def import_(target: str, allow_none: bool = False) -> Any:
     if target is None:
         return None
     path, identifier = target.rsplit('.', 1)
