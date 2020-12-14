@@ -1,5 +1,5 @@
 **Run an Experiment on Heterogeneous Mode**
-=================================
+===========================================
 
 Run NNI on heterogeneous mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
 
@@ -12,6 +12,7 @@ NNI has supported [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pa
 Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's content is like:
 
 .. code-block:: yaml
+
     authorName: default
     experimentName: example_mnist
     trialConcurrency: 2
