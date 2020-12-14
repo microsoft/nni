@@ -109,7 +109,7 @@ class OriginNode(AbstractLogicalNode):
 class LogicalPlan:
     def __init__(self, plan_id=0) -> None:
         self.lp_model = Model(_internal=True)
-        self.id = id
+        self.id = plan_id
         self.logical_graph = LogicalGraph(
             self.lp_model, self.id, name=f'{self.id}', _internal=True)._register()
         self.lp_model._root_graph_name = self.logical_graph.name
