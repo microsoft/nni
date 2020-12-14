@@ -106,7 +106,11 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         import torch
-        script_module = torch.jit.script(self.base_model)
+        try:
+            script_module = torch.jit.script(self.base_model)
+        except Exception as e:
+            _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
+            raise e
         base_model = convert_to_graph(script_module, self.base_model, self.recorded_module_args)
 
         assert id(self.trainer) in self.recorded_module_args

@@ -165,6 +165,33 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
     # key: tensor (%out.1), value: node (this node)
     output_remap = {}
 
+    def handle_if_condition(cond_tensor):
+        """
+        to calculate the condition, we only deal with the following op types by tracing back
+        `prim::GetAttr`, `aten::__getitem__`, `prim::Constant`, `aten::eq`
+
+        generate the expression using recursive calls
+
+        NOTE: do not support dynamic graph
+        """
+        def _generate_expr(tensor):
+            if tensor.node().kind() == 'prim::GetAttr':
+                return f'({getattr(module, tensor.node().s("name"))})'
+            elif tensor.node().kind() == 'aten::__getitem__':
+                t = _generate_expr(tensor.node().inputsAt(0))
+                idx = _generate_expr(tensor.node().inputsAt(1))
+                return f'({t}[{idx}])'
+            elif tensor.node().kind() == 'prim::Constant':
+                return f'{tensor.toIValue()}'
+            elif tensor.node().kind() == 'aten::eq':
+                left = _generate_expr(tensor.node().inputsAt(0))
+                right = _generate_expr(tensor.node().inputsAt(1))
+                return f'({left} == {right})'
+            else:
+                raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition')
+        expr = _generate_expr(cond_tensor)
+        return eval(expr)
+
     def handle_if_node(node):
         """
         Parameters
@@ -181,19 +208,13 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
         # will support constant expression in future
         inputs = [i for i in node.inputs()]
         assert len(inputs) == 1
-        if not inputs[0].node().kind() in ['prim::Constant', 'prim::GetAttr']:
-            raise RuntimeError('"if" whose condition is not constant or attribute has not been supported yet!')
-        chosen_block = None
-        if inputs[0].node().kind() == 'prim::Constant':
-            chosen_block = 0 if inputs[0].toIValue() else 1
-        if inputs[0].node().kind() == 'prim::GetAttr':
-            chosen_block = 0 if getattr(module, inputs[0].node().s('name')) else 1
+        cond = handle_if_condition(inputs[0])
+        chosen_block = 0 if cond else 1
         blocks = [block for block in node.blocks()]
         assert len(blocks) == 2
         last_block_node = None
         for node in blocks[chosen_block].nodes():
             last_block_node = handle_single_node(node)
-        assert last_block_node is not None
         return last_block_node
 
     def handle_single_node(node):
@@ -310,8 +331,12 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
                                             node_type, attrs)
             node_index[node] = new_node
+        elif node.kind() == 'prim::min':
+            print('zql: ', sm_graph)
+            exit(1)
         elif node.kind() == 'prim::If':
             last_block_node = handle_if_node(node)
+            # last_block_node is None means no node in the branch block
             node_index[node] = last_block_node
         elif node.kind() == 'prim::Loop':
             raise RuntimeError('Loop has not been supported yet!')
@@ -346,6 +371,9 @@ def merge_aten_slices(ir_graph):
     for head_node in head_slice_nodes:
         slot = 0
         new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), OpTypeName.MergedSlice)
+        if len(head_node.incoming_edges) == 4:
+            # when slice is for one dimension list, there are only 4 inputs, thus merge is not needed
+            break
         assert len(head_node.incoming_edges) == 5
         for edge in head_node.incoming_edges:
             edge.tail = new_slice_node

@@ -37,20 +37,26 @@ __all__ = [
 
 
 class LayerChoice(nn.Module):
-    def __init__(self, candidate_ops: List, label: str = None):
+    def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
         super(LayerChoice, self).__init__()
-        self.candidate_ops = candidate_ops
-        self.label = label
+        self.candidate_ops = op_candidates
+        self.label = key
+        if reduction or return_mask:
+            _logger.warning('input arguments `reduction` and `return_mask` are deprecated!')
 
     def forward(self, x):
         return x
 
+
 class InputChoice(nn.Module):
-    def __init__(self, n_chosen: int = 1, reduction: str = 'sum', label: str = None):
+    def __init__(self, n_candidates=None, choose_from=None, n_chosen=1,
+                 reduction="sum", return_mask=False, key=None):
         super(InputChoice, self).__init__()
         self.n_chosen = n_chosen
         self.reduction = reduction
-        self.label = label
+        self.label = key
+        if n_candidates or choose_from or return_mask:
+            _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 
     def forward(self, candidate_inputs: List['Tensor']) -> 'Tensor':
         # fake return

@@ -27,7 +27,9 @@ BasicOpsPT = {
     'aten::slice': 'Slice',
     'aten::cat': 'Cat',
     'aten::size': 'Size',
-    'aten::view': 'View'
+    'aten::view': 'View',
+    'aten::eq': 'Eq',
+    'aten::add_': 'Add_' # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
 }
 
 BasicOpsTF = {}
