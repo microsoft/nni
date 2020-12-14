@@ -79,9 +79,16 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
             Keyword arguments passed to trainer. Will be passed to Trainer class in future. Currently,
             only the key ``max_epochs`` is useful.
         """
-        super(PyTorchImageClassificationTrainer, self).__init__(model,
-                                                                dataset_cls, dataset_kwargs, dataloader_kwargs,
-                                                                optimizer_cls, optimizer_kwargs, trainer_kwargs)
+        super(
+            PyTorchImageClassificationTrainer,
+            self).__init__(
+            model,
+            dataset_cls,
+            dataset_kwargs,
+            dataloader_kwargs,
+            optimizer_cls,
+            optimizer_kwargs,
+            trainer_kwargs)
         self._use_cuda = torch.cuda.is_available()
         self.model = model
         if self._use_cuda:
@@ -94,7 +101,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
         self._optimizer = getattr(torch.optim, optimizer_cls)(
             model.parameters(), **(optimizer_kwargs or {}))
         self._trainer_kwargs = trainer_kwargs or {'max_epochs': 10}
-        
+
         self._train_dataloader = DataLoader(
             self._train_dataset, **(dataloader_kwargs or {}))
         self._val_dataloader = DataLoader(
