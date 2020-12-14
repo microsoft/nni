@@ -1,3 +1,4 @@
+from collections import defaultdict
 import inspect
 
 def import_(target: str, allow_none: bool = False) -> 'Any':
@@ -6,7 +7,6 @@ def import_(target: str, allow_none: bool = False) -> 'Any':
     path, identifier = target.rsplit('.', 1)
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
-
 
 _records = {}
 
@@ -83,3 +83,9 @@ def register_trainer():
         return m
 
     return _register
+
+_last_uid = defaultdict(int)
+
+def uid(namespace: str = 'default') -> int:
+    _last_uid[namespace] += 1
+    return _last_uid[namespace]
