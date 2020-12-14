@@ -21,7 +21,7 @@ nnictl support commands:
 * [nnictl log](#log)
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
-* [nnictl package](#package)
+* [nnictl algo](#algo)
 * [nnictl ss_gen](#ss_gen)
 * [nnictl --version](#version)
 
@@ -769,112 +769,89 @@ Debug mode will disable version check function in Trialkeeper.
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
 
-<a name="package"></a>
+<a name="algo"></a>
 
-### Manage package
+### Manage builtin algorithms
 
-* __nnictl package install__
+* __nnictl algo register__
   * Description
 
-    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
+    Register customized algorithms as builtin tuner/assessor/advisor.
 
   * Usage
 
     ```bash
-    nnictl package install --name <package name>
+    nnictl algo register --meta <path_to_meta_file>
     ```
+    `<path_to_meta_file>` is the path to the meta data file in yml format, which has following keys:
+    * `algoType`: type of algorithms, could be one of `tuner`, `assessor`, `advisor`
+    * `builtinName`: builtin name used in experiment configuration file
+    * `className`: tuner class name, including its module name, for example: `demo_tuner.DemoTuner`
+    * `classArgsValidator`: class args validator class name, including its module name, for example: `demo_tuner.MyClassArgsValidator`
 
-    The available `<package name>` can be checked via `nnictl package list` command.
-
-    or
-
-    ```bash
-    nnictl package install <installation source>
-    ```
-
-    Reference [Install customized algorithms](InstallCustomizedAlgos.md) to prepare the installation source.
 
   * Example
 
-    > Install SMAC tuner
+    > Install a customized tuner in nni examples
 
     ```bash
-    nnictl package install --name SMAC
-    ```
-
-    > Install a customized tuner
-
-    ```bash
-    nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
+    cd nni/examples/tuners/customized_tuner
+    python3 setup.py develop
+    nnictl algo register --meta meta_file.yml
     ```
 
 
-* __nnictl package show__
+* __nnictl algo show__
 
   * Description
 
-    Show the detailed information of specified packages.
+    Show the detailed information of specified registered algorithms.
 
   * Usage
 
     ```bash
-    nnictl package show <package name>
+    nnictl algo show <builtinName>
     ```
 
   * Example
 
     ```bash
-    nnictl package show SMAC
+    nnictl algo show SMAC
     ```
 
-* __nnictl package list__
+* __nnictl algo list__
   * Description
 
-    List the installed/all packages.
+    List the registered builtin algorithms
 
   * Usage
 
     ```bash
-    nnictl package list [OPTIONS]
+    nnictl algo list
     ```
-
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |--all|  False| |List all packages|
 
   * Example
 
-    > List installed packages
-
     ```bash
-    nnictl package list
+    nnictl algo list
     ```
 
-    > List all packages
-
-    ```bash
-    nnictl package list --all
-    ```
-
-* __nnictl package uninstall__
+* __nnictl algo unregister__
 
   * Description
 
-    Uninstall a package.
+    Unregister a registered customized builtin algorithms. The NNI provided builtin algorithms can not be unregistered.
 
   * Usage
 
     ```bash
-    nnictl package uninstall <package name>
+    nnictl algo unregister <builtinName>
     ```
 
   * Example
-    Uninstall SMAC package
 
     ```bash
-    nnictl package uninstall SMAC
+    nnictl algo unregister demotuner
     ```
 
 

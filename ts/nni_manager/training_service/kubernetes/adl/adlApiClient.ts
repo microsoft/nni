@@ -13,14 +13,17 @@ class AdlClientV1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize adl CRD definition
      */
-    public constructor() {
+    protected readonly namespace: string;
+
+    public constructor(namespace: string) {
         super();
+        this.namespace = namespace;
         this.crdSchema = JSON.parse(fs.readFileSync('./config/adl/adaptdl-crd-v1.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
     protected get operator(): any {
-        return this.client.apis['adaptdl.petuum.com'].v1.namespaces('default').adaptdljobs;
+        return this.client.apis['adaptdl.petuum.com'].v1.namespaces(this.namespace).adaptdljobs;
     }
 
     public get containerName(): string {
@@ -29,7 +32,7 @@ class AdlClientV1 extends KubernetesCRDClient {
 
     public async getKubernetesPods(jobName: string): Promise<any> {
         let result: Promise<any>;
-        const response = await this.client.api.v1.namespaces('default').pods
+        const response = await this.client.api.v1.namespaces(this.namespace).pods
             .get({ qs: { labelSelector: `adaptdl/job=${jobName}` } });
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
@@ -47,8 +50,8 @@ class AdlClientFactory {
     /**
      * Factory method to generate operator client
      */
-    public static createClient(): KubernetesCRDClient {
-        return new AdlClientV1();
+    public static createClient(namespace: string): KubernetesCRDClient {
+        return new AdlClientV1(namespace);
     }
 }
 
