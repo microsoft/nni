@@ -105,7 +105,7 @@ class PyTorchOperation(Operation):
         return None
 
     def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
-        from .converter.op_types import Type
+        from .converter.op_types import OpTypeName
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
@@ -133,7 +133,7 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::add':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]} + {inputs[1]}'
-        elif self.type == Type.MergedSlice:
+        elif self.type == OpTypeName.MergedSlice:
             assert (len(inputs) - 1) % 4 == 0
             slices = []
             dim = int((len(inputs) - 1) / 4)

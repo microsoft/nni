@@ -15,7 +15,6 @@ def model_to_pytorch_script(model: Model, placement = None) -> str:
         import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement = placement)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
-    # FIXME: set correct PATH for the packages (after launch refactor)
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
     return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
@@ -71,7 +70,7 @@ def _remove_prefix(names, graph_name):
         return names[len(graph_name):] if names.startswith(graph_name) else names
 
 def graph_to_pytorch_model(graph_name: str, graph: Graph, placement = None) -> str:
-    nodes = graph.topo_sort()  # FIXME: topological sort is needed here
+    nodes = graph.topo_sort()
 
     # handle module node and function node differently
     # only need to generate code for module here
@@ -129,10 +128,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-# FIXME: remove these two lines
-import sys
-sys.path.append("test/convert_test")
 
 {}
 

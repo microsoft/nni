@@ -52,7 +52,7 @@ else:
 
         def connect(self) -> BufferedIOBase:
             conn, _ = self._socket.accept()
-            self.file = conn.makefile('w+b')
+            self.file = conn.makefile('rwb')
             return self.file
 
         def close(self) -> None:

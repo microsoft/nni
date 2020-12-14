@@ -169,10 +169,29 @@ class Model:
             matched_nodes.extend(nodes)
         return matched_nodes
 
-    def get_by_name(self, name: str) -> Union['Graph', 'Node']:
+    def get_nodes_by_type(self, type_name: str) -> List['Node']:
         """
-        Find the graph or node that have the given name space name.
+        Traverse all the nodes to find the matched node(s) with the given type.
         """
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = graph.get_nodes_by_type(type_name)
+            matched_nodes.extend(nodes)
+        return matched_nodes
+
+    def get_node_by_name(self, node_name: str) -> 'Node':
+        """
+        Traverse all the nodes to find the matched node with the given name.
+        """
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = graph.get_nodes_by_name(node_name)
+            matched_nodes.extend(nodes)
+        assert len(matched_nodes) <= 1
+        if matched_nodes:
+            return matched_nodes[0]
+        else:
+            return None
 
 
 class ModelStatus(Enum):
@@ -325,6 +344,9 @@ class Graph:
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.label == label]
+
+    def get_nodes_by_name(self, name: str) -> List['Node']:
+        return [node for node in self.hidden_nodes if node.name == name]
 
     def topo_sort(self) -> List['Node']:
         node_to_fanin = {}

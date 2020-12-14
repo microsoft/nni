@@ -1,4 +1,5 @@
 import json_tricks
+import logging
 import re
 import torch
 
@@ -6,9 +7,10 @@ from ..graph import Graph, Node, Edge, Model
 from ..operation import Cell, Operation
 from ..nn.pytorch import Placeholder, LayerChoice, InputChoice
 
-from .op_types import MODULE_EXCEPT_LIST, Type
+from .op_types import MODULE_EXCEPT_LIST, OpTypeName, BasicOpsPT
 from .utils import build_full_name, _convert_name
 
+_logger = logging.getLogger(__name__)
 
 global_seq = 0
 global_graph_id = 0
@@ -80,7 +82,7 @@ def create_prim_constant_node(ir_graph, node, module_name):
     if node.outputsAt(0).toIValue() is not None:
         attrs = {'value': node.outputsAt(0).toIValue()}
     global_seq += 1
-    new_node = ir_graph.add_node(build_full_name(module_name, Type.Constant, global_seq),
+    new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Constant, global_seq),
                                  node.kind(), attrs)
     return new_node
 
@@ -163,6 +165,33 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
     # key: tensor (%out.1), value: node (this node)
     output_remap = {}
 
+    def handle_if_condition(cond_tensor):
+        """
+        to calculate the condition, we only deal with the following op types by tracing back
+        `prim::GetAttr`, `aten::__getitem__`, `prim::Constant`, `aten::eq`
+
+        generate the expression using recursive calls
+
+        NOTE: do not support dynamic graph
+        """
+        def _generate_expr(tensor):
+            if tensor.node().kind() == 'prim::GetAttr':
+                return f'({getattr(module, tensor.node().s("name"))})'
+            elif tensor.node().kind() == 'aten::__getitem__':
+                t = _generate_expr(tensor.node().inputsAt(0))
+                idx = _generate_expr(tensor.node().inputsAt(1))
+                return f'({t}[{idx}])'
+            elif tensor.node().kind() == 'prim::Constant':
+                return f'{tensor.toIValue()}'
+            elif tensor.node().kind() == 'aten::eq':
+                left = _generate_expr(tensor.node().inputsAt(0))
+                right = _generate_expr(tensor.node().inputsAt(1))
+                return f'({left} == {right})'
+            else:
+                raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition')
+        expr = _generate_expr(cond_tensor)
+        return eval(expr)
+
     def handle_if_node(node):
         """
         Parameters
@@ -179,19 +208,13 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
         # will support constant expression in future
         inputs = [i for i in node.inputs()]
         assert len(inputs) == 1
-        if not inputs[0].node().kind() in ['prim::Constant', 'prim::GetAttr']:
-            raise RuntimeError('"if" whose condition is not constant or attribute has not been supported yet!')
-        chosen_block = None
-        if inputs[0].node().kind() == 'prim::Constant':
-            chosen_block = 0 if inputs[0].toIValue() else 1
-        if inputs[0].node().kind() == 'prim::GetAttr':
-            chosen_block = 0 if getattr(module, inputs[0].node().s('name')) else 1
+        cond = handle_if_condition(inputs[0])
+        chosen_block = 0 if cond else 1
         blocks = [block for block in node.blocks()]
         assert len(blocks) == 2
         last_block_node = None
         for node in blocks[chosen_block].nodes():
             last_block_node = handle_single_node(node)
-        assert last_block_node is not None
         return last_block_node
 
     def handle_single_node(node):
@@ -287,29 +310,33 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             node_index[node] = new_node
         elif node.kind() == 'prim::ListConstruct':
             global_seq += 1
-            new_node = ir_graph.add_node(build_full_name(module_name, Type.ListConstruct, global_seq), node.kind())
+            new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListConstruct, global_seq), node.kind())
             node_index[node] = new_node
             _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
         elif node.kind() == 'aten::append':
             global_seq += 1
-            aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
+            aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
             _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             output_remap[node.inputsAt(0)] = node
         elif node.kind().startswith('aten::'):
             # handle aten::XXX
             global_seq += 1
-            aten_node = ir_graph.add_node(build_full_name(module_name, Type.BasicOpsPT[node.kind()], global_seq), node.kind())
+            aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], global_seq), node.kind())
             node_index[node] = aten_node
             _add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
         elif node.kind() == 'prim::GetAttr':
             node_type, attrs = handle_prim_attr_node(node)
             global_seq += 1
-            new_node = ir_graph.add_node(build_full_name(module_name, Type.Attr, global_seq),
+            new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
                                             node_type, attrs)
             node_index[node] = new_node
+        elif node.kind() == 'prim::min':
+            print('zql: ', sm_graph)
+            exit(1)
         elif node.kind() == 'prim::If':
             last_block_node = handle_if_node(node)
+            # last_block_node is None means no node in the branch block
             node_index[node] = last_block_node
         elif node.kind() == 'prim::Loop':
             raise RuntimeError('Loop has not been supported yet!')
@@ -343,7 +370,10 @@ def merge_aten_slices(ir_graph):
     
     for head_node in head_slice_nodes:
         slot = 0
-        new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), Type.MergedSlice)
+        new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), OpTypeName.MergedSlice)
+        if len(head_node.incoming_edges) == 4:
+            # when slice is for one dimension list, there are only 4 inputs, thus merge is not needed
+            break
         assert len(head_node.incoming_edges) == 5
         for edge in head_node.incoming_edges:
             edge.tail = new_slice_node
@@ -383,10 +413,13 @@ def _handle_layerchoice(module):
 
     m_attrs = {}
     candidates = module.candidate_ops
+    choices = []
     for i, cand in enumerate(candidates):
         assert id(cand) in modules_arg, 'id not exist: {}'.format(id(cand))
         assert isinstance(modules_arg[id(cand)], dict)
-        m_attrs[f'choice_{i}'] = modules_arg[id(cand)]
+        cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
+        choices.append({'type': cand_type, 'parameters': modules_arg[id(cand)]})
+    m_attrs[f'choices'] = choices
     m_attrs['label'] = module.label
     return m_attrs
 
@@ -425,17 +458,18 @@ def convert_module(script_module, module, module_name, ir_model):
     # NOTE: have not supported nested LayerChoice, i.e., a candidate module
     # also has LayerChoice or InputChoice or ValueChoice
     original_type_name = script_module.original_name
-    if original_type_name == Type.LayerChoice:
+    if original_type_name == OpTypeName.LayerChoice:
         m_attrs = _handle_layerchoice(module)
         return None, m_attrs
-    if original_type_name == Type.InputChoice:
+    if original_type_name == OpTypeName.InputChoice:
         m_attrs = _handle_inputchoice(module)
         return None, m_attrs
-    if original_type_name in Type.Placeholder:
+    if original_type_name == OpTypeName.Placeholder:
         m_attrs = modules_arg[id(module)]
         return None, m_attrs
     if original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
         # this is a basic module from pytorch, no need to parse its graph
+        assert id(module) in modules_arg, f'{original_type_name} arguments are not recorded'
         m_attrs = modules_arg[id(module)]
         return None, m_attrs
 
@@ -463,7 +497,15 @@ def convert_module(script_module, module, module_name, ir_model):
 
     ir_graph._register()
 
-    return ir_graph, modules_arg[id(module)]
+    if id(module) not in modules_arg:
+        raise RuntimeError(f'{original_type_name} arguments are not recorded, \
+            you might have forgotten to decorate this class with @register_module()')
+    # TODO: if we parse this module, it means we will create a graph (module class)
+    # for this module. Then it is not necessary to record this module's arguments
+    # return ir_graph, modules_arg[id(module)].
+    # That is, we can refactor this part, to allow users to annotate which module 
+    # should not be parsed further.
+    return ir_graph, {}
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
     """
