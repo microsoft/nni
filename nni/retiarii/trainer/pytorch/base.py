@@ -94,8 +94,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
         self._optimizer = getattr(torch.optim, optimizer_cls)(
             model.parameters(), **(optimizer_kwargs or {}))
         self._trainer_kwargs = trainer_kwargs or {'max_epochs': 10}
-
-        # TODO: we will need at least two (maybe three) data loaders in future.
+        
         self._train_dataloader = DataLoader(
             self._train_dataset, **(dataloader_kwargs or {}))
         self._val_dataloader = DataLoader(
