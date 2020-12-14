@@ -36,13 +36,6 @@ def get_and_register_default_listener(engine: AbstractExecutionEngine) -> Defaul
         engine.register_graph_listener(_default_listener)
     return _default_listener
 
-def _get_search_space() -> 'Dict':
-    engine = get_execution_engine()
-    while True:
-        time.sleep(1)
-        if engine.get_search_space() is not None:
-            break
-    return engine.get_search_space()
 
 def submit_models(*models: Model) -> None:
     engine = get_execution_engine()

@@ -50,10 +50,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
         self._running_models: Dict[int, Model] = dict()
 
-    def get_search_space(self) -> 'JSON':
-        advisor = get_advisor()
-        return advisor.search_space
-
     def submit_models(self, *models: Model) -> None:
         for model in models:
             data = BaseGraphData(codegen.model_to_pytorch_script(model),
@@ -106,7 +102,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         Initialize the model, hand it over to trainer.
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
-        # FIXME: update this part to dump code to a correct path!!!
         with open('_generated_model.py', 'w') as f:
             f.write(graph_data.model_script)
         trainer_cls = utils.import_(graph_data.training_module)
