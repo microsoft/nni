@@ -80,20 +80,16 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
             only the key ``max_epochs`` is useful.
         """
         super(PyTorchImageClassificationTrainer, self).__init__(model,
-                 dataset_cls, dataset_kwargs, dataloader_kwargs,
-                 optimizer_cls, optimizer_kwargs, trainer_kwargs)
+                                                                dataset_cls, dataset_kwargs, dataloader_kwargs,
+                                                                optimizer_cls, optimizer_kwargs, trainer_kwargs)
         self._use_cuda = torch.cuda.is_available()
         self.model = model
         if self._use_cuda:
             self.model.cuda()
         self._loss_fn = nn.CrossEntropyLoss()
-        self._train_dataset = getattr(datasets, dataset_cls)(train=True,
-                                                             transform=get_default_transform(
-                                                                 dataset_cls),
+        self._train_dataset = getattr(datasets, dataset_cls)(train=True, transform=get_default_transform(dataset_cls),
                                                              **(dataset_kwargs or {}))
-        self._val_dataset = getattr(datasets, dataset_cls)(train=False,
-                                                           transform=get_default_transform(
-                                                               dataset_cls),
+        self._val_dataset = getattr(datasets, dataset_cls)(train=False, transform=get_default_transform(dataset_cls),
                                                            **(dataset_kwargs or {}))
         self._optimizer = getattr(torch.optim, optimizer_cls)(
             model.parameters(), **(optimizer_kwargs or {}))
@@ -176,23 +172,18 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         self._optimizers = []
         self._trainers = []
         self._loss_fn = nn.CrossEntropyLoss()
-        self.max_steps = None
+        self.max_steps = self.kwargs['max_steps'] if 'makx_steps' in self.kwargs else None
         self.n_model = len(self.kwargs['model_kwargs'])
-        if 'max_steps' in self.kwargs:
-            self.max_steps = self.kwargs['max_steps']
+        # self.device = self.kwargs['device'] if 'device' in self.kwargs else None
 
         for m in self.kwargs['model_kwargs']:
             if m['use_input']:
                 dataset_cls = m['dataset_cls']
                 dataset_kwargs = m['dataset_kwargs']
                 dataloader_kwargs = m['dataloader_kwargs']
-                train_dataset = getattr(datasets, dataset_cls)(train=True,
-                                                               transform=get_default_transform(
-                                                                   dataset_cls),
+                train_dataset = getattr(datasets, dataset_cls)(train=True, transform=get_default_transform(dataset_cls),
                                                                **(dataset_kwargs or {}))
-                val_dataset = getattr(datasets, dataset_cls)(train=False,
-                                                             transform=get_default_transform(
-                                                                 dataset_cls),
+                val_dataset = getattr(datasets, dataset_cls)(train=False, transform=get_default_transform(dataset_cls),
                                                              **(dataset_kwargs or {}))
                 train_dataloader = DataLoader(
                     train_dataset, **(dataloader_kwargs or {}))
@@ -260,8 +251,6 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             summed_loss.backward()
             for opt in self._optimizers:
                 opt.step()
-            # if batch_idx % 50 == 0:
-            #     nni.report_intermediate_result(report_loss)
             if self.max_steps and batch_idx >= self.max_steps:
                 return
 
