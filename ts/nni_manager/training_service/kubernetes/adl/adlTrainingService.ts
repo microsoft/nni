@@ -39,7 +39,6 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
         super();
         this.adlJobInfoCollector = new AdlJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();
-        this.kubernetesCRDClient = AdlClientFactory.createClient();
         this.configmapTemplateStr = fs.readFileSync(
             './config/adl/adaptdl-nni-configmap-template.json', 'utf8');
         this.jobTemplateStr = fs.readFileSync('./config/adl/adaptdljob-template.json', 'utf8');
@@ -214,10 +213,10 @@ class AdlTrainingService extends KubernetesTrainingService implements Kubernetes
             trialJobId, form, codeDir, outputDir)
         const cleanupScriptTemplate: string =
 `#!/bin/bash
-ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | xargs kill -2
+ps aux | grep "python3 -m nni.tools.trial_tool.trial_keeper" | awk '{print $2}' | xargs kill -2
 while true;
 do
-    proc=\`ps aux | grep "python3 -m nni_trial_tool.trial_keeper" | awk '{print $2}' | grep "" -c\`
+    proc=\`ps aux | grep "python3 -m nni.tools.trial_tool.trial_keeper" | awk '{print $2}' | grep "" -c\`
     if (( $proc == 1  )); then
         exit 0
     else
@@ -281,7 +280,7 @@ export NNI_TRIAL_SEQ_ID={4}
 mkdir -p $NNI_OUTPUT_DIR
 {5}
 echo '{6}' > $NNI_CODE_DIR/{7}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' \
+python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
 --nnimanager_ip {9} --nnimanager_port {10} \
 --nni_manager_version '{11}' --log_collection '{12}'
 `;
@@ -294,15 +293,34 @@ python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' \
         return Promise.resolve(runScript);
     }
 
+    public async cleanUp(): Promise<void> {
+        super.cleanUp();
+
+        // Delete Tensorboard deployment
+        try {
+            await this.genericK8sClient.deleteDeployment("adaptdl-tensorboard-" + this.experimentId.toLowerCase());
+            this.log.info('tensorboard deployment deleted');
+        } catch (error) {
+            this.log.error(`tensorboard deployment deletion failed: ${error.message}`);
+        }
+    }
+
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         this.log.info('SetCluster ' + key + ', ' +value);
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG: {
                 this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
+                let namespace: string = 'default';
+                if (this.adlTrialConfig.namespace !== undefined) {
+                    namespace = this.adlTrialConfig.namespace;
+                }
+                this.genericK8sClient.setNamespace = namespace;
+                this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
                 break;
+            }
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;

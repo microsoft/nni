@@ -15,6 +15,16 @@ const trialJobStatus = [
     'SYS_CANCELED',
     'EARLY_STOPPED'
 ];
+const EXPERIMENTSTATUS = [
+    'INITIALIZED',
+    'RUNNING',
+    'ERROR',
+    'STOPPING',
+    'STOPPED',
+    'DONE',
+    'NO_MORE_TRIAL',
+    'TUNER_NO_MORE_TRIAL'
+];
 const CONTROLTYPE = ['MAX_EXEC_DURATION', 'MAX_TRIAL_NUM', 'TRIAL_CONCURRENCY', 'SEARCH_SPACE'];
 const MONACO = {
     readOnly: true,
@@ -64,6 +74,7 @@ export {
     MANAGER_IP,
     DOWNLOAD_IP,
     trialJobStatus,
+    EXPERIMENTSTATUS,
     COLUMNPro,
     WEBUIDOC,
     CONTROLTYPE,

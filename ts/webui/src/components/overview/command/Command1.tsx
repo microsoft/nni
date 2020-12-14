@@ -37,9 +37,9 @@ export const Command1 = (): any => {
         <div className='basic' style={rightEidtParam}>
             <div>
                 <p className='command'>Training platform</p>
-                <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
+                <div className='ellipsis'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
                 <p className='lineMargin'>{title.join('/')}</p>
-                <div className='nowrap'>{builtinName.join('/')}</div>
+                <div className='ellipsis'>{builtinName.join('/')}</div>
             </div>
         </div>
     );

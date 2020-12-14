@@ -1,5 +1,27 @@
-.cursor{
-    &:hover, & i:hover{
-        cursor: pointer;
-    }
+.ellipsis {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.link {
+	outline: none;
+	color: #333 !important;
+	text-decoration: none;
+	
+	&:hover {
+		color: #0071bc !important;
+		text-decoration: underline;
+	}
+	&:active,
+	&:visited {
+		color: #0071bc;
+	}
+}
+
+.cursor {
+	&:hover,
+	& i:hover {
+		cursor: pointer;
+	}
 }
