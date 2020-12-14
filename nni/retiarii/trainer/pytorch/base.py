@@ -43,6 +43,7 @@ def get_default_transform(dataset: str) -> Any:
     # unsupported dataset, return None
     return None
 
+
 @register_trainer()
 class PyTorchImageClassificationTrainer(BaseTrainer):
     """
