@@ -7,7 +7,7 @@ import datasets
 
 from putils import get_parameters
 from model import SearchMobileNet
-from nni.algorithms.nas.pytorch.proxylessnas import ProxylessNasTrainer
+from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
 from retrain import Retrain
 
 logger = logging.getLogger('nni_proxylessnas')
