@@ -174,7 +174,6 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         self._loss_fn = nn.CrossEntropyLoss()
         self.max_steps = self.kwargs['max_steps'] if 'makx_steps' in self.kwargs else None
         self.n_model = len(self.kwargs['model_kwargs'])
-        # self.device = self.kwargs['device'] if 'device' in self.kwargs else None
 
         for m in self.kwargs['model_kwargs']:
             if m['use_input']:
