@@ -20,10 +20,10 @@ Tuner
 ..  autoclass:: nni.tuner.Tuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner.HyperoptTuner
+..  autoclass:: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.evolution_tuner.evolution_tuner.EvolutionTuner
+..  autoclass:: nni.algorithms.hpo.evolution_tuner.EvolutionTuner
     :members:
 
 ..  autoclass:: nni.algorithms.hpo.smac_tuner.SMACTuner
@@ -32,19 +32,19 @@ Tuner
 ..  autoclass:: nni.algorithms.hpo.gridsearch_tuner.GridSearchTuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
+..  autoclass:: nni.algorithms.hpo.networkmorphism_tuner.NetworkMorphismTuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.metis_tuner.metis_tuner.MetisTuner
+..  autoclass:: nni.algorithms.hpo.metis_tuner.MetisTuner
     :members:
 
 ..  autoclass:: nni.algorithms.hpo.ppo_tuner.PPOTuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.batch_tuner.batch_tuner.BatchTuner
+..  autoclass:: nni.algorithms.hpo.batch_tuner.BatchTuner
     :members:
 
-..  autoclass:: nni.algorithms.hpo.gp_tuner.gp_tuner.GPTuner
+..  autoclass:: nni.algorithms.hpo.gp_tuner.GPTuner
     :members:
 
 Assessor
@@ -68,10 +68,10 @@ Advisor
 ..  autoclass:: nni.runtime.msg_dispatcher_base.MsgDispatcherBase
     :members:
 
-..  autoclass:: nni.algorithms.hpo.hyperband_advisor.hyperband_advisor.Hyperband
+..  autoclass:: nni.algorithms.hpo.hyperband_advisor.Hyperband
     :members:
 
-..  autoclass:: nni.algorithms.hpo.bohb_advisor.bohb_advisor.BOHB
+..  autoclass:: nni.algorithms.hpo.bohb_advisor.BOHB
     :members:
 
 Utilities
