@@ -1,8 +1,9 @@
 import inspect
 import logging
+from typing import Any, List
+
 import torch
 import torch.nn as nn
-from typing import (Any, Tuple, List, Optional)
 
 from ...utils import add_record
 
@@ -10,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 __all__ = [
     'LayerChoice', 'InputChoice', 'Placeholder',
-    'Module', 'Sequential', 'ModuleList', # TODO: 'ModuleDict', 'ParameterList', 'ParameterDict', 
+    'Module', 'Sequential', 'ModuleList',  # TODO: 'ModuleDict', 'ParameterList', 'ParameterDict',
     'Identity', 'Linear', 'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d',
     'ConvTranspose2d', 'ConvTranspose3d', 'Threshold', 'ReLU', 'Hardtanh', 'ReLU6',
     'Sigmoid', 'Tanh', 'Softmax', 'Softmax2d', 'LogSoftmax', 'ELU', 'SELU', 'CELU', 'GLU', 'GELU', 'Hardshrink',
@@ -30,7 +31,7 @@ __all__ = [
     'TransformerEncoderLayer', 'TransformerDecoderLayer', 'Transformer',
     #'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
     #'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
-    #'Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss', 'ChannelShuffle', 
+    #'Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss', 'ChannelShuffle',
     'Flatten', 'Hardsigmoid', 'Hardswish'
 ]
 
@@ -59,7 +60,8 @@ class InputChoice(nn.Module):
 
     def forward(self, candidate_inputs: List['Tensor']) -> 'Tensor':
         # fake return
-        return torch.tensor(candidate_inputs)
+        return torch.tensor(candidate_inputs)  # pylint: disable=not-callable
+
 
 class ValueChoice:
     """
@@ -67,6 +69,7 @@ class ValueChoice:
     when instantiating a pytorch module.
     TODO: can also be used in training approach
     """
+
     def __init__(self, candidate_values: List[Any]):
         self.candidate_values = candidate_values
 
@@ -81,6 +84,7 @@ class Placeholder(nn.Module):
     def forward(self, x):
         return x
 
+
 class ChosenInputs(nn.Module):
     def __init__(self, chosen: int):
         super().__init__()
@@ -92,19 +96,23 @@ class ChosenInputs(nn.Module):
 
 # the following are pytorch modules
 
+
 class Module(nn.Module):
     def __init__(self):
         super(Module, self).__init__()
+
 
 class Sequential(nn.Sequential):
     def __init__(self, *args):
         add_record(id(self), {})
         super(Sequential, self).__init__(*args)
 
+
 class ModuleList(nn.ModuleList):
     def __init__(self, *args):
         add_record(id(self), {})
         super(ModuleList, self).__init__(*args)
+
 
 def wrap_module(original_class):
     orig_init = original_class.__init__
@@ -115,13 +123,14 @@ def wrap_module(original_class):
         full_args = {}
         full_args.update(kws)
         for i, arg in enumerate(args):
-            full_args[argname_list[i]] = args[i]
+            full_args[argname_list[i]] = arg
         add_record(id(self), full_args)
 
-        orig_init(self, *args, **kws) # Call the original __init__
+        orig_init(self, *args, **kws)  # Call the original __init__
 
-    original_class.__init__ = __init__ # Set the class' __init__ to the new one
+    original_class.__init__ = __init__  # Set the class' __init__ to the new one
     return original_class
+
 
 # TODO: support different versions of pytorch
 Identity = wrap_module(nn.Identity)

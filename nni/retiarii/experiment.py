@@ -1,27 +1,28 @@
-import dataclasses
 import logging
 import time
 
 from dataclasses import dataclass
 from pathlib import Path
+from subprocess import Popen
 from threading import Thread
 from typing import Any, List, Optional
 
-from ..experiment import Experiment, TrainingServiceConfig
-from ..experiment import launcher, rest
+from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
+from ..experiment.pipe import Pipe
 from .utils import get_records
 from .integration import RetiariiAdvisor
-from .converter.graph_gen import convert_to_graph
+from .converter import convert_to_graph
 from .mutator import LayerChoiceMutator, InputChoiceMutator
 
 _logger = logging.getLogger(__name__)
 
+
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
-    search_space: Any = '' # TODO: remove
+    search_space: Any = ''  # TODO: remove
     trial_command: str = 'python3 -m nni.retiarii.trial_entry'
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
@@ -51,6 +52,7 @@ class RetiariiExeConfig(ConfigBase):
     @property
     def _validation_rules(self):
         return _validation_rules
+
 
 _canonical_rules = {
     'trial_code_directory': util.canonical_path,
@@ -139,7 +141,7 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        # FIXME: 
+        # FIXME:
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 

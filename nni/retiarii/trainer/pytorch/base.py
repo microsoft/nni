@@ -1,5 +1,4 @@
-import abc
-from typing import *
+from typing import Any, List, Dict, Tuple
 
 import numpy as np
 import torch
@@ -41,6 +40,7 @@ def get_default_transform(dataset: str) -> Any:
         ])
     # unsupported dataset, return None
     return None
+
 
 @register_trainer()
 class PyTorchImageClassificationTrainer(BaseTrainer):
@@ -94,7 +94,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
         self._dataloader = DataLoader(
             self._dataset, **(dataloader_kwargs or {}))
 
-    def _accuracy(self, input, target):
+    def _accuracy(self, input, target):  # pylint: disable=redefined-builtin
         _, predict = torch.max(input.data, 1)
         correct = predict.eq(target.data).cpu().sum().item()
         return correct / input.size(0)
@@ -176,7 +176,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                 dataloader = DataLoader(dataset, **(dataloader_kwargs or {}))
                 self._datasets.append(dataset)
                 self._dataloaders.append(dataloader)
-            
+
             if m['use_output']:
                 optimizer_cls = m['optimizer_cls']
                 optimizer_kwargs = m['optimizer_kwargs']
@@ -186,7 +186,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                     name_prefix = '_'.join(name.split('_')[:2])
                     if m_header == name_prefix:
                         one_model_params.append(param)
-                        
+
                 optimizer = getattr(torch.optim, optimizer_cls)(one_model_params, **(optimizer_kwargs or {}))
                 self._optimizers.append(optimizer)
 
@@ -206,7 +206,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                 x, y = self.training_step_before_model(batch, batch_idx, f'cuda:{idx}')
                 xs.append(x)
                 ys.append(y)
-            
+
             y_hats = self.multi_model(*xs)
             if len(ys) != len(xs):
                 raise ValueError('len(ys) should be equal to len(xs)')
@@ -230,13 +230,12 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             if self.max_steps and batch_idx >= self.max_steps:
                 return
 
-    
     def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, Any]:
         x, y = self.training_step_before_model(batch, batch_idx)
         y_hat = self.model(x)
         return self.training_step_after_model(x, y, y_hat)
 
-    def training_step_before_model(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int, device = None):
+    def training_step_before_model(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int, device=None):
         x, y = batch
         if device:
             x, y = x.cuda(torch.device(device)), y.cuda(torch.device(device))

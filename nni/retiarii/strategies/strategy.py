@@ -1,6 +1,7 @@
 import abc
 from typing import List
 
+
 class BaseStrategy(abc.ABC):
 
     @abc.abstractmethod

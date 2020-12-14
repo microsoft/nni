@@ -1,5 +1,6 @@
 import graphviz
 
+
 def convert_to_visualize(graph_ir, vgraph):
     for name, graph in graph_ir.items():
         if name == '_training_config':
@@ -32,6 +33,7 @@ def convert_to_visualize(graph_ir, vgraph):
                 elif dst in cell_node:
                     dst = cell_node[dst][0]
                 subgraph.edge(src, dst)
+
 
 def visualize_model(graph_ir):
     vgraph = graphviz.Digraph('G', filename='vgraph', format='jpg')
