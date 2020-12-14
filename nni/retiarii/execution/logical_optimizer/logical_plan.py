@@ -1,9 +1,8 @@
-from nni.retiarii.operation import Operation
-from nni.retiarii.graph import Model, Graph, Edge, Node, Cell
-from typing import *
-import logging
-from nni.retiarii.operation import _IOPseudoOperation
 import copy
+from typing import Dict, Tuple, List, Any
+
+from ...graph import Cell, Edge, Graph, Model, Node
+from ...operation import Operation, _IOPseudoOperation
 
 
 class PhysicalDevice:
@@ -108,11 +107,11 @@ class OriginNode(AbstractLogicalNode):
 
 
 class LogicalPlan:
-    def __init__(self, id=0) -> None:
+    def __init__(self, plan_id=0) -> None:
         self.lp_model = Model(_internal=True)
-        self.id = id
+        self.id = plan_id
         self.logical_graph = LogicalGraph(
-            self.lp_model, id, name=f'{id}', _internal=True)._register()
+            self.lp_model, self.id, name=f'{self.id}', _internal=True)._register()
         self.lp_model._root_graph_name = self.logical_graph.name
         self.models = []
 
@@ -148,7 +147,7 @@ class LogicalPlan:
             phy_model.training_config.kwargs['is_multi_model'] = True
             phy_model.training_config.kwargs['model_cls'] = phy_graph.name
             phy_model.training_config.kwargs['model_kwargs'] = []
-            #FIXME: allow user to specify
+            # FIXME: allow user to specify
             phy_model.training_config.module = 'nni.retiarii.trainer.PyTorchMultiModelTrainer'
 
         # merge sub-graphs
@@ -158,10 +157,9 @@ class LogicalPlan:
                     model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
 
-        
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
-        training_config_slot = {} # Model ID -> Slot ID
+        training_config_slot = {}  # Model ID -> Slot ID
         input_slot_mapping = {}
         output_slot_mapping = {}
         # Replace all logical nodes to executable physical nodes
@@ -230,7 +228,7 @@ class LogicalPlan:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
                     to_operation = Operation.new(
-                        'ToDevice', {"device":tail_placement.device})
+                        'ToDevice', {"device": tail_placement.device})
                     to_node = Node(phy_graph, phy_model._uid(),
                                    edge.head.name+"_to_"+edge.tail.name, to_operation)._register()
                     Edge((edge.head, edge.head_slot),
@@ -249,19 +247,18 @@ class LogicalPlan:
             if edge.head in input_nodes:
                 edge.head_slot = input_slot_mapping[edge.head]
                 edge.head = phy_graph.input_node
-        
 
         # merge all output nodes into one with multiple slots
         output_nodes = []
         for node in phy_graph.hidden_nodes:
             if isinstance(node.operation, _IOPseudoOperation) and node.operation.type == '_outputs':
                 output_nodes.append(node)
-                
+
         for edge in phy_graph.edges:
             if edge.tail in output_nodes:
                 edge.tail_slot = output_slot_mapping[edge.tail]
                 edge.tail = phy_graph.output_node
-        
+
         for node in input_nodes:
             node.remove()
         for node in output_nodes:

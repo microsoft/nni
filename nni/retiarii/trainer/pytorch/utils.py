@@ -123,13 +123,13 @@ class AverageMeter:
         return fmtstr.format(**self.__dict__)
 
 
-def _replace_module_with_type(root_module, init_fn, type, modules):
+def _replace_module_with_type(root_module, init_fn, type_name, modules):
     if modules is None:
         modules = []
 
     def apply(m):
         for name, child in m.named_children():
-            if isinstance(child, type):
+            if isinstance(child, type_name):
                 setattr(m, name, init_fn(child))
                 modules.append((child.key, getattr(m, name)))
             else:

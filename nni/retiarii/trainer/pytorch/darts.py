@@ -6,7 +6,6 @@ import logging
 
 import torch
 import torch.nn as nn
-from nni.nas.pytorch.mutables import LayerChoice
 
 from ..interface import BaseOneShotTrainer
 from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice

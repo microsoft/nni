@@ -1,8 +1,8 @@
-from abc import *
-from typing import *
+from abc import ABC
 
 from .logical_plan import LogicalPlan
-    
+
+
 class AbstractOptimizer(ABC):
     def __init__(self) -> None:
         pass

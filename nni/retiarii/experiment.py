@@ -1,27 +1,31 @@
-import dataclasses
 import logging
 import time
 
 from dataclasses import dataclass
 from pathlib import Path
+from subprocess import Popen
 from threading import Thread
-from typing import Any, List, Optional
+from typing import Any, Optional
 
-from ..experiment import Experiment, TrainingServiceConfig
-from ..experiment import launcher, rest
+from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
+from ..experiment.pipe import Pipe
+from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
-from .converter.graph_gen import convert_to_graph
-from .mutator import LayerChoiceMutator, InputChoiceMutator
+from .converter import convert_to_graph
+from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
+from .trainer.interface import BaseTrainer
+from .strategies.strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
+
 
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
-    search_space: Any = '' # TODO: remove
+    search_space: Any = ''  # TODO: remove
     trial_command: str = 'python3 -m nni.retiarii.trial_entry'
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
@@ -52,6 +56,7 @@ class RetiariiExeConfig(ConfigBase):
     def _validation_rules(self):
         return _validation_rules
 
+
 _canonical_rules = {
     'trial_code_directory': util.canonical_path,
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
@@ -70,8 +75,8 @@ _validation_rules = {
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: 'nn.Module', trainer: 'BaseTrainer',
-                 applied_mutators: List['Mutator'], strategy: 'BaseStrategy'):
+    def __init__(self, base_model: Model, trainer: BaseTrainer,
+                 applied_mutators: Mutator, strategy: BaseStrategy):
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 
@@ -139,7 +144,7 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        # FIXME: 
+        # FIXME:
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 

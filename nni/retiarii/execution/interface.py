@@ -1,5 +1,5 @@
-from abc import *
-from typing import *
+from abc import ABC, abstractmethod, abstractclassmethod
+from typing import Any, NewType, List
 
 from ..graph import Model, MetricData
 

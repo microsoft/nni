@@ -1,15 +1,12 @@
-import json
 import logging
-import random
-import os
 
-from .. import Model, submit_models, wait_models
-from .. import Sampler
+from .. import Sampler, submit_models, wait_models
 from .strategy import BaseStrategy
 
 from ...algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 
 _logger = logging.getLogger(__name__)
+
 
 class TPESampler(Sampler):
     def __init__(self, optimize_mode='minimize'):
@@ -37,6 +34,7 @@ class TPESampler(Sampler):
         self.index += 1
         return chosen
 
+
 class TPEStrategy(BaseStrategy):
     def __init__(self):
         self.tpe_sampler = TPESampler()
@@ -55,7 +53,7 @@ class TPEStrategy(BaseStrategy):
             while True:
                 model = base_model
                 _logger.info('apply mutators...')
-                _logger.info('mutators: {}'.format(applied_mutators))
+                _logger.info('mutators: %s', str(applied_mutators))
                 self.tpe_sampler.generate_samples(self.model_id)
                 for mutator in applied_mutators:
                     _logger.info('mutate model...')
@@ -66,6 +64,6 @@ class TPEStrategy(BaseStrategy):
                 wait_models(model)
                 self.tpe_sampler.receive_result(self.model_id, model.metric)
                 self.model_id += 1
-                _logger.info('Strategy says:', model.metric)
-        except Exception as e:
+                _logger.info('Strategy says: %s', model.metric)
+        except Exception:
             _logger.error(logging.exception('message'))

@@ -5,7 +5,6 @@ Model representation.
 import copy
 from enum import Enum
 import json
-from collections import defaultdict
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
@@ -329,12 +328,12 @@ class Graph:
         Returns nodes whose operation is specified typed.
         """
         return [node for node in self.hidden_nodes if node.operation.type == operation_type]
-        
-    def get_node_by_id(self, id: int) -> Optional['Node']:
+
+    def get_node_by_id(self, node_id: int) -> Optional['Node']:
         """
         Returns the node which has specified name; or returns `None` if no node has this name.
         """
-        found = [node for node in self.nodes if node.id == id]
+        found = [node for node in self.nodes if node.id == node_id]
         return found[0] if found else None
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
@@ -365,7 +364,8 @@ class Graph:
                     curr_nodes.append(successor)
 
         for key in node_to_fanin:
-            assert node_to_fanin[key] == 0, '{}, fanin: {}, predecessor: {}, edges: {}, fanin: {}, keys: {}'.format(key,
+            assert node_to_fanin[key] == 0, '{}, fanin: {}, predecessor: {}, edges: {}, fanin: {}, keys: {}'.format(
+                key,
                 node_to_fanin[key],
                 key.predecessors[0],
                 self.edges,
@@ -586,6 +586,7 @@ class Node:
         if self.label is not None:
             ret['label'] = self.label
         return ret
+
 
 class Edge:
     """
