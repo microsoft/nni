@@ -1,0 +1,64 @@
+.expBackground {
+	background: #f2f2f2;
+	height: 100%;
+	.content {
+		background: #fff;
+	}
+}
+
+.experimentList {
+	padding: 42px;
+
+	.box {
+		.search {
+			width: 90%;
+			&-input {
+				width: 330px;
+			}
+		}
+
+		.filter {
+			width: 10%;
+			text-align: right;
+
+			&-button-open {
+				background: #f3f2f1;
+			}
+		}
+	}
+
+	.filter-condition {
+		margin-top: 26px;
+		.reset {
+			width: 80px;
+			position: relative;
+			top: 29px;
+		}
+
+		&-status {
+			width: 194px;
+		}
+		&-platform {
+			width: 150px;
+		}
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	.margin {
+		margin-left: 10px;
+	}
+
+	.tagContainer {
+		width: 100%;
+
+		.tag {
+			font-weight: 500;
+			background: #f2f2f2;
+			margin: 0 4px;
+			padding: 0 6px;
+		}
+	}
+}

@@ -58,12 +58,12 @@ class GPUScheduler {
         return [];
     }
 
-    public getSystemGpuCount(): number {
+    public getSystemGpuCount(): number | undefined{
         if (this.gpuSummary !== undefined) {
             return this.gpuSummary.gpuCount;
         }
 
-        return 0;
+        return undefined;
     }
 
     public async stop(): Promise<void> {

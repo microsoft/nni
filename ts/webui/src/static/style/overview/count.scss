@@ -58,6 +58,7 @@ $margin: 24px;
 .concurrency {
 	.editparam {
 		margin-top: 5px;
+		position: relative;
 	}
 }
 .editparam {
@@ -124,5 +125,6 @@ $margin: 24px;
 .info {
 	position: absolute;
 	z-index: 999;
-	left: 0;
+	left: -50%;
+    width: 270%;
 }
