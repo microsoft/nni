@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
 import nni.retiarii.nn.pytorch as nn
+from nni.retiarii import register_module
 
 # Paper suggests 0.9997 momentum, for TensorFlow. Equivalent PyTorch momentum is
 # 1.0 - tensorflow.
@@ -109,7 +110,7 @@ def _get_depths(depths, alpha):
     rather than down. """
     return [_round_to_multiple_of(depth * alpha, 8) for depth in depths]
 
-
+@register_module()
 class MNASNet(nn.Module):
     """ MNASNet, as described in https://arxiv.org/pdf/1807.11626.pdf. This
     implements the B1 variant of the model.
@@ -126,8 +127,7 @@ class MNASNet(nn.Module):
 
     def __init__(self, alpha, depths, convops, kernel_sizes, num_layers,
                  skips, num_classes=1000, dropout=0.2):
-        super(MNASNet, self).__init__(alpha, depths, convops, kernel_sizes, num_layers,
-                 skips, num_classes, dropout)
+        super(MNASNet, self).__init__()
         assert alpha > 0.0
         assert len(depths) == len(convops) == len(kernel_sizes) == len(num_layers) == len(skips) == 7
         self.alpha = alpha

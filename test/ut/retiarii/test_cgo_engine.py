@@ -42,8 +42,7 @@ class CGOEngineTest(unittest.TestCase):
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
         models = _load_mnist(2)
-        anything = lambda: None
-        advisor = RetiariiAdvisor(anything)
+        advisor = RetiariiAdvisor()
         submit_models(*models)
 
         if torch.cuda.is_available() and torch.cuda.device_count() >= 2:

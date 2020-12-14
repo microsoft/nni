@@ -4,6 +4,7 @@ from typing import *
 import logging
 from nni.retiarii.operation import _IOPseudoOperation
 import copy
+from nni.retiarii.utils import uid
 
 
 class PhysicalDevice:
@@ -231,8 +232,7 @@ class LogicalPlan:
                 else:
                     to_operation = Operation.new(
                         'ToDevice', {"device":tail_placement.device})
-                    to_node = Node(phy_graph, phy_model._uid(),
-                                   edge.head.name+"_to_"+edge.tail.name, to_operation)._register()
+                    to_node = Node(phy_graph, uid(), edge.head.name+"_to_"+edge.tail.name, to_operation)._register()
                     Edge((edge.head, edge.head_slot),
                          (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node

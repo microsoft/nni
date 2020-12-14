@@ -61,30 +61,24 @@ $boxGapPadding: 10px;
 }
 
 .basic {
-	line-height: 21px;
-	font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 21px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 
-	p {
-		color: #8f8f8f;
-		font-size: 14px;
-		font-weight: normal;
+    p {
+        font-size: 14px;
+        color: #8f8f8f;
 
-		span {
-			color: #484848;
-		}
-	}
+        span {
+            color: #484848;
+        }
+    }
 
-	div {
-		font-size: 16px;
-		font-weight: 500;
-		color: #484848;
-	}
-
-	.nowrap {
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
+    div {
+        font-size: 16px;
+        font-weight: 500;
+        color: #484848;
+    }
+    
 }
 
 .overviewBestMetric {

@@ -3,7 +3,7 @@ from .logical_plan import LogicalPlan, AbstractLogicalNode, LogicalGraph, Origin
 from nni.retiarii import Graph, Node, Model
 from typing import *
 from nni.retiarii.operation import _IOPseudoOperation
-
+from nni.retiarii.utils import uid
 
 _supported_training_modules = ['nni.retiarii.trainer.PyTorchImageClassificationTrainer']
 class DedupInputNode(AbstractLogicalNode):
@@ -77,8 +77,7 @@ class DedupInputOptimizer(AbstractOptimizer):
                     assert(nodes_to_dedup[0] == root_node)
                     nodes_to_skip.add(root_node)
                 else:
-                    dedup_node = DedupInputNode(logical_plan.logical_graph, \
-                        logical_plan.lp_model._uid(), nodes_to_dedup)._register()
+                    dedup_node = DedupInputNode(logical_plan.logical_graph, uid(), nodes_to_dedup)._register()
                     for edge in logical_plan.logical_graph.edges:
                         if edge.head in nodes_to_dedup:
                             edge.head = dedup_node

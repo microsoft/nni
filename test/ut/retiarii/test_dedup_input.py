@@ -54,9 +54,8 @@ class DedupInputTest(unittest.TestCase):
         lp_dump = lp.logical_graph._dump()
         
         self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-        
-        anything = lambda: None
-        advisor = RetiariiAdvisor(anything)
+
+        advisor = RetiariiAdvisor()
         cgo = CGOExecutionEngine()
 
         phy_models = cgo._assemble(lp)

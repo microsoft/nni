@@ -236,6 +236,14 @@ function formatTimestamp(timestamp?: number, placeholder?: string): string {
     return timestamp ? new Date(timestamp).toLocaleString('en-US') : placeholder;
 }
 
+function expformatTimestamp(timestamp: number | string): string {
+    if (typeof timestamp === 'number') {
+        return new Date(timestamp).toLocaleString('en-US');
+    } else {
+        return 'N/A';
+    }
+}
+
 function metricAccuracy(metric: MetricDataRecord): number {
     const data = parseMetrics(metric.data);
     // return typeof data === 'number' ? data : NaN;
@@ -260,6 +268,10 @@ function formatComplexTypeValue(value: any): string | number {
     } else {
         return value.toString();
     }
+}
+
+function isManagerExperimentPage(): boolean {
+    return location.pathname.indexOf('experiment') === -1 ? false : true;
 }
 
 function caclMonacoEditorHeight(height): number {
@@ -306,12 +318,14 @@ export {
     filterDuration,
     formatAccuracy,
     formatTimestamp,
+    expformatTimestamp,
     metricAccuracy,
     parseMetrics,
     isArrayType,
     requestAxios,
     isNaNorInfinity,
     formatComplexTypeValue,
+    isManagerExperimentPage,
     caclMonacoEditorHeight,
     copyAndSort
 };
