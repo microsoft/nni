@@ -223,8 +223,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             xs = []
             ys = []
             for idx, batch in enumerate(multi_model_batch):
-                x, y = self.training_step_before_model(
-                    batch, batch_idx, f'cuda:{idx}')
+                x, y = self.training_step_before_model(batch, batch_idx, f'cuda:{idx}')
                 xs.append(x)
                 ys.append(y)
 
@@ -253,11 +252,6 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             if self.max_steps and batch_idx >= self.max_steps:
                 return
 
-    def training_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, Any]:
-        x, y = self.training_step_before_model(batch, batch_idx)
-        y_hat = self.model(x)
-        return self.training_step_after_model(x, y, y_hat)
-
     def training_step_before_model(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int, device=None):
         x, y = batch
         if device:
@@ -274,8 +268,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             xs = []
             ys = []
             for idx, batch in enumerate(multi_model_batch):
-                x, y = self.training_step_before_model(
-                    batch, batch_idx, f'cuda:{idx}')
+                x, y = self.training_step_before_model(batch, batch_idx, f'cuda:{idx}')
                 xs.append(x)
                 ys.append(y)
             if len(ys) != len(xs):
@@ -285,30 +278,19 @@ class PyTorchMultiModelTrainer(BaseTrainer):
 
             for output_idx, yhat in enumerate(y_hats):
                 if len(ys) == len(y_hats):
-                    acc = self.validation_step_after_model(
-                        xs[output_idx], ys[output_idx], yhat)
+                    acc = self.validation_step_after_model(xs[output_idx], ys[output_idx], yhat)
                 elif len(ys) == 1:
-                    acc = self.validation_step_after_model(
-                        xs[0], ys[0].to(yhat.get_device()), yhat)
+                    acc = self.validation_step_after_model(xs[0], ys[0].to(yhat.get_device()), yhat)
                 else:
-                    raise ValueError(
-                        'len(ys) should be either 1 or len(y_hats)')
+                    raise ValueError('len(ys) should be either 1 or len(y_hats)')
                 all_val_outputs[output_idx].append(acc)
 
-                # report_loss[self.kwargs['model_kwargs']
-                #             [output_idx]['model_id']] = loss.item()
         report_acc = {}
         for idx in all_val_outputs:
-            avg_acc = np.mean([x['val_acc']
-                               for x in all_val_outputs[idx]]).item()
+            avg_acc = np.mean([x['val_acc'] for x in all_val_outputs[idx]]).item()
             report_acc[self.kwargs['model_kwargs'][idx]['model_id']] = avg_acc
         nni.report_intermediate_result(report_acc)
         return report_acc
-
-    def validation_step(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int) -> Dict[str, Any]:
-        x, y = self.validation_step_before_model(batch, batch_idx)
-        y_hat = self.model(x)
-        return self.validation_step_after_model(x, y, y_hat)
 
     def validation_step_before_model(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int, device=None):
         x, y = batch
