@@ -169,7 +169,7 @@ class GridSearchTuner(Tuner):
         """
         self.count += 1
         while self.count <= len(self.expanded_search_space) - 1:
-            _params_tuple = convert_dict2tuple(self.expanded_search_space[self.count])
+            _params_tuple = convert_dict2tuple(copy.deepcopy(self.expanded_search_space[self.count]))
             if _params_tuple in self.supplement_data:
                 self.count += 1
             else:
@@ -203,6 +203,6 @@ class GridSearchTuner(Tuner):
             if not _value:
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
-            _params_tuple = convert_dict2tuple(_params)
+            _params_tuple = convert_dict2tuple(copy.deepcopy(_params))
             self.supplement_data[_params_tuple] = True
         logger.info("Successfully import data to grid search tuner.")

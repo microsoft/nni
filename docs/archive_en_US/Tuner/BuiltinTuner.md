@@ -12,7 +12,7 @@ Currently, we support the following algorithms:
 |[__Random Search__](#Random)|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters. [Reference Paper](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf)|
 |[__Anneal__](#Anneal)|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.|
 |[__Naïve Evolution__](#Evolution)|Naïve Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naïve Evolution requires many trials to work, but it's very simple and easy to expand new features. [Reference paper](https://arxiv.org/pdf/1703.01041.pdf)|
-|[__SMAC__](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC needs to be installed by `nnictl package` command. [Reference Paper,](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) [GitHub Repo](https://github.com/automl/SMAC3)|
+|[__SMAC__](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC needs to be installed by `pip install nni[SMAC]` command. [Reference Paper,](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) [GitHub Repo](https://github.com/automl/SMAC3)|
 |[__Batch tuner__](#Batch)|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.|
 |[__Grid Search__](#GridSearch)|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, randint. |
 |[__Hyperband__](#Hyperband)|Hyperband tries to use limited resources to explore as many configurations as possible and returns the most promising ones as a final result. The basic idea is to generate many configurations and run them for a small number of trials. The half least-promising configurations are thrown out, the remaining are further trained along with a selection of new configurations. The size of these populations is sensitive to resource constraints (e.g. allotted search time). [Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)|
@@ -27,7 +27,9 @@ Currently, we support the following algorithms:
 
 Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and **classArgs** in the `config.yml` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
-Note: Please follow the format when you write your `config.yml` file. Some built-in tuners need to be installed using `nnictl package`, like SMAC.
+Note: Please follow the format when you write your `config.yml` file. Some built-in tuners have 
+dependencies need to be installed using `pip install nni[<tuner>]`, like SMAC's dependencies can
+be installed using `pip install nni[SMAC]`.
 
 <a name="TPE"></a>
 
@@ -144,10 +146,10 @@ tuner:
 
 **Installation**
 
-SMAC needs to be installed by following command before the first usage. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
+SMAC has dependencies need to be installed by following command before the first usage. As a reminder, `swig` is required for SMAC: for Ubuntu `swig` can be installed with `apt`.
 
 ```bash
-nnictl package install --name=SMAC
+pip install nni[SMAC]
 ```
 
 **Suggested scenario**
@@ -340,7 +342,7 @@ tuner:
 BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package. ConfigSpace can be installed using the following command.
 
 ```bash
-nnictl package install --name=BOHB
+pip install nni[BOHB]
 ```
 
 **Suggested scenario**

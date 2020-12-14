@@ -1,0 +1,23 @@
+.status {
+    color: #0573bc;
+    font-size: 20px;
+    font-weight: 600;
+
+    .status-text {
+        display: inline-block;
+    }
+
+    .color {
+        color: #333;
+    }
+}
+
+.inputBox {
+    height: 32px;
+    margin-top: 5px;
+}
+
+/* office-fabric-ui progressIndicator */
+.ms-ProgressIndicator-itemProgress {
+    padding: 0;
+}
