@@ -24,10 +24,10 @@ export const Command2 = (): any => {
     return (
         <div className='basic' style={leftProgress}>
             <p className='command'>Log directory</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={EXPERIMENT.profile.logDir || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {
@@ -43,10 +43,10 @@ export const Command2 = (): any => {
                 </TooltipHost>
             </div>
             <p className='lineMargin'>Trial command</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={trialCommand || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {
