@@ -1,3 +1,4 @@
+from collections import defaultdict
 import traceback
 from .nn.pytorch import enable_record_args, get_records, disable_record_args
 
@@ -22,3 +23,9 @@ class TraceClassArguments:
             # return False # uncomment to pass exception through
         self.recorded_arguments = get_records()
         disable_record_args()
+
+_last_uid = defaultdict(int)
+
+def uid(namespace: str = 'default') -> int:
+    _last_uid[namespace] += 1
+    return _last_uid[namespace]
