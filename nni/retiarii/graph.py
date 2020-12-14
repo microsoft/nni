@@ -179,8 +179,9 @@ class Model:
             matched_nodes.extend(nodes)
         return matched_nodes
 
-    def get_nodes_by_name(self, node_name: str) -> 'Node':
+    def get_node_by_name(self, node_name: str) -> 'Node':
         """
+        Traverse all the nodes to find the matched node with the given name.
         """
         matched_nodes = []
         for graph in self.graphs.values():

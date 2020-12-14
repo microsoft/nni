@@ -143,10 +143,8 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
 
     def _train(self):
         for i, batch in enumerate(self._dataloader):
-            print('zql: start to train...')
             loss = self.training_step(batch, i)
             loss.backward()
-            break # FIXME: remove
 
     def fit(self) -> None:
         for _ in range(self._trainer_kwargs['max_epochs']):

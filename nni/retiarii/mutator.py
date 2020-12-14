@@ -112,7 +112,7 @@ class LayerChoiceMutator(Mutator):
         self.candidates = candidates
 
     def mutate(self, model):
-        target = model.get_nodes_by_name(self.node_name)
+        target = model.get_node_by_name(self.node_name)
         indexes = [i for i in range(len(self.candidates))]
         chosen_index = self.choice(indexes)
         chosen_cand = self.candidates[chosen_index]
@@ -125,7 +125,7 @@ class InputChoiceMutator(Mutator):
         self.n_chosen = n_chosen
 
     def mutate(self, model):
-        target = model.get_nodes_by_name(self.node_name)
+        target = model.get_node_by_name(self.node_name)
         candidates = [i for i in range(self.n_chosen)]
         chosen = self.choice(candidates)
         target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',

@@ -7,7 +7,6 @@ from typing import (Any, Tuple, List, Optional)
 from ...utils import add_record
 
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.INFO)
 
 __all__ = [
     'LayerChoice', 'InputChoice', 'Placeholder',

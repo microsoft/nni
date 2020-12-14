@@ -44,8 +44,6 @@ class RetiariiExeConfig(ConfigBase):
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
 
-## End of public API ##
-
     @property
     def _canonical_rules(self):
         return _canonical_rules
@@ -181,6 +179,7 @@ class RetiariiExperiment(Experiment):
             while True:
                 time.sleep(10)
                 status = self.get_status()
+                # TODO: double check the status
                 if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
                     return status
         finally:

@@ -3,8 +3,6 @@ import sys
 import torch
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
-
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer
 
 from base_mnasnet import MNASNet
