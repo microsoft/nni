@@ -194,8 +194,8 @@ Some compression algorithms use epochs to control the progress of compression (e
 
 ``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 
-Export Compressed Model
-^^^^^^^^^^^^^^^^^^^^^^^
+Export Pruning Model
+^^^^^^^^^^^^^^^^^^^^
 
 You can easily export the compressed model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
 
@@ -208,5 +208,28 @@ You can easily export the compressed model using the following API if you are pr
 .. code-block:: python
 
    pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
+
+Export Quantized Model
+^^^^^^^^^^^^^^^^^^^^^^
+You can export the quantized model directly by using ``torch.save`` api and the quantized model can be loaded by ``torch.load`` without any extra modification. The following example shows the normal proceduce of saving, loading quantized model and get related parameters in QAT.
+
+.. code-block:: python
+
+   # save quantized model
+   torch.save(model.state_dict(), "quantized_model.pkt")
+
+   # simulate model loading procedure
+   qmodel_load = Mnist()
+   optimizer = torch.optim.SGD(qmodel_load.parameters(), lr=0.01, momentum=0.5)
+   quantizer = QAT_Quantizer(qmodel_load, configure_list, optimizer)
+   quantizer.compress()
+   # load quantized model
+   qmodel_load.load_state_dict(torch.load("quantized_model.pkt"))
+
+   # get scale, zero_point and weight of conv1 in loaded model
+   conv1 = qmodel_load.conv1
+   scale = conv1.module.scale
+   zero_point = conv1.module.zero_point
+   weight = conv1.module.weight
 
 If you want to really speed up the compressed model, please refer to `NNI model speedup <./ModelSpeedup.rst>`__ for details.
