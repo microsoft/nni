@@ -9,10 +9,6 @@ import { GPUInfo } from "../../training_service/common/gpuData";
 import { CommandChannel } from "./commandChannel";
 import { WebCommandChannel } from './channels/webCommandChannel';
 import { EventEmitter } from "events";
-import { AMLEnvironmentService } from './environments/amlEnvironmentService';
-import { OpenPaiEnvironmentService } from './environments/openPaiEnvironmentService';
-import { LocalEnvironmentService } from './environments/localEnvironmentService';
-import { RemoteEnvironmentService } from './environments/remoteEnvironmentService';
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -171,23 +167,6 @@ export abstract class EnvironmentService {
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new EnvironmentInformation(envId, envName);
-    }
-}
-
-export class EnvironmentServiceFactory {
-    public static createEnvironmentService(name: string): EnvironmentService {
-        switch(name) {
-            case 'local':
-                return new LocalEnvironmentService();
-            case 'remote':
-                return new RemoteEnvironmentService();
-            case 'aml':
-                return new AMLEnvironmentService();
-            case 'pai':
-                return new OpenPaiEnvironmentService();
-            default:
-                throw new Error(`${name} not supported!`);
-        }
     }
 }
 
