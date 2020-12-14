@@ -98,14 +98,11 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
                                                              **(dataset_kwargs or {}))
         self._val_dataset = getattr(datasets, dataset_cls)(train=False, transform=get_default_transform(dataset_cls),
                                                            **(dataset_kwargs or {}))
-        self._optimizer = getattr(torch.optim, optimizer_cls)(
-            model.parameters(), **(optimizer_kwargs or {}))
+        self._optimizer = getattr(torch.optim, optimizer_cls)(model.parameters(), **(optimizer_kwargs or {}))
         self._trainer_kwargs = trainer_kwargs or {'max_epochs': 10}
 
-        self._train_dataloader = DataLoader(
-            self._train_dataset, **(dataloader_kwargs or {}))
-        self._val_dataloader = DataLoader(
-            self._val_dataset, **(dataloader_kwargs or {}))
+        self._train_dataloader = DataLoader(self._train_dataset, **(dataloader_kwargs or {}))
+        self._val_dataloader = DataLoader(self._val_dataset, **(dataloader_kwargs or {}))
 
     def _accuracy(self, input, target):
         _, predict = torch.max(input.data, 1)
@@ -120,8 +117,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
     def training_step_before_model(self, batch: Tuple[torch.Tensor, torch.Tensor], batch_idx: int):
         x, y = batch
         if self._use_cuda:
-            x, y = x.cuda(torch.device('cuda:0')), y.cuda(
-                torch.device('cuda:0'))
+            x, y = x.cuda(torch.device('cuda:0')), y.cuda(torch.device('cuda:0'))
         return x, y
 
     def training_step_after_model(self, x, y, y_hat):
@@ -190,10 +186,8 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                                                                **(dataset_kwargs or {}))
                 val_dataset = getattr(datasets, dataset_cls)(train=False, transform=get_default_transform(dataset_cls),
                                                              **(dataset_kwargs or {}))
-                train_dataloader = DataLoader(
-                    train_dataset, **(dataloader_kwargs or {}))
-                val_dataloader = DataLoader(
-                    val_dataset, **(dataloader_kwargs or {}))
+                train_dataloader = DataLoader(train_dataset, **(dataloader_kwargs or {}))
+                val_dataloader = DataLoader(val_dataset, **(dataloader_kwargs or {}))
                 self._train_datasets.append(train_dataset)
                 self._train_dataloaders.append(train_dataloader)
 
@@ -210,14 +204,12 @@ class PyTorchMultiModelTrainer(BaseTrainer):
                     if m_header == name_prefix:
                         one_model_params.append(param)
 
-                optimizer = getattr(torch.optim, optimizer_cls)(
-                    one_model_params, **(optimizer_kwargs or {}))
+                optimizer = getattr(torch.optim, optimizer_cls)(one_model_params, **(optimizer_kwargs or {}))
                 self._optimizers.append(optimizer)
 
     def fit(self) -> None:
         torch.autograd.set_detect_anomaly(True)
-        max_epochs = max([x['trainer_kwargs']['max_epochs']
-                          for x in self.kwargs['model_kwargs']])
+        max_epochs = max([x['trainer_kwargs']['max_epochs'] for x in self.kwargs['model_kwargs']])
         for _ in range(max_epochs):
             self._train()
         nni.report_final_result(self._validate())
@@ -240,17 +232,13 @@ class PyTorchMultiModelTrainer(BaseTrainer):
             report_loss = {}
             for output_idx, yhat in enumerate(y_hats):
                 if len(ys) == len(y_hats):
-                    loss = self.training_step_after_model(
-                        xs[output_idx], ys[output_idx], yhat)
+                    loss = self.training_step_after_model(xs[output_idx], ys[output_idx], yhat)
                 elif len(ys) == 1:
-                    loss = self.training_step_after_model(
-                        xs[0], ys[0].to(yhat.get_device()), yhat)
+                    loss = self.training_step_after_model(xs[0], ys[0].to(yhat.get_device()), yhat)
                 else:
-                    raise ValueError(
-                        'len(ys) should be either 1 or len(y_hats)')
+                    raise ValueError('len(ys) should be either 1 or len(y_hats)')
                 losses.append(loss.to("cuda:0"))
-                report_loss[self.kwargs['model_kwargs']
-                            [output_idx]['model_id']] = loss.item()
+                report_loss[self.kwargs['model_kwargs'][output_idx]['model_id']] = loss.item()
             summed_loss = sum(losses)
             summed_loss.backward()
             for opt in self._optimizers:
