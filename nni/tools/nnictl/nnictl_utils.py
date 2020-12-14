@@ -54,6 +54,7 @@ def update_experiment():
                 rest_pid = nni_config.get_config('restServerPid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
+                    experiment_config.update_experiment(key, 'port', None)
                     continue
 
 def check_experiment_id(args, update=True):
@@ -345,9 +346,9 @@ def log_internal(args, filetype):
     '''internal function to call get_log_content'''
     file_name = get_config_filename(args)
     if filetype == 'stdout':
-        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stdout')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'log', 'nnictl_stdout.log')
     else:
-        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'log', 'nnictl_stderr.log')
     print(check_output_command(file_full_path, head=args.head, tail=args.tail))
 
 def log_stdout(args):
@@ -854,8 +855,9 @@ def save_experiment(args):
     except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
-    nnictl_config_dir = os.path.join(NNICTL_HOME_DIR, args.id)
-    shutil.copytree(nnictl_config_dir, os.path.join(temp_nnictl_dir, args.id))
+    nnictl_log_dir = os.path.join(NNICTL_HOME_DIR, args.id, 'log')
+    shutil.copytree(nnictl_log_dir, os.path.join(temp_nnictl_dir, args.id, 'log'))
+    shutil.copy(os.path.join(NNICTL_HOME_DIR, args.id, '.config'), os.path.join(temp_nnictl_dir, args.id, '.config'))
 
     # Step3. Copy code dir
     if args.saveCodeDir:

@@ -1,22 +1,19 @@
-# How to install customized tuner as a builtin tuner
+# How to register a customized tuner as a builtin tuner
 
-You can following below steps to install a customized tuner in `nni/examples/tuners/customized_tuner` as a builtin tuner.
+You can following below steps to register a customized tuner in `nni/examples/tuners/customized_tuner` as a builtin tuner.
 
-## Prepare installation source and install package
+## Install the customized tuner package into python environment
 
-There are 2 options to install this customized tuner:
+There are 2 options to install the package into python environment:
 
 ### Option 1: install from directory
 
-Step 1: From `nni/examples/tuners/customized_tuner` directory, run:
+From `nni/examples/tuners/customized_tuner` directory, run:
 
 `python setup.py develop`
 
 This command will build the `nni/examples/tuners/customized_tuner` directory as a pip installation source.
 
-Step 2: Run command:
-
-`nnictl package install ./`
 
 ### Option 2: install from whl file
 
@@ -28,16 +25,22 @@ This command build a whl file which is a pip installation source.
 
 Step 2: Run command:
 
-`nnictl package install dist/demo_tuner-0.1-py3-none-any.whl`
+`pip install dist/demo_tuner-0.1-py3-none-any.whl`
 
-## Check the installed package
+## Register the customized tuner as builtin tuner:
 
-Then run command `nnictl package list`, you should be able to see that demotuner is installed:
+Run following command:
+
+`nnictl algo register --meta meta_file.yml`
+
+## Check the registered builtin algorithms
+
+Then run command `nnictl algo list`, you should be able to see that demotuner is installed:
 ```
 +-----------------+------------+-----------+--------=-------------+------------------------------------------+
-|      Name       |    Type    | Installed |      Class Name      |               Module Name                |
+|      Name       |    Type    |  source   |      Class Name      |               Module Name                |
 +-----------------+------------+-----------+----------------------+------------------------------------------+
-| demotuner       | tuners     | Yes       | DemoTuner            | demo_tuner                               |
+| demotuner       | tuners     |  user     | DemoTuner            | demo_tuner                               |
 +-----------------+------------+-----------+----------------------+------------------------------------------+
 ```
 

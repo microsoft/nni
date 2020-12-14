@@ -123,7 +123,7 @@ If there is a stderr file, please check it. Two possible cases are:
 
 ### Fail to use BOHB on Windows
 
-Make sure a C++ 14.0 compiler is installed when trying to run `nnictl package install --name=BOHB` to install the dependencies.
+Make sure a C++ 14.0 compiler is installed when trying to run `pip install nni[BOHB]` to install the dependencies.
 
 ### Not supported tuner on Windows
 

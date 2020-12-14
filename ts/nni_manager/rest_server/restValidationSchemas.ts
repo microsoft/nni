@@ -102,6 +102,7 @@ export namespace ValidationSchemas {
                     name: joi.string().min(1).required()
                 }),
                 // ############## adl ###############
+                namespace: joi.string(),
                 adaptive: joi.boolean(),
                 checkpoint: joi.object({
                     storageClass: joi.string().min(1).required(),
