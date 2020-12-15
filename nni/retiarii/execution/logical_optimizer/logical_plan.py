@@ -1,7 +1,7 @@
 import copy
-from nni.retiarii.utils import uid
 from typing import Dict, Tuple, List, Any
 
+from nni.retiarii.utils import uid
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
 

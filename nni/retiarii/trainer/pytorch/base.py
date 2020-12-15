@@ -297,7 +297,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         acc = self._accuracy(y_hat, y)
         return {'val_acc': acc}
 
-    def _accuracy(self, input, target):
+    def _accuracy(self, input, target):  # pylint: disable=redefined-builtin
         _, predict = torch.max(input.data, 1)
         correct = predict.eq(target.data).cpu().sum().item()
         return correct / input.size(0)

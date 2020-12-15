@@ -1,4 +1,3 @@
-from nni.retiarii.operation import _IOPseudoOperation
 from nni.retiarii.utils import uid
 from typing import List, Dict, Tuple
 
