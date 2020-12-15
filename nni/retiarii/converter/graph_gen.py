@@ -1,20 +1,20 @@
-import json_tricks
 import logging
 import re
+
 import torch
 
-from ..graph import Graph, Node, Edge, Model
-from ..operation import Cell, Operation
-from ..nn.pytorch import Placeholder, LayerChoice, InputChoice
-
-from .op_types import MODULE_EXCEPT_LIST, OpTypeName, BasicOpsPT
-from .utils import build_full_name, _convert_name
+from ..graph import Graph, Model, Node
+from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
+from ..operation import Cell
+from .op_types import MODULE_EXCEPT_LIST, BasicOpsPT, OpTypeName
+from .utils import _convert_name, build_full_name
 
 _logger = logging.getLogger(__name__)
 
 global_seq = 0
 global_graph_id = 0
 modules_arg = None
+
 
 def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap, ignore_first=False):
     """
@@ -76,6 +76,7 @@ def _add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap, 
 
         new_node_input_idx += 1
 
+
 def create_prim_constant_node(ir_graph, node, module_name):
     global global_seq
     attrs = {}
@@ -86,13 +87,16 @@ def create_prim_constant_node(ir_graph, node, module_name):
                                  node.kind(), attrs)
     return new_node
 
+
 def handle_prim_attr_node(node):
     assert node.hasAttribute('name')
     attrs = {'name': node.s('name'), 'input': node.inputsAt(0).debugName()}
     return node.kind(), attrs
 
+
 def _remove_mangle(module_type_str):
     return re.sub('\\.___torch_mangle_\\d+', '', module_type_str)
+
 
 def remove_unconnected_nodes(ir_graph, targeted_type=None):
     """
@@ -121,6 +125,7 @@ def remove_unconnected_nodes(ir_graph, targeted_type=None):
 
     for hidden_node in to_removes:
         hidden_node.remove()
+
 
 def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, ir_graph):
     """
@@ -156,7 +161,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
         # TODO: add scope name
         ir_graph._add_input(_convert_name(_input.debugName()))
 
-    node_index = {} # graph node to graph ir node
+    node_index = {}  # graph node to graph ir node
 
     # some node does not have output but it modifies a variable, for example aten::append
     # %17 : Tensor[] = aten::append(%out.1, %16)
@@ -248,13 +253,14 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                     # therefore, we do this check for a module. example below:
                     # %25 : __torch__.xxx = prim::GetAttr[name="input_switch"](%self)
                     # %27 : Tensor = prim::CallMethod[name="forward"](%25, %out.1)
-                    assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(submodule_name, script_module._modules.keys())
+                    assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(
+                        submodule_name, script_module._modules.keys())
 
                     submodule_full_name = build_full_name(module_name, submodule_name)
                     submodule_obj = getattr(module, submodule_name)
                     subgraph, sub_m_attrs = convert_module(script_module._modules[submodule_name],
-                                                        submodule_obj,
-                                                        submodule_full_name, ir_model)
+                                                           submodule_obj,
+                                                           submodule_full_name, ir_model)
                 else:
                     # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
                     # %10 : __torch__.darts_model.Cell = prim::GetAttr[name="0"](%8)
@@ -271,7 +277,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
                         predecessor_obj = getattr(module, predecessor_name)
                         submodule_obj = getattr(predecessor_obj, submodule_name)
                         subgraph, sub_m_attrs = convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
-                                                            submodule_obj, submodule_full_name, ir_model)
+                                                               submodule_obj, submodule_full_name, ir_model)
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
@@ -329,7 +335,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             node_type, attrs = handle_prim_attr_node(node)
             global_seq += 1
             new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
-                                            node_type, attrs)
+                                         node_type, attrs)
             node_index[node] = new_node
         elif node.kind() == 'prim::min':
             print('zql: ', sm_graph)
@@ -350,6 +356,7 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
 
     return node_index
 
+
 def merge_aten_slices(ir_graph):
     """
     if there is aten::slice node, merge the consecutive ones together.
@@ -367,7 +374,7 @@ def merge_aten_slices(ir_graph):
                     break
     if has_slice_node:
         assert head_slice_nodes
-    
+
     for head_node in head_slice_nodes:
         slot = 0
         new_slice_node = ir_graph.add_node(build_full_name(head_node.name, 'merged'), OpTypeName.MergedSlice)
@@ -391,11 +398,11 @@ def merge_aten_slices(ir_graph):
             slot += 4
             ir_graph.hidden_nodes.remove(node)
             node = suc_node
-        
+
         for edge in node.outgoing_edges:
             edge.head = new_slice_node
         ir_graph.hidden_nodes.remove(node)
-    
+
 
 def refine_graph(ir_graph):
     """
@@ -408,13 +415,14 @@ def refine_graph(ir_graph):
     remove_unconnected_nodes(ir_graph, targeted_type='prim::GetAttr')
     merge_aten_slices(ir_graph)
 
+
 def _handle_layerchoice(module):
     global modules_arg
 
     m_attrs = {}
     candidates = module.candidate_ops
     choices = []
-    for i, cand in enumerate(candidates):
+    for cand in candidates:
         assert id(cand) in modules_arg, 'id not exist: {}'.format(id(cand))
         assert isinstance(modules_arg[id(cand)], dict)
         cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
@@ -423,12 +431,14 @@ def _handle_layerchoice(module):
     m_attrs['label'] = module.label
     return m_attrs
 
+
 def _handle_inputchoice(module):
     m_attrs = {}
     m_attrs['n_chosen'] = module.n_chosen
     m_attrs['reduction'] = module.reduction
     m_attrs['label'] = module.label
     return m_attrs
+
 
 def convert_module(script_module, module, module_name, ir_model):
     """
@@ -503,9 +513,10 @@ def convert_module(script_module, module, module_name, ir_model):
     # TODO: if we parse this module, it means we will create a graph (module class)
     # for this module. Then it is not necessary to record this module's arguments
     # return ir_graph, modules_arg[id(module)].
-    # That is, we can refactor this part, to allow users to annotate which module 
+    # That is, we can refactor this part, to allow users to annotate which module
     # should not be parsed further.
     return ir_graph, {}
+
 
 def convert_to_graph(script_module, module, recorded_modules_arg):
     """

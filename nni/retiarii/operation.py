@@ -4,11 +4,13 @@ from . import debug_configs
 
 __all__ = ['Operation', 'Cell']
 
+
 def _convert_name(name: str) -> str:
     """
     Convert the names using separator '.' to valid variable name in code
     """
     return name.replace('.', '__')
+
 
 class Operation:
     """
@@ -152,6 +154,7 @@ class PyTorchOperation(Operation):
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 
+
 class TensorFlowOperation(Operation):
     def _to_class_name(self) -> str:
         return 'K.layers.' + self.type
@@ -191,6 +194,7 @@ class Cell(PyTorchOperation):
     framework
         No real usage. Exists for compatibility with base class.
     """
+
     def __init__(self, cell_name: str, parameters: Dict[str, Any] = {}):
         self.type = '_cell'
         self.cell_name = cell_name
@@ -207,6 +211,7 @@ class _IOPseudoOperation(Operation):
     The benefit is that users no longer need to verify `Node.operation is not None`,
     especially in static type checking.
     """
+
     def __init__(self, type_name: str, io_names: List = None):
         assert type_name.startswith('_')
         super(_IOPseudoOperation, self).__init__(type_name, {}, True)

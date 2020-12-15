@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 
 def _get_mask(sampled, total):
     multihot = [i == sampled or (isinstance(sampled, list) and i in sampled) for i in range(total)]
-    return torch.tensor(multihot, dtype=torch.bool)
+    return torch.tensor(multihot, dtype=torch.bool)  # pylint: disable=not-callable
 
 
 class PathSamplingLayerChoice(nn.Module):
@@ -44,9 +44,9 @@ class PathSamplingLayerChoice(nn.Module):
     def forward(self, *args, **kwargs):
         assert self.sampled is not None, 'At least one path needs to be sampled before fprop.'
         if isinstance(self.sampled, list):
-            return sum([getattr(self, self.op_names[i])(*args, **kwargs) for i in self.sampled])
+            return sum([getattr(self, self.op_names[i])(*args, **kwargs) for i in self.sampled])  # pylint: disable=not-an-iterable
         else:
-            return getattr(self, self.op_names[self.sampled])(*args, **kwargs)
+            return getattr(self, self.op_names[self.sampled])(*args, **kwargs)  # pylint: disable=invalid-sequence-index
 
     def __len__(self):
         return len(self.op_names)
@@ -76,7 +76,7 @@ class PathSamplingInputChoice(nn.Module):
 
     def forward(self, input_tensors):
         if isinstance(self.sampled, list):
-            return sum([input_tensors[t] for t in self.sampled])
+            return sum([input_tensors[t] for t in self.sampled])  # pylint: disable=not-an-iterable
         else:
             return input_tensors[self.sampled]
 

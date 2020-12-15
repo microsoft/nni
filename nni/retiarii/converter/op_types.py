@@ -16,6 +16,7 @@ class OpTypeName(str, Enum):
     Placeholder = 'Placeholder'
     MergedSlice = 'MergedSlice'
 
+
 # deal with aten op
 BasicOpsPT = {
     'aten::mean': 'Mean',
@@ -29,7 +30,7 @@ BasicOpsPT = {
     'aten::size': 'Size',
     'aten::view': 'View',
     'aten::eq': 'Eq',
-    'aten::add_': 'Add_' # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
+    'aten::add_': 'Add_'  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
 }
 
 BasicOpsTF = {}

@@ -1,9 +1,9 @@
-from nni.retiarii.operation import Operation
-from nni.retiarii.graph import Model, Graph, Edge, Node, Cell
-from typing import *
-import logging
-from nni.retiarii.operation import _IOPseudoOperation
 import copy
+from typing import Dict, Tuple, List, Any
+
+from nni.retiarii.utils import uid
+from ...graph import Cell, Edge, Graph, Model, Node
+from ...operation import Operation, _IOPseudoOperation
 
 
 class PhysicalDevice:
@@ -15,7 +15,7 @@ class PhysicalDevice:
         return self.server == o.server and self.device == o.device
 
     def __hash__(self) -> int:
-        return hash(self.server+'_'+self.device)
+        return hash(self.server + '_' + self.device)
 
 
 class AbstractLogicalNode(Node):
@@ -108,11 +108,11 @@ class OriginNode(AbstractLogicalNode):
 
 
 class LogicalPlan:
-    def __init__(self, id=0) -> None:
+    def __init__(self, plan_id=0) -> None:
         self.lp_model = Model(_internal=True)
-        self.id = id
+        self.id = plan_id
         self.logical_graph = LogicalGraph(
-            self.lp_model, id, name=f'{id}', _internal=True)._register()
+            self.lp_model, self.id, name=f'{self.id}', _internal=True)._register()
         self.lp_model._root_graph_name = self.logical_graph.name
         self.models = []
 
@@ -148,7 +148,7 @@ class LogicalPlan:
             phy_model.training_config.kwargs['is_multi_model'] = True
             phy_model.training_config.kwargs['model_cls'] = phy_graph.name
             phy_model.training_config.kwargs['model_kwargs'] = []
-            #FIXME: allow user to specify
+            # FIXME: allow user to specify
             phy_model.training_config.module = 'nni.retiarii.trainer.PyTorchMultiModelTrainer'
 
         # merge sub-graphs
@@ -158,10 +158,9 @@ class LogicalPlan:
                     model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
 
-        
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
-        training_config_slot = {} # Model ID -> Slot ID
+        training_config_slot = {}  # Model ID -> Slot ID
         input_slot_mapping = {}
         output_slot_mapping = {}
         # Replace all logical nodes to executable physical nodes
@@ -183,10 +182,8 @@ class LogicalPlan:
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in training_config_slot:
-                        phy_model.training_config.kwargs['model_kwargs'].append(
-                            new_node.graph.model.training_config.kwargs.copy())
-                        training_config_slot[model_id] = \
-                            len(phy_model.training_config.kwargs['model_kwargs'])-1
+                        phy_model.training_config.kwargs['model_kwargs'].append(new_node.graph.model.training_config.kwargs.copy())
+                        training_config_slot[model_id] = len(phy_model.training_config.kwargs['model_kwargs']) - 1
                         slot = training_config_slot[model_id]
                         phy_model.training_config.kwargs['model_kwargs'][slot]['model_id'] = model_id
                         phy_model.training_config.kwargs['model_kwargs'][slot]['use_input'] = False
@@ -223,18 +220,14 @@ class LogicalPlan:
             tail_placement = node_placements[edge.tail]
             if head_placement != tail_placement:
                 if head_placement.server != tail_placement.server:
-                    raise ValueError(
-                        'Cross-server placement is not supported.')
+                    raise ValueError('Cross-server placement is not supported.')
                 # Same server different devices
                 if (edge.head, tail_placement) in copied_op:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
-                    to_operation = Operation.new(
-                        'ToDevice', {"device":tail_placement.device})
-                    to_node = Node(phy_graph, phy_model._uid(),
-                                   edge.head.name+"_to_"+edge.tail.name, to_operation)._register()
-                    Edge((edge.head, edge.head_slot),
-                         (to_node, None), _internal=True)._register()
+                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device})
+                    to_node = Node(phy_graph, uid(), edge.head.name + "_to_" + edge.tail.name, to_operation)._register()
+                    Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node
                 edge.head = to_node
                 edge.head_slot = None
@@ -249,19 +242,18 @@ class LogicalPlan:
             if edge.head in input_nodes:
                 edge.head_slot = input_slot_mapping[edge.head]
                 edge.head = phy_graph.input_node
-        
 
         # merge all output nodes into one with multiple slots
         output_nodes = []
         for node in phy_graph.hidden_nodes:
             if isinstance(node.operation, _IOPseudoOperation) and node.operation.type == '_outputs':
                 output_nodes.append(node)
-                
+
         for edge in phy_graph.edges:
             if edge.tail in output_nodes:
                 edge.tail_slot = output_slot_mapping[edge.tail]
                 edge.tail = phy_graph.output_node
-        
+
         for node in input_nodes:
             node.remove()
         for node in output_nodes:
@@ -269,11 +261,9 @@ class LogicalPlan:
 
         return phy_model, node_placements
 
-    def node_replace(self, old_node: Node,
-                     new_node: Node,
-                     input_slot_mapping=None, output_slot_mapping=None):
+    def node_replace(self, old_node: Node, new_node: Node, input_slot_mapping=None, output_slot_mapping=None):
         # TODO: currently, only support single input slot and output slot.
-        if input_slot_mapping != None or output_slot_mapping != None:
+        if input_slot_mapping is not None or output_slot_mapping is not None:
             raise ValueError('Slot mapping is not supported')
 
         phy_graph = old_node.graph

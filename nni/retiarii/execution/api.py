@@ -1,12 +1,11 @@
 import time
 import os
-import importlib.util
-from typing import *
+from typing import List
 
 from ..graph import Model, ModelStatus
 from .base import BaseExecutionEngine
 from .cgo_engine import CGOExecutionEngine
-from .interface import *
+from .interface import AbstractExecutionEngine, WorkerInfo
 from .listener import DefaultListener
 
 _execution_engine = None

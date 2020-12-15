@@ -1,5 +1,5 @@
 import logging
-from typing import *
+from typing import Dict, Any, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
@@ -61,16 +61,16 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def _send_trial_callback(self, paramater: dict) -> None:
         for listener in self._listeners:
-            _logger.warning('resources: {}'.format(listener.resources))
+            _logger.warning('resources: %s', listener.resources)
             if not listener.has_available_resource():
                 _logger.warning('There is no available resource, but trial is submitted.')
             listener.on_resource_used(1)
-            _logger.warning('on_resource_used: {}'.format(listener.resources))
+            _logger.warning('on_resource_used: %s', listener.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
         for listener in self._listeners:
             listener.on_resource_available(1 * num_trials)
-            _logger.warning('on_resource_available: {}'.format(listener.resources))
+            _logger.warning('on_resource_available: %s', listener.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]

@@ -1,6 +1,5 @@
 import abc
-import inspect
-from typing import *
+from typing import Any
 
 
 class BaseTrainer(abc.ABC):

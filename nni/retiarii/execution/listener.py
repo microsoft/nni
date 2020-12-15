@@ -1,7 +1,5 @@
-from typing import *
-
-from ..graph import *
-from .interface import *
+from ..graph import Model, ModelStatus
+from .interface import MetricData, AbstractGraphListener
 
 
 class DefaultListener(AbstractGraphListener):

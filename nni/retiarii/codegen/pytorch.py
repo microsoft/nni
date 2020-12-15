@@ -1,29 +1,28 @@
 import logging
-from typing import *
+from typing import List
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
-from ..operation import Operation, Cell
 
 _logger = logging.getLogger(__name__)
 
 
-
-def model_to_pytorch_script(model: Model, placement = None) -> str:
+def model_to_pytorch_script(model: Model, placement=None) -> str:
     graphs = []
     total_pkgs = set()
     for name, cell in model.graphs.items():
-        import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement = placement)
+        import_pkgs, graph_code = graph_to_pytorch_model(name, cell, placement=placement)
         graphs.append(graph_code)
         total_pkgs.update(import_pkgs)
     pkgs_code = '\n'.join(['import {}'.format(pkg) for pkg in total_pkgs])
     return _PyTorchScriptTemplate.format(pkgs_code, '\n\n'.join(graphs)).strip()
 
+
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
-    _logger.info('sorted_incoming_edges: {}'.format(edges))
+    _logger.info('sorted_incoming_edges: %s', str(edges))
     if not edges:
         return []
-    _logger.info(f'all tail_slots are None: {[edge.tail_slot for edge in edges]}')
+    _logger.info('all tail_slots are None: %s', str([edge.tail_slot for edge in edges]))
     if all(edge.tail_slot is None for edge in edges):
         return edges
     if all(isinstance(edge.tail_slot, int) for edge in edges):
@@ -31,6 +30,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
         if [edge.tail_slot for edge in edges] == list(range(len(edges))):
             return edges
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
+
 
 def _format_inputs(node: Node) -> List[str]:
     edges = _sorted_incoming_edges(node)
@@ -53,6 +53,7 @@ def _format_inputs(node: Node) -> List[str]:
                 inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
     return inputs
 
+
 def _remove_prefix(names, graph_name):
     """
     variables name (full name space) is too long,
@@ -69,14 +70,14 @@ def _remove_prefix(names, graph_name):
     else:
         return names[len(graph_name):] if names.startswith(graph_name) else names
 
-def graph_to_pytorch_model(graph_name: str, graph: Graph, placement = None) -> str:
+
+def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str:
     nodes = graph.topo_sort()
 
     # handle module node and function node differently
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
-    placement_codes = []
     for node in nodes:
         if node.operation:
             pkg_name = node.operation.get_import_pkg()

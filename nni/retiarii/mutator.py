@@ -13,6 +13,7 @@ class Sampler:
     """
     Handles `Mutator.choice()` calls.
     """
+
     def choice(self, candidates: List[Choice], mutator: 'Mutator', model: Model, index: int) -> Choice:
         raise NotImplementedError()
 
@@ -35,6 +36,7 @@ class Mutator:
     For certain mutator subclasses, strategy or sampler can use `Mutator.dry_run()` to predict choice candidates.
     # Method names are open for discussion.
     """
+
     def __init__(self, sampler: Optional[Sampler] = None):
         self.sampler: Optional[Sampler] = sampler
         self._cur_model: Optional[Model] = None
@@ -77,7 +79,6 @@ class Mutator:
         self.sampler = sampler_backup
         return recorder.recorded_candidates, new_model
 
-
     def mutate(self, model: Model) -> None:
         """
         Abstract method to be implemented by subclass.
@@ -105,6 +106,7 @@ class _RecorderSampler(Sampler):
 
 # the following is for inline mutation
 
+
 class LayerChoiceMutator(Mutator):
     def __init__(self, node_name: str, candidates: List):
         super().__init__()
@@ -118,6 +120,7 @@ class LayerChoiceMutator(Mutator):
         chosen_cand = self.candidates[chosen_index]
         target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
 
+
 class InputChoiceMutator(Mutator):
     def __init__(self, node_name: str, n_chosen: int):
         super().__init__()
@@ -129,4 +132,4 @@ class InputChoiceMutator(Mutator):
         candidates = [i for i in range(self.n_chosen)]
         chosen = self.choice(candidates)
         target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',
-            {'chosen': chosen})
+                                {'chosen': chosen})

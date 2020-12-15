@@ -58,16 +58,16 @@ class Compare extends React.Component<CompareProps, {}> {
         super(props);
     }
 
-    private _generateTooltipSummary(row: Item, metricKey: string): string {
-        return renderToString(
+    private _generateTooltipSummary = (row: Item, value: string): string =>
+        renderToString(
             <div className='tooldetailAccuracy'>
+                <div>Trial No.: {row.sequenceId}</div>
                 <div>Trial ID: {row.id}</div>
-                <div>Default metric: {row.metrics.get(metricKey) || 'N/A'}</div>
+                <div>Intermediate metric: {value}</div>
             </div>
         );
-    }
 
-    private _intermediates(items: Item[], metricKey: string): React.ReactNode {
+    private _intermediates(items: Item[]): React.ReactNode {
         // Precondition: make sure `items` is not empty
         const xAxisMax = Math.max(...items.map(item => item.intermediates.length));
         const xAxis = Array(xAxisMax)
@@ -84,7 +84,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 trigger: 'item',
                 enterable: true,
                 position: (point: number[], data: TooltipForIntermediate): [number, number] => {
-                    if (data.dataIndex < length / 2) {
+                    if (data.dataIndex < xAxisMax / 2) {
                         return [point[0], 80];
                     } else {
                         return [point[0] - 300, 80];
@@ -92,7 +92,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 },
                 formatter: (data: TooltipForIntermediate): string => {
                     const item = items.find(k => k.id === data.seriesName) as Item;
-                    return this._generateTooltipSummary(item, metricKey);
+                    return this._generateTooltipSummary(item, data.data);
                 }
             },
             grid: {
@@ -187,9 +187,13 @@ class Compare extends React.Component<CompareProps, {}> {
                     {parameterKeys.map(k =>
                         this._renderRow(`space_${k}`, k, 'value', items, item => item.parameters.get(k))
                     )}
-                    {metricKeys.map(k =>
-                        this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item => item.metrics.get(k))
-                    )}
+                    {metricKeys !== undefined
+                        ? metricKeys.map(k =>
+                              this._renderRow(`metrics_${k}`, `Metric: ${k}`, 'value', items, item =>
+                                  item.metrics.get(k)
+                              )
+                          )
+                        : null}
                 </tbody>
             </table>
         );
@@ -209,8 +213,6 @@ class Compare extends React.Component<CompareProps, {}> {
             metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
             intermediates: _parseIntermediates(trial)
         }));
-        const metricKeys = this._overlapKeys(items.map(item => item.metrics));
-        const defaultMetricKey = !metricKeys || metricKeys.includes('default') ? 'default' : metricKeys[0];
 
         return (
             <Modal
@@ -232,7 +234,7 @@ class Compare extends React.Component<CompareProps, {}> {
                         />
                     </div>
                     <Stack className='compare-modal-intermediate'>
-                        {this._intermediates(items, defaultMetricKey)}
+                        {this._intermediates(items)}
                         <Stack className='compare-yAxis'># Intermediate result</Stack>
                     </Stack>
                     {showDetails && <Stack>{this._columns(items)}</Stack>}
