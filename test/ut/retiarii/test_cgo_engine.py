@@ -5,7 +5,9 @@ import threading
 import unittest
 import logging
 import time
-import torch 
+import torch
+
+from pathlib import Path
 
 from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
 from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
@@ -22,7 +24,8 @@ from nni.retiarii.utils import import_
 
 
 def _load_mnist(n_models: int = 1):
-    with open('converted_mnist_pytorch.json') as f:
+    path = Path(__file__).parent / 'converted_mnist_pytorch.json'
+    with open(path) as f:
         mnist_model = Model._load(json.load(f))
     if n_models == 1:
         return mnist_model
