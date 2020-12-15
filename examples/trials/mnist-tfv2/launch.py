@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from nni.experiment import Experiment
-from nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
+from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
 tuner = HyperoptTuner('tpe')
 
