@@ -11,7 +11,7 @@ Notes
 1. This document list field names as separated words.
    They should be spelled in ``snake_case`` for Python library ``nni.experiment``, and are normally spelled in ``camelCase`` for YAML files.
 
-2. In this document type of fields are expressed in `Python type hint <https://docs.python.org/3/library/typing.html>`_ format.
+2. In this document type of fields are expressed in `Python type hint <https://docs.python.org/3/library/typing.html>`__ format.
    Therefore JSON objects are called `dict` and arrays are called `list`.
 
 .. _Path:
@@ -44,7 +44,7 @@ Path_ to a JSON file containing the search space.
 
 type: ``Optional[str]``
 
-Search space format is determined by tuner. Common format for built-in tuners is documeted `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`_.
+Search space format is determined by tuner. Common format for built-in tuners is documeted `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`__.
 
 Mutually exclusive to `search space`_.
 
@@ -56,7 +56,7 @@ Search space object.
 
 type: ``Optional[Any]``
 
-The format is determined by tuner. Common format for built-in tuners is documented here `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`_.
+The format is determined by tuner. Common format for built-in tuners is documented `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`__.
 
 Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
 
@@ -147,7 +147,7 @@ If not specified, this will be the default IPv4 address of outgoing connection.
 use annotation
 --------------
 
-Enable `annotation <https://nni.readthedocs.io/en/stable/Tutorial/AnnotationSpec.html>`_.
+Enable `annotation <https://nni.readthedocs.io/en/stable/Tutorial/AnnotationSpec.html>`__.
 
 type: ``bool``
 
@@ -237,7 +237,7 @@ type: Optional `AlgorithmConfig`_
 training service
 ----------------
 
-Specify `training service <https://nni.readthedocs.io/en/stable/TrainingService/Overview.html>`_.
+Specify `training service <https://nni.readthedocs.io/en/stable/TrainingService/Overview.html>`__.
 
 type: `TrainingServiceConfig`_
 
@@ -272,7 +272,7 @@ code directory
 
 type: ``Optional[str]`` for custom algorithm, ``None`` for built-in and registered algorithm
 
-If not specified, the `class name`_ will be looked up in Python's `module search path <https://docs.python.org/3/tutorial/modules.html#the-module-search-path>`_
+If not specified, the `class name`_ will be looked up in Python's `module search path <https://docs.python.org/3/tutorial/modules.html#the-module-search-path>`__
 
 
 class args
@@ -298,7 +298,7 @@ One of following:
 LocalConfig
 ===========
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/LocalMode.html>`_.
+Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/LocalMode.html>`__.
 
 platform
 --------
@@ -343,7 +343,7 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 RemoteConfig
 ============
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/RemoteMachineMode.html>`_.
+Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/RemoteMachineMode.html>`__.
 
 platform
 --------
@@ -469,7 +469,7 @@ This is useful if preparing steps vary for different machines.
 OpenPaiConfig
 =============
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/PaiMode.html>`_.
+Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/PaiMode.html>`__.
 
 platform
 --------

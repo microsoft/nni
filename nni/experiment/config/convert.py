@@ -78,6 +78,7 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
         for machine in ts['machineList']:
             data['machineList'].append({
                 'ip': machine['host'],
+                'port': machine['port'],
                 'username': machine['user'],
                 'passwd': machine['password'],
                 'sshKeyPath': machine['sshKeyFile'],
