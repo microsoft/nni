@@ -1,6 +1,6 @@
-from nni.retiarii.utils import uid
 from typing import List, Dict, Tuple
 
+from nni.retiarii.utils import uid
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
