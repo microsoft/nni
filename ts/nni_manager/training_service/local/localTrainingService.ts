@@ -254,13 +254,17 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGTERM');
-        let waitingTime = 0;
+        let startTime = Date.now();
         while(await isAlive(trialJob.pid)) {    
-            if (waitingTime > 4999) {
-                tkill(trialJob.pid, 'SIGKILL');
+            if (Date.now() - startTime > 4999) {
+                tkill(trialJob.pid, 'SIGKILL', (err) => {
+                    if (err) {
+                        this.log.error(`kill trial job error: ${err}`);
+                    }
+                });
+                break;
             }
             await delay(500);
-            waitingTime += 500;
         }
 
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
