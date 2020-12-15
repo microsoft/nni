@@ -1,16 +1,13 @@
 import logging
-import threading
-from typing import *
+from typing import Any, Callable
 
 import json_tricks
 import nni
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
-from nni.runtime.protocol import send, CommandType
+from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
-from . import utils
 from .graph import MetricData
-
 
 _logger = logging.getLogger('nni.msg_dispatcher_base')
 
@@ -44,6 +41,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     final_metric_callback
     """
+
     def __init__(self):
         super(RetiariiAdvisor, self).__init__()
         register_advisor(self)  # register the current advisor as the "global only" advisor
@@ -88,28 +86,28 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'parameters': parameters,
             'parameter_source': 'algorithm'
         }
-        _logger.info('New trial sent: {}'.format(new_trial))
+        _logger.info('New trial sent: %s', new_trial)
         send(CommandType.NewTrialJob, json_tricks.dumps(new_trial))
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
     def handle_request_trial_jobs(self, num_trials):
-        _logger.info('Request trial jobs: {}'.format(num_trials))
+        _logger.info('Request trial jobs: %s', num_trials)
         if self.request_trial_jobs_callback is not None:
             self.request_trial_jobs_callback(num_trials)  # pylint: disable=not-callable
 
     def handle_update_search_space(self, data):
-        _logger.info('Received search space: {}'.format(data))
+        _logger.info('Received search space: %s', data)
         self.search_space = data
 
     def handle_trial_end(self, data):
-        _logger.info('Trial end: {}'.format(data))  # do nothing
+        _logger.info('Trial end: %s', data)
         self.trial_end_callback(json_tricks.loads(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
                                 data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
-        _logger.info('Metric reported: {}'.format(data))
+        _logger.info('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
         elif data['type'] == MetricType.PERIODICAL:

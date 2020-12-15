@@ -1,5 +1,4 @@
-import abc
-from typing import *
+from typing import Any, List, Dict, Tuple
 
 import numpy as np
 import torch
@@ -106,7 +105,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
         self._train_dataloader = DataLoader(self._train_dataset, **(dataloader_kwargs or {}))
         self._val_dataloader = DataLoader(self._val_dataset, **(dataloader_kwargs or {}))
 
-    def _accuracy(self, input, target):
+    def _accuracy(self, input, target):  # pylint: disable=redefined-builtin
         _, predict = torch.max(input.data, 1)
         correct = predict.eq(target.data).cpu().sum().item()
         return correct / input.size(0)

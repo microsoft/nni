@@ -86,8 +86,8 @@ class ReinforceController(nn.Module):
         self.attn_query = nn.Linear(self.lstm_size, self.lstm_size, bias=False)
         self.v_attn = nn.Linear(self.lstm_size, 1, bias=False)
         self.g_emb = nn.Parameter(torch.randn(1, self.lstm_size) * 0.1)
-        self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]),
-                                         requires_grad=False)  # pylint: disable=not-callable
+        self.skip_targets = nn.Parameter(torch.tensor([1.0 - self.skip_target, self.skip_target]),  # pylint: disable=not-callable
+                                         requires_grad=False)
         assert entropy_reduction in ['sum', 'mean'], 'Entropy reduction must be one of sum and mean.'
         self.entropy_reduction = torch.sum if entropy_reduction == 'sum' else torch.mean
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction='none')
