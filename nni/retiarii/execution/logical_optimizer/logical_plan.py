@@ -15,7 +15,7 @@ class PhysicalDevice:
         return self.server == o.server and self.device == o.device
 
     def __hash__(self) -> int:
-        return hash(self.server+'_'+self.device)
+        return hash(self.server + '_' + self.device)
 
 
 class AbstractLogicalNode(Node):
@@ -182,10 +182,8 @@ class LogicalPlan:
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in training_config_slot:
-                        phy_model.training_config.kwargs['model_kwargs'].append(
-                            new_node.graph.model.training_config.kwargs.copy())
-                        training_config_slot[model_id] = \
-                            len(phy_model.training_config.kwargs['model_kwargs'])-1
+                        phy_model.training_config.kwargs['model_kwargs'].append(new_node.graph.model.training_config.kwargs.copy())
+                        training_config_slot[model_id] = len(phy_model.training_config.kwargs['model_kwargs']) - 1
                         slot = training_config_slot[model_id]
                         phy_model.training_config.kwargs['model_kwargs'][slot]['model_id'] = model_id
                         phy_model.training_config.kwargs['model_kwargs'][slot]['use_input'] = False
@@ -222,17 +220,14 @@ class LogicalPlan:
             tail_placement = node_placements[edge.tail]
             if head_placement != tail_placement:
                 if head_placement.server != tail_placement.server:
-                    raise ValueError(
-                        'Cross-server placement is not supported.')
+                    raise ValueError('Cross-server placement is not supported.')
                 # Same server different devices
                 if (edge.head, tail_placement) in copied_op:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
-                    to_operation = Operation.new(
-                        'ToDevice', {"device":tail_placement.device})
-                    to_node = Node(phy_graph, uid(), edge.head.name+"_to_"+edge.tail.name, to_operation)._register()
-                    Edge((edge.head, edge.head_slot),
-                         (to_node, None), _internal=True)._register()
+                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device})
+                    to_node = Node(phy_graph, uid(), edge.head.name + "_to_" + edge.tail.name, to_operation)._register()
+                    Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node
                 edge.head = to_node
                 edge.head_slot = None
@@ -266,11 +261,9 @@ class LogicalPlan:
 
         return phy_model, node_placements
 
-    def node_replace(self, old_node: Node,
-                     new_node: Node,
-                     input_slot_mapping=None, output_slot_mapping=None):
+    def node_replace(self, old_node: Node, new_node: Node, input_slot_mapping=None, output_slot_mapping=None):
         # TODO: currently, only support single input slot and output slot.
-        if input_slot_mapping != None or output_slot_mapping != None:
+        if input_slot_mapping is not None or output_slot_mapping is not None:
             raise ValueError('Slot mapping is not supported')
 
         phy_graph = old_node.graph
