@@ -337,8 +337,6 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
                                          node_type, attrs)
             node_index[node] = new_node
-        elif node.kind() == 'prim::min':
-            raise
         elif node.kind() == 'prim::If':
             last_block_node = handle_if_node(node)
             # last_block_node is None means no node in the branch block
