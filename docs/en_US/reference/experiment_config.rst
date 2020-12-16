@@ -44,7 +44,7 @@ Path_ to a JSON file containing the search space.
 
 type: ``Optional[str]``
 
-Search space format is determined by tuner. Common format for built-in tuners is documeted `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`__.
+Search space format is determined by tuner. Common format for built-in tuners is documeted `here <../Tutorial/SearchSpaceSpec.html>`__.
 
 Mutually exclusive to `search space`_.
 
@@ -56,7 +56,7 @@ Search space object.
 
 type: ``Optional[Any]``
 
-The format is determined by tuner. Common format for built-in tuners is documented `here <https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html>`__.
+The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.html>`__.
 
 Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
 
@@ -141,13 +141,11 @@ type: ``Optional[str]``
 
 If not specified, this will be the default IPv4 address of outgoing connection.
 
-// there is an easy way to get the IP mentioned above, I will remove netifaces denendency
-
 
 use annotation
 --------------
 
-Enable `annotation <https://nni.readthedocs.io/en/stable/Tutorial/AnnotationSpec.html>`__.
+Enable `annotation <../Tutorial/AnnotationSpec.html>`__.
 
 type: ``bool``
 
@@ -237,7 +235,7 @@ type: Optional `AlgorithmConfig`_
 training service
 ----------------
 
-Specify `training service <https://nni.readthedocs.io/en/stable/TrainingService/Overview.html>`__.
+Specify `training service <../TrainingService/Overview.html>`__.
 
 type: `TrainingServiceConfig`_
 
@@ -298,7 +296,7 @@ One of following:
 LocalConfig
 ===========
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/LocalMode.html>`__.
+Detailed `here <../TrainingService/LocalMode.html>`__.
 
 platform
 --------
@@ -343,7 +341,7 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 RemoteConfig
 ============
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/RemoteMachineMode.html>`__.
+Detailed `here <../TrainingService/RemoteMachineMode.html>`__.
 
 platform
 --------
@@ -469,7 +467,7 @@ This is useful if preparing steps vary for different machines.
 OpenPaiConfig
 =============
 
-Detailed `here <https://nni.readthedocs.io/en/stable/TrainingService/PaiMode.html>`__.
+Detailed `here <../TrainingService/PaiMode.html>`__.
 
 platform
 --------
