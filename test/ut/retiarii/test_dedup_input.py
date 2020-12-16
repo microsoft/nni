@@ -53,7 +53,8 @@ class DedupInputTest(unittest.TestCase):
         lp, models = self._build_logical_with_mnist(3)
         opt = DedupInputOptimizer()
         opt.convert(lp)
-        with open('dedup_logical_graph.json' , 'r') as fp:
+        correct_json_path = Path(__file__).parent / 'dedup_logical_graph.json'
+        with open(correct_json_path , 'r') as fp:
             correct_dump = fp.readlines()
         lp_dump = lp.logical_graph._dump()
         
