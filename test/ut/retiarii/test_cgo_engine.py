@@ -35,7 +35,6 @@ def _load_mnist(n_models: int = 1):
         return models
 
 
-@unittest.skip('Skipped in this version')
 class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
