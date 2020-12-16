@@ -29,14 +29,10 @@ def _test_file(json_path):
             graph['inputs'] = None
         if 'outputs' not in graph:
             graph['outputs'] = None
-        for node_name, node in graph['nodes'].items():
-            if 'parameters' not in node:
-                node['parameters'] = {}
 
     # debug output
     #json.dump(orig_ir, open('_orig.json', 'w'), indent=4)
     #json.dump(dump_ir, open('_dump.json', 'w'), indent=4)
-
     assert orig_ir == dump_ir
 
 

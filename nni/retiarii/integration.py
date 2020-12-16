@@ -9,7 +9,7 @@ from nni.utils import MetricType
 
 from .graph import MetricData
 
-_logger = logging.getLogger('nni.msg_dispatcher_base')
+_logger = logging.getLogger(__name__)
 
 
 class RetiariiAdvisor(MsgDispatcherBase):
