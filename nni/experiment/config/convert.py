@@ -61,8 +61,10 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     data['trial'] = {
         'command': data.pop('trialCommand'),
         'codeDir': data.pop('trialCodeDirectory'),
-        'gpuNum': data.pop('trialGpuNumber', '')
     }
+
+    if 'trialGpuNumber' in data:
+        data['trial']['gpuNum'] = data.pop('trialGpuNumber')
 
     if ts['platform'] == 'local':
         data['localConfig'] = {

@@ -53,7 +53,7 @@ class ExperimentConfig(ConfigBase):
     trial_command: str
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
-    trial_gpu_number: int = 0
+    trial_gpu_number: Optional[int] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
