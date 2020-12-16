@@ -24,6 +24,7 @@ class DebugSampler(Sampler):
     def mutation_start(self, mutator, model):
         self.iteration += 1
 
+
 class DebugMutator(Mutator):
     def mutate(self, model):
         ops = [max_pool, avg_pool, global_pool]
@@ -33,6 +34,7 @@ class DebugMutator(Mutator):
 
         pool2 = model.graphs['stem'].get_node_by_name('pool2')
         pool2.update_operation(self.choice(ops))
+
 
 sampler = DebugSampler()
 mutator = DebugMutator()
@@ -61,6 +63,7 @@ def test_mutation():
     assert model2.history == [model0, model1]
     assert _get_pools(model0) == (max_pool, max_pool)
     assert _get_pools(model1) == (avg_pool, global_pool)
+
 
 def _get_pools(model):
     pool1 = model.graphs['stem'].get_node_by_name('pool1').operation
