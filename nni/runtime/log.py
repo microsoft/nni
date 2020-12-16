@@ -31,7 +31,7 @@ def init_logger() -> None:
     if trial_platform == 'unittest':
         return
 
-    if trial_platform:
+    if trial_platform and not trial_env_vars.REUSE_MODE:
         _init_logger_trial()
         return
 
