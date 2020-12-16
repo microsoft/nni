@@ -43,8 +43,8 @@ def get_registered_algo_meta(builtin_name, algo_type=None):
     -------
         Returns meta information of speicified builtin alogorithms, for example:
         {
-            'classArgsValidator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator',
-            'className': 'nni.smac_tuner.smac_tuner.SMACTuner',
+            'classArgsValidator': 'nni.smac_tuner.SMACClassArgsValidator',
+            'className': 'nni.smac_tuner.SMACTuner',
             'builtinName': 'SMAC'
         }
     """

@@ -480,6 +480,7 @@ class NNIManager implements Manager {
         }
         await this.storeExperimentProfile();
         this.setStatus('STOPPED');
+        this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'port', undefined);
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {

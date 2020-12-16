@@ -85,7 +85,10 @@ class Experiments:
             self.experiments = self.read_file()
             if expId not in self.experiments:
                 return False
-            self.experiments[expId][key] = value
+            if value is None:
+                self.experiments[expId].pop(key, None)
+            else:
+                self.experiments[expId][key] = value
             self.write_file()
             return True
 

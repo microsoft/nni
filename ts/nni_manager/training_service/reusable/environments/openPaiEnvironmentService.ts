@@ -45,6 +45,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return true;
     }
 
+    public get getName(): string {
+        return 'pai';
+    }
+
     public async config(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
