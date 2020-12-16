@@ -21,6 +21,7 @@ from nni.retiarii.integration import RetiariiAdvisor
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
+
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'converted_mnist_pytorch.json'
     with open(path) as f:
@@ -34,9 +35,9 @@ def _load_mnist(n_models: int = 1):
         return models
 
 class DedupInputTest(unittest.TestCase):
-    def _build_logical_with_mnist(self, n_models : int):
+    def _build_logical_with_mnist(self, n_models: int):
         lp = LogicalPlan()
-        models = _load_mnist(n_models = n_models)
+        models = _load_mnist(n_models=n_models)
         for m in models:
             lp.add_model(m)
         return lp, models
@@ -44,8 +45,8 @@ class DedupInputTest(unittest.TestCase):
     def _test_add_model(self):
         lp, models = self._build_logical_with_mnist(3)
         for node in lp.logical_graph.hidden_nodes:
-            old_nodes = [ m.root_graph.get_node_by_id(node.id) for m in models]
-            
+            old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
+
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
 
     def test_dedup_input(self):
@@ -57,7 +58,7 @@ class DedupInputTest(unittest.TestCase):
         with open(correct_json_path , 'r') as fp:
             correct_dump = fp.readlines()
         lp_dump = lp.logical_graph._dump()
-        
+
         self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
 
         advisor = RetiariiAdvisor()
@@ -81,7 +82,6 @@ class DedupInputTest(unittest.TestCase):
         advisor.default_worker.join()
         advisor.assessor_worker.join()
 
+
 if __name__ == '__main__':
-    #CGOEngineTest().test_dedup_input()
-    #CGOEngineTest().test_submit_models()
     unittest.main()
