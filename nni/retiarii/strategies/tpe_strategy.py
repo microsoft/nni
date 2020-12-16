@@ -1,9 +1,9 @@
 import logging
 
+from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+
 from .. import Sampler, submit_models, wait_models
 from .strategy import BaseStrategy
-
-from ...algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 
 _logger = logging.getLogger(__name__)
 
