@@ -23,7 +23,8 @@ export namespace ValidationSchemas {
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
-                useActiveGpu: joi.boolean()
+                useActiveGpu: joi.boolean(),
+                reuse: joi.boolean()
             }),
             trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 image: joi.string().min(1),
@@ -181,6 +182,9 @@ export namespace ValidationSchemas {
                 computeTarget: joi.string().min(1),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
+            }),
+            heterogeneous_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                trainingServicePlatforms: joi.array(),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)

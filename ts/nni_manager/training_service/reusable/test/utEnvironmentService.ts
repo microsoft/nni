@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
-import { EventEmitter } from "events";
-import { CommandChannel } from "../commandChannel";
+import { Channel, EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
+import { EventEmitter } from 'events';
 import { UtCommandChannel } from "./utCommandChannel";
 
 export class UtEnvironmentService extends EnvironmentService {
-    private commandChannel: UtCommandChannel | undefined;
     private allEnvironments = new Map<string, EnvironmentInformation>();
     private hasMoreEnvironmentsInternal = true;
 
@@ -23,6 +21,14 @@ export class UtEnvironmentService extends EnvironmentService {
         return 1;
     }
 
+    public get getName(): string {
+        return 'ut';
+    }
+
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = new UtCommandChannel(eventEmitter);
+    }
+
     public testSetEnvironmentStatus(environment: EnvironmentInformation, newStatus: EnvironmentStatus): void {
         environment.status = newStatus;
     }
@@ -35,24 +41,12 @@ export class UtEnvironmentService extends EnvironmentService {
         return this.allEnvironments;
     }
 
-    public testGetCommandChannel(): UtCommandChannel {
-        if (this.commandChannel === undefined) {
-            throw new Error(`command channel shouldn't be undefined.`);
-        }
-        return this.commandChannel;
-    }
-
     public testSetNoMoreEnvironment(hasMore: boolean): void {
         this.hasMoreEnvironmentsInternal = hasMore;
     }
 
     public get hasMoreEnvironments(): boolean {
         return this.hasMoreEnvironmentsInternal;
-    }
-
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        this.commandChannel = new UtCommandChannel(commandEmitter)
-        return this.commandChannel;
     }
 
     public async config(_key: string, _value: string): Promise<void> {

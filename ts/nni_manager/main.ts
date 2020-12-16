@@ -28,6 +28,7 @@ import { RouterTrainingService } from './training_service/reusable/routerTrainin
 import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
+
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
@@ -36,21 +37,14 @@ function initStartupInfo(
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
-    if (platformMode === 'adl') {
+    const routerPlatformMode = ['remote', 'pai', 'aml', 'heterogeneous'];
+    if (routerPlatformMode.includes(platformMode)) {
         Container.bind(TrainingService)
-            .to(AdlTrainingService)
+            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'remote') {
-        Container.bind(TrainingService)
-            .to(RouterTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'pai') {
-        Container.bind(TrainingService)
-            .to(RouterTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'paiYarn') {
         Container.bind(TrainingService)
@@ -68,9 +62,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         Container.bind(TrainingService)
             .to(DLTSTrainingService)
             .scope(Scope.Singleton);
-    } else if (platformMode === 'aml') {
+    } else if (platformMode === 'adl') {
         Container.bind(TrainingService)
-            .to(RouterTrainingService)
+            .to(AdlTrainingService)
             .scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${platformMode}`);
@@ -103,7 +97,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <adl/local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/adl/heterogeneous> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -123,7 +117,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['adl', 'local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'heterogeneous'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
