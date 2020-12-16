@@ -337,14 +337,12 @@ def handle_graph_nodes(script_module, sm_graph, module, module_name, ir_model, i
             new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, global_seq),
                                          node_type, attrs)
             node_index[node] = new_node
-        elif node.kind() == 'prim::min':
-            print('zql: ', sm_graph)
-            exit(1)
         elif node.kind() == 'prim::If':
             last_block_node = handle_if_node(node)
             # last_block_node is None means no node in the branch block
             node_index[node] = last_block_node
         elif node.kind() == 'prim::Loop':
+            # refer to https://gist.github.com/liuzhe-lz/90c35d9dd6fd7f3f32544940151ab186
             raise RuntimeError('Loop has not been supported yet!')
         else:
             raise RuntimeError('Unsupported kind: {}'.format(node.kind()))

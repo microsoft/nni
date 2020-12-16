@@ -7,6 +7,8 @@ import logging
 import time
 from pathlib import Path
 
+from pathlib import Path
+
 from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
 from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
 from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
@@ -20,9 +22,8 @@ from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMulti
 from nni.retiarii.utils import import_
 
 def _load_mnist(n_models: int = 1):
-    json_file = 'converted_mnist_pytorch.json' 
-    model_path = Path(__file__).parent / json_file
-    with open(model_path) as f:
+    path = Path(__file__).parent / 'converted_mnist_pytorch.json'
+    with open(path) as f:
         mnist_model = Model._load(json.load(f))
     if n_models == 1:
         return mnist_model

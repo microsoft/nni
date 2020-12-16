@@ -45,7 +45,7 @@ model0 = Model._load(ir)
 
 
 def test_dry_run():
-    candidates = mutator.dry_run(model0)
+    candidates, _ = mutator.dry_run(model0)
     assert len(candidates) == 2
     assert candidates[0] == [max_pool, avg_pool, global_pool]
     assert candidates[1] == [max_pool, avg_pool, global_pool]
