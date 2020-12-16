@@ -98,14 +98,14 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
         data['paiConfig'] = {
             'userName': ts['username'],
             'token': ts['token'],
-            'host': 'https://' + ts['host'],
+            'host': ts['host'],
             'reuse': ts['reuseMode']
         }
-        if 'openPaiConfigFile' in ts:
-            data['paiConfig']['paiConfigPath'] = ts['openPaiConfigFile']
-        elif 'openPaiConfig' in ts:
+        if 'openpaiConfigFile' in ts:
+            data['paiConfig']['paiConfigPath'] = ts['openpaiConfigFile']
+        elif 'openpaiConfig' in ts:
             conf_file = NamedTemporaryFile('w', delete=False)
-            json.dump(ts['openPaiConfig'], conf_file, indent=4)
+            json.dump(ts['openpaiConfig'], conf_file, indent=4)
             data['paiConfig']['paiConfigPath'] = conf_file.name
 
     elif ts['platform'] == 'aml':

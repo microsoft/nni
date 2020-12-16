@@ -18,7 +18,7 @@ class RemoteMachineConfig(ConfigBase):
     port: int = 22
     user: str
     password: Optional[str] = None
-    ssh_key_file: PathLike = '~/.ssh/id_rsa'
+    ssh_key_file: Optional[PathLike] = None
     ssh_passphrase: Optional[str] = None
     use_active_gpu: bool
     max_trial_number_per_gpu: int = 1

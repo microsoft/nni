@@ -22,23 +22,23 @@ class OpenPaiConfig(TrainingServiceConfig):
     container_storage_mount_point: str
     reuse_mode: bool = False
 
-    open_pai_config: Optional[Dict[str, Any]]
-    open_pai_config_file: Optional[PathLike]
+    openpai_config: Optional[Dict[str, Any]]
+    openpai_config_file: Optional[PathLike]
 
     _canonical_rules = {
-        'host': lambda value: value.split('://', 1)[1] if '://' in value else value,  # type: ignore
+        'host': lambda value: 'https://' + value if '://' not in value else value,  # type: ignore
         'local_storage_mount_point': util.canonical_path,
-        'open_pai_config_file': util.canonical_path
+        'openpai_config_file': util.canonical_path
     }
 
     _validation_rules = {
         'platform': lambda value: (value == 'openpai', 'cannot be modified'),
         'local_storage_mount_point': lambda value: Path(value).is_dir(),
         'container_storage_mount_point': lambda value: Path(value).is_absolute(),
-        'open_pai_config_file': lambda value: Path(value).is_file()
+        'openpai_config_file': lambda value: Path(value).is_file()
     }
 
     def validate(self) -> None:
         super().validate()
-        if self.open_pai_config is not None and self.open_pai_config_file is not None:
-            raise ValueError('open_pai_config and open_pai_config_file can only be set one')
+        if self.openpai_config is not None and self.openpai_config_file is not None:
+            raise ValueError('openpai_config and openpai_config_file can only be set one')
