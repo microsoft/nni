@@ -33,7 +33,7 @@ We prepared a dockerfile for setting up experiment environments. Before starting
 Run Experiments:
 ----------------
 
-Three representative kinds of tensor operators, **matrix multiplication**\ ,** batched matrix multiplication** and **2D convolution**\ , are chosen from BERT and AlexNet, and tuned with NNI. The ``Trial`` code for all tensor operators is ``/root/compiler_auto_tune_stable.py``\ , and ``Search Space`` files and ``config`` files for each tuning algorithm locate in ``/root/experiments/``\ , which are categorized by tensor operators. Here ``/root`` refers to the root of the container.
+Three representative kinds of tensor operators, **matrix multiplication**\ , **batched matrix multiplication** and **2D convolution**\ , are chosen from BERT and AlexNet, and tuned with NNI. The ``Trial`` code for all tensor operators is ``/root/compiler_auto_tune_stable.py``\ , and ``Search Space`` files and ``config`` files for each tuning algorithm locate in ``/root/experiments/``\ , which are categorized by tensor operators. Here ``/root`` refers to the root of the container.
 
 For tuning the operators of matrix multiplication, please run below commands from ``/root``\ :
 
@@ -111,7 +111,7 @@ For tuning the operators of 2D convolution, please run below commands from ``/ro
 
 Please note that G-BFS and N-A2C are only designed for tuning tiling schemes of multiplication of matrices with only power of 2 rows and columns, so they are not compatible with other types of configuration spaces, thus not eligible to tune the operators of batched matrix multiplication and 2D convolution. Here, AutoTVM is implemented by its authors in the TVM project, so the tuning results are printed on the screen rather than reported to NNI manager. The port 8080 of the container is bind to the host on the same port, so one can access the NNI Web UI through ``host_ip_addr:8080`` and monitor tuning process as below screenshot.
 
-:raw-html:`<img src="../../../examples/trials/systems/opevo/screenshot.png" />`
+.. image:: ../../img/opevo.png
 
 Citing OpEvo
 ------------

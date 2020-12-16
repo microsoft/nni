@@ -29,7 +29,7 @@ The procedure of classic NAS algorithms is similar to hyper-parameter tuning, us
      - Brief Introduction of Algorithm
    * - :githublink:`Random Search <examples/tuners/random_nas_tuner>`
      - Randomly pick a model from search space
-   * - `PPO Tuner </Tuner/BuiltinTuner.html#PPOTuner>`__
+   * - `PPO Tuner <../Tuner/BuiltinTuner.html#PPOTuner>`__
      - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
 
 
@@ -46,19 +46,19 @@ NNI currently supports the one-shot NAS algorithms listed below and is adding mo
 
    * - Name
      - Brief Introduction of Algorithm
-   * - `ENAS </NAS/ENAS.html>`__
+   * - `ENAS <ENAS.rst>`__
      - `Efficient Neural Architecture Search via Parameter Sharing <https://arxiv.org/abs/1802.03268>`__. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
-   * - `DARTS </NAS/DARTS.html>`__
+   * - `DARTS <DARTS.rst>`__
      - `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__ introduces a novel algorithm for differentiable network architecture search on bilevel optimization.
-   * - `P-DARTS </NAS/PDARTS.html>`__
+   * - `P-DARTS <PDARTS.rst>`__
      - `Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation <https://arxiv.org/abs/1904.12760>`__ is based on DARTS. It introduces an efficient algorithm which allows the depth of searched architectures to grow gradually during the training procedure.
-   * - `SPOS </NAS/SPOS.html>`__
+   * - `SPOS <SPOS.rst>`__
      - `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ constructs a simplified supernet trained with a uniform path sampling method and applies an evolutionary algorithm to efficiently search for the best-performing architectures.
-   * - `CDARTS </NAS/CDARTS.html>`__
+   * - `CDARTS <CDARTS.rst>`__
      - `Cyclic Differentiable Architecture Search <https://arxiv.org/abs/****>`__ builds a cyclic feedback mechanism between the search and evaluation networks. It introduces a cyclic differentiable architecture search framework which integrates the two networks into a unified architecture.
-   * - `ProxylessNAS </NAS/Proxylessnas.html>`__
+   * - `ProxylessNAS <Proxylessnas.rst>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms.
-   * - `TextNAS </NAS/TextNAS.html>`__
+   * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. It is a neural architecture search algorithm tailored for text representation.
 
 

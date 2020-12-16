@@ -15,7 +15,7 @@ System architecture
    :alt: 
 
 
-The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage trial jobs and the communication between different modules. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports `local platfrom <LocalMode.md>`__\ , `remote platfrom <RemoteMachineMode.md>`__\ , `PAI platfrom <PaiMode.md>`__\ , `kubeflow platform <KubeflowMode.md>`__ and `FrameworkController platfrom <FrameworkControllerMode.rst>`__.
+The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage trial jobs and the communication between different modules. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports `local platfrom <LocalMode.rst>`__\ , `remote platfrom <RemoteMachineMode.rst>`__\ , `PAI platfrom <PaiMode.rst>`__\ , `kubeflow platform <KubeflowMode.rst>`__ and `FrameworkController platfrom <FrameworkControllerMode.rst>`__.
 
 In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 

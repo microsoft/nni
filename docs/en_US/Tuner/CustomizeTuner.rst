@@ -115,6 +115,11 @@ NNI needs to locate your customized tuner class and instantiate the class, so yo
 
 More detail example you could see:
 
+.. cannot find these link
+ :githublink:`evolution-tuner <src/sdk/pynni/nni/evolution_tuner>`
+ :githublink:`hyperopt-tuner <src/sdk/pynni/nni/hyperopt_tuner>`
+ `src/sdk/pynni/nni/msg_dispatcher_base.py <src/sdk/pynni/nni/msg_dispatcher_base.py>`
+
 ..
 
    * :githublink:`evolution-tuner <src/sdk/pynni/nni/evolution_tuner>`

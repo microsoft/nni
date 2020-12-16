@@ -81,6 +81,9 @@ The requirements of return values of ``sample_search()`` and ``sample_final()`` 
        def sample_final(self):
            return self.sample_search()  # use the same logic here. you can do something different
 
+
+.. cannot find :githublink:`here <src/sdk/pynni/nni/nas/pytorch/random/mutator.py>`. (twice)
+
 The complete example of random mutator can be found :githublink:`here <src/sdk/pynni/nni/nas/pytorch/random/mutator.py>`.
 
 For advanced usages, e.g., users want to manipulate the way modules in ``LayerChoice`` are executed, they can inherit ``BaseMutator``\ , and overwrite ``on_forward_layer_choice`` and ``on_forward_input_choice``\ , which are the callback implementation of ``LayerChoice`` and ``InputChoice`` respectively. Users can still use property ``mutables`` to get all ``LayerChoice`` and ``InputChoice`` in the model code. For details, please refer to :githublink:`reference <src/sdk/pynni/nni/nas/pytorch>` here to learn more.

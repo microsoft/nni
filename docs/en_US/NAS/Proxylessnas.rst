@@ -58,6 +58,7 @@ The implementation on NNI is based on the `offical implementation <https://githu
 
 Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in :githublink:`example code <examples/nas/proxylessnas>` using :githublink:`NNI NAS interface <src/sdk/pynni/nni/nas/pytorch/proxylessnas>`.
 
+.. cannot find :githublink:`NNI NAS interface <src/sdk/pynni/nni/nas/pytorch/proxylessnas>`.
 
 .. image:: ../../img/proxylessnas.png
    :target: ../../img/proxylessnas.png

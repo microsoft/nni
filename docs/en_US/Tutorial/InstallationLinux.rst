@@ -31,7 +31,7 @@ Install NNI through source code
 Use NNI in a docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  You can also install NNI in a docker image. Please follow the instructions :githublink:`here <deployment/docker/README.rst>` to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command ``docker pull msranni/nni:latest``.
+  You can also install NNI in a docker image. Please follow the instructions `here <../Tutorial/HowToUseDocker.rst>`__ to build an NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command ``docker pull msranni/nni:latest``.
 
 Verify installation
 -------------------

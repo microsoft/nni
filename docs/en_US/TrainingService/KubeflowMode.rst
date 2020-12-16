@@ -11,16 +11,16 @@ Prerequisite for on-premises Kubernetes Service
 
 #. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this `guideline <https://kubernetes.io/docs/setup/>`__ to set up Kubernetes
 #. Download, set up, and deploy **Kubeflow** to your Kubernetes cluster. Follow this `guideline <https://www.kubeflow.org/docs/started/getting-started/>`__ to setup Kubeflow.
-#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the**KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
+#. Prepare a **kubeconfig** file, which will be used by NNI to interact with your Kubernetes API server. By default, NNI manager will use ``$(HOME)/.kube/config`` as kubeconfig file's path. You can also specify other kubeconfig files by setting the **KUBECONFIG** environment variable. Refer this `guideline <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ to learn more about kubeconfig.
 #. If your NNI trial job needs GPU resource, you should follow this `guideline <https://github.com/NVIDIA/k8s-device-plugin>`__ to configure **Nvidia device plugin for Kubernetes**.
-#. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in ``root_squash option``\ , otherwise permission issue may raise when NNI copy files to NFS. Refer this `page <https://linux.die.net/man/5/exports>`__ to learn what root_squash option is), or**Azure File Storage**.
+#. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in ``root_squash option``\ , otherwise permission issue may raise when NNI copy files to NFS. Refer this `page <https://linux.die.net/man/5/exports>`__ to learn what root_squash option is), or **Azure File Storage**.
 #. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
 
 .. code-block:: bash
 
     apt-get install nfs-common
 
-#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart>`__.
+7. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
 Prerequisite for Azure Kubernetes Service
 -----------------------------------------
@@ -230,6 +230,7 @@ Trial configuration in kubeflow mode have the following configuration keys:
   * apiVersion
 
     * Required key. The API version of your Kubeflow.
+.. cannot find :githublink:`msranni/nni <deployment/docker/Dockerfile>`
 
 * ps (optional). This config section is used to configure Tensorflow parameter server role.
 * master(optional). This config section is used to configure PyTorch parameter server role.

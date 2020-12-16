@@ -1,7 +1,4 @@
-Write A .. role:: raw-html(raw)
-   :format: html
-
-Search Space
+Write A Search Space
 ====================
 
 Genrally, a search space describes candiate architectures from which users want to find the best one. Different search algorithms, no matter classic NAS or one-shot NAS, can be applied on the search space. NNI provides APIs to unified the expression of neural architecture search space.
@@ -61,10 +58,10 @@ So how about the possibilities of connections? This can be done using ``InputCho
            # ... same ...
            return output
 
-Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or ``None`` if none is selected. Like layer choices, input choices should be **initialized in ``__init__`` and called in ``forward``**. This is to allow search algorithms to identify these choices and do necessary preparations.
+Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or ``None`` if none is selected. Like layer choices, input choices should be initialized in ""__init__`` and called in ``forward``. This is to allow search algorithms to identify these choices and do necessary preparations.
 
 ``LayerChoice`` and ``InputChoice`` are both **mutables**. Mutable means "changeable". As opposed to traditional deep learning layers/modules which have fixed operation types once defined, models with mutable are essentially a series of possible models.
 
 Users can specify a **key** for each mutable. By default, NNI will assign one for you that is globally unique, but in case users want to share choices (for example, there are two ``LayerChoice``\ s with the same candidate operations and you want them to have the same choice, i.e., if first one chooses the i-th op, the second one also chooses the i-th op), they can give them the same key. The key marks the identity for this choice and will be used in the dumped checkpoint. So if you want to increase the readability of your exported architecture, manually assigning keys to each mutable would be a good idea. For advanced usage on mutables (e.g., ``LayerChoice`` and ``InputChoice``\ ), see `Mutables <./NasReference.rst>`__.
 
-With search space defined, the next step is searching for the best model from it. Please refer to `classic NAS algorithms <./ClassicNas.md>`__ and `one-shot NAS algorithms <./NasGuide.rst>`__ for how to search from your defined search space.
+With search space defined, the next step is searching for the best model from it. Please refer to `classic NAS algorithms <./ClassicNas.rst>`__ and `one-shot NAS algorithms <./NasGuide.rst>`__ for how to search from your defined search space.

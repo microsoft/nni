@@ -13,7 +13,7 @@ As we all know, the choice of model optimizer is directly affects the performanc
 
 In this example, we have selected the following common deep learning optimizer:
 
-..
+.. code-block::
 
    "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
@@ -48,7 +48,7 @@ As we stated in the target, we target to find out the best ``optimizer`` for tra
        "model":{"_type":"choice", "_value":["vgg", "resnet18", "googlenet", "densenet121", "mobilenet", "dpn92", "senet18"]}
    }
 
-*Implemented code directory: :githublink:`search_space.json <examples/trials/cifar10_pytorch/search_space.json>`*
+Implemented code directory: :githublink:`search_space.json <examples/trials/cifar10_pytorch/search_space.json>`
 
 **Trial**
 
@@ -59,7 +59,7 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 * Use ``nni.report_intermediate_result(acc)`` to report the intermedian result after finish each epoch.
 * Use ``nni.report_final_result(acc)`` to report the final result before the trial end.
 
-*Implemented code directory: :githublink:`main.py <examples/trials/cifar10_pytorch/main.py>`*
+Implemented code directory: :githublink:`main.py <examples/trials/cifar10_pytorch/main.py>`
 
 You can also use your previous code directly, refer to `How to define a trial <Trials.rst>`__ for modify.
 
@@ -73,7 +73,7 @@ Here is the example of running this experiment on OpenPAI:
 
 code directory: :githublink:`examples/trials/cifar10_pytorch/config_pai.yml <examples/trials/cifar10_pytorch/config_pai.yml>`
 
-*The complete examples we have implemented: :githublink:`examples/trials/cifar10_pytorch/ <examples/trials/cifar10_pytorch>`*
+The complete examples we have implemented: :githublink:`examples/trials/cifar10_pytorch/ <examples/trials/cifar10_pytorch>`
 
 Launch the experiment
 ^^^^^^^^^^^^^^^^^^^^^
