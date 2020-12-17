@@ -9,6 +9,7 @@ from pathlib import Path
 
 from pathlib import Path
 
+import nni
 from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
 from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
 from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
@@ -61,7 +62,7 @@ class DedupInputTest(unittest.TestCase):
         #lp_dump = lp.logical_graph._dump()
 
         # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-
+        nni.retiarii.integration._advisor = None
         advisor = RetiariiAdvisor()
         cgo = CGOExecutionEngine()
 

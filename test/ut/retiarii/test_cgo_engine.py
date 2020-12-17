@@ -22,8 +22,6 @@ from nni.retiarii.integration import RetiariiAdvisor
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
-nni.retiarii.debug_configs.framework = 'pytorch'
-
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'converted_mnist_pytorch.json'
     with open(path) as f:
@@ -41,6 +39,7 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
         os.environ['CGO'] = 'true'
+        nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
         from nni.runtime import protocol, platform
         import nni.runtime.platform.test as tt
