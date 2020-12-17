@@ -73,7 +73,6 @@ dependencies = [
     'websockets',
     'filelock',
     'prettytable',
-    'packaging',
     'dataclasses ; python_version < "3.7"',
     'numpy < 1.19.4 ; sys_platform == "win32"',
     'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',

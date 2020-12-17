@@ -10,6 +10,8 @@ def import_(target: str, allow_none: bool = False) -> Any:
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
 
+def version_larger_equal(a: str, b: str) -> bool:
+    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 _records = {}
 
