@@ -1,5 +1,6 @@
 import inspect
 import logging
+from packaging import version
 from typing import Any, List
 
 import torch
@@ -8,6 +9,8 @@ import torch.nn as nn
 from ...utils import add_record
 
 _logger = logging.getLogger(__name__)
+
+# NOTE: support pytorch version >= 1.5.0
 
 __all__ = [
     'LayerChoice', 'InputChoice', 'Placeholder',
@@ -29,12 +32,18 @@ __all__ = [
     'ConstantPad3d', 'Bilinear', 'CosineSimilarity', 'Unfold', 'Fold',
     'AdaptiveLogSoftmaxWithLoss', 'TransformerEncoder', 'TransformerDecoder',
     'TransformerEncoderLayer', 'TransformerDecoderLayer', 'Transformer',
-    #'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
-    #'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
-    #'Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss', 'ChannelShuffle',
-    'Flatten', 'Hardsigmoid', 'Hardswish'
+    'Flatten', 'Hardsigmoid'
 ]
 
+if version.parse(torch.__version__) >= version.parse('1.6.0'):
+    __all__.append('Hardswish')
+
+if version.parse(torch.__version__) >= version.parse('1.7.0'):
+    __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
+
+#'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
+#'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
+#'ChannelShuffle'
 
 class LayerChoice(nn.Module):
     def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
@@ -132,7 +141,6 @@ def wrap_module(original_class):
     return original_class
 
 
-# TODO: support different versions of pytorch
 Identity = wrap_module(nn.Identity)
 Linear = wrap_module(nn.Linear)
 Conv1d = wrap_module(nn.Conv1d)
@@ -236,6 +244,17 @@ TransformerDecoder = wrap_module(nn.TransformerDecoder)
 TransformerEncoderLayer = wrap_module(nn.TransformerEncoderLayer)
 TransformerDecoderLayer = wrap_module(nn.TransformerDecoderLayer)
 Transformer = wrap_module(nn.Transformer)
+Flatten = wrap_module(nn.Flatten)
+Hardsigmoid = wrap_module(nn.Hardsigmoid)
+
+if version.parse(torch.__version__) >= version.parse('1.6.0'):
+    Hardswish = wrap_module(nn.Hardswish)
+
+if version.parse(torch.__version__) >= version.parse('1.7.0'):
+    SiLU = wrap_module(nn.SiLU)
+    Unflatten = wrap_module(nn.Unflatten)
+    TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
+
 #LazyLinear = wrap_module(nn.LazyLinear)
 #LazyConv1d = wrap_module(nn.LazyConv1d)
 #LazyConv2d = wrap_module(nn.LazyConv2d)
@@ -243,10 +262,4 @@ Transformer = wrap_module(nn.Transformer)
 #LazyConvTranspose1d = wrap_module(nn.LazyConvTranspose1d)
 #LazyConvTranspose2d = wrap_module(nn.LazyConvTranspose2d)
 #LazyConvTranspose3d = wrap_module(nn.LazyConvTranspose3d)
-Flatten = wrap_module(nn.Flatten)
-#Unflatten = wrap_module(nn.Unflatten)
-Hardsigmoid = wrap_module(nn.Hardsigmoid)
-Hardswish = wrap_module(nn.Hardswish)
-#SiLU = wrap_module(nn.SiLU)
-#TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
 #ChannelShuffle = wrap_module(nn.ChannelShuffle)
