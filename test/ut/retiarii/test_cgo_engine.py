@@ -9,6 +9,7 @@ import torch
 
 from pathlib import Path
 
+import nni
 from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
 from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
 from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
@@ -21,6 +22,7 @@ from nni.retiarii.integration import RetiariiAdvisor
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
+nni.retiarii.debug_configs.framework = 'pytorch'
 
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'converted_mnist_pytorch.json'
