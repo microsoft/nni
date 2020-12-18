@@ -1,11 +1,10 @@
 import time
 import os
-from typing import List
 
 from ..graph import Model, ModelStatus
 from .base import BaseExecutionEngine
 from .cgo_engine import CGOExecutionEngine
-from .interface import AbstractExecutionEngine, WorkerInfo
+from .interface import AbstractExecutionEngine
 from .listener import DefaultListener
 
 _execution_engine = None
@@ -51,6 +50,7 @@ def wait_models(*models: Model) -> None:
             break
 
 
-def query_available_resources() -> List[WorkerInfo]:
-    listener = get_and_register_default_listener(get_execution_engine())
-    return listener.resources
+def query_available_resources() -> int:
+    engine = get_execution_engine()
+    resources = engine.query_available_resource()
+    return resources if isinstance(resources, int) else len(resources)
