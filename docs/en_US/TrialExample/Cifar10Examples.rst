@@ -13,7 +13,7 @@ As we all know, the choice of model optimizer is directly affects the performanc
 
 In this example, we have selected the following common deep learning optimizer:
 
-.. code-block::
+.. code-block:: bash
 
    "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
