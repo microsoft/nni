@@ -29,7 +29,7 @@ The procedure of classic NAS algorithms is similar to hyper-parameter tuning, us
      - Brief Introduction of Algorithm
    * - :githublink:`Random Search <examples/tuners/random_nas_tuner>`
      - Randomly pick a model from search space
-   * - `PPO Tuner <../Tuner/BuiltinTuner.html#PPOTuner>`__
+   * - `PPO Tuner <../Tuner/BuiltinTuner.rst#PPO-Tuner>`__
      - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
 
 

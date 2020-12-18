@@ -8,7 +8,7 @@ In this tutorial, we use the `first section <#quick-start-to-compress-a-model>`_
 Quick Start to Compress a Model
 -------------------------------
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner <../Compression/Pruner.html#slim-pruner>`__ as an example to show the usage.
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner <../Compression/Pruner.rst#slim-pruner>`__ as an example to show the usage.
 
 Write configuration
 ^^^^^^^^^^^^^^^^^^^
@@ -190,7 +190,7 @@ In this example, 'op_names' is the name of layer and four layers will be quantiz
 APIs for Updating Fine Tuning Status
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some compression algorithms use epochs to control the progress of compression (e.g. `AGP <../Compression/Pruner.html#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
+Some compression algorithms use epochs to control the progress of compression (e.g. `AGP <../Compression/Pruner.rst#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
 
 ``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 
