@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Optional
 
 from .base import ConfigBase
 from .common import TrainingServiceConfig
