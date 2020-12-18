@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Any, Callable
 
 import json_tricks
@@ -8,6 +9,10 @@ from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
 from .graph import MetricData
+from .execution.base import BaseExecutionEngine
+from .execution.cgo_engine import CGOExecutionEngine
+from .execution.api import set_execution_engine
+from .integration_api import register_advisor
 
 _logger = logging.getLogger(__name__)
 
@@ -54,6 +59,15 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Callable[[int, MetricData], None] = None
 
         self.parameters_count = 0
+
+        engine = self._create_execution_engine()
+        set_execution_engine(engine)
+
+    def _create_execution_engine(self):
+        if os.environ.get('CGO') == 'true':
+            return CGOExecutionEngine()
+        else:
+            return BaseExecutionEngine()
 
     def handle_initialize(self, data):
         """callback for initializing the advisor
@@ -126,34 +140,3 @@ class RetiariiAdvisor(MsgDispatcherBase):
             else:
                 return value
         return value
-
-
-_advisor: RetiariiAdvisor = None
-
-
-def get_advisor() -> RetiariiAdvisor:
-    global _advisor
-    assert _advisor is not None
-    return _advisor
-
-
-def register_advisor(advisor: RetiariiAdvisor):
-    global _advisor
-    assert _advisor is None
-    _advisor = advisor
-
-
-def send_trial(parameters: dict) -> int:
-    """
-    Send a new trial. Executed on tuner end.
-    Return a ID that is the unique identifier for this trial.
-    """
-    return get_advisor().send_trial(parameters)
-
-
-def receive_trial_parameters() -> dict:
-    """
-    Received a new trial. Executed on trial end.
-    """
-    params = nni.get_next_parameter()
-    return params

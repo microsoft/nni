@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData
-from ..integration import send_trial, receive_trial_parameters, get_advisor
+from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
 
