@@ -33,6 +33,13 @@ def training_service_config_factory(platform: str, **kwargs): # -> TrainingServi
             return cls(**kwargs)
     raise ValueError(f'Unrecognized platform {platform}')
 
+def load_config(Type, value):
+    if isinstance(value, list):
+        return [load_config(Type, item) for item in value]
+    if isinstance(value, dict):
+        return Type(**value)
+    return value
+
 def strip_optional(type_hint):
     return type_hint.__args__[0] if str(type_hint).startswith('typing.Optional[') else type_hint
 

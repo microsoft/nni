@@ -6,12 +6,31 @@ from typing import Optional, Union
 
 from .base import ConfigBase
 from .common import TrainingServiceConfig
+from . import util
 
 __all__ = ['KubeflowConfig', 'KubeflowRoleConfig', 'KubeflowNfsConfig', 'KubeflowAzureStorageConfig']
 
 
 @dataclass(init=False)
-class KubeflowNfsConfig(ConfigBase):
+class _KubeflowStorageConfig(ConfigBase):
+    storage: str
+    server: Optional[str] = None
+    path: Optional[str] = None
+    azure_account: Optional[str] = None
+    azure_share: Optional[str] = None
+    key_vault: Optional[str] = None
+    key_vault_secret: Optional[str] = None
+
+@dataclass(init=False)
+class KubeflowAzureStorageConfig(_KubeflowStorageConfig):
+    storage: str = 'azureStorage'
+    azure_account: str
+    azure_share: str
+    key_vault: str
+    key_vault_secret: str
+
+@dataclass(init=False)
+class KubeflowNfsConfig(_KubeflowStorageConfig):
     storage: str = 'nfs'
     server: str
     path: str
@@ -40,9 +59,15 @@ class KubeflowConfig(TrainingServiceConfig):
     platform: str = 'kubeflow'
     operator: str
     api_version: str
-    storage: Union[KubeflowNfsConfig, KubeflowAzureStorageConfig]
+    storage: _KubeflowStorageConfig
     worker: KubeflowRoleConfig
     parameter_server: Optional[KubeflowRoleConfig] = None
+
+    def __init__(self, **kwargs):
+        kwargs['storage'] = util.load_config(_KubeflowStorageConfig, kwargs.get('storage'))
+        kwargs['worker'] = util.load_config(KubeflowRoleConfig, kwargs.get('worker'))
+        kwargs['parameter_server'] = util.load_config(KubeflowRoleConfig, kwargs.get('parameter_server'))
+        super().__init__(**kwargs)
 
     _validation_rules = {
         'platform': lambda value: (value == 'kubeflow', 'cannot be modified'),

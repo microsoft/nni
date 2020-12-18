@@ -6,6 +6,7 @@ from typing import List, Union
 
 from .base import ConfigBase
 from .common import TrainingServiceConfig
+from . import util
 
 __all__ = [
     'FrameworkControllerConfig',
@@ -14,6 +15,16 @@ __all__ = [
     'FrameworkControllerAzureStorageConfig'
 ]
 
+
+@dataclass(init=False)
+class _FrameworkControllerStorageConfig(ConfigBase):
+    storage: str
+    server: Optional[str] = None
+    path: Optional[str] = None
+    azure_account: Optional[str] = None
+    azure_share: Optional[str] = None
+    key_vault: Optional[str] = None
+    key_vault_secret: Optional[str] = None
 
 @dataclass(init=False)
 class FrameworkControllerNfsConfig(ConfigBase):
@@ -47,8 +58,13 @@ class FrameworkControllerRoleConfig(ConfigBase):
 class FrameworkControllerConfig(TrainingServiceConfig):
     platform: str = 'frameworkcontroller'
     service_account_name: str
-    storage: Union[FrameworkControllerNfsConfig, FrameworkControllerAzureStorageConfig]
+    storage: _FrameworkControllerStorageConfig]
     task_roles: List[FrameworkControllerRoleConfig]
+
+    def __init__(self, **kwargs):
+        kwargs['storage'] = util.load_config(_FrameworkControllerStorageConfig, kwargs.get('storage'))
+        kwargs['task_roles'] = util.load_config(FrameworkControllerRoleConfig, kwargs.get('task_roles'))
+        super().__init__(**kwargs)
 
     _validation_rules = {
         'platform': lambda value: (value == 'frameworkcontroller', 'cannot be modified')

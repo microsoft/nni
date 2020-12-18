@@ -11,7 +11,6 @@ from . import util
 
 __all__ = ['RemoteConfig', 'RemoteMachineConfig']
 
-
 @dataclass(init=False)
 class RemoteMachineConfig(ConfigBase):
     host: str
@@ -46,6 +45,10 @@ class RemoteConfig(TrainingServiceConfig):
     platform: str = 'remote'
     reuse_mode: bool = False
     machine_list: List[RemoteMachineConfig]
+
+    def __init__(self, **kwargs):
+        kwargs['machine_list'] = util.load_config(RemoteMachineConfig, kwargs.get('machine_list'))
+        super().__init__(**kwargs)
 
     _validation_rules = {
         'platform': lambda value: (value == 'remote', 'cannot be modified')

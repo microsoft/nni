@@ -9,10 +9,10 @@ from .base import PathLike
 from .common import TrainingServiceConfig
 from . import util
 
-__all__ = ['OpenPaiConfig']
+__all__ = ['OpenpaiConfig']
 
 @dataclass(init=False)
-class OpenPaiConfig(TrainingServiceConfig):
+class OpenpaiConfig(TrainingServiceConfig):
     platform: str = 'openpai'
     host: str
     username: str

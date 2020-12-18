@@ -68,10 +68,12 @@ class ExperimentConfig(ConfigBase):
     training_service: TrainingServiceConfig
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
-        super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(training_service_platform)
+            kwargs['training_service'] = util.training_service_config_factory(training_service_platform)
+        elif isinstance(kwargs.get('training_service'), dict):
+            kwargs['training_service'] = util.training_service_config_factory(**kwargs['training_service'])
+        super().__init__(**kwargs)
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
