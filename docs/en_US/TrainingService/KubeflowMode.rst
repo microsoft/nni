@@ -230,6 +230,7 @@ Trial configuration in kubeflow mode have the following configuration keys:
   * apiVersion
 
     * Required key. The API version of your Kubeflow.
+
 .. cannot find :githublink:`msranni/nni <deployment/docker/Dockerfile>`
 
 * ps (optional). This config section is used to configure Tensorflow parameter server role.

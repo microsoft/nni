@@ -129,6 +129,7 @@ Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode <RemoteMachin
   Optional key. In pai mode, your trial program will be scheduled by OpenPAI to run in `Docker container <https://www.docker.com/>`__. This key is used to specify the Docker image used to create the container in which your trial will run.
 
   We already build a docker image :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`. You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config file specified in ``paiConfigPath`` field.
+
 .. cannot find :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`
 
 * 
