@@ -17,6 +17,7 @@ from .config import ExperimentConfig
 from . import launcher
 from .pipe import Pipe
 from . import rest
+from ..tools.nnictl.command_utils import kill_command
 
 nni.runtime.log.init_logger_experiment()
 _logger = logging.getLogger('nni.experiment')
@@ -142,7 +143,7 @@ class Experiment:
         atexit.unregister(self.stop)
 
         if self._proc is not None:
-            self._proc.kill()
+            kill_command(self._proc.pid)
         if self._pipe is not None:
             self._pipe.close()
         if self._dispatcher_thread is not None:
