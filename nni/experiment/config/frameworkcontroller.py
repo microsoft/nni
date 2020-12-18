@@ -58,7 +58,7 @@ class FrameworkControllerRoleConfig(ConfigBase):
 class FrameworkControllerConfig(TrainingServiceConfig):
     platform: str = 'frameworkcontroller'
     service_account_name: str
-    storage: _FrameworkControllerStorageConfig]
+    storage: _FrameworkControllerStorageConfig
     task_roles: List[FrameworkControllerRoleConfig]
 
     def __init__(self, **kwargs):
