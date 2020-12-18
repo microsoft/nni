@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Optional
 
 from .base import ConfigBase
 from .common import TrainingServiceConfig
@@ -20,14 +20,6 @@ class _KubeflowStorageConfig(ConfigBase):
     azure_share: Optional[str] = None
     key_vault: Optional[str] = None
     key_vault_secret: Optional[str] = None
-
-@dataclass(init=False)
-class KubeflowAzureStorageConfig(_KubeflowStorageConfig):
-    storage: str = 'azureStorage'
-    azure_account: str
-    azure_share: str
-    key_vault: str
-    key_vault_secret: str
 
 @dataclass(init=False)
 class KubeflowNfsConfig(_KubeflowStorageConfig):
