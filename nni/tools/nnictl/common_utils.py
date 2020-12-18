@@ -130,4 +130,4 @@ class SimplePreemptiveLock(filelock.SoftFileLock):
         return None
 
 def get_file_lock(path: string, stale=-1):
-    return SimplePreemptiveLock(path + '.lock', stale=-1)
+    return SimplePreemptiveLock(path + '.lock', stale=stale)
