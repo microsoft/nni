@@ -270,6 +270,8 @@ class QAT_Quantizer(Quantizer):
 
         if quant_start_step > self.bound_model.steps:
             return output
+        else:
+            module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
 
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
