@@ -19,7 +19,7 @@ jobs:
       set -e
       python3 -m pip install --upgrade pip setuptools
       python3 -m pip install pytest coverage
-      python3 -m pip install pylint flake8
+      python3 -m pip install pylint==2.6.0 flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: Install Python tools
 
