@@ -1,9 +1,6 @@
 import time
-import os
 
 from ..graph import Model, ModelStatus
-from .base import BaseExecutionEngine
-from .cgo_engine import CGOExecutionEngine
 from .interface import AbstractExecutionEngine
 from .listener import DefaultListener
 
@@ -21,7 +18,7 @@ def set_execution_engine(engine) -> None:
     else:
         raise RuntimeError('execution engine is already set')
 
-def get_execution_engine() -> BaseExecutionEngine:
+def get_execution_engine() -> AbstractExecutionEngine:
     """
     Currently we assume the default execution engine is BaseExecutionEngine.
     """

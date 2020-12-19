@@ -3,7 +3,6 @@ import os
 from typing import Any, Callable
 
 import json_tricks
-import nni
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
