@@ -269,9 +269,8 @@ class QAT_Quantizer(Quantizer):
         assert output_bits >= 1, "quant bits length should be at least 1"
 
         if quant_start_step > self.bound_model.steps:
-            return output
-        else:
             module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
+            return output
 
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
