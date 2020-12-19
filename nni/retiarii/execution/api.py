@@ -12,7 +12,7 @@ _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'submit_models', 'wait_models', 'query_available_resources',
-           'set_execution_engine']
+           'set_execution_engine', 'is_stopped_exec']
 
 def set_execution_engine(engine) -> None:
     global _execution_engine
@@ -56,3 +56,7 @@ def query_available_resources() -> int:
     engine = get_execution_engine()
     resources = engine.query_available_resource()
     return resources if isinstance(resources, int) else len(resources)
+
+
+def is_stopped_exec(model: Model) -> bool:
+    return model.status in (ModelStatus.Trained, ModelStatus.Failed)

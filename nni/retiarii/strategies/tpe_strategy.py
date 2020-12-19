@@ -1,8 +1,9 @@
 import logging
+import time
 
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
-from .. import Sampler, submit_models, wait_models
+from .. import Sampler, submit_models, wait_models, query_available_resources, is_stopped_exec
 from .strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
@@ -39,6 +40,7 @@ class TPEStrategy(BaseStrategy):
     def __init__(self):
         self.tpe_sampler = TPESampler()
         self.model_id = 0
+        self.running_models = {}
 
     def run(self, base_model, applied_mutators):
         sample_space = []
@@ -48,9 +50,10 @@ class TPEStrategy(BaseStrategy):
             sample_space.extend(recorded_candidates)
         self.tpe_sampler.update_sample_space(sample_space)
 
-        try:
-            _logger.info('stargety start...')
-            while True:
+        _logger.info('stargety start...')
+        while True:
+            avail_resource = query_available_resources()
+            if avail_resource > 0:
                 model = base_model
                 _logger.info('apply mutators...')
                 _logger.info('mutators: %s', str(applied_mutators))
@@ -61,9 +64,19 @@ class TPEStrategy(BaseStrategy):
                     model = mutator.apply(model)
                 # run models
                 submit_models(model)
-                wait_models(model)
-                self.tpe_sampler.receive_result(self.model_id, model.metric)
+                self.running_models[self.model_id] = model
                 self.model_id += 1
                 _logger.info('Strategy says: %s', model.metric)
-        except Exception:
-            _logger.error(logging.exception('message'))
+            else:
+                time.sleep(2)
+
+            _logger.warning('num of running models: %d', len(self.running_models))
+            to_be_deleted = []
+            for _id, _model in self.running_models.items():
+                if is_stopped_exec(_model):
+                    if _model.metric is not None:
+                        self.tpe_sampler.receive_result(_id, _model.metric)
+                        _logger.warning('tpe receive results: %d, %s', _id, _model.metric)
+                    to_be_deleted.append(_id)
+            for _id in to_be_deleted:
+                del self.running_models[_id]

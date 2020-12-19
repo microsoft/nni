@@ -1,4 +1,7 @@
 import logging
+import os
+import random
+import string
 from typing import Dict, Any, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
@@ -101,9 +104,12 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         Initialize the model, hand it over to trainer.
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
-        with open('_generated_model.py', 'w') as f:
+        random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+        file_name = f'_generated_model_{random_str}.py'
+        with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
         trainer_cls = utils.import_(graph_data.training_module)
-        model_cls = utils.import_('_generated_model._model')
+        model_cls = utils.import_(f'_generated_model_{random_str}._model')
         trainer_instance = trainer_cls(model=model_cls(), **graph_data.training_kwargs)
         trainer_instance.fit()
+        os.remove(file_name)
