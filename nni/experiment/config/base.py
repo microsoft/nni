@@ -58,11 +58,6 @@ class ConfigBase:
                     value = Path(value).expanduser()
                     if not value.is_absolute():
                         value = _base_path / value
-                # convert nested dict to config type
-                if isinstance(value, dict):
-                    cls = util.strip_optional(field.type)
-                    if isinstance(cls, type) and issubclass(cls, ConfigBase):
-                        value = cls(**value, _base_path=_base_path)
             setattr(self, field.name, value)
         if kwargs:
             cls = type(self).__name__
