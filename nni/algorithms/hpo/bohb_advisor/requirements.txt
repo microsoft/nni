@@ -1,2 +1,0 @@
-ConfigSpace==0.4.7
-statsmodels==0.10.0

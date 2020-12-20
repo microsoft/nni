@@ -1,0 +1,4 @@
+algoType: tuner
+builtinName: demotuner
+className: demo_tuner.DemoTuner
+classArgsValidator: demo_tuner.MyClassArgsValidator

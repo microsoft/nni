@@ -255,4 +255,4 @@ Known Limitations:
   Note that for nested search space:
 
 
-  * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
+  * Only Random Search/TPE/Anneal/Evolution/Grid Search tuner supports nested search space

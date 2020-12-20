@@ -82,7 +82,7 @@ class ConfigBase:
         """
         return dataclasses.asdict(
             self.canonical(),
-            dict_factory = lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
+            dict_factory=lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
         )
 
     def canonical(self: T) -> T:

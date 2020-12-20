@@ -12,3 +12,4 @@ Introduction to NNI Training Services
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
     AML<./TrainingService/AMLMode>
+    Heterogeneous<./TrainingService/HeterogeneousMode>
