@@ -17,14 +17,16 @@ jobs:
 
   - script: |
       set -e
-      python3 -m pip install --upgrade pip setuptools
-      python3 -m pip install pytest coverage
-      python3 -m pip install pylint flake8
+      python -m pip install --upgrade pip setuptools
+      python -m pip install pytest coverage
+      python -m pip install pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      python -m pytest --version
+      python -m pylint --version
     displayName: Install Python tools
 
   - script: |
-      python3 setup.py develop
+      python setup.py develop
     displayName: Install NNI
 
   - script: |
@@ -38,21 +40,24 @@ jobs:
   - script: |
       set -e
       sudo apt-get install -y pandoc
-      python3 -m pip install --upgrade pygments
-      python3 -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python3 -m pip install --upgrade tensorflow
-      python3 -m pip install --upgrade gym onnx peewee thop graphviz
-      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      python -m pip install --upgrade pygments
+      python -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install --upgrade tensorflow
+      python -m pip install --upgrade gym onnx peewee thop graphviz
+      python -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
       sudo apt-get install swig -y
-      python3 -m pip install -e .[SMAC,BOHB]
+      python -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
   - script: |
       set -e
-      python3 -m pylint --rcfile pylintrc nni
-      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      echo '## pylint ##'
+      python -m pylint --rcfile pylintrc nni
+      echo '## flake8 on sdk ##'
+      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      echo '## flake8 on examples ##'
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: pylint and flake8
 
   - script: |
@@ -62,7 +67,7 @@ jobs:
 
   - script: |
       cd test
-      python3 -m pytest ut
+      python -m pytest ut
     displayName: Python unit test
 
   - script: |
@@ -75,7 +80,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: Simple integration test
 
 
