@@ -71,7 +71,8 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
             'useActiveGpu': ts.get('useActiveGpu', False),
             'maxTrialNumPerGpu': ts['maxTrialNumberPerGpu']
         }
-        data['localConfig']['gpuIndices']: _convert_gpu_indices(ts.get('gpuIndices'))
+        if 'gpuIndices' in ts:
+            data['localConfig']['gpuIndices'] = _convert_gpu_indices(ts['gpuIndices'])
 
     elif ts['platform'] == 'remote':
         print(ts)
