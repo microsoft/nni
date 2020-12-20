@@ -45,7 +45,7 @@ jobs:
       runOptions: commands
       commands: |
         conda activate l2w & python -m pip install --upgrade pip setuptools
-        conda activate l2w & python /tmp/nnitest/$(Build.BuildId)/pipelines/tools/install_nni.py $(NNI_RELEASE)
+        conda activate l2w & python /tmp/nnitest/$(Build.BuildId)/test/vso_tools/install_nni.py $(NNI_RELEASE)
       failOnStdErr: false
     displayName: Install NNI on Windows worker
 
