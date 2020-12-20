@@ -19,7 +19,7 @@ class RemoteMachineConfig(ConfigBase):
     password: Optional[str] = None
     ssh_key_file: Optional[PathLike] = None
     ssh_passphrase: Optional[str] = None
-    use_active_gpu: bool
+    use_active_gpu: bool = False
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
     trial_prepare_command: Optional[str] = None
@@ -47,7 +47,8 @@ class RemoteConfig(TrainingServiceConfig):
     machine_list: List[RemoteMachineConfig]
 
     def __init__(self, **kwargs):
-        kwargs['machine_list'] = util.load_config(RemoteMachineConfig, kwargs.get('machine_list'))
+        kwargs = util.case_insensitive(kwargs)
+        kwargs['machinelist'] = util.load_config(RemoteMachineConfig, kwargs.get('machinelist'))
         super().__init__(**kwargs)
 
     _validation_rules = {

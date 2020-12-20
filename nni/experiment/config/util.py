@@ -8,12 +8,15 @@ Miscellaneous utility functions.
 import math
 import os.path
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 PathLike = Union[Path, str]
 
-def case_insensitive(key: str) -> str:
-    return key.lower().replace('_', '')
+def case_insensitive(key_or_kwargs: Union[str, Dict[str, Any]]) -> Union[str, Dict[str, Any]]:
+    if isinstance(key_or_kwargs, str):
+        return key_or_kwargs.lower().replace('_', '')
+    else:
+        return {key.lower().replace('_', ''): value for key, value in key_or_kwargs.items()}
 
 def camel_case(key: str) -> str:
     words = key.split('_')

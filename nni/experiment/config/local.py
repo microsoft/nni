@@ -11,7 +11,7 @@ __all__ = ['LocalConfig']
 @dataclass(init=False)
 class LocalConfig(TrainingServiceConfig):
     platform: str = 'local'
-    use_active_gpu: bool
+    use_active_gpu: Optional[bool] = None
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
 

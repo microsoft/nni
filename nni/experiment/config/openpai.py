@@ -22,8 +22,8 @@ class OpenpaiConfig(TrainingServiceConfig):
     container_storage_mount_point: str
     reuse_mode: bool = False
 
-    openpai_config: Optional[Dict[str, Any]]
-    openpai_config_file: Optional[PathLike]
+    openpai_config: Optional[Dict[str, Any]] = None
+    openpai_config_file: Optional[PathLike] = None
 
     _canonical_rules = {
         'host': lambda value: 'https://' + value if '://' not in value else value,  # type: ignore
@@ -34,7 +34,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     _validation_rules = {
         'platform': lambda value: (value == 'openpai', 'cannot be modified'),
         'local_storage_mount_point': lambda value: Path(value).is_dir(),
-        'container_storage_mount_point': lambda value: Path(value).is_absolute(),
+        'container_storage_mount_point': lambda value: (Path(value).is_absolute(), 'is not absolute'),
         'openpai_config_file': lambda value: Path(value).is_file()
     }
 

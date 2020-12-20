@@ -62,8 +62,9 @@ class FrameworkControllerConfig(TrainingServiceConfig):
     task_roles: List[FrameworkControllerRoleConfig]
 
     def __init__(self, **kwargs):
+        kwargs = util.case_insensitive(kwargs)
         kwargs['storage'] = util.load_config(_FrameworkControllerStorageConfig, kwargs.get('storage'))
-        kwargs['task_roles'] = util.load_config(FrameworkControllerRoleConfig, kwargs.get('task_roles'))
+        kwargs['taskroles'] = util.load_config(FrameworkControllerRoleConfig, kwargs.get('taskroles'))
         super().__init__(**kwargs)
 
     _validation_rules = {

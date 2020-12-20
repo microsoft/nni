@@ -68,33 +68,35 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
 
     if ts['platform'] == 'local':
         data['localConfig'] = {
-            'useActiveGpu': ts['useActiveGpu'],
+            'useActiveGpu': ts.get('useActiveGpu', False),
             'maxTrialNumPerGpu': ts['maxTrialNumberPerGpu']
         }
-        if ts.get('gpuIndices') is not None:
-            data['localConfig']['gpuIndices'] = ','.join(str(idx) for idx in ts['gpuIndices'])
+        data['localConfig']['gpuIndices']: _convert_gpu_indices(ts.get('gpuIndices'))
 
     elif ts['platform'] == 'remote':
+        print(ts)
         data['remoteConfig'] = {'reuse': ts['reuseMode']}
         data['machineList'] = []
         for machine in ts['machineList']:
-            data['machineList'].append({
-                'ip': machine['host'],
-                'port': machine['port'],
-                'username': machine['user'],
-                'passwd': machine['password'],
-                'sshKeyPath': machine['sshKeyFile'],
-                'passphrase': machine['sshPassphrase'],
-                'gpuIndices': _convert_gpu_indices(machine['gpuIndices']),
-                'maxTrialNumPerGpu': machine['maxTrialNumPerGpu'],
-                'useActiveGpu': machine['useActiveGpu'],
-                'preCommand': machine['trialPrepareCommand']
-            })
+            machine_v1 = {
+                'ip': machine.get('host'),
+                'port': machine.get('port'),
+                'username': machine.get('user'),
+                'passwd': machine.get('password'),
+                'sshKeyPath': machine.get('sshKeyFile'),
+                'passphrase': machine.get('sshPassphrase'),
+                'gpuIndices': _convert_gpu_indices(machine.get('gpuIndices')),
+                'maxTrialNumPerGpu': machine.get('maxTrialNumPerGpu'),
+                'useActiveGpu': machine.get('useActiveGpu'),
+                'preCommand': machine.get('trialPrepareCommand')
+            }
+            machine_v1 = {k: v for k, v in machine_v1.items() if v is not None}
+            data['machineList'].append(machine_v1)
 
     elif ts['platform'] == 'pai':
-        data['trial']['image'] = ts['docker_image']
-        data['trial']['nniManagerNFSMountPath'] = ts['local_storage_mount_point']
-        data['trial']['containerNFSMountPath'] = ts['container_storage_mount_point']
+        data['trial']['image'] = ts['dockerImage']
+        data['trial']['nniManagerNFSMountPath'] = ts['localStorageMountPoint']
+        data['trial']['containerNFSMountPath'] = ts['containerStorageMountPoint']
         data['paiConfig'] = {
             'userName': ts['username'],
             'token': ts['token'],
@@ -109,10 +111,10 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
             data['paiConfig']['paiConfigPath'] = conf_file.name
 
     elif ts['platform'] == 'aml':
-        data['trial']['image'] = ts['docker_image']
+        data['trial']['image'] = ts['dockerImage']
         data['amlConfig'] = dict(ts)
         data['amlConfig'].pop('platform')
-        data['amlConfig'].pop('docker_image')
+        data['amlConfig'].pop('dockerImage')
 
     elif ts['platform'] == 'kubeflow':
         data['trial'].pop('command')
@@ -123,9 +125,9 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
         data['trial']['worker'] = _convert_kubeflow_role(ts['worker'])
         if ts.get('parameterServer') is not None:
             if ts['operator'] == 'tf-operator':
-                data['trial']['ps'] = _convert_kubeflow_role(ts['parameter_server'])
+                data['trial']['ps'] = _convert_kubeflow_role(ts['parameterServer'])
             else:
-                data['trial']['master'] = _convert_kubeflow_role(ts['parameter_server'])
+                data['trial']['master'] = _convert_kubeflow_role(ts['parameterServer'])
 
     elif ts['platform'] == 'frameworkcontroller':
         data['trial'].pop('command')
