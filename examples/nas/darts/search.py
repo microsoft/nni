@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import json
 import logging
 import time
 from argparse import ArgumentParser
@@ -67,4 +68,6 @@ if __name__ == "__main__":
             unrolled=args.unrolled
         )
         trainer.fit()
+        final_architecture = trainer.export()
         print('Final architecture:', trainer.export())
+        json.dump(trainer.export(), open('checkpoint.json', 'w'))

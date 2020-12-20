@@ -105,7 +105,7 @@ def _setup():
 
         packages = _find_python_packages(),
         package_data = {
-            'nni': _find_requirements_txt(),  # must do this manually due to setuptools issue #1806
+            'nni': _find_requirements_txt() + _find_default_config(),  # setuptools issue #1806
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
@@ -139,7 +139,7 @@ def _setup():
 def _find_python_packages():
     packages = []
     for dirpath, dirnames, filenames in os.walk('nni'):
-        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath:
+        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath and '/default_config' not in dirpath:
             packages.append(dirpath.replace('/', '.'))
     return sorted(packages) + ['nni_node']
 
@@ -150,9 +150,12 @@ def _find_requirements_txt():
             requirement_files.append(os.path.join(dirpath[len('nni/'):], 'requirements.txt'))
     return requirement_files
 
+def _find_default_config():
+    return ['runtime/default_config/' + name for name in os.listdir('nni/runtime/default_config')]
+
 def _find_node_files():
     if not os.path.exists('nni_node'):
-        if release and 'build_ts' not in sys.argv:
+        if release and 'build_ts' not in sys.argv and 'clean' not in sys.argv:
             sys.exit('ERROR: To build a release version, run "python setup.py build_ts" first')
         return []
     files = []
@@ -165,20 +168,6 @@ def _find_node_files():
 
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
-
-def _copy_data_files():
-    # after installation, nni needs to find this location in nni.tools.package_utils.get_registered_algo_config_path
-    # since we can not import nni here, we need to ensure get_registered_algo_config_path use the same
-    # logic here to retrieve registered_algorithms.yml
-    if _using_conda_or_virtual_environment():
-        nni_config_dir = os.path.join(sys.prefix, 'nni')
-    elif sys.platform == 'win32':
-        nni_config_dir = os.path.join(os.getenv('APPDATA'), 'nni')
-    else:
-        nni_config_dir = os.path.expanduser('~/.config/nni')
-    if not os.path.exists(nni_config_dir):
-        os.makedirs(nni_config_dir)
-    shutil.copyfile('./deployment/registered_algorithms.yml', os.path.join(nni_config_dir, 'registered_algorithms.yml'))
 
 class BuildTs(Command):
     description = 'build TypeScript modules'
@@ -200,7 +189,6 @@ class Build(build):
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
-        _copy_data_files()
         super().run()
 
 class Develop(develop):
@@ -226,7 +214,6 @@ class Develop(develop):
     def run(self):
         if not self.skip_ts:
             setup_ts.build(release=None)
-        _copy_data_files()
         super().run()
 
 class Clean(clean):
