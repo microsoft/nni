@@ -98,3 +98,6 @@ venv.bak/
 # VSCode
 .vscode
 .vs
+.history
+generated/
+test/ut/retiarii/_debug_graph_data.json

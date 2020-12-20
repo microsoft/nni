@@ -12,7 +12,8 @@ _trial_env_var_names = [
     'NNI_SYS_DIR',
     'NNI_OUTPUT_DIR',
     'NNI_TRIAL_SEQ_ID',
-    'MULTI_PHASE'
+    'MULTI_PHASE',
+    'REUSE_MODE'
 ]
 
 _dispatcher_env_var_names = [

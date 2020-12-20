@@ -120,6 +120,7 @@ interface Intermedia {
     type: string;
     data: Array<number | object>; // intermediate data
     hyperPara: object; // each trial hyperpara value
+    trialNum: number;
 }
 
 interface MetricDataRecord {
@@ -218,6 +219,19 @@ interface SortInfo {
     isDescend?: boolean;
 }
 
+interface AllExperimentList {
+    id: string;
+    experimentName: string;
+    port: number;
+    status: string;
+    platform: string;
+    startTime: number;
+    endTime: number;
+    tag: string[];
+    pid: number;
+    webuiUrl: string[];
+    logDir: string[];
+}
 export {
     TableObj,
     TableRecord,
@@ -240,5 +254,6 @@ export {
     EventMap,
     SingleAxis,
     MultipleAxes,
-    SortInfo
+    SortInfo,
+    AllExperimentList
 };

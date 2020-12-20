@@ -9,7 +9,7 @@ from unittest import TestCase, main
 
 import hyperopt as hp
 
-from nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner import json2space, json2parameter, json2vals, HyperoptTuner
+from nni.algorithms.hpo.hyperopt_tuner import json2space, json2parameter, json2vals, HyperoptTuner
 
 
 class HyperoptTunerTestCase(TestCase):

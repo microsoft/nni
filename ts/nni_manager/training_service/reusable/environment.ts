@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { EventEmitter } from "events";
 import { getLogger, Logger } from "../../common/log";
 import { TrialJobStatus } from "../../common/trainingService";
 import { GPUInfo } from "../../training_service/common/gpuData";
-import { WebCommandChannel } from "./channels/webCommandChannel";
 import { CommandChannel } from "./commandChannel";
+import { WebCommandChannel } from './channels/webCommandChannel';
+import { EventEmitter } from "events";
 
 
 export type EnvironmentStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED';
@@ -75,6 +75,8 @@ export class EnvironmentInformation {
     public maxTrialNumberPerGpu?: number;
     public useActiveGpu?: boolean;
 
+    public environmentService?: EnvironmentService;
+
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
         this.id = id;
@@ -127,11 +129,27 @@ export abstract class EnvironmentService {
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;
+    // Make public for ut
+    protected commandChannel: CommandChannel | undefined;
     
     // It is used to set prefetched environment count, default value is 0 for OpenPAI and AML mode,
     // in remote mode, this value is set to the length of machine list.
     public get prefetchedEnvironmentCount(): number {
         return 0;
+    }
+
+    public abstract get getName(): string;
+    
+    // Initialize command channel, use WebCommandChannel as default command channel
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = WebCommandChannel.getInstance(eventEmitter);
+    }
+
+    public get getCommandChannel(): CommandChannel {
+        if (this.commandChannel === undefined) {
+            throw new Error("Command channel not initialized!");
+        }
+        return this.commandChannel;
     }
 
     // It depends on environment pressure and settings
@@ -145,10 +163,6 @@ export abstract class EnvironmentService {
     // 2. If there are consistent error on requested environments, for example, authentication failure on platform.
     public get hasMoreEnvironments(): boolean {
         return true;
-    }
-
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new WebCommandChannel(commandEmitter);
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {

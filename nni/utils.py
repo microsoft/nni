@@ -109,6 +109,7 @@ def extract_scalar_history(trial_history, scalar_key='default'):
 def convert_dict2tuple(value):
     """
     convert dict type to tuple to solve unhashable problem.
+    NOTE: this function will change original data.
     """
     if isinstance(value, dict):
         for _keys in value:
