@@ -92,7 +92,10 @@ def main_loop(args):
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
-    _trial_process = Popen(args.trial_command, shell=True, stdout=log_pipe_stdout, stderr=log_pipe_stdout, preexec_fn=os.setsid)
+    if sys.platform == 'win32':
+        _trial_process = Popen(args.trial_command, shell=True, stdout=log_pipe_stdout, stderr=log_pipe_stdout)
+    else:
+        _trial_process = Popen(args.trial_command, shell=True, stdout=log_pipe_stdout, stderr=log_pipe_stdout, preexec_fn=os.setsid)
     nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(_trial_process.pid,
                                                                                                   shlex.split(
                                                                                                       args.trial_command)))
