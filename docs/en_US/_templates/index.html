@@ -11,7 +11,7 @@
   <a href="{{ pathto('FeatureEngineering/Overview') }}">Feature Engineering</a>,
   <a href="{{ pathto('NAS/Overview') }}">Neural Architecture Search</a>,
   <a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperparameter Tuning</a> and
-  <a href="{{ pathto('Compressor/Overview') }}">Model Compression</a>.
+  <a href="{{ pathto('Compression/Overview') }}">Model Compression</a>.
 </div>
 <p class="topMargin">
   The tool manages automated machine learning (AutoML) experiments,
@@ -161,18 +161,18 @@
             <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
           </ul>
         </ul>
-        <a href="{{ pathto('Compressor/Overview') }}">Model Compression</a>
+        <a href="{{ pathto('Compression/Overview') }}">Model Compression</a>
         <ul class="firstUl">
           <div><b>Pruning</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">AGP Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">Slim Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">FPGM Pruner</a></li>
           </ul>
           <div><b>Quantization</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}">QAT Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}">DoReFa Quantizer</a></li>
           </ul>
         </ul>
         <a href="{{ pathto('FeatureEngineering/Overview') }}">Feature Engineering (Beta)</a>
@@ -243,7 +243,7 @@
     <div class="command">python3 -m pip install --upgrade nni</div>
     <div class="command-intro">Windows</div>
     <div class="command">python -m pip install --upgrade nni</div>
-    <p class="topMargin">If you want to try latest code, please <a href="{{ pathto('Installation') }}">install
+    <p class="topMargin">If you want to try latest code, please <a href="{{ pathto('installation') }}">install
         NNI</a> from source code.
     </p>
     <p>For detail system requirements of NNI, please refer to <a href="{{ pathto('Tutorial/InstallationLinux') }}">here</a>
@@ -256,7 +256,7 @@
       <li>Currently NNI on Windows supports local, remote and pai mode. Anaconda or Miniconda is highly
         recommended to install <a href="{{ pathto('Tutorial/InstallationWin') }}">NNI on Windows</a>.</li>
       <li>If there is any error like Segmentation fault, please refer to <a
-          href="{{ pathto('Tutorial/Installation') }}">FAQ</a>. For FAQ on Windows, please refer
+          href="{{ pathto('installation') }}">FAQ</a>. For FAQ on Windows, please refer
         to <a href="{{ pathto('Tutorial/InstallationWin') }}">NNI on Windows</a>.</li>
     </ul>
   </div>
@@ -397,7 +397,7 @@ You can use these commands to get more information about the experiment
         Feature Engineering</a> with NNI
     </li>
     <li><a
-        href="https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb">Hyperparameter
+        href="https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb">Hyperparameter
         Tuning for Matrix Factorization</a> with NNI</li>
     <li><a href="https://github.com/ksachdeva/scikit-nni">scikit-nni</a> Hyper-parameter search for scikit-learn
       pipelines using NNI</li>
@@ -406,8 +406,8 @@ You can use these commands to get more information about the experiment
   <!-- Relevant Articles -->
   <ul>
     <h2>Relevant Articles</h2>
-    <li><a href="{{ pathto('CommunitySharings/HpoComparision') }}">Hyper Parameter Optimization Comparison</a></li>
-    <li><a href="{{ pathto('CommunitySharings/NasComparision') }}">Neural Architecture Search Comparison</a></li>
+    <li><a href="{{ pathto('CommunitySharings/HpoComparison') }}">Hyper Parameter Optimization Comparison</a></li>
+    <li><a href="{{ pathto('CommunitySharings/NasComparison') }}">Neural Architecture Search Comparison</a></li>
     <li><a href="{{ pathto('CommunitySharings/ParallelizingTpeSearch') }}">Parallelizing a Sequential Algorithm TPE</a>
     </li>
     <li><a href="{{ pathto('CommunitySharings/RecommendersSvd') }}">Automatically tuning SVD with NNI</a></li>
@@ -471,7 +471,7 @@ You can use these commands to get more information about the experiment
   <h1 class="title">Related Projects</h1>
   <p>
     Targeting at openness and advancing state-of-art technology,
-    <a href="https://www.microsoft.com/en-us/research/group/systems-research-group-asia/">Microsoft Research (MSR)</a>
+    <a href="https://www.microsoft.com/en-us/research/group/systems-and-networking-research-group-asia/">Microsoft Research (MSR)</a>
     had also released few
     other open source projects.</p>
   <ul id="relatedProject">
