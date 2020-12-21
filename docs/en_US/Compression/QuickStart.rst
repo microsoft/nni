@@ -211,7 +211,7 @@ You can easily export the compressed model using the following API if you are pr
 
 Export Quantized Model
 ^^^^^^^^^^^^^^^^^^^^^^
-You can export the quantized model directly by using ``torch.save`` api and the quantized model can be loaded by ``torch.load`` without any extra modification. The following example shows the normal proceduce of saving, loading quantized model and get related parameters in QAT.
+You can export the quantized model directly by using ``torch.save`` api and the quantized model can be loaded by ``torch.load`` without any extra modification. The following example shows the normal procedure of saving, loading quantized model and get related parameters in QAT.
 
 .. code-block:: python
 
