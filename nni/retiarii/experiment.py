@@ -195,3 +195,42 @@ class RetiariiExperiment(Experiment):
             raise RuntimeError('Experiment is not running')
         resp = rest.get(self.port, '/check-status')
         return resp['status']
+
+
+class RetiariiOneshotExperiment:
+    def __init__(self, base_model: Model, trainer: BaseTrainer):
+        self.base_model = base_model
+        self.trainer = trainer
+
+    def run(self, config=None, visualize=False) -> None:
+        """
+        this function executes the search process. it could be consistent with `RetiariiExperiment` which
+        runs trials in NNI training service, but we choose to directly run the search process here for
+        easy debuggability.
+        """
+        raise NotImplementedError
+
+    def export(self, top_n=1):
+        """
+        export a list of models which are ```top_n``` best performing models according to the trainer's judgement.
+        each model is a pytorch/tensorflow model along with a json file of chosen architecture.
+        """
+        raise NotImplementedError
+
+    def retrain(self, model):
+        """
+        this function retrains the exported model, and test it to output test accuracy
+        """
+        raise NotImplementedError
+
+    def visualize(self):
+        """
+        launch visulization through rest server
+        """
+        raise NotImplementedError
+
+    def visualize_arch(self, model):
+        """
+        visualize a chosen architecture, export a figure for this architecture
+        """
+        raise NotImplementedError
