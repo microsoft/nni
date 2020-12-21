@@ -189,6 +189,7 @@ class Build(build):
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+        open('nni/version.py', 'w').write(f"__version__ = '{release}'")
         super().run()
 
 class Develop(develop):
@@ -212,6 +213,7 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
+        open('nni/version.py', 'w').write("__version__ = '999.dev0'")
         if not self.skip_ts:
             setup_ts.build(release=None)
         super().run()

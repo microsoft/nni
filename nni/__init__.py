@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-__version__ = '999.0.0-developing'
+from .version import __version__
 
 from .runtime.log import init_logger
 init_logger()
