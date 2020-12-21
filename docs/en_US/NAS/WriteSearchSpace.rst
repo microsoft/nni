@@ -58,7 +58,7 @@ So how about the possibilities of connections? This can be done using ``InputCho
            # ... same ...
            return output
 
-Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or ``None`` if none is selected. Like layer choices, input choices should be initialized in ""__init__`` and called in ``forward``. This is to allow search algorithms to identify these choices and do necessary preparations.
+Input choice can be thought of as a callable module that receives a list of tensors and outputs the concatenation/sum/mean of some of them (sum by default), or ``None`` if none is selected. Like layer choices, input choices should be initialized in ``__init__`` and called in ``forward``. This is to allow search algorithms to identify these choices and do necessary preparations.
 
 ``LayerChoice`` and ``InputChoice`` are both **mutables**. Mutable means "changeable". As opposed to traditional deep learning layers/modules which have fixed operation types once defined, models with mutable are essentially a series of possible models.
 
