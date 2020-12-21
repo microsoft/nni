@@ -8,12 +8,15 @@ Miscellaneous utility functions.
 import math
 import os.path
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Dict, Optional, Union
 
 PathLike = Union[Path, str]
 
-def case_insensitive(key: str) -> str:
-    return key.lower().replace('_', '')
+def case_insensitive(key_or_kwargs: Union[str, Dict[str, Any]]) -> Union[str, Dict[str, Any]]:
+    if isinstance(key_or_kwargs, str):
+        return key_or_kwargs.lower().replace('_', '')
+    else:
+        return {key.lower().replace('_', ''): value for key, value in key_or_kwargs.items()}
 
 def camel_case(key: str) -> str:
     words = key.split('_')
@@ -26,12 +29,19 @@ def canonical_path(path: Optional[PathLike]) -> Optional[str]:
 def count(*values) -> int:
     return sum(value is not None and value is not False for value in values)
 
-def training_service_config_factory(platform: str): # -> TrainingServiceConfig
+def training_service_config_factory(platform: str, **kwargs): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
     for cls in TrainingServiceConfig.__subclasses__():
         if cls.platform == platform:
-            return cls()
+            return cls(**kwargs)
     raise ValueError(f'Unrecognized platform {platform}')
+
+def load_config(Type, value):
+    if isinstance(value, list):
+        return [load_config(Type, item) for item in value]
+    if isinstance(value, dict):
+        return Type(**value)
+    return value
 
 def strip_optional(type_hint):
     return type_hint.__args__[0] if str(type_hint).startswith('typing.Optional[') else type_hint

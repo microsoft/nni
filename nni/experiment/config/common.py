@@ -53,7 +53,7 @@ class ExperimentConfig(ConfigBase):
     trial_command: str
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
-    trial_gpu_number: int = 0
+    trial_gpu_number: Optional[int] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
@@ -68,10 +68,13 @@ class ExperimentConfig(ConfigBase):
     training_service: TrainingServiceConfig
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
-        super().__init__(**kwargs)
+        kwargs = util.case_insensitive(kwargs)
         if training_service_platform is not None:
-            assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(training_service_platform)
+            assert 'trainingservice' not in kwargs
+            kwargs['trainingservice'] = util.training_service_config_factory(training_service_platform)
+        elif isinstance(kwargs.get('trainingservice'), dict):
+            kwargs['trainingservice'] = util.training_service_config_factory(**kwargs['trainingservice'])
+        super().__init__(**kwargs)
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
@@ -79,6 +82,9 @@ class ExperimentConfig(ConfigBase):
             _validate_for_exp(self)
         else:
             _validate_for_nnictl(self)
+        if self.trial_gpu_number and hasattr(self.training_service, 'use_active_gpu'):
+            if self.training_service.use_active_gpu is None:
+                raise ValueError('Please set "use_active_gpu"')
 
 ## End of public API ##
 

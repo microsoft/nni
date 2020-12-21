@@ -249,7 +249,7 @@ def run(args):
             wait_for_port_available(8080, 180)
         else:
             wait_for_port_available(8080, 30)
-        print('{}Testing: {}{}'.format(GREEN, name, CLEAR))
+        print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
         run_test_case(test_case_config, it_config, args)
