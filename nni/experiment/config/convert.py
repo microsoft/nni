@@ -61,48 +61,114 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     data['trial'] = {
         'command': data.pop('trialCommand'),
         'codeDir': data.pop('trialCodeDirectory'),
-        'gpuNum': data.pop('trialGpuNumber', '')
     }
+
+    if 'trialGpuNumber' in data:
+        data['trial']['gpuNum'] = data.pop('trialGpuNumber')
 
     if ts['platform'] == 'local':
         data['localConfig'] = {
-            'useActiveGpu': ts['useActiveGpu'],
+            'useActiveGpu': ts.get('useActiveGpu', False),
             'maxTrialNumPerGpu': ts['maxTrialNumberPerGpu']
         }
-        if ts.get('gpuIndices') is not None:
-            data['localConfig']['gpuIndices'] = ','.join(str(idx) for idx in ts['gpuIndices'])
+        if 'gpuIndices' in ts:
+            data['localConfig']['gpuIndices'] = _convert_gpu_indices(ts['gpuIndices'])
 
     elif ts['platform'] == 'remote':
+        print(ts)
         data['remoteConfig'] = {'reuse': ts['reuseMode']}
         data['machineList'] = []
         for machine in ts['machineList']:
-            machine = {
-                'ip': machine['host'],
-                'username': machine['user'],
-                'passwd': machine['password'],
-                'sshKeyPath': machine['sshKeyFile'],
-                'passphrase': machine['sshPassphrase'],
-                'gpuIndices': _convert_gpu_indices(machine['gpuIndices']),
-                'maxTrialNumPerGpu': machine['maxTrialNumPerGpu'],
-                'useActiveGpu': machine['useActiveGpu'],
-                'preCommand': machine['trialPrepareCommand']
+            machine_v1 = {
+                'ip': machine.get('host'),
+                'port': machine.get('port'),
+                'username': machine.get('user'),
+                'passwd': machine.get('password'),
+                'sshKeyPath': machine.get('sshKeyFile'),
+                'passphrase': machine.get('sshPassphrase'),
+                'gpuIndices': _convert_gpu_indices(machine.get('gpuIndices')),
+                'maxTrialNumPerGpu': machine.get('maxTrialNumPerGpu'),
+                'useActiveGpu': machine.get('useActiveGpu'),
+                'preCommand': machine.get('trialPrepareCommand')
             }
+            machine_v1 = {k: v for k, v in machine_v1.items() if v is not None}
+            data['machineList'].append(machine_v1)
 
     elif ts['platform'] == 'pai':
-        data['trial']['cpuNum'] = ts['trialCpuNumber']
-        data['trial']['memoryMB'] = util.parse_size(ts['trialMemorySize'])
-        data['trial']['image'] = ts['docker_image']
+        data['trial']['image'] = ts['dockerImage']
+        data['trial']['nniManagerNFSMountPath'] = ts['localStorageMountPoint']
+        data['trial']['containerNFSMountPath'] = ts['containerStorageMountPoint']
         data['paiConfig'] = {
             'userName': ts['username'],
             'token': ts['token'],
-            'host': 'https://' + ts['host'],
+            'host': ts['host'],
             'reuse': ts['reuseMode']
         }
+        if 'openpaiConfigFile' in ts:
+            data['paiConfig']['paiConfigPath'] = ts['openpaiConfigFile']
+        elif 'openpaiConfig' in ts:
+            conf_file = NamedTemporaryFile('w', delete=False)
+            json.dump(ts['openpaiConfig'], conf_file, indent=4)
+            data['paiConfig']['paiConfigPath'] = conf_file.name
+
+    elif ts['platform'] == 'aml':
+        data['trial']['image'] = ts['dockerImage']
+        data['amlConfig'] = dict(ts)
+        data['amlConfig'].pop('platform')
+        data['amlConfig'].pop('dockerImage')
+
+    elif ts['platform'] == 'kubeflow':
+        data['trial'].pop('command')
+        data['trial'].pop('gpuNum')
+        data['kubeflowConfig'] = dict(ts['storage'])
+        data['kubeflowConfig']['operator'] = ts['operator']
+        data['kubeflowConfig']['apiVersion'] = ts['apiVersion']
+        data['trial']['worker'] = _convert_kubeflow_role(ts['worker'])
+        if ts.get('parameterServer') is not None:
+            if ts['operator'] == 'tf-operator':
+                data['trial']['ps'] = _convert_kubeflow_role(ts['parameterServer'])
+            else:
+                data['trial']['master'] = _convert_kubeflow_role(ts['parameterServer'])
+
+    elif ts['platform'] == 'frameworkcontroller':
+        data['trial'].pop('command')
+        data['trial'].pop('gpuNum')
+        data['frameworkcontrollerConfig'] = dict(ts['storage'])
+        data['frameworkcontrollerConfig']['serviceAccountName'] = ts['serviceAccountName']
+        data['trial']['taskRoles'] = [_convert_fxctl_role(r) for r in ts['taskRoles']]
+
+    elif ts['platform'] == 'adl':
+        data['trial']['image'] = ts['dockerImage']
 
     return data
 
 def _convert_gpu_indices(indices):
     return ','.join(str(idx) for idx in indices) if indices is not None else None
+
+def _convert_kubeflow_role(data):
+    return {
+        'replicas': data['replicas'],
+        'command': data['command'],
+        'gpuNum': data['gpuNumber'],
+        'cpuNum': data['cpuNumber'],
+        'memoryMB': util.parse_size(data['memorySize']),
+        'image': data['dockerImage']
+    }
+
+def _convert_fxctl_role(data):
+    return {
+        'name': data['name'],
+        'taskNum': data['taskNumber'],
+        'command': data['command'],
+        'gpuNum': data['gpuNumber'],
+        'cpuNum': data['cpuNumber'],
+        'memoryMB': util.parse_size(data['memorySize']),
+        'image': data['dockerImage'],
+        'frameworkAttemptCompletionPolicy': {
+            'minFailedTaskCount': data['attemptCompletionMinFailedTasks'],
+            'minSucceededTaskCount': data['attemptCompletionMinSucceededTasks']
+        }
+    }
 
 
 def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
@@ -135,9 +201,19 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
         ret.append(request_data)
 
     elif config.training_service.platform == 'openpai':
-        pai_config_data = dict()
-        pai_config_data['pai_config'] = experiment_config['paiConfig']
-        ret.append(pai_config_data)
+        ret.append({'pai_config': experiment_config['paiConfig']})
+
+    elif config.training_service.platform == 'aml':
+        ret.append({'aml_config': experiment_config['amlConfig']})
+
+    elif config.training_service.platform == 'kubeflow':
+        ret.append({'kubeflow_config': experiment_config['kubeflowConfig']})
+
+    elif config.training_service.platform == 'frameworkcontroller':
+        ret.append({'frameworkcontroller_config': experiment_config['frameworkcontrollerConfig']})
+
+    elif config.training_service.platform == 'adl':
+        pass
 
     else:
         raise RuntimeError('Unsupported training service ' + config.training_service.platform)
@@ -159,7 +235,7 @@ def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
 
     if config.search_space is not None:
         request_data['searchSpace'] = json.dumps(config.search_space)
-    else:
+    elif config.search_space_file is not None:
         request_data['searchSpace'] = Path(config.search_space_file).read_text()
 
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
