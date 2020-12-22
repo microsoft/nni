@@ -194,7 +194,7 @@ Some compression algorithms use epochs to control the progress of compression (e
 
 ``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 
-Export Pruning Model
+Export Pruned Model
 ^^^^^^^^^^^^^^^^^^^^
 
 You can easily export the compressed model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
