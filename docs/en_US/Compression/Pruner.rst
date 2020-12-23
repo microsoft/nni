@@ -582,7 +582,7 @@ PyTorch code
 
 .. code-block:: python
 
-   from nni.algorithms.compression.pytorch.pruning import ADMMPruner
+   from nni.algorithms.compression.pytorch.pruning import AutoCompressPruner
    config_list = [{
            'sparsity': 0.5,
            'op_types': ['Conv2d']
@@ -633,7 +633,7 @@ PyTorch code
 
 You can view :githublink:`example <examples/model_compress/amc/>` for more information.
 
-User configuration for AutoCompress Pruner
+User configuration for AMC Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
