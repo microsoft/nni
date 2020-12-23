@@ -287,7 +287,7 @@ NAS Updates
 ^^^^^^^^^^^
 
 
-* NAS support for TensorFlow 2.0 (preview) `TF2.0 NAS examples <https://github.com/microsoft/nni/tree/v1.9/examples/nas/naive-tf>`__
+* NAS support for TensorFlow 2.0 (preview) `TF2.0 NAS examples <https://github.com/microsoft/nni/tree/v1.6/examples/nas/naive-tf>`__
 * Use OrderedDict for LayerChoice
 * Prettify the format of export
 * Replace layer choice with selected module after applied fixed architecture
@@ -303,7 +303,7 @@ Training Service Updates
 
 
 * update pai yaml merge logic
-* support windows as remote machine in remote mode `Remote Mode <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/RemoteMachineMode.md#windows>`__
+* support windows as remote machine in remote mode `Remote Mode <https://github.com/microsoft/nni/blob/v1.6/docs/en_US/TrainingService/RemoteMachineMode.md#windows>`__
 
 Bug Fix
 ^^^^^^^
@@ -324,32 +324,32 @@ Hyper-Parameter Optimizing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* New tuner: `Population Based Training (PBT) <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Tuner/PBTTuner.md>`__
+* New tuner: `Population Based Training (PBT) <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Tuner/PBTTuner.md>`__
 * Trials can now report infinity and NaN as result
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* New NAS algorithm: `TextNAS <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/TextNAS.md>`__
-* ENAS and DARTS now support `visualization <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/Visualization.md>`__ through web UI.
+* New NAS algorithm: `TextNAS <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/NAS/TextNAS.md>`__
+* ENAS and DARTS now support `visualization <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/NAS/Visualization.md>`__ through web UI.
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
 
 
-* New Pruner: `GradientRankFilterPruner <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compression/Pruner.md#gradientrankfilterpruner>`__
+* New Pruner: `GradientRankFilterPruner <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Compression/Pruner.md#gradientrankfilterpruner>`__
 * Compressors will validate configuration by default
 * Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
 * Model compression examples are refactored and improved
-* Added documentation for `implementing compressing algorithm <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compression/Framework.md>`__
+* Added documentation for `implementing compressing algorithm <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Compression/Framework.md>`__
 
 Training Service
 ^^^^^^^^^^^^^^^^
 
 
 * Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
-* Experimental `DLTS <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/DLTSMode.md>`__ support
+* Experimental `DLTS <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/TrainingService/DLTSMode.md>`__ support
 
 Overall Documentation Improvement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -587,7 +587,7 @@ Major Features
 
     * Provide auto feature interface
     * Tuner based on beam search
-    * `Add Pakdd example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/auto-feature-engineering>`__
+    * `Add Pakdd example <https://github.com/microsoft/nni/tree/v1.0/examples/trials/auto-feature-engineering>`__
 
   * Add a parallel algorithm to improve the performance of TPE with large concurrency.  -PR #1052
   * Support multiphase for hyperband    -PR #1257
@@ -633,7 +633,7 @@ Major Features
 
     * Add configuration example
 
-  * `WebUI description improvement <Tutorial/WebUI.md>`__  -PR #1419
+  * `WebUI description improvement <Tutorial/WebUI.rst>`__  -PR #1419
 
 Bug fix
 ^^^^^^^
@@ -666,7 +666,7 @@ Major Features
   * Add ``enas-mode``  and ``oneshot-mode`` for NAS interface: `PR #1201 <https://github.com/microsoft/nni/pull/1201#issue-291094510>`__
 
 * 
-  `Gaussian Process Tuner with Matern kernel <Tuner/GPTuner.md>`__
+  `Gaussian Process Tuner with Matern kernel <Tuner/GPTuner.rst>`__
 
 * 
   (deprecated) Multiphase experiment supports
@@ -681,11 +681,11 @@ Major Features
   Web Portal
 
 
-  * Enable trial comparation in Web Portal. For details, refer to `View trials status <Tutorial/WebUI.md>`__
-  * Allow users to adjust rendering interval of Web Portal. For details, refer to `View Summary Page <Tutorial/WebUI.md>`__
-  * show intermediate results more friendly. For details, refer to `View trials status <Tutorial/WebUI.md>`__
+  * Enable trial comparation in Web Portal. For details, refer to `View trials status <Tutorial/WebUI.rst>`__
+  * Allow users to adjust rendering interval of Web Portal. For details, refer to `View Summary Page <Tutorial/WebUI.rst>`__
+  * show intermediate results more friendly. For details, refer to `View trials status <Tutorial/WebUI.rst>`__
 
-* `Commandline Interface <Tutorial/Nnictl.md>`__
+* `Commandline Interface <Tutorial/Nnictl.rst>`__
 
   * ``nnictl experiment delete``\ : delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
   * ``nnictl platform clean``\ : It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
@@ -745,9 +745,9 @@ Bug fix and other changes
 * Fix bug of table entries
 * Nested search space refinement
 * Refine 'randint' type and support lower bound
-* `Comparison of different hyper-parameter tuning algorithm <CommunitySharings/HpoComparison.md>`__
-* `Comparison of NAS algorithm <CommunitySharings/NasComparison.md>`__
-* `NNI practice on Recommenders <CommunitySharings/RecommendersSvd.md>`__
+* `Comparison of different hyper-parameter tuning algorithm <CommunitySharings/HpoComparison.rst>`__
+* `Comparison of NAS algorithm <CommunitySharings/NasComparison.rst>`__
+* `NNI practice on Recommenders <CommunitySharings/RecommendersSvd.rst>`__
 
 Release 0.7 - 4/29/2018
 -----------------------
@@ -756,20 +756,20 @@ Major Features
 ^^^^^^^^^^^^^^
 
 
-* `Support NNI on Windows <Tutorial/InstallationWin.md>`__
+* `Support NNI on Windows <Tutorial/InstallationWin.rst>`__
 
   * NNI running on windows for local mode
 
-* `New advisor: BOHB <Tuner/BohbAdvisor.md>`__
+* `New advisor: BOHB <Tuner/BohbAdvisor.rst>`__
 
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
 
-* `Support import and export experiment data through nnictl <Tutorial/Nnictl.md>`__
+* `Support import and export experiment data through nnictl <Tutorial/Nnictl.rst>`__
 
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
 
-* `Designated gpu devices for NNI trial jobs <Tutorial/ExperimentConfig.md#localConfig>`__
+* `Designated gpu devices for NNI trial jobs <Tutorial/ExperimentConfig.rst#localConfig>`__
 
   * Specify GPU devices for NNI trial jobs by gpuIndices configuration, if gpuIndices is set in experiment configuration file, only the specified GPU devices are used for NNI trial jobs.
 
@@ -799,7 +799,7 @@ Major Features
 ^^^^^^^^^^^^^^
 
 
-* `Version checking <TrainingService/PaiMode.md>`__
+* `Version checking <TrainingService/PaiMode.rst>`__
 
   * check whether the version is consistent between nniManager and trialKeeper
 
@@ -887,16 +887,16 @@ New tuner and assessor supports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* Support `Metis tuner <Tuner/MetisTuner.md>`__ as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+* Support `Metis tuner <Tuner/MetisTuner.rst>`__ as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support `ENAS customized tuner <https://github.com/countif/enas_nni>`__\ , a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support `Curve fitting assessor <Assessor/CurvefittingAssessor.md>`__ for early stop policy using learning curve extrapolation.
+* Support `Curve fitting assessor <Assessor/CurvefittingAssessor.rst>`__ for early stop policy using learning curve extrapolation.
 * Advanced Support of `Weight Sharing <https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md>`__\ : Enable weight sharing for NAS tuners, currently through NFS.
 
 Training Service Enhancement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* `FrameworkController Training service <TrainingService/FrameworkControllerMode.md>`__\ : Support run experiments using frameworkcontroller on kubernetes
+* `FrameworkController Training service <TrainingService/FrameworkControllerMode.rst>`__\ : Support run experiments using frameworkcontroller on kubernetes
 
   * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
   * NNI provides unified and simple specification for job definition.
@@ -923,13 +923,13 @@ New tuner supports
 ^^^^^^^^^^^^^^^^^^
 
 
-* Support `network morphism <Tuner/NetworkmorphismTuner.md>`__ as a new tuner
+* Support `network morphism <Tuner/NetworkmorphismTuner.rst>`__ as a new tuner
 
 Training Service improvements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* Migrate `Kubeflow training service <TrainingService/KubeflowMode.md>`__\ 's dependency from kubectl CLI to `Kubernetes API <https://kubernetes.io/docs/concepts/overview/kubernetes-api/>`__ client
+* Migrate `Kubeflow training service <TrainingService/KubeflowMode.rst>`__\ 's dependency from kubectl CLI to `Kubernetes API <https://kubernetes.io/docs/concepts/overview/kubernetes-api/>`__ client
 * `Pytorch-operator <https://github.com/kubeflow/pytorch-operator>`__ support for Kubeflow training service
 * Improvement on local code files uploading to OpenPAI HDFS
 * Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
@@ -955,8 +955,8 @@ New examples
 ^^^^^^^^^^^^
 
 
-* `FashionMnist <https://github.com/microsoft/nni/tree/v1.9/examples/trials/network_morphism>`__\ , work together with network morphism tuner
-* `Distributed MNIST example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed-pytorch>`__ written in PyTorch
+* `FashionMnist <https://github.com/microsoft/nni/tree/v0.5/examples/trials/network_morphism>`__\ , work together with network morphism tuner
+* `Distributed MNIST example <https://github.com/microsoft/nni/tree/v0.5/examples/trials/mnist-distributed-pytorch>`__ written in PyTorch
 
 Release 0.4 - 12/6/2018
 -----------------------
@@ -965,13 +965,13 @@ Major Features
 ^^^^^^^^^^^^^^
 
 
-* `Kubeflow Training service <TrainingService/KubeflowMode.md>`__
+* `Kubeflow Training service <TrainingService/KubeflowMode.rst>`__
 
   * Support tf-operator
-  * `Distributed trial example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed/dist_mnist.py>`__ on Kubeflow
+  * `Distributed trial example <https://github.com/microsoft/nni/tree/v0.4/examples/trials/mnist-distributed/dist_mnist.py>`__ on Kubeflow
 
-* `Grid search tuner <Tuner/GridsearchTuner.md>`__
-* `Hyperband tuner <Tuner/HyperbandAdvisor.md>`__
+* `Grid search tuner <Tuner/GridsearchTuner.rst>`__
+* `Hyperband tuner <Tuner/HyperbandAdvisor.rst>`__
 * Support launch NNI experiment on MAC
 * WebUI
 
@@ -1015,7 +1015,7 @@ NNICTL new features and updates
 
 * 
   Support updating max trial number.
-  use ``nnictl update --help`` to learn more. Or refer to `NNICTL Spec <Tutorial/Nnictl.md>`__ for the fully usage of NNICTL.
+  use ``nnictl update --help`` to learn more. Or refer to `NNICTL Spec <Tutorial/Nnictl.rst>`__ for the fully usage of NNICTL.
 
 API new features and updates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1060,15 +1060,15 @@ New examples
      docker pull msranni/nni:latest
 
 * 
-  New trial example: `NNI Sklearn Example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/sklearn>`__
+  New trial example: `NNI Sklearn Example <https://github.com/microsoft/nni/tree/v0.3/examples/trials/sklearn>`__
 
-* New competition example: `Kaggle Competition TGS Salt Example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/kaggle-tgs-salt>`__
+* New competition example: `Kaggle Competition TGS Salt Example <https://github.com/microsoft/nni/tree/v0.3/examples/trials/kaggle-tgs-salt>`__
 
 Others
 ^^^^^^
 
 
-* UI refactoring, refer to `WebUI doc <Tutorial/WebUI.md>`__ for how to work with the new UI.
+* UI refactoring, refer to `WebUI doc <Tutorial/WebUI.rst>`__ for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
 
 Release 0.2.0 - 9/29/2018
