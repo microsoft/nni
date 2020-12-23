@@ -63,12 +63,12 @@ class InputChoice(nn.Module):
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=1,
                  reduction="sum", return_mask=False, key=None):
         super(InputChoice, self).__init__()
+        self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
         self.label = key
         self.key = key  # deprecated, for backward compatibility
-        self.n_candidates = n_candidates  # deprecated, for backward compatibility
-        if n_candidates or choose_from or return_mask:
+        if choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
@@ -99,13 +99,31 @@ class Placeholder(nn.Module):
 
 
 class ChosenInputs(nn.Module):
-    def __init__(self, chosen: int):
+    """
+    """
+    def __init__(self, chosen: List[int], reduction: str):
         super().__init__()
         self.chosen = chosen
+        self.reduction = reduction
 
     def forward(self, candidate_inputs):
-        # TODO: support multiple chosen inputs
-        return candidate_inputs[self.chosen]
+        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
+
+    def _tensor_reduction(self, reduction_type, tensor_list):
+        if reduction_type == "none":
+            return tensor_list
+        if not tensor_list:
+            return None  # empty. return None for now
+        if len(tensor_list) == 1:
+            return tensor_list[0]
+        if reduction_type == "sum":
+            return sum(tensor_list)
+        if reduction_type == "mean":
+            return sum(tensor_list) / len(tensor_list)
+        if reduction_type == "concat":
+            return torch.cat(tensor_list, dim=1)
+        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+
 
 # the following are pytorch modules
 

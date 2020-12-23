@@ -1,5 +1,8 @@
 import atexit
+import colorama
 import logging
+import psutil
+import socket
 import time
 
 from dataclasses import dataclass
@@ -109,7 +112,10 @@ class RetiariiExperiment(Experiment):
             mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
             applied_mutators.append(mutator)
         for node in ic_nodes:
-            mutator = InputChoiceMutator(node.name, node.operation.parameters['n_chosen'])
+            mutator = InputChoiceMutator(node.name,
+                                         node.operation.parameters['n_candidates'],
+                                         node.operation.parameters['n_chosen'],
+                                         node.operation.parameters['reduction'])
             applied_mutators.append(mutator)
         return applied_mutators
 
