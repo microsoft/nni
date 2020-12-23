@@ -17,6 +17,7 @@ from .config import convert
 from . import management
 from .pipe import Pipe
 from . import rest
+from ..tools.nnictl.config_utils import Experiments
 
 _logger = logging.getLogger('nni.experiment')
 
@@ -34,13 +35,15 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     try:
         _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)
         pipe = Pipe(exp_id)
-        proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
+        start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
         _logger.info('Statring web server...')
         _check_rest_server(port)
+        _save_experiment_information(exp_id, port, start_time, config.training_service.platform,
+                                     config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
         _init_experiment(config, port, debug)
         return proc, pipe
@@ -64,7 +67,7 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
         raise RuntimeError(f'Port {port} is not idle {message}')
 
 
-def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Popen:
+def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Tuple[int, Popen]:
     ts = config.training_service.platform
     if ts == 'openpai':
         ts = 'pai'
@@ -85,7 +88,7 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     for arg_key, arg_value in args.items():
         cmd.append('--' + arg_key)
         cmd.append(str(arg_value))
-    return Popen(cmd, cwd=node_dir)
+    return int(time.time() * 1000), Popen(cmd, cwd=node_dir)
 
 
 def _check_rest_server(port: int, retry: int = 3) -> None:
@@ -103,3 +106,8 @@ def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
     for cluster_metadata in convert.to_cluster_metadata(config):
         rest.put(port, '/experiment/cluster-metadata', cluster_metadata)
     rest.post(port, '/experiment', convert.to_rest_json(config))
+
+
+def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str, name: str, pid: int, logDir: str) -> None:
+    experiment_config = Experiments()
+    experiment_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)

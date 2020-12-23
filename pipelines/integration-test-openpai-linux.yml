@@ -26,37 +26,30 @@ jobs:
       echo "NNI version: ${NNI_RELEASE}"
       echo "Build docker image: $(build_docker_image)"
 
-      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install --upgrade pip setuptools
     displayName: Prepare
 
   - script: |
       set -e
       python3 setup.py build_ts
       python3 setup.py bdist_wheel -p manylinux1_x86_64
-      python3 -m pip install -U dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
+      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
     displayName: Build and install NNI
-
-  - script: |
-      set -e
-      sudo apt-get install swig -y
-      nnictl package install --name=SMAC
-      nnictl package install --name=BOHB
-    displayName: Install extra tuners
 
   - script: |
       set -e
       cd examples/tuners/customized_tuner
       python3 setup.py develop --user
-      nnictl package install .
+      nnictl algo register --meta meta_file.yml
     displayName: Install customized tuner
 
   - script: |
       set -e
       docker login -u nnidev -p $(docker_hub_password)
       echo '## Build docker image ##'
-      docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-it-pai:latest .
+      docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
       echo '## Upload docker image ##'
-      docker push nnidev/nni-it-pai:latest
+      docker push nnidev/nni-nightly
     condition: eq(variables['build_docker_image'], 'true')
     displayName: Build and upload docker image
 
@@ -68,7 +61,7 @@ jobs:
           --pai_reuse false \
           --pai_host https://ne.openpai.org \
           --pai_user $(pai_user) \
-          --nni_docker_image nnidev/nni-it-pai:latest \
+          --nni_docker_image nnidev/nni-nightly \
           --pai_storage_config_name confignfs-data \
           --pai_token $(pai_token) \
           --nni_manager_nfs_mount_path /home/quzha/mnt-pai-ne/shinyang3 \

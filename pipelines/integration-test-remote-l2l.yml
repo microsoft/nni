@@ -27,29 +27,17 @@ jobs:
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
 
-      python3 -m pip install -U --upgrade pip setuptools
+      python3 -m pip install --upgrade pip setuptools
     displayName: Prepare
 
   - script: |
       set -e
-      python3 setup.py build_ts
-      python3 setup.py bdist_wheel -p manylinux1_x86_64
-      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
-    displayName: Install NNI
+      python3 test/vso_tools/install_nni.py $(NNI_RELEASE) SMAC,BOHB
 
-  - script: |
-      set -e
-      sudo apt-get install swig -y
-      nnictl package install --name=SMAC
-      nnictl package install --name=BOHB
-    displayName: Install extra tuners
-
-  - script: |
-      set -e
       cd examples/tuners/customized_tuner
       python3 setup.py develop --user
-      nnictl package install .
-    displayName: Install customized tuner
+      nnictl algo register --meta meta_file.yml
+    displayName: Install NNI
 
   - task: CopyFilesOverSSH@0
     inputs:
@@ -58,6 +46,15 @@ jobs:
       targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
       overwrite: true
     displayName: Copy wheel to remote machine
+    timeoutInMinutes: 10
+
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      contents: Dockerfile
+      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      overwrite: true
+    displayName: Copy dockerfile to remote machine
     timeoutInMinutes: 10
 
   - task: CopyFilesOverSSH@0
@@ -73,10 +70,8 @@ jobs:
     inputs:
       sshEndpoint: $(worker)
       runOptions: commands
-      commands: |
-        python3 /tmp/nnitest/$(Build.BuildId)/test/nni_test/nnitest/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
-        echo "##vso[task.setvariable variable=docker_port]$(cat /tmp/nnitest/$(Build.BuildId)/port)"
-    displayName: Start docker
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+    displayName: Install NNI and run docker on Linux worker
 
   - script: |
       cd test
@@ -108,5 +103,6 @@ jobs:
     inputs:
       sshEndpoint: $(worker)
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/nni_test/nnitest/remote_docker.py --mode stop --name $(Build.BuildId)
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
+    condition: always()
     displayName: Stop docker
