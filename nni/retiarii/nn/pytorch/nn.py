@@ -49,6 +49,9 @@ class LayerChoice(nn.Module):
         super(LayerChoice, self).__init__()
         self.candidate_ops = op_candidates
         self.label = key
+        self.key = key  # deprecated, for backward compatibility
+        for i, module in enumerate(op_candidates):  # deprecated, for backward compatibility
+            self.add_module(str(i), module)
         if reduction or return_mask:
             _logger.warning('input arguments `reduction` and `return_mask` are deprecated!')
 
@@ -63,6 +66,8 @@ class InputChoice(nn.Module):
         self.n_chosen = n_chosen
         self.reduction = reduction
         self.label = key
+        self.key = key  # deprecated, for backward compatibility
+        self.n_candidates = n_candidates  # deprecated, for backward compatibility
         if n_candidates or choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 

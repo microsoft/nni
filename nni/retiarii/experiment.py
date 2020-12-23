@@ -18,9 +18,11 @@ from .converter import convert_to_graph
 from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
 from .trainer.interface import BaseTrainer
 from .strategies.strategy import BaseStrategy
+from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
 
 _logger = logging.getLogger(__name__)
 
+OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
@@ -76,7 +78,7 @@ _validation_rules = {
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: Model, trainer: BaseTrainer,
-                 applied_mutators: Mutator, strategy: BaseStrategy):
+                 applied_mutators: Mutator = None, strategy: BaseStrategy = None):
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 
@@ -173,23 +175,26 @@ class RetiariiExperiment(Experiment):
         self._proc = None
         self._pipe = None
 
-    def run(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if self.trainer is Dartstrain
-        self.config = config
-        self.start(config, port, debug)
-        try:
-            while True:
-                time.sleep(10)
-                status = self.get_status()
-                # TODO: double check the status
-                if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
-                    return status
-        finally:
-            self.stop()
+        if isinstance(self.trainer, OneShotTrainers):
+            self.trainer.fit()
+        else:
+            assert config is not None, 'You are using classic search mode, config cannot be None!'
+            self.config = config
+            self.start(config, port, debug)
+            try:
+                while True:
+                    time.sleep(10)
+                    status = self.get_status()
+                    # TODO: double check the status
+                    if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
+                        return status
+            finally:
+                self.stop()
 
     def get_status(self) -> str:
         if self.port is None:
