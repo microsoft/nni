@@ -66,7 +66,6 @@ class TPEStrategy(BaseStrategy):
                 submit_models(model)
                 self.running_models[self.model_id] = model
                 self.model_id += 1
-                _logger.info('Strategy says: %s', model.metric)
             else:
                 time.sleep(2)
 
