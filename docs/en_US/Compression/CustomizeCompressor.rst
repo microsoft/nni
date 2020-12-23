@@ -52,7 +52,7 @@ A basic ``pruner`` looks likes this:
                wrapper.if_calculated = True
                return masks
 
-Reference nni provided :githublink:`pruner <src/sdk/pynni/nni/compression/pytorch/pruning/one_shot.py>` implementations to implement your own pruner class.
+Reference nni provided :githublink:`pruner <nni/algorithms/compression/pytorch/pruning/one_shot.py>` implementations to implement your own pruner class.
 
 ----
 
