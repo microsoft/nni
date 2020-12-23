@@ -101,7 +101,7 @@ Number of GPUs used by each trial.
 
 type: ``Optional[int]``
 
-This field might have slightly different meaning for varied training services,
+This field might have slightly different meaning for various training services,
 especially when set to ``0`` or ``None``.
 See training service's document for details.
 
@@ -297,12 +297,12 @@ TrainingServiceConfig
 
 One of following:
 
-  - `LocalConfig`_
-  - `RemoteConfig`_
-  - `OpenpaiConfig`_
-  - `AmlConfig`_
+- `LocalConfig`_
+- `RemoteConfig`_
+- `OpenpaiConfig`_
+- `AmlConfig`_
 
-For other training services, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>` for now.
+For other training services, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
 
 LocalConfig
@@ -494,7 +494,9 @@ Hostname of OpenPAI service.
 
 type: ``str``
 
-This may includes ``https://`` or ``http://`` prefix. HTTPS will be used by default.
+This may includes ``https://`` or ``http://`` prefix.
+
+HTTPS will be used by default.
 
 
 username
