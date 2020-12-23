@@ -197,7 +197,7 @@ Some compression algorithms use epochs to control the progress of compression (e
 Export Pruned Model
 ^^^^^^^^^^^^^^^^^^^^
 
-You can easily export the compressed model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
+You can easily export the pruned model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
 
 .. code-block:: bash
 
