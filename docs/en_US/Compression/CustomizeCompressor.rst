@@ -28,9 +28,7 @@ An implementation of ``weight masker`` may look like this:
            # mask = ...
            return {'weight_mask': mask}
 
-.. cannot find :githublink:`weight masker <src/sdk/pynni/nni/compression/pytorch/pruning/structured_pruning.py>`
-
-You can reference nni provided :githublink:`weight masker <src/sdk/pynni/nni/compression/pytorch/pruning/structured_pruning.py>` implementations to implement your own weight masker.
+You can reference nni provided :githublink:`weight masker <nni/algorithms/compression/pytorch/pruning/structured_pruning.py>` implementations to implement your own weight masker.
 
 A basic ``pruner`` looks likes this:
 

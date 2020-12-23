@@ -60,12 +60,6 @@ The working directory of your assessor is ``<home>/nni-experiments/<experiment_i
 
 More detail example you could see:
 
-.. cannot find these links
- :githublink:`medianstop-assessor <src/sdk/pynni/nni/medianstop_assessor>`
- :githublink:`curvefitting-assessor <src/sdk/pynni/nni/curvefitting_assessor>`
-
-..
-
-   * :githublink:`medianstop-assessor <src/sdk/pynni/nni/medianstop_assessor>`
-   * :githublink:`curvefitting-assessor <src/sdk/pynni/nni/curvefitting_assessor>`
+* :githublink:`medianstop-assessor <nni/algorithms/hpo/medianstop_assessor.py>`
+* :githublink:`curvefitting-assessor <nni/algorithms/hpo/curvefitting_assessor/>`
 
