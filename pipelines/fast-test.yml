@@ -106,7 +106,7 @@ jobs:
 
   - script: |
       set -e
-      python -m pip install torch==1.6.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      pip install torch==1.6.0+cpu torchvision==0.7.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
       python -m pip install tensorflow==1.15.4
       python -m pip install keras==2.1.6
       python -m pip install gym onnx peewee
