@@ -41,7 +41,7 @@ class NaiveQuantizer(Quantizer):
         wrapper.module.weight = weight
         return weight
 
-def update_ema(biased_ema, value, decay, step):
+def update_ema(biased_ema, value, decay):
     """
     calculate biased stat and unbiased stat in each step using exponential moving average method
 
@@ -53,8 +53,6 @@ def update_ema(biased_ema, value, decay, step):
         current stat value
     decay : float
         the weight of previous stat value, larger means smoother curve
-    step : int
-        current step
 
     Returns
     -------
@@ -275,9 +273,9 @@ class QAT_Quantizer(Quantizer):
         if wrapper.training:
             current_min, current_max = torch.min(output), torch.max(output)
             module.tracked_min_biased = update_ema(module.tracked_min_biased, current_min,
-                                                                       module.ema_decay, self.bound_model.steps)
+                                                                       module.ema_decay)
             module.tracked_max_biased = update_ema(module.tracked_max_biased, current_max,
-                                                                       module.ema_decay, self.bound_model.steps)
+                                                                       module.ema_decay)
             module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_biased, module.tracked_max_biased)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
