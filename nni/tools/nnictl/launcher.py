@@ -9,6 +9,7 @@ import random
 import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
+from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node
@@ -591,6 +592,11 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
+    try:
+        config = ExperimentConfig(**experiment_config)
+        experiment_config = convert.to_v1_yaml(config)
+    except Exception:
+        pass
     try:
         validate_all_content(experiment_config, config_path)
     except Exception as e:

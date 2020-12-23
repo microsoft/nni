@@ -62,7 +62,9 @@ jobs:
 
   - script: |
       cd test
-      python3 -m pytest ut
+      python3 -m pytest ut --ignore=ut/sdk/test_pruners.py --ignore=ut/sdk/test_compressor_tf.py
+      python3 -m pytest ut/sdk/test_pruners.py
+      python3 -m pytest ut/sdk/test_compressor_tf.py
     displayName: Python unit test
 
   - script: |
