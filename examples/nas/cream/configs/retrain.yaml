@@ -1,13 +1,13 @@
 AUTO_RESUME: False
 DATA_DIR: './data/imagenet'
-MODEL: '604m_retrain'
+MODEL: '481m_retrain'
 RESUME_PATH: './experiments/workspace/retrain/resume.pth.tar'
-SAVE_PATH: './'
+SAVE_PATH: './experiments/workspace/retrain'
 SEED: 42
 LOG_INTERVAL: 50
 RECOVERY_INTERVAL: 0
-WORKERS: 4
-NUM_GPU: 2
+WORKERS: 8
+NUM_GPU: 8
 SAVE_IMAGES: False
 AMP: False
 OUTPUT: 'None'
@@ -19,34 +19,32 @@ DATASET:
   NUM_CLASSES: 1000
   IMAGE_SIZE: 224 # image patch size
   INTERPOLATION: 'random' # Image resize interpolation type
-  BATCH_SIZE: 32 # batch size
+  BATCH_SIZE: 128 # batch size
   NO_PREFECHTER: False
 
 NET:
   GP: 'avg'
-  DROPOUT_RATE: 0.0
-  SELECTION: 42
+  DROPOUT_RATE: 0.2
+  SELECTION: 481
 
   EMA:
     USE: True
     FORCE_CPU: False # force model ema to be tracked on CPU
-    DECAY: 0.9998
+    DECAY: 0.9999
 
-OPT: 'sgd'
-OPT_EPS: 1e-2
-MOMENTUM: 0.9
-DECAY_RATE: 0.1
 
-SCHED: 'sgd'
-LR_NOISE: None
-LR_NOISE_PCT: 0.67
-LR_NOISE_STD: 1.0
-WARMUP_LR: 1e-4
-MIN_LR: 1e-5
-EPOCHS: 200
-START_EPOCH: None
-DECAY_EPOCHS: 30.0
+LR: 0.064
+EPOCHS: 500
+OPT_EPS: 1e-3
+SCHED: 'cosine'
+OPT: 'rmsproptf'
+WARMUP_LR: 1e-6
+DECAY_EPOCHS: 2.4
+DECAY_RATE: 0.973
 WARMUP_EPOCHS: 3
-COOLDOWN_EPOCHS: 10
-PATIENCE_EPOCHS: 10
-LR: 1e-2
+WEIGHT_DECAY: 1e-5
+
+AUGMENTATION:
+  AA: 'rand-m9-mstd0.5'
+  RE_PROB: 0.2  # random erase prob
+  RE_MODE: 'pixel'  # random erase mode
