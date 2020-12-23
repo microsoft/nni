@@ -95,7 +95,7 @@ if __name__ == '__main__':
         optimizer=optim,
         num_epochs=50,
         dataset=dataset_train,
-        batch_size=4,
+        batch_size=32,
         log_frequency=10,
         unrolled=False
     )

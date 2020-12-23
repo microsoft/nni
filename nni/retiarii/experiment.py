@@ -1,3 +1,4 @@
+import atexit
 import logging
 import time
 
@@ -11,6 +12,8 @@ from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
+from ..tools.nnictl.command_utils import kill_command
+
 from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
@@ -89,6 +92,7 @@ class RetiariiExperiment(Experiment):
         self.recorded_module_args = get_records()
 
         self._dispatcher = RetiariiAdvisor()
+        self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
@@ -146,7 +150,8 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        # FIXME:
+        atexit.register(self.stop)
+
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 
@@ -158,9 +163,19 @@ class RetiariiExperiment(Experiment):
 
         # dispatcher must be created after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        Thread(target=self._dispatcher.run).start()
+        self._dispatcher_thread = Thread(target=self._dispatcher.run)
+        self._dispatcher_thread.start()
 
         self._start_strategy()
+
+        ips = [self.config.nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
+        _logger.info(msg)
 
         # TODO: register experiment management metadata
 
@@ -168,12 +183,22 @@ class RetiariiExperiment(Experiment):
         """
         Stop background experiment.
         """
-        self._proc.kill()
-        self._pipe.close()
+        _logger.info('Stopping experiment...')
+        atexit.unregister(self.stop)
+
+        if self._proc is not None:
+            kill_command(self._proc.pid)
+        if self._pipe is not None:
+            self._pipe.close()
+        if self._dispatcher_thread is not None:
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
 
         self.port = None
         self._proc = None
         self._pipe = None
+        self._dispatcher = None
+        self._dispatcher_thread = None
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
@@ -190,9 +215,10 @@ class RetiariiExperiment(Experiment):
                 while True:
                     time.sleep(10)
                     status = self.get_status()
-                    # TODO: double check the status
-                    if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
-                        return status
+                    if status == 'STOPPED':
+                        return True
+                    if status == 'ERROR':
+                        return False
             finally:
                 self.stop()
 
@@ -203,6 +229,9 @@ class RetiariiExperiment(Experiment):
         return resp['status']
 
     def export_top_models(self, top_n: int):
+        """
+        export several top performing models
+        """
         raise NotImplementedError
 
     def retrain_model(self, model):
