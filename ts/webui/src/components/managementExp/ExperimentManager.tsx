@@ -9,6 +9,8 @@ import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
 import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
+import { TitleContext } from '../overview/TitleContext';
+import { Title } from '../overview/Title';
 import '../../App.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
@@ -84,6 +86,9 @@ class Experiment extends React.Component<{}, ExpListState> {
                 <Stack className='contentBox expBackground'>
                     <Stack className='content'>
                         <Stack className='experimentList'>
+                            <TitleContext.Provider value={{ text: 'All experiments', icon: 'CustomList' }}>
+                                <Title />
+                            </TitleContext.Provider>
                             <Stack className='box' horizontal>
                                 <div className='search'>
                                     <SearchBox
