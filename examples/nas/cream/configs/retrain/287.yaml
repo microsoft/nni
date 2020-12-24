@@ -1,0 +1,51 @@
+AUTO_RESUME: False
+DATA_DIR: './data/imagenet'
+MODEL: '287m_retrain'
+RESUME_PATH: './experiments/workspace/retrain/resume.pth.tar'
+SAVE_PATH: './experiments/workspace/retrain'
+SEED: 42
+LOG_INTERVAL: 50
+RECOVERY_INTERVAL: 0
+WORKERS: 8
+NUM_GPU: 8
+SAVE_IMAGES: False
+AMP: False
+OUTPUT: 'None'
+EVAL_METRICS: 'prec1'
+TTA: 0
+LOCAL_RANK: 0
+
+DATASET:
+  NUM_CLASSES: 1000
+  IMAGE_SIZE: 224 # image patch size
+  INTERPOLATION: 'random' # Image resize interpolation type
+  BATCH_SIZE: 128 # batch size
+  NO_PREFECHTER: False
+
+NET:
+  GP: 'avg'
+  DROPOUT_RATE: 0.2
+  SELECTION: 470
+
+  EMA:
+    USE: True
+    FORCE_CPU: False # force model ema to be tracked on CPU
+    DECAY: 0.9999
+
+
+LR: 0.064
+EPOCHS: 500
+OPT_EPS: 1e-3
+SCHED: 'cosine'
+OPT: 'rmsproptf'
+WARMUP_LR: 1e-6
+DECAY_EPOCHS: 2.4
+DECAY_RATE: 0.973
+WARMUP_EPOCHS: 3
+WEIGHT_DECAY: 1e-5
+
+AUGMENTATION:
+  AA: 'rand-m9-mstd0.5'
+  RE_PROB: 0.2  # random erase prob
+  RE_MODE: 'pixel'  # random erase mode
+
