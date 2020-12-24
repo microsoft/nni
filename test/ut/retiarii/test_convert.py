@@ -5,6 +5,8 @@ Reference: We use tested models from https://github.com/pytorch/pytorch/blob/mas
 import os
 import sys
 import unittest
+
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,7 +15,7 @@ import torchvision
 from nni.retiarii import register_module
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import get_records
+from nni.retiarii.utils import get_records, clear_records
 
 
 @register_module()
@@ -37,13 +39,39 @@ class MnistNet(nn.Module):
 
 
 class TestConvert(unittest.TestCase):
+    def setUp(self):
+        clear_records()
+
+    @staticmethod
+    def _match_state_dict(current_values, expected_format):
+        result = {}
+        for k, v in expected_format.items():
+            for cv in current_values:
+                if cv.shape == v.shape:
+                    result[k] = cv
+                    current_values.remove(cv)
+                    break
+        return result
+
     def checkExportImport(self, model, input):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model, get_records())
         model_code = model_to_pytorch_script(model_ir)
-        print(model_code)
-        exec(model_code)
-        return _model()
+        clear_records()
+
+        exec_vars = {}
+        exec(model_code + '\n\nconverted_model = _model()', exec_vars)
+        converted_model = exec_vars['converted_model']
+        converted_state_dict = self._match_state_dict(list(model.state_dict().values()),
+                                                      dict(converted_model.state_dict()))
+        converted_model.load_state_dict(converted_state_dict)
+        with torch.no_grad():
+            expected_output = model.eval()(*input)
+            converted_output = converted_model.eval()(*input)
+        self.assertEqual(len(converted_output), len(expected_output))
+        for a, b in zip(converted_output, expected_output):
+            self.assertLess((a - b).abs().max().item(), 1E-4)
+        return converted_model
 
     def test_dcgan_models(self):
         @register_module()

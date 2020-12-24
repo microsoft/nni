@@ -19,12 +19,17 @@ def get_records():
     return _records
 
 
+def clear_records():
+    global _records
+    _records = {}
+
+
 def add_record(key, value):
     """
     """
     global _records
     if _records is not None:
-        assert key not in _records, '{} already in _records'.format(key)
+        # assert key not in _records, '{} already in _records'.format(key)  # FIXME temporarily comment this line
         _records[key] = value
 
 
