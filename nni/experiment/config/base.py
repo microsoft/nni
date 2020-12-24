@@ -58,11 +58,6 @@ class ConfigBase:
                     value = Path(value).expanduser()
                     if not value.is_absolute():
                         value = _base_path / value
-                # convert nested dict to config type
-                if isinstance(value, dict):
-                    cls = util.strip_optional(field.type)
-                    if isinstance(cls, type) and issubclass(cls, ConfigBase):
-                        value = cls(**value, _base_path=_base_path)
             setattr(self, field.name, value)
         if kwargs:
             cls = type(self).__name__
@@ -87,7 +82,7 @@ class ConfigBase:
         """
         return dataclasses.asdict(
             self.canonical(),
-            dict_factory = lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
+            dict_factory=lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
         )
 
     def canonical(self: T) -> T:

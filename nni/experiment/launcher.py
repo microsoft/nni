@@ -32,7 +32,7 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     exp_id = management.generate_experiment_id()
 
     try:
-        _logger.info(f'Creating experiment {colorama.Fore.CYAN}{exp_id}')
+        _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)
         pipe = Pipe(exp_id)
         proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')

@@ -9,6 +9,7 @@ import random
 import time
 import tempfile
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
+from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node
@@ -118,13 +119,6 @@ def set_local_config(experiment_config, port, config_file_name):
     request_data = dict()
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
-        if request_data['local_config']:
-            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
-                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
-            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
-                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
-            if request_data['local_config'].get('useActiveGpu'):
-                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
@@ -306,6 +300,37 @@ def set_aml_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_heterogeneous_config(experiment_config, port, config_file_name):
+    '''set heterogeneous configuration'''
+    heterogeneous_config_data = dict()
+    heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
+    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+    for platform in platform_list:
+        if platform == 'aml':
+            heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
+        elif platform ==  'remote':
+            if experiment_config.get('remoteConfig'):
+                heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
+            heterogeneous_config_data['machine_list'] = experiment_config['machineList']
+        elif platform == 'local' and experiment_config.get('localConfig'):
+            heterogeneous_config_data['local_config'] = experiment_config['localConfig']
+        elif platform == 'pai':
+            heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(heterogeneous_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -387,6 +412,21 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'heterogeneous':
+        request_data['clusterMetaData'].append(
+            {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
+        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+        request_dict = {
+            'aml': {'key': 'aml_config', 'value': experiment_config.get('amlConfig')},
+            'remote': {'key': 'machine_list', 'value': experiment_config.get('machineList')},
+            'pai': {'key': 'pai_config', 'value': experiment_config.get('paiConfig')},
+            'local': {'key': 'local_config', 'value': experiment_config.get('localConfig')}
+        }
+        for platform in platform_list:
+            if request_dict.get(platform):
+                request_data['clusterMetaData'].append(request_dict[platform])
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
@@ -420,6 +460,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
     elif platform == 'aml':
         config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
+    elif platform == 'heterogeneous':
+        config_result, err_msg = set_heterogeneous_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
@@ -550,6 +592,11 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
+    try:
+        config = ExperimentConfig(**experiment_config)
+        experiment_config = convert.to_v1_yaml(config)
+    except Exception:
+        pass
     try:
         validate_all_content(experiment_config, config_path)
     except Exception as e:

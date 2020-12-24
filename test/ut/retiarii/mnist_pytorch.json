@@ -1,0 +1,61 @@
+{
+    "_model": {
+        "inputs": ["image"],
+        "outputs": ["metric"],
+
+        "nodes": {
+            "stem": {"operation": {"type": "_cell", "cell_name": "stem"}},
+            "flatten": {"operation": {"type": "Flatten"}},
+            "fc1": {"operation": {"type": "Dense", "parameters": {"out_features": 256, "in_features": 1024}}},
+            "fc2": {"operation": {"type": "Dense", "parameters": {"out_features": 10, "in_features": 256}}},
+            "softmax": {"operation": {"type": "Softmax"}}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["stem", null]},
+            {"head": ["stem", null], "tail": ["flatten", null]},
+            {"head": ["flatten", null], "tail": ["fc1", null]},
+            {"head": ["fc1", null], "tail": ["fc2", null]},
+            {"head": ["fc2", null], "tail": ["softmax", null]},
+            {"head": ["softmax", null], "tail": ["_outputs", 0]}
+        ]
+    },
+
+    "stem": {
+        "nodes": {
+            "conv1": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 32, "in_channels": 1, "kernel_size": 5}}},
+            "pool1": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}},
+            "conv2": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 64, "in_channels": 32, "kernel_size": 5}}},
+            "pool2": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}}
+        },
+
+        "edges": [
+            {"head": ["_inputs", 0], "tail": ["conv1", null]},
+            {"head": ["conv1", null], "tail": ["pool1", null]},
+            {"head": ["pool1", null], "tail": ["conv2", null]},
+            {"head": ["conv2", null], "tail": ["pool2", null]},
+            {"head": ["pool2", null], "tail": ["_outputs", 0]}
+        ]
+    },
+
+    "_training_config": {
+        "module": "nni.retiarii.trainer.PyTorchImageClassificationTrainer",
+        "kwargs": {
+            "dataset_cls": "MNIST",
+            "dataset_kwargs": {
+                "root": "data/mnist",
+                "download": true
+            },
+            "dataloader_kwargs": {
+                "batch_size": 32
+            },
+            "optimizer_cls" : "SGD",
+            "optimizer_kwargs": {
+                "lr": 1e-3
+            },
+            "trainer_kwargs": {
+                "max_epochs": 1
+            }
+        }
+    }
+}

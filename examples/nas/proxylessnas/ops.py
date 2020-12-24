@@ -39,19 +39,13 @@ class MobileInvertedResidualBlock(nn.Module):
         self.op_candidates_list = op_candidates_list
 
     def forward(self, x):
-        out, idx = self.mobile_inverted_conv(x)
-        # TODO: unify idx format
-        if not isinstance(idx, int):
-            idx = (idx == 1).nonzero()
-        if self.op_candidates_list[idx].is_zero_layer():
-            res = x
-        elif self.shortcut is None:
-            res = out
-        else:
-            conv_x = out
-            skip_x = self.shortcut(x)
-            res = skip_x + conv_x
-        return res
+        out = self.mobile_inverted_conv(x)
+        if torch.sum(torch.abs(out)).item() == 0 and x.size() == out.size():
+            # is zero layer
+            return x
+        if self.shortcut is None:
+            return out
+        return out + self.shortcut(x)
 
 
 class ShuffleLayer(nn.Module):

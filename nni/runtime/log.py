@@ -31,7 +31,7 @@ def init_logger() -> None:
     if trial_platform == 'unittest':
         return
 
-    if trial_platform:
+    if trial_platform and not trial_env_vars.REUSE_MODE:
         _init_logger_trial()
         return
 
@@ -74,7 +74,8 @@ def _init_logger_trial() -> None:
     log_file = open(log_path, 'w')
     _setup_root_logger(StreamHandler(log_file), logging.INFO)
 
-    sys.stdout = _LogFileWrapper(log_file)
+    if trial_env_vars.NNI_PLATFORM == 'local':
+        sys.stdout = _LogFileWrapper(log_file)
 
 
 def _init_logger_standalone() -> None:

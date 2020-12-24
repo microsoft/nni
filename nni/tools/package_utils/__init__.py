@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 import sys
 import ruamel.yaml as yaml
-import nni
+from nni.runtime.config import get_config_file
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
 
@@ -43,8 +43,8 @@ def get_registered_algo_meta(builtin_name, algo_type=None):
     -------
         Returns meta information of speicified builtin alogorithms, for example:
         {
-            'classArgsValidator': 'nni.smac_tuner.smac_tuner.SMACClassArgsValidator',
-            'className': 'nni.smac_tuner.smac_tuner.SMACTuner',
+            'classArgsValidator': 'nni.smac_tuner.SMACClassArgsValidator',
+            'className': 'nni.smac_tuner.SMACTuner',
             'builtinName': 'SMAC'
         }
     """
@@ -210,19 +210,7 @@ def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
 
 def get_registered_algo_config_path():
-    # Find the path for registered_algorithms.yml for this nni installation,
-    # the registered_algorithms.yml is copied into this location in setup.py,
-    # so we need to ensure that we use the same logic as setup.py to find the location.
-
-    if _using_conda_or_virtual_environment():
-        nni_config_dir = os.path.join(sys.prefix, 'nni')
-    elif sys.platform == 'win32':
-        nni_config_dir = os.path.join(os.getenv('APPDATA'), 'nni')
-    else:
-        nni_config_dir = os.path.expanduser('~/.config/nni')
-    if not os.path.exists(nni_config_dir):
-        os.makedirs(nni_config_dir, exist_ok=True)
-    return os.path.join(nni_config_dir, 'registered_algorithms.yml')
+    return str(get_config_file('registered_algorithms.yml'))
 
 def read_registerd_algo_meta():
     config_file = get_registered_algo_config_path()
