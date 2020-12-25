@@ -47,7 +47,7 @@ Below is a simple example code of how to define a base model.
     def forward(self, x):
       return F.relu(self.mymodule(x))
 
-Users can refer to `Darts base model <https://github.com/microsoft/nni/blob/master/test/retiarii_test/darts/darts_model.py>`__ and `Mnasnet base model <https://github.com/microsoft/nni/blob/master/test/retiarii_test/mnasnet/base_mnasnet.py>`__ for more complete examples.
+Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complete examples.
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -82,7 +82,7 @@ For easy usability and also backward compatibility, we provide some APIs for use
 
 * ``nn.ValueChoice``. Will be supported soon.
 
-Detailed API description can be found `here <>`__\. Example of using these APIs can be found in `Darts base model <https://github.com/microsoft/nni/blob/master/test/retiarii_test/darts/darts_model.py>`__\.
+Detailed API description can be found `here <>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`.
 
 **Express mutations with mutators**
 
@@ -126,7 +126,7 @@ For mutator to easily target on a node (i.e., PyTorch module), we provide a plac
     }
   )
 
-``label`` is used by mutator to identify this placeholder, ``related_info`` is included in this placeholder node for mutator to get more mutation related information. A complete example code can be found in `Mnasnet base model <https://github.com/microsoft/nni/blob/master/test/retiarii_test/mnasnet/base_mnasnet.py>`__\.
+``label`` is used by mutator to identify this placeholder, ``related_info`` is included in this placeholder node for mutator to get more mutation related information. A complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
 
 Explore the Defined Model Space
 -------------------------------
