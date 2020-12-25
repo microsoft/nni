@@ -186,27 +186,6 @@ class RetiariiExperiment(Experiment):
 
         # TODO: register experiment management metadata
 
-    def stop(self) -> None:
-        """
-        Stop background experiment.
-        """
-        _logger.info('Stopping experiment...')
-        atexit.unregister(self.stop)
-
-        if self._proc is not None:
-            kill_command(self._proc.pid)
-        if self._pipe is not None:
-            self._pipe.close()
-        if self._dispatcher_thread is not None:
-            self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
-
-        self.port = None
-        self._proc = None
-        self._pipe = None
-        self._dispatcher = None
-        self._dispatcher_thread = None
-
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
         Run the experiment.
