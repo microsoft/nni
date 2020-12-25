@@ -145,7 +145,7 @@ class RetiariiExperiment(Experiment):
         Thread(target=self.strategy.run, args=(base_model, self.applied_mutators)).start()
         _logger.info('Strategy started!')
 
-    def start(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> None:
+    def start(self, port: int = 8080, debug: bool = False) -> None:
         """
         Start the experiment in background.
         This method will raise exception on failure.
@@ -162,7 +162,7 @@ class RetiariiExperiment(Experiment):
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 
-        self._proc, self._pipe = launcher.start_experiment(config, port, debug)
+        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
         assert self._proc is not None
         assert self._pipe is not None
 
@@ -217,17 +217,7 @@ class RetiariiExperiment(Experiment):
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
-            self.start(config, port, debug)
-            try:
-                while True:
-                    time.sleep(10)
-                    status = self.get_status()
-                    if status == 'STOPPED':
-                        return True
-                    if status == 'ERROR':
-                        return False
-            finally:
-                self.stop()
+            super().run(port, debug)
 
     def export_top_models(self, top_n: int):
         """
