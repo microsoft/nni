@@ -1,16 +1,20 @@
+$pageMargin: 24px;
+
 .expBackground {
 	background: #f2f2f2;
 	height: 100%;
 
 	.content {
-		margin-top: 24px;
+		/* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
+		margin-top: 32px;
+		margin-bottom: $pageMargin;
 		background: #fff;
 	}
 }
 
 .experimentList {
 	min-height: 99%;
-	padding:  24px 42px;
+	padding: $pageMargin 42px;
 
 	.box {
 		margin-top: 20px;

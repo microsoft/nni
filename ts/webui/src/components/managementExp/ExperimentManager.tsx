@@ -84,7 +84,8 @@ class Experiment extends React.Component<{}, ExpListState> {
                     </div>
                 ) : null}
                 <Stack className='contentBox expBackground'>
-                    <Stack className='content' styles={{ root: { minHeight: window.innerHeight - 56 - 48 } }}>
+                    {/* 56px: navBarHeight; 48: marginTop & Bottom */}
+                    <Stack className='content' styles={{ root: { minHeight: window.innerHeight - 104 } }}>
                         <Stack className='experimentList'>
                             <TitleContext.Provider value={{ text: 'All experiments', icon: 'CustomList' }}>
                                 <Title />
