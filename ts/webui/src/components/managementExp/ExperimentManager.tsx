@@ -93,7 +93,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 <div className='search'>
                                     <SearchBox
                                         className='search-input'
-                                        placeholder='Search the experiment by name and ID'
+                                        placeholder='Search the experiment by name or ID'
                                         onEscape={this.setOriginSource.bind(this)}
                                         onClear={this.setOriginSource.bind(this)}
                                         onChange={this.searchNameAndId.bind(this)}
@@ -131,6 +131,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 compact={true}
                                 selectionMode={0} // close selector function
                                 className='table'
+                                onActiveItemChanged={this.something}
                             />
                         </Stack>
                     </Stack>
@@ -256,6 +257,15 @@ class Experiment extends React.Component<{}, ExpListState> {
         }
     ];
 
+    private something = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
+        if (item.status !== 'STOPPED' && item.port !== undefined) {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            const webuiPortal = `${protocol}//${hostname}:${item.port}/oview`;
+            window.open(webuiPortal);
+        }
+    };
+
     private clickFilter(_e: any): void {
         const { hideFilter } = this.state;
         if (!hideFilter === true) {
@@ -282,10 +292,11 @@ class Experiment extends React.Component<{}, ExpListState> {
             if (newValue === '') {
                 this.setOriginSource();
             } else {
+                const searchInput = newValue.trim();
                 let result = originExperimentList.filter(
                     item =>
-                        item.experimentName.toLowerCase().includes(newValue.toLowerCase()) ||
-                        item.id.toLowerCase().includes(newValue.toLowerCase())
+                        item.experimentName.toLowerCase().includes(searchInput.toLowerCase()) ||
+                        item.id.toLowerCase().includes(searchInput.toLowerCase())
                 );
                 result = this.commonSelectString(result, '');
                 const sortedResult = getSortedSource(result, sortInfo);
@@ -295,7 +306,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 }));
             }
             this.setState(() => ({
-                searchInputVal: newValue
+                searchInputVal: newValue.trim()
             }));
         }
     }
@@ -419,7 +430,9 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     // reset
     private setSearchSource(): void {
-        const { sortInfo, searchInputVal, originExperimentList } = this.state;
+        const { sortInfo, originExperimentList } = this.state;
+        let { searchInputVal } = this.state;
+        searchInputVal = searchInputVal.trim();
         // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
         const result = originExperimentList.filter(
             item =>
