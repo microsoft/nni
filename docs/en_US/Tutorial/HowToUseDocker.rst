@@ -33,7 +33,7 @@ For example, you could start a new Docker container from the following command:
 
 ``-p:`` Port mapping, map host port to a container port.
 
-For more information about Docker commands, please `refer to this <https://docs.docker.com/v17.09/edge/engine/reference/run/>`__.
+For more information about Docker commands, please `refer to this <https://docs.docker.com/engine/reference/run/>`__.
 
 Note:
 

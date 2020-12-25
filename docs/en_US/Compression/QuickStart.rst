@@ -8,7 +8,7 @@ In this tutorial, we use the `first section <#quick-start-to-compress-a-model>`_
 Quick Start to Compress a Model
 -------------------------------
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner </Compression/Pruner.html#slim-pruner>`__ as an example to show the usage.
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner <../Compression/Pruner.rst#slim-pruner>`__ as an example to show the usage.
 
 Write configuration
 ^^^^^^^^^^^^^^^^^^^
@@ -82,13 +82,13 @@ Tensorflow code
    pruner = LevelPruner(tf.get_default_graph(), config_list)
    pruner.compress()
 
-You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.md>`__ and `Quantizer <./Quantizer.md>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
+You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.rst>`__ and `Quantizer <./Quantizer.rst>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
 
 A compression algorithm is first instantiated with a ``config_list`` passed in. The specification of this ``config_list`` will be described later.
 
 The function call ``pruner.compress()`` modifies user defined model (in Tensorflow the model can be obtained with ``tf.get_default_graph()``\ , while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
-*Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.*
+Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
 
 Specification of ``config_list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,7 +104,7 @@ There are different keys in a ``dict``. Some of them are common keys supported b
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
-Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.md>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
+Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
 A simple example of configuration is shown below:
 
@@ -190,7 +190,7 @@ In this example, 'op_names' is the name of layer and four layers will be quantiz
 APIs for Updating Fine Tuning Status
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some compression algorithms use epochs to control the progress of compression (e.g. `AGP </Compression/Pruner.html#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
+Some compression algorithms use epochs to control the progress of compression (e.g. `AGP <../Compression/Pruner.rst#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
 
 ``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 

@@ -52,7 +52,7 @@ Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's con
 
 Note: You should set ``trainingServicePlatform: paiYarn`` in NNI config YAML file if you want to start experiment in paiYarn mode.
 
-Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , trial configuration in paiYarn mode have these additional keys:
+Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , trial configuration in paiYarn mode have these additional keys:
 
 
 * cpuNum
@@ -62,6 +62,8 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
 * memoryMB
 
   * Required key. Should be positive number based on your trial program's memory requirement
+
+.. :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`
 
 * image
 
@@ -75,6 +77,8 @@ Compared with `LocalMode <LocalMode.md>`__ and `RemoteMachineMode <RemoteMachine
 * shmMB
 
   * Optional key. Set the shmMB configuration of OpenpaiYarn, it set the shared memory for one task in the task role.
+
+.. cannot find `Refer <https://github.com/microsoft/paiYarn/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.rst#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpaiYarn-job>`__
 
 * authFile
 
@@ -169,6 +173,8 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 
 data management
 ---------------
+
+.. cannot find `guidance <https://github.com/microsoft/paiYarn/blob/master/docs/user/storage.rst>`__
 
 If your training data is not too large, it could be put into codeDir, and nni will upload the data to hdfs, or you could build your own docker image with the data. If you have large dataset, it's not appropriate to put the data in codeDir, and you could follow the `guidance <https://github.com/microsoft/paiYarn/blob/master/docs/user/storage.rst>`__ to mount the data folder in container.
 
