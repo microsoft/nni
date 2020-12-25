@@ -512,7 +512,7 @@ Note that the only acceptable types within the search space are ``layer_choice``
 
 **Suggested scenario**
 
-PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the :githublink:`mnist-nas <examples/trials/mnist-nas>` example. `See details <./PPOTuner.rst>`__
+PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the :githublink:`mnist-nas <examples/nas/classic_nas>` example. `See details <./PPOTuner.rst>`__
 
 **classArgs Requirements:**
 

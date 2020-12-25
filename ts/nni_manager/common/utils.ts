@@ -434,8 +434,8 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
         const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock.*');
         const lockFileNames: string[] = glob.sync(lockPath);
         const canLock: boolean = lockFileNames.map((fileName) => {
-            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs > lockOpts.stale;
-        }).filter(isExpired=>isExpired === false).length === 0;
+            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs < lockOpts.stale;
+        }).filter(unexpired=>unexpired === true).length === 0;
         if (!canLock) {
             throw new Error('File has been locked.');
         }

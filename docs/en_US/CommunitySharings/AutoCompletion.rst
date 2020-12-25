@@ -27,6 +27,8 @@ Step 1. Download ``bash-completion``
 
 Here, {nni-version} should by replaced by the version of NNI, e.g., ``master``\ , ``v1.9``. You can also check the latest ``bash-completion`` script :githublink:`here <tools/bash-completion>`.
 
+.. cannot find :githublink:`here <tools/bash-completion>`.
+
 Step 2. Install the script
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 

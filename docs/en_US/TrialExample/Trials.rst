@@ -28,7 +28,7 @@ An example is shown below:
        "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
    }
 
-Refer to `SearchSpaceSpec.md <../Tutorial/SearchSpaceSpec.rst>`__ to learn more about search spaces. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+Refer to `SearchSpaceSpec <../Tutorial/SearchSpaceSpec.rst>`__ to learn more about search spaces. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
 
 Step 2 - Update model code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +80,7 @@ To enable NNI API mode, you need to set useAnnotation to *false* and provide the
 
 You can refer to `here <../Tutorial/ExperimentConfig.rst>`__ for more information about how to set up experiment configurations.
 
-Please refer to `here </sdk_reference.html>`__ for more APIs (e.g., ``nni.get_sequence_id()``\ ) provided by NNI.
+Please refer to `here <../sdk_reference.rst>`__ for more APIs (e.g., ``nni.get_sequence_id()``\ ) provided by NNI.
 
 :raw-html:`<a name="nni-annotation"></a>`
 
