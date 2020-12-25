@@ -7,7 +7,7 @@ schedules:
 
 jobs:
 - job: adl
-  pool: NNI CI ADL CLI
+  pool: NNI CI KUBE CLI
   timeoutInMinutes: 120
 
   steps:
