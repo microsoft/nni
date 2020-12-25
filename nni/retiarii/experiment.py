@@ -229,12 +229,6 @@ class RetiariiExperiment(Experiment):
             finally:
                 self.stop()
 
-    def get_status(self) -> str:
-        if self.port is None:
-            raise RuntimeError('Experiment is not running')
-        resp = rest.get(self.port, '/check-status')
-        return resp['status']
-
     def export_top_models(self, top_n: int):
         """
         export several top performing models
