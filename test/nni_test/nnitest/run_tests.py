@@ -38,6 +38,12 @@ def update_training_service_config(config, training_service):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
+    
+    if training_service == 'adl':
+        # in adl mode, codeDir refers to the path in container
+        containerCodeDir = config['trial']['codeDir'].replace('../../../', '')
+        it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
+        it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
     deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
@@ -263,7 +269,7 @@ if __name__ == '__main__':
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai',
-                                                   'kubeflow', 'frameworkcontroller'], default='local')
+                                                   'kubeflow', 'frameworkcontroller', 'adl'], default='local')
     args = parser.parse_args()
 
     run(args)
