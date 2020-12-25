@@ -1,7 +1,5 @@
 import atexit
-import colorama
 import logging
-import psutil
 import socket
 import time
 
@@ -10,6 +8,9 @@ from pathlib import Path
 from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
+
+import colorama
+import psutil
 
 from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
 from ..experiment.config.base import ConfigBase, PathLike

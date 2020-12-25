@@ -2,7 +2,7 @@ import logging
 import random
 import time
 
-from .. import Sampler, submit_models, query_available_resources, is_stopped_exec
+from .. import Sampler, submit_models, query_available_resources
 from .strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
