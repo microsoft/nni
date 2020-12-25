@@ -11,6 +11,7 @@ Click the tab ``All experiments`` on the nav bar.
    :alt: ExperimentList nav
 
 
+
 * On the ``All experiments`` page, you can see all the experiments on your machine. 
 
 .. image:: ../../img/webui-img/managerExperimentList/expList.png
@@ -18,18 +19,21 @@ Click the tab ``All experiments`` on the nav bar.
    :alt: Experiments list
 
 
-* When you want to see more details about an experiments you could click this line, look that:
 
-.. image:: ../../img/webui-img/managerExperimentList/.png
-   :target: ../../img/webui-img/managerExperimentList/.png
+* When you want to see more details about an experiments you could click the row or trial id, look that:
+
+.. image:: ../../img/webui-img/managerExperimentList/toAnotherExp.png
+   :target: ../../img/webui-img/managerExperimentList/toAnotherExp.png
    :alt: See this experiment detail
 
 
-* If has many experiments on the table, you could open the ``filter`` button to filter data.
+
+* If has many experiments on the table, you can use the ``filter`` button.
 
 .. image:: ../../img/webui-img/managerExperimentList/expFilter.png
    :target: ../../img/webui-img/managerExperimentList/expFilter.png
    :alt: filter button
+
 
 
 View summary page
