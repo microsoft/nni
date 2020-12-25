@@ -1,12 +1,15 @@
 .expBackground {
 	background: #f2f2f2;
 	height: 100%;
+
 	.content {
+		margin-top: 24px;
 		background: #fff;
 	}
 }
 
 .experimentList {
+	min-height: 99%;
 	padding:  24px 42px;
 
 	.box {
