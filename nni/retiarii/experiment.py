@@ -1,7 +1,6 @@
 import atexit
 import logging
 import socket
-import time
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -12,11 +11,10 @@ from typing import Any, Optional
 import colorama
 import psutil
 
-from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
+from ..experiment import Experiment, TrainingServiceConfig, launcher
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
-from ..tools.nnictl.command_utils import kill_command
 
 from .graph import Model
 from .utils import get_records
