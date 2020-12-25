@@ -132,7 +132,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 compact={true}
                                 selectionMode={0} // close selector function
                                 className='table'
-                                onActiveItemChanged={this.something}
+                                onActiveItemChanged={this.experimentClicked}
                             />
                         </Stack>
                     </Stack>
@@ -258,7 +258,7 @@ class Experiment extends React.Component<{}, ExpListState> {
         }
     ];
 
-    private something = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
+    private experimentClicked = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
         if (item.status !== 'STOPPED' && item.port !== undefined) {
             const hostname = window.location.hostname;
             const protocol = window.location.protocol;
