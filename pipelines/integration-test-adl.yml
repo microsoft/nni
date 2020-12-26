@@ -41,7 +41,7 @@ jobs:
       set -e
       docker login -u nnidev -p $(docker_hub_password)
       echo '## Copy examples to docker ##'
-      sed -i '$a COPY examples /examples' adl.Dockerfile
+      sed -i '$a COPY examples /examples' Dockerfile
       cat Dockerfile
       echo '## Build docker image ##'
       docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
