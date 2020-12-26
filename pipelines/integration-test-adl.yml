@@ -55,6 +55,7 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts adl \
+          --nni_docker_image nnidev/nni-nightly \
           --checkpoint_storage_class $(checkpoint_storage_class) \
           --checkpoint_storage_size $(checkpoint_storage_size) \
           --nni_manager_ip $(nni_manager_ip)

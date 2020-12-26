@@ -41,7 +41,7 @@ def update_training_service_config(config, training_service):
     
     if training_service == 'adl':
         # in adl mode, codeDir refers to the path in container
-        containerCodeDir = config['trial']['codeDir'].replace('../../../', '')
+        containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
