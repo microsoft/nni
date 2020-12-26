@@ -89,6 +89,8 @@ def update_training_service_config(args):
         if args.remote_reuse is not None:
             config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
     elif args.ts == 'adl':
+        if args.nni_docker_image is not None:
+            config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.checkpoint_storage_class is not None:
             config[args.ts]['trial']['checkpoint']['storageClass'] = args.checkpoint_storage_class
         if args.checkpoint_storage_size is not None:
