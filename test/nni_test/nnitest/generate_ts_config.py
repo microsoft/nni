@@ -107,7 +107,7 @@ def update_training_service_config(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
@@ -139,9 +139,9 @@ if __name__ == '__main__':
     # args for adl
     parser.add_argument("--checkpoint_storage_class", type=str)
     parser.add_argument("--checkpoint_storage_size", type=str)
-    parser.add_argument("--adaptive", type=str)
-    parser.add_argument("--nfs_server", type=str)
-    parser.add_argument("--nfs_path", type=str)
-    parser.add_argument("--nfs_container_mount_path", type=str)
+    parser.add_argument("--adaptive", type=str, required=False)
+    parser.add_argument("--nfs_server", type=str, required=False)
+    parser.add_argument("--nfs_path", type=str, required=False)
+    parser.add_argument("--nfs_container_mount_path", type=str, required=False)
 
     update_training_service_config(args)
