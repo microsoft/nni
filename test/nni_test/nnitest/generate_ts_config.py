@@ -93,14 +93,6 @@ def update_training_service_config(args):
             config[args.ts]['trial']['checkpoint']['storageClass'] = args.checkpoint_storage_class
         if args.checkpoint_storage_size is not None:
             config[args.ts]['trial']['checkpoint']['storageSize'] = args.checkpoint_storage_size
-        if args.adaptive is not None:
-            config[args.ts]['trial']['adaptive'] = args.adaptive
-        if args.nfs_server is not None and args.nfs_path is not None and args.nfs_container_mount_path is not None:
-            # default keys in nfs is empty, need to initialize
-            config[args.ts]['trial']['nfs'] = {}
-            config[args.ts]['trial']['nfs']['server'] = args.nfs_server
-            config[args.ts]['trial']['nfs']['path'] = args.nfs_path
-            config[args.ts]['trial']['nfs']['container_mount_path'] = args.nfs_container_mount_path
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
@@ -139,9 +131,5 @@ if __name__ == '__main__':
     # args for adl
     parser.add_argument("--checkpoint_storage_class", type=str)
     parser.add_argument("--checkpoint_storage_size", type=str)
-    parser.add_argument("--adaptive", type=str, required=False)
-    parser.add_argument("--nfs_server", type=str, required=False)
-    parser.add_argument("--nfs_path", type=str, required=False)
-    parser.add_argument("--nfs_container_mount_path", type=str, required=False)
 
     update_training_service_config(args)
