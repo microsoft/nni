@@ -57,10 +57,6 @@ jobs:
           --ts adl \
           --checkpoint_storage_class $(checkpoint_storage_class) \
           --checkpoint_storage_size $(checkpoint_storage_size) \
-          --nni_manager_ip $(nni_manager_ip) \
-          --adaptive $(adaptive) \
-          --nfs_server $(nfs_server) \
-          --nfs_path $(nfs_path) \
-          --nfs_container_mount_path $(nfs_container_mount_path)
+          --nni_manager_ip $(nni_manager_ip)
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts adl
     displayName: Integration test
