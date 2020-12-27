@@ -46,7 +46,6 @@ def update_training_service_config(config, training_service):
             current_dir = os.getcwd()
             containerCodeDir = current_dir[current_dir.index('/test'):]
         containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
-        it_ts_config[training_service]['searchSpacePath'] = '{0}/search_space.json'.format(containerCodeDir)
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
