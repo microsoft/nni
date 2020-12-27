@@ -44,7 +44,7 @@ def update_training_service_config(config, training_service):
         # in adl mode, codeDir refers to the path in container
         if config['trial']['codeDir'] == '.':
             current_dir = os.getcwd()
-            containerCodeDir = current_dir[current_dir.index('/test'):-1]
+            containerCodeDir = current_dir[current_dir.index('/test'):]
         containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['searchSpacePath'] = '{0}/search_space.json'.format(containerCodeDir)
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
