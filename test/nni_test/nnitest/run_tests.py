@@ -44,12 +44,10 @@ def update_training_service_config(config, training_service, config_file_path):
         containerCodeDir = '/'
         # replace metric test folders to container folder
         if config['trial']['codeDir'] == '.' or config['trial']['codeDir'] == '../naive_trial':
-            print('-----config file path:' + config_file_path)
             containerCodeDir = '/' + config_file_path[:config_file_path.rfind('/')]
         else:
             # replace example folders to container folder
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
-        print('-------------containerCodeDir:' + containerCodeDir)
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
@@ -263,6 +261,10 @@ def run(args):
             wait_for_port_available(8080, 180)
         else:
             wait_for_port_available(8080, 30)
+
+        # adl mode need more time to cleanup PVC
+        if args.ts == 'adl' and name == 'nnictl-resume-2':
+            time.sleep(30)
         print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
