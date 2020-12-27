@@ -23,7 +23,7 @@ from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
 it_variables = {}
 
 
-def update_training_service_config(config, training_service):
+def update_training_service_config(config, training_service, config_file_path):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
 
     # hack for kubeflow trial config
@@ -40,13 +40,16 @@ def update_training_service_config(config, training_service):
             config['trial'].pop('gpuNum')
     
     if training_service == 'adl':
-        # hack for adl trial config
-        # replace example folders to container folder
-        containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
+        # hack for adl trial config, codeDir in adl mode refers to path in container
+        containerCodeDir = '/'
         # replace metric test folders to container folder
         if config['trial']['codeDir'] == '.':
-            current_dir = os.getcwd()
-            containerCodeDir = current_dir[current_dir.index('/test'):]
+            print('-----config file path:' + config_file_path)
+            containerCodeDir = '/' + config_file_path[:config_file_path.rfind('/')]
+        else:
+            # replace example folders to container folder
+            containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
+        print('-------------containerCodeDir:' + containerCodeDir)
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
@@ -69,7 +72,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
     # the hack for kubeflow should be applied at last step
-    update_training_service_config(test_yml_config, args.ts)
+    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'])
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
