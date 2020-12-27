@@ -41,7 +41,7 @@ jobs:
       set -e
       docker login -u nnidev -p $(docker_hub_password)
       echo '## Install packages and copy test files ##'
-      sed -i '$a python3 -m pip install adaptdl tensorboard' Dockerfile
+      sed -i '$a RUN python3 -m pip install adaptdl tensorboard' Dockerfile
       sed -i '$a COPY examples /examples' Dockerfile
       sed -i '$a COPY test /test' Dockerfile
       echo '## Build docker image ##'
