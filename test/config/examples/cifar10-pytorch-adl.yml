@@ -13,7 +13,7 @@ assessor:
     optimize_mode: maximize
 trial:
   codeDir: ../../../examples/trials/cifar10_pytorch
-  command: python3 main_adll.py --epochs 1
+  command: python3 main_adl.py --epochs 1
   gpuNum: 1
 
 useAnnotation: false
