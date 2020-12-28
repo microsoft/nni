@@ -5,7 +5,7 @@ import json
 import os
 from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, check_response
 from .url_utils import experiment_url, import_data_url
-from .config_utils import Config
+from .config_utils import Config, Experiments
 from .common_utils import get_json_content, print_normal, print_error, print_warning
 from .nnictl_utils import get_experiment_port, get_config_filename, detect_process
 from .launcher_utils import parse_time
@@ -58,8 +58,8 @@ def get_query_type(key):
 
 def update_experiment_profile(args, key, value):
     '''call restful server to update experiment profile'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
+    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
+    rest_port = nni_config.get_config('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
