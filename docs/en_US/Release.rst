@@ -98,14 +98,14 @@ WebUI, nnictl and nnicli
 * Remove support for Multiphase on WebUI (#2760)
 * Support save and restore experiments (#2750)
 * Add intermediate results in export result (#2706)
-* Add `command <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Tutorial/Nnictl.rst#nnictl-trial>`__ to list trial results with highest/lowest metrics (#2747)
-* Improve the user experience of `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.rst>`__ with `examples <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
+* Add `command <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Tutorial/Nnictl.md#nnictl-trial>`__ to list trial results with highest/lowest metrics (#2747)
+* Improve the user experience of `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md>`__ with `examples <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
 
 Neural architecture search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* `Search space zoo: ENAS and DARTS <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/NAS/SearchSpaceZoo.rst>`__ (#2589)
+* `Search space zoo: ENAS and DARTS <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/NAS/SearchSpaceZoo.md>`__ (#2589)
 * API to query intermediate results in NAS benchmark (#2728)
 
 Model compression
@@ -115,8 +115,8 @@ Model compression
 * Support the List/Tuple Construct/Unpack operation for TorchModuleGraph (#2609)
 * Model speedup improvement: Add support of DenseNet and InceptionV3 (#2719)
 * Support the multiple successive tuple unpack operations (#2768)
-* `Doc of comparing the performance of supported pruners <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.rst>`__ (#2742)
-* New pruners: `Sensitivity pruner <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner>`__ (#2684) and `AMC pruner <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.rst>`__ (#2573) (#2786)
+* `Doc of comparing the performance of supported pruners <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/CommunitySharings/ModelCompressionComparison.md>`__ (#2742)
+* New pruners: `Sensitivity pruner <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md#sensitivity-pruner>`__ (#2684) and `AMC pruner <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/Compressor/Pruner.md>`__ (#2573) (#2786)
 * TensorFlow v2 support in model compression (#2755)
 
 Backward incompatible changes
@@ -178,28 +178,28 @@ Training Service
 
 
 * Support AML(Azure Machine Learning) platform as NNI training service.
-* OpenPAI job can be reusable. When a trial is completed, the OpenPAI job won't stop, and wait next trial. `refer to reuse flag in OpenPAI config <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/PaiMode.rst#openpai-configurations>`__.
-* `Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.rst#how-to-use-training-service>`__.
+* OpenPAI job can be reusable. When a trial is completed, the OpenPAI job won't stop, and wait next trial. `refer to reuse flag in OpenPAI config <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/PaiMode.md#openpai-configurations>`__.
+* `Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.md#how-to-use-training-service>`__.
 
 Neural Architecture Search (NAS)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 
-  `Provide NAS Open Benchmarks (NasBench101, NasBench201, NDS) with friendly APIs <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.rst>`__.
+  `Provide NAS Open Benchmarks (NasBench101, NasBench201, NDS) with friendly APIs <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md>`__.
 
 * 
-  `Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.rst>`__.
+  `Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.md>`__.
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
 
 
 * Improve Model Speedup: track more dependencies among layers and automatically resolve mask conflict, support the speedup of pruned resnet.
-* Added new pruners, including three auto model pruning algorithms: `NetAdapt Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#netadapt-pruner>`__\ , `SimulatedAnnealing Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner>`__\ , `AutoCompress Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#autocompress-pruner>`__\ , and `ADMM Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.rst#admm-pruner>`__.
-* Added `model sensitivity analysis tool <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.rst>`__ to help users find the sensitivity of each layer to the pruning.
+* Added new pruners, including three auto model pruning algorithms: `NetAdapt Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#netadapt-pruner>`__\ , `SimulatedAnnealing Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#simulatedannealing-pruner>`__\ , `AutoCompress Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#autocompress-pruner>`__\ , and `ADMM Pruner <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Pruner.md#admm-pruner>`__.
+* Added `model sensitivity analysis tool <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md>`__ to help users find the sensitivity of each layer to the pruning.
 * 
-  `Easy flops calculation for model compression and NAS <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.rst#model-flops-parameters-counter>`__.
+  `Easy flops calculation for model compression and NAS <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/CompressionUtils.md#model-flops-parameters-counter>`__.
 
 * 
   Update lottery ticket pruner to export winning ticket.
@@ -208,13 +208,13 @@ Examples
 ^^^^^^^^
 
 
-* Automatically optimize tensor operators on NNI with a new `customized tuner OpEvo <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.rst>`__.
+* Automatically optimize tensor operators on NNI with a new `customized tuner OpEvo <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.md>`__.
 
 Built-in tuners/assessors/advisors
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* `Allow customized tuners/assessor/advisors to be installed as built-in algorithms <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.rst>`__.
+* `Allow customized tuners/assessor/advisors to be installed as built-in algorithms <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.md>`__.
 
 WebUI
 ^^^^^
@@ -235,10 +235,10 @@ Documentation
 -------------
 
 
-* Improve `documentation for model compression <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.rst>`__
-* Improve `documentation <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.rst>`__
+* Improve `documentation for model compression <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md>`__
+* Improve `documentation <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/Benchmarks.md>`__
   and `examples <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/BenchmarksExample.ipynb>`__ for NAS benchmarks.
-* Improve `documentation for AzureML training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/AMLMode.rst>`__
+* Improve `documentation for AzureML training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/AMLMode.md>`__
 * Homepage migration to readthedoc.
 
 Bug Fixes
@@ -287,7 +287,7 @@ NAS Updates
 ^^^^^^^^^^^
 
 
-* NAS support for TensorFlow 2.0 (preview) `TF2.0 NAS examples <https://github.com/microsoft/nni/tree/v1.9/examples/nas/naive-tf>`__
+* NAS support for TensorFlow 2.0 (preview) `TF2.0 NAS examples <https://github.com/microsoft/nni/tree/v1.6/examples/nas/naive-tf>`__
 * Use OrderedDict for LayerChoice
 * Prettify the format of export
 * Replace layer choice with selected module after applied fixed architecture
@@ -303,7 +303,7 @@ Training Service Updates
 
 
 * update pai yaml merge logic
-* support windows as remote machine in remote mode `Remote Mode <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/RemoteMachineMode.rst#windows>`__
+* support windows as remote machine in remote mode `Remote Mode <https://github.com/microsoft/nni/blob/v1.6/docs/en_US/TrainingService/RemoteMachineMode.md#windows>`__
 
 Bug Fix
 ^^^^^^^
@@ -324,32 +324,32 @@ Hyper-Parameter Optimizing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* New tuner: `Population Based Training (PBT) <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Tuner/PBTTuner.rst>`__
+* New tuner: `Population Based Training (PBT) <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Tuner/PBTTuner.md>`__
 * Trials can now report infinity and NaN as result
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* New NAS algorithm: `TextNAS <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/TextNAS.rst>`__
-* ENAS and DARTS now support `visualization <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/NAS/Visualization.rst>`__ through web UI.
+* New NAS algorithm: `TextNAS <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/NAS/TextNAS.md>`__
+* ENAS and DARTS now support `visualization <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/NAS/Visualization.md>`__ through web UI.
 
 Model Compression
 ^^^^^^^^^^^^^^^^^
 
 
-* New Pruner: `GradientRankFilterPruner <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compressor/Pruner.rst#gradientrankfilterpruner>`__
+* New Pruner: `GradientRankFilterPruner <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Compression/Pruner.md#gradientrankfilterpruner>`__
 * Compressors will validate configuration by default
 * Refactor: Adding optimizer as an input argument of pruner, for easy support of DataParallel and more efficient iterative pruning. This is a broken change for the usage of iterative pruning algorithms.
 * Model compression examples are refactored and improved
-* Added documentation for `implementing compressing algorithm <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/Compressor/Framework.rst>`__
+* Added documentation for `implementing compressing algorithm <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/Compression/Framework.md>`__
 
 Training Service
 ^^^^^^^^^^^^^^^^
 
 
 * Kubeflow now supports pytorchjob crd v1 (thanks external contributor @jiapinai)
-* Experimental `DLTS <https://github.com/microsoft/nni/blob/v1.9/docs/en_US/TrainingService/DLTSMode.rst>`__ support
+* Experimental `DLTS <https://github.com/microsoft/nni/blob/v1.5/docs/en_US/TrainingService/DLTSMode.md>`__ support
 
 Overall Documentation Improvement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -380,8 +380,8 @@ Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* Support `C-DARTS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.rst>`__ algorithm and add `the example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts>`__ using it
-* Support a preliminary version of `ProxylessNAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.rst>`__ and the corresponding `example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas>`__
+* Support `C-DARTS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md>`__ algorithm and add `the example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts>`__ using it
+* Support a preliminary version of `ProxylessNAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md>`__ and the corresponding `example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas>`__
 * Add unit tests for the NAS framework
 
 Model Compression
@@ -389,7 +389,7 @@ Model Compression
 
 
 * Support DataParallel for compressing models, and provide `an example <https://github.com/microsoft/nni/blob/v1.4/examples/model_compress/multi_gpu.py>`__ of using DataParallel
-* Support `model speedup <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.rst>`__ for compressed models, in Alpha version
+* Support `model speedup <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/ModelSpeedup.md>`__ for compressed models, in Alpha version
 
 Training Service
 ^^^^^^^^^^^^^^^^
@@ -409,7 +409,7 @@ Others
 ^^^^^^
 
 
-* Support running `NNI experiment at foreground <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment>`__\ , i.e., ``--foreground`` argument in ``nnictl create/resume/view``
+* Support running `NNI experiment at foreground <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl.md#manage-an-experiment>`__\ , i.e., ``--foreground`` argument in ``nnictl create/resume/view``
 * Support canceling the trials in UNKNOWN state
 * Support large search space whose size could be up to 50mb (thanks external contributor @Sundrops)
 
@@ -418,10 +418,10 @@ Documentation
 
 
 * Improve `the index structure <https://nni.readthedocs.io/en/latest/>`__ of NNI readthedocs
-* Improve `documentation for NAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.rst>`__
-* Improve documentation for `the new PAI mode <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.rst>`__
-* Add QuickStart guidance for `NAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md>`__ and `model compression <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.rst>`__
-* Improve documentation for `the supported EfficientNet <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.rst>`__
+* Improve `documentation for NAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/NasGuide.md>`__
+* Improve documentation for `the new PAI mode <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrainingService/PaiMode.md>`__
+* Add QuickStart guidance for `NAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/QuickStart.md>`__ and `model compression <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Compressor/QuickStart.md>`__
+* Improve documentation for `the supported EfficientNet <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/TrialExample/EfficientNet.md>`__
 
 Bug Fixes
 ^^^^^^^^^
@@ -448,15 +448,18 @@ Model Compression Algorithms Support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* `Knowledge Distillation <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/TrialExample/KDExample.rst>`__ algorithm and the example using itExample
+* `Knowledge Distillation <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/TrialExample/KDExample.md>`__ algorithm and the example using itExample
 * Pruners
 
-  * `L2Filter Pruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.rst#3-l2filter-pruner>`__
-  * `ActivationAPoZRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.rst#1-activationapozrankfilterpruner>`__
-  * `ActivationMeanRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.rst#2-activationmeanrankfilterpruner>`__
+  * `L2Filter Pruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#3-l2filter-pruner>`__
+  * `ActivationAPoZRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#1-activationapozrankfilterpruner>`__
+  * `ActivationMeanRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Pruner.md#2-activationmeanrankfilterpruner>`__
 
-* `BNN Quantizer <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.rst#bnn-quantizer>`__
-  #### Training Service
+* `BNN Quantizer <https://github.com/microsoft/nni/blob/v1.3/docs/en_US/Compressor/Quantizer.md#bnn-quantizer>`__
+
+Training Service
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 * 
   NFS Support for PAI
 
@@ -490,22 +493,22 @@ Major Features
 ^^^^^^^^^^^^^^
 
 
-* `Feature Engineering <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.rst>`__
+* `Feature Engineering <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/Overview.md>`__
 
   * New feature engineering interface
-  * Feature selection algorithms: `Gradient feature selector <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md>`__ & `GBDT selector <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.rst>`__
+  * Feature selection algorithms: `Gradient feature selector <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GradientFeatureSelector.md>`__ & `GBDT selector <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/FeatureEngineering/GBDTSelector.md>`__
   * `Examples for feature engineering <https://github.com/microsoft/nni/tree/v1.2/examples/feature_engineering>`__
 
 * Neural Architecture Search (NAS) on NNI
 
-  * `New NAS interface <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.rst>`__
-  * NAS algorithms: `ENAS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas>`__\ , `DARTS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts>`__\ , `P-DARTS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.rst#p-darts>`__ (in PyTorch)
+  * `New NAS interface <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/NasInterface.md>`__
+  * NAS algorithms: `ENAS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#enas>`__\ , `DARTS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#darts>`__\ , `P-DARTS <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/NAS/Overview.md#p-darts>`__ (in PyTorch)
   * NAS in classic mode (each trial runs independently)
 
 * Model compression
 
-  * `New model pruning algorithms <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.rst>`__\ : lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
-  * `New model quantization algorithms <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.rst>`__\ : QAT quantizer, DoReFa quantizer
+  * `New model pruning algorithms <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md>`__\ : lottery ticket pruning approach, L1Filter pruner, Slim pruner, FPGM pruner
+  * `New model quantization algorithms <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.md>`__\ : QAT quantizer, DoReFa quantizer
   * Support the API for exporting compressed model.
 
 * Training Service
@@ -547,9 +550,9 @@ Major Features
 ^^^^^^^^^^^^^^
 
 
-* New tuner: `PPO Tuner <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.rst>`__
-* `View stopped experiments <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.rst#view>`__
-* Tuners can now use dedicated GPU resource (see ``gpuIndices`` in `tutorial <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.rst>`__ for details)
+* New tuner: `PPO Tuner <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tuner/PPOTuner.md>`__
+* `View stopped experiments <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/Nnictl.md#view>`__
+* Tuners can now use dedicated GPU resource (see ``gpuIndices`` in `tutorial <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Tutorial/ExperimentConfig.md>`__ for details)
 * Web UI improvements
 
   * Trials detail page can now list hyperparameters of each trial, as well as their start and end time (via "add column")
@@ -558,9 +561,9 @@ Major Features
 * More examples
 
   * `EfficientNet PyTorch example <https://github.com/ultmaster/EfficientNet-PyTorch>`__
-  * `Cifar10 NAS example <https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.rst>`__
+  * `Cifar10 NAS example <https://github.com/microsoft/nni/blob/v1.1/examples/trials/nas_cifar10/README.md>`__
 
-* `Model compression toolkit - Alpha release <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.rst>`__\ : We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute
+* `Model compression toolkit - Alpha release <https://github.com/microsoft/nni/blob/v1.1/docs/en_US/Compressor/Overview.md>`__\ : We are glad to announce the alpha release for model compression toolkit on top of NNI, it's still in the experiment phase which might evolve based on usage feedback. We'd like to invite you to use, feedback and even contribute
 
 Fixed Bugs
 ^^^^^^^^^^
@@ -584,7 +587,7 @@ Major Features
 
     * Provide auto feature interface
     * Tuner based on beam search
-    * `Add Pakdd example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/auto-feature-engineering>`__
+    * `Add Pakdd example <https://github.com/microsoft/nni/tree/v1.0/examples/trials/auto-feature-engineering>`__
 
   * Add a parallel algorithm to improve the performance of TPE with large concurrency.  -PR #1052
   * Support multiphase for hyperband    -PR #1257
@@ -686,7 +689,9 @@ Major Features
 
   * ``nnictl experiment delete``\ : delete one or all experiments, it includes log, result, environment information and cache. It uses to delete useless experiment result, or save disk space.
   * ``nnictl platform clean``\ : It uses to clean up disk on a target platform. The provided YAML file includes the information of target platform, and it follows the same schema as the NNI configuration file.
-    ### Bug fix and other changes
+
+Bug fix and other changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Tuner Installation Improvements: add `sklearn <https://scikit-learn.org/stable/>`__ to nni dependencies.
 * (Bug Fix) Failed to connect to PAI http code - `Issue #1076 <https://github.com/microsoft/nni/issues/1076>`__
@@ -716,7 +721,7 @@ Major Features
 
   * Support Kubeflow TFJob/PyTorchJob v1beta2
 
-* `General NAS programming interface <https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.rst>`__
+* `General NAS programming interface <https://github.com/microsoft/nni/blob/v0.8/docs/en_US/GeneralNasInterfaces.md>`__
 
   * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
   * Provide a new command ``nnictl trial codegen`` for debugging the NAS code
@@ -855,8 +860,8 @@ Improvements
 ^^^^^^^^^^^^
 
 
-* Making `log directory <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.rst>`__ configurable
-* Support `different levels of logs <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.rst>`__\ , making it easier for debugging
+* Making `log directory <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__ configurable
+* Support `different levels of logs <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__\ , making it easier for debugging
 
 Documentation
 ^^^^^^^^^^^^^
@@ -885,7 +890,7 @@ New tuner and assessor supports
 * Support `Metis tuner <Tuner/MetisTuner.rst>`__ as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support `ENAS customized tuner <https://github.com/countif/enas_nni>`__\ , a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
 * Support `Curve fitting assessor <Assessor/CurvefittingAssessor.rst>`__ for early stop policy using learning curve extrapolation.
-* Advanced Support of `Weight Sharing <https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.rst>`__\ : Enable weight sharing for NAS tuners, currently through NFS.
+* Advanced Support of `Weight Sharing <https://github.com/microsoft/nni/blob/v0.5/docs/AdvancedNAS.md>`__\ : Enable weight sharing for NAS tuners, currently through NFS.
 
 Training Service Enhancement
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -950,8 +955,8 @@ New examples
 ^^^^^^^^^^^^
 
 
-* `FashionMnist <https://github.com/microsoft/nni/tree/v1.9/examples/trials/network_morphism>`__\ , work together with network morphism tuner
-* `Distributed MNIST example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed-pytorch>`__ written in PyTorch
+* `FashionMnist <https://github.com/microsoft/nni/tree/v0.5/examples/trials/network_morphism>`__\ , work together with network morphism tuner
+* `Distributed MNIST example <https://github.com/microsoft/nni/tree/v0.5/examples/trials/mnist-distributed-pytorch>`__ written in PyTorch
 
 Release 0.4 - 12/6/2018
 -----------------------
@@ -963,7 +968,7 @@ Major Features
 * `Kubeflow Training service <TrainingService/KubeflowMode.rst>`__
 
   * Support tf-operator
-  * `Distributed trial example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/mnist-distributed/dist_mnist.py>`__ on Kubeflow
+  * `Distributed trial example <https://github.com/microsoft/nni/tree/v0.4/examples/trials/mnist-distributed/dist_mnist.py>`__ on Kubeflow
 
 * `Grid search tuner <Tuner/GridsearchTuner.rst>`__
 * `Hyperband tuner <Tuner/HyperbandAdvisor.rst>`__
@@ -1055,9 +1060,9 @@ New examples
      docker pull msranni/nni:latest
 
 * 
-  New trial example: `NNI Sklearn Example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/sklearn>`__
+  New trial example: `NNI Sklearn Example <https://github.com/microsoft/nni/tree/v0.3/examples/trials/sklearn>`__
 
-* New competition example: `Kaggle Competition TGS Salt Example <https://github.com/microsoft/nni/tree/v1.9/examples/trials/kaggle-tgs-salt>`__
+* New competition example: `Kaggle Competition TGS Salt Example <https://github.com/microsoft/nni/tree/v0.3/examples/trials/kaggle-tgs-salt>`__
 
 Others
 ^^^^^^

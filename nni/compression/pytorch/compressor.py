@@ -669,7 +669,7 @@ class QuantGrad(torch.autograd.Function):
             raise ValueError("unrecognized QuantType.")
 
         bits = QuantGrad.get_bits_length(wrapper.config, quant_type)
-        qmin, qmax = torch.Tensor([0], device=tensor.device), torch.Tensor([(1 << bits) - 1], device=tensor.device)
+        qmin, qmax = torch.Tensor([0]).to(device=tensor.device), torch.Tensor([(1 << bits)-1]).to(device=tensor.device)
         ctx.save_for_backward(tensor, wrapper.module.scale, wrapper.module.zero_point, qmin, qmax)
         return output
 

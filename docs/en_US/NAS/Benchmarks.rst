@@ -44,12 +44,13 @@ Please make sure there is at least 10GB free disk space and note that the conver
 Example Usages
 --------------
 
-Please refer to `examples usages of Benchmarks API <./BenchmarksExample>`__.
+Please refer to `examples usages of Benchmarks API <./BenchmarksExample.rst>`__.
 
 NAS-Bench-101
 -------------
 
-`Paper link <https://arxiv.org/abs/1902.09635>`__ &nbsp; &nbsp; `Open-source <https://github.com/google-research/nasbench>`__
+* `Paper link <https://arxiv.org/abs/1902.09635>`__ 
+* `Open-source <https://github.com/google-research/nasbench>`__
 
 NAS-Bench-101 contains 423,624 unique neural networks, combined with 4 variations in number of epochs (4, 12, 36, 108), each of which is trained 3 times. It is a cell-wise search space, which constructs and stacks a cell by enumerating DAGs with at most 7 operators, and no more than 9 connections. All operators can be chosen from ``CONV3X3_BN_RELU``\ , ``CONV1X1_BN_RELU`` and ``MAXPOOL3X3``\ , except the first operator (always ``INPUT``\ ) and last operator (always ``OUTPUT``\ ).
 
@@ -85,7 +86,9 @@ API Documentation
 NAS-Bench-201
 -------------
 
-`Paper link <https://arxiv.org/abs/2001.00326>`__ &nbsp; &nbsp; `Open-source API <https://github.com/D-X-Y/NAS-Bench-201>`__ &nbsp; &nbsp;\ `Implementations <https://github.com/D-X-Y/AutoDL-Projects>`__
+* `Paper link <https://arxiv.org/abs/2001.00326>`__ 
+* `Open-source API <https://github.com/D-X-Y/NAS-Bench-201>`__ 
+* `Implementations <https://github.com/D-X-Y/AutoDL-Projects>`__
 
 NAS-Bench-201 is a cell-wise search space that views nodes as tensors and edges as operators. The search space contains all possible densely-connected DAGs with 4 nodes, resulting in 15,625 candidates in total. Each operator (i.e., edge) is selected from a pre-defined operator set (\ ``NONE``\ , ``SKIP_CONNECT``\ , ``CONV_1X1``\ , ``CONV_3X3`` and ``AVG_POOL_3X3``\ ). Training appraoches vary in the dataset used (CIFAR-10, CIFAR-100, ImageNet) and number of epochs scheduled (12 and 200). Each combination of architecture and training approach is repeated 1 - 3 times with different random seeds.
 
@@ -113,7 +116,8 @@ API Documentation
 NDS
 ---
 
-`Paper link <https://arxiv.org/abs/1905.13214>`__ &nbsp; &nbsp; `Open-source <https://github.com/facebookresearch/nds>`__
+* `Paper link <https://arxiv.org/abs/1905.13214>`__ 
+* `Open-source <https://github.com/facebookresearch/nds>`__
 
 *On Network Design Spaces for Visual Recognition* released trial statistics of over 100,000 configurations (models + hyper-parameters) sampled from multiple model families, including vanilla (feedforward network loosely inspired by VGG), ResNet and ResNeXt (residual basic block and residual bottleneck block) and NAS cells (following popular design from NASNet, Ameoba, PNAS, ENAS and DARTS). Most configurations are trained only once with a fixed seed, except a few that are trained twice or three times.
 

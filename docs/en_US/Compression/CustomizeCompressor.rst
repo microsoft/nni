@@ -5,7 +5,7 @@ Customize New Compression Algorithm
 
 In order to simplify the process of writing new compression algorithms, we have designed simple and flexible programming interface, which covers pruning and quantization. Below, we first demonstrate how to customize a new pruning algorithm and then demonstrate how to customize a new quantization algorithm.
 
-**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference `Framework overview of model compression </Compression/Framework.html>`__
+**Important Note** To better understand how to customize new pruning/quantization algorithms, users should first understand the framework that supports various pruning algorithms in NNI. Reference `Framework overview of model compression <../Compression/Framework.rst>`__
 
 Customize a new pruning algorithm
 ---------------------------------
@@ -28,7 +28,7 @@ An implementation of ``weight masker`` may look like this:
            # mask = ...
            return {'weight_mask': mask}
 
-You can reference nni provided :githublink:`weight masker <src/sdk/pynni/nni/compression/pytorch/pruning/structured_pruning.py>` implementations to implement your own weight masker.
+You can reference nni provided :githublink:`weight masker <nni/algorithms/compression/pytorch/pruning/structured_pruning.py>` implementations to implement your own weight masker.
 
 A basic ``pruner`` looks likes this:
 
@@ -52,7 +52,7 @@ A basic ``pruner`` looks likes this:
                wrapper.if_calculated = True
                return masks
 
-Reference nni provided :githublink:`pruner <src/sdk/pynni/nni/compression/pytorch/pruning/one_shot.py>` implementations to implement your own pruner class.
+Reference nni provided :githublink:`pruner <nni/algorithms/compression/pytorch/pruning/one_shot.py>` implementations to implement your own pruner class.
 
 ----
 
