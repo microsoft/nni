@@ -33,8 +33,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         advisor.intermediate_metric_callback = self._intermediate_metric_callback
         advisor.final_metric_callback = self._final_metric_callback
 
-        
-
     def add_optimizer(self, opt):
         self._optimizers.append(opt)
 
