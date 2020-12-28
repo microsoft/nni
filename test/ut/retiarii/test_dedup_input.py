@@ -62,7 +62,8 @@ class DedupInputTest(unittest.TestCase):
         #lp_dump = lp.logical_graph._dump()
 
         # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-        nni.retiarii.integration._advisor = None
+        nni.retiarii.integration_api._advisor = None
+        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         cgo = CGOExecutionEngine()
 

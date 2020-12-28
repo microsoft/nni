@@ -39,6 +39,8 @@ class CGOEngineTest(unittest.TestCase):
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
         models = _load_mnist(2)
+        nni.retiarii.integration_api._advisor = None
+        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         submit_models(*models)
 
