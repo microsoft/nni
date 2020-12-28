@@ -201,7 +201,9 @@ def convert_time_stamp_to_date(content):
 
 def check_rest(args):
     '''check if restful server is running'''
-    rest_port = Experiments().get_all_experiments().get(get_config_filename(args), None).get('port', None)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
     running, _ = check_rest_server_quick(rest_port)
     if running:
         print_normal('Restful server is running...')
@@ -218,18 +220,19 @@ def stop_experiment(args):
     if experiment_id_list:
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
-            nni_config = Experiments().get_all_experiments().get(experiment_id, None)
-            rest_pid = nni_config.get('pid', None)
+            experiment_config = Experiments()
+            experiment_dict = experiment_config.get_all_experiments()
+            rest_pid = experiment_dict.get(experiment_id, None).get('pid', None)
             if rest_pid:
                 kill_command(rest_pid)
-                tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+                tensorboard_pid_list = experiment_dict.get(experiment_id, None).get('tensorboardPidList', None)
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
                             kill_command(tensorboard_pid)
                         except Exception as exception:
                             print_error(exception)
-                    nni_config.set_config('tensorboardPidList', [])
+                    experiment_config.update_experiment(experiment_id, 'tensorboardPidList', [])
             print_normal('Stop experiment success.')
 
 def trial_ls(args):
@@ -248,9 +251,10 @@ def trial_ls(args):
     if args.head and args.tail:
         print_error('Head and tail cannot be set at the same time.')
         return
-    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
-    rest_port = nni_config.get_config('port')
-    rest_pid = nni_config.get_config('pid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -279,9 +283,10 @@ def trial_ls(args):
 
 def trial_kill(args):
     '''List trial'''
-    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
-    rest_port = nni_config.get_config('port')
-    rest_pid = nni_config.get_config('pid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -310,9 +315,10 @@ def trial_codegen(args):
 
 def list_experiment(args):
     '''Get experiment information'''
-    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
-    rest_port = nni_config.get_config('port')
-    rest_pid = nni_config.get_config('pid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -331,8 +337,9 @@ def list_experiment(args):
 
 def experiment_status(args):
     '''Show the status of experiment'''
-    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
-    rest_port = nni_config.get_config('port')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
     result, response = check_rest_server_quick(rest_port)
     if not result:
         print_normal('Restful server is not running...')
@@ -750,9 +757,10 @@ def export_trials_data(args):
             groupby.setdefault(content['trialJobId'], []).append(json.loads(content['data']))
         return groupby
 
-    nni_config = Experiments().get_all_experiments().get(get_config_filename(args), None)
-    rest_port = nni_config.get_config('port')
-    rest_pid = nni_config.get_config('pid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
 
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
