@@ -5,7 +5,7 @@ import torch
 from pathlib import Path
 
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategies import TPEStrategy
+from nni.retiarii.strategies import TPEStrategy, RandomStrategy
 from nni.retiarii.trainer import PyTorchImageClassificationTrainer
 
 from darts_model import CNN
@@ -18,7 +18,8 @@ if __name__ == '__main__':
             optimizer_kwargs={"lr": 1e-3},
             trainer_kwargs={"max_epochs": 1})
 
-    simple_startegy = TPEStrategy()
+    #simple_startegy = TPEStrategy()
+    simple_startegy = RandomStrategy()
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_startegy)
 

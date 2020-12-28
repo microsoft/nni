@@ -10,6 +10,11 @@ def import_(target: str, allow_none: bool = False) -> Any:
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
 
+def version_larger_equal(a: str, b: str) -> bool:
+    # TODO: refactor later
+    a = a.split('+')[0]
+    b = b.split('+')[0]
+    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 _records = {}
 
@@ -24,7 +29,7 @@ def add_record(key, value):
     """
     global _records
     if _records is not None:
-        assert key not in _records, '{} already in _records'.format(key)
+        #assert key not in _records, '{} already in _records'.format(key)
         _records[key] = value
 
 

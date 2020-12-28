@@ -18,7 +18,7 @@ Prerequisite for on-premises Kubernetes Service
 
     apt-get install nfs-common
 
-#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart>`__.
+7. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
 Prerequisite for Azure Kubernetes Service
 -----------------------------------------
@@ -101,7 +101,7 @@ If you use Azure Kubernetes Service, you should  set ``frameworkcontrollerConfig
 
 Note: You should explicitly set ``trainingServicePlatform: frameworkcontroller`` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode.
 
-The trial's config format for NNI frameworkcontroller mode is a simple version of FrameworkController's official config, you could refer the `Tensorflow example of FrameworkController <https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml>`__ for deep understanding.
+The trial's config format for NNI frameworkcontroller mode is a simple version of FrameworkController's official config, you could refer the `Tensorflow example of FrameworkController <https://github.com/microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/ps/cpu/tensorflowdistributedtrainingwithcpu.yaml>`__ for deep understanding.
 
 Trial configuration in frameworkcontroller mode have the following configuration keys:
 
@@ -115,7 +115,7 @@ Trial configuration in frameworkcontroller mode have the following configuration
   * cpuNum: the number of cpu device used in container.
   * memoryMB: the memory limitaion to be specified in container.
   * image: the docker image used to create pod and run the program.
-  * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the `user-manual <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.rst#frameworkattemptcompletionpolicy>`__ to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, The completion policy could helps stop ps.
+  * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the `user-manual <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy>`__ to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, The completion policy could helps stop ps.
 
 How to run example
 ------------------

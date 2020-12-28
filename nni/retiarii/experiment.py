@@ -1,5 +1,6 @@
+import atexit
 import logging
-import time
+import socket
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,10 +8,14 @@ from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
 
-from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
+import colorama
+import psutil
+
+from ..experiment import Experiment, TrainingServiceConfig, launcher
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
+
 from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
@@ -18,9 +23,11 @@ from .converter import convert_to_graph
 from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
 from .trainer.interface import BaseTrainer
 from .strategies.strategy import BaseStrategy
+from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
 
 _logger = logging.getLogger(__name__)
 
+OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
@@ -76,7 +83,7 @@ _validation_rules = {
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: Model, trainer: BaseTrainer,
-                 applied_mutators: Mutator, strategy: BaseStrategy):
+                 applied_mutators: Mutator = None, strategy: BaseStrategy = None):
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 
@@ -87,6 +94,7 @@ class RetiariiExperiment(Experiment):
         self.recorded_module_args = get_records()
 
         self._dispatcher = RetiariiAdvisor()
+        self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
@@ -103,7 +111,10 @@ class RetiariiExperiment(Experiment):
             mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
             applied_mutators.append(mutator)
         for node in ic_nodes:
-            mutator = InputChoiceMutator(node.name, node.operation.parameters['n_chosen'])
+            mutator = InputChoiceMutator(node.name,
+                                         node.operation.parameters['n_candidates'],
+                                         node.operation.parameters['n_chosen'],
+                                         node.operation.parameters['reduction'])
             applied_mutators.append(mutator)
         return applied_mutators
 
@@ -132,7 +143,7 @@ class RetiariiExperiment(Experiment):
         Thread(target=self.strategy.run, args=(base_model, self.applied_mutators)).start()
         _logger.info('Strategy started!')
 
-    def start(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> None:
+    def start(self, port: int = 8080, debug: bool = False) -> None:
         """
         Start the experiment in background.
         This method will raise exception on failure.
@@ -144,11 +155,12 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        # FIXME:
+        atexit.register(self.stop)
+
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 
-        self._proc, self._pipe = launcher.start_experiment(config, port, debug)
+        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
         assert self._proc is not None
         assert self._pipe is not None
 
@@ -156,42 +168,42 @@ class RetiariiExperiment(Experiment):
 
         # dispatcher must be created after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        Thread(target=self._dispatcher.run).start()
+        self._dispatcher_thread = Thread(target=self._dispatcher.run)
+        self._dispatcher_thread.start()
 
         self._start_strategy()
 
+        ips = [self.config.nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
+        _logger.info(msg)
+
         # TODO: register experiment management metadata
 
-    def stop(self) -> None:
-        """
-        Stop background experiment.
-        """
-        self._proc.kill()
-        self._pipe.close()
-
-        self.port = None
-        self._proc = None
-        self._pipe = None
-
-    def run(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        self.config = config
-        self.start(config, port, debug)
-        try:
-            while True:
-                time.sleep(10)
-                status = self.get_status()
-                # TODO: double check the status
-                if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
-                    return status
-        finally:
-            self.stop()
+        if isinstance(self.trainer, OneShotTrainers):
+            self.trainer.fit()
+        else:
+            assert config is not None, 'You are using classic search mode, config cannot be None!'
+            self.config = config
+            super().run(port, debug)
 
-    def get_status(self) -> str:
-        if self.port is None:
-            raise RuntimeError('Experiment is not running')
-        resp = rest.get(self.port, '/check-status')
-        return resp['status']
+    def export_top_models(self, top_n: int):
+        """
+        export several top performing models
+        """
+        raise NotImplementedError
+
+    def retrain_model(self, model):
+        """
+        this function retrains the exported model, and test it to output test accuracy
+        """
+        raise NotImplementedError

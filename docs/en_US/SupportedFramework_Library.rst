@@ -11,44 +11,30 @@ Supported AI Frameworks
 -----------------------
 
 
-* :raw-html:`<b>[PyTorch]</b>` https://github.com/pytorch/pytorch
+* `PyTorch <https://github.com/pytorch/pytorch>`__
 
-  .. raw:: html
+  * :githublink:`MNIST-pytorch <examples/trials/mnist-distributed-pytorch>`
+  * `CIFAR-10 <./TrialExample/Cifar10Examples.rst>`__
+  * :githublink:`TGS salt identification chanllenge <examples/trials/kaggle-tgs-salt/README.md>`
+  * :githublink:`Network_morphism <examples/trials/network_morphism/README.md>`
 
-     <ul> 
-         <li><a href="../../examples/trials/mnist-distributed-pytorch">MNIST-pytorch</a><br/></li>
-         <li><a href="TrialExample/Cifar10Examples.md">CIFAR-10</a><br/></li>
-         <li><a href="../../examples/trials/kaggle-tgs-salt/README.md">TGS salt identification chanllenge</a><br/></li>
-         <li><a href="../../examples/trials/network_morphism/README.md">Network_morphism</a><br/></li>
-       </ul>
+* `TensorFlow <https://github.com/tensorflow/tensorflow>`__
 
+  * :githublink:`MNIST-tensorflow <examples/trials/mnist-distributed>`
+  * :githublink:`Squad <examples/trials/ga_squad/README.md>`
 
-* :raw-html:`<b>[TensorFlow]</b>` https://github.com/tensorflow/tensorflow
+* `Keras <https://github.com/keras-team/keras>`__
 
-  .. raw:: html
-
-     <ul> 
-         <li><a href="../../examples/trials/mnist-distributed">MNIST-tensorflow</a><br/></li>
-          <li><a href="../../examples/trials/ga_squad/README.md">Squad</a><br/></li>
-       </ul>
+  * :githublink:`MNIST-keras <examples/trials/mnist-keras>`
+  * :githublink:`Network_morphism <examples/trials/network_morphism/README.md>`
 
 
-* :raw-html:`<b>[Keras]</b>` https://github.com/keras-team/keras
-
-  .. raw:: html
-
-     <ul>
-         <li><a href="../../examples/trials/mnist-keras">MNIST-keras</a><br/></li>
-         <li><a href="../../examples/trials/network_morphism/README.md">Network_morphism</a><br/></li>
-       </ul>
-
-
-* :raw-html:`<b>[MXNet]</b>` https://github.com/apache/incubator-mxnet
-* :raw-html:`<b>[Caffe2]</b>` https://github.com/BVLC/caffe
-* :raw-html:`<b>[CNTK (Python language)]</b>` https://github.com/microsoft/CNTK
-* :raw-html:`<b>[Spark MLlib]</b>` http://spark.apache.org/mllib/
-* :raw-html:`<b>[Chainer]</b>` https://chainer.org/
-* :raw-html:`<b>[Theano]</b>` https://pypi.org/project/Theano/ :raw-html:`<br/>`
+* `MXNet <https://github.com/apache/incubator-mxnet>`__
+* `Caffe2 <https://github.com/BVLC/caffe>`__
+* `CNTK (Python language) <https://github.com/microsoft/CNTK>`__
+* `Spark MLlib <http://spark.apache.org/mllib/>`__
+* `Chainer <https://chainer.org/>`__
+* `Theano <https://pypi.org/project/Theano/>`__
 
 You are encouraged to `contribute more examples <Tutorial/Contributing.rst>`__ for other NNI users. 
 
@@ -58,22 +44,16 @@ Supported Library
 NNI also supports all libraries written in python.Here are some common libraries, including some algorithms based on GBDT: XGBoost, CatBoost and lightGBM.
 
 
-* :raw-html:`<b>[Scikit-learn]</b>` https://scikit-learn.org/stable/
+* `Scikit-learn <https://scikit-learn.org/stable/>`__
 
-  .. raw:: html
+  * `Scikit-learn <TrialExample/SklearnExamples.rst>`__
 
-     <ul>
-       <li><a href="TrialExample/SklearnExamples.md">Scikit-learn</a><br/></li>
-       </ul>
+* `XGBoost <https://xgboost.readthedocs.io/en/latest/>`__
+* `CatBoost <https://catboost.ai/>`__
+* `LightGBM <https://lightgbm.readthedocs.io/en/latest/>`__
 
-
-* :raw-html:`<b>[XGBoost]</b>` https://xgboost.readthedocs.io/en/latest/
-* :raw-html:`<b>[CatBoost]</b>` https://catboost.ai/
-* :raw-html:`<b>[LightGBM]</b>` https://lightgbm.readthedocs.io/en/latest/
-    :raw-html:`<ul>
-    <li><a href="TrialExample/GbdtExample.md">Auto-gbdt</a><br/></li>
-    </ul>`
+  * `Auto-gbdt <TrialExample/GbdtExample.rst>`__
 
 Here is just a small list of libraries that supported by NNI. If you are interested in NNI, you can refer to the `tutorial <TrialExample/Trials.rst>`__ to complete your own hacks.
 
-In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer `Write a Trial Run on NNI <TrialExample/Trials.md>`__. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to `here <Tutorial/Contributing.rst>`__.
+In addition to the above examples, we also welcome more and more users to apply NNI to your own work, if you have any doubts, please refer `Write a Trial Run on NNI <TrialExample/Trials.rst>`__. In particular, if you want to be a contributor of NNI, whether it is the sharing of examples , writing of Tuner or otherwise, we are all looking forward to your participation.More information please refer to `here <Tutorial/Contributing.rst>`__.

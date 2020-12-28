@@ -3,7 +3,7 @@ Dependency-aware Mode for Filter Pruning
 
 Currently, we have several filter pruning algorithm for the convolutional layers: FPGM Pruner, L1Filter Pruner, L2Filter Pruner, Activation APoZ Rank Filter Pruner, Activation Mean Rank Filter Pruner, Taylor FO On Weight Pruner. In these filter pruning algorithms, the pruner will prune each convolutional layer separately. While pruning a convolution layer, the algorithm will quantify the importance of each filter based on some specific rules(such as l1-norm), and prune the less important filters.
 
-As `dependency analysis utils <./CompressionUtils.md>`__ shows, if the output channels of two convolutional layers(conv1, conv2) are added together, then these two conv layers have channel dependency with each other(more details please see `Compression Utils <./CompressionUtils.rst>`__\ ). Take the following figure as an example.
+As `dependency analysis utils <./CompressionUtils.rst>`__ shows, if the output channels of two convolutional layers(conv1, conv2) are added together, then these two conv layers have channel dependency with each other(more details please see `Compression Utils <./CompressionUtils.rst>`__\ ). Take the following figure as an example.
 
 
 .. image:: ../../img/mask_conflict.jpg

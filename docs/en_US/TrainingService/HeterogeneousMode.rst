@@ -3,13 +3,15 @@
 
 Run NNI on heterogeneous mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
 
-## Setup environment
-NNI has supported [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md) and [AML](./AMLMode.md) for heterogeneous training service. Before starting an experiment using these mode, users should setup the corresponding environment for the platforms. More details about the environment setup could be found in the corresponding docs.
+Setup environment
+-----------------
 
+NNI has supported `local <./LocalMode.rst>`__\ , `remote <./RemoteMachineMode.rst>`__\ , `PAI <./PaiMode.rst>`__\ , and `AML <./AMLMode.rst>`__ for heterogeneous training service. Before starting an experiment using these mode, users should setup the corresponding environment for the platforms. More details about the environment setup could be found in the corresponding docs.
 
+Run an experiment
+-----------------
 
-## Run an experiment
-Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's content is like:
+Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's content is like:
 
 .. code-block:: yaml
 
@@ -45,8 +47,8 @@ Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's conte
 Configurations for heterogeneous mode:
 
 heterogeneousConfig:
-* trainingServicePlatforms. required key. This field specify the platforms used in heterogeneous mode, the values using yaml list format. NNI support setting `local`, `remote`, `aml`, `pai` in this field.
+
+* trainingServicePlatforms. required key. This field specify the platforms used in heterogeneous mode, the values using yaml list format. NNI support setting ``local``, ``remote``, ``aml``, ``pai`` in this field.
 
 
-Note:  
-    If setting a platform in trainingServicePlatforms mode, users should also set the corresponding configuration for the platform. For example, if set `remote` as one of the platform, should also set `machineList` and `remoteConfig` configuration.
+.. Note:: If setting a platform in trainingServicePlatforms mode, users should also set the corresponding configuration for the platform. For example, if set ``remote`` as one of the platform, should also set ``machineList`` and ``remoteConfig`` configuration.
