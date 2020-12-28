@@ -23,6 +23,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._original_models = {}
         self._original_model_to_multi_model = {}
 
+        self.resources = 0
+
         # register advisor callbacks
         advisor = get_advisor()
         advisor.send_trial_callback = self._send_trial_callback
@@ -30,6 +32,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         advisor.trial_end_callback = self._trial_end_callback
         advisor.intermediate_metric_callback = self._intermediate_metric_callback
         advisor.final_metric_callback = self._final_metric_callback
+
+        
 
     def add_optimizer(self, opt):
         self._optimizers.append(opt)
@@ -79,12 +83,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._listeners.append(listener)
 
     def _send_trial_callback(self, paramater: dict) -> None:
-        for listener in self._listeners:
-            listener.on_resource_used(0)  # FIXME: find the real resource id
+        if self.resources <= 0:
+            _logger.warning('There is no available resource, but trial is submitted.')
+        self.resources -= 1
+        _logger.info('on_resource_used: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
-        for listener in self._listeners:
-            listener.on_resource_available([0] * num_trials)  # FIXME: find the real resource id
+        self.resources += num_trials
+        _logger.info('on_resource_available: %d', self.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]
