@@ -1,7 +1,7 @@
 **Run an Experiment on Heterogeneous Mode**
 ===========================================
 
-Run NNI on heterogeneous mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
+Run NNI on heterogeneous mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously.
 
 Setup environment
 -----------------
