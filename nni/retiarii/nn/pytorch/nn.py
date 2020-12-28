@@ -5,9 +5,11 @@ from typing import Any, List
 import torch
 import torch.nn as nn
 
-from ...utils import add_record
+from ...utils import add_record, version_larger_equal
 
 _logger = logging.getLogger(__name__)
+
+# NOTE: support pytorch version >= 1.5.0
 
 __all__ = [
     'LayerChoice', 'InputChoice', 'Placeholder',
@@ -29,18 +31,27 @@ __all__ = [
     'ConstantPad3d', 'Bilinear', 'CosineSimilarity', 'Unfold', 'Fold',
     'AdaptiveLogSoftmaxWithLoss', 'TransformerEncoder', 'TransformerDecoder',
     'TransformerEncoderLayer', 'TransformerDecoderLayer', 'Transformer',
-    #'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
-    #'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
-    #'Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss', 'ChannelShuffle',
-    'Flatten', 'Hardsigmoid', 'Hardswish'
+    'Flatten', 'Hardsigmoid'
 ]
 
+if version_larger_equal(torch.__version__, '1.6.0'):
+    __all__.append('Hardswish')
+
+if version_larger_equal(torch.__version__, '1.7.0'):
+    __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
+
+#'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
+#'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
+#'ChannelShuffle'
 
 class LayerChoice(nn.Module):
     def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
         super(LayerChoice, self).__init__()
         self.candidate_ops = op_candidates
         self.label = key
+        self.key = key  # deprecated, for backward compatibility
+        for i, module in enumerate(op_candidates):  # deprecated, for backward compatibility
+            self.add_module(str(i), module)
         if reduction or return_mask:
             _logger.warning('input arguments `reduction` and `return_mask` are deprecated!')
 
@@ -52,10 +63,12 @@ class InputChoice(nn.Module):
     def __init__(self, n_candidates=None, choose_from=None, n_chosen=1,
                  reduction="sum", return_mask=False, key=None):
         super(InputChoice, self).__init__()
+        self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
         self.label = key
-        if n_candidates or choose_from or return_mask:
+        self.key = key  # deprecated, for backward compatibility
+        if choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
@@ -86,13 +99,31 @@ class Placeholder(nn.Module):
 
 
 class ChosenInputs(nn.Module):
-    def __init__(self, chosen: int):
+    """
+    """
+    def __init__(self, chosen: List[int], reduction: str):
         super().__init__()
         self.chosen = chosen
+        self.reduction = reduction
 
     def forward(self, candidate_inputs):
-        # TODO: support multiple chosen inputs
-        return candidate_inputs[self.chosen]
+        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
+
+    def _tensor_reduction(self, reduction_type, tensor_list):
+        if reduction_type == "none":
+            return tensor_list
+        if not tensor_list:
+            return None  # empty. return None for now
+        if len(tensor_list) == 1:
+            return tensor_list[0]
+        if reduction_type == "sum":
+            return sum(tensor_list)
+        if reduction_type == "mean":
+            return sum(tensor_list) / len(tensor_list)
+        if reduction_type == "concat":
+            return torch.cat(tensor_list, dim=1)
+        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+
 
 # the following are pytorch modules
 
@@ -132,7 +163,6 @@ def wrap_module(original_class):
     return original_class
 
 
-# TODO: support different versions of pytorch
 Identity = wrap_module(nn.Identity)
 Linear = wrap_module(nn.Linear)
 Conv1d = wrap_module(nn.Conv1d)
@@ -236,6 +266,17 @@ TransformerDecoder = wrap_module(nn.TransformerDecoder)
 TransformerEncoderLayer = wrap_module(nn.TransformerEncoderLayer)
 TransformerDecoderLayer = wrap_module(nn.TransformerDecoderLayer)
 Transformer = wrap_module(nn.Transformer)
+Flatten = wrap_module(nn.Flatten)
+Hardsigmoid = wrap_module(nn.Hardsigmoid)
+
+if version_larger_equal(torch.__version__, '1.6.0'):
+    Hardswish = wrap_module(nn.Hardswish)
+
+if version_larger_equal(torch.__version__, '1.7.0'):
+    SiLU = wrap_module(nn.SiLU)
+    Unflatten = wrap_module(nn.Unflatten)
+    TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
+
 #LazyLinear = wrap_module(nn.LazyLinear)
 #LazyConv1d = wrap_module(nn.LazyConv1d)
 #LazyConv2d = wrap_module(nn.LazyConv2d)
@@ -243,10 +284,4 @@ Transformer = wrap_module(nn.Transformer)
 #LazyConvTranspose1d = wrap_module(nn.LazyConvTranspose1d)
 #LazyConvTranspose2d = wrap_module(nn.LazyConvTranspose2d)
 #LazyConvTranspose3d = wrap_module(nn.LazyConvTranspose3d)
-Flatten = wrap_module(nn.Flatten)
-#Unflatten = wrap_module(nn.Unflatten)
-Hardsigmoid = wrap_module(nn.Hardsigmoid)
-Hardswish = wrap_module(nn.Hardswish)
-#SiLU = wrap_module(nn.SiLU)
-#TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
 #ChannelShuffle = wrap_module(nn.ChannelShuffle)
