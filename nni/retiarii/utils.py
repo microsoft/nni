@@ -35,6 +35,12 @@ def add_record(key, value):
         _records[key] = value
 
 
+def del_record(key):
+    global _records
+    if _records is not None:
+        _records.pop(key, None)
+
+
 def _blackbox_cls(cls, register_format=None):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
@@ -47,7 +53,7 @@ def _blackbox_cls(cls, register_format=None):
                 full_args[argname] = value
 
             # eject un-serializable arguments
-            for k in full_args:
+            for k in list(full_args.keys()):
                 if not isinstance(full_args[k], (int, float, str, dict, list)):
                     full_args.pop(k)
 
@@ -60,7 +66,7 @@ def _blackbox_cls(cls, register_format=None):
             super().__init__(*args, **kwargs)
 
         def __del__(self):
-            raise RuntimeError(f'Blackbox class instance {str(self)} should not be deleted.')
+            del_record(id(self))
 
     wrapper.__name__ = cls.__name__
     wrapper.__qualname__ = cls.__qualname__

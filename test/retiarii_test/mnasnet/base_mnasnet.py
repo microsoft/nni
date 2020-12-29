@@ -127,7 +127,7 @@ class MNASNet(nn.Module):
 
     def __init__(self, alpha, depths, convops, kernel_sizes, num_layers,
                  skips, num_classes=1000, dropout=0.2):
-        super(MNASNet, self).__init__()
+        super().__init__()
         assert alpha > 0.0
         assert len(depths) == len(convops) == len(kernel_sizes) == len(num_layers) == len(skips) == 7
         self.alpha = alpha

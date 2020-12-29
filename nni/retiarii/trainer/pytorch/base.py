@@ -80,7 +80,7 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
             Keyword arguments passed to trainer. Will be passed to Trainer class in future. Currently,
             only the key ``max_epochs`` is useful.
         """
-        super(PyTorchImageClassificationTrainer, self).__init__()
+        super().__init__()
         self._use_cuda = torch.cuda.is_available()
         self.model = model
         if self._use_cuda:
