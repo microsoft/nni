@@ -418,7 +418,7 @@ def _handle_layerchoice(module):
     global modules_arg
 
     m_attrs = {}
-    candidates = module.candidate_ops
+    candidates = module.op_candidates
     choices = []
     for cand in candidates:
         assert id(cand) in modules_arg, 'id not exist: {}'.format(id(cand))
@@ -508,7 +508,7 @@ def convert_module(script_module, module, module_name, ir_model):
 
     if id(module) not in modules_arg:
         raise RuntimeError(f'{original_type_name} arguments are not recorded, \
-            you might have forgotten to decorate this class with @register_module()')
+            you might have forgotten to decorate this class with @blackbox_module')
     # TODO: if we parse this module, it means we will create a graph (module class)
     # for this module. Then it is not necessary to record this module's arguments
     # return ir_graph, modules_arg[id(module)].

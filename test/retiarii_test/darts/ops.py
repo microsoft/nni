@@ -1,8 +1,8 @@
 import torch
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import register_module
+from nni.retiarii import blackbox_module
 
-@register_module()
+@blackbox_module
 class DropPath(nn.Module):
     def __init__(self, p=0.):
         """
@@ -24,7 +24,7 @@ class DropPath(nn.Module):
 
         return x
 
-@register_module()
+@blackbox_module
 class PoolBN(nn.Module):
     """
     AvgPool or MaxPool with BN. `pool_type` must be `max` or `avg`.
@@ -45,7 +45,7 @@ class PoolBN(nn.Module):
         out = self.bn(out)
         return out
 
-@register_module()
+@blackbox_module
 class StdConv(nn.Module):
     """
     Standard conv: ReLU - Conv - BN
@@ -61,7 +61,7 @@ class StdConv(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-@register_module()
+@blackbox_module
 class FacConv(nn.Module):
     """
     Factorized conv: ReLU - Conv(Kx1) - Conv(1xK) - BN
@@ -78,7 +78,7 @@ class FacConv(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-@register_module()
+@blackbox_module
 class DilConv(nn.Module):
     """
     (Dilated) depthwise separable conv.
@@ -98,7 +98,7 @@ class DilConv(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-@register_module()
+@blackbox_module
 class SepConv(nn.Module):
     """
     Depthwise separable conv.
@@ -114,7 +114,7 @@ class SepConv(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-@register_module()
+@blackbox_module
 class FactorizedReduce(nn.Module):
     """
     Reduce feature map size by factorized pointwise (stride=2).

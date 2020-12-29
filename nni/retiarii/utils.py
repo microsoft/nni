@@ -10,11 +10,13 @@ def import_(target: str, allow_none: bool = False) -> Any:
     module = __import__(path, globals(), locals(), [identifier])
     return getattr(module, identifier)
 
+
 def version_larger_equal(a: str, b: str) -> bool:
     # TODO: refactor later
     a = a.split('+')[0]
     b = b.split('+')[0]
     return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
+
 
 _records = {}
 
@@ -29,73 +31,60 @@ def add_record(key, value):
     """
     global _records
     if _records is not None:
-        #assert key not in _records, '{} already in _records'.format(key)
+        assert key not in _records, '{} already in _records'.format(key)
         _records[key] = value
 
 
-def _register_module(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
+def _blackbox_cls(cls, register_format=None):
+    class wrapper(cls):
+        def __init__(self, *args, **kwargs):
+            argname_list = list(inspect.signature(cls).parameters.keys())
+            full_args = {}
+            full_args.update(kwargs)
 
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            full_args[argname_list[i]] = arg
-        add_record(id(self), full_args)
+            assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
+            for argname, value in zip(argname_list, args):
+                full_args[argname] = value
 
-        orig_init(self, *args, **kws)  # Call the original __init__
+            # eject un-serializable arguments
+            for k in full_args:
+                if not isinstance(full_args[k], (int, float, str, dict, list)):
+                    full_args.pop(k)
 
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
+            if register_format == 'args':
+                add_record(id(self), full_args)
+            elif register_format == 'full':
+                full_class_name = cls.__module__ + '.' + cls.__name__
+                add_record(id(self), {'modulename': full_class_name, 'args': full_args})
+
+            super().__init__(*args, **kwargs)
+
+        def __del__(self):
+            raise RuntimeError(f'Blackbox class instance {str(self)} should not be deleted.')
+
+    wrapper.__name__ = cls.__name__
+    wrapper.__qualname__ = cls.__qualname__
+    wrapper.__init__.__doc__ = cls.__init__.__doc__
+
+    return wrapper
 
 
-def register_module():
+def blackbox(cls, *args, **kwargs):
+    return _blackbox_cls(cls, 'args')(*args, **kwargs)
+
+
+def blackbox_module(cls):
     """
-    Register a module.
+    Register a module. Use it as a decorator.
     """
-    # use it as a decorator: @register_module()
-    def _register(cls):
-        m = _register_module(
-            original_class=cls)
-        return m
-
-    return _register
+    return _blackbox_cls(cls, 'args')
 
 
-def _register_trainer(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
-
-    full_class_name = original_class.__module__ + '.' + original_class.__name__
-
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            # TODO: support both pytorch and tensorflow
-            from .nn.pytorch import Module
-            if isinstance(args[i], Module):
-                # ignore the base model object
-                continue
-            full_args[argname_list[i]] = arg
-        add_record(id(self), {'modulename': full_class_name, 'args': full_args})
-
-        orig_init(self, *args, **kws)  # Call the original __init__
-
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
-
-
-def register_trainer():
-    def _register(cls):
-        m = _register_trainer(
-            original_class=cls)
-        return m
-
-    return _register
+def blackbox_trainer(cls):
+    """
+    Register a trainer. Use it as a decorator.
+    """
+    return _blackbox_cls(cls, 'full')
 
 
 _last_uid = defaultdict(int)

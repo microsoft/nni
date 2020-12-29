@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 import nni
 
 from ..interface import BaseTrainer
-from ...utils import register_trainer
+from ...utils import blackbox_trainer
 
 
 def get_default_transform(dataset: str) -> Any:
@@ -43,7 +43,7 @@ def get_default_transform(dataset: str) -> Any:
     return None
 
 
-@register_trainer()
+@blackbox_trainer
 class PyTorchImageClassificationTrainer(BaseTrainer):
     """
     Image classification trainer for PyTorch.
