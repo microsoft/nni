@@ -8,6 +8,8 @@ Introduction to NNI Training Services
     OpenPAI<./TrainingService/PaiMode>
     OpenPAI Yarn Mode<./TrainingService/PaiYarnMode>
     Kubeflow<./TrainingService/KubeflowMode>
+    AdaptDL<./TrainingService/AdaptDLMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
     AML<./TrainingService/AMLMode>
+    Heterogeneous<./TrainingService/HeterogeneousMode>

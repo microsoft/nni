@@ -1,0 +1,55 @@
+{
+    "apiVersion": "apps/v1",
+    "kind": "Deployment",
+    "metadata": {
+        "name": "<name>",
+        "labels": {
+            "expId": "<exp_id>"
+        }
+    },
+    "spec": {
+        "selector": {
+           "matchLabels": {
+              "app": "<name>"
+           }
+        },
+        "replicas": 1,
+        "template": {
+            "metadata": {
+                "labels": {
+                    "app": "<name>"
+                }
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "command": ["tensorboard"],
+                        "args": ["--host=0.0.0.0", "--logdir=/adaptdl/tensorboard", "--port=6006"],
+                        "image": "tensorflow/tensorflow",
+                        "name": "tensorboard",
+                        "ports": [
+                            {
+                                "containerPort": 6006
+                            }
+                        ],
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/adaptdl/tensorboard",
+                                "name": "adaptdl-tensorboard-pvc",
+                                "subPath": "adaptdl/tensorboard"
+                            }
+                        ]
+                    }
+                ],
+                "volumes": [
+                    {
+                        "name": "adaptdl-tensorboard-pvc",
+                        "persistentVolumeClaim": {
+                            "claimName": "<adaptdl_tensorflow_pvc_name>"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}

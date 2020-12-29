@@ -1,0 +1,132 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+jobs:
+- job: validate_version_number
+  pool:
+    vmImage: Ubuntu 18.04
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python version
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $BRANCH_TAG
+      if [[ $BRANCH_TAG = v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^v[0-9](.[0-9])+$ ]]; then
+        echo 'Build version match branch tag'
+      else
+        echo 'Build version does not match branch tag'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'release' )
+    displayName: Validate release version number and branch tag
+
+  - script: |
+      echo $(NNI_RELEASE)
+      if [[ $(NNI_RELEASE) =~ ^[0-9](.[0-9])+a[0-9]$ ]]; then
+        echo 'Valid prerelease version $(NNI_RELEASE)'
+        echo `git describe --tags --abbrev=0`
+      else
+        echo 'Invalid build version $(NNI_RELEASE)'
+        exit 1
+      fi
+    condition: ne( variables['build_type'], 'rerelease' )
+    displayName: Validate prerelease version number
+
+- job: linux
+  dependsOn: validate_version_number
+  condition: succeeded()
+  pool:
+    vmImage: Ubuntu 18.04
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python version
+
+  - script: |
+      python -m pip install --upgrade pip setuptools twine
+      python test/vso_tools/build_wheel.py $(NNI_RELEASE)
+
+      if [ $(build_type) = 'release' ]
+        echo 'uploading release package to pypi...'
+        python -m twine upload -u nni -p $(pypi_password) dist/*
+      then
+      else
+        echo 'uploading prerelease package to testpypi...'
+        python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
+      fi
+    displayName: Build and upload wheel
+
+  - script: |
+      if [ $(build_type) = 'release' ]
+      then
+        docker login -u msranni -p $(docker_hub_password)
+        export IMAGE_NAME=msranni/nni
+      else
+        docker login -u nnidev -p $(docker_hub_password)
+        export IMAGE_NAME=nnidev/nni-test
+      fi
+
+      echo "## Building ${IMAGE_NAME}:$(NNI_RELEASE) ##"
+      docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
+      docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
+      docker push ${IMAGE_NAME}
+      docker push ${IMAGE_NAME}:$(NNI_RELEASE)
+    displayName: Build and upload docker image
+
+- job: macos
+  dependsOn: validate_version_number
+  condition: succeeded()
+  pool:
+    vmImage: macOS-10.15
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python version
+
+  - script: |
+      python -m pip install --upgrade pip setuptools twine
+      python test/vso_tools/build_wheel.py $(NNI_RELEASE)
+
+      if [ $(build_type) = 'release' ]
+        echo '## uploading to pypi ##'
+        python -m twine upload -u nni -p $(pypi_password) dist/*
+      then
+      else
+        echo '## uploading to testpypi ##'
+        python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
+      fi
+    displayName: Build and upload wheel
+
+- job: windows
+  dependsOn: validate_version_number
+  condition: succeeded()
+  pool:
+    vmImage: windows-2019
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.8
+    displayName: Configure Python version
+
+  - powershell: |
+      python -m pip install --upgrade pip setuptools twine
+      python test/vso_tools/build_wheel.py $(NNI_RELEASE)
+
+      if($env:BUILD_TYPE -eq 'release'){
+        Write-Host '## uploading to pypi ##'
+        python -m twine upload -u nni -p $(pypi_password) dist/*
+      }
+      else{
+        Write-Host '## uploading to testpypi ##'
+        python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
+      }
+    displayName: Build and upload wheel

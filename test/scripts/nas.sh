@@ -21,7 +21,7 @@ fi
 echo "testing darts..."
 cd $EXAMPLE_DIR/darts
 python3 search.py --epochs 1 --channels 2 --layers 4
-python3 retrain.py --arc-checkpoint ./checkpoints/epoch_0.json --layers 4 --epochs 1
+python3 retrain.py --arc-checkpoint ./checkpoint.json --layers 4 --epochs 1
 
 echo "testing enas..."
 cd $EXAMPLE_DIR/enas

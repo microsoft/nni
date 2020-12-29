@@ -1,13 +1,16 @@
+import logging
 import os
 import sys
-import logging
 from argparse import ArgumentParser
-import torch
-import datasets
 
-from putils import get_parameters
+import torch
+from nni.algorithms.nas.pytorch.proxylessnas import ProxylessNasTrainer
+from torchvision import transforms
+
+import datasets
 from model import SearchMobileNet
-from nni.nas.pytorch.proxylessnas import ProxylessNasTrainer
+from nni.algorithms.nas.pytorch.proxylessnas import ProxylessNasTrainer
+from putils import LabelSmoothingLoss, accuracy, get_parameters
 from retrain import Retrain
 
 logger = logging.getLogger('nni_proxylessnas')
@@ -30,7 +33,7 @@ if __name__ == "__main__":
     parser.add_argument("--resize_scale", default=0.08, type=float)
     parser.add_argument("--distort_color", default='normal', type=str, choices=['normal', 'strong', 'None'])
     # configurations for training mode
-    parser.add_argument("--train_mode", default='search', type=str, choices=['search', 'retrain'])
+    parser.add_argument("--train_mode", default='search', type=str, choices=['search_v1', 'search', 'retrain'])
     # configurations for search
     parser.add_argument("--checkpoint_path", default='./search_mobile_net.pt', type=str)
     parser.add_argument("--arch_path", default='./arch_path.pt', type=str)
@@ -80,6 +83,26 @@ if __name__ == "__main__":
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
     if args.train_mode == 'search':
+        from nni.retiarii.trainer.pytorch import ProxylessTrainer
+        from torchvision.datasets import ImageNet
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
+        dataset = ImageNet(args.data_path, transform=transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            normalize,
+        ]))
+        trainer = ProxylessTrainer(model,
+                                   loss=LabelSmoothingLoss(),
+                                   dataset=dataset,
+                                   optimizer=optimizer,
+                                   metrics=lambda output, target: accuracy(output, target, topk=(1, 5,)),
+                                   num_epochs=120,
+                                   log_frequency=10)
+        trainer.fit()
+        print('Final architecture:', trainer.export())
+    elif args.train_mode == 'search_v1':
         # this is architecture search
         logger.info('Creating ProxylessNasTrainer...')
         trainer = ProxylessNasTrainer(model,
