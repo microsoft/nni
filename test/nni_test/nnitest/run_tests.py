@@ -41,13 +41,13 @@ def update_training_service_config(config, training_service, config_file_path):
     
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
-        containerCodeDir = '/'
+        containerCodeDir = config['trial']['codeDir']
         # replace metric test folders to container folder
         if config['trial']['codeDir'] == '.':
             containerCodeDir = '/' + config_file_path[:config_file_path.rfind('/')]
         elif config['trial']['codeDir'] == '../naive_trial':
             containerCodeDir = '/test/config/naive_trial'
-        else:
+        elif '../../../' in config['trial']['codeDir']:
             # replace example folders to container folder
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
