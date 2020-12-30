@@ -60,13 +60,16 @@ Click the tab "Overview".
 
 
 
-* You can review and download the experiment results and nni-manager/dispatcher log files from the "Download" button.
+* You can review and download the experiment results(experiment config, trial message and intermeidate metric) when you click the button named `Experiment summary`.
 
 
-.. image:: ../../img/webui-img/download.png
-   :target: ../../img/webui-img/download.png
+.. image:: ../../img/webui-img/summary.png
+   :target: ../../img/webui-img/summary.png
    :alt: 
 
+
+
+* You can see nni-manager/dispatcher log files from the "Download" button.
 
 
 * You can change some experiment configurations such as maxExecDuration, maxTrialNum and trial concurrency on here.
