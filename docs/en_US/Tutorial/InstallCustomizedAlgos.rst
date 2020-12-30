@@ -160,3 +160,9 @@ Run following command to uninstall an installed package:
 For example:
 
 ``nnictl algo unregister demotuner``
+
+
+Migrate previous customized algorithms
+--------------------------------------
+
+All that needs to be modified is to delete ``NNI Package :: tuner`` metadata in ``setup.py`` and add a meta file mentioned in `4. Prepare meta file`_. Then you can follow `Register customized algorithms as builtin tuners, assessors and advisors`_ to register your customized algorithms.
