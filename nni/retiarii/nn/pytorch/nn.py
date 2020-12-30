@@ -4,7 +4,7 @@ from typing import Any, List
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, blackbox_module, version_larger_equal
+from ...utils import add_record, blackbox_module, uid, version_larger_equal
 
 _logger = logging.getLogger(__name__)
 
@@ -44,8 +44,8 @@ class LayerChoice(nn.Module):
     def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
         super(LayerChoice, self).__init__()
         self.op_candidates = op_candidates
-        self.label = key
-        self.key = key  # deprecated, for backward compatibility
+        self.label = key if key is not None else f'layerchoice_{uid()}'
+        self.key = self.label  # deprecated, for backward compatibility
         for i, module in enumerate(op_candidates):  # deprecated, for backward compatibility
             self.add_module(str(i), module)
         if reduction or return_mask:
@@ -62,8 +62,8 @@ class InputChoice(nn.Module):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
-        self.label = key
-        self.key = key  # deprecated, for backward compatibility
+        self.label = key if key is not None else f'inputchoice_{uid()}'
+        self.key = self.label  # deprecated, for backward compatibility
         if choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 

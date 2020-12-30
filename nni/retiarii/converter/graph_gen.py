@@ -455,13 +455,15 @@ class GraphConverter:
         # also has LayerChoice or InputChoice or ValueChoice
         original_type_name = script_module.original_name
         m_attrs = None
-        if original_type_name == OpTypeName.LayerChoice:
+        if original_type_name in MODULE_EXCEPT_LIST:
+            pass  # do nothing
+        elif original_type_name == OpTypeName.LayerChoice:
             m_attrs = self._handle_layerchoice(module)
         elif original_type_name == OpTypeName.InputChoice:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.Placeholder:
             m_attrs = self.modules_arg[id(module)]
-        elif original_type_name in torch.nn.__dict__ and original_type_name not in MODULE_EXCEPT_LIST:
+        elif original_type_name in torch.nn.__dict__:
             # this is a basic module from pytorch, no need to parse its graph
             assert id(module) in self.modules_arg, f'{original_type_name} arguments are not recorded'
             m_attrs = self.modules_arg[id(module)]
