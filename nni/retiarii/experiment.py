@@ -29,6 +29,7 @@ _logger = logging.getLogger(__name__)
 
 OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
+
 @dataclass(init=False)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
@@ -128,6 +129,9 @@ class RetiariiExperiment(Experiment):
         base_model_ir = convert_to_graph(script_module, self.base_model)
 
         recorded_module_args = get_records()
+        if id(self.trainer) not in recorded_module_args:
+            raise KeyError('Your trainer is not found in registered classes. You might have forgotten to \
+                register your customized trainer with @register_trainer decorator.')
         trainer_config = recorded_module_args[id(self.trainer)]
         base_model_ir.apply_trainer(trainer_config['modulename'], trainer_config['args'])
 

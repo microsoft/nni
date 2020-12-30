@@ -94,7 +94,7 @@ def blackbox_module(cls):
     return _blackbox_cls(cls, module_name, 'args')
 
 
-def blackbox_trainer(cls):
+def register_trainer(cls):
     """
     Register a trainer. Use it as a decorator.
     """
