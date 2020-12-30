@@ -60,7 +60,7 @@ def update_experiment_profile(args, key, value):
     '''call restful server to update experiment profile'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(experiment_url(rest_port), REST_TIME_OUT)

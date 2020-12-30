@@ -82,7 +82,7 @@ def check_experiment_id(args, update=True):
                 experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                                       experiment_dict[key].get('experimentName', 'N/A'),
                                                                       experiment_dict[key]['status'],
-                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
                                                                       experiment_dict[key]['startTime'],
                                                                       experiment_dict[key]['endTime'])
@@ -129,7 +129,7 @@ def parse_ids(args):
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
-            if experiment_dict[key]['port'] == args.port:
+            if experiment_dict[key].get('port', 'N/A') == args.port:
                 result_list.append(key)
         if args.id and result_list and args.id != result_list[0]:
             print_error('Experiment id and resful server port not match')
@@ -142,7 +142,7 @@ def parse_ids(args):
                 experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                                       experiment_dict[key].get('experimentName', 'N/A'),
                                                                       experiment_dict[key]['status'],
-                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
                                                                       experiment_dict[key]['startTime'],
                                                                       experiment_dict[key]['endTime'])
@@ -185,7 +185,7 @@ def get_experiment_port(args):
         exit(1)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['port']
+    return experiment_dict[experiment_id].get('port', 'N/A')
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
@@ -203,7 +203,7 @@ def check_rest(args):
     '''check if restful server is running'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         print_normal('Restful server is running...')
@@ -222,10 +222,10 @@ def stop_experiment(args):
             print_normal('Stopping experiment %s' % experiment_id)
             experiment_config = Experiments()
             experiment_dict = experiment_config.get_all_experiments()
-            rest_pid = experiment_dict.get(experiment_id, None).get('pid', None)
+            rest_pid = experiment_dict.get(experiment_id).get('pid')
             if rest_pid:
                 kill_command(rest_pid)
-                tensorboard_pid_list = experiment_dict.get(experiment_id, None).get('tensorboardPidList', None)
+                tensorboard_pid_list = experiment_dict.get(experiment_id).get('tensorboardPidList')
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
@@ -253,8 +253,8 @@ def trial_ls(args):
         return
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
-    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -285,8 +285,8 @@ def trial_kill(args):
     '''List trial'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
-    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -317,8 +317,8 @@ def list_experiment(args):
     '''Get experiment information'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
-    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -339,7 +339,7 @@ def experiment_status(args):
     '''Show the status of experiment'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
     result, response = check_rest_server_quick(rest_port)
     if not result:
         print_normal('Restful server is not running...')
@@ -625,12 +625,12 @@ def platform_clean(args):
             break
     if platform == 'remote':
         machine_list = config_content.get('machineList')
-        remote_clean(machine_list, None)
+        remote_clean(machine_list)
     elif platform == 'pai':
         host = config_content.get('paiConfig').get('host')
         user_name = config_content.get('paiConfig').get('userName')
         output_dir = config_content.get('trial').get('outputDir')
-        hdfs_clean(host, user_name, output_dir, None)
+        hdfs_clean(host, user_name, output_dir)
     print_normal('Done.')
 
 def experiment_list(args):
@@ -656,7 +656,7 @@ def experiment_list(args):
         experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                               experiment_dict[key].get('experimentName', 'N/A'),
                                                               experiment_dict[key]['status'],
-                                                              experiment_dict[key]['port'],
+                                                              experiment_dict[key].get('port', 'N/A'),
                                                               experiment_dict[key].get('platform'),
                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
@@ -759,8 +759,8 @@ def export_trials_data(args):
 
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args), None).get('port', None)
-    rest_pid = experiment_dict.get(get_config_filename(args), None).get('pid', None)
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
 
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
