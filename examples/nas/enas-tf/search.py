@@ -5,7 +5,7 @@
 from tensorflow.keras.losses import Reduction, SparseCategoricalCrossentropy
 from tensorflow.keras.optimizers import SGD
 
-from nni.nas.tensorflow import enas
+from nni.algorithms.nas.tensorflow import enas
 
 import datasets
 from macro import GeneralNetwork

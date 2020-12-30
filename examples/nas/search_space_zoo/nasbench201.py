@@ -10,13 +10,13 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from nni.nas.pytorch import enas
+from nni.algorithms.nas.pytorch.darts import DartsTrainer
+from nni.algorithms.nas.pytorch import enas
 from nni.nas.pytorch.utils import AverageMeterGroup
 from nni.nas.pytorch.nasbench201 import NASBench201Cell
 from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.benchmarks.nasbench201 import query_nb201_trial_stats
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
-from nni.nas.pytorch.darts import DartsTrainer
 from utils import accuracy, reward_accuracy
 
 import datasets
