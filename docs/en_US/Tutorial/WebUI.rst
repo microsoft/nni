@@ -42,12 +42,42 @@ View summary page
 Click the tab "Overview".
 
 
-* On the overview tab, you can see the experiment information and status and the performance of top trials. If you want to see config and search space, please click the right button "Config" and "Search space".
+* On the overview tab, you can see the experiment information and status and the performance of top trials.
 
 
 .. image:: ../../img/webui-img/full-oview.png
    :target: ../../img/webui-img/full-oview.png
-   :alt: 
+   :alt: overview
+
+
+
+* If you want to see experiment search space and config, please click the right button ``Search space`` and ``Config`` (when you hover on this button).
+
+#.
+Search space file:
+
+
+.. image:: ../../img/webui-img/searchSpace.png
+   :target: ../../img/webui-img/searchSpace.png
+   :alt: searchSpace
+
+
+#.
+Config file:
+
+
+.. image:: ../../img/webui-img/config.png
+   :target: ../../img/webui-img/config.png
+   :alt: config
+
+
+
+* You can view and download nni-manager/dispatcher log files on here.
+
+
+.. image:: ../../img/webui-img/review-log.png
+   :target: ../../img/webui-img/review-log.png
+   :alt: logfile
 
 
 
@@ -60,16 +90,13 @@ Click the tab "Overview".
 
 
 
-* You can review and download the experiment results(experiment config, trial message and intermeidate metric) when you click the button named `Experiment summary`.
+* You can review and download the experiment results(experiment config, trial message and intermeidate metric) when you click the button named ``Experiment summary``.
 
 
 .. image:: ../../img/webui-img/summary.png
    :target: ../../img/webui-img/summary.png
    :alt: 
 
-
-
-* You can see nni-manager/dispatcher log files from the "Download" button.
 
 
 * You can change some experiment configurations such as maxExecDuration, maxTrialNum and trial concurrency on here.
