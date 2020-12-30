@@ -26,7 +26,7 @@ Currently, we support the following algorithms:
    * - `Naïve Evolution <#Evolution>`__
      - Naïve Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naïve Evolution requires many trials to work, but it's very simple and easy to expand new features. `Reference paper <https://arxiv.org/pdf/1703.01041.pdf>`__
    * - `SMAC <#SMAC>`__
-     - SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC needs to be installed by ``nnictl package`` command. `Reference Paper, <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `GitHub Repo <https://github.com/automl/SMAC3>`__
+     - SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by NNI is a wrapper on the SMAC3 GitHub repo. Notice, SMAC needs to be installed by ``pip install nni[SMAC]`` command. `Reference Paper, <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `GitHub Repo <https://github.com/automl/SMAC3>`__
    * - `Batch tuner <#Batch>`__
      - Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.
    * - `Grid Search <#GridSearch>`__
@@ -52,7 +52,7 @@ Usage of Built-in Tuners
 
 Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
-Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners need to be installed using ``nnictl package``\ , like SMAC.
+Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners have dependencies need to be installed using ``pip install nni[<tuner>]``, like SMAC's dependencies can be installed using ``pip install nni[SMAC]``.
 
 :raw-html:`<a name="TPE"></a>`
 
@@ -192,11 +192,11 @@ SMAC
 
 **Installation**
 
-SMAC needs to be installed by following command before the first usage. As a reminder, ``swig`` is required for SMAC: for Ubuntu ``swig`` can be installed with ``apt``.
+SMAC has dependencies need to be installed by following command before the first usage. As a reminder, ``swig`` is required for SMAC: for Ubuntu ``swig`` can be installed with ``apt``.
 
 .. code-block:: bash
 
-   nnictl package install --name=SMAC
+   pip install nni[SMAC]
 
 **Suggested scenario**
 
@@ -417,7 +417,7 @@ BOHB advisor requires `ConfigSpace <https://github.com/automl/ConfigSpace>`__ pa
 
 .. code-block:: bash
 
-   nnictl package install --name=BOHB
+   pip install nni[BOHB]
 
 **Suggested scenario**
 
