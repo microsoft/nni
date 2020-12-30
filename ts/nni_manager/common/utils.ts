@@ -344,16 +344,19 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
     let cmd: string = command;
     let arg: string[] = [];
     let newShell: boolean = true;
+    let isDetached: boolean = false;
     if (process.platform === "win32") {
         cmd = command.split(" ", 1)[0];
         arg = command.substr(cmd.length + 1).split(" ");
         newShell = false;
+        isDetached = true;
     }
     const tunerProc: ChildProcess = spawn(cmd, arg, {
         stdio,
         cwd: newCwd,
         env: newEnv,
-        shell: newShell
+        shell: newShell,
+        detached: isDetached
     });
     return tunerProc;
 }

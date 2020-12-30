@@ -1,17 +1,26 @@
+$pageMargin: 24px;
+
 .expBackground {
 	background: #f2f2f2;
 	height: 100%;
+
 	.content {
+		/* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
+		margin-top: 32px;
+		margin-bottom: $pageMargin;
 		background: #fff;
 	}
 }
 
 .experimentList {
-	padding: 42px;
+	padding: $pageMargin 42px;
 
 	.box {
+		margin-top: 20px;
+
 		.search {
 			width: 90%;
+
 			&-input {
 				width: 330px;
 			}
@@ -51,14 +60,22 @@
 		margin-left: 10px;
 	}
 
-	.tagContainer {
-		width: 100%;
+	.idColor {
+		color: #615f5d !important;
+	}
 
-		.tag {
-			font-weight: 500;
-			background: #f2f2f2;
-			margin: 0 4px;
-			padding: 0 6px;
+	.toAnotherExp {
+
+		&:hover {
+			color: #333231 !important;
 		}
+
+		&:hover {
+			color:  #615f5d !important;
+		}
+	}
+
+	.ms-DetailsRow:focus {
+		background: #e1dfdd;
 	}
 }

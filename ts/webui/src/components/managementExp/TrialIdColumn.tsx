@@ -19,9 +19,14 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
         return (
             <div className='succeed-padding ellipsis'>
                 {status === 'STOPPED' ? (
-                    <div>{id}</div>
+                    <div className='idColor'>{id}</div>
                 ) : (
-                    <a href={webuiPortal} className='link' target='_blank' rel='noopener noreferrer'>
+                    <a
+                        href={webuiPortal}
+                        className='link toAnotherExp idColor'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                    >
                         {id}
                     </a>
                 )}
