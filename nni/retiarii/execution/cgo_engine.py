@@ -63,7 +63,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         #     if node.graph.model not in unique_models:
         #         unique_models.add(node.graph.model)
         # return [m for m in unique_models]
-        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan)
+        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.n_model_per_graph)
         phy_models_and_placements = []
         for multi_model in grouped_models:
             model, model_placement = logical_plan.assemble(multi_model)
@@ -83,7 +83,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def _send_trial_callback(self, paramater: dict) -> None:
         if self.resources <= 0:
             _logger.warning('There is no available resource, but trial is submitted.')
-        self.resources -= 1
+        print(paramater)
+        self.resources -= paramater['training_kwargs']['n_model']
         _logger.info('on_resource_used: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
@@ -147,8 +148,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
 class AssemblePolicy:
     @staticmethod
-    def group(logical_plan):
+    def group(logical_plan, n_model_per_graph):
+        #TODO: Packing multiple model in one GPU
+        # Currently, we only support one model per GPU
+        all_grouped_models = []
         group_model = {}
         for idx, m in enumerate(logical_plan.models):
             group_model[m] = PhysicalDevice('server', f'cuda:{idx}')
-        return [group_model]
+            if len(group_model) == n_model_per_graph or idx == len(logical_plan.models)-1:
+                all_grouped_models.append(group_model)
+                group_model = {}
+        return all_grouped_models

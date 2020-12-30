@@ -148,6 +148,7 @@ class LogicalPlan:
             phy_model.training_config.kwargs['is_multi_model'] = True
             phy_model.training_config.kwargs['model_cls'] = phy_graph.name
             phy_model.training_config.kwargs['model_kwargs'] = []
+            phy_model.training_config.kwargs['n_model'] = len(multi_model_placement)
             # FIXME: allow user to specify
             phy_model.training_config.module = 'nni.retiarii.trainer.PyTorchMultiModelTrainer'
 

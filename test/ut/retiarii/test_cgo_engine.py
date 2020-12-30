@@ -60,6 +60,8 @@ class CGOEngineTest(unittest.TestCase):
                     metric = tt.get_last_metric()
                     if metric == last_metric:
                         continue
+                    if 'value' in metric:
+                        metric['value'] = json.dumps(metric['value'])
                     advisor.handle_report_metric_data(metric)
                     last_metric = metric
                 if not trial_thread.is_alive():

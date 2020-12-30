@@ -68,6 +68,7 @@ class DedupInputTest(unittest.TestCase):
         cgo = CGOExecutionEngine()
 
         phy_models = cgo._assemble(lp)
+        print(len(phy_models))
         self.assertTrue(len(phy_models) == 1)
 
         advisor.stopping = True

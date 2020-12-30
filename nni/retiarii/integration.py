@@ -132,8 +132,8 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
-        if isinstance(value, str):
-            value = json_tricks.loads(value)
+        assert isinstance(value, str)
+        value = json_tricks.loads(value)
         if isinstance(value, dict):
             if 'default' in value:
                 return value['default']
