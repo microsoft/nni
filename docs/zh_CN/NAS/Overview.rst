@@ -53,7 +53,7 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
    * - `P-DARTS </NAS/PDARTS.html>`__
      - `Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation <https://arxiv.org/abs/1904.12760>`__ 这篇论文是基于 DARTS 的. 它引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。
    * - `SPOS </NAS/SPOS.html>`__
-     论文 `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。
+     - 论文 `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。
    * - `CDARTS </NAS/CDARTS.html>`__
      - `Cyclic Differentiable Architecture Search <https://arxiv.org/abs/****>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
    * - `ProxylessNAS </NAS/Proxylessnas.html>`__

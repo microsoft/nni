@@ -45,7 +45,7 @@ Kubeflow 训练平台会实例化一个 Kubernetes 客户端来与 Kubernetes �
 对于每个 Trial，会上传本机 codeDir 路径（在 nni_config.yml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：`nfs <https://en.wikipedia.org/wiki/Network_File_System>`__ 和 `azure file storage <https://azure.microsoft.com/en-us/services/storage/files/>`__，需要在 NNI 的 YAML 文件中进行配置。 当文件准备好后，Kubeflow 训练平台会调用 Kubernetes 的 API 来创建 Kubeflow 作业 (\ `tf-operator <https://github.com/kubeflow/tf-operator>`__ 作业或 `pytorch-operator <https://github.com/kubeflow/pytorch-operator>`__ 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个 Trial 的存储卷的 URL，以便浏览日志和输出文件。
 
 支持的操作符（operator）
-------------------
+-----------------------------------------
 
 NNI 仅支持 Kubeflow 的 tf-operator 和 pytorch-operator，其它操作符未经测试。
 可以在配置文件中设置操作符类型。

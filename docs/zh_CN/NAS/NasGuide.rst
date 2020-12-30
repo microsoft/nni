@@ -12,7 +12,7 @@ One-Shot NAS 算法
 
 .. code-block:: python
 
-   ＃与传统模型训练完全相同
+   # 与传统模型训练完全相同
    model = Net()
    dataset_train = CIFAR10(root="./data", train=True, download=True, transform=train_transform)
    dataset_valid = CIFAR10(root="./data", train=False, download=True, transform=valid_transform)
@@ -48,7 +48,7 @@ One-Shot NAS 算法
 
 **注意** ，在使用 One-Shot NAS 算法时，不需要启动 NNI Experiment。 不需要 ``nnictl`` ，可直接运行 Python 脚本（即：``train.py`` )，如：``python3 train.py``。 训练完成后，可通过 ``trainer.export()`` 导出找到的最好的模型。
 
-NNI 中每个 Trainer 都用其对应的场景和用法。 一些 Trainer 假定任务是分类任务；一些 Trainer 对 "epoch" 有不同的定义（如：ENAS 的每个 Epoch 是 一些子步骤加上 Controller 的步骤）。 大部分 Trainer 不支持分布式训练：没有使用 ``DataParallel`` 或 ``DistributedDataParallel`` 来包装模型。 如果通过试用，想要在定制的应用中使用 Trainer，可能需要 `自定义 Trainer <./Advanced.rst#extend-the-ability-of-one-shot-trainers>`__。
+NNI 中每个 Trainer 都用其对应的场景和用法。 一些 Trainer 假定任务是分类任务；一些 Trainer 对 "epoch" 有不同的定义（如：ENAS 的每个 Epoch 是 一些子步骤加上 Controller 的步骤）。 大部分 Trainer 不支持分布式训练：没有使用 ``DataParallel`` 或 ``DistributedDataParallel`` 来包装模型。 如果通过试用，想要在定制的应用中使用 Trainer，可能需要 `自定义 Trainer <./Advanced.rst>`__。
 
 此外，可以使用 NAS 可视化来显示 One-Shot NAS。 `请看细节。 <./Visualization.rst>`__
 

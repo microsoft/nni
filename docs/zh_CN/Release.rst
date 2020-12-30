@@ -1,7 +1,3 @@
-.. role:: raw-html(raw)
-   :format: html
-
-
 更改日志
 =========
 
@@ -37,7 +33,7 @@
 * 为远程训练平台添加 reuse 模式 (#2923)
 
 Web 界面和 nnictl
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 重新设计 Web 界面的 "Overview" 页面 (#2914)
@@ -61,7 +57,7 @@ UT & IT
 * 重构了模型压缩的文档结构 (#2919)
 
 修复的 Bug
----------
+--------------------
 
 
 * 修复正确使用 naïve evolution Tuner，Trial 失败的 Bug (#2695)
@@ -89,7 +85,7 @@ UT & IT
 * 为在 OpenPAI 模式复制数据增加更多日志信息 (#2702)
 
 Web 界面，nnictl 和 nnicli
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 改进超参数并行坐标图的绘制 (#2691) (#2759)
@@ -152,7 +148,7 @@ Web 界面，nnictl 和 nnicli
 * 改进模型压缩的文档结构 (#2676)
 
 修复的 Bug
----------
+----------------------
 
 
 * 修复训练平台的目录生成错误 (#2673)
@@ -217,7 +213,7 @@ Web 界面，nnictl 和 nnicli
 * `允许自定义 Tuner、Assessor、Advisor 被安装为内置算法 <https://github.com/microsoft/nni/blob/v1.7/docs/zh_CN/Tutorial/InstallCustomizedAlgos.rst>`__.
 
 Web 界面
-^^^^^
+^^^^^^^^^^^^^^
 
 
 * 支持更友好的嵌套搜索空间可视化。
@@ -242,7 +238,7 @@ Web 界面
 * 主页迁移到 readthedoc。
 
 修复的 Bug
----------
+------------------
 
 
 * 修复模型图中含有共享的 nn.Module 时的问题
@@ -267,7 +263,7 @@ Web 界面
 * 支持 Windows 下开发模式安装
 
 Web 界面
-^^^^^^
+^^^^^^^^^^^^^^^
 
 
 * 显示 Trial 的错误消息
@@ -278,7 +274,7 @@ Web 界面
 * 在超参图中显示最好的 Trial
 
 超参优化更新
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 
 * 改进 PBT 的错误处理，并支持恢复 Experiment
@@ -307,7 +303,7 @@ NAS 更新
 
 
 修复的 Bug
-^^^^^^^
+^^^^^^^^^^^^^^
 
 
 * 修复开发模式安装
@@ -359,7 +355,7 @@ NAS 更新
 * 语法、拼写以及措辞上的修改 (感谢贡献者 @AHartNtkn)
 
 修复的 Bug
-^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * ENAS 不能使用多个 LSTM 层 (感谢贡献者 @marsggbo)
@@ -401,7 +397,7 @@ NAS 更新
 * 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
 
 Web 界面
-^^^^^
+^^^^^^^^^^^^
 
 
 * Web 界面重构：采用 fabric 框架
@@ -410,7 +406,7 @@ Web 界面
 ^^^^^^
 
 
-* 支持 `在前台运行 NNI 的 Experiment <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/Tutorial/Nnictl#manage-an-experiment>`__\ , 即 ``nnictl create/resume/view`` 的 ``--foreground`` 参数
+* 支持 `在前台运行 NNI 的 Experiment <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Tutorial/Nnictl#manage-an-experiment>`__\ , 即 ``nnictl create/resume/view`` 的 ``--foreground`` 参数
 * 支持取消 UNKNOWN 状态的 Trial。
 * 支持最大 50MB 的搜索空间文件 （感谢外部贡献者 @Sundrops）
 
@@ -425,7 +421,7 @@ Web 界面
 * 改进 `EfficientNet 的文档 <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrialExample/EfficientNet.rst>`__
 
 修复的 Bug
-^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 
 * 修复在指标数据和 JSON 格式中对 NaN 的支持
@@ -454,8 +450,7 @@ Web 界面
 
   * `L2Filter Pruner <https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.rst#3-l2filter-pruner>`__
   * `ActivationAPoZRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md#1-activationapozrankfilterpruner>`__
-  * `ActivationMeanRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md
-#2-activationmeanrankfilterpruner>`__
+  * `ActivationMeanRankFilterPruner <https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Pruner.md#2-activationmeanrankfilterpruner>`__
 
 * `BNN Quantizer <https://github.com/microsoft/nni/blob/v1.3/docs/zh_CN/Compressor/Quantizer.md#bnn-quantizer>`__
   训练平台
@@ -476,7 +471,7 @@ Web 界面
 * 启用 `ESLint <https://eslint.org/>`__ 静态代码分析
 
 小改动和 Bug 修复
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 正确识别内置 Tuner 和定制 Tuner
@@ -506,7 +501,7 @@ Web 界面
 
 * 模型压缩
 
-  * `全新模型剪枝算法 <https://github.com/microsoft/nni/blob/v1.2/docs/en_US/Compressor/Overview.rst>`__: lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
+  * `全新模型剪枝算法 <https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md>`__: lottery ticket 修剪, L1Filter Pruner, Slim Pruner, FPGM Pruner
   * `全新模型量化算法 <https://github.com/microsoft/nni/blob/v1.2/docs/zh_CN/Compressor/Overview.md>`__\ : QAT quantizer, DoReFa quantizer
   * 支持导出压缩后模型的 API。
 
@@ -534,7 +529,7 @@ Web 界面
   * 改进了 NNI API 文档，增加了更多的 docstring。
 
 Bug 修复
-^^^^^^^
+^^^^^^^^^^^^^
 
 
 * 修复当失败的 Trial 没有指标时，表格的排序问题。 -Issue #1773
@@ -586,7 +581,7 @@ Bug 修复
 
     * 提供自动特征接口
     * 基于 Beam 搜索的 Tuner
-    * `增加 Pakdd 示例<https://github.com/microsoft/nni/tree/v1.9/examples/trials/auto-feature-engineering>`__
+    * `增加 Pakdd 示例 <https://github.com/microsoft/nni/tree/v1.9/examples/trials/auto-feature-engineering>`__
 
   * 添加并行算法提高 TPE 在高并发下的性能。  -PR #1052
   * 为 hyperband 支持多阶段    -PR #1257
@@ -635,7 +630,7 @@ Bug 修复
   * `改进 WebUI 描述 <Tutorial/WebUI.rst>`__  -PR #1419
 
 Bug 修复
-^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 
 * (Bug 修复)修复 0.9 版本中的链接  -Issue #1236
@@ -733,7 +728,7 @@ Bug 修复
   * 使用 ComponentUpdate 来避免不必要的刷新
 
 Bug 修复和其它更新
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复 ``nnictl update`` 不一致的命令行风格
@@ -782,7 +777,7 @@ Bug 修复和其它更新
   * 为 YAML 文件格式错误提供更有意义的错误信息
 
 Bug 修复
-^^^^^^^
+^^^^^^^^^^^^^^
 
 
 * 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
@@ -812,7 +807,7 @@ Bug 修复
 * 为所有 Trial 增加中间结果的视图
 
 Bug 修复
-^^^^^^^
+^^^^^^^^^^^^^^
 
 
 * `为 OpenPAI 增加 shmMB 配置 <https://github.com/microsoft/nni/issues/842>`__
@@ -840,7 +835,7 @@ Bug 修复
 * Tuner、Assessor 参考：https://nni.readthedocs.io/zh/latest/sdk_reference.html#tuner
 
 Bug 修复和其它更新
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复了在某些极端条件下，不能正确存储任务的取消状态。
@@ -858,7 +853,7 @@ Bug 修复和其它更新
 
 
 * 支持配置 `log 目录 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__ 
-支持 `不同级别的日志 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__，使其更易于调试。
+* 支持 `不同级别的日志 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__，使其更易于调试。
 
 文档
 ^^^^^^^^^^^^^
@@ -867,7 +862,7 @@ Bug 修复和其它更新
 * 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
 
 Bug 修复和其它更新
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
@@ -1082,8 +1077,7 @@ API 的新功能和更新
 
 * 支持 `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ tuner (参考 `这里 <Tuner/SmacTuner.rst>`__ 来了解如何使用 SMAC tuner)
 
-  * `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 `SMAC3 <https://github.com/automl/SMAC3>`__
- 来支持。
+  * `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 `SMAC3 <https://github.com/automl/SMAC3>`__ 来支持。
 
 * 支持将 NNI 安装在 `conda <https://conda.io/docs/index.html>`__ 和 Python 虚拟环境中。
 * 其它

@@ -64,7 +64,7 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
      - AMC：移动设备的模型压缩和加速 `参考论文 <https://arxiv.org/pdf/1802.03494.pdf>`__
 
 
-参考此 :githublink:`基准测试 <docs/en_US/CommunitySharings/ModelCompressionComparison.rst>` 来查看这些剪枝器在一些基准问题上的表现。
+参考此 `基准测试 <../CommunitySharings/ModelCompressionComparison.rst>`__ 来查看这些剪枝器在一些基准问题上的表现。
 
 量化算法
 ^^^^^^^^^^^^^^^^^^^^^^^

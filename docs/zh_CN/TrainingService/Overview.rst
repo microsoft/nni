@@ -35,15 +35,15 @@ NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际�
    * - `**PAI** <./PaiMode.rst>`__
      - NNI 支持在 `OpenPAI <https://github.com/Microsoft/pai>`__ (aka PAI) 上运行 Experiment，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 `OpenPAI <https://github.com/Microsoft/pai>`__ 群集的账户。 如果没有 OpenPAI 账户，参考 `这里 <https://github.com/Microsoft/pai#how-to-deploy>`__ 来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。
    * - `**Kubeflow** <./KubeflowMode.rst>`__
-     NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
+     - NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
    * - `**AdaptDL** <./AdaptDLMode.rst>`__
-     NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI kubeflow 模式之前，应该具有 Kubernetes 集群。
+     - NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI kubeflow 模式之前，应该具有 Kubernetes 集群。
    * - `**FrameworkController** <./FrameworkControllerMode.rst>`__
-     NNI 支持使用 `FrameworkController <https://github.com/Microsoft/frameworkcontroller>`__，来运行 Experiment，称之为 frameworkcontroller 模式。 FrameworkController 构建于 Kubernetes 上，用于编排各种应用。这样，可以不用为某个深度学习框架安装 Kubeflow 的 tf-operator 或 pytorch-operator 等。 而直接用 FrameworkController 作为 NNI Experiment 的训练平台。
+     - NNI 支持使用 `FrameworkController <https://github.com/Microsoft/frameworkcontroller>`__，来运行 Experiment，称之为 frameworkcontroller 模式。 FrameworkController 构建于 Kubernetes 上，用于编排各种应用。这样，可以不用为某个深度学习框架安装 Kubeflow 的 tf-operator 或 pytorch-operator 等。 而直接用 FrameworkController 作为 NNI Experiment 的训练平台。
    * - `**DLTS** <./DLTSMode.rst>`__
-     NNI 支持在 `DLTS <https://github.com/microsoft/DLWorkspace.git>`__ 上运行 Experiment，这是一个由微软开源的工具包。
+     - NNI 支持在 `DLTS <https://github.com/microsoft/DLWorkspace.git>`__ 上运行 Experiment，这是一个由微软开源的工具包。
    * - `**AML** <./AMLMode.rst>`__
-     NNI 支持在 `AML <https://azure.microsoft.com/en-us/services/machine-learning/>`__ 上运行 Experiment，称为 aml 模式。
+     - NNI 支持在 `AML <https://azure.microsoft.com/en-us/services/machine-learning/>`__ 上运行 Experiment，称为 aml 模式。
 
 
 训练平台做了什么？

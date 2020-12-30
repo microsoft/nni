@@ -1,5 +1,5 @@
 NNI 中的 BOHB Advisor
-===================
+======================================
 
 1. 介绍
 ---------------
@@ -11,7 +11,7 @@ BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分
 接下来分两部分来介绍 BOHB 过程涉及的原理:
 
 HB（Hyperband）
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 按照 Hyperband 的方式来选择资源（budget），并继续使用 "连续减半（SuccessiveHalving）" 策略。 更多细节，请参考 `NNI 中的 Hyperband <HyperbandAdvisor.rst>`__ 和 `Hyperband 的参考论文 <https://arxiv.org/abs/1603.06560>`__。 下面的伪代码描述了这个过程。
 
@@ -122,7 +122,7 @@ Advisor 有大量的文件、函数和类。 这里只简单介绍最重要的�
 -------------
 
 BOHB 在 MNIST 数据集上的表现
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 源码地址： :githublink:`examples/trials/mnist-advisor <examples/trials/>`
 

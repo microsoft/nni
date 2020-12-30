@@ -1,5 +1,5 @@
 NNI 中使用 scikit-learn
-===================
+======================================
 
 `Scikit-learn <https://github.com/scikit-learn/scikit-learn>`__ (sklearn) 是流行的数据挖掘和分析工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 如何更高效的使用 scikit-learn，是一个很有价值的话题。
 
@@ -66,7 +66,7 @@ NNI 支持多种调优算法来为 scikit-learn 搜索最好的模型和超参�
 * 
   **第二步**
 
-  在代码最前面，加上 ``import nni``来导入 NNI 包。
+  在代码最前面，加上 ``import nni`` 来导入 NNI 包。
 
   首先，要使用 ``nni.get_next_parameter()`` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。
   例如，如果定义了如下的 search_space.json：

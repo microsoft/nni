@@ -196,8 +196,7 @@ ENAS Macro 的搜索空间如下图所示。
   Separable Conv3x3：如果 ``separable=True``，则 cell 将使用 `SepConv <#DilConv>`__ 而不是常规的卷积操作。 SepConv 固定为  ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
   * Separable Conv5x5: SepConv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
   * 普通的 Conv3x3: 如果 ``separable=False``\ , cell 将使用常规的转化操作 ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
-  * 
-    普通的 Conv5x5：Conv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
+  * 普通的 Conv5x5：Conv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
 
 ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.ConvBranch
 

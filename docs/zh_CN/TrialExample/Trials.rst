@@ -3,7 +3,7 @@
 
 
 实现 NNI 的 Trial（尝试）代码
-========================
+===========================================
 
 **Trial（尝试）** 是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
@@ -159,10 +159,9 @@ NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 
 
 .. code-block:: python
 
-   ＃注意：请为 Trial 代码中的超参分配默认值
-   nni.get_next_parameter # 返回 {}
-   nni.report_final_result ＃已在 stdout 上打印日志，但不报告
-   nni.report_intermediate_result # ＃已在 stdout 上打印日志，但不报告
+   # 注意：请为 Trial 代码中的超参分配默认值
+   nni.report_final_result # 已在 stdout 上打印日志，但不报告
+   nni.report_intermediate_result # 已在 stdout 上打印日志，但不报告
    nni.get_experiment_id # 返回 "STANDALONE"
    nni.get_trial_id # 返回 "STANDALONE"
    nni.get_sequence_id # 返回 0
@@ -172,7 +171,7 @@ NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 
 更多调试的信息，可参考 `How to Debug <../Tutorial/HowToDebug.rst>`__。
 
 Trial 存放在什么地方？
---------------------
+----------------------------------------
 
 本机模式
 ^^^^^^^^^^

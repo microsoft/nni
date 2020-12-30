@@ -33,11 +33,11 @@ TPE 的并行优化
 * **constant_liar_type** (*min、max 或 mean, 可选, 默认值为 min*) - 使用的 constant liar 类型，会在 X 点根据 y 的取值来确定。对应三个值：min{Y}, max{Y}, 和 mean{Y}。
 
 Random Search（随机搜索）
--------------
+---------------------------------------
 
 论文 `Random Search for Hyper-Parameter Optimization <http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf>`__ 中介绍了随机搜索惊人的简单和效果。 建议在不知道超参数的先验分布时，使用随机搜索作为基准。
 
 Anneal（退火算法）
-------
+------------------------
 
 这种简单的退火算法从先前的采样开始，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。

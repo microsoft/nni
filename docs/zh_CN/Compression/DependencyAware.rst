@@ -46,7 +46,7 @@
 
    from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   ＃dummy_input 对于依赖感知模式是必需的
+   # dummy_input 对于依赖感知模式是必需的
    dummy_input = torch.ones(1, 3, 224, 224).cuda()
    pruner = L1FilterPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
    # 对于 L2FilterPruner
@@ -61,6 +61,7 @@
    # pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
 
    pruner.compress()
+
 
 评估
 ----------

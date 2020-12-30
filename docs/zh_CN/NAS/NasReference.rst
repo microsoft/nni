@@ -57,7 +57,7 @@ Trainer
     :members:
 
 重新训练
-^^^^^^^
+^^^^^^^^^^^
 
 ..  autofunction:: nni.nas.pytorch.fixed.apply_fixed_architecture
 

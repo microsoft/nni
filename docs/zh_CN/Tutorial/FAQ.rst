@@ -39,7 +39,7 @@ Job management error: getIPV4Address() failed because os.networkInterfaces().eth
 计算机没有 eth0 设备，需要在配置文件中手动设置 `nniManagerIp <ExperimentConfig.rst>`__ 。
 
 运行时间超过了 MaxDuration ，但没有停止
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 当实验到达最长运行时间时，nniManager 不会创建新的尝试，但除非手动停止实验，运行中的尝试会继续。
 
@@ -78,7 +78,7 @@ NNI 在 Windows 上的问题
 参考 `在 Windows 上 安装 NNI <InstallationWin.rst>`__
 
 更多常见问题解答
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `标有常见问题标签的 Issue <https://github.com/microsoft/nni/labels/FAQ>`__
 
