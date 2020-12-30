@@ -1,26 +1,37 @@
 Neural Architecture Search with Retiarii (Experimental)
 =======================================================
 
-`Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ is a new framework to support neural architecture search and hyper-parameter tuning. It allows users to express various search space with high flexibility, to reuse many SOTA search algorithms, and to leverage system level optimizations to speed up the search process.
+`Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ is a new framework to support neural architecture search and hyper-parameter tuning. It allows users to express various search space with high flexibility, to reuse many SOTA search algorithms, and to leverage system level optimizations to speed up the search process. This framework provides the following new user experiences.
 
-*We are working on migrating* `our previous NAS framework <../Overview.rst>`__ *to Retiarii framework. Thus, this feature is still experimental. We recommend users to try the new framework and provide your valuable feedback for us to improve it. You can also use the old framework if you like.*
+* Search space can be expressed directly in user model code. A tuning space can be expressed along programming a model.
+* Neural architecture candidates and hyper-parameter candidates are more friendly supported in an experiment.
+* The experiment can be launched directly from python code.
+
+*We are working on migrating* `our previous NAS framework <../Overview.rst>`__ *to Retiarii framework. Thus, this feature is still experimental. We recommend users to try the new framework and provide your valuable feedback for us to improve it. The old framework is still supported for now.*
 
 .. contents::
 
-There are mainly two steps to start an experiment for your nueral architecture search task. First, define the model space you want to explore. Second, choose a search method to explore your defined model space.
+There are mainly two steps to start an experiment for your neural architecture search task. First, define the model space you want to explore. Second, choose a search method to explore your defined model space.
 
 Define your Model Space
 -----------------------
 
-Model space is defined by users to express a set of models that users want to explore, and believe good-performing models are included in those models. In our framework, a model space is defined with two parts: a base model and possible mutations on the base model.
+Model space is defined by users to express a set of models that users want to explore, and believe good-performing models are included in those models. In this framework, a model space is defined with two parts: a base model and possible mutations on the base model.
 
 Define Base Model
 ^^^^^^^^^^^^^^^^^
 
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. There are only two small differences.
 
-* Replace PyTorch ``nn`` with our wrapped ``nn`` for PyTorch modules. For example, replace ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn``
-* Add the decorator ``@register_module()`` above user defined PyTorch module.
+* Use our wrapped ``nn`` for PyTorch modules instead of ``torch.nn``. Specifically, users can simply replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn``
+* Add the decorator ``@blackbox_module`` to some module classes. Below we explain why this decorator is needed and what module classes should be decorated.
+
+**@blackbox_module**: Our framework works as follows: it converts user defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user defined mutations are applied to the graph to generate new graphs, each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a module class in the following cases:
+
+* When a module class cannot be successfully converted to a subgraph. Currently, our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module.
+* The candidate ops in ``LayerChoice`` should be decorated as blackbox module.
+* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module.
+* If no mutation is targeted on a module, this module *can be* decorated as a blackbox module.
 
 Below is a simple example code of how to define a base model.
 
