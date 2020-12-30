@@ -53,7 +53,6 @@ def update_experiment():
                 rest_pid = experiment_dict[key].get('pid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
-                    experiment_config.update_experiment(key, 'port', None)
                     continue
 
 def check_experiment_id(args, update=True):
