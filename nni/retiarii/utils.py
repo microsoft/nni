@@ -1,4 +1,5 @@
 import inspect
+import warnings
 from collections import defaultdict
 from typing import Any
 
@@ -54,7 +55,12 @@ def _blackbox_cls(cls, module_name, register_format=None):
 
             # eject un-serializable arguments
             for k in list(full_args.keys()):
+                # The list is not complete and does not support nested cases.
                 if not isinstance(full_args[k], (int, float, str, dict, list)):
+                    if not (register_format == 'full' and k == 'model'):
+                        # no warning if it is base model in trainer
+                        warnings.warn(f'{cls} has un-serializable arguments {k} whose value is {full_args[k]}. \
+                            This is not supported. You can ignore this warning if you are passing the model to trainer.')
                     full_args.pop(k)
 
             if register_format == 'args':
@@ -79,6 +85,12 @@ def _blackbox_cls(cls, module_name, register_format=None):
 
 
 def blackbox(cls, *args, **kwargs):
+    """
+    To create an blackbox instance inline without decorator. For example,
+
+    .. code-block:: python
+        self.op = blackbox(MyCustomOp, hidden_units=128)
+    """
     # get caller module name
     frm = inspect.stack()[1]
     module_name = inspect.getmodule(frm[0]).__name__
