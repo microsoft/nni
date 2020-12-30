@@ -1,10 +1,10 @@
 How to register a customized tuner as a builtin tuner
-==================================================
+=====================================================
 
 You can following below steps to register a customized tuner in ``nni/examples/tuners/customized_tuner`` as a builtin tuner.
 
 Install the customized tuner package into python environment
------------------------------------------------
+------------------------------------------------------------
 
 There are 2 options to install the package into python environment:
 
@@ -38,7 +38,7 @@ Run following command:
 ``nnictl algo register --meta meta_file.yml``
 
 Check the registered builtin algorithms
----------------------------
+---------------------------------------
 
 Then run command ``nnictl algo list``\ , you should be able to see that demotuner is installed:
 
