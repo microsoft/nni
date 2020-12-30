@@ -125,14 +125,14 @@ class RetiariiExperiment(Experiment):
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
-        base_model = convert_to_graph(script_module, self.base_model, self.recorded_module_args)
+        base_model_ir = convert_to_graph(script_module, self.base_model)
 
-        assert id(self.trainer) in self.recorded_module_args
-        trainer_config = self.recorded_module_args[id(self.trainer)]
-        base_model.apply_trainer(trainer_config['modulename'], trainer_config['args'])
+        recorded_module_args = get_records()
+        trainer_config = recorded_module_args[id(self.trainer)]
+        base_model_ir.apply_trainer(trainer_config['modulename'], trainer_config['args'])
 
         # handle inline mutations
-        mutators = self._process_inline_mutation(base_model)
+        mutators = self._process_inline_mutation(base_model_ir)
         if mutators is not None and self.applied_mutators:
             raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, \
                 do not use mutators when you use LayerChoice/InputChoice')
@@ -140,7 +140,7 @@ class RetiariiExperiment(Experiment):
             self.applied_mutators = mutators
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy.run, args=(base_model, self.applied_mutators)).start()
+        Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators)).start()
         _logger.info('Strategy started!')
 
     def start(self, port: int = 8080, debug: bool = False) -> None:

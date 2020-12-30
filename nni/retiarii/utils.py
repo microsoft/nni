@@ -41,7 +41,7 @@ def del_record(key):
         _records.pop(key, None)
 
 
-def _blackbox_cls(cls, register_format=None):
+def _blackbox_cls(cls, module_name, register_format=None):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
             argname_list = list(inspect.signature(cls).parameters.keys())
@@ -68,6 +68,9 @@ def _blackbox_cls(cls, register_format=None):
         def __del__(self):
             del_record(id(self))
 
+    # using module_name instead of cls.__module__ because it's more natural to see where the module gets wrapped
+    # instead of simply putting torch.nn or etc.
+    wrapper.__module__ = module_name
     wrapper.__name__ = cls.__name__
     wrapper.__qualname__ = cls.__qualname__
     wrapper.__init__.__doc__ = cls.__init__.__doc__
@@ -76,21 +79,28 @@ def _blackbox_cls(cls, register_format=None):
 
 
 def blackbox(cls, *args, **kwargs):
-    return _blackbox_cls(cls, 'args')(*args, **kwargs)
+    # get caller module name
+    frm = inspect.stack()[1]
+    module_name = inspect.getmodule(frm[0]).__name__
+    return _blackbox_cls(cls, module_name, 'args')(*args, **kwargs)
 
 
 def blackbox_module(cls):
     """
     Register a module. Use it as a decorator.
     """
-    return _blackbox_cls(cls, 'args')
+    frm = inspect.stack()[1]
+    module_name = inspect.getmodule(frm[0]).__name__
+    return _blackbox_cls(cls, module_name, 'args')
 
 
 def blackbox_trainer(cls):
     """
     Register a trainer. Use it as a decorator.
     """
-    return _blackbox_cls(cls, 'full')
+    frm = inspect.stack()[1]
+    module_name = inspect.getmodule(frm[0]).__name__
+    return _blackbox_cls(cls, module_name, 'full')
 
 
 _last_uid = defaultdict(int)

@@ -31,4 +31,4 @@ if __name__ == '__main__':
     exp_config.training_service.use_active_gpu = True
     exp_config.training_service.gpu_indices = [1, 2]
 
-    exp.run(exp_config, 8081, debug=True)
+    exp.run(exp_config, 8081)
