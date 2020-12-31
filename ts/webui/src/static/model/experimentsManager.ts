@@ -32,7 +32,7 @@ class ExperimentsManager {
                     platforms.add(item.platform);
                 }
                 // this.experimentList = data.reverse();
-                this.experimentList = data.sort((a, b) => a.startTime - b.startTime);
+                this.experimentList = data.sort((a, b) => b.startTime - a.startTime);
                 this.platform = Array.from(platforms);
             })
             .catch(error => {
