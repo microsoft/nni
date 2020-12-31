@@ -52,11 +52,11 @@
 熟悉贡献协议后，即可按照 NNI 开发人员教程，创建第一个 PR =)：
 
 * 推荐新贡献者先从简单的问题开始：['good first issue'](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 或 ['help-wanted'](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22)。
-* [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.md)
-* [如何调试](docs/zh_CN/Tutorial/HowToDebug.md)
-* 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.md)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
-* [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.md)
-* [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.md)
-* [在 NNI 上实现新的 NAS Trainer](docs/zh_CN/NAS/Advanced.md)
-* [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.md)
+* [NNI 开发环境安装教程](docs/zh_CN/Tutorial/SetupNniDeveloperEnvironment.rst)
+* [如何调试](docs/zh_CN/Tutorial/HowToDebug.rst)
+* 如果有使用上的问题，可先查看[常见问题解答](https://github.com/microsoft/nni/blob/master/docs/zh_CN/Tutorial/FAQ.rst)。如果没能解决问题，可通过 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 联系 NNI 开发团队或在 GitHub 上 [报告问题](https://github.com/microsoft/nni/issues/new/choose)。
+* [自定义 Tuner](docs/zh_CN/Tuner/CustomizeTuner.rst)
+* [实现定制的训练平台](docs/zh_CN/TrainingService/HowToImplementTrainingService.rst)
+* [在 NNI 上实现新的 NAS Trainer](docs/zh_CN/NAS/Advanced.rst)
+* [自定义 Advisor](docs/zh_CN/Tuner/CustomizeAdvisor.rst)
 
