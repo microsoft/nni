@@ -3,7 +3,7 @@ Experiment Config Reference
 ===========================
 
 This is the detailed list of experiment config fields.
-For quick start guide, use tutorial instead. [TODO]
+For quick start guide, use tutorial instead.
 
 Notes
 =====
@@ -81,7 +81,7 @@ type: ``str``
 
 default: ``"."``
 
-All files in this directory will be sent to training machine, unless there is a ``.nniignore`` file [TODO: nniignore doc]
+All files in this directory will be sent to training machine, unless there is a `.nniignore file <../Tutorial/QuickStart.rst#nniignore>`__.
 
 
 trial concurrency
@@ -106,7 +106,7 @@ especially when set to ``0`` or ``None``.
 See training service's document for details.
 
 In local mode, setting the field to zero will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
-And when set to ``None``, trials will be created and scheduled as if they do not use GPU,
+And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
 but they can still use all GPU resources if they want.
 
 
@@ -215,7 +215,7 @@ Because tuner, assessor, and advisor run in same process, this option will affec
 tuner
 -----
 
-Specify the tuner [TODO: tuner overview doc (mention both built-in and custom)]
+Specify the tuner.
 
 type: Optional `AlgorithmConfig`_
 
@@ -223,7 +223,7 @@ type: Optional `AlgorithmConfig`_
 assessor
 --------
 
-Specify the assessor [TODO: assessor overview doc]
+Specify the assessor.
 
 type: Optional `AlgorithmConfig`_
 
@@ -231,7 +231,7 @@ type: Optional `AlgorithmConfig`_
 advisor
 -------
 
-Specify the advisor [TODO: advisor doc]
+Specify the advisor.
 
 type: Optional `AlgorithmConfig`_
 
@@ -372,7 +372,7 @@ type: list of `RemoteMachineConfig`_
 reuse mode
 ----------
 
-Enable reuse mode [TODO: doc for reuse mode]
+Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
 type: ``bool``
 
@@ -548,7 +548,7 @@ This must be an absolute path.
 reuse mode
 ----------
 
-Enable reuse mode. [TODO: reuse doc]
+Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
 type: ``bool``
 
