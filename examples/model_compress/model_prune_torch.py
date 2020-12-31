@@ -212,7 +212,7 @@ def main(args):
     train_loader, test_loader = get_data_loaders(dataset_name, args.batch_size)
     dummy_input, _ = next(iter(train_loader))
     dummy_input = dummy_input.to(device)
-    model = create_model(model_name).cuda()
+    model = create_model(model_name).to(device)
     if args.resume_from is not None and os.path.exists(args.resume_from):
         print('loading checkpoint {} ...'.format(args.resume_from))
         model.load_state_dict(torch.load(args.resume_from))
