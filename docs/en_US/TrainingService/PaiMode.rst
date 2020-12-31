@@ -247,5 +247,5 @@ Check policy:
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
 
 
-.. image:: ../../img/version_check.png
+.. image:: ../../img/webui-img/experimentError.png
    :scale: 80%
