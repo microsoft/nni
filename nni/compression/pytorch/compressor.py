@@ -580,10 +580,15 @@ class QuantType:
     """
     Enum class for quantization type.
     """
-    QUANT_INPUT = 'input'
-    QUANT_WEIGHT = 'weight'
-    QUANT_OUTPUT = 'output'
+    QUANT_INPUT = 0
+    QUANT_WEIGHT = 1
+    QUANT_OUTPUT = 2
 
+QType_Dict = {
+    0: "input",
+    1: "weight",
+    2: "output"
+}
 
 class QuantGrad(torch.autograd.Function):
     """
@@ -628,7 +633,7 @@ class QuantGrad(torch.autograd.Function):
             return config["quant_bits"].get(quant_type)
 
     @staticmethod
-    def quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax):
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
         """
         This method should be overrided by subclass to provide customized backward function,
         default implementation is Straight-Through Estimator
@@ -652,9 +657,6 @@ class QuantGrad(torch.autograd.Function):
         tensor
             gradient of the input of quantization operation
         """
-        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
-        mask = (tensor_q < qmin) | (tensor_q > qmax)
-        grad_output[mask] = 0
         return grad_output
 
     @staticmethod
@@ -668,15 +670,20 @@ class QuantGrad(torch.autograd.Function):
         else:
             raise ValueError("unrecognized QuantType.")
 
-        bits = QuantGrad.get_bits_length(wrapper.config, quant_type)
-        qmin, qmax = torch.Tensor([0]).to(device=tensor.device), torch.Tensor([(1 << bits)-1]).to(device=tensor.device)
-        ctx.save_for_backward(tensor, wrapper.module.scale, wrapper.module.zero_point, qmin, qmax)
+        bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
+        qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
+        if hasattr(wrapper.module, 'scale') and hasattr(wrapper.module, 'zero_point'):
+            scale = wrapper.module.scale
+            zero_point = wrapper.module.zero_point
+        else:
+            scale, zero_point = None, None
+        ctx.save_for_backward(tensor, torch.Tensor([quant_type]), scale, zero_point, qmin, qmax)
         return output
 
     @classmethod
     def backward(cls, ctx, grad_output):
-        tensor, scale, zero_point, qmin, qmax = ctx.saved_variables
-        output = cls.quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax)
+        tensor, quant_type, scale, zero_point, qmin, qmax = ctx.saved_variables
+        output = cls.quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax)
         return output, None, None, None
 
 def _check_weight(module):

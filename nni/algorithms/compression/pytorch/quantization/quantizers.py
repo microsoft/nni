@@ -41,7 +41,7 @@ class NaiveQuantizer(Quantizer):
         wrapper.module.weight = weight
         return weight
 
-def update_ema(biased_ema, value, decay):
+def update_ema(biased_ema, value, decay, step):
     """
     calculate biased stat and unbiased stat in each step using exponential moving average method
 
@@ -53,13 +53,16 @@ def update_ema(biased_ema, value, decay):
         current stat value
     decay : float
         the weight of previous stat value, larger means smoother curve
+    step : int
+        current step
 
     Returns
     -------
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    return biased_ema 
+    unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
+    return biased_ema, unbiased_ema
 
 
 def update_quantization_param(bits, rmin, rmax):
@@ -118,6 +121,15 @@ def get_bits_length(config, quant_type):
         return config["quant_bits"].get(quant_type)
 
 
+class QATGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
+        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
+        mask = (tensor_q < qmin) | (tensor_q > qmax)
+        grad_output[mask] = 0
+        return grad_output
+
+
 class QAT_Quantizer(Quantizer):
     """Quantizer defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
@@ -145,6 +157,7 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
+        self.quant_grad = QATGrad
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
@@ -266,17 +279,16 @@ class QAT_Quantizer(Quantizer):
         assert output_bits >= 1, "quant bits length should be at least 1"
 
         if quant_start_step > self.bound_model.steps:
-            module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
             return output
 
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
             current_min, current_max = torch.min(output), torch.max(output)
-            module.tracked_min_biased = update_ema(module.tracked_min_biased, current_min,
-                                                                       module.ema_decay)
-            module.tracked_max_biased = update_ema(module.tracked_max_biased, current_max,
-                                                                       module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_biased, module.tracked_max_biased)
+            module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min,
+                                                                       module.ema_decay, self.bound_model.steps)
+            module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max,
+                                                                       module.ema_decay, self.bound_model.steps)
+            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -340,7 +352,7 @@ class DoReFaQuantizer(Quantizer):
 
 class ClipGrad(QuantGrad):
     @staticmethod
-    def quant_backward(tensor, grad_output, quant_type):
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
         if quant_type == QuantType.QUANT_OUTPUT:
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output
