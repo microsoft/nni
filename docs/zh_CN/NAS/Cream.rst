@@ -5,11 +5,12 @@
 百里挑一：一站式神经体系结构搜索的优先路径提取
 =======================================================================================
 
- **`[Paper] <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__ `[Models-Google Drive] <https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing>`__\ `[Models-Baidu Disk (PWD: wqw6)] <https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g>`__ `[BibTex] <https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja>`__**   :raw-html:`<br/>`
+`[Paper] <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__ `[Models-Google Drive] <https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing>`__ `[Models-Baidu Disk (PWD: wqw6)] <https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g>`__ `[BibTex] <https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja>`__   :raw-html:`<br/>`
 
 在这项工作中，我们提出了一种简单有效的体系结构提炼方法。 中心思想是子网可以在整个训练过程中进行协作学习并相互教，目的是促进各个模型的融合。 我们介绍了优先路径的概念，它是指在训练过程中表现出卓越性能的体系结构候选人。 从优先路径中提取知识可以促进子网的训练。 由于优先路径会根据其性能和复杂性而动态变化，因此最终获得的路径就是百里挑一。 与最近的架构 `MobileNetV3 <https://arxiv.org/abs/1905.02244>`__ 和 `EfficientNet <https://arxiv.org/abs/1905.11946>`__  系列在对齐设置下相比，发现的体系结构具有更高的性能。
 
-:raw-html:`<div ><img src="https://github.com/microsoft/Cream/blob/main/demo/intro.jpg" width="800"/></div>`
+.. image:: https://raw.githubusercontent.com/microsoft/Cream/main/demo/intro.jpg
+
 重现结果
 ------------------
 
@@ -44,12 +45,11 @@ ImageNet 的 top-1 准确性。 Cream 搜索算法的 top-1 准确性超过 Imag
 
 
 
-.. raw:: html
+.. image:: ../../img/cream_flops100.jpg
+   :scale: 50%
 
-   <table style="border: none">
-       <th><img src="./../../img/cream_flops100.jpg" alt="drawing" width="400"/></th>
-       <th><img src="./../../img/cream_flops600.jpg" alt="drawing" width="400"/></th>
-   </table>
+.. image:: ../../img/cream_flops600.jpg
+   :scale: 50%
 
 
 示例

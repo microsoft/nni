@@ -23,6 +23,6 @@
     One-Shot NAS <NAS/one_shot_nas>
     自定义 NAS 算法 <NAS/Advanced>
     NAS 可视化 <NAS/Visualization>
-    Search Space Zoo <NAS/SearchSpaceZoo>
+    搜索空间集合 <NAS/SearchSpaceZoo>
     NAS 基准测试 <NAS/Benchmarks>
     API 参考 <NAS/NasReference>
