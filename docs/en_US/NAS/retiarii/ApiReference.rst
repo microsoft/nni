@@ -65,3 +65,12 @@ Strategies
 
 ..  autoclass:: nni.retiarii.strategies.TPEStrategy
     :members:
+
+Retiarii Experiments
+-----------
+
+..  autoclass:: nni.retiarii.experiment.RetiariiExperiment
+    :members:
+
+..  autoclass:: nni.retiarii.experiment.RetiariiExeConfig
+    :members:
