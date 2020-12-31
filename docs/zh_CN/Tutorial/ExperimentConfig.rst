@@ -295,7 +295,7 @@ trainingServicePlatform
   **pai**  提交到微软开源的 `OpenPAI <https://github.com/Microsoft/pai>`__ 上。 更多 OpenPAI 配置，参考 `PAI 模式指南 <../TrainingService/PaiMode.rst>`__。
 
 * 
-  **kubeflow** 提交任务到 `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持基于 kubernetes 的 kubeflow，以及 `azure kubernetes <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__。 详情参考 `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__。
+  **kubeflow** 提交任务到 `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持基于 kubernetes 的 kubeflow，以及 `azure kubernetes <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__。 详情参考 `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__。
 
 * 
   **adl** 提交任务到 `AdaptDL <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持 Kubernetes 集群上的 AdaptDL。 详情参考 `AdaptDL Docs <../TrainingService/AdaptDLMode.rst>`__。
@@ -755,7 +755,7 @@ keyVault
 
 如果使用 Azure 存储，则必需。 键值对。
 
-将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考：https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2 。
+将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考：https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2 。
 
 
 * 

@@ -3,7 +3,7 @@
 
  
 
-NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
+NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
 
 私有部署的 Kubernetes 的准备工作
 -----------------------------------------------
@@ -26,11 +26,11 @@ Azure 部署的 Kubernetes 的准备工作
 -----------------------------------------
 
 
-#. NNI 支持基于 Azure Kubernetes Service 的 Kubeflow，参考 `指南 <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__ 来设置 Azure Kubernetes Service。
-#. 安装 `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 和 ``kubectl``。  使用 ``az login`` 命令来设置 Azure 账户，并将 kubectl 客户端连接到 AKS，参考此 `指南 <https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster>`__。
+#. NNI 支持基于 Azure Kubernetes Service 的 Kubeflow，参考 `指南 <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__ 来设置 Azure Kubernetes Service。
+#. 安装 `Azure CLI <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 和 ``kubectl``。  使用 ``az login`` 命令来设置 Azure 账户，并将 kubectl 客户端连接到 AKS，参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-walkthrough#connect-to-the-cluster>`__。
 #. 在 Azure Kubernetes Service 上部署 Kubeflow，参考此 `指南 <https://www.kubeflow.org/docs/started/getting-started/>`__。
-#. 参考此  `指南 <https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ 来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
-#. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 `Azure Key Vault <https://azure.microsoft.com/en-us/services/key-vault/>`__ 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考 `指南 <https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli>`__ 来存储访问密钥。
+#. 参考此  `指南 <https://docs.microsoft.com/zh-cn/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ 来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
+#. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 `Azure Key Vault <https://azure.microsoft.com/zh-cn/services/key-vault/>`__ 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考 `指南 <https://docs.microsoft.com/zh-cn/azure/key-vault/quick-create-cli>`__ 来存储访问密钥。
 
 设计
 ------
@@ -42,7 +42,7 @@ Azure 部署的 Kubernetes 的准备工作
 
 Kubeflow 训练平台会实例化一个 Kubernetes 客户端来与 Kubernetes 集群的 API 服务器交互。
 
-对于每个 Trial，会上传本机 codeDir 路径（在 nni_config.yml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：`nfs <https://en.wikipedia.org/wiki/Network_File_System>`__ 和 `azure file storage <https://azure.microsoft.com/en-us/services/storage/files/>`__，需要在 NNI 的 YAML 文件中进行配置。 当文件准备好后，Kubeflow 训练平台会调用 Kubernetes 的 API 来创建 Kubeflow 作业 (\ `tf-operator <https://github.com/kubeflow/tf-operator>`__ 作业或 `pytorch-operator <https://github.com/kubeflow/pytorch-operator>`__ 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个 Trial 的存储卷的 URL，以便浏览日志和输出文件。
+对于每个 Trial，会上传本机 codeDir 路径（在 nni_config.yml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：`nfs <https://zh.wikipedia.org/wiki/Network_File_System>`__ 和 `azure file storage <https://azure.microsoft.com/zh-cn/services/storage/files/>`__，需要在 NNI 的 YAML 文件中进行配置。 当文件准备好后，Kubeflow 训练平台会调用 Kubernetes 的 API 来创建 Kubeflow 作业 (\ `tf-operator <https://github.com/kubeflow/tf-operator>`__ 作业或 `pytorch-operator <https://github.com/kubeflow/pytorch-operator>`__ 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个 Trial 的存储卷的 URL，以便浏览日志和输出文件。
 
 支持的操作符（operator）
 -----------------------------------------

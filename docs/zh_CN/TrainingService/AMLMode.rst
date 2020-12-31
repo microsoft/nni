@@ -1,14 +1,14 @@
 **在 Azure Machine Learning 上运行 Experiment**
 ===================================================
 
-NNI 支持在 `AML <https://azure.microsoft.com/en-us/services/machine-learning/>`__ 上运行 Experiment，称为 aml 模式。
+NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/>`__ 上运行 Experiment，称为 aml 模式。
 
 设置环境
 -----------------
 
 步骤 1. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 NNI。   
 
-步骤 2. 通过此 `链接 <https://azure.microsoft.com/en-us/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。
+步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。
 
 步骤 3. 在机器上安装 Azure CLI，参照 `此 <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 安装指南。
 
@@ -102,7 +102,7 @@ amlConfig:
 
 * computeTarget
 
-  * 必填，要在 AML 工作区中使用的计算机集群名称。 `参考文档 <https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target>`__ 了解步骤 6。
+  * 必填，要在 AML 工作区中使用的计算机集群名称。 `参考文档 <https://docs.microsoft.com/zh-cn/azure/machine-learning/concept-compute-target>`__ 了解步骤 6。
 
 * maxTrialNumPerGpu
 
