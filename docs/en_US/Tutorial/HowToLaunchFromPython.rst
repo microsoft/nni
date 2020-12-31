@@ -3,7 +3,7 @@
 
 Overview
 --------
-This is a new way to launch experiments since ``nni v2.0``. Before, you need to configure our experiment in a yaml configuration file and launch the experiment through ``nnictl`` command. Now, you can also configure and run your experiment directly in the python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
+This is a new way to launch experiments since ``nni v2.0``. Before, you need to configure your experiment in a yaml configuration file and launch the experiment through ``nnictl`` command. Now, you can also configure and run your experiment directly in the python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
 
 How to Use
 ----------
@@ -55,7 +55,7 @@ Now, you have successfully launched an NNI experiment. And you can type ``localh
 
 Example
 -------
-Below is an example for this new launching approach. You can also find this code in ``examples/trials/mnist-tfv2/launch.py``.
+Below is an example for this new launching approach. You can also find this code in :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>` .
 
 .. code-block:: python
 
