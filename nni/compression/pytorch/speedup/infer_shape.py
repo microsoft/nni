@@ -273,7 +273,8 @@ infer_from_inshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -308,7 +309,8 @@ infer_from_outshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_outshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_outshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_outshape(module_masks, mask)
 }
 
 
