@@ -218,7 +218,7 @@ Once a trial job is completed, you can goto NNI WebUI's overview page (like http
 
 Expand a trial information in trial list view, click the logPath link like:
 
-.. image:: ../../img/nni_webui_joblist.jpg
+.. image:: ../../img/nni_webui_joblist.png
    :scale: 30%
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
