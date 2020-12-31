@@ -12,7 +12,7 @@ NNI 支持在 `OpenPAI <https://github.com/Microsoft/pai>`__  上运行 Experime
 设置环境
 -----------------
 
-**步骤 1. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 NNI。**   
+**步骤 1. 参考** `指南 <../Tutorial/QuickStart.rst>`__ **安装 NNI。**   
 
 **步骤 2. 获得令牌（token）。**
 

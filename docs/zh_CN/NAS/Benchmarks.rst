@@ -113,7 +113,7 @@ API 文档
 NDS
 ---
 
-`Paper link <https://arxiv.org/abs/1905.13214>`__ &nbsp; &nbsp; `Open-source <https://github.com/facebookresearch/nds>`__
+`论文链接 <https://arxiv.org/abs/1905.13214>`__ , `开源代码 <https://github.com/facebookresearch/nds>`__
 
 *On Network Design Spaces for Visual Recognition* 发布了来自多个模型系列，超过 100,000 个配置（模型加超参组合）的统计，包括 vanilla (受 VGG 启发的松散前馈网络), ResNet 和 ResNeXt (残差基本模块和残差瓶颈模块) 以及 NAS 单元格 (遵循 NASNet, Ameoba, PNAS, ENAS 和 DARTS 的设计)。 大部分配置只采用固定的随机种子训练一次，但少部分会训练两到三次。
 

@@ -97,9 +97,7 @@ Experiment 结果
 详细的实验结果如下图所示。 水平轴是 Trial 的顺序。 垂直轴是指标，此例中为写入的 OPS。 蓝点表示使用的是 SMAC Tuner，橙色表示使用的是 TPE Tuner。 
 
 
-.. image:: https://github.com/microsoft/nni/tree/v1.9/examples/trials/systems/rocksdb-fillrandom/plot.png
-   :target: https://github.com/microsoft/nni/tree/v1.9/examples/trials/systems/rocksdb-fillrandom/plot.png
-   :alt: image
+.. image:: https://github.com/microsoft/nni/blob/v2.0/docs/img/rocksdb-fillrandom-plot.png?raw=true
 
 
 下表列出了两个 Tuner 获得的最佳 Trial 以及相应的参数和指标。 不出所料，两个 Tuner 都为 ``fillrandom`` 测试找到了一样的最佳配置。

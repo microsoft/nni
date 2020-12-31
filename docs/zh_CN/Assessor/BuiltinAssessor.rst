@@ -7,7 +7,7 @@
 
 NNI 提供了先进的评估算法，使用上也很简单。 下面是内置 Assessor 的介绍。
 
-注意：点击**Assessor 的名称**可了解每个 Assessor 的安装需求，建议的场景以及示例。 在每个 Assessor 建议场景最后，还有算法的详细说明。
+注意：点击 **Assessor 的名称** 可了解每个 Assessor 的安装需求，建议的场景以及示例。 在每个 Assessor 建议场景最后，还有算法的详细说明。
 
 当前支持以下 Assessor：
 

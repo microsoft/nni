@@ -71,7 +71,7 @@ NNI 与 CIFAR-10
 
 这是在 OpenPAI 上运行 Experiment 的示例：
 
-代码： :githublink:`examples/trials/cifar10_pytorch/config_pai.yml <examples/trials/cifar10_pytorch/config_pai.yml>`
+代码 :githublink:`examples/trials/cifar10_pytorch/config_pai.yml <examples/trials/cifar10_pytorch/config_pai.yml>`
 
 完整示例 :githublink:`examples/trials/cifar10_pytorch/ <examples/trials/cifar10_pytorch>`
 

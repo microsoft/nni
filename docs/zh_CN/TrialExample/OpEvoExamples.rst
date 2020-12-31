@@ -111,7 +111,7 @@ NNI 上调优张量算子
 
 请注意，G-BFS 和 N-A2C 这两种方法是专为优化行和列为2的幂的矩阵相乘的平铺（tiling）策略而设计的，所以他们不能够兼容其他类型的搜索空间，因此不能够用来优化批量矩阵乘和2维卷积这两种张量算子。 这里，AutoTVM是由作者在 TVM 项目中实现的，因此调优结果打印在屏幕上，而不是报告给 NNI 管理器。 容器的端口 8080 绑定到主机的同一端口，因此可以通过 ``host_ip_addr:8080`` 访问 NNI Web 界面，并监视调优过程，如下面的屏幕截图所示。
 
-:raw-html:`<img src="../../../examples/trials/systems/opevo/screenshot.png" />`
+:raw-html:`<img src="https://github.com/microsoft/nni/blob/v2.0/docs/img/opevo.png?raw=true" />`
 
 引用 OpEvo
 ------------

@@ -103,7 +103,7 @@ CIFAR-10, ResNet50:
 
 
 * 
-  如果遵循 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>`\ 的做法，对于每一次剪枝实验，实验结果将以JSON格式保存如下：
+  如果遵循 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 的做法，对于每一次剪枝实验，实验结果将以JSON格式保存如下：
 
   .. code-block:: json
 
@@ -114,8 +114,7 @@ CIFAR-10, ResNet50:
        }
 
 * 
-  实验代码在 :githublink:`这里 <examples/model_compress/comparison_of_pruners>`. 
-  可以参开 :githublink:`分析 <examples/model_compress/comparison_of_pruners/analyze.py>` 来绘制新的性能比较图。
+  实验代码在 :githublink:`这里 <examples/model_compress/comparison_of_pruners>`。可以参考 :githublink:`分析 <examples/model_compress/comparison_of_pruners/analyze.py>` 来绘制新的性能比较图。
 
 贡献
 ------------

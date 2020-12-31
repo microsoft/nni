@@ -48,6 +48,7 @@ NNI 的异构模式目前支持 `local <./LocalMode.rst>`__\ , `remote <./Remote
 异构模式的配置：
 
 heterogeneousConfig:
+
 * trainingServicePlatforms. 必填。 该字段指定用于异构模式的平台，值使用 yaml 列表格式。 NNI 支持在此字段中设置 `local`, `remote`, `aml`, `pai` 。
 
 

@@ -7,7 +7,7 @@
 
 本文由 NNI 用户在知乎论坛上发表。 在这篇文章中，Garvin 分享了在使用 NNI 进行自动特征工程方面的体验。 我们认为本文对于有兴趣使用 NNI 进行特征工程的用户非常有用。 经作者许可，将原始文章摘编如下。  
 
-**原文(source)**\ : `如何看待微软最新发布的AutoML平台NNI？By Garvin Li <https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0>`__
+**原文**\ : `如何看待微软最新发布的AutoML平台NNI？By Garvin Li <https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0>`__
 
 01 AutoML概述
 ---------------------
@@ -24,7 +24,7 @@ NNI (Neural Network Intelligence) 是一个微软开源的自动机器学习工�
 或复杂系统的参数
 。
 
-链接： ` https://github.com/Microsoft/nni <https://github.com/Microsoft/nni>`__
+链接： `https://github.com/Microsoft/nni <https://github.com/Microsoft/nni>`__
 
 总体看微软的工具都有一个比较大的特点，
 技术可能不一定多新颖，但是设计都非常赞。
@@ -34,9 +34,7 @@ NNI 的 AutoFeatureENG 基本包含了用户对于 AutoFeatureENG 的一切幻�
 03 细说NNI - AutoFeatureENG
 --------------------------------
 
-..
-
-   本文使用了此项目： `https://github.com/SpongebBob/tabular_automl_NNI <https://github.com/SpongebBob/tabular_automl_NNI>`__。 
+本文使用了此项目： `https://github.com/SpongebBob/tabular_automl_NNI <https://github.com/SpongebBob/tabular_automl_NNI>`__。 
 
 
 新用户可以使用 NNI 轻松高效地进行 AutoFeatureENG。 使用是非常简单的，安装下文件中的 require，然后 pip install NNI。
@@ -137,5 +135,6 @@ NNI 的 AutoFeature 模块是给整个行业制定了一个教科书般的标准
 
 大家用的时候如果是 Mac 电脑可能会遇到 gcc 的问题，因为开源项目自带的脚本是基于 gcc7 编译的， 可以用下面的方法绕过去：
 
-brew install libomp
-===================
+.. code-block:: bash
+
+ brew install libomp

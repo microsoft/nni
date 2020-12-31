@@ -162,7 +162,7 @@ APoZ Pruner 示例
 在一块 V100 GPU 上
 输入张量: ``torch.randn(64, 3, 32, 32)``
 
-C list-table::
+.. list-table::
    :header-rows: 1
    :widths: auto
 

@@ -4,7 +4,7 @@ Metis Tuner
 Metis Tuner
 -----------
 
-`Metis <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>` 相对于别的调优算法，有几个优势。 大多数调参工具仅仅预测最优配置，而 Metis 具有两个输出，最优配置的预测， 以及下一次 Trial 的建议。 不再需要随机猜测！
+`Metis <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ 相对于别的调优算法，有几个优势。 大多数调参工具仅仅预测最优配置，而 Metis 具有两个输出，最优配置的预测， 以及下一次 Trial 的建议。 不再需要随机猜测！
 
 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。
 
