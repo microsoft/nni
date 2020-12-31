@@ -3,7 +3,7 @@ Neural Architecture Search with Retiarii (Experimental)
 
 `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ is a new framework to support neural architecture search and hyper-parameter tuning. It allows users to express various search space with high flexibility, to reuse many SOTA search algorithms, and to leverage system level optimizations to speed up the search process. This framework provides the following new user experiences.
 
-* Search space can be expressed directly in user model code. A tuning space can be expressed along programming a model.
+* Search space can be expressed directly in user model code. A tuning space can be expressed along defining a model.
 * Neural architecture candidates and hyper-parameter candidates are more friendly supported in an experiment.
 * The experiment can be launched directly from python code.
 
@@ -26,22 +26,31 @@ Defining a base model is almost the same as defining a PyTorch (or TensorFlow) m
 * Use our wrapped ``nn`` for PyTorch modules instead of ``torch.nn``. Specifically, users can simply replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn``
 * Add the decorator ``@blackbox_module`` to some module classes. Below we explain why this decorator is needed and what module classes should be decorated.
 
-**@blackbox_module**: Our framework works as follows: it converts user defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user defined mutations are applied to the graph to generate new graphs, each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a module class in the following cases:
+**@blackbox_module**: To understand this decorator, we first briefly explain how our framework works: it converts user defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a module class in the following cases:
 
-* When a module class cannot be successfully converted to a subgraph. Currently, our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module.
-* The candidate ops in ``LayerChoice`` should be decorated as blackbox module.
-* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module.
+* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module. The following ``MyModule`` should be decorated.
+
+  .. code-block:: python
+
+    @blackbox_module
+    class MyModule(nn.Module):
+      def __init__(self):
+        ...
+      def forward(self, x):
+        for i in range(10): # <- adhoc loop
+          ...
+
+* The candidate ops in ``LayerChoice`` should be decorated as blackbox module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated.
+* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
 * If no mutation is targeted on a module, this module *can be* decorated as a blackbox module.
 
-Below is a simple example code of how to define a base model.
+Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
 
 .. code-block:: python
 
   import torch.nn.functional as F
   import nni.retiarii.nn.pytorch as nn
-  from nni.retiarii import register_module
 
-  @register_module()
   class MyModule(nn.Module):
     def __init__(self):
       super().__init__()
@@ -50,7 +59,6 @@ Below is a simple example code of how to define a base model.
     def forward(self, x):
       return self.pool(self.conv(x))
 
-  @register_module()
   class Model(nn.Module):
     def __init__(self):
       super().__init__()
@@ -58,7 +66,7 @@ Below is a simple example code of how to define a base model.
     def forward(self, x):
       return F.relu(self.mymodule(x))
 
-Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complete examples.
+Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complicated examples.
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -69,35 +77,44 @@ A base model is only one concrete model not a model space. To define model space
 
 For easy usability and also backward compatibility, we provide some APIs for users to easily express possible mutations during defining a base model. The APIs can be used just like PyTorch module.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one is chosen in each explored model.
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one is chosen in each explored model. *Note that the candidates should be decorated as blackbox module.*
 
-.. code-block:: python
+  .. code-block:: python
 
-  # declared in `__init__`
-  self.layer = nn.LayerChoice([
-    ops.PoolBN('max', channels, 3, stride, 1),
-    ops.SepConv(channels, channels, 3, stride, 1),
-    nn.Identity()
-  ]))
-  # invoked in `forward` function
-  out = self.layer(x)
+    # import nni.retiarii.nn.pytorch as nn
+    # declared in `__init__`
+    self.layer = nn.LayerChoice([
+      ops.PoolBN('max', channels, 3, stride, 1),
+      ops.SepConv(channels, channels, 3, stride, 1),
+      nn.Identity()
+    ]))
+    # invoked in `forward` function
+    out = self.layer(x)
 
-* ``nn.InputChoice``. It is mainly for choosing (trying) different connections. It takes several tensors and chooses one.
+* ``nn.InputChoice``. It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
 
-.. code-block:: python
+  .. code-block:: python
 
-  # declared in `__init__`
-  self.input_switch = nn.InputChoice(n_chosen=1)
-  # invoked in `forward` function, choose one from the three
-  out = self.input_switch([tensor1, tensor2, tensor3])
+    # import nni.retiarii.nn.pytorch as nn
+    # declared in `__init__`
+    self.input_switch = nn.InputChoice(n_chosen=1)
+    # invoked in `forward` function, choose one from the three
+    out = self.input_switch([tensor1, tensor2, tensor3])
 
-* ``nn.ValueChoice``. Will be supported soon.
+* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of blackbox modules and the wrapped ``nn`` modules. *Note that it has not been officially supported.*
 
-Detailed API description can be found `here <>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`.
+  .. code-block:: python
+
+    # import nni.retiarii.nn.pytorch as nn
+    # used in `__init__`
+    self.conv = nn.Conv2d(XX, XX, kernel_size=nn.ValueChoice([1, 3, 5])
+    self.op = MyOp(nn.ValueChoice([0, 1], nn.ValueChoice([-1, 1]))
+
+Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`.
 
 **Express mutations with mutators**
 
-Inline mutations have limited expressiveness, as it has to be embedded in model definition. Therefore, we provide primitives for users to write *Mutator* to flexibly express how they want to mutate base model. Mutator stands above base model, thus has full ability to edit the model.
+Though easy-to-use, inline mutations have limited expressiveness, as it has to be embedded in model definition. To greatly improve expressiveness and flexibility, we provide primitives for users to write *Mutator* to flexibly express how they want to mutate base model. Mutator stands above base model, thus has full ability to edit the model.
 
 Users can instantiate several mutators as below, the mutators will be sequentially applied to the base model one after another to generate a new model during experiment running.
 
@@ -107,28 +124,30 @@ Users can instantiate several mutators as below, the mutators will be sequential
   applied_mutators.append(BlockMutator('mutable_0'))
   applied_mutators.append(BlockMutator('mutable_1'))
 
-``BlockMutator`` could be defined by users to express how to mutate the base model. User defined mutator should inherit ``Mutator`` class, and implement mutation logic in member function ``mutate``.
+``BlockMutator`` is defined by users to express how to mutate the base model. User defined mutator should inherit ``Mutator`` class, and implement mutation logic in the member function ``mutate``.
 
 .. code-block:: python
 
+  from nni.retiarii import Mutator
   class BlockMutator(Mutator):
-    def __init__(self, target: str):
+    def __init__(self, target: str, candidates: List):
         super(BlockMutator, self).__init__()
         self.target = target
+        self.candidate_op_list = candidates
 
     def mutate(self, model):
       nodes = model.get_nodes_by_label(self.target)
       for node in nodes:
-        chosen_op = self.choice(candidate_op_list)
+        chosen_op = self.choice(self.candidate_op_list)
         node.update_operation(chosen_op.type, chosen_op.params)
 
-The input of ``mutate`` is a model IR (please refer to `here <>`__ for the format and APIs of the IR), users can mutate the model with its member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of mutations. In the above example, the node's operation can be changed to each operation from ``candidate_op_list``.
+The input of ``mutate`` is graph IR of the base model (please refer to `here <./ApiReference.rst>`__ for the format and APIs of the IR), users can mutate the graph with its member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
 
-For mutator to easily target on a node (i.e., PyTorch module), we provide a placeholder module called ``nn.Placeholder``. If you want to mutate a module, you can define this module with ``nn.Placeholder``, and use mutator to mutate this placeholder to give it real computation operation.
+For mutator to easily target on a node (i.e., PyTorch module), we provide a placeholder module called ``nn.Placeholder``. If you want to mutate a module, you can define this module with ``nn.Placeholder``, and use mutator to mutate this placeholder to give it a real operation.
 
 .. code-block:: python
 
-  ph = nn.Placeholder(label=f'mutable_{count}',
+  ph = nn.Placeholder(label='mutable_0',
     related_info={
       'kernel_size_options': [1, 3, 5],
       'n_layer_options': [1, 2, 3, 4],
@@ -137,7 +156,7 @@ For mutator to easily target on a node (i.e., PyTorch module), we provide a plac
     }
   )
 
-``label`` is used by mutator to identify this placeholder, ``related_info`` is included in this placeholder node for mutator to get more mutation related information. A complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
+``label`` is used by mutator to identify this placeholder, ``related_info`` is the information that are required by mutator. As ``related_info`` is a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
 
 Explore the Defined Model Space
 -------------------------------
@@ -150,14 +169,46 @@ Create a Trainer and Exploration Strategy
 **Classic search approach:**
 In this approach, trainer is for training each explored model, while strategy is for sampling the models. Both trainer and strategy are required to explore the model space.
 
-**Weight-sharing search approach:**
-In this approach, users only need a weight-sharing trainer, because this trainer takes charge of both search and training.
+**Oneshot (Weight-sharing) search approach:**
+In this approach, users only need a oneshot trainer, because this trainer takes charge of both search and training.
 
 In the following table, we listed the available trainers and strategies.
 
-TODO: table here.
+.. list-table::
+  :header-rows: 1
+  :widths: auto
 
-Users can write their own trainer and strategy, please refer to `here <>`__ for tutorial.
+  * - Trainer
+    - Strategy
+    - Oneshot Trainer
+  * - PyTorchImageClassificationTrainer
+    - TPEStrategy
+    - DartsTrainer
+  * - PyTorchMultiModelTrainer
+    - RandomStrategy
+    - EnasTrainer
+  * - 
+    - 
+    - ProxylessTrainer
+  * - 
+    - 
+    - SinglePathTrainer (RandomTrainer)
+
+There usage and API document can be found `here <./ApiReference>`__\.
+
+Here is a simple example of using trainer and strategy.
+
+.. code-block:: python
+
+  trainer = PyTorchImageClassificationTrainer(base_model,   
+    dataset_cls="MNIST",
+    dataset_kwargs={"root": "data/mnist", "download": True},
+    dataloader_kwargs={"batch_size": 32},
+    optimizer_kwargs={"lr": 1e-3},
+    trainer_kwargs={"max_epochs": 1})
+  simple_startegy = RandomStrategy()
+
+Users can refer to `this document <./WriteTrainer.rst>`__ for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
 Set up an Experiment
 ^^^^^^^^^^^^^^^^^^^^
@@ -172,9 +223,16 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp_config.trial_concurrency = 2
   exp_config.max_trial_number = 10
   exp_config.training_service.use_active_gpu = False
-  exp.run(exp_config, 8081, debug=True)
+  exp.run(exp_config, 8081)
 
 This code starts an NNI experiment. Note that if inlined mutation is used, ``applied_mutators`` should be ``None``.
+
+The complete code of a simple MNIST example can be found :githublink:`here <test/retiarii_test/mnist/test.py>`.
+
+Visualize your experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment, please refer to `here <../../Tutorial/WebUI.rst>`__ for details. If users are using oneshot trainer, they can refer to `here <../Visualization.rst>`__ for how to visualize their experiments.
 
 FAQ
 ---
