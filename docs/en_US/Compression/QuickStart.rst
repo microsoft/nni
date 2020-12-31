@@ -8,7 +8,7 @@ In this tutorial, we use the `first section <#quick-start-to-compress-a-model>`_
 Quick Start to Compress a Model
 -------------------------------
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner </Compression/Pruner.html#slim-pruner>`__ as an example to show the usage.
+NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner <../Compression/Pruner.rst#slim-pruner>`__ as an example to show the usage.
 
 Write configuration
 ^^^^^^^^^^^^^^^^^^^
@@ -82,13 +82,13 @@ Tensorflow code
    pruner = LevelPruner(tf.get_default_graph(), config_list)
    pruner.compress()
 
-You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.md>`__ and `Quantizer <./Quantizer.md>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
+You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.rst>`__ and `Quantizer <./Quantizer.rst>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
 
 A compression algorithm is first instantiated with a ``config_list`` passed in. The specification of this ``config_list`` will be described later.
 
 The function call ``pruner.compress()`` modifies user defined model (in Tensorflow the model can be obtained with ``tf.get_default_graph()``\ , while in PyTorch the model is the defined model class), and the model is modified with masks inserted. Then when you run the model, the masks take effect. The masks can be adjusted at runtime by the algorithms.
 
-*Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.*
+Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
 
 Specification of ``config_list``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,7 +104,7 @@ There are different keys in a ``dict``. Some of them are common keys supported b
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
-Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.md>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
+Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
 A simple example of configuration is shown below:
 
@@ -190,14 +190,14 @@ In this example, 'op_names' is the name of layer and four layers will be quantiz
 APIs for Updating Fine Tuning Status
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some compression algorithms use epochs to control the progress of compression (e.g. `AGP </Compression/Pruner.html#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
+Some compression algorithms use epochs to control the progress of compression (e.g. `AGP <../Compression/Pruner.rst#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
 
 ``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
 
-Export Compressed Model
-^^^^^^^^^^^^^^^^^^^^^^^
+Export Pruned Model
+^^^^^^^^^^^^^^^^^^^^
 
-You can easily export the compressed model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
+You can easily export the pruned model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. In this exported ``model.pth``\ , the masked weights are zero.
 
 .. code-block:: bash
 
@@ -208,5 +208,44 @@ You can easily export the compressed model using the following API if you are pr
 .. code-block:: python
 
    pruner.export_model(model_path='model.pth', mask_path='mask.pth', onnx_path='model.onnx', input_shape=[1, 1, 28, 28])
+
+Export Quantized Model
+^^^^^^^^^^^^^^^^^^^^^^
+You can export the quantized model directly by using ``torch.save`` api and the quantized model can be loaded by ``torch.load`` without any extra modification. The following example shows the normal procedure of saving, loading quantized model and get related parameters in QAT.
+
+.. code-block:: python
+
+   # Init model and quantize it by using NNI QAT
+   model = Mnist()
+   configure_list = [...]
+   optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+   quantizer = QAT_Quantizer(model, configure_list, optimizer)
+   quantizer.compress()
+
+   model.to(device)
+   
+   # Quantize aware training
+   for epoch in range(40):
+        print('# Epoch {} #'.format(epoch))
+        train(model, quantizer, device, train_loader, optimizer)
+   
+   # Save quantized model which is generated by using NNI QAT algorithm
+   torch.save(model.state_dict(), "quantized_model.pkt")
+
+   # Simulate model loading procedure
+   # Have to init new model and compress it before loading
+   qmodel_load = Mnist()
+   optimizer = torch.optim.SGD(qmodel_load.parameters(), lr=0.01, momentum=0.5)
+   quantizer = QAT_Quantizer(qmodel_load, configure_list, optimizer)
+   quantizer.compress()
+   
+   # Load quantized model
+   qmodel_load.load_state_dict(torch.load("quantized_model.pkt"))
+
+   # Get scale, zero_point and weight of conv1 in loaded model
+   conv1 = qmodel_load.conv1
+   scale = conv1.module.scale
+   zero_point = conv1.module.zero_point
+   weight = conv1.module.weight
 
 If you want to really speed up the compressed model, please refer to `NNI model speedup <./ModelSpeedup.rst>`__ for details.

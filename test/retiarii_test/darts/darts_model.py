@@ -55,7 +55,7 @@ class Node(nn.Module):
                     ops.DilConv(channels, channels, 5, stride, 4, 2, affine=False)
                 ]))
         self.drop_path = ops.DropPath()
-        self.input_switch = nn.InputChoice(n_chosen=2)
+        self.input_switch = nn.InputChoice(n_candidates=num_prev_nodes, n_chosen=2)
 
     def forward(self, prev_nodes: List['Tensor']) -> 'Tensor':
         #assert self.ops.__len__() == len(prev_nodes)

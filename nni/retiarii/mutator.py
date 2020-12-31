@@ -104,6 +104,7 @@ class _RecorderSampler(Sampler):
         self.recorded_candidates.append(candidates)
         return candidates[0]
 
+
 # the following is for inline mutation
 
 
@@ -122,14 +123,16 @@ class LayerChoiceMutator(Mutator):
 
 
 class InputChoiceMutator(Mutator):
-    def __init__(self, node_name: str, n_chosen: int):
+    def __init__(self, node_name: str, n_candidates: int, n_chosen: int, reduction: str):
         super().__init__()
         self.node_name = node_name
+        self.n_candidates = n_candidates
         self.n_chosen = n_chosen
+        self.reduction = reduction
 
     def mutate(self, model):
         target = model.get_node_by_name(self.node_name)
-        candidates = [i for i in range(self.n_chosen)]
-        chosen = self.choice(candidates)
+        candidates = [i for i in range(self.n_candidates)]
+        chosen = [self.choice(candidates) for _ in range(self.n_chosen)]
         target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',
-                                {'chosen': chosen})
+                                {'chosen': chosen, 'reduction': self.reduction})

@@ -113,7 +113,7 @@ User configuration for Slim Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We implemented one of the experiments in `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\ , we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+We implemented one of the experiments in `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/pdf/1708.06519.pdf>`__\ , we pruned ``70%`` channels in the **VGGNet** for CIFAR-10 in the paper, in which ``88.5%`` parameters are pruned. Our experiments results are as follows:
 
 .. list-table::
    :header-rows: 1
@@ -182,7 +182,7 @@ User configuration for FPGM Pruner
 L1Filter Pruner
 ---------------
 
-This is an one-shot pruner, In `'PRUNING FILTERS FOR EFFICIENT CONVNETS' <https://arxiv.org/abs/1608.08710>`__\ , authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+This is an one-shot pruner, In `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\ , authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
 
 
 .. image:: ../../img/l1filter_pruner.png
@@ -232,7 +232,7 @@ User configuration for L1Filter Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We implemented one of the experiments in `'PRUNING FILTERS FOR EFFICIENT CONVNETS' <https://arxiv.org/abs/1608.08710>`__ with **L1FilterPruner**\ , we pruned** VGG-16** for CIFAR-10 to** VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ with **L1FilterPruner**\ , we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which ``64%`` parameters are pruned. Our experiments results are as follows:
 
 .. list-table::
    :header-rows: 1
@@ -330,7 +330,7 @@ User configuration for ActivationAPoZRankFilter Pruner
 ActivationMeanRankFilter Pruner
 -------------------------------
 
-ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper\ `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
+ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
@@ -582,7 +582,7 @@ PyTorch code
 
 .. code-block:: python
 
-   from nni.algorithms.compression.pytorch.pruning import ADMMPruner
+   from nni.algorithms.compression.pytorch.pruning import AutoCompressPruner
    config_list = [{
            'sparsity': 0.5,
            'op_types': ['Conv2d']
@@ -633,7 +633,7 @@ PyTorch code
 
 You can view :githublink:`example <examples/model_compress/amc/>` for more information.
 
-User configuration for AutoCompress Pruner
+User configuration for AMC Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**

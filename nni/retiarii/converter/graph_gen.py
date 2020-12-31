@@ -432,6 +432,7 @@ def _handle_layerchoice(module):
 
 def _handle_inputchoice(module):
     m_attrs = {}
+    m_attrs['n_candidates'] = module.n_candidates
     m_attrs['n_chosen'] = module.n_chosen
     m_attrs['reduction'] = module.reduction
     m_attrs['label'] = module.label
