@@ -28,8 +28,10 @@ class Mutator:
     """
     Mutates graphs in model to generate new model.
     `Mutator` class will be used in two places:
-      1. Inherit `Mutator` to implement graph mutation logic.
-      2. Use `Mutator` subclass to implement NAS strategy.
+
+        1. Inherit `Mutator` to implement graph mutation logic.
+        2. Use `Mutator` subclass to implement NAS strategy.
+
     In scenario 1, the subclass should implement `Mutator.mutate()` interface with `Mutator.choice()`.
     In scenario 2, strategy should use constructor or `Mutator.bind_sampler()` to initialize subclass,
     and then use `Mutator.apply()` to mutate model.
