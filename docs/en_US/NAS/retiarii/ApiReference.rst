@@ -67,7 +67,7 @@ Strategies
     :members:
 
 Retiarii Experiments
------------
+--------------------
 
 ..  autoclass:: nni.retiarii.experiment.RetiariiExperiment
     :members:

@@ -21,7 +21,7 @@ For details, please refer to the following tutorials:
     Write A Search Space <NAS/WriteSearchSpace>
     Classic NAS <NAS/ClassicNas>
     One-shot NAS <NAS/one_shot_nas>
-    Retiarii NAS (experimental) <NAS/retiarii/Tutorial>
+    Retiarii NAS (experimental) <NAS/retiarii/retiarii_index>
     Customize a NAS Algorithm <NAS/Advanced>
     NAS Visualization <NAS/Visualization>
     Search Space Zoo <NAS/SearchSpaceZoo>
