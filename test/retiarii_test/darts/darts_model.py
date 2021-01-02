@@ -7,9 +7,9 @@ import torch.nn as torch_nn
 
 import ops
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import register_module
+from nni.retiarii import blackbox_module
 
-
+@blackbox_module
 class AuxiliaryHead(nn.Module):
     """ Auxiliary head in 2/3 place of network to let the gradient flow well """
 
@@ -35,7 +35,6 @@ class AuxiliaryHead(nn.Module):
         logits = self.linear(out)
         return logits
 
-@register_module()
 class Node(nn.Module):
     def __init__(self, node_id, num_prev_nodes, channels, num_downsample_connect):
         super().__init__()
@@ -66,7 +65,6 @@ class Node(nn.Module):
         #out = [self.drop_path(o) if o is not None else None for o in out]
         return self.input_switch(out)
 
-@register_module()
 class Cell(nn.Module):
 
     def __init__(self, n_nodes, channels_pp, channels_p, channels, reduction_p, reduction):
@@ -100,7 +98,6 @@ class Cell(nn.Module):
         output = torch.cat(new_tensors, dim=1)
         return output
 
-@register_module()
 class CNN(nn.Module):
 
     def __init__(self, input_size, in_channels, channels, n_classes, n_layers, n_nodes=4,
