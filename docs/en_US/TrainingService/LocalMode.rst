@@ -93,7 +93,7 @@ To run an experiment in NNI, you only needed:
 
 ..
 
-   You can download nni source code and a set of examples can be found in ~/nni/examples, run ``ls ~/nni/examples/trials`` to see all the trial examples.
+   You can download nni source code and a set of examples can be found in ``nni/examples``, run ``ls nni/examples/trials`` to see all the trial examples.
 
 
 Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run ``ls ~/nni/examples/trials`` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
