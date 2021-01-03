@@ -83,8 +83,8 @@ def check_experiment_id(args, update=True):
                                                                       experiment_dict[key]['status'],
                                                                       experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
-                                                                      experiment_dict[key]['startTime'],
-                                                                      experiment_dict[key]['endTime'])
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -128,7 +128,7 @@ def parse_ids(args):
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
-            if experiment_dict[key].get('port', 'N/A') == args.port:
+            if experiment_dict[key].get('port') == args.port:
                 result_list.append(key)
         if args.id and result_list and args.id != result_list[0]:
             print_error('Experiment id and resful server port not match')
@@ -143,8 +143,8 @@ def parse_ids(args):
                                                                       experiment_dict[key]['status'],
                                                                       experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
-                                                                      experiment_dict[key]['startTime'],
-                                                                      experiment_dict[key]['endTime'])
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -184,7 +184,7 @@ def get_experiment_port(args):
         exit(1)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id].get('port', 'N/A')
+    return experiment_dict[experiment_id].get('port')
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
