@@ -595,7 +595,7 @@ def create_experiment(args):
 
     try:
         validate_all_content(experiment_config, config_path)
-    except Exception as e:
+    except Exception:
         print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
         try:
             config = ExperimentConfig(**experiment_config)
