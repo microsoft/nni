@@ -7,7 +7,7 @@ NNI review article from Zhihu: :raw-html:`<an open source project with highly re
 
 The article is by a NNI user on Zhihu forum. In the article, Garvin had shared his experience on using NNI for Automatic Feature Engineering. We think this article is very useful for users who are interested in using NNI for feature engineering. With author's permission, we translated the original article into English.  
 
-**原文(source)**\ : `如何看待微软最新发布的AutoML平台NNI？By Garvin Li <https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0>`__
+**source**\ : `如何看待微软最新发布的AutoML平台NNI？By Garvin Li <https://www.zhihu.com/question/297982959/answer/964961829?utm_source=wechat_session&utm_medium=social&utm_oi=28812108627968&from=singlemessage&isappinstalled=0>`__
 
 01 Overview of AutoML
 ---------------------
@@ -24,7 +24,7 @@ Microsoft, to help users design and tune machine learning models, neural network
 architectures, or a complex system’s parameters in an efficient and automatic
 way.
 
-Link:\ ` https://github.com/Microsoft/nni <https://github.com/Microsoft/nni>`__
+Link: `https://github.com/Microsoft/nni <https://github.com/Microsoft/nni>`__
 
 In general, most of Microsoft tools have one prominent characteristic: the
 design is highly reasonable (regardless of the technology innovation degree).
@@ -51,7 +51,7 @@ NNI treats AutoFeatureENG as a two-steps-task, feature generation exploration an
 04 Feature Exploration
 ----------------------
 
-For feature derivation, NNI offers many operations which could automatically generate new features, which list \ `as following <https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.rst>`__\  :
+For feature derivation, NNI offers many operations which could automatically generate new features, which list \ `as following <https://github.com/SpongebBob/tabular_automl_NNI/blob/master/AutoFEOp.md>`__\  :
 
 **count**\ : Count encoding is based on replacing categories with their counts computed on the train set, also named frequency encoding.
 
@@ -111,7 +111,7 @@ To avoid feature explosion and overfitting, feature selection is necessary. In t
    :alt: 
 
 
-If you have used **XGBoost** or** GBDT**\ , you would know the algorithm based on tree structure can easily calculate the importance of each feature on results. LightGBM is able to make feature selection naturally.
+If you have used **XGBoost** or **GBDT**\ , you would know the algorithm based on tree structure can easily calculate the importance of each feature on results. LightGBM is able to make feature selection naturally.
 
 The issue is that selected features might be applicable to *GBDT* (Gradient Boosting Decision Tree), but not to the linear algorithm like *LR* (Logistic Regression).
 

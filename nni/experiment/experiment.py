@@ -170,7 +170,7 @@ class Experiment:
             while True:
                 time.sleep(10)
                 status = self.get_status()
-                if status == 'STOPPED':
+                if status == 'DONE' or status == 'STOPPED':
                     return True
                 if status == 'ERROR':
                     return False

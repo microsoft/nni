@@ -4,7 +4,7 @@ NAS Visualization (Experimental)
 Built-in Trainers Support
 -------------------------
 
-Currently, only ENAS and DARTS support visualization. Examples of `ENAS <./ENAS.md>`__ and `DARTS <./DARTS.rst>`__ has demonstrated how to enable visualization in your code, namely, adding this before ``trainer.train()``\ :
+Currently, only ENAS and DARTS support visualization. Examples of `ENAS <./ENAS.rst>`__ and `DARTS <./DARTS.rst>`__ has demonstrated how to enable visualization in your code, namely, adding this before ``trainer.train()``\ :
 
 .. code-block:: python
 

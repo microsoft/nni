@@ -77,7 +77,7 @@ NNI also provides algorithm toolkits for machine learning and deep learning, esp
 Hyperparameter Tuning
 ^^^^^^^^^^^^^^^^^^^^^
 
-This is a core and basic feature of NNI, we provide many popular `automatic tuning algorithms <Tuner/BuiltinTuner.md>`__ (i.e., tuner) and `early stop algorithms <Assessor/BuiltinAssessor.md>`__ (i.e., assessor). You can follow `Quick Start <Tutorial/QuickStart.rst>`__ to tune your model (or system). Basically, there are the above three steps and then starting an NNI experiment.
+This is a core and basic feature of NNI, we provide many popular `automatic tuning algorithms <Tuner/BuiltinTuner.rst>`__ (i.e., tuner) and `early stop algorithms <Assessor/BuiltinAssessor.rst>`__ (i.e., assessor). You can follow `Quick Start <Tutorial/QuickStart.rst>`__ to tune your model (or system). Basically, there are the above three steps and then starting an NNI experiment.
 
 General NAS Framework
 ^^^^^^^^^^^^^^^^^^^^^

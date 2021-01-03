@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
+import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
 
 _logger = logging.getLogger(__name__)
@@ -157,7 +158,7 @@ def replace_layer_choice(root_module, init_fn, modules=None):
     List[Tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
-    return _replace_module_with_type(root_module, init_fn, LayerChoice, modules)
+    return _replace_module_with_type(root_module, init_fn, (LayerChoice, nn.LayerChoice), modules)
 
 
 def replace_input_choice(root_module, init_fn, modules=None):
@@ -178,4 +179,4 @@ def replace_input_choice(root_module, init_fn, modules=None):
     List[Tuple[str, nn.Module]]
         A list from layer choice keys (names) and replaced modules.
     """
-    return _replace_module_with_type(root_module, init_fn, InputChoice, modules)
+    return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
