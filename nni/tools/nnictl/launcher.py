@@ -17,7 +17,7 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
 
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
@@ -592,16 +592,22 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    try:
-        config = ExperimentConfig(**experiment_config)
-        experiment_config = convert.to_v1_yaml(config)
-    except Exception:
-        pass
+
     try:
         validate_all_content(experiment_config, config_path)
     except Exception as e:
-        print_error(e)
-        exit(1)
+        print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
+        try:
+            config = ExperimentConfig(**experiment_config)
+            experiment_config = convert.to_v1_yaml(config)
+        except Exception as e:
+            print_error(f'Conversion from v2 format failed: {repr(e)}')
+            exit(1)
+        try:
+            validate_all_content(experiment_config, config_path)
+        except Exception as e:
+            print_error(f'Config validation failed. {repr(e)}')
+            exit(1)
 
     nni_config.set_config('experimentConfig', experiment_config)
     nni_config.set_config('restServerPort', args.port)
