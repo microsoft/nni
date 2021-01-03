@@ -3,7 +3,7 @@
 
 Overview
 --------
-This is a new way to launch experiments since ``nni v2.0``. Before, you need to configure your experiment in a yaml configuration file and launch the experiment through ``nnictl`` command. Now, you can also configure and run your experiment directly in the python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
+This is a new way to launch experiments since ``nni v2.0``. Before, you need to configure your experiment in a yaml configuration file and launch the experiment through ``nnictl`` command. Now, you can also configure and run your experiment directly in a python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
 
 How to Use
 ----------
@@ -16,28 +16,34 @@ After successfully installing ``nni``, you can write your own experimental confi
 
 .. code-block:: python
 
-    from nni.algorithms.hpo.foo_tuner import FooTuner
-    foo_tuner = FooTuner()
+    from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+    tuner = HyperoptTuner('tpe')
 
-Very simple, you have successfully initialized a ``FooTuner`` instance called ``foo_tuner``.
+Very simple, you have successfully initialized a ``HyperoptTuner`` instance called ``tuner``.
 
 See all real `builtin tuners <../builtin_tuner.rst>`__ supported in NNI.
 
 ..
 
-    Step 2 - Initialize a experiment instance and configure it
+    Step 2 - Initialize an experiment instance and configure it
 
 .. code-block:: python
 
-    experiment = Experiment(tuner=foo_tuner, training_service='local')
+    experiment = Experiment(tuner=tuner, training_service='local')
 
-Now, you have a ``Experiment`` instance with ``foo_tuner`` you have initialized in the previous step, and this experiment will launch trials on your local machine due to ``training_service='local'``.
+Now, you have a ``Experiment`` instance with ``tuner`` you have initialized in the previous step, and this experiment will launch trials on your local machine due to ``training_service='local'``.
 
 See all `training services <../training_services.rst>`__ supported in NNI.
 
 .. code-block:: python
 
     experiment.config.experiment_name = 'test'
+    experiment.config.trial_concurrency = 2
+    experiment.config.max_trial_number = 5
+    experiment.config.search_space = search_space
+    experiment.config.trial_command = 'python3 mnist.py'
+    experiment.config.trial_code_directory = Path(__file__).parent
+    experiment.config.training_service.use_active_gpu = True
 
 Use the form like ``experiment.config.foo = 'bar'`` to configure your experiment.
 
