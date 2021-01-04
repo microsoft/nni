@@ -14,7 +14,7 @@ python main_torch_pruner.py
 此例在代码中配置了模型压缩：
 
 ```python
-configure_list = [{
+config_list = [{
     'initial_sparsity': 0,
     'final_sparsity': 0.8,
     'start_epoch': 0,
@@ -22,7 +22,7 @@ configure_list = [{
     'frequency': 1,
     'op_types': ['default']
 }]
-pruner = AGPPruner(configure_list)
+pruner = AGPPruner(config_list)
 ```
 
 当调用 `pruner(model)` 时，模型会被嵌入掩码操作。 例如，某层以权重作为输入，可在权重和层操作之间插入一个操作，此操作以权重为输入，并将其应用掩码后输出。 因此，计算过程中，只要通过此操作，就会应用掩码。 还可以**不做任何改动**，来对模型进行微调。
