@@ -12,12 +12,11 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import register_module
+from nni.retiarii import blackbox_module
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import get_records, clear_records
+from nni.retiarii.utils import get_records
 
-@register_module()
 class MnistNet(nn.Module):
     def __init__(self):
         super(MnistNet, self).__init__()
@@ -54,9 +53,8 @@ class TestConvert(unittest.TestCase):
 
     def checkExportImport(self, model, input):
         script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model, get_records())
+        model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
-        clear_records()
 
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
@@ -73,7 +71,6 @@ class TestConvert(unittest.TestCase):
         return converted_model
 
     def test_dcgan_models(self):
-        @register_module()
         class DCGANGenerator(nn.Module):
             def __init__(self, nz, ngf, nc):
                 super(DCGANGenerator, self).__init__()
@@ -103,7 +100,6 @@ class TestConvert(unittest.TestCase):
             def forward(self, input):
                 return self.main(input)
 
-        @register_module()
         class DCGANDiscriminator(nn.Module):
             def __init__(self, nc, ndf):
                 super(DCGANDiscriminator, self).__init__()
@@ -138,7 +134,6 @@ class TestConvert(unittest.TestCase):
 
     @unittest.skip('this test has a if condition that needs to be handle')  # FIXME
     def test_neural_style(self):
-        @register_module()
         class TransformerNet(torch.nn.Module):
             def __init__(self):
                 super(TransformerNet, self).__init__()
@@ -178,7 +173,6 @@ class TestConvert(unittest.TestCase):
                 y = self.deconv3(y)
                 return y
 
-        @register_module()
         class ConvLayer(torch.nn.Module):
             def __init__(self, in_channels, out_channels, kernel_size, stride):
                 super(ConvLayer, self).__init__()
@@ -191,7 +185,6 @@ class TestConvert(unittest.TestCase):
                 out = self.conv2d(out)
                 return out
 
-        @register_module()
         class ResidualBlock(torch.nn.Module):
             """ResidualBlock
             introduced in: https://arxiv.org/abs/1512.03385
@@ -213,7 +206,6 @@ class TestConvert(unittest.TestCase):
                 out = out + residual
                 return out
 
-        @register_module()
         class UpsampleConvLayer(torch.nn.Module):
             """UpsampleConvLayer
             Upsamples the input and then does a convolution. This method gives better results
@@ -247,7 +239,6 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(MnistNet().eval(), (torch.rand(5, 1, 28, 28),))
 
     def test_reinforcement_learning(self):
-        @register_module()
         class Policy(nn.Module):
             def __init__(self):
                 super(Policy, self).__init__()
@@ -263,7 +254,6 @@ class TestConvert(unittest.TestCase):
 
     @unittest.skip('Replaced init error.')  # FIXME
     def test_snli(self):
-        @register_module()
         class Bottle(nn.Module):
 
             def forward(self, input):
@@ -273,11 +263,9 @@ class TestConvert(unittest.TestCase):
                 out = super(Bottle, self).forward(input.view(size[0] * size[1], -1))
                 return out.view(size[0], size[1], -1)
 
-        @register_module()
         class Linear(Bottle, nn.Linear):
             pass
 
-        @register_module()
         class Encoder(nn.Module):
 
             def __init__(self, config):
@@ -296,7 +284,6 @@ class TestConvert(unittest.TestCase):
                 outputs, (ht, ct) = self.rnn(inputs, (h0, c0))
                 return ht[-1] if not self.config.birnn else ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
 
-        @register_module()
         class SNLIClassifier(nn.Module):
 
             def __init__(self, config):
@@ -356,7 +343,6 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(SNLIClassifier(Config()), (premise, hypothesis))
 
     def test_super_resolution(self):
-        @register_module()
         class Net(nn.Module):
 
             def __init__(self, upscale_factor):
@@ -381,7 +367,6 @@ class TestConvert(unittest.TestCase):
 
     @unittest.skip('Need to support operator prim::ListUnpack')  # FIXME
     def test_time_sequence_prediction(self):
-        @register_module()
         class Sequence(torch.jit.ScriptModule):
             def __init__(self):
                 super(Sequence, self).__init__()
@@ -417,7 +402,6 @@ class TestConvert(unittest.TestCase):
                     outputs = torch.cat((outputs, output), 1)
                 return outputs
 
-        @register_module()
         class Traced(nn.Module):
             def __init__(self):
                 super(Traced, self).__init__()
@@ -430,7 +414,6 @@ class TestConvert(unittest.TestCase):
 
     @unittest.skip('Unsupported callmethod encode')  # FIXME
     def test_vae(self):
-        @register_module()
         class VAE(nn.Module):
             def __init__(self):
                 super(VAE, self).__init__()
@@ -479,7 +462,6 @@ class TestConvert(unittest.TestCase):
             return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                              padding=1, bias=False)
 
-        @register_module()
         class BasicBlock(torch.jit.ScriptModule):
             expansion = 1
             __constants__ = ['downsample']
@@ -513,7 +495,6 @@ class TestConvert(unittest.TestCase):
 
                 return out
 
-        @register_module()
         class ResNet(torch.jit.ScriptModule):
             __constants__ = ['layer1', 'layer2', 'layer3', 'layer4']
 
