@@ -76,9 +76,7 @@ class ExperimentConfig(ConfigBase):
             # dict means a single training service
             # list means hybrid training service
             kwargs['trainingservice'] = util.training_service_config_factory(config = kwargs['trainingservice'])
-            print('zql: ', kwargs)
         else:
-            print('zql2')
             raise RuntimeError('Unsupported Training service configuration!')
         super().__init__(**kwargs)
 
