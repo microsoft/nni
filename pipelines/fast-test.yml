@@ -16,6 +16,12 @@ jobs:
 
   - script: |
       set -e
+      sudo apt-get install swig3.0 -y
+      swig -version
+    displayName: test
+
+  - script: |
+      set -e
       python -m pip install --upgrade pip setuptools
       python -m pip install pytest coverage
       python -m pip install pylint flake8
@@ -26,13 +32,13 @@ jobs:
       python setup.py develop
     displayName: Install NNI
 
-  - script: |
-      set -e
-      cd ts/nni_manager
-      yarn eslint
-      cd ../webui
-      yarn eslint
-    displayName: ESLint
+  # - script: |
+  #     set -e
+  #     cd ts/nni_manager
+  #     yarn eslint
+  #     cd ../webui
+  #     yarn eslint
+  #   displayName: ESLint
 
   - script: |
       set -e
@@ -46,18 +52,18 @@ jobs:
       python -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
-  - script: |
-      set -e
-      python -m pylint --rcfile pylintrc nni
-      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-      EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-    displayName: pylint and flake8
+  # - script: |
+  #     set -e
+  #     python -m pylint --rcfile pylintrc nni
+  #     python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+  #     EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+  #     python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+  #   displayName: pylint and flake8
 
-  - script: |
-      cd docs/en_US
-      sphinx-build -M html . _build -W --keep-going -T
-    displayName: Check Sphinx documentation
+  # - script: |
+  #     cd docs/en_US
+  #     sphinx-build -M html . _build -W --keep-going -T
+  #   displayName: Check Sphinx documentation
 
   - script: |
       set -e
