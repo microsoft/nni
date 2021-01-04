@@ -31,7 +31,8 @@ class ExperimentsManager {
                     }
                     platforms.add(item.platform);
                 }
-                this.experimentList = data;
+                // this.experimentList = data.reverse();
+                this.experimentList = data.sort((a, b) => b.startTime - a.startTime);
                 this.platform = Array.from(platforms);
             })
             .catch(error => {
