@@ -52,7 +52,7 @@ Usage of Built-in Tuners
 
 Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
-Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners have dependencies need to be installed using ``pip install nni[<tuner>]``, like SMAC's dependencies can be installed using ``pip install nni[SMAC]``.
+Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners have dependencies that need to be installed using ``pip install nni[<tuner>]``, like SMAC's dependencies can be installed using ``pip install nni[SMAC]``.
 
 :raw-html:`<a name="TPE"></a>`
 
@@ -192,7 +192,7 @@ SMAC
 
 **Installation**
 
-SMAC has dependencies need to be installed by following command before the first usage. As a reminder, ``swig`` is required for SMAC: for Ubuntu ``swig`` can be installed with ``apt``.
+SMAC has dependencies that need to be installed by following command before the first usage. As a reminder, ``swig`` is required for SMAC: for Ubuntu ``swig`` can be installed with ``apt``.
 
 .. code-block:: bash
 
