@@ -133,7 +133,7 @@ We implemented one of the experiments in `Learning Efficient Convolutional Netwo
      - 88.5%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/reproduced/slim_torch_pruner.py <examples/model_compress/reproduced/slim_torch_cifar10.py>`
 
 ----
 
@@ -252,7 +252,7 @@ We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS
      - 64.0%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/reproduced/L1_filter_pruner.py <examples/model_compress/reproduced/L1_torch_cifar10.py>`
 
 ----
 
@@ -659,7 +659,7 @@ We implemented one of the experiments in `AMC: AutoML for Model Compression and 
      - 50%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/amc/>`
+The experiments code can be found at :githublink:`examples/model_compress/ <examples/model_compress/amc/>`
 
 ADMM Pruner
 -----------
@@ -754,7 +754,7 @@ User configuration for LotteryTicket Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/reproduced/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png
