@@ -53,21 +53,21 @@ Click the tab ``Overview``.
 
 * If you want to see experiment search space and config, please click the right button ``Search space`` and ``Config`` (when you hover on this button).
 
-1. Search space file:
+   1. Search space file:
 
 
-.. image:: ../../img/webui-img/searchSpace.png
-   :target: ../../img/webui-img/searchSpace.png
-   :alt: searchSpace
+      .. image:: ../../img/webui-img/searchSpace.png
+         :target: ../../img/webui-img/searchSpace.png
+         :alt: searchSpace
 
 
 
-2. Config file:
+   2. Config file:
 
 
-.. image:: ../../img/webui-img/config.png
-   :target: ../../img/webui-img/config.png
-   :alt: config
+      .. image:: ../../img/webui-img/config.png
+         :target: ../../img/webui-img/config.png
+         :alt: config
 
 
 
