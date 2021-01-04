@@ -44,9 +44,10 @@ Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's con
         username: bob
         passwd: bob123
 
-
-
 Configurations for hybrid mode:
+
+hybridConfig:
+
 * trainingServicePlatforms. required key. This field specify the platforms used in hybrid mode, the values using yaml list format. NNI support setting ``local``, ``remote``, ``aml``, ``pai`` in this field.
 
 
