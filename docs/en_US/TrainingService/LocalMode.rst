@@ -17,9 +17,9 @@ You have an implementation for MNIST classifer using convolutional layers, the P
 
 To enable NNI API, make the following changes:
 
-   1.1 Declare NNI API: include ``import nni`` in your trial code to use NNI APIs.
+1.1 Declare NNI API: include ``import nni`` in your trial code to use NNI APIs.
 
-   1.2 Get predefined parameters
+1.2 Get predefined parameters
 
 Use the following code snippet:
 
@@ -35,7 +35,7 @@ to get hyper-parameters' values assigned by tuner. ``RECEIVED_PARAMS`` is an obj
 
 ..
 
-   1.3 Report NNI results: Use the API: ``nni.report_intermediate_result(accuracy)`` to send ``accuracy`` to assessor. Use the API: ``nni.report_final_result(accuracy)`` to send `accuracy` to tuner.
+1.3 Report NNI results: Use the API: ``nni.report_intermediate_result(accuracy)`` to send ``accuracy`` to assessor. Use the API: ``nni.report_final_result(accuracy)`` to send `accuracy` to tuner.
 
 We had made the changes and saved it to ``mnist.py``.
 
