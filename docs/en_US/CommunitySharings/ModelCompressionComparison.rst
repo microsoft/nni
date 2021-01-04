@@ -42,7 +42,7 @@ Experiment Result
 
 For each dataset/model/pruner combination, we prune the model to different levels by setting a series of target sparsities for the pruner. 
 
-Here we plot both **Number of Weights - Performances** curve and** FLOPs - Performance** curve. 
+Here we plot both **Number of Weights - Performances** curve and **FLOPs - Performance** curve. 
 As a reference, we also plot the result declared in the paper `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <http://arxiv.org/abs/1907.03141>`__ for models VGG16 and ResNet18 on CIFAR-10.
 
 The experiment result are shown in the following figures:

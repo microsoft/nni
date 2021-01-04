@@ -40,7 +40,7 @@ Then
 
 And you could reference the examples in ``/examples/feature_engineering/gbdt_selector/``\ , too.
 
-**Requirement of ``fit`` FuncArgs**
+**Requirement of fit FuncArgs**
 
 
 * 
@@ -64,7 +64,7 @@ And you could reference the examples in ``/examples/feature_engineering/gbdt_sel
 * 
   **num_boost_round** (int, require) - number of boost round. The detail you could reference `here <https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.train.html#lightgbm.train>`__.
 
-**Requirement of ``get_selected_features`` FuncArgs**
+**Requirement of get_selected_features FuncArgs**
 
 
 * **topk** (int, require) - the topK impotance features you want to selected.

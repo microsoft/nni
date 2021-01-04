@@ -23,60 +23,62 @@ CNN MNIST classifier for deep learning is similar to ``hello world`` for program
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple YAML file which enables assessor.
 
-``code directory: examples/trials/mnist-tfv1/``
+code directory: :githublink:`mnist-tfv1/ <examples/trials/mnist-tfv1/>`
 
 :raw-html:`<a name="mnist-tfv2"></a>`
 **MNIST with NNI API (TensorFlow v2.x)**
 
 Same network to the example above, but written in TensorFlow v2.x Keras API.
 
-``code directory: examples/trials/mnist-tfv2/``
+code directory: :githublink:`mnist-tfv2/ <examples/trials/mnist-tfv2/>`
 
 :raw-html:`<a name="mnist-annotation"></a>`
 **MNIST with NNI annotation**
 
 This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.
 
-``code directory: examples/trials/mnist-annotation/``
+code directory: :githublink:`mnist-annotation/ <examples/trials/mnist-annotation/>`
 
 :raw-html:`<a name="mnist-keras"></a>`
 **MNIST in keras**
 
 This example is implemented in keras. It is also a network for MNIST dataset, with two convolution layers, one pooling layer, and two fully connected layers.
 
-``code directory: examples/trials/mnist-keras/``
+code directory: :githublink:`mnist-keras/ <examples/trials/mnist-keras/>`
 
 :raw-html:`<a name="mnist-batch"></a>`
 **MNIST -- tuning with batch tuner**
 
 This example is to show how to use batch tuner. Users simply list all the configurations they want to try in the search space file. NNI will try all of them.
 
-``code directory: examples/trials/mnist-batch-tune-keras/``
+code directory: :githublink:`mnist-batch-tune-keras/ <examples/trials/mnist-batch-tune-keras/>`
 
 :raw-html:`<a name="mnist-hyperband"></a>`
 **MNIST -- tuning with hyperband**
 
 This example is to show how to use hyperband to tune the model. There is one more key ``STEPS`` in the received configuration for trials to control how long it can run (e.g., number of iterations).
 
-``code directory: examples/trials/mnist-hyperband/``
+.. cannot find :githublink:`mnist-hyperband/ <examples/trials/mnist-hyperband/>`
+
+code directory: :githublink:`mnist-hyperband/ <examples/trials/mnist-hyperband/>`
 
 :raw-html:`<a name="mnist-nested"></a>`
 **MNIST -- tuning within a nested search space**
 
 This example is to show that NNI also support nested search space. The search space file is an example of how to define nested search space.
 
-``code directory: examples/trials/mnist-nested-search-space/``
+code directory: :githublink:`mnist-nested-search-space/ <examples/trials/mnist-nested-search-space/>`
 
 :raw-html:`<a name="mnist-kubeflow-tf"></a>`
 **distributed MNIST (tensorflow) using kubeflow**
 
 This example is to show how to run distributed training on kubeflow through NNI. Users can simply provide distributed training code and a configure file which specifies the kubeflow mode. For example, what is the command to run ps and what is the command to run worker, and how many resources they consume. This example is implemented in tensorflow, thus, uses kubeflow tensorflow operator.
 
-``code directory: examples/trials/mnist-distributed/``
+code directory: :githublink:`mnist-distributed/ <examples/trials/mnist-distributed/>`
 
 :raw-html:`<a name="mnist-kubeflow-pytorch"></a>`
 **distributed MNIST (pytorch) using kubeflow**
 
 Similar to the previous example, the difference is that this example is implemented in pytorch, thus, it uses kubeflow pytorch operator.
 
-``code directory: examples/trials/mnist-distributed-pytorch/``
+code directory: :githublink:`mnist-distributed-pytorch/ <examples/trials/mnist-distributed-pytorch/>`

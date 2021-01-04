@@ -594,10 +594,10 @@ class Edge:
 
     Example forward code snippet:
     ```
-        a, b, c = split(x)
-        p = concat(a, c)
-        q = sum(b, p)
-        z = relu(q)
+    a, b, c = split(x)
+    p = concat(a, c)
+    q = sum(b, p)
+    z = relu(q)
     ```
 
     Edges in above snippet:

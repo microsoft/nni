@@ -160,7 +160,7 @@ Three steps to start an experiment
 
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
-*Example:* :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`
+*Example:* :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`
 
 All the code above is already prepared and stored in :githublink:`examples/trials/mnist-tfv1/ <examples/trials/mnist-tfv1>`.
 

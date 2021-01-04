@@ -7,7 +7,7 @@ Assessor receives the intermediate result from a trial and decides whether the t
 
 Here is an experimental result of MNIST after using the 'Curvefitting' Assessor in 'maximize' mode. You can see that Assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use Assessor, you may get better hyperparameters using the same computing resources.
 
-*Implemented code directory: [config_assessor.yml](https://github.com/Microsoft/nni/blob/v1.9/examples/trials/mnist-tfv1/config_assessor.yml)*
+Implemented code directory: :githublink:`config_assessor.yml <examples/trials/mnist-tfv1/config_assessor.yml>`
 
 ..  image:: ../img/Assessor.png
 

@@ -252,7 +252,7 @@ maxExecDuration
 
 Optional. String. Default: 999d.
 
-**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**\ ,** m**\ ,** h**\ ,** d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
+**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**\ **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
 
 Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 
@@ -282,14 +282,14 @@ trainingServicePlatform
 
 Required. String.
 
-Specifies the platform to run the experiment, including **local**\ ,** remote**\ ,** pai**\ ,** kubeflow**\ ,** frameworkcontroller**.
+Specifies the platform to run the experiment, including **local**\ , **remote**\ , **pai**\ , **kubeflow**\ , **frameworkcontroller**.
 
 
 * 
   **local** run an experiment on local ubuntu machine.
 
 * 
-  **remote** submit trial jobs to remote ubuntu machines, and** machineList** field should be filed in order to set up SSH connection to remote machine.
+  **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
 
 * 
   **pai**  submit trial jobs to `OpenPAI <https://github.com/Microsoft/pai>`__ of Microsoft. For more details of pai configuration, please refer to `Guide to PAI Mode <../TrainingService/PaiMode.rst>`__
@@ -363,7 +363,7 @@ tuner
 
 Required.
 
-Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs** are needed. *Users must choose exactly one way.*
+Specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk (built-in tuners), in which case you need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, in which case **codeDirectory**\ , **classFileName**\ , **className** and **classArgs** are needed. *Users must choose exactly one way.*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
@@ -417,7 +417,7 @@ If **includeIntermediateResults** is true, the last intermediate result of the t
 assessor
 ^^^^^^^^
 
-Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs**. *Users must choose exactly one way.*
+Specifies the assessor algorithm to run an experiment. Similar to tuners, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk. Users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and users need to set **codeDirectory**\ , **classFileName**\ , **className** and **classArgs**. *Users must choose exactly one way.*
 
 By default, there is no assessor enabled.
 
@@ -461,14 +461,14 @@ advisor
 
 Optional.
 
-Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**\ ,** classFileName**\ ,** className** and **classArgs**.
+Specifies the advisor algorithm in the experiment. Similar to tuners and assessors, there are two kinds of ways to specify advisor. One way is to use advisor provided by NNI sdk, need to set **builtinAdvisorName** and **classArgs**. Another way is to use users' own advisor file, and need to set **codeDirectory**\ , **classFileName**\ , **className** and **classArgs**.
 
 When advisor is enabled, settings of tuners and advisors will be bypassed.
 
 builtinAdvisorName
 ^^^^^^^^^^^^^^^^^^
 
-Specifies the name of a built-in advisor. NNI sdk provides `BOHB <../Tuner/BohbAdvisor.md>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__.
+Specifies the name of a built-in advisor. NNI sdk provides `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__.
 
 codeDir
 ^^^^^^^
@@ -552,6 +552,8 @@ In PAI mode, the following keys are required.
 * 
   **portList**\ : List of key-values pairs with ``label``\ , ``beginAt``\ , ``portNumber``. See `job tutorial of PAI <https://github.com/microsoft/pai/blob/master/docs/job_tutorial.rst>`__ for details.
 
+.. cannot find `Reference <https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.rst#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job>`__  and `job tutorial of PAI <https://github.com/microsoft/pai/blob/master/docs/job_tutorial.rst>`__ 
+
 In Kubeflow mode, the following keys are required.
 
 
@@ -607,7 +609,7 @@ localConfig
 
 Optional in local mode. Key-value pairs.
 
-Only applicable if **trainingServicePlatform** is set to ``local``\ , otherwise there should not be** localConfig** section in configuration file.
+Only applicable if **trainingServicePlatform** is set to ``local``\ , otherwise there should not be **localConfig** section in configuration file.
 
 gpuIndices
 ^^^^^^^^^^
@@ -755,7 +757,7 @@ keyVault
 
 Required if using azure storage. Key-value pairs.
 
-Set **keyVault** to storage the private key of your azure storage account. Refer to https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2.
+Set **keyVault** to storage the private key of your azure storage account. Refer to `the doc <https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2>`__ .
 
 
 * 
