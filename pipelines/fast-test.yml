@@ -16,14 +16,6 @@ jobs:
 
   - script: |
       set -e
-      sudo apt-get remove swig -y
-      sudo apt-get install swig3.0 -y
-      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      swig -version
-    displayName: test
-
-  - script: |
-      set -e
       python -m pip install --upgrade pip setuptools
       python -m pip install pytest coverage
       python -m pip install pylint flake8
@@ -50,7 +42,9 @@ jobs:
       python -m pip install tensorflow
       python -m pip install gym onnx peewee thop graphviz
       python -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
+      sudo apt-get remove swig -y
       sudo apt-get install swig3.0 -y
+      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       python -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
