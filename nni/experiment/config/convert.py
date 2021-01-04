@@ -18,8 +18,17 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     data = config.json()
 
     ts = data.pop('trainingService')
-    if ts['platform'] == 'openpai':
-        ts['platform'] = 'pai'
+    if isinstance(ts, list):
+        for conf in ts:
+            if conf['platform'] == 'openpai':
+                conf['platform'] = 'pai'
+            _handle_training_service(conf, data)
+        data['trainingServicePlatform'] = 'heterogeneous'
+    else:
+        if ts['platform'] == 'openpai':
+            ts['platform'] = 'pai'
+        data['trainingServicePlatform'] = ts['platform']
+        _handle_training_service(ts, data)
 
     data['authorName'] = 'N/A'
     data['experimentName'] = data.get('experimentName', 'N/A')
@@ -27,7 +36,7 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     if data['debug']:
         data['versionCheck'] = False
     data['maxTrialNum'] = data.pop('maxTrialNumber', 99999)
-    data['trainingServicePlatform'] = ts['platform']
+
     ss = data.pop('searchSpace', None)
     ss_file = data.pop('searchSpaceFile', None)
     if ss is not None:
@@ -66,6 +75,9 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     if 'trialGpuNumber' in data:
         data['trial']['gpuNum'] = data.pop('trialGpuNumber')
 
+    return data
+
+def _handle_training_service(ts, data):
     if ts['platform'] == 'local':
         data['localConfig'] = {
             'useActiveGpu': ts.get('useActiveGpu', False),
@@ -139,8 +151,6 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
 
     elif ts['platform'] == 'adl':
         data['trial']['image'] = ts['dockerImage']
-
-    return data
 
 def _convert_gpu_indices(indices):
     return ','.join(str(idx) for idx in indices) if indices is not None else None
