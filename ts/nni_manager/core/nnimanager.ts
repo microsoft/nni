@@ -450,15 +450,17 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
-        this.dispatcher.sendCommand(TERMINATE);
-        let tunerAlive: boolean = true;
-        // gracefully terminate tuner and assessor here, wait at most 30 seconds.
-        for (let i: number = 0; i < 30; i++) {
-            if (!tunerAlive) { break; }
-            tunerAlive = await isAlive(this.dispatcherPid);
-            await delay(1000);
+        if (this.dispatcherPid > 0) {
+            this.dispatcher.sendCommand(TERMINATE);
+            let tunerAlive: boolean = true;
+            // gracefully terminate tuner and assessor here, wait at most 30 seconds.
+            for (let i: number = 0; i < 30; i++) {
+                if (!tunerAlive) { break; }
+                tunerAlive = await isAlive(this.dispatcherPid);
+                await delay(1000);
+            }
+            await killPid(this.dispatcherPid);
         }
-        await killPid(this.dispatcherPid);
         const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
 
         // DON'T try to make it in parallel, the training service may not handle it well.
