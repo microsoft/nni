@@ -8,7 +8,7 @@ from tensorflow.keras.losses import Reduction, SparseCategoricalCrossentropy
 from tensorflow.keras.optimizers import SGD
 
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice
-from nni.nas.tensorflow.enas import EnasTrainer
+from nni.algorithms.nas.tensorflow.enas import EnasTrainer
 
 
 class Net(Model):
@@ -55,7 +55,7 @@ class Net(Model):
 
 
 def accuracy(truth, logits):
-    truth = tf.reshape(truth, -1)
+    truth = tf.reshape(truth, (-1, ))
     predicted = tf.cast(tf.math.argmax(logits, axis=1), truth.dtype)
     equal = tf.cast(predicted == truth, tf.int32)
     return tf.math.reduce_sum(equal).numpy() / equal.shape[0]
