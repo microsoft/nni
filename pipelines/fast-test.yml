@@ -60,6 +60,7 @@ jobs:
     displayName: Check Sphinx documentation
 
   - script: |
+      set -e
       cd test
       python -m pytest ut --ignore=ut/sdk/test_pruners.py --ignore=ut/sdk/test_compressor_tf.py
       python -m pytest ut/sdk/test_pruners.py
