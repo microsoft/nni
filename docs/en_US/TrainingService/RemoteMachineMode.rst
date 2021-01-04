@@ -220,6 +220,7 @@ If you want multiple commands to be executed, you can use ``&&`` to connect thes
 
 Remote machine support running experiment in reuse mode. In this mode, NNI will reuse remote machine jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.  
 Follow the setting to enable reuse mode:
+
 .. code-block:: yaml
 
    remoteConfig:
