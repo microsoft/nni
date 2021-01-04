@@ -51,7 +51,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(training_service_platform)
+            self.training_service = util.training_service_config_factory(platform = training_service_platform)
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
