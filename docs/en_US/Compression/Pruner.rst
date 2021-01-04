@@ -133,7 +133,7 @@ We implemented one of the experiments in `Learning Efficient Convolutional Netwo
      - 88.5%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/reproduced/slim_torch_pruner.py <examples/model_compress/reproduced/slim_torch_cifar10.py>`
+The experiments code can be found at :githublink:`examples/model_compress/reproduced/slim_torch_cifar10.py <examples/model_compress/reproduced/slim_torch_cifar10.py>`
 
 ----
 
@@ -252,7 +252,7 @@ We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS
      - 64.0%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/reproduced/L1_filter_pruner.py <examples/model_compress/reproduced/L1_torch_cifar10.py>`
+The experiments code can be found at :githublink:`examples/model_compress/reproduced/L1_torch_cifar10.py <examples/model_compress/reproduced/L1_torch_cifar10.py>`
 
 ----
 
