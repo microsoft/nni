@@ -4,7 +4,7 @@ from typing import List, Dict, Tuple
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData
-from ..integration import send_trial, receive_trial_parameters, get_advisor
+from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 from .logical_optimizer.logical_plan import LogicalPlan, PhysicalDevice
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 

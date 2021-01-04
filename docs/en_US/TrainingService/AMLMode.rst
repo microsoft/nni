@@ -81,9 +81,8 @@ Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have
 * image
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
-    .. code-block:: bash
 
-       Note: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
+.. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
 
 amlConfig:
 

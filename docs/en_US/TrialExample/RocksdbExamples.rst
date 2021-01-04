@@ -8,11 +8,11 @@ Overview
 
 The performance of RocksDB is highly contingent on its tuning. However, because of the complexity of its underlying technology and a large number of configurable parameters, a good configuration is sometimes hard to obtain. NNI can help to address this issue. NNI supports many kinds of tuning algorithms to search the best configuration of RocksDB, and support many kinds of environments like local machine, remote servers and cloud. 
 
-This example illustrates how to use NNI to search the best configuration of RocksDB for a ``fillrandom`` benchmark supported by a benchmark tool ``db_bench``\ , which is an official benchmark tool provided by RocksDB itself. Therefore, before running this example, please make sure NNI is installed and `\ ``db_bench`` <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ is in your ``PATH``. Please refer to `here <../Tutorial/QuickStart.md>`__ for detailed information about installation and preparing of NNI environment, and `here <https://github.com/facebook/rocksdb/blob/master/INSTALL.rst>`__ for compiling RocksDB as well as ``db_bench``.
+This example illustrates how to use NNI to search the best configuration of RocksDB for a ``fillrandom`` benchmark supported by a benchmark tool ``db_bench``\ , which is an official benchmark tool provided by RocksDB itself. Therefore, before running this example, please make sure NNI is installed and `db_bench <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ is in your ``PATH``. Please refer to `here <../Tutorial/QuickStart.rst>`__ for detailed information about installation and preparing of NNI environment, and `here <https://github.com/facebook/rocksdb/blob/master/INSTALL.md>`__ for compiling RocksDB as well as ``db_bench``.
 
-We also provide a simple script :githublink:`db_bench_installation.sh <examples/trials/systems/rocksdb-fillrandom/db_bench_installation.sh>` helping to compile and install ``db_bench`` as well as its dependencies on Ubuntu. Installing RocksDB on other systems can follow the same procedure.
+We also provide a simple script :githublink:`db_bench_installation.sh <examples/trials/systems_auto_tuning/rocksdb-fillrandom/db_bench_installation.sh>` helping to compile and install ``db_bench`` as well as its dependencies on Ubuntu. Installing RocksDB on other systems can follow the same procedure.
 
-*code directory: :githublink:`example/trials/systems/rocksdb-fillrandom <examples/trials/systems/rocksdb-fillrandom>`*
+:githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom>`
 
 Experiment setup
 ----------------
@@ -43,7 +43,7 @@ In this example, the search space is specified by a ``search_space.json`` file a
        }
    }
 
-*code directory: :githublink:`example/trials/systems/rocksdb-fillrandom/search_space.json <examples/trials/systems/rocksdb-fillrandom/search_space.json>`*
+:githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom/search_space.json>`
 
 Benchmark code
 ^^^^^^^^^^^^^^
@@ -54,7 +54,7 @@ Benchmark code should receive a configuration from NNI manager, and report the c
 * Use ``nni.get_next_parameter()`` to get next system configuration.
 * Use ``nni.report_final_result(metric)`` to report the benchmark result.
 
-*code directory: :githublink:`example/trials/systems/rocksdb-fillrandom/main.py <examples/trials/systems/rocksdb-fillrandom/main.py>`*
+:githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom/main.py>`
 
 Config file
 ^^^^^^^^^^^
@@ -63,11 +63,11 @@ One could start a NNI experiment with a config file. A config file for NNI is a 
 
 Here is an example of tuning RocksDB with SMAC algorithm:
 
-*code directory: :githublink:`example/trials/systems/rocksdb-fillrandom/config_smac.yml <examples/trials/systems/rocksdb-fillrandom/config_smac.yml>`*
+:githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom/config_smac.yml>`
 
 Here is an example of tuning RocksDB with TPE algorithm:
 
-*code directory: :githublink:`example/trials/systems/rocksdb-fillrandom/config_tpe.yml <examples/trials/systems/rocksdb-fillrandom/config_tpe.yml>`*
+:githublink:`code directory <examples/trials/systems_auto_tuning/rocksdb-fillrandom/config_tpe.yml>`
 
 Other tuners can be easily adopted in the same way. Please refer to `here <../Tuner/BuiltinTuner.rst>`__ for more information.
 
@@ -97,8 +97,8 @@ We ran these two examples on the same machine with following details:
 The detailed experiment results are shown in the below figure. Horizontal axis is sequential order of trials. Vertical axis is the metric, write OPS in this example. Blue dots represent trials for tuning RocksDB with SMAC tuner, and orange dots stand for trials for tuning RocksDB with TPE tuner. 
 
 
-.. image:: https://github.com/microsoft/nni/tree/v1.9/examples/trials/systems/rocksdb-fillrandom/plot.png
-   :target: https://github.com/microsoft/nni/tree/v1.9/examples/trials/systems/rocksdb-fillrandom/plot.png
+.. image:: ../../img/rocksdb-fillrandom-plot.png
+   :target: ../../img/rocksdb-fillrandom-plot.png
    :alt: image
 
 

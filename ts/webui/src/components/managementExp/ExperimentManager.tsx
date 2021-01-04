@@ -9,6 +9,8 @@ import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
 import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
+import { TitleContext } from '../overview/TitleContext';
+import { Title } from '../overview/Title';
 import '../../App.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
@@ -82,13 +84,17 @@ class Experiment extends React.Component<{}, ExpListState> {
                     </div>
                 ) : null}
                 <Stack className='contentBox expBackground'>
-                    <Stack className='content'>
+                    {/* 56px: navBarHeight; 48: marginTop & Bottom */}
+                    <Stack className='content' styles={{ root: { minHeight: window.innerHeight - 104 } }}>
                         <Stack className='experimentList'>
+                            <TitleContext.Provider value={{ text: 'All experiments', icon: 'CustomList' }}>
+                                <Title />
+                            </TitleContext.Provider>
                             <Stack className='box' horizontal>
                                 <div className='search'>
                                     <SearchBox
                                         className='search-input'
-                                        placeholder='Search the experiment by name and ID'
+                                        placeholder='Search the experiment by name or ID'
                                         onEscape={this.setOriginSource.bind(this)}
                                         onClear={this.setOriginSource.bind(this)}
                                         onChange={this.searchNameAndId.bind(this)}
@@ -126,6 +132,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 compact={true}
                                 selectionMode={0} // close selector function
                                 className='table'
+                                onActiveItemChanged={this.experimentClicked}
                             />
                         </Stack>
                     </Stack>
@@ -204,7 +211,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
-                    <div>{item.port !== undefined ? item.port : '--'}</div>
+                    <div className={item.status === 'STOPPED' ? 'gray-port' : ''}>
+                        {item.port !== undefined ? item.port : '--'}
+                    </div>
                 </div>
             )
         },
@@ -251,6 +260,15 @@ class Experiment extends React.Component<{}, ExpListState> {
         }
     ];
 
+    private experimentClicked = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
+        if (item.status !== 'STOPPED' && item.port !== undefined) {
+            const hostname = window.location.hostname;
+            const protocol = window.location.protocol;
+            const webuiPortal = `${protocol}//${hostname}:${item.port}/oview`;
+            window.open(webuiPortal);
+        }
+    };
+
     private clickFilter(_e: any): void {
         const { hideFilter } = this.state;
         if (!hideFilter === true) {
@@ -277,10 +295,11 @@ class Experiment extends React.Component<{}, ExpListState> {
             if (newValue === '') {
                 this.setOriginSource();
             } else {
+                const searchInput = newValue.trim();
                 let result = originExperimentList.filter(
                     item =>
-                        item.experimentName.toLowerCase().includes(newValue.toLowerCase()) ||
-                        item.id.toLowerCase().includes(newValue.toLowerCase())
+                        item.experimentName.toLowerCase().includes(searchInput.toLowerCase()) ||
+                        item.id.toLowerCase().includes(searchInput.toLowerCase())
                 );
                 result = this.commonSelectString(result, '');
                 const sortedResult = getSortedSource(result, sortInfo);
@@ -290,7 +309,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 }));
             }
             this.setState(() => ({
-                searchInputVal: newValue
+                searchInputVal: newValue.trim()
             }));
         }
     }
@@ -414,7 +433,9 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     // reset
     private setSearchSource(): void {
-        const { sortInfo, searchInputVal, originExperimentList } = this.state;
+        const { sortInfo, originExperimentList } = this.state;
+        let { searchInputVal } = this.state;
+        searchInputVal = searchInputVal.trim();
         // hert re-search data for fix this status: filter first -> searchBox search result null -> close filter
         const result = originExperimentList.filter(
             item =>
