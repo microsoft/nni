@@ -183,7 +183,7 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             }),
-            heterogeneous_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            hybrid_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 trainingServicePlatforms: joi.array(),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase

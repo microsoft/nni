@@ -1,10 +1,10 @@
-**Run an Experiment on Heterogeneous Mode**
+**Run an Experiment on Hybrid Mode**
 ===========================================
 
-Run NNI on heterogeneous mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
+Run NNI on hybrid mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
 
 ## Setup environment
-NNI has supported [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md) and [AML](./AMLMode.md) for heterogeneous training service. Before starting an experiment using these mode, users should setup the corresponding environment for the platforms. More details about the environment setup could be found in the corresponding docs.
+NNI has supported [local](./LocalMode.md), [remote](./RemoteMachineMode.md), [pai](./PaiMode.md) and [AML](./AMLMode.md) for hybrid training service. Before starting an experiment using these mode, users should setup the corresponding environment for the platforms. More details about the environment setup could be found in the corresponding docs.
 
 
 
@@ -18,7 +18,7 @@ Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's conte
     trialConcurrency: 2
     maxExecDuration: 1h
     maxTrialNum: 10
-    trainingServicePlatform: heterogeneous
+    trainingServicePlatform: hybrid
     searchSpacePath: search_space.json
     #choice: true, false
     useAnnotation: false
@@ -31,7 +31,7 @@ Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's conte
       command: python3 mnist.py
       codeDir: .
       gpuNum: 1
-    heterogeneousConfig:
+    hybridConfig:
       trainingServicePlatforms:
         - local
         - remote
@@ -42,10 +42,12 @@ Use `examples/trials/mnist-tfv1` as an example. The NNI config YAML file's conte
         username: bob
         passwd: bob123
 
-Configurations for heterogeneous mode:
 
-heterogeneousConfig:
-* trainingServicePlatforms. required key. This field specify the platforms used in heterogeneous mode, the values using yaml list format. NNI support setting `local`, `remote`, `aml`, `pai` in this field.
+
+Configurations for hybrid mode:
+
+hybridConfig:
+* trainingServicePlatforms. required key. This field specify the platforms used in hybrid mode, the values using yaml list format. NNI support setting `local`, `remote`, `aml`, `pai` in this field.
 
 
 Note:  

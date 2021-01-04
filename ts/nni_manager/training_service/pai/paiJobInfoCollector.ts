@@ -127,6 +127,7 @@ export class PAIJobInfoCollector {
                             }
                         }
                     }
+                    this.log.info('paiTrialJobUrl: ' + paiTrialJob.url);
                 }
             }
             deferred.resolve();
