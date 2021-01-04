@@ -16,7 +16,9 @@ jobs:
 
   - script: |
       set -e
+      sudo apt-get remove swig -y
       sudo apt-get install swig3.0 -y
+      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       swig -version
     displayName: test
 
