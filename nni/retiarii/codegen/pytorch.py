@@ -19,10 +19,10 @@ def model_to_pytorch_script(model: Model, placement=None) -> str:
 
 def _sorted_incoming_edges(node: Node) -> List[Edge]:
     edges = [edge for edge in node.graph.edges if edge.tail is node]
-    _logger.info('sorted_incoming_edges: %s', str(edges))
+    _logger.debug('sorted_incoming_edges: %s', str(edges))
     if not edges:
         return []
-    _logger.info('all tail_slots are None: %s', str([edge.tail_slot for edge in edges]))
+    _logger.debug('all tail_slots are None: %s', str([edge.tail_slot for edge in edges]))
     if all(edge.tail_slot is None for edge in edges):
         return edges
     if all(isinstance(edge.tail_slot, int) for edge in edges):

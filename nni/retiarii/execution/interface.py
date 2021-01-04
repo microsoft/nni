@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod, abstractclassmethod
-from typing import Any, NewType, List
+from typing import Any, NewType, List, Union
 
 from ..graph import Model, MetricData
 
@@ -59,13 +59,6 @@ class AbstractGraphListener(ABC):
         """
         pass
 
-    @abstractmethod
-    def on_resource_available(self, resources: List[WorkerInfo]) -> None:
-        """
-        Reports when a worker becomes idle.
-        """
-        pass
-
 
 class AbstractExecutionEngine(ABC):
     """
@@ -109,7 +102,7 @@ class AbstractExecutionEngine(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def query_available_resource(self) -> List[WorkerInfo]:
+    def query_available_resource(self) -> Union[List[WorkerInfo], int]:
         """
         Returns information of all idle workers.
         If no details are available, this may returns a list of "empty" objects, reporting the number of idle workers.

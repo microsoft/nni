@@ -66,7 +66,7 @@ When this happens, you should check ``nnictl``\ 's error output file ``stderr`` 
 **Dispatcher** Fails
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Dispatcher fails. Usually, for some new users of NNI, it means that tuner fails. You could check dispatcher's log to see what happens to your dispatcher. For built-in tuner, some common errors might be invalid search space (unsupported type of search space or inconsistence between initializing args in configuration file and actual tuner's __init__ function args).
+Dispatcher fails. Usually, for some new users of NNI, it means that tuner fails. You could check dispatcher's log to see what happens to your dispatcher. For built-in tuner, some common errors might be invalid search space (unsupported type of search space or inconsistence between initializing args in configuration file and actual tuner's ``__init__`` function args).
 
 Take the later situation as an example. If you write a customized tuner who's __init__ function has an argument called ``optimize_mode``\ , which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
 

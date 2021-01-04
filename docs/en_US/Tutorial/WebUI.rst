@@ -7,7 +7,7 @@ View summary page
 Click the tab "Overview".
 
 
-* On the overview tab, you can see the experiment information and status and the performance of top trials. If you want to see config and search space, please click the right button "Config" and "Search space".
+* On the overview tab, you can see the experiment information and status and the performance of top trials. If you want to see config and search space, please click the right button ``Config`` and ``Search space`` .
 
 
 .. image:: ../../img/webui-img/full-oview.png
@@ -57,13 +57,13 @@ Click the tab "Overview".
 
 
 
-* You can click "About" to see the version and report any questions.
+* You can click ``About`` to see the version and report any questions.
 
 View job default metric
 -----------------------
 
 
-* Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+* Click the tab ``Default Metric`` to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
 
 .. image:: ../../img/webui-img/default-metric.png
@@ -72,7 +72,7 @@ View job default metric
 
 
 
-* Click the switch named "optimization curve" to see the experiment's optimization curve.
+* Click the switch named ``optimization curve`` to see the experiment's optimization curve.
 
 
 .. image:: ../../img/webui-img/best-curve.png
@@ -98,7 +98,7 @@ Click the tab "Hyper Parameter" to see the parallel graph.
 View Trial Duration
 -------------------
 
-Click the tab "Trial Duration" to see the bar graph.
+Click the tab ``Trial Duration`` to see the bar graph.
 
 
 .. image:: ../../img/webui-img/trial_duration.png
@@ -109,7 +109,7 @@ Click the tab "Trial Duration" to see the bar graph.
 View Trial Intermediate Result Graph
 ------------------------------------
 
-Click the tab "Intermediate Result" to see the line graph.
+Click the tab ``Intermediate Result`` to see the line graph.
 
 
 .. image:: ../../img/webui-img/trials_intermeidate.png
@@ -130,7 +130,7 @@ You may find that these trials will get better or worse at an intermediate resul
 View trials status
 ------------------
 
-Click the tab "Trials Detail" to see the status of all trials. Specifically:
+Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy, and search space file.
@@ -142,7 +142,7 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 
 
 
-* The button named "Add column" can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
+* The button named ``Add column`` can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column "Intermediate count" to watch the trial's progress.
 
 
 .. image:: ../../img/webui-img/addColumn.png
@@ -151,7 +151,7 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 
 
 
-* If you want to compare some trials, you can select them and then click "Compare" to see the results.
+* If you want to compare some trials, you can select them and then click ``Compare`` to see the results.
 
 
 .. image:: ../../img/webui-img/select-trial.png
@@ -174,7 +174,7 @@ Click the tab "Trials Detail" to see the status of all trials. Specifically:
 
 
 
-* You can use the button named "Copy as python" to copy the trial's parameters.
+* You can use the button named ``Copy as python`` to copy the trial's parameters.
 
 
 .. image:: ../../img/webui-img/copyParameter.png
