@@ -51,4 +51,4 @@ hybridConfig:
 * trainingServicePlatforms. required key. This field specify the platforms used in hybrid mode, the values using yaml list format. NNI support setting ``local``, ``remote``, ``aml``, ``pai`` in this field.
 
 
-.. Note:: If setting a platform in trainingServicePlatforms mode, users should also set the corresponding configuration for the platform. For example, if set ``remote`` as one of the platform, should also set ``machineList`` and ``remoteConfig`` configuration.
+.. Note:: If setting a platform in trainingServicePlatforms mode, users should also set the corresponding configuration for the platform. For example, if set ``remote`` as one of the platform, should also set ``machineList`` and ``remoteConfig`` configuration. Local platform does not support windows for now.
