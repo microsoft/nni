@@ -36,7 +36,7 @@ After the installation, you may want to enable the auto-completion feature for *
 
 NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
 
-Here is an example script to train a CNN on the MNIST dataset **without NNI**\ :
+Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
 .. code-block:: python
 
@@ -160,9 +160,9 @@ Three steps to start an experiment
 
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
-*Example:* :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`
+*Example:* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 
-All the code above is already prepared and stored in :githublink:`examples/trials/mnist-tfv1/ <examples/trials/mnist-tfv1>`.
+All the code above is already prepared and stored in :githublink:`examples/trials/mnist-pytorch/ <examples/trials/mnist-pytorch>`.
 
 Linux and macOS
 ^^^^^^^^^^^^^^^
@@ -171,7 +171,7 @@ Run the **config.yml** file from your command line to start an MNIST experiment.
 
 .. code-block:: bash
 
-   nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+   nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
 Windows
 ^^^^^^^
@@ -180,7 +180,7 @@ Run the **config_windows.yml** file from your command line to start an MNIST exp
 
 .. code-block:: bash
 
-   nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+   nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
 
 .. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
 

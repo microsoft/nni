@@ -1,21 +1,22 @@
-authorName: default
-experimentName: example_mnist_pytorch
+searchSpace:
+  momentum:
+    _type: uniform
+    _value: [0, 1]
+  hidden_size:
+    _type: choice
+    _value: [128, 256, 512, 1024]
+  batch_size:
+    _type: choice
+    _value: [16, 32, 64, 128]
+  lr:
+    _type: choice
+    _value: [0.0001, 0.001, 0.01, 0.1]
+trainingService:
+  platform: local
+trialCommand: python3 mnist.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0

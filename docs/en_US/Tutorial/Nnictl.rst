@@ -96,7 +96,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
   ..
 
@@ -105,7 +105,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088
 
   ..
 
@@ -114,7 +114,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088 --debug
 
 Note:
 
@@ -363,11 +363,11 @@ nnictl update
 * 
   Example
 
-  ``update experiment's new search space with file dir 'examples/trials/mnist-tfv1/search_space.json'``
+  ``update experiment's new search space with file dir 'examples/trials/mnist-pytorch/search_space.json'``
 
   .. code-block:: bash
 
-     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
+     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-pytorch/search_space.json
 
 
 * 

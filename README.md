@@ -244,12 +244,10 @@ Note:
 
 ### **Verify installation**
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
-
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v1.9 https://github.com/Microsoft/nni.git
+  git clone -b v2.0 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -257,13 +255,13 @@ The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is 
   Linux or macOS
 
   ```bash
-  nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+  nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
   ```
 
   Windows
 
-  ```bash
-  nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+  ```powershell
+  nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
   ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
