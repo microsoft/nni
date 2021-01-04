@@ -67,14 +67,18 @@ class ExperimentConfig(ConfigBase):
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
 
-    def __init__(self, training_service_platform: Optional[str, List[str]] = None, **kwargs):
+    def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
         kwargs = util.case_insensitive(kwargs)
         if training_service_platform is not None:
             assert 'trainingservice' not in kwargs
             kwargs['trainingservice'] = util.training_service_config_factory(platform = training_service_platform)
-        elif isinstance(kwargs.get('trainingservice'), dict):
+        elif isinstance(kwargs.get('trainingservice'), (dict, list)):
+            # dict means a single training service
+            # list means hybrid training service
             kwargs['trainingservice'] = util.training_service_config_factory(config = kwargs['trainingservice'])
+            print('zql: ', kwargs)
         else:
+            print('zql2')
             raise RuntimeError('Unsupported Training service configuration!')
         super().__init__(**kwargs)
 

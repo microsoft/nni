@@ -19,11 +19,14 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
 
     ts = data.pop('trainingService')
     if isinstance(ts, list):
+        hybrid_names = []
         for conf in ts:
             if conf['platform'] == 'openpai':
                 conf['platform'] = 'pai'
+            hybrid_names.append(conf['platform'])
             _handle_training_service(conf, data)
         data['trainingServicePlatform'] = 'heterogeneous'
+        data['heterogeneousConfig'] = {'trainingServicePlatforms': hybrid_names}
     else:
         if ts['platform'] == 'openpai':
             ts['platform'] = 'pai'
