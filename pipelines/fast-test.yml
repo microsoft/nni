@@ -64,9 +64,12 @@ jobs:
   - script: |
       set -e
       cd test
-      python -m pytest ut --ignore=ut/sdk/test_pruners.py --ignore=ut/sdk/test_compressor_tf.py
+      python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+        --ignore=ut/sdk/test_compressor_tf.py \
+        --ignore=ut/sdk/test_compressor_torch.py
       python -m pytest ut/sdk/test_pruners.py
       python -m pytest ut/sdk/test_compressor_tf.py
+      python -m pytest ut/sdk/test_compressor_torch.py
     displayName: Python unit test
 
   - script: |
