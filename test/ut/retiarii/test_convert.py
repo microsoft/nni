@@ -37,9 +37,6 @@ class MnistNet(nn.Module):
 
 
 class TestConvert(unittest.TestCase):
-    def setUp(self):
-        clear_records()
-
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}

@@ -37,7 +37,7 @@ def add_record(key, value):
     """
     global _records
     if _records is not None:
-        # assert key not in _records, '{} already in _records'.format(key)  # FIXME temporarily comment this line
+        assert key not in _records, '{} already in _records'.format(key)
         _records[key] = value
 
 
