@@ -30,15 +30,15 @@
 
 CIFAR-10, VGG16:
 
-![](../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_vgg16.png)
+![](../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png)
 
 CIFAR-10, ResNet18:
 
-![](../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet18.png)
+![](../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png)
 
 CIFAR-10, ResNet50:
 
-![](../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet50.png)
+![](../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png)
 
 ## 分析
 
