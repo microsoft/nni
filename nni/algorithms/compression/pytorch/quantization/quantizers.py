@@ -41,7 +41,7 @@ class NaiveQuantizer(Quantizer):
         wrapper.module.weight = weight
         return weight
 
-def update_ema(biased_ema, value, decay, step):
+def update_ema(biased_ema, value, decay):
     """
     calculate biased stat and unbiased stat in each step using exponential moving average method
 
@@ -53,16 +53,13 @@ def update_ema(biased_ema, value, decay, step):
         current stat value
     decay : float
         the weight of previous stat value, larger means smoother curve
-    step : int
-        current step
 
     Returns
     -------
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
-    return biased_ema, unbiased_ema
+    return biased_ema 
 
 
 def update_quantization_param(bits, rmin, rmax):
@@ -85,16 +82,10 @@ def update_quantization_param(bits, rmin, rmax):
     # extend the [min, max] interval to ensure that it contains 0.
     # Otherwise, we would not meet the requirement that 0 be an exactly
     # representable value.
-    if rmin.is_cuda:
-        rmin = torch.min(rmin, torch.Tensor([0]).cuda())
-        rmax = torch.max(rmax, torch.Tensor([0]).cuda())
-        qmin = torch.Tensor([0]).cuda()
-        qmax = torch.Tensor([(1 << bits) - 1]).cuda()
-    else:
-        rmin = torch.min(rmin, torch.Tensor([0]))
-        rmax = torch.max(rmax, torch.Tensor([0]))
-        qmin = torch.Tensor([0])
-        qmax = torch.Tensor([(1 << bits) - 1])
+    rmin = torch.min(rmin, torch.Tensor([0]).to(rmin.device))
+    rmax = torch.max(rmax, torch.Tensor([0]).to(rmin.device))
+    qmin = torch.Tensor([0]).to(rmin.device)
+    qmax = torch.Tensor([(1 << bits) - 1]).to(rmin.device)
 
     # First determine the scale.
     scale = (rmax - rmin) / (qmax - qmin)
@@ -103,7 +94,6 @@ def update_quantization_param(bits, rmin, rmax):
     initial_zero_point = qmin - rmin / scale
 
     # Now we need to nudge the zero point to be an integer
-    nudged_zero_point = 0
     if initial_zero_point < qmin:
         nudged_zero_point = qmin
     elif initial_zero_point > qmax:
@@ -209,10 +199,8 @@ class QAT_Quantizer(Quantizer):
         -------
         Tensor
         """
-        if real_val.is_cuda:
-            op.zero_point = op.zero_point.cuda()
-            op.scale = op.scale.cuda()
-
+        op.zero_point = op.zero_point.to(real_val.device)
+        op.scale = op.scale.to(real_val.device)
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
         qmax = (1 << bits) - 1
@@ -279,16 +267,17 @@ class QAT_Quantizer(Quantizer):
         assert output_bits >= 1, "quant bits length should be at least 1"
 
         if quant_start_step > self.bound_model.steps:
+            module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
             return output
 
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
             current_min, current_max = torch.min(output), torch.max(output)
-            module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min,
-                                                                       module.ema_decay, self.bound_model.steps)
-            module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max,
-                                                                       module.ema_decay, self.bound_model.steps)
-            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
+            module.tracked_min_biased = update_ema(module.tracked_min_biased, current_min,
+                                                                       module.ema_decay)
+            module.tracked_max_biased = update_ema(module.tracked_max_biased, current_max,
+                                                                       module.ema_decay)
+            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_biased, module.tracked_max_biased)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out

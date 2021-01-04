@@ -670,6 +670,7 @@ class QuantGrad(torch.autograd.Function):
         else:
             raise ValueError("unrecognized QuantType.")
 
+
         bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
         qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
         if hasattr(wrapper.module, 'scale') and hasattr(wrapper.module, 'zero_point'):

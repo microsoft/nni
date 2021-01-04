@@ -71,7 +71,7 @@ You can view example for more information
 User configuration for QAT Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart.rst>`__.
+common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
 
 configuration needed by this algorithm :
 

@@ -50,11 +50,9 @@ def update_experiment():
     for key in experiment_dict.keys():
         if isinstance(experiment_dict[key], dict):
             if experiment_dict[key].get('status') != 'STOPPED':
-                nni_config = Config(key)
-                rest_pid = nni_config.get_config('restServerPid')
+                rest_pid = experiment_dict[key].get('pid')
                 if not detect_process(rest_pid):
                     experiment_config.update_experiment(key, 'status', 'STOPPED')
-                    experiment_config.update_experiment(key, 'port', None)
                     continue
 
 def check_experiment_id(args, update=True):
@@ -83,10 +81,10 @@ def check_experiment_id(args, update=True):
                 experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                                       experiment_dict[key].get('experimentName', 'N/A'),
                                                                       experiment_dict[key]['status'],
-                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
-                                                                      experiment_dict[key]['startTime'],
-                                                                      experiment_dict[key]['endTime'])
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -130,7 +128,7 @@ def parse_ids(args):
         return running_experiment_list
     if args.port is not None:
         for key in running_experiment_list:
-            if experiment_dict[key]['port'] == args.port:
+            if experiment_dict[key].get('port') == args.port:
                 result_list.append(key)
         if args.id and result_list and args.id != result_list[0]:
             print_error('Experiment id and resful server port not match')
@@ -143,10 +141,10 @@ def parse_ids(args):
                 experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                                       experiment_dict[key].get('experimentName', 'N/A'),
                                                                       experiment_dict[key]['status'],
-                                                                      experiment_dict[key]['port'],
+                                                                      experiment_dict[key].get('port', 'N/A'),
                                                                       experiment_dict[key].get('platform'),
-                                                                      experiment_dict[key]['startTime'],
-                                                                      experiment_dict[key]['endTime'])
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
+                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -186,7 +184,7 @@ def get_experiment_port(args):
         exit(1)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['port']
+    return experiment_dict[experiment_id].get('port')
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
@@ -202,8 +200,9 @@ def convert_time_stamp_to_date(content):
 
 def check_rest(args):
     '''check if restful server is running'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         print_normal('Restful server is running...')
@@ -220,18 +219,19 @@ def stop_experiment(args):
     if experiment_id_list:
         for experiment_id in experiment_id_list:
             print_normal('Stopping experiment %s' % experiment_id)
-            nni_config = Config(experiment_id)
-            rest_pid = nni_config.get_config('restServerPid')
+            experiment_config = Experiments()
+            experiment_dict = experiment_config.get_all_experiments()
+            rest_pid = experiment_dict.get(experiment_id).get('pid')
             if rest_pid:
                 kill_command(rest_pid)
-                tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+                tensorboard_pid_list = experiment_dict.get(experiment_id).get('tensorboardPidList')
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
                             kill_command(tensorboard_pid)
                         except Exception as exception:
                             print_error(exception)
-                    nni_config.set_config('tensorboardPidList', [])
+                    experiment_config.update_experiment(experiment_id, 'tensorboardPidList', [])
             print_normal('Stop experiment success.')
 
 def trial_ls(args):
@@ -250,9 +250,10 @@ def trial_ls(args):
     if args.head and args.tail:
         print_error('Head and tail cannot be set at the same time.')
         return
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -281,9 +282,10 @@ def trial_ls(args):
 
 def trial_kill(args):
     '''List trial'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -312,9 +314,10 @@ def trial_codegen(args):
 
 def list_experiment(args):
     '''Get experiment information'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -333,8 +336,9 @@ def list_experiment(args):
 
 def experiment_status(args):
     '''Show the status of experiment'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
     result, response = check_rest_server_quick(rest_port)
     if not result:
         print_normal('Restful server is not running...')
@@ -620,12 +624,12 @@ def platform_clean(args):
             break
     if platform == 'remote':
         machine_list = config_content.get('machineList')
-        remote_clean(machine_list, None)
+        remote_clean(machine_list)
     elif platform == 'pai':
         host = config_content.get('paiConfig').get('host')
         user_name = config_content.get('paiConfig').get('userName')
         output_dir = config_content.get('trial').get('outputDir')
-        hdfs_clean(host, user_name, output_dir, None)
+        hdfs_clean(host, user_name, output_dir)
     print_normal('Done.')
 
 def experiment_list(args):
@@ -651,7 +655,7 @@ def experiment_list(args):
         experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
                                                               experiment_dict[key].get('experimentName', 'N/A'),
                                                               experiment_dict[key]['status'],
-                                                              experiment_dict[key]['port'],
+                                                              experiment_dict[key].get('port', 'N/A'),
                                                               experiment_dict[key].get('platform'),
                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['startTime'] / 1000)) if isinstance(experiment_dict[key]['startTime'], int) else experiment_dict[key]['startTime'],
                                                               time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiment_dict[key]['endTime'] / 1000)) if isinstance(experiment_dict[key]['endTime'], int) else experiment_dict[key]['endTime'])
@@ -752,9 +756,10 @@ def export_trials_data(args):
             groupby.setdefault(content['trialJobId'], []).append(json.loads(content['data']))
         return groupby
 
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
 
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
