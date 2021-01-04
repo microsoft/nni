@@ -1,11 +1,10 @@
-import inspect
 import logging
 from typing import Any, List
 
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, version_larger_equal
+from ...utils import add_record, blackbox_module, uid, version_larger_equal
 
 _logger = logging.getLogger(__name__)
 
@@ -40,16 +39,13 @@ if version_larger_equal(torch.__version__, '1.6.0'):
 if version_larger_equal(torch.__version__, '1.7.0'):
     __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
 
-#'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
-#'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
-#'ChannelShuffle'
 
 class LayerChoice(nn.Module):
     def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
         super(LayerChoice, self).__init__()
-        self.candidate_ops = op_candidates
-        self.label = key
-        self.key = key  # deprecated, for backward compatibility
+        self.op_candidates = op_candidates
+        self.label = key if key is not None else f'layerchoice_{uid()}'
+        self.key = self.label  # deprecated, for backward compatibility
         for i, module in enumerate(op_candidates):  # deprecated, for backward compatibility
             self.add_module(str(i), module)
         if reduction or return_mask:
@@ -66,8 +62,8 @@ class InputChoice(nn.Module):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
-        self.label = key
-        self.key = key  # deprecated, for backward compatibility
+        self.label = key if key is not None else f'inputchoice_{uid()}'
+        self.key = self.label  # deprecated, for backward compatibility
         if choose_from or return_mask:
             _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
 
@@ -101,6 +97,7 @@ class Placeholder(nn.Module):
 class ChosenInputs(nn.Module):
     """
     """
+
     def __init__(self, chosen: List[int], reduction: str):
         super().__init__()
         self.chosen = chosen
@@ -128,9 +125,7 @@ class ChosenInputs(nn.Module):
 # the following are pytorch modules
 
 
-class Module(nn.Module):
-    def __init__(self):
-        super(Module, self).__init__()
+Module = nn.Module
 
 
 class Sequential(nn.Sequential):
@@ -145,143 +140,116 @@ class ModuleList(nn.ModuleList):
         super(ModuleList, self).__init__(*args)
 
 
-def wrap_module(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
-
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            full_args[argname_list[i]] = arg
-        add_record(id(self), full_args)
-
-        orig_init(self, *args, **kws)  # Call the original __init__
-
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
-
-
-Identity = wrap_module(nn.Identity)
-Linear = wrap_module(nn.Linear)
-Conv1d = wrap_module(nn.Conv1d)
-Conv2d = wrap_module(nn.Conv2d)
-Conv3d = wrap_module(nn.Conv3d)
-ConvTranspose1d = wrap_module(nn.ConvTranspose1d)
-ConvTranspose2d = wrap_module(nn.ConvTranspose2d)
-ConvTranspose3d = wrap_module(nn.ConvTranspose3d)
-Threshold = wrap_module(nn.Threshold)
-ReLU = wrap_module(nn.ReLU)
-Hardtanh = wrap_module(nn.Hardtanh)
-ReLU6 = wrap_module(nn.ReLU6)
-Sigmoid = wrap_module(nn.Sigmoid)
-Tanh = wrap_module(nn.Tanh)
-Softmax = wrap_module(nn.Softmax)
-Softmax2d = wrap_module(nn.Softmax2d)
-LogSoftmax = wrap_module(nn.LogSoftmax)
-ELU = wrap_module(nn.ELU)
-SELU = wrap_module(nn.SELU)
-CELU = wrap_module(nn.CELU)
-GLU = wrap_module(nn.GLU)
-GELU = wrap_module(nn.GELU)
-Hardshrink = wrap_module(nn.Hardshrink)
-LeakyReLU = wrap_module(nn.LeakyReLU)
-LogSigmoid = wrap_module(nn.LogSigmoid)
-Softplus = wrap_module(nn.Softplus)
-Softshrink = wrap_module(nn.Softshrink)
-MultiheadAttention = wrap_module(nn.MultiheadAttention)
-PReLU = wrap_module(nn.PReLU)
-Softsign = wrap_module(nn.Softsign)
-Softmin = wrap_module(nn.Softmin)
-Tanhshrink = wrap_module(nn.Tanhshrink)
-RReLU = wrap_module(nn.RReLU)
-AvgPool1d = wrap_module(nn.AvgPool1d)
-AvgPool2d = wrap_module(nn.AvgPool2d)
-AvgPool3d = wrap_module(nn.AvgPool3d)
-MaxPool1d = wrap_module(nn.MaxPool1d)
-MaxPool2d = wrap_module(nn.MaxPool2d)
-MaxPool3d = wrap_module(nn.MaxPool3d)
-MaxUnpool1d = wrap_module(nn.MaxUnpool1d)
-MaxUnpool2d = wrap_module(nn.MaxUnpool2d)
-MaxUnpool3d = wrap_module(nn.MaxUnpool3d)
-FractionalMaxPool2d = wrap_module(nn.FractionalMaxPool2d)
-FractionalMaxPool3d = wrap_module(nn.FractionalMaxPool3d)
-LPPool1d = wrap_module(nn.LPPool1d)
-LPPool2d = wrap_module(nn.LPPool2d)
-LocalResponseNorm = wrap_module(nn.LocalResponseNorm)
-BatchNorm1d = wrap_module(nn.BatchNorm1d)
-BatchNorm2d = wrap_module(nn.BatchNorm2d)
-BatchNorm3d = wrap_module(nn.BatchNorm3d)
-InstanceNorm1d = wrap_module(nn.InstanceNorm1d)
-InstanceNorm2d = wrap_module(nn.InstanceNorm2d)
-InstanceNorm3d = wrap_module(nn.InstanceNorm3d)
-LayerNorm = wrap_module(nn.LayerNorm)
-GroupNorm = wrap_module(nn.GroupNorm)
-SyncBatchNorm = wrap_module(nn.SyncBatchNorm)
-Dropout = wrap_module(nn.Dropout)
-Dropout2d = wrap_module(nn.Dropout2d)
-Dropout3d = wrap_module(nn.Dropout3d)
-AlphaDropout = wrap_module(nn.AlphaDropout)
-FeatureAlphaDropout = wrap_module(nn.FeatureAlphaDropout)
-ReflectionPad1d = wrap_module(nn.ReflectionPad1d)
-ReflectionPad2d = wrap_module(nn.ReflectionPad2d)
-ReplicationPad2d = wrap_module(nn.ReplicationPad2d)
-ReplicationPad1d = wrap_module(nn.ReplicationPad1d)
-ReplicationPad3d = wrap_module(nn.ReplicationPad3d)
-CrossMapLRN2d = wrap_module(nn.CrossMapLRN2d)
-Embedding = wrap_module(nn.Embedding)
-EmbeddingBag = wrap_module(nn.EmbeddingBag)
-RNNBase = wrap_module(nn.RNNBase)
-RNN = wrap_module(nn.RNN)
-LSTM = wrap_module(nn.LSTM)
-GRU = wrap_module(nn.GRU)
-RNNCellBase = wrap_module(nn.RNNCellBase)
-RNNCell = wrap_module(nn.RNNCell)
-LSTMCell = wrap_module(nn.LSTMCell)
-GRUCell = wrap_module(nn.GRUCell)
-PixelShuffle = wrap_module(nn.PixelShuffle)
-Upsample = wrap_module(nn.Upsample)
-UpsamplingNearest2d = wrap_module(nn.UpsamplingNearest2d)
-UpsamplingBilinear2d = wrap_module(nn.UpsamplingBilinear2d)
-PairwiseDistance = wrap_module(nn.PairwiseDistance)
-AdaptiveMaxPool1d = wrap_module(nn.AdaptiveMaxPool1d)
-AdaptiveMaxPool2d = wrap_module(nn.AdaptiveMaxPool2d)
-AdaptiveMaxPool3d = wrap_module(nn.AdaptiveMaxPool3d)
-AdaptiveAvgPool1d = wrap_module(nn.AdaptiveAvgPool1d)
-AdaptiveAvgPool2d = wrap_module(nn.AdaptiveAvgPool2d)
-AdaptiveAvgPool3d = wrap_module(nn.AdaptiveAvgPool3d)
-TripletMarginLoss = wrap_module(nn.TripletMarginLoss)
-ZeroPad2d = wrap_module(nn.ZeroPad2d)
-ConstantPad1d = wrap_module(nn.ConstantPad1d)
-ConstantPad2d = wrap_module(nn.ConstantPad2d)
-ConstantPad3d = wrap_module(nn.ConstantPad3d)
-Bilinear = wrap_module(nn.Bilinear)
-CosineSimilarity = wrap_module(nn.CosineSimilarity)
-Unfold = wrap_module(nn.Unfold)
-Fold = wrap_module(nn.Fold)
-AdaptiveLogSoftmaxWithLoss = wrap_module(nn.AdaptiveLogSoftmaxWithLoss)
-TransformerEncoder = wrap_module(nn.TransformerEncoder)
-TransformerDecoder = wrap_module(nn.TransformerDecoder)
-TransformerEncoderLayer = wrap_module(nn.TransformerEncoderLayer)
-TransformerDecoderLayer = wrap_module(nn.TransformerDecoderLayer)
-Transformer = wrap_module(nn.Transformer)
-Flatten = wrap_module(nn.Flatten)
-Hardsigmoid = wrap_module(nn.Hardsigmoid)
+Identity = blackbox_module(nn.Identity)
+Linear = blackbox_module(nn.Linear)
+Conv1d = blackbox_module(nn.Conv1d)
+Conv2d = blackbox_module(nn.Conv2d)
+Conv3d = blackbox_module(nn.Conv3d)
+ConvTranspose1d = blackbox_module(nn.ConvTranspose1d)
+ConvTranspose2d = blackbox_module(nn.ConvTranspose2d)
+ConvTranspose3d = blackbox_module(nn.ConvTranspose3d)
+Threshold = blackbox_module(nn.Threshold)
+ReLU = blackbox_module(nn.ReLU)
+Hardtanh = blackbox_module(nn.Hardtanh)
+ReLU6 = blackbox_module(nn.ReLU6)
+Sigmoid = blackbox_module(nn.Sigmoid)
+Tanh = blackbox_module(nn.Tanh)
+Softmax = blackbox_module(nn.Softmax)
+Softmax2d = blackbox_module(nn.Softmax2d)
+LogSoftmax = blackbox_module(nn.LogSoftmax)
+ELU = blackbox_module(nn.ELU)
+SELU = blackbox_module(nn.SELU)
+CELU = blackbox_module(nn.CELU)
+GLU = blackbox_module(nn.GLU)
+GELU = blackbox_module(nn.GELU)
+Hardshrink = blackbox_module(nn.Hardshrink)
+LeakyReLU = blackbox_module(nn.LeakyReLU)
+LogSigmoid = blackbox_module(nn.LogSigmoid)
+Softplus = blackbox_module(nn.Softplus)
+Softshrink = blackbox_module(nn.Softshrink)
+MultiheadAttention = blackbox_module(nn.MultiheadAttention)
+PReLU = blackbox_module(nn.PReLU)
+Softsign = blackbox_module(nn.Softsign)
+Softmin = blackbox_module(nn.Softmin)
+Tanhshrink = blackbox_module(nn.Tanhshrink)
+RReLU = blackbox_module(nn.RReLU)
+AvgPool1d = blackbox_module(nn.AvgPool1d)
+AvgPool2d = blackbox_module(nn.AvgPool2d)
+AvgPool3d = blackbox_module(nn.AvgPool3d)
+MaxPool1d = blackbox_module(nn.MaxPool1d)
+MaxPool2d = blackbox_module(nn.MaxPool2d)
+MaxPool3d = blackbox_module(nn.MaxPool3d)
+MaxUnpool1d = blackbox_module(nn.MaxUnpool1d)
+MaxUnpool2d = blackbox_module(nn.MaxUnpool2d)
+MaxUnpool3d = blackbox_module(nn.MaxUnpool3d)
+FractionalMaxPool2d = blackbox_module(nn.FractionalMaxPool2d)
+FractionalMaxPool3d = blackbox_module(nn.FractionalMaxPool3d)
+LPPool1d = blackbox_module(nn.LPPool1d)
+LPPool2d = blackbox_module(nn.LPPool2d)
+LocalResponseNorm = blackbox_module(nn.LocalResponseNorm)
+BatchNorm1d = blackbox_module(nn.BatchNorm1d)
+BatchNorm2d = blackbox_module(nn.BatchNorm2d)
+BatchNorm3d = blackbox_module(nn.BatchNorm3d)
+InstanceNorm1d = blackbox_module(nn.InstanceNorm1d)
+InstanceNorm2d = blackbox_module(nn.InstanceNorm2d)
+InstanceNorm3d = blackbox_module(nn.InstanceNorm3d)
+LayerNorm = blackbox_module(nn.LayerNorm)
+GroupNorm = blackbox_module(nn.GroupNorm)
+SyncBatchNorm = blackbox_module(nn.SyncBatchNorm)
+Dropout = blackbox_module(nn.Dropout)
+Dropout2d = blackbox_module(nn.Dropout2d)
+Dropout3d = blackbox_module(nn.Dropout3d)
+AlphaDropout = blackbox_module(nn.AlphaDropout)
+FeatureAlphaDropout = blackbox_module(nn.FeatureAlphaDropout)
+ReflectionPad1d = blackbox_module(nn.ReflectionPad1d)
+ReflectionPad2d = blackbox_module(nn.ReflectionPad2d)
+ReplicationPad2d = blackbox_module(nn.ReplicationPad2d)
+ReplicationPad1d = blackbox_module(nn.ReplicationPad1d)
+ReplicationPad3d = blackbox_module(nn.ReplicationPad3d)
+CrossMapLRN2d = blackbox_module(nn.CrossMapLRN2d)
+Embedding = blackbox_module(nn.Embedding)
+EmbeddingBag = blackbox_module(nn.EmbeddingBag)
+RNNBase = blackbox_module(nn.RNNBase)
+RNN = blackbox_module(nn.RNN)
+LSTM = blackbox_module(nn.LSTM)
+GRU = blackbox_module(nn.GRU)
+RNNCellBase = blackbox_module(nn.RNNCellBase)
+RNNCell = blackbox_module(nn.RNNCell)
+LSTMCell = blackbox_module(nn.LSTMCell)
+GRUCell = blackbox_module(nn.GRUCell)
+PixelShuffle = blackbox_module(nn.PixelShuffle)
+Upsample = blackbox_module(nn.Upsample)
+UpsamplingNearest2d = blackbox_module(nn.UpsamplingNearest2d)
+UpsamplingBilinear2d = blackbox_module(nn.UpsamplingBilinear2d)
+PairwiseDistance = blackbox_module(nn.PairwiseDistance)
+AdaptiveMaxPool1d = blackbox_module(nn.AdaptiveMaxPool1d)
+AdaptiveMaxPool2d = blackbox_module(nn.AdaptiveMaxPool2d)
+AdaptiveMaxPool3d = blackbox_module(nn.AdaptiveMaxPool3d)
+AdaptiveAvgPool1d = blackbox_module(nn.AdaptiveAvgPool1d)
+AdaptiveAvgPool2d = blackbox_module(nn.AdaptiveAvgPool2d)
+AdaptiveAvgPool3d = blackbox_module(nn.AdaptiveAvgPool3d)
+TripletMarginLoss = blackbox_module(nn.TripletMarginLoss)
+ZeroPad2d = blackbox_module(nn.ZeroPad2d)
+ConstantPad1d = blackbox_module(nn.ConstantPad1d)
+ConstantPad2d = blackbox_module(nn.ConstantPad2d)
+ConstantPad3d = blackbox_module(nn.ConstantPad3d)
+Bilinear = blackbox_module(nn.Bilinear)
+CosineSimilarity = blackbox_module(nn.CosineSimilarity)
+Unfold = blackbox_module(nn.Unfold)
+Fold = blackbox_module(nn.Fold)
+AdaptiveLogSoftmaxWithLoss = blackbox_module(nn.AdaptiveLogSoftmaxWithLoss)
+TransformerEncoder = blackbox_module(nn.TransformerEncoder)
+TransformerDecoder = blackbox_module(nn.TransformerDecoder)
+TransformerEncoderLayer = blackbox_module(nn.TransformerEncoderLayer)
+TransformerDecoderLayer = blackbox_module(nn.TransformerDecoderLayer)
+Transformer = blackbox_module(nn.Transformer)
+Flatten = blackbox_module(nn.Flatten)
+Hardsigmoid = blackbox_module(nn.Hardsigmoid)
 
 if version_larger_equal(torch.__version__, '1.6.0'):
-    Hardswish = wrap_module(nn.Hardswish)
+    Hardswish = blackbox_module(nn.Hardswish)
 
 if version_larger_equal(torch.__version__, '1.7.0'):
-    SiLU = wrap_module(nn.SiLU)
-    Unflatten = wrap_module(nn.Unflatten)
-    TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
-
-#LazyLinear = wrap_module(nn.LazyLinear)
-#LazyConv1d = wrap_module(nn.LazyConv1d)
-#LazyConv2d = wrap_module(nn.LazyConv2d)
-#LazyConv3d = wrap_module(nn.LazyConv3d)
-#LazyConvTranspose1d = wrap_module(nn.LazyConvTranspose1d)
-#LazyConvTranspose2d = wrap_module(nn.LazyConvTranspose2d)
-#LazyConvTranspose3d = wrap_module(nn.LazyConvTranspose3d)
-#ChannelShuffle = wrap_module(nn.ChannelShuffle)
+    SiLU = blackbox_module(nn.SiLU)
+    Unflatten = blackbox_module(nn.Unflatten)
+    TripletMarginWithDistanceLoss = blackbox_module(nn.TripletMarginWithDistanceLoss)
