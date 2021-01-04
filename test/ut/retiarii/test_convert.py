@@ -67,6 +67,11 @@ class TestConvert(unittest.TestCase):
             self.assertLess((a - b).abs().max().item(), 1E-4)
         return converted_model
 
+    def setUp(self):
+        # FIXME
+        import nni.retiarii.debug_configs
+        nni.retiarii.debug_configs.framework = 'pytorch'
+
     def test_dcgan_models(self):
         class DCGANGenerator(nn.Module):
             def __init__(self, nz, ngf, nc):
