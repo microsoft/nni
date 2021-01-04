@@ -509,6 +509,11 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
                                                  mode, experiment_id, foreground, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
+    # save experiment information
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -546,11 +551,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 
     # start a new experiment
     print_normal('Starting experiment...')
-    # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
@@ -613,8 +613,7 @@ def create_experiment(args):
     try:
         launch_experiment(args, experiment_config, 'new', experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
@@ -646,8 +645,7 @@ def manage_stopped_experiment(args, mode):
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
