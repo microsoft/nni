@@ -57,9 +57,7 @@ Code Styles & Naming Conventions
 
   * For function docstring, **description**, **Parameters**, and **Returns** **Yields** are mandatory.
   * For class docstring, **description**, **Attributes** are mandatory.
-  * For docstring to describe ``dict``, which is commonly used in our hyper-param format description, please refer to RiboKit Doc Standards
-
-    * `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`__
+  * For docstring to describe ``dict``, which is commonly used in our hyper-param format description, please refer to `Internal Guideline on Writing Standards <https://ribokit.github.io/docs/text/>`__
 
 Documentation
 -------------

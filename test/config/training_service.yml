@@ -103,3 +103,22 @@ remote:
     port:
     username:
   trainingServicePlatform: remote
+adl:
+  maxExecDuration: 15m
+  nniManagerIp:
+  # use a small trial number to make IT faster
+  maxTrialNum: 2
+  trialConcurrency: 2
+  trial:
+    namespace: default
+    command:
+    codeDir:
+    gpuNum: 1
+    cpuNum: 1
+    image:
+    memorySize: 1Gi
+    checkpoint:
+      storageClass:
+      storageSize:
+  trainingServicePlatform: adl
+
