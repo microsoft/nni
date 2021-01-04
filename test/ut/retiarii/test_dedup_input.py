@@ -51,7 +51,7 @@ class DedupInputTest(unittest.TestCase):
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
 
     def test_dedup_input(self):
-        os.environ['CGO'] = 'true'
+        os.environ['CGO_DEVICES'] = 'cuda:0,cuda:1,cuda:2,cuda:3'
         lp, models = self._build_logical_with_mnist(3)
         opt = DedupInputOptimizer()
         opt.convert(lp)
@@ -65,7 +65,8 @@ class DedupInputTest(unittest.TestCase):
         nni.retiarii.integration_api._advisor = None
         nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
-        cgo = CGOExecutionEngine()
+        available_devices = os.environ.get('CGO_DEVICES').split(',')
+        cgo = CGOExecutionEngine(available_devices = available_devices)
 
         phy_models = cgo._assemble(lp)
         print(len(phy_models))

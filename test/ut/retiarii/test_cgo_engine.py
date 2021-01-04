@@ -30,7 +30,7 @@ def _load_mnist(n_models: int = 1):
 class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
-        os.environ['CGO'] = 'true'
+        os.environ['CGO_DEVICES'] = 'cuda:0,cuda:1,cuda:2,cuda:3'
         nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
         from nni.runtime import protocol

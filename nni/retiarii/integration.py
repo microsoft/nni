@@ -63,8 +63,9 @@ class RetiariiAdvisor(MsgDispatcherBase):
         set_execution_engine(engine)
 
     def _create_execution_engine(self):
-        if os.environ.get('CGO') == 'true':
-            return CGOExecutionEngine()
+        if 'CGO_DEVICES' in os.environ:
+            available_devices = os.environ.get('CGO_DEVICES').split(',')
+            return CGOExecutionEngine(available_devices=available_devices)
         else:
             return BaseExecutionEngine()
 

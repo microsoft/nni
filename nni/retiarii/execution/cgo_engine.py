@@ -14,11 +14,11 @@ _logger = logging.getLogger(__name__)
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
-    def __init__(self, n_model_per_graph=4) -> None:
+    def __init__(self, available_devices = None) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
-        self.n_model_per_graph = n_model_per_graph
+        self.available_devices = available_devices if available_devices else []
         self._optimizers = [DedupInputOptimizer()]
         self._original_models = {}
         self._original_model_to_multi_model = {}
@@ -63,7 +63,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         #     if node.graph.model not in unique_models:
         #         unique_models.add(node.graph.model)
         # return [m for m in unique_models]
-        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.n_model_per_graph)
+        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
         phy_models_and_placements = []
         for multi_model in grouped_models:
             model, model_placement = logical_plan.assemble(multi_model)
@@ -148,14 +148,15 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
 class AssemblePolicy:
     @staticmethod
-    def group(logical_plan, n_model_per_graph):
+    def group(logical_plan, available_devices):
         #TODO: Packing multiple model in one GPU
         # Currently, we only support one model per GPU
         all_grouped_models = []
         group_model = {}
+        assert(len(available_devices) > 0) # There should be at least 1 device, set in CGO_DEVICES
         for idx, m in enumerate(logical_plan.models):
-            group_model[m] = PhysicalDevice('server', f'cuda:{idx}')
-            if len(group_model) == n_model_per_graph or idx == len(logical_plan.models)-1:
+            group_model[m] = PhysicalDevice('server', available_devices[idx % len(available_devices)])
+            if len(group_model) == len(available_devices) or idx == len(logical_plan.models)-1:
                 all_grouped_models.append(group_model)
                 group_model = {}
         return all_grouped_models
