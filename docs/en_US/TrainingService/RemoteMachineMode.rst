@@ -217,3 +217,10 @@ If you want multiple commands to be executed, you can use ``&&`` to connect thes
    preCommand: command1 && command2 && command3
 
 **Note**\ : Because **preCommand** will execute before other commands each time, it is strongly not recommended to set **preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+
+Remote machine support running experiment in reuse mode. In this mode, NNI will reuse remote machine jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
+Follow the setting to enable reuse mode:
+.. code-block:: yaml
+
+   remoteConfig:
+     reuse: true
