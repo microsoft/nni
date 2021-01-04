@@ -640,7 +640,7 @@ def manage_stopped_experiment(args, mode):
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:
-        restServerPid = Experiments().get_all_experiments().get(experiment_id).get('pid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
