@@ -41,7 +41,7 @@ See all `training services <../training_services.rst>`__ supported in NNI.
 
 Use the form like ``experiment.config.foo = 'bar'`` to configure your experiment.
 
-See `parameter configuration <TBD>`__ required by different training services.
+See `parameter configuration <../reference/experiment_config.rst>`__ required by different training services.
 
 ..
 
