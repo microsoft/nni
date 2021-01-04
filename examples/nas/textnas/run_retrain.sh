@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 export PYTHONPATH="$(pwd)"
-export CUDA_VISIBLE_DEVICES=0
 
 python3 -u retrain.py \
   --train_ratio=1.0 \

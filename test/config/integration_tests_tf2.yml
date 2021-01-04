@@ -52,6 +52,10 @@ testCases:
       command: python3 main.py --epochs 1 --batches 1
       gpuNum: 0
 
+- name: cifar10-pytorch-adl
+  configFile: test/config/examples/cifar10-pytorch-adl.yml
+  trainingService: adl
+
 - name: classic-nas-gen-ss
   configFile: test/config/examples/classic-nas-tf2.yml
   launchCommand: nnictl ss_gen --trial_command="python3 train.py --epochs 1" --trial_dir=../examples/nas/classic_nas-tf --file=config/examples/nni-nas-search-space-tf2.json
