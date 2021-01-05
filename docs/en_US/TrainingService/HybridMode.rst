@@ -1,7 +1,7 @@
 **Run an Experiment on Hybrid Mode**
 ===========================================
 
-Run NNI on hybrid mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously。
+Run NNI on hybrid mode means that NNI will run trials jobs in multiple kinds of training platforms. For example, NNI could submit trial jobs to remote machine and AML simultaneously.
 
 Setup environment
 -----------------
