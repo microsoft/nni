@@ -18,11 +18,11 @@
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    编写搜索空间 <NAS/WriteSearchSpace>
+    定义搜索空间 <NAS/WriteSearchSpace>
     经典 NAS <NAS/ClassicNas>
     One-Shot NAS <NAS/one_shot_nas>
     自定义 NAS 算法 <NAS/Advanced>
     NAS 可视化 <NAS/Visualization>
-    Search Space Zoo <NAS/SearchSpaceZoo>
+    搜索空间集合 <NAS/SearchSpaceZoo>
     NAS 基准测试 <NAS/Benchmarks>
     API 参考 <NAS/NasReference>
