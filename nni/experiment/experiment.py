@@ -1,5 +1,6 @@
 import atexit
 import logging
+from pathlib import Path
 import socket
 from subprocess import Popen
 from threading import Thread
@@ -15,6 +16,7 @@ from nni.tuner import Tuner
 
 from .config import ExperimentConfig
 from . import launcher
+from . import management
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.command_utils import kill_command
@@ -76,6 +78,7 @@ class Experiment:
 
     def __init__(self, tuner: Tuner, config=None, training_service=None):
         self.config: ExperimentConfig
+        self.id: Optional[str] = None
         self.port: Optional[int] = None
         self.tuner: Tuner = tuner
         self._proc: Optional[Popen] = None
@@ -108,10 +111,15 @@ class Experiment:
         """
         atexit.register(self.stop)
 
-        if debug:
-            logging.getLogger('nni').setLevel(logging.DEBUG)
+        self.id = management.generate_experiment_id()
 
-        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
+        if self.config.experiment_working_directory is not None:
+            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
+        else:
+            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
+        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
+
+        self._proc, self._pipe = launcher.start_experiment(self.id, self.config, port, debug)
         assert self._proc is not None
         assert self._pipe is not None
 
@@ -119,7 +127,7 @@ class Experiment:
 
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher = MsgDispatcher(self.tuner, None)
+        self._dispatcher = self._create_dispatcher()
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 
@@ -129,10 +137,11 @@ class Experiment:
                 if interface.family == socket.AF_INET:
                     ips.append(interface.address)
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
-        # TODO: register experiment management metadata
+    def _create_dispatcher(self):  # overrided by retiarii, temporary solution
+        return MsgDispatcher(self.tuner, None)
 
 
     def stop(self) -> None:
@@ -142,6 +151,8 @@ class Experiment:
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
 
+        if self.id is not None:
+            nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
             kill_command(self._proc.pid)
         if self._pipe is not None:
@@ -150,6 +161,7 @@ class Experiment:
             self._dispatcher.stopping = True
             self._dispatcher_thread.join(timeout=1)
 
+        self.id = None
         self.port = None
         self._proc = None
         self._pipe = None

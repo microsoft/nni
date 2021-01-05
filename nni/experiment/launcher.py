@@ -14,7 +14,6 @@ import nni_node
 
 from .config import ExperimentConfig
 from .config import convert
-from . import management
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments
@@ -22,12 +21,13 @@ from ..tools.nnictl.config_utils import Experiments
 _logger = logging.getLogger('nni.experiment')
 
 
-def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
+def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
     pipe = None
     proc = None
 
     config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
+
     if isinstance(config.training_service, list): # hybrid training service
         _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
     elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
@@ -35,7 +35,7 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     exp_id = management.generate_experiment_id()
 
     try:
-        _logger.info('Creating experiment, Experiment ID: %s%s', colorama.Fore.CYAN, exp_id)
+        _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         pipe = Pipe(exp_id)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
@@ -94,7 +94,13 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     for arg_key, arg_value in args.items():
         cmd.append('--' + arg_key)
         cmd.append(str(arg_value))
-    return int(time.time() * 1000), Popen(cmd, cwd=node_dir)
+
+    if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
+        proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+    else:
+        proc = Popen(cmd, cwd=node_dir)
+    return int(time.time() * 1000), proc
 
 
 def _check_rest_server(port: int, retry: int = 3) -> None:
