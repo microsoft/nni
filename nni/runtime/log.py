@@ -12,6 +12,13 @@ import colorama
 from .env_vars import dispatcher_env_vars, trial_env_vars
 
 
+handlers = {}
+
+log_format = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+time_format = '%Y-%m-%d %H:%M:%S'
+formatter = Formatter(log_format, time_format)
+
+
 def init_logger() -> None:
     """
     This function will (and should only) get invoked on the first time of importing nni (no matter which submodule).
@@ -44,18 +51,22 @@ def init_logger_experiment() -> None:
 
     This function will get invoked after `init_logger()`.
     """
-    formatter.format = _colorful_format
+    colorful_formatter = Formatter(log_format, time_format)
+    colorful_formatter.format = _colorful_format
+    handlers['_default_'].setFormatter(colorful_formatter)
 
-    log_path = _prepare_log_dir(dispatcher_env_vars.NNI_LOG_DIRECTORY) / 'dispatcher.log'
-    _setup_root_logger(FileHandler(log_path), logging.DEBUG)
+    logging.getLogger('filelock').setLevel(logging.WARNING)
 
 
-time_format = '%Y-%m-%d %H:%M:%S'
+def start_experiment_log(experiment_id: str, debug: bool) -> None:
+    log_path = _prepare_log_dir(Path.home() / f'nni-experiments/{experiment_id}/log') / 'dispatcher.log'
+    log_level = logging.DEBUG if debug else logging.INFO
+    _register_handler(FileHandler(log_path), log_level, experiment_id)
 
-formatter = Formatter(
-    '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s',
-    time_format
-)
+def stop_experiment_log(experiment_id: str) -> None:
+    if experiment_id in handlers:
+        logging.getLogger().removeHandler(handlers.pop(experiment_id))
+
 
 def _init_logger_dispatcher() -> None:
     log_level_map = {
@@ -69,26 +80,20 @@ def _init_logger_dispatcher() -> None:
 
     log_path = _prepare_log_dir(dispatcher_env_vars.NNI_LOG_DIRECTORY) / 'dispatcher.log'
     log_level = log_level_map.get(dispatcher_env_vars.NNI_LOG_LEVEL, logging.INFO)
-    _setup_root_logger(FileHandler(log_path), log_level)
+    _register_handler(FileHandler(log_path), log_level)
 
 
 def _init_logger_trial() -> None:
     log_path = _prepare_log_dir(trial_env_vars.NNI_OUTPUT_DIR) / 'trial.log'
     log_file = open(log_path, 'w')
-    _setup_root_logger(StreamHandler(log_file), logging.INFO)
+    _register_handler(StreamHandler(log_file), logging.INFO)
 
     if trial_env_vars.NNI_PLATFORM == 'local':
         sys.stdout = _LogFileWrapper(log_file)
 
 
 def _init_logger_standalone() -> None:
-    _setup_nni_logger(StreamHandler(sys.stdout), logging.INFO)
-
-    # Following line does not affect NNI loggers, but without this user's logger won't
-    # print log even it's level is set to INFO, so we do it for user's convenience.
-    # If this causes any issue in future, remove it and use `logging.info()` instead of
-    # `logging.getLogger('xxx').info()` in all examples.
-    logging.basicConfig()
+    _register_handler(StreamHandler(sys.stdout), logging.INFO)
 
 
 def _prepare_log_dir(path: Optional[str]) -> Path:
@@ -98,20 +103,18 @@ def _prepare_log_dir(path: Optional[str]) -> Path:
     ret.mkdir(parents=True, exist_ok=True)
     return ret
 
-def _setup_root_logger(handler: Handler, level: int) -> None:
-    _setup_logger('', handler, level)
-
-def _setup_nni_logger(handler: Handler, level: int) -> None:
-    _setup_logger('nni', handler, level)
-
-def _setup_logger(name: str, handler: Handler, level: int) -> None:
+def _register_handler(handler: Handler, level: int, tag: str = '_default_') -> None:
+    assert tag not in handlers
+    handlers[tag] = handler
     handler.setFormatter(formatter)
-    logger = logging.getLogger(name)
+    logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(level)
-    logger.propagate = False
 
 def _colorful_format(record):
+    time = formatter.formatTime(record, time_format)
+    if not record.name.startswith('nni.'):
+        return '[{}] ({}) {}'.format(time, record.name, record.msg % record.args)
     if record.levelno >= logging.ERROR:
         color = colorama.Fore.RED
     elif record.levelno >= logging.WARNING:
@@ -121,7 +124,6 @@ def _colorful_format(record):
     else:
         color = colorama.Fore.BLUE
     msg = color + (record.msg % record.args) + colorama.Style.RESET_ALL
-    time = formatter.formatTime(record, time_format)
     if record.levelno < logging.INFO:
         return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)
     else:

@@ -14,7 +14,6 @@ import nni_node
 
 from .config import ExperimentConfig
 from .config import convert
-from . import management
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments
@@ -22,7 +21,7 @@ from ..tools.nnictl.config_utils import Experiments
 _logger = logging.getLogger('nni.experiment')
 
 
-def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
+def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
     pipe = None
     proc = None
 
@@ -30,7 +29,6 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
     _ensure_port_idle(port)
     if config.training_service.platform == 'openpai':
         _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
-    exp_id = management.generate_experiment_id()
 
     try:
         _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)

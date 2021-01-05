@@ -15,6 +15,7 @@ from nni.tuner import Tuner
 
 from .config import ExperimentConfig
 from . import launcher
+from . import management
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.command_utils import kill_command
@@ -76,6 +77,7 @@ class Experiment:
 
     def __init__(self, tuner: Tuner, config=None, training_service=None):
         self.config: ExperimentConfig
+        self.id: Optional[str] = None
         self.port: Optional[int] = None
         self.tuner: Tuner = tuner
         self._proc: Optional[Popen] = None
@@ -108,10 +110,13 @@ class Experiment:
         """
         atexit.register(self.stop)
 
+        self.id = management.generate_experiment_id()
+        nni.runtime.log.start_experiment_log(self.id, debug)
+
         if debug:
             logging.getLogger('nni').setLevel(logging.DEBUG)
 
-        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
+        self._proc, self._pipe = launcher.start_experiment(self.id, self.config, port, debug)
         assert self._proc is not None
         assert self._pipe is not None
 
@@ -132,8 +137,6 @@ class Experiment:
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
         _logger.info(msg)
 
-        # TODO: register experiment management metadata
-
 
     def stop(self) -> None:
         """
@@ -142,6 +145,8 @@ class Experiment:
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
 
+        if self.id is not None:
+            nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
             kill_command(self._proc.pid)
         if self._pipe is not None:
@@ -150,6 +155,7 @@ class Experiment:
             self._dispatcher.stopping = True
             self._dispatcher_thread.join(timeout=1)
 
+        self.id = None
         self.port = None
         self._proc = None
         self._pipe = None
