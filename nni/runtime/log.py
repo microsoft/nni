@@ -44,6 +44,8 @@ def init_logger() -> None:
 
     _init_logger_standalone()
 
+    logging.getLogger('filelock').setLevel(logging.WARNING)
+
 
 def init_logger_experiment() -> None:
     """
@@ -54,9 +56,6 @@ def init_logger_experiment() -> None:
     colorful_formatter = Formatter(log_format, time_format)
     colorful_formatter.format = _colorful_format
     handlers['_default_'].setFormatter(colorful_formatter)
-
-    logging.getLogger('filelock').setLevel(logging.WARNING)
-
 
 def start_experiment_log(experiment_id: str, debug: bool) -> None:
     log_path = _prepare_log_dir(Path.home() / f'nni-experiments/{experiment_id}/log') / 'dispatcher.log'
