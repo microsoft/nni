@@ -103,8 +103,6 @@ Run following command to register the customized algorithms as builtin algorithm
 
 The ``<path_to_meta_file>`` is the path to the yaml file your created in above section.
 
-Reference `customized tuner example <../Tuner/InstallCustomizedTuner.rst>`_ for a full example.
-
 6. Use the installed builtin algorithms in experiment
 -----------------------------------------------------
 
