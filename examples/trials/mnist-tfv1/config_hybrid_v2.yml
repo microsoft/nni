@@ -3,8 +3,6 @@ trialConcurrency: 3
 maxExperimentDuration: 1h
 maxTrialNumber: 10
 searchSpaceFile: search_space.json
-nniManagerIp: 10.150.144.59
-debug: true
 
 trialCodeDirectory: .
 trialCommand: python3 mnist.py
@@ -19,7 +17,7 @@ trainingService:
   - platform: remote
     reuseMode: true
     machineList:
-      - host: 10.190.175.223
+      - host: 10.1.1.1
         user: xxx
         password: xxx
         #port can be skip if using default ssh port 22
