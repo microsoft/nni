@@ -25,17 +25,3 @@ NNI client is a python API of ``nnictl``\ , which implements the most commonly u
 
    # stop the experiment, then disconnect the instance from the experiment.
    exp.stop_experiment()
-
-References
-----------
-
-..  autoclass:: nni.experiment.Experiment
-    :members:
-..  autoclass:: nni.experiment.TrialJob
-    :members:
-..  autoclass:: nni.experiment.TrialHyperParameters
-    :members:
-..  autoclass:: nni.experiment.TrialMetricData
-    :members:
-..  autoclass:: nni.experiment.TrialResult
-    :members:
