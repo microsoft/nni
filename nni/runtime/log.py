@@ -46,6 +46,9 @@ def init_logger_experiment() -> None:
     """
     formatter.format = _colorful_format
 
+    log_path = _prepare_log_dir(dispatcher_env_vars.NNI_LOG_DIRECTORY) / 'dispatcher.log'
+    _setup_root_logger(FileHandler(log_path), logging.DEBUG)
+
 
 time_format = '%Y-%m-%d %H:%M:%S'
 

@@ -51,6 +51,10 @@ class RemoteConfig(TrainingServiceConfig):
         kwargs['machinelist'] = util.load_config(RemoteMachineConfig, kwargs.get('machinelist'))
         super().__init__(**kwargs)
 
+    _canonical_rules = {
+        'machine_list': lambda value: [config.canonical() for config in value]
+    }
+
     _validation_rules = {
         'platform': lambda value: (value == 'remote', 'cannot be modified')
     }
