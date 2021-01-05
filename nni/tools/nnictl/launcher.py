@@ -300,23 +300,23 @@ def set_aml_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_heterogeneous_config(experiment_config, port, config_file_name):
-    '''set heterogeneous configuration'''
-    heterogeneous_config_data = dict()
-    heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
-    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+def set_hybrid_config(experiment_config, port, config_file_name):
+    '''set hybrid configuration'''
+    hybrid_config_data = dict()
+    hybrid_config_data['hybrid_config'] = experiment_config['hybridConfig']
+    platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
     for platform in platform_list:
         if platform == 'aml':
-            heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
+            hybrid_config_data['aml_config'] = experiment_config['amlConfig']
         elif platform ==  'remote':
             if experiment_config.get('remoteConfig'):
-                heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
-            heterogeneous_config_data['machine_list'] = experiment_config['machineList']
+                hybrid_config_data['remote_config'] = experiment_config['remoteConfig']
+            hybrid_config_data['machine_list'] = experiment_config['machineList']
         elif platform == 'local' and experiment_config.get('localConfig'):
-            heterogeneous_config_data['local_config'] = experiment_config['localConfig']
+            hybrid_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
-            heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(heterogeneous_config_data), REST_TIME_OUT)
+            hybrid_config_data['pai_config'] = experiment_config['paiConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -412,10 +412,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'heterogeneous':
+    elif experiment_config['trainingServicePlatform'] == 'hybrid':
         request_data['clusterMetaData'].append(
-            {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
-        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+            {'key': 'hybrid_config', 'value': experiment_config['hybridConfig']})
+        platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
         request_dict = {
             'aml': {'key': 'aml_config', 'value': experiment_config.get('amlConfig')},
             'remote': {'key': 'machine_list', 'value': experiment_config.get('machineList')},
@@ -460,8 +460,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
     elif platform == 'aml':
         config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
-    elif platform == 'heterogeneous':
-        config_result, err_msg = set_heterogeneous_config(experiment_config, port, config_file_name)
+    elif platform == 'hybrid':
+        config_result, err_msg = set_hybrid_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
