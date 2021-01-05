@@ -2,15 +2,7 @@
 **How to register customized algorithms as builtin tuners, assessors and advisors**
 =======================================================================================
 
-Content
--------
-
-* `Overview`_
-* `Register customized algorithms as builtin tuners, assessors and advisors`_
-* `Use the installed builtin algorithms in experiment`_
-* `Manage builtin algorithms using nnictl algo`_
-* `Porting customized algorithms from v1.x to v2.x`_
-* `Example: Register a customized tuner as a builtin tuner`_
+.. contents::
 
 Overview
 --------
@@ -113,7 +105,7 @@ Run following command to register the customized algorithms as builtin algorithm
 
 The ``<path_to_meta_file>`` is the path to the yaml file your created in above section.
 
-Reference `Example: Register a customized tuner as a builtin tuner`_ for a full example.
+Reference `customized tuner example <#example-register-a-customized-tuner-as-a-builtin-tuner>`_ for a full example.
 
 Use the installed builtin algorithms in experiment
 --------------------------------------------------
