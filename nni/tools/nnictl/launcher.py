@@ -47,10 +47,10 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
 
-    if (platform != 'local') and detect_port(int(port) + 1):
-        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+    if (platform not in ['local', 'aml']) and detect_port(int(port) + 1):
+        print_error('%s mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
+        'You could use \'nnictl create --help\' to get help information' % (platform, (int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
