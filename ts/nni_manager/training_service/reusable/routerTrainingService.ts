@@ -95,8 +95,8 @@ class RouterTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
-            // Need to refactor configuration, remove heterogeneous_config field in the future
-            if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
+            // Need to refactor configuration, remove hybrid_config field in the future
+            if (key === TrialConfigMetadataKey.HYBRID_CONFIG){
                 this.internalTrainingService = component.get(TrialDispatcher);
                 const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
                 if (this.internalTrainingService === undefined) {

@@ -1,8 +1,6 @@
 Run an Experiment on Kubeflow
 =============================
 
-===
-
 Now NNI supports running experiment on `Kubeflow <https://github.com/kubeflow/kubeflow>`__\ , called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a Kubernetes cluster, either on-premises or `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/en-us/services/kubernetes-service/>`__\ , a Ubuntu machine on which `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ is setup to connect to your Kubernetes cluster. If you are not familiar with Kubernetes, `here <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ is a good start. In kubeflow mode, your trial program will run as Kubeflow job in Kubernetes cluster.
 
 Prerequisite for on-premises Kubernetes Service
