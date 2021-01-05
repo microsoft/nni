@@ -69,7 +69,7 @@ class Experiment:
             A tuner instance.
         training_service
             Name of training service.
-            Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl".
+            Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl" and hybrid training service.
         """
         ...
 
