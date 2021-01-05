@@ -40,7 +40,7 @@ jobs:
       set -e
       sudo apt-get install -y pandoc
       python -m pip install --upgrade pygments
-      python -m pip install "torch==1.6.0+cpu" "torchvision==0.7.0+cpu" -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install --pre torch torchvision torchaudio -f https://download.pytorch.org/whl/nightly/cpu/torch_nightly.html
       python -m pip install tensorflow
       python -m pip install gym onnx peewee thop graphviz
       python -m pip install sphinx==3.3.1 sphinx-argparse==0.2.5 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 nbsphinx
