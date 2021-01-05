@@ -1,6 +1,4 @@
-import atexit
 import logging
-import socket
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,10 +6,7 @@ from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
 
-import colorama
-import psutil
-
-from ..experiment import Experiment, TrainingServiceConfig, launcher
+from ..experiment import Experiment, TrainingServiceConfig
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
@@ -159,34 +154,11 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        atexit.register(self.stop)
-
-        if debug:
-            logging.getLogger('nni').setLevel(logging.DEBUG)
-
-        self._proc, self._pipe = launcher.start_experiment(self.config, port, debug)
-        assert self._proc is not None
-        assert self._pipe is not None
-
-        self.port = port  # port will be None if start up failed
-
-        # dispatcher must be created after pipe initialized
-        # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher_thread = Thread(target=self._dispatcher.run)
-        self._dispatcher_thread.start()
-
+        super().start(port, debug)
         self._start_strategy()
 
-        ips = [self.config.nni_manager_ip]
-        for interfaces in psutil.net_if_addrs().values():
-            for interface in interfaces:
-                if interface.family == socket.AF_INET:
-                    ips.append(interface.address)
-        ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
-        _logger.info(msg)
-
-        # TODO: register experiment management metadata
+    def _create_dispatcher(self):
+        return self._dispatcher
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
