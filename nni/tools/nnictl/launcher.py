@@ -47,10 +47,10 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
 
-    if (platform != 'local') and detect_port(int(port) + 1):
-        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+    if (platform not in ['local', 'aml']) and detect_port(int(port) + 1):
+        print_error('%s mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
+        'You could use \'nnictl create --help\' to get help information' % (platform, (int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
@@ -316,7 +316,9 @@ def set_hybrid_config(experiment_config, port, config_file_name):
             hybrid_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
             hybrid_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), REST_TIME_OUT)
+    # It needs to connect all remote machines, set longer timeout here to wait for restful server connection response.
+    time_out = 60 if 'remote' in platform_list else REST_TIME_OUT
+    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), time_out)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -567,7 +569,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
     if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
+        web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
     else:
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
