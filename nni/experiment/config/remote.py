@@ -4,6 +4,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Union
+import warnings
 
 from .base import ConfigBase, PathLike
 from .common import TrainingServiceConfig
@@ -17,7 +18,7 @@ class RemoteMachineConfig(ConfigBase):
     port: int = 22
     user: str
     password: Optional[str] = None
-    ssh_key_file: Optional[PathLike] = None
+    ssh_key_file: PathLike = '~/.ssh/id_rsa'
     ssh_passphrase: Optional[str] = None
     use_active_gpu: bool = False
     max_trial_number_per_gpu: int = 1
@@ -39,6 +40,8 @@ class RemoteMachineConfig(ConfigBase):
         super().validate()
         if self.password is None and not Path(self.ssh_key_file).is_file():
             raise ValueError(f'Password is not provided and cannot find SSH key file "{self.ssh_key_file}"')
+        if self.password:
+            warnings.warn('Password will be exposed through web UI in plain text. We recommend to use SSH key file.')
 
 @dataclass(init=False)
 class RemoteConfig(TrainingServiceConfig):
