@@ -31,7 +31,7 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
         _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
 
     try:
-        _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)
+        _logger.info('Creating experiment %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         pipe = Pipe(exp_id)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')

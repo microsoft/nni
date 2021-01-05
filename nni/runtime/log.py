@@ -57,8 +57,8 @@ def init_logger_experiment() -> None:
     colorful_formatter.format = _colorful_format
     handlers['_default_'].setFormatter(colorful_formatter)
 
-def start_experiment_log(experiment_id: str, debug: bool) -> None:
-    log_path = _prepare_log_dir(Path.home() / f'nni-experiments/{experiment_id}/log') / 'dispatcher.log'
+def start_experiment_log(experiment_id: str, log_directory: Path, debug: bool) -> None:
+    log_path = _prepare_log_dir(log_directory) / 'dispatcher.log'
     log_level = logging.DEBUG if debug else logging.INFO
     _register_handler(FileHandler(log_path), log_level, experiment_id)
 

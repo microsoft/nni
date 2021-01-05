@@ -1,5 +1,6 @@
 import atexit
 import logging
+from pathlib import Path
 import socket
 from subprocess import Popen
 from threading import Thread
@@ -111,10 +112,12 @@ class Experiment:
         atexit.register(self.stop)
 
         self.id = management.generate_experiment_id()
-        nni.runtime.log.start_experiment_log(self.id, debug)
 
-        if debug:
-            logging.getLogger('nni').setLevel(logging.DEBUG)
+        if self.config.experiment_working_directory is not None:
+            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
+        else:
+            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
+        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
         self._proc, self._pipe = launcher.start_experiment(self.id, self.config, port, debug)
         assert self._proc is not None
@@ -134,7 +137,7 @@ class Experiment:
                 if interface.family == socket.AF_INET:
                     ips.append(interface.address)
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
-        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips)
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
 
