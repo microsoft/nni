@@ -4,27 +4,26 @@
 jobs:
 - job: ubuntu_latest
   pool:
-    # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
-    vmImage: ubuntu-18.04
+    vmImage: ubuntu-latest
 
   # This platform tests lint and doc first.
 
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: 3.6
+      versionSpec: 3.8
     displayName: Configure Python version
 
   - script: |
       set -e
-      python3 -m pip install --upgrade pip setuptools
-      python3 -m pip install pytest coverage
-      python3 -m pip install pylint flake8
+      python -m pip install --upgrade pip setuptools
+      python -m pip install pytest coverage
+      python -m pip install pylint flake8
       echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
     displayName: Install Python tools
 
   - script: |
-      python3 setup.py develop
+      python setup.py develop
     displayName: Install NNI
 
   - script: |
@@ -35,24 +34,28 @@ jobs:
       yarn eslint
     displayName: ESLint
 
+  # FIXME: temporarily fixed to pytorch 1.6 as 1.7 won't work with compression
+
   - script: |
       set -e
       sudo apt-get install -y pandoc
-      python3 -m pip install --upgrade pygments
-      python3 -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python3 -m pip install --upgrade tensorflow
-      python3 -m pip install --upgrade gym onnx peewee thop graphviz
-      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
-      sudo apt-get install swig -y
-      python3 -m pip install -e .[SMAC,BOHB]
+      python -m pip install --upgrade pygments
+      python -m pip install "torch==1.6.0+cpu" "torchvision==0.7.0+cpu" -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install tensorflow
+      python -m pip install gym onnx peewee thop graphviz
+      python -m pip install sphinx==3.3.1 sphinx-argparse==0.2.5 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 nbsphinx
+      sudo apt-get remove swig -y
+      sudo apt-get install swig3.0 -y
+      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      python -m pip install -e .[SMAC,BOHB]
     displayName: Install extra dependencies
 
   - script: |
       set -e
-      python3 -m pylint --rcfile pylintrc nni
-      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+      python -m pylint --rcfile pylintrc nni
+      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
       EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
     displayName: pylint and flake8
 
   - script: |
@@ -61,10 +64,14 @@ jobs:
     displayName: Check Sphinx documentation
 
   - script: |
+      set -e
       cd test
-      python3 -m pytest ut --ignore=ut/sdk/test_pruners.py --ignore=ut/sdk/test_compressor_tf.py
-      python3 -m pytest ut/sdk/test_pruners.py
-      python3 -m pytest ut/sdk/test_compressor_tf.py
+      python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+        --ignore=ut/sdk/test_compressor_tf.py \
+        --ignore=ut/sdk/test_compressor_torch.py
+      python -m pytest ut/sdk/test_pruners.py
+      python -m pytest ut/sdk/test_compressor_tf.py
+      python -m pytest ut/sdk/test_compressor_torch.py
     displayName: Python unit test
 
   - script: |
@@ -77,7 +84,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
     displayName: Simple integration test
 
 

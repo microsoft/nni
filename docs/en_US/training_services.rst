@@ -6,7 +6,6 @@ Introduction to NNI Training Services
     Local<./TrainingService/LocalMode>
     Remote<./TrainingService/RemoteMachineMode>
     OpenPAI<./TrainingService/PaiMode>
-    OpenPAI Yarn Mode<./TrainingService/PaiYarnMode>
     Kubeflow<./TrainingService/KubeflowMode>
     AdaptDL<./TrainingService/AdaptDLMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
