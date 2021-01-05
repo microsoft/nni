@@ -604,7 +604,7 @@ def create_experiment(args):
         try:
             validate_all_content(experiment_config, config_path)
         except Exception as e:
-            print_error(f'Config validation failed. {repr(e)}')
+            print_error(f'Config in v1 format validation failed. {repr(e)}')
             exit(1)
 
     nni_config.set_config('experimentConfig', experiment_config)

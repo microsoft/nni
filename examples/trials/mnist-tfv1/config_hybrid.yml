@@ -7,6 +7,8 @@ trainingServicePlatform: hybrid
 searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
+nniManagerIp: 10.150.144.59
+versionCheck: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
   #SMAC (SMAC should be installed through nnictl)
@@ -25,8 +27,7 @@ hybridConfig:
 remoteConfig:
   reuse: true
 machineList:
-  - ip: 10.1.1.1
-    username: bob
-    passwd: bob123
-    #port can be skip if using default ssh port 22
-    #port: 22
+  - ip: 10.190.175.223
+    username: xxx
+    passwd: xxx
+    port: 22

@@ -28,12 +28,14 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
 
     config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
-    if config.training_service.platform == 'openpai':
-        _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
+    if isinstance(config.training_service, list): # hybrid training service
+        _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
+    elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
+        _ensure_port_idle(port + 1, f'{config.training_service.platform} requires an additional port')
     exp_id = management.generate_experiment_id()
 
     try:
-        _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)
+        _logger.info('Creating experiment, Experiment ID: %s%s', colorama.Fore.CYAN, exp_id)
         pipe = Pipe(exp_id)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
@@ -42,7 +44,8 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
         nni.runtime.protocol._out_file = pipe_file
         _logger.info('Statring web server...')
         _check_rest_server(port)
-        _save_experiment_information(exp_id, port, start_time, config.training_service.platform,
+        platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
+        _save_experiment_information(exp_id, port, start_time, platform,
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
         _init_experiment(config, port, debug)
@@ -68,9 +71,12 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
 
 
 def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Tuple[int, Popen]:
-    ts = config.training_service.platform
-    if ts == 'openpai':
-        ts = 'pai'
+    if isinstance(config.training_service, list):
+        ts = 'hybrid'
+    else:
+        ts = config.training_service.platform
+        if ts == 'openpai':
+            ts = 'pai'
 
     args = {
         'port': port,

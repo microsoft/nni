@@ -25,8 +25,8 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
                 conf['platform'] = 'pai'
             hybrid_names.append(conf['platform'])
             _handle_training_service(conf, data)
-        data['trainingServicePlatform'] = 'heterogeneous'
-        data['heterogeneousConfig'] = {'trainingServicePlatforms': hybrid_names}
+        data['trainingServicePlatform'] = 'hybrid'
+        data['hybridConfig'] = {'trainingServicePlatforms': hybrid_names}
     else:
         if ts['platform'] == 'openpai':
             ts['platform'] = 'pai'
@@ -188,7 +188,26 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
     experiment_config = to_v1_yaml(config, skip_nnictl=True)
     ret = []
 
-    if config.training_service.platform == 'local':
+    if isinstance(config.training_service, list):
+        hybrid_conf = dict()
+        hybrid_conf['hybrid_config'] = experiment_config['hybridConfig']
+        for conf in config.training_service:
+            metadata = _get_cluster_metadata(conf.platform, experiment_config)
+            if metadata is not None:
+                hybrid_conf.update(metadata)
+        ret.append(hybrid_conf)
+    else:
+        metadata = _get_cluster_metadata(config.training_service.platform, experiment_config)
+        if metadata is not None:
+            ret.append(metadata)
+
+    if experiment_config.get('nniManagerIp') is not None:
+        ret.append({'nni_manager_ip': {'nniManagerIp': experiment_config['nniManagerIp']}})
+    ret.append({'trial_config': experiment_config['trial']})
+    return ret
+
+def _get_cluster_metadata(platform: str, experiment_config) -> Dict:
+    if platform == 'local':
         request_data = dict()
         request_data['local_config'] = experiment_config['localConfig']
         if request_data['local_config']:
@@ -198,9 +217,9 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
                 request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
             if request_data['local_config'].get('useActiveGpu'):
                 request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
-        ret.append(request_data)
+        return request_data
 
-    elif config.training_service.platform == 'remote':
+    elif platform == 'remote':
         request_data = dict()
         if experiment_config.get('remoteConfig'):
             request_data['remote_config'] = experiment_config['remoteConfig']
@@ -211,31 +230,25 @@ def to_cluster_metadata(config: ExperimentConfig) -> List[Dict[str, Any]]:
             for i in range(len(request_data['machine_list'])):
                 if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
                     request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
-        ret.append(request_data)
+        return request_data
 
-    elif config.training_service.platform == 'openpai':
-        ret.append({'pai_config': experiment_config['paiConfig']})
+    elif platform == 'openpai':
+        return {'pai_config': experiment_config['paiConfig']}
 
-    elif config.training_service.platform == 'aml':
-        ret.append({'aml_config': experiment_config['amlConfig']})
+    elif platform == 'aml':
+        return {'aml_config': experiment_config['amlConfig']}
 
-    elif config.training_service.platform == 'kubeflow':
-        ret.append({'kubeflow_config': experiment_config['kubeflowConfig']})
+    elif platform == 'kubeflow':
+        return {'kubeflow_config': experiment_config['kubeflowConfig']}
 
-    elif config.training_service.platform == 'frameworkcontroller':
-        ret.append({'frameworkcontroller_config': experiment_config['frameworkcontrollerConfig']})
+    elif platform == 'frameworkcontroller':
+        return {'frameworkcontroller_config': experiment_config['frameworkcontrollerConfig']}
 
-    elif config.training_service.platform == 'adl':
-        pass
+    elif platform == 'adl':
+        return None
 
     else:
-        raise RuntimeError('Unsupported training service ' + config.training_service.platform)
-
-    if experiment_config.get('nniManagerIp') is not None:
-        ret.append({'nni_manager_ip': {'nniManagerIp': experiment_config['nniManagerIp']}})
-    ret.append({'trial_config': experiment_config['trial']})
-    return ret
-
+        raise RuntimeError('Unsupported training service ' + platform)
 
 def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
     experiment_config = to_v1_yaml(config, skip_nnictl=True)
