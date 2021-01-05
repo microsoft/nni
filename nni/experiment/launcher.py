@@ -2,7 +2,7 @@ import contextlib
 import logging
 from pathlib import Path
 import socket
-from subprocess import Popen, CREATE_NEW_PROCESS_GROUP
+from subprocess import Popen
 import sys
 import time
 from typing import Optional, Tuple
@@ -90,6 +90,7 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         cmd.append(str(arg_value))
 
     if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
         proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
         proc = Popen(cmd, cwd=node_dir)
