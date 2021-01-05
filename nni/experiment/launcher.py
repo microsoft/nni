@@ -88,7 +88,13 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     for arg_key, arg_value in args.items():
         cmd.append('--' + arg_key)
         cmd.append(str(arg_value))
-    return int(time.time() * 1000), Popen(cmd, cwd=node_dir)
+
+    if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
+        proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+    else:
+        proc = Popen(cmd, cwd=node_dir)
+    return int(time.time() * 1000), proc
 
 
 def _check_rest_server(port: int, retry: int = 3) -> None:
