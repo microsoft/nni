@@ -30,6 +30,10 @@ BasicOpsPT = {
     'aten::size': 'Size',
     'aten::view': 'View',
     'aten::eq': 'Eq',
+    'aten::Bool': 'Bool',
+    'aten::empty': 'Empty',
+    'aten::zeros': 'Zeros',
+    'aten::chunk': 'Chunk',
     'aten::add_': 'Add_'  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
 }
 

@@ -56,8 +56,8 @@ def get_dataset(cls, cutout_length=0):
     valid_transform = transforms.Compose(normalize)
 
     if cls == "cifar10":
-        dataset_train = CIFAR10(root="./data", train=True, download=True, transform=train_transform)
-        dataset_valid = CIFAR10(root="./data", train=False, download=True, transform=valid_transform)
+        dataset_train = CIFAR10(root="./data/cifar10", train=True, download=True, transform=train_transform)
+        dataset_valid = CIFAR10(root="./data/cifar10", train=False, download=True, transform=valid_transform)
     else:
         raise NotImplementedError
     return dataset_train, dataset_valid

@@ -19,12 +19,12 @@ if __name__ == '__main__':
     _DEFAULT_NUM_LAYERS = [1, 3, 3, 3, 2, 4, 1]
 
     base_model = MNASNet(0.5, _DEFAULT_DEPTHS, _DEFAULT_CONVOPS, _DEFAULT_KERNEL_SIZES,
-                    _DEFAULT_NUM_LAYERS, _DEFAULT_SKIPS)
+                         _DEFAULT_NUM_LAYERS, _DEFAULT_SKIPS)
     trainer = PyTorchImageClassificationTrainer(base_model, dataset_cls="CIFAR10",
-            dataset_kwargs={"root": "data/cifar10", "download": True},
-            dataloader_kwargs={"batch_size": 32},
-            optimizer_kwargs={"lr": 1e-3},
-            trainer_kwargs={"max_epochs": 1})
+                                                dataset_kwargs={"root": "data/cifar10", "download": True},
+                                                dataloader_kwargs={"batch_size": 32},
+                                                optimizer_kwargs={"lr": 1e-3},
+                                                trainer_kwargs={"max_epochs": 1})
 
     # new interface
     applied_mutators = []
@@ -41,4 +41,4 @@ if __name__ == '__main__':
     exp_config.max_trial_number = 10
     exp_config.training_service.use_active_gpu = False
 
-    exp.run(exp_config, 8081, debug=True)
+    exp.run(exp_config, 8081)

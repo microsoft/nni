@@ -132,7 +132,7 @@ class DartsDiscreteMutator(Mutator):
     ----------
     model : nn.Module
         The model to apply the mutator.
-    parent_mutator : Mutator
+    parent_mutator : nni.nas.pytorch.mutator.Mutator
         The mutator that provides ``sample_final`` method, that will be called to get the architecture.
     """
     def __init__(self, model, parent_mutator):

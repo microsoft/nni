@@ -113,7 +113,7 @@ def _setup():
         install_requires = dependencies,
         extras_require = {
             'SMAC': ['ConfigSpaceNNI', 'smac4nni'],
-            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
+            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.12.0'],
             'PPOTuner': ['enum34', 'gym']
         },
         setup_requires = ['requests'],
