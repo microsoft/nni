@@ -316,9 +316,8 @@ def set_hybrid_config(experiment_config, port, config_file_name):
             hybrid_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
             hybrid_config_data['pai_config'] = experiment_config['paiConfig']
-    # It needs to connect all remote machines, the time out of connection is 30 seconds, 
-    # set longer timeout here to wait for restful server connection response.
-    time_out = 35 if 'remote' in platform_list else REST_TIME_OUT
+    # It needs to connect all remote machines, set longer timeout here to wait for restful server connection response.
+    time_out = 60 if 'remote' in platform_list else REST_TIME_OUT
     response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), time_out)
     err_message = None
     if not response or not response.status_code == 200:
