@@ -111,6 +111,15 @@ def get_bits_length(config, quant_type):
         return config["quant_bits"].get(quant_type)
 
 
+class QATGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
+        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
+        mask = (tensor_q < qmin) | (tensor_q > qmax)
+        grad_output[mask] = 0
+        return grad_output
+
+
 class QAT_Quantizer(Quantizer):
     """Quantizer defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
@@ -138,6 +147,7 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
+        self.quant_grad = QATGrad
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
@@ -331,7 +341,7 @@ class DoReFaQuantizer(Quantizer):
 
 class ClipGrad(QuantGrad):
     @staticmethod
-    def quant_backward(tensor, grad_output, quant_type):
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
         if quant_type == QuantType.QUANT_OUTPUT:
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output

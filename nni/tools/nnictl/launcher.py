@@ -17,7 +17,7 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
 
 from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
@@ -300,23 +300,23 @@ def set_aml_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_heterogeneous_config(experiment_config, port, config_file_name):
-    '''set heterogeneous configuration'''
-    heterogeneous_config_data = dict()
-    heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
-    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+def set_hybrid_config(experiment_config, port, config_file_name):
+    '''set hybrid configuration'''
+    hybrid_config_data = dict()
+    hybrid_config_data['hybrid_config'] = experiment_config['hybridConfig']
+    platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
     for platform in platform_list:
         if platform == 'aml':
-            heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
+            hybrid_config_data['aml_config'] = experiment_config['amlConfig']
         elif platform ==  'remote':
             if experiment_config.get('remoteConfig'):
-                heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
-            heterogeneous_config_data['machine_list'] = experiment_config['machineList']
+                hybrid_config_data['remote_config'] = experiment_config['remoteConfig']
+            hybrid_config_data['machine_list'] = experiment_config['machineList']
         elif platform == 'local' and experiment_config.get('localConfig'):
-            heterogeneous_config_data['local_config'] = experiment_config['localConfig']
+            hybrid_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
-            heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(heterogeneous_config_data), REST_TIME_OUT)
+            hybrid_config_data['pai_config'] = experiment_config['paiConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -412,10 +412,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'heterogeneous':
+    elif experiment_config['trainingServicePlatform'] == 'hybrid':
         request_data['clusterMetaData'].append(
-            {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
-        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+            {'key': 'hybrid_config', 'value': experiment_config['hybridConfig']})
+        platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
         request_dict = {
             'aml': {'key': 'aml_config', 'value': experiment_config.get('amlConfig')},
             'remote': {'key': 'machine_list', 'value': experiment_config.get('machineList')},
@@ -460,8 +460,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
     elif platform == 'aml':
         config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
-    elif platform == 'heterogeneous':
-        config_result, err_msg = set_heterogeneous_config(experiment_config, port, config_file_name)
+    elif platform == 'hybrid':
+        config_result, err_msg = set_hybrid_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
@@ -509,6 +509,11 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
                                                  mode, experiment_id, foreground, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
+    # save experiment information
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
+                                            experiment_config['trainingServicePlatform'],
+                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -546,11 +551,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 
     # start a new experiment
     print_normal('Starting experiment...')
-    # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
@@ -592,24 +592,28 @@ def create_experiment(args):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    try:
-        config = ExperimentConfig(**experiment_config)
-        experiment_config = convert.to_v1_yaml(config)
-    except Exception:
-        pass
+
     try:
         validate_all_content(experiment_config, config_path)
-    except Exception as e:
-        print_error(e)
-        exit(1)
+    except Exception:
+        print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
+        try:
+            config = ExperimentConfig(**experiment_config)
+            experiment_config = convert.to_v1_yaml(config)
+        except Exception as e:
+            print_error(f'Conversion from v2 format failed: {repr(e)}')
+        try:
+            validate_all_content(experiment_config, config_path)
+        except Exception as e:
+            print_error(f'Config validation failed. {repr(e)}')
+            exit(1)
 
     nni_config.set_config('experimentConfig', experiment_config)
     nni_config.set_config('restServerPort', args.port)
     try:
         launch_experiment(args, experiment_config, 'new', experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
@@ -641,8 +645,7 @@ def manage_stopped_experiment(args, mode):
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)

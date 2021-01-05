@@ -70,7 +70,7 @@ class Experiment:
             A tuner instance.
         training_service
             Name of training service.
-            Supported value: "local", "remote", "openpai".
+            Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl" and hybrid training service.
         """
         ...
 
@@ -139,7 +139,7 @@ class Experiment:
         """
         Stop background experiment.
         """
-        _logger.info('Stopping experiment...')
+        _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
 
         if self._proc is not None:
@@ -155,6 +155,7 @@ class Experiment:
         self._pipe = None
         self._dispatcher = None
         self._dispatcher_thread = None
+        _logger.info('Experiment stopped')
 
 
     def run(self, port: int = 8080, debug: bool = False) -> bool:
@@ -174,6 +175,8 @@ class Experiment:
                     return True
                 if status == 'ERROR':
                     return False
+        except KeyboardInterrupt:
+            _logger.warning('KeyboardInterrupt detected')
         finally:
             self.stop()
 
