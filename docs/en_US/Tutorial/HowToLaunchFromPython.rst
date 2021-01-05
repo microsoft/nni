@@ -1,13 +1,13 @@
-**How to Launch from Python**
+**How to Launch an experiment from Python**
 =============================
 
 Overview
 --------
-This is a new way to launch experiments since ``nni v2.0``. Before, you need to configure your experiment in a yaml configuration file and launch the experiment through ``nnictl`` command. Now, you can also configure and run your experiment directly in a python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
+Since ``nni v2.0``, we provide a new way to launch experiments. Before that, you need to configure the experiment in the yaml configuration file and then use the experiment ``nnictl`` command to launch the experiment. Now, you can also configure and run experiments directly in python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
 
 How to Use
 ----------
-After successfully installing ``nni``, you can write your own experimental configuration and run. You can even use python script to launch multiple experiments as you like! The following three steps are necessary.
+After successfully installing ``nni``, you can start the experiment with a python script in the following 3 steps.
 
 ..
 
