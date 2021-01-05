@@ -1,6 +1,4 @@
-import atexit
 import logging
-import socket
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,10 +6,7 @@ from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
 
-import colorama
-import psutil
-
-from ..experiment import Experiment, TrainingServiceConfig, launcher
+from ..experiment import Experiment, TrainingServiceConfig
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
