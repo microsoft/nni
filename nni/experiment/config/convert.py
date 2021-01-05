@@ -213,10 +213,6 @@ def _get_cluster_metadata(platform: str, experiment_config) -> Dict:
         if request_data['local_config']:
             if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
                 request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
-            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
-                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
-            if request_data['local_config'].get('useActiveGpu'):
-                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
         return request_data
 
     elif platform == 'remote':

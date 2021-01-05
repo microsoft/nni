@@ -171,7 +171,6 @@ class Experiment:
             while True:
                 time.sleep(10)
                 status = self.get_status()
-                print('zqlllll: ', status)
                 if status == 'DONE' or status == 'STOPPED':
                     return True
                 if status == 'ERROR':
