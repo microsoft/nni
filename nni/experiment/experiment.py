@@ -127,7 +127,7 @@ class Experiment:
 
         # dispatcher must be launched after pipe initialized
         # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher = MsgDispatcher(self.tuner, None)
+        self._dispatcher = self._create_dispatcher()
         self._dispatcher_thread = Thread(target=self._dispatcher.run)
         self._dispatcher_thread.start()
 
@@ -139,6 +139,9 @@ class Experiment:
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
+
+    def _create_dispatcher(self):  # overrided by retiarii, temporary solution
+        return MsgDispatcher(self.tuner, None)
 
 
     def stop(self) -> None:
