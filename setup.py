@@ -74,6 +74,7 @@ dependencies = [
     'filelock',
     'prettytable',
     'dataclasses ; python_version < "3.7"',
+    'packaging',
     'numpy < 1.19.4 ; sys_platform == "win32"',
     'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
     'numpy ; sys.platform != "win32" and python_version >= "3.7"',
