@@ -27,12 +27,10 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
 
     config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
-
     if isinstance(config.training_service, list): # hybrid training service
         _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
     elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
         _ensure_port_idle(port + 1, f'{config.training_service.platform} requires an additional port')
-    exp_id = management.generate_experiment_id()
 
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
