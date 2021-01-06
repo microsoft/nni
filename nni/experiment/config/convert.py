@@ -18,6 +18,15 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     data = config.json()
 
     ts = data.pop('trainingService')
+
+    data['trial'] = {
+        'command': data.pop('trialCommand'),
+        'codeDir': data.pop('trialCodeDirectory'),
+    }
+
+    if 'trialGpuNumber' in data:
+        data['trial']['gpuNum'] = data.pop('trialGpuNumber')
+
     if isinstance(ts, list):
         hybrid_names = []
         for conf in ts:
@@ -70,14 +79,6 @@ def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str,
     if tuner_gpu_indices is not None:
         data['tuner']['gpuIndicies'] = tuner_gpu_indices
 
-    data['trial'] = {
-        'command': data.pop('trialCommand'),
-        'codeDir': data.pop('trialCodeDirectory'),
-    }
-
-    if 'trialGpuNumber' in data:
-        data['trial']['gpuNum'] = data.pop('trialGpuNumber')
-
     return data
 
 def _handle_training_service(ts, data):
@@ -113,6 +114,9 @@ def _handle_training_service(ts, data):
         data['trial']['image'] = ts['dockerImage']
         data['trial']['nniManagerNFSMountPath'] = ts['localStorageMountPoint']
         data['trial']['containerNFSMountPath'] = ts['containerStorageMountPoint']
+        data['trial']['paiStorageConfigName'] = ts['storageConfigName']
+        data['trial']['cpuNum'] = ts['trialCpuNumber']
+        data['trial']['memoryMB'] = ts['trialMemorySize']
         data['paiConfig'] = {
             'userName': ts['username'],
             'token': ts['token'],
