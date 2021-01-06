@@ -1,5 +1,5 @@
 **Tutorial: Create and Run an Experiment on local with NNI API**
-====================================================================
+================================================================
 
 In this tutorial, we will use the example in [nni/examples/trials/mnist-pytorch] to explain how to create and run an experiment on local with NNI API.
 
