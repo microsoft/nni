@@ -116,7 +116,7 @@ type: ``Optional[str]``
 
 Search space format is determined by tuner. Common format for built-in tuners is documeted `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
-Mutually exclusive to `search space`_.
+Mutually exclusive to `searchSpace`_.
 
 
 searchSpace
@@ -130,7 +130,7 @@ The format is determined by tuner. Common format for built-in tuners is document
 
 Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
 
-Mutually exclusive to `search space file`_.
+Mutually exclusive to `searchSpaceFile`_.
 
 
 trialCommand
@@ -227,7 +227,7 @@ type: ``bool``
 
 default: ``False``
 
-When using annotation, `search space`_ and `search space file`_ should not be specified manually.
+When using annotation, `searchSpace`_ and `searchSpaceFile`_ should not be specified manually.
 
 
 debug
@@ -371,7 +371,7 @@ One of following:
 
 - `LocalConfig`_
 - `RemoteConfig`_
-- `OpenpaiConfig`_
+- `OpenpaiConfig <openpai-class>`_
 - `AmlConfig`_
 
 For other training services, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
@@ -395,7 +395,7 @@ Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
 type: ``Optional[bool]``
 
-Must be set when `trial gpu number` greater than zero.
+Must be set when `trialGpuNumber` greater than zero.
 
 If your are using desktop system with GUI, set this to ``True``.
 
@@ -417,7 +417,7 @@ Limit the GPUs visible to trial processes.
 
 type: ``Optional[list[int] | str]``
 
-If `trial gpu number`_ is less than the length of this value, only a subset will be visible to each trial.
+If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
@@ -485,13 +485,13 @@ Login password.
 
 type: ``Optional[str]``
 
-If not specified, `ssh key file`_ will be used instead.
+If not specified, `sshKeyFile`_ will be used instead.
 
 
 sshKeyFile
 ----------
 
-`Path`_ to ssh key file (identity file).
+`Path`_ to sshKeyFile (identity file).
 
 type: ``Optional[str]``
 
@@ -533,7 +533,7 @@ Limit the GPUs visible to trial processes.
 
 type: ``Optional[list[int] | str]``
 
-If `trial gpu number`_ is less than the length of this value, only a subset will be visible to each trial.
+If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
@@ -547,6 +547,7 @@ type: ``Optional[str]``
 
 This is useful if preparing steps vary for different machines.
 
+.. _openpai-class:
 
 OpenpaiConfig
 ^^^^^^^^^^^^^
@@ -646,7 +647,7 @@ An example can be found `here <https://github.com/microsoft/pai/blob/master/docs
 
 
 AmlConfig
-^^^^^^^^=
+^^^^^^^^^
 
 Detailed `here <../TrainingService/AMLMode.rst>`__.
 
