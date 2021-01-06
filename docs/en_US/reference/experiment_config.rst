@@ -2,14 +2,11 @@
 Experiment Config Reference
 ===========================
 
-This is the detailed list of experiment config fields.
-For quick start guide, use tutorial instead.
-
 Notes
 =====
 
-1. This document list field names as separated words.
-   They should be spelled in ``snake_case`` for Python library ``nni.experiment``, and are normally spelled in ``camelCase`` for YAML files.
+1. This document list field names is ``camelCase``.
+   They need to be converted to ``snake_case`` for Python library ``nni.experiment``.
 
 2. In this document type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__.
    Therefore JSON objects are called `dict` and arrays are called `list`.
@@ -25,19 +22,93 @@ Notes
 
 4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
 
-ExperimentConfig
-================
+Examples
+========
 
-experiment name
----------------
+Local Mode
+^^^^^^^^^^
+
+.. code-block:: yaml
+
+    experimentName: MNIST
+    searchSpaceFile: search_space.json
+    trialCommand: python mnist.py
+    trialCodeDirectory: .
+    trialGpuNumber: 1
+    maxExperimentDuration: 24h
+    maxTrialNumber: 100
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: local
+      useActiveGpu: True
+
+Local Mode (Inline Search Space)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+    searchSpace:
+      batch_size:
+        _type: choice
+        _value: [16, 32, 64]
+      learning_rate:
+        _type: loguniform
+        _value: [0.0001, 0.1]
+    trialCommand: python mnist.py
+    trialGpuNumber: 1
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: local
+      useActiveGpu: True
+
+Remote Mode
+^^^^^^^^^^^
+
+.. code-block:: yaml
+
+    experimentName: MNIST
+    searchSpaceFile: search_space.json
+    trialCommand: python mnist.py
+    trialCodeDirectory: .
+    trialGpuNumber: 1
+    maxExperimentDuration: 24h
+    maxTrialNumber: 100
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: remote
+      machineList:
+        - host: 11.22.33.44
+          user: alice
+          password: xxxxx
+        - host: my.domain.com
+          user: bob
+          sshKeyFile: ~/.ssh/id_rsa
+
+Reference
+=========
+
+ExperimentConfig
+^^^^^^^^^^^^^^^^
+
+experimentName
+--------------
 
 Mnemonic name of the experiment. This will be shown in web UI and nnictl.
 
 type: ``Optional[str]``
 
 
-search space file
------------------
+searchSpaceFile
+---------------
 
 Path_ to a JSON file containing the search space.
 
@@ -48,8 +119,8 @@ Search space format is determined by tuner. Common format for built-in tuners is
 Mutually exclusive to `search space`_.
 
 
-search space
-------------
+searchSpace
+-----------
 
 Search space object.
 
@@ -62,8 +133,8 @@ Note that ``None`` means "no such field" so empty search space should be written
 Mutually exclusive to `search space file`_.
 
 
-trial command
--------------
+trialCommand
+------------
 
 Command to launch trial.
 
@@ -72,8 +143,8 @@ type: ``str``
 The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
 
 
-trial code directory
---------------------
+trialCodeDirectory
+------------------
 
 `Path`_ to the directory containing trial source files.
 
@@ -84,8 +155,8 @@ default: ``"."``
 All files in this directory will be sent to training machine, unless there is a `.nniignore file <../Tutorial/QuickStart.rst#nniignore>`__.
 
 
-trial concurrency
------------------
+trialConcurrency
+----------------
 
 Specify how many trials should be run concurrently.
 
@@ -94,8 +165,8 @@ type: ``int``
 The real concurrency also depends on hardware resources and may be less than this value.
 
 
-trial gpu number
-----------------
+trialGpuNumber
+--------------
 
 Number of GPUs used by each trial.
 
@@ -110,8 +181,8 @@ And when set to ``None``, trials will be created and scheduled as if they did no
 but they can still use all GPU resources if they want.
 
 
-max experiment duration
------------------------
+maxExperimentDuration
+---------------------
 
 Limit the duration of this experiment if specified.
 
@@ -124,8 +195,8 @@ examples: ``"10m"``, ``"0.5h"``
 When time runs out, the experiment will stop creating trials but continue to serve web UI.
 
 
-max trial number
-----------------
+maxTrialNumber
+--------------
 
 Limit the number of trials to create if specified.
 
@@ -134,8 +205,8 @@ type: ``Optional[int]``
 When the budget runs out, the experiment will stop creating trials but continue to serve web UI.
 
 
-nni manager ip
---------------
+nniManagerIp
+------------
 
 IP of current machine, used by training machines to access NNI manager. Not used in local mode.
 
@@ -146,8 +217,8 @@ If not specified, IPv4 address of ``eth0`` will be used.
 Must be set on Windows and systems using predictable network interface name, except for local mode.
 
 
-use annotation
---------------
+useAnnotation
+-------------
 
 Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
 
@@ -170,8 +241,8 @@ default: ``False``
 When enabled, logging will be more verbose and some internal validation will be loosen.
 
 
-log level
----------
+logLevel
+--------
 
 Set log level of whole system.
 
@@ -188,8 +259,8 @@ The exception is trial, whose logging level is directly managed by trial code.
 For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``logging.CRITICAL``.
 
 
-experiment working directory
-----------------------------
+experimentWorkingDirectory
+--------------------------
 
 Specify the `directory <path>`_ to place log, checkpoint, metadata, and other run-time stuff.
 
@@ -200,8 +271,8 @@ By default uses ``~/nni-experiments``.
 NNI will create a subdirectory named by experiment ID, so it is safe to use same directory for multiple experiments.
 
 
-tuner gpu indices
------------------
+tunerGpuIndices
+---------------
 
 Limit the GPUs visible to tuner, assessor, and advisor.
 
@@ -236,8 +307,8 @@ Specify the advisor.
 type: Optional `AlgorithmConfig`_
 
 
-training service
-----------------
+trainingService
+---------------
 
 Specify `training service <../TrainingService/Overview.rst>`__.
 
@@ -245,7 +316,7 @@ type: `TrainingServiceConfig`_
 
 
 AlgorithmConfig
-===============
+^^^^^^^^^^^^^^^
 
 ``AlgorithmConfig`` describes a tuner / assessor / advisor algorithm.
 
@@ -264,8 +335,8 @@ Name of built-in or registered algorithm.
 type: ``str`` for built-in and registered algorithm, ``None`` for other custom algorithm
 
 
-class name
-----------
+className
+---------
 
 Qualified class name of not registered custom algorithm.
 
@@ -274,16 +345,16 @@ type: ``None`` for built-in and registered algorithm, ``str`` for other custom a
 example: ``"my_tuner.MyTuner"``
 
 
-code directory
---------------
+codeDirectory
+-------------
 
 `Path`_ to directory containing the custom algorithm class.
 
 type: ``None`` for built-in and registered algorithm, ``str`` for other custom algorithm
 
 
-class args
-----------
+classArgs
+---------
 
 Keyword arguments passed to algorithm class' constructor.
 
@@ -293,7 +364,7 @@ See algorithm's document for supported value.
 
 
 TrainingServiceConfig
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 One of following:
 
@@ -306,7 +377,7 @@ For other training services, we suggest to use `v1 config schema <../Tutorial/Ex
 
 
 LocalConfig
-===========
+^^^^^^^^^^^
 
 Detailed `here <../TrainingService/LocalMode.rst>`__.
 
@@ -316,8 +387,8 @@ platform
 Constant string ``"local"``.
 
 
-use active gpu
---------------
+useActiveGpu
+------------
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
@@ -328,8 +399,8 @@ Must be set when `trial gpu number` greater than zero.
 If your are using desktop system with GUI, set this to ``True``.
 
 
-max trial number per gpu
-------------------------
+maxTrialNumberPerGpu
+---------------------
 
 Specify how many trials can share one GPU.
 
@@ -338,8 +409,8 @@ type: ``int``
 default: ``1``
 
 
-gpu indices
------------
+gpuIndices
+----------
 
 Limit the GPUs visible to trial processes.
 
@@ -351,7 +422,7 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
 RemoteConfig
-============
+^^^^^^^^^^^^
 
 Detailed `here <../TrainingService/RemoteMachineMode.rst>`__.
 
@@ -361,16 +432,16 @@ platform
 Constant string ``"remote"``.
 
 
-machine list
-------------
+machineList
+-----------
 
 List of training machines.
 
 type: list of `RemoteMachineConfig`_
 
 
-reuse mode
-----------
+reuseMode
+---------
 
 Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
@@ -378,7 +449,7 @@ type: ``bool``
 
 
 RemoteMachineConfig
-===================
+^^^^^^^^^^^^^^^^^^^
 
 host
 ----
@@ -416,8 +487,8 @@ type: ``Optional[str]``
 If not specified, `ssh key file`_ will be used instead.
 
 
-ssh key file
-------------
+sshKeyFile
+----------
 
 `Path`_ to ssh key file (identity file).
 
@@ -426,16 +497,16 @@ type: ``Optional[str]``
 Only used when `password`_ is not specified.
 
 
-ssh passphrase
---------------
+sshPassphrase
+-------------
 
 Passphrase of SSH identity file.
 
 type: ``Optional[str]``
 
 
-use active gpu
---------------
+useActiveGpu
+------------
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
@@ -444,8 +515,8 @@ type: ``bool``
 default: ``False``
 
 
-max trial number per gpu
-------------------------
+maxTrialNumberPerGpu
+--------------------
 
 Specify how many trials can share one GPU.
 
@@ -454,8 +525,8 @@ type: ``int``
 default: ``1``
 
 
-gpu indices
------------
+gpuIndices
+----------
 
 Limit the GPUs visible to trial processes.
 
@@ -466,8 +537,8 @@ If `trial gpu number`_ is less than the length of this value, only a subset will
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
-trial prepare command
----------------------
+trialPrepareCommand
+-------------------
 
 Command(s) to run before launching each trial.
 
@@ -477,7 +548,7 @@ This is useful if preparing steps vary for different machines.
 
 
 OpenpaiConfig
-=============
+^^^^^^^^^^^^^
 
 Detailed `here <../TrainingService/PaiMode.rst>`__.
 
@@ -517,8 +588,8 @@ type: ``str``
 This can be found in your OpenPAI user settings page.
 
 
-docker image
-------------
+dockerImage
+-----------
 
 Name and tag of docker image to run the trials.
 
@@ -527,16 +598,16 @@ type: ``str``
 default: ``"msranni/nni:latest"``
 
 
-nni manager storage mount point
--------------------------------
+nniManagerStorageMountPoint
+---------------------------
 
 `Mount point <path>`_ of storage service (typically NFS) on current machine.
 
 type: ``str``
 
 
-container storage mount point
------------------------------
+containerStorageMountPoint
+--------------------------
 
 Mount point of storage service (typically NFS) in docker container.
 
@@ -545,8 +616,8 @@ type: ``str``
 This must be an absolute path.
 
 
-reuse mode
-----------
+reuseMode
+---------
 
 Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
@@ -555,16 +626,16 @@ type: ``bool``
 default: ``False``
 
 
-open pai config
----------------
+openpaiConfig
+-------------
 
 Embedded OpenPAI config file.
 
 type: ``Optional[JSON]``
 
 
-open pai config file
---------------------
+openpaiConfigFile
+-----------------
 
 `Path`_ to OpenPAI config file.
 
@@ -574,7 +645,7 @@ An example can be found `here <https://github.com/microsoft/pai/blob/master/docs
 
 
 AmlConfig
-=========
+^^^^^^^^=
 
 Detailed `here <../TrainingService/AMLMode.rst>`__.
 
@@ -585,8 +656,8 @@ platform
 Constant string ``"aml"``.
 
 
-docker image
-------------
+dockerImage
+-----------
 
 Name and tag of docker image to run the trials.
 
@@ -595,32 +666,32 @@ type: ``str``
 default: ``"msranni/nni:latest"``
 
 
-subscription id
----------------
+subscriptionId
+--------------
 
 Azure subscription ID.
 
 type: ``str``
 
 
-resource group
---------------
+resourceGroup
+-------------
 
 Azure resource group name.
 
 type: ``str``
 
 
-workspace name
---------------
+workspaceName
+-------------
 
 Azure workspace name.
 
 type: ``str``
 
 
-compute target
---------------
+computeTarget
+-------------
 
 AML compute cluster name.
 
