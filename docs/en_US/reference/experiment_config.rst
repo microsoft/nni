@@ -152,7 +152,8 @@ type: ``str``
 
 default: ``"."``
 
-All files in this directory will be sent to training machine, unless there is a `.nniignore file <../Tutorial/QuickStart.rst#nniignore>`__.
+All files in this directory will be sent to training machine, unless there is a ``.nniignore`` file.
+(See nniignore section of `quick start guide <../Tutorial/QuickStart.rst>`__ for details.)
 
 
 trialConcurrency
