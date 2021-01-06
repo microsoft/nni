@@ -235,72 +235,36 @@ Click the "Overview" tab.
 Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
 
 
-.. image:: ../../img/QuickStart1.png
-   :target: ../../img/QuickStart1.png
-   :alt: 
+.. image:: ../../img/webui-img/full-oview.png
+   :target: ../../img/webui-img/full-oview.png
+   :alt: overview
 
-
-The top 10 trials will be listed on the Overview page. You can browse all the trials on the "Trials Detail" page.
-
-
-.. image:: ../../img/QuickStart2.png
-   :target: ../../img/QuickStart2.png
-   :alt: 
 
 
 View trials detail page
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Click the "Default Metric" tab to see the point graph of all trials. Hover to see specific default metrics and search space messages.
+We could see best trial metrics and hyper-parameter graph in this page. And the table content includes more column when you click the button ``Add/Remove columns``.
 
 
-.. image:: ../../img/QuickStart3.png
-   :target: ../../img/QuickStart3.png
-   :alt: 
-
-
-Click the "Hyper Parameter" tab to see the parallel graph.
-
-
-* You can select the percentage to see the top trials.
-* Choose two axis to swap their positions.
-
-
-.. image:: ../../img/QuickStart4.png
-   :target: ../../img/QuickStart4.png
-   :alt: 
-
-
-Click the "Trial Duration" tab to see the bar graph.
-
-
-.. image:: ../../img/QuickStart5.png
-   :target: ../../img/QuickStart5.png
-   :alt: 
-
-
-Below is the status of all trials. Specifically:
-
-
-* Trial detail: trial's id, duration, start time, end time, status, accuracy, and search space file.
-* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
-* Kill: you can kill a job that has the ``Running`` status.
-* Support: Used to search for a specific trial.
-
-
-.. image:: ../../img/QuickStart6.png
-   :target: ../../img/QuickStart6.png
-   :alt: 
+.. image:: ../../img/webui-img/full-detail.png
+   :target: ../../img/webui-img/full-detail.png
+   :alt: detail
 
 
 
-* Intermediate Result Graph
+View experiments management page
+^^^^^^^^^^^^^^^^^^^^^^^
+
+On the ``All experiments`` page, you can see all the experiments on your machine. 
+
+.. image:: ../../img/webui-img/managerExperimentList/expList.png
+   :target: ../../img/webui-img/managerExperimentList/expList.png
+   :alt: Experiments list
 
 
-.. image:: ../../img/QuickStart7.png
-   :target: ../../img/QuickStart7.png
-   :alt: 
 
+More detail please refer `the doc <./WebUI.rst>`__.
 
 Related Topic
 -------------
