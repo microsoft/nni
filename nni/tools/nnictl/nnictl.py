@@ -244,7 +244,7 @@ def parse_args():
         print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
 
     parser_package_subparsers = subparsers.add_parser('package', help='control nni tuner and assessor packages')
-    parser_package_subparsers.add_argument('args', nargs=argparse.REMAINDER)
+    parser_package_subparsers.add_argument('args', help='all subcommands have deprecated, nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage', nargs=argparse.REMAINDER)
     parser_package_subparsers.set_defaults(func=show_messsage_for_nnictl_package)
 
     #parse tensorboard command
