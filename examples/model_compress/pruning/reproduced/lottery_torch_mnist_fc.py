@@ -28,13 +28,17 @@ class fc1(nn.Module):
 def train(model, train_loader, optimizer, criterion):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.train()
-    for imgs, targets in train_loader:
+    for batch_idx, (imgs, targets) in enumerate(train_loader):
         optimizer.zero_grad()
         imgs, targets = imgs.to(device), targets.to(device)
         output = model(imgs)
         train_loss = criterion(output, targets)
         train_loss.backward()
         optimizer.step()
+        if batch_idx % 100 == 0:
+            print('{:2.0f}%  Loss {}'.format(
+                100 * batch_idx / len(train_loader), train_loss.item()))
+
     return train_loss.item()
 
 def test(model, test_loader, criterion):

@@ -37,7 +37,7 @@ Usage
    out = model(dummy_input)
    print('elapsed time: ', time.time() - start)
 
-For complete examples please refer to :githublink:`the code <examples/model_compress/model_speedup.py>`
+For complete examples please refer to :githublink:`the code <examples/model_compress/pruning/model_speedup.py>`
 
 NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
@@ -51,7 +51,7 @@ For PyTorch we can only replace modules, if functions in ``forward`` should be r
 Speedup Results of Examples
 ---------------------------
 
-The code of these experiments can be found :githublink:`here <examples/model_compress/model_speedup.py>`.
+The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/model_speedup.py>`.
 
 slim pruner example
 ^^^^^^^^^^^^^^^^^^^

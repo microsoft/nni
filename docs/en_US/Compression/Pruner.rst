@@ -133,7 +133,7 @@ We implemented one of the experiments in `Learning Efficient Convolutional Netwo
      - 88.5%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/slim_torch_cifar10.py <examples/model_compress/pruning/reproduced/slim_torch_cifar10.py>`
 
 ----
 
@@ -252,7 +252,7 @@ We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS
      - 64.0%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/L1_torch_cifar10.py <examples/model_compress/pruning/reproduced/L1_torch_cifar10.py>`
 
 ----
 
@@ -316,7 +316,7 @@ PyTorch code
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for ActivationAPoZRankFilter Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -351,7 +351,7 @@ PyTorch code
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for ActivationMeanRankFilterPruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -471,7 +471,7 @@ PyTorch code
 
    pruner.update_epoch(epoch)
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for AGP Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -511,7 +511,7 @@ PyTorch code
    pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,base_algo='l1', experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for NetAdapt Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -552,7 +552,7 @@ PyTorch code
    pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_algo='l1', cool_down_rate=0.9, experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for SimulatedAnnealing Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -593,7 +593,7 @@ PyTorch code
                cool_down_rate=0.9, admm_num_iterations=30, admm_training_epochs=5, experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for AutoCompress Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -631,7 +631,7 @@ PyTorch code
    pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/amc/>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/amc/>` for more information.
 
 User configuration for AMC Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -659,7 +659,7 @@ We implemented one of the experiments in `AMC: AutoML for Model Compression and 
      - 50%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/amc/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/ <examples/model_compress/pruning/amc/>`
 
 ADMM Pruner
 -----------
@@ -693,7 +693,7 @@ PyTorch code
    pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for ADMM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -754,7 +754,7 @@ User configuration for LotteryTicket Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/pruning/reproduced/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png
