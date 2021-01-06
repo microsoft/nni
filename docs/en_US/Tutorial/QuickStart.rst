@@ -227,12 +227,11 @@ After you start your experiment in NNI successfully, you can find a message in t
 
 Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ.rst>`__.
 
-View summary page
+View overview page
 ^^^^^^^^^^^^^^^^^
 
-Click the "Overview" tab.
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Download** button. You can download the experiment results anytime while the experiment is running, or you can wait until the end of the execution, etc.
+Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Experiment summary** button.
 
 
 .. image:: ../../img/webui-img/full-oview.png
@@ -244,7 +243,7 @@ Information about this experiment will be shown in the WebUI, including the expe
 View trials detail page
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-We could see best trial metrics and hyper-parameter graph in this page. And the table content includes more column when you click the button ``Add/Remove columns``.
+We could see best trial metrics and hyper-parameter graph in this page. And the table content includes more columns when you click the button ``Add/Remove columns``.
 
 
 .. image:: ../../img/webui-img/full-detail.png
