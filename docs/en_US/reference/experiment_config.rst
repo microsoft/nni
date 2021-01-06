@@ -2,23 +2,19 @@
 Experiment Config Reference
 ===========================
 
-This is the detailed list of experiment config fields.
-For quick start guide, reference the tutorial instead. [TODO]
-
 Notes
 =====
 
-1. This document list field names as separated words.
-   They should be spelled in ``snake_case`` for Python library ``nni.experiment``, and are normally spelled in ``camelCase`` for YAML files.
+1. This document list field names is ``camelCase``.
+   They need to be converted to ``snake_case`` for Python library ``nni.experiment``.
 
-2. In this document type of fields are expressed in `Python type hint <https://docs.python.org/3/library/typing.html>`__ format.
+2. In this document type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__.
    Therefore JSON objects are called `dict` and arrays are called `list`.
 
-.. _Path:
-.. _directory:
+.. _path:
 
 3. Some fields take a path to file or directory.
-   Unless otherwise noted, both absolute path and relative path are supported, and ``~`` can be used for home directory.
+   Unless otherwise noted, both absolute path and relative path are supported, and ``~`` will be expanded to home directory.
 
    - When written in YAML file, relative paths are relative to the directory containing that file.
    - When assigned in Python code, relative paths are relative to current working directory.
@@ -26,55 +22,129 @@ Notes
 
 4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
 
-ExperimentConfig
-================
+Examples
+========
 
-experiment name
----------------
+Local Mode
+^^^^^^^^^^
+
+.. code-block:: yaml
+
+    experimentName: MNIST
+    searchSpaceFile: search_space.json
+    trialCommand: python mnist.py
+    trialCodeDirectory: .
+    trialGpuNumber: 1
+    maxExperimentDuration: 24h
+    maxTrialNumber: 100
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: local
+      useActiveGpu: True
+
+Local Mode (Inline Search Space)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+    searchSpace:
+      batch_size:
+        _type: choice
+        _value: [16, 32, 64]
+      learning_rate:
+        _type: loguniform
+        _value: [0.0001, 0.1]
+    trialCommand: python mnist.py
+    trialGpuNumber: 1
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: local
+      useActiveGpu: True
+
+Remote Mode
+^^^^^^^^^^^
+
+.. code-block:: yaml
+
+    experimentName: MNIST
+    searchSpaceFile: search_space.json
+    trialCommand: python mnist.py
+    trialCodeDirectory: .
+    trialGpuNumber: 1
+    maxExperimentDuration: 24h
+    maxTrialNumber: 100
+    tuner:
+      name: TPE
+      classArgs:
+        optimize_mode: maximize
+    trainingService:
+      platform: remote
+      machineList:
+        - host: 11.22.33.44
+          user: alice
+          password: xxxxx
+        - host: my.domain.com
+          user: bob
+          sshKeyFile: ~/.ssh/id_rsa
+
+Reference
+=========
+
+ExperimentConfig
+^^^^^^^^^^^^^^^^
+
+experimentName
+--------------
 
 Mnemonic name of the experiment. This will be shown in web UI and nnictl.
 
 type: ``Optional[str]``
 
 
-search space file
------------------
+searchSpaceFile
+---------------
 
 Path_ to a JSON file containing the search space.
 
 type: ``Optional[str]``
 
-Search space format is determined by tuner. Common format for built-in tuners is documeted `here <../Tutorial/SearchSpaceSpec.html>`__.
+Search space format is determined by tuner. Common format for built-in tuners is documeted `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
-Mutually exclusive to `search space`_.
+Mutually exclusive to `searchSpace`_.
 
 
-search space
-------------
+searchSpace
+-----------
 
 Search space object.
 
-type: ``Optional[Any]``
+type: ``Optional[JSON]``
 
-The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.html>`__.
+The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
 Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
 
-Mutually exclusive to `search space file`_.
+Mutually exclusive to `searchSpaceFile`_.
 
 
-trial command
--------------
+trialCommand
+------------
 
-Command(s) to launch trial.
+Command to launch trial.
 
 type: ``str``
 
-Bash will be used on Linux and macOS. PowerShell will be used on Windows.
+The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
 
 
-trial code directory
---------------------
+trialCodeDirectory
+------------------
 
 `Path`_ to the directory containing trial source files.
 
@@ -82,11 +152,12 @@ type: ``str``
 
 default: ``"."``
 
-All files in this directory will be sent to training machine, unless there is a ``.nniignore`` file [TODO:link]
+All files in this directory will be sent to training machine, unless there is a ``.nniignore`` file.
+(See nniignore section of `quick start guide <../Tutorial/QuickStart.rst>`__ for details.)
 
 
-trial concurrency
------------------
+trialConcurrency
+----------------
 
 Specify how many trials should be run concurrently.
 
@@ -95,21 +166,24 @@ type: ``int``
 The real concurrency also depends on hardware resources and may be less than this value.
 
 
-trial gpu number
-----------------
+trialGpuNumber
+--------------
 
 Number of GPUs used by each trial.
 
 type: ``Optional[int]``
 
-If set to zero, trials will have no access to any GPU. 
+This field might have slightly different meaning for various training services,
+especially when set to ``0`` or ``None``.
+See training service's document for details.
 
-If not specified, trials will be created and scheduled as if they do not use GPU,
-but they can still access all GPUs on the training machine.
+In local mode, setting the field to zero will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
+And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
+but they can still use all GPU resources if they want.
 
 
-max experiment duration
------------------------
+maxExperimentDuration
+---------------------
 
 Limit the duration of this experiment if specified.
 
@@ -122,8 +196,8 @@ examples: ``"10m"``, ``"0.5h"``
 When time runs out, the experiment will stop creating trials but continue to serve web UI.
 
 
-max trial number
-----------------
+maxTrialNumber
+--------------
 
 Limit the number of trials to create if specified.
 
@@ -132,26 +206,28 @@ type: ``Optional[int]``
 When the budget runs out, the experiment will stop creating trials but continue to serve web UI.
 
 
-nni manager ip
---------------
+nniManagerIp
+------------
 
 IP of current machine, used by training machines to access NNI manager. Not used in local mode.
 
 type: ``Optional[str]``
 
-If not specified, this will be the default IPv4 address of outgoing connection.
+If not specified, IPv4 address of ``eth0`` will be used.
+
+Must be set on Windows and systems using predictable network interface name, except for local mode.
 
 
-use annotation
---------------
+useAnnotation
+-------------
 
-Enable `annotation <../Tutorial/AnnotationSpec.html>`__.
+Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
 
 type: ``bool``
 
 default: ``False``
 
-When using annotation, `search space`_ and `search space file`_ should not be specified manually.
+When using annotation, `searchSpace`_ and `searchSpaceFile`_ should not be specified manually.
 
 
 debug
@@ -166,8 +242,8 @@ default: ``False``
 When enabled, logging will be more verbose and some internal validation will be loosen.
 
 
-log level
----------
+logLevel
+--------
 
 Set log level of whole system.
 
@@ -181,13 +257,13 @@ Most modules of NNI will be affected by this value, including NNI manager, tuner
 
 The exception is trial, whose logging level is directly managed by trial code.
 
-For Python modules, "trace" acts as ``logging.DEBUG`` and "fatal" acts as ``logging.CRITICAL``.
+For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``logging.CRITICAL``.
 
 
-experiment working directory
-----------------------------
+experimentWorkingDirectory
+--------------------------
 
-Specify the `directory`_ to place log, checkpoint, metadata, and other run-time stuff.
+Specify the `directory <path>`_ to place log, checkpoint, metadata, and other run-time stuff.
 
 type: ``Optional[str]``
 
@@ -196,12 +272,12 @@ By default uses ``~/nni-experiments``.
 NNI will create a subdirectory named by experiment ID, so it is safe to use same directory for multiple experiments.
 
 
-tuner gpu indices
------------------
+tunerGpuIndices
+---------------
 
 Limit the GPUs visible to tuner, assessor, and advisor.
 
-type: ``Optional[Union[list[int], str]]``
+type: ``Optional[list[int] | str]``
 
 This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
 
@@ -211,7 +287,7 @@ Because tuner, assessor, and advisor run in same process, this option will affec
 tuner
 -----
 
-Specify the tuner [TODO:link]
+Specify the tuner.
 
 type: Optional `AlgorithmConfig`_
 
@@ -219,7 +295,7 @@ type: Optional `AlgorithmConfig`_
 assessor
 --------
 
-Specify the assessor [TODO:link]
+Specify the assessor.
 
 type: Optional `AlgorithmConfig`_
 
@@ -227,54 +303,59 @@ type: Optional `AlgorithmConfig`_
 advisor
 -------
 
-Specify the advisor [TODO:link]
+Specify the advisor.
 
 type: Optional `AlgorithmConfig`_
 
 
-training service
-----------------
+trainingService
+---------------
 
-Specify `training service <../TrainingService/Overview.html>`__.
+Specify `training service <../TrainingService/Overview.rst>`__.
 
 type: `TrainingServiceConfig`_
 
 
 AlgorithmConfig
-===============
+^^^^^^^^^^^^^^^
 
-[TODO:short description]
+``AlgorithmConfig`` describes a tuner / assessor / advisor algorithm.
+
+For custom algorithms, there are two ways to describe them:
+
+  1. `Register the algorithm <../Tuner/InstallCustomizedTuner.rst>`__ to use it like built-in. (preferred)
+
+  2. Specify code directory and class name directly.
+
 
 name
 ----
 
-Name of built-in or registered [TODO:link] algorithm.
+Name of built-in or registered algorithm.
 
-type: ``str`` for built-in and registered algorithm, ``None`` for custom algorithm
+type: ``str`` for built-in and registered algorithm, ``None`` for other custom algorithm
 
 
-class name
-----------
+className
+---------
 
-Qualified class name of custom algorithm.
+Qualified class name of not registered custom algorithm.
 
-type: ``str`` for custom algorithm, ``None`` for built-in and registered algorithm
+type: ``None`` for built-in and registered algorithm, ``str`` for other custom algorithm
 
 example: ``"my_tuner.MyTuner"``
 
 
-code directory
---------------
+codeDirectory
+-------------
 
 `Path`_ to directory containing the custom algorithm class.
 
-type: ``Optional[str]`` for custom algorithm, ``None`` for built-in and registered algorithm
-
-If not specified, the `class name`_ will be looked up in Python's `module search path <https://docs.python.org/3/tutorial/modules.html#the-module-search-path>`__
+type: ``None`` for built-in and registered algorithm, ``str`` for other custom algorithm
 
 
-class args
-----------
+classArgs
+---------
 
 Keyword arguments passed to algorithm class' constructor.
 
@@ -284,19 +365,22 @@ See algorithm's document for supported value.
 
 
 TrainingServiceConfig
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 One of following:
 
-  - `LocalConfig`_
-  - `RemoteConfig`_
-  - `OpenPaiConfig`_
+- `LocalConfig`_
+- `RemoteConfig`_
+- `OpenpaiConfig <openpai-class>`_
+- `AmlConfig`_
+
+For other training services, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
 
 LocalConfig
-===========
+^^^^^^^^^^^
 
-Detailed `here <../TrainingService/LocalMode.html>`__.
+Detailed `here <../TrainingService/LocalMode.rst>`__.
 
 platform
 --------
@@ -304,20 +388,20 @@ platform
 Constant string ``"local"``.
 
 
-use active gpu
---------------
+useActiveGpu
+------------
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
-type: ``bool``
+type: ``Optional[bool]``
+
+Must be set when `trialGpuNumber` greater than zero.
 
 If your are using desktop system with GUI, set this to ``True``.
 
-// need to discuss default value
 
-
-max trial number per gpu
-------------------------
+maxTrialNumberPerGpu
+---------------------
 
 Specify how many trials can share one GPU.
 
@@ -326,22 +410,22 @@ type: ``int``
 default: ``1``
 
 
-gpu indices
------------
+gpuIndices
+----------
 
 Limit the GPUs visible to trial processes.
 
-type: ``Optional[Union[list[int], str]]``
+type: ``Optional[list[int] | str]``
 
-If `trial gpu number`_ is less than the length of this value, only a subset will be visible to each trial.
+If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
 RemoteConfig
-============
+^^^^^^^^^^^^
 
-Detailed `here <../TrainingService/RemoteMachineMode.html>`__.
+Detailed `here <../TrainingService/RemoteMachineMode.rst>`__.
 
 platform
 --------
@@ -349,24 +433,24 @@ platform
 Constant string ``"remote"``.
 
 
-machine list
-------------
+machineList
+-----------
 
 List of training machines.
 
 type: list of `RemoteMachineConfig`_
 
 
-reuse mode
-----------
+reuseMode
+---------
 
-Enable reuse mode [TODO]
+Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
-type: bool
+type: ``bool``
 
 
 RemoteMachineConfig
-===================
+^^^^^^^^^^^^^^^^^^^
 
 host
 ----
@@ -383,7 +467,7 @@ SSH service port.
 
 type: ``int``
 
-default: 22
+default: ``22``
 
 
 user
@@ -401,39 +485,39 @@ Login password.
 
 type: ``Optional[str]``
 
-If not specified, `ssh key file`_ will be used instead.
+If not specified, `sshKeyFile`_ will be used instead.
 
 
-ssh key file
-------------
+sshKeyFile
+----------
 
-`Path`_ to ssh key file (identity file).
+`Path`_ to sshKeyFile (identity file).
 
-type: ``str``
-
-default: ``"~/.ssh/id_rsa"``
+type: ``Optional[str]``
 
 Only used when `password`_ is not specified.
 
 
-ssh passphrase
---------------
+sshPassphrase
+-------------
 
 Passphrase of SSH identity file.
 
 type: ``Optional[str]``
 
 
-use active gpu
---------------
+useActiveGpu
+------------
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
 type: ``bool``
 
+default: ``False``
 
-max trial number per gpu
-------------------------
+
+maxTrialNumberPerGpu
+--------------------
 
 Specify how many trials can share one GPU.
 
@@ -442,20 +526,20 @@ type: ``int``
 default: ``1``
 
 
-gpu indices
------------
+gpuIndices
+----------
 
 Limit the GPUs visible to trial processes.
 
-type: ``Optional[Union[list[int], str]]``
+type: ``Optional[list[int] | str]``
 
-If `trial gpu number`_ is less than the length of this value, only a subset will be visible to each trial.
+If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
-trial prepare command
----------------------
+trialPrepareCommand
+-------------------
 
 Command(s) to run before launching each trial.
 
@@ -463,11 +547,12 @@ type: ``Optional[str]``
 
 This is useful if preparing steps vary for different machines.
 
+.. _openpai-class:
 
-OpenPaiConfig
-=============
+OpenpaiConfig
+^^^^^^^^^^^^^
 
-Detailed `here <../TrainingService/PaiMode.html>`__.
+Detailed `here <../TrainingService/PaiMode.rst>`__.
 
 platform
 --------
@@ -481,6 +566,10 @@ host
 Hostname of OpenPAI service.
 
 type: ``str``
+
+This may includes ``https://`` or ``http://`` prefix.
+
+HTTPS will be used by default.
 
 
 username
@@ -501,28 +590,8 @@ type: ``str``
 This can be found in your OpenPAI user settings page.
 
 
-trial cpu number
-----------------
-
-Number of CPUs used by each trial.
-
-type: ``int``
-
-default: ``1``
-
-
-trial memory size
------------------
-
-Memory used by each trial.
-
-type: ``str``
-
-examples: ``"1gb"``, ``"512mb"``
-
-
-docker image
-------------
+dockerImage
+-----------
 
 Name and tag of docker image to run the trials.
 
@@ -531,26 +600,16 @@ type: ``str``
 default: ``"msranni/nni:latest"``
 
 
-reuse mode
-----------
-
-Enable reuse mode.
-
-type: ``bool``
-
-default: ``False``
-
-
-nni manager storage mount point
--------------------------------
+nniManagerStorageMountPoint
+---------------------------
 
 `Mount point <path>`_ of storage service (typically NFS) on current machine.
 
 type: ``str``
 
 
-container storage mount point
------------------------------
+containerStorageMountPoint
+--------------------------
 
 Mount point of storage service (typically NFS) in docker container.
 
@@ -559,15 +618,83 @@ type: ``str``
 This must be an absolute path.
 
 
-open pai config
----------------
+reuseMode
+---------
+
+Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
+
+type: ``bool``
+
+default: ``False``
+
+
+openpaiConfig
+-------------
 
 Embedded OpenPAI config file.
 
-type: ``Optional[Dict[str, Any]]``
+type: ``Optional[JSON]``
 
 
-open pai config file
---------------------
+openpaiConfigFile
+-----------------
 
-`Path`_ to OpenPAI
+`Path`_ to OpenPAI config file.
+
+type: ``Optional[str]``
+
+An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__
+
+
+AmlConfig
+^^^^^^^^^
+
+Detailed `here <../TrainingService/AMLMode.rst>`__.
+
+
+platform
+--------
+
+Constant string ``"aml"``.
+
+
+dockerImage
+-----------
+
+Name and tag of docker image to run the trials.
+
+type: ``str``
+
+default: ``"msranni/nni:latest"``
+
+
+subscriptionId
+--------------
+
+Azure subscription ID.
+
+type: ``str``
+
+
+resourceGroup
+-------------
+
+Azure resource group name.
+
+type: ``str``
+
+
+workspaceName
+-------------
+
+Azure workspace name.
+
+type: ``str``
+
+
+computeTarget
+-------------
+
+AML compute cluster name.
+
+type: ``str``
