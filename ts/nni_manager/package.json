@@ -68,17 +68,20 @@
   },
   "resolutions": {
     "mem": "^4.0.0",
-    "lodash": "^4.17.13",
-    "lodash.merge": "^4.6.2",
+    "lodash": ">=4.17.13",
+    "lodash.merge": ">=4.6.2",
     "node.extend": "^1.1.7",
     "hoek": "^4.2.1",
     "js-yaml": "^3.13.1",
     "acorn": ">=7.1.1",
-    "node-forge": "^0.10.0",
+    "node-forge": ">=0.10.0",
     "dot-prop": "^4.2.1",
     "npm": ">=6.14.8",
     "yargs": ">=16.0.3",
-    "yargs-parser": ">=20.2.0"
+    "yargs-parser": ">=20.2.0",
+    "y18n": ">=5.0.5",
+    "acorn": ">=8.0.4",
+    "serialize-javascript": ">=5.0.1"
   },
   "engines": {
     "node": ">=10.0.0"

@@ -70,7 +70,7 @@ def format_tensorboard_log_path(path_list):
         new_path_list.append('name%d:%s' % (index + 1, value))
     return ','.join(new_path_list)
 
-def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
+def start_tensorboard_process(args, experiment_id, path_list, temp_nni_path):
     '''call cmds to start tensorboard process in local machine'''
     if detect_port(args.port):
         print_error('Port %s is used by another process, please reset port!' % str(args.port))
@@ -83,20 +83,19 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
     url_list = get_local_urls(args.port)
     print_green('Start tensorboard success!')
     print_normal('Tensorboard urls: ' + '     '.join(url_list))
-    tensorboard_process_pid_list = nni_config.get_config('tensorboardPidList')
+    experiment_config = Experiments()
+    tensorboard_process_pid_list = experiment_config.get_all_experiments().get(experiment_id).get('tensorboardPidList')
     if tensorboard_process_pid_list is None:
         tensorboard_process_pid_list = [tensorboard_process.pid]
     else:
         tensorboard_process_pid_list.append(tensorboard_process.pid)
-    nni_config.set_config('tensorboardPidList', tensorboard_process_pid_list)
+    experiment_config.update_experiment(experiment_id, 'tensorboardPidList', tensorboard_process_pid_list)
 
 def stop_tensorboard(args):
     '''stop tensorboard'''
     experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    nni_config = Config(experiment_id)
-    tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+    tensorboard_pid_list = experiment_config.get_all_experiments().get(experiment_id).get('tensorboardPidList')
     if tensorboard_pid_list:
         for tensorboard_pid in tensorboard_pid_list:
             try:
@@ -104,7 +103,7 @@ def stop_tensorboard(args):
                 call(cmds)
             except Exception as exception:
                 print_error(exception)
-        nni_config.set_config('tensorboardPidList', [])
+        experiment_config.update_experiment(experiment_id, 'tensorboardPidList', [])
         print_normal('Stop tensorboard success!')
     else:
         print_error('No tensorboard configuration!')
@@ -164,4 +163,4 @@ def start_tensorboard(args):
     os.makedirs(temp_nni_path, exist_ok=True)
 
     path_list = get_path_list(args, nni_config, trial_content, temp_nni_path)
-    start_tensorboard_process(args, nni_config, path_list, temp_nni_path)
+    start_tensorboard_process(args, experiment_id, path_list, temp_nni_path)

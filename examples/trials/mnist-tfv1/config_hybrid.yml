@@ -3,7 +3,7 @@ experimentName: example_mnist
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-trainingServicePlatform: heterogeneous
+trainingServicePlatform: hybrid
 searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
@@ -18,7 +18,7 @@ trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
-heterogeneousConfig:
+hybridConfig:
   trainingServicePlatforms:
     - local
     - remote
@@ -26,7 +26,6 @@ remoteConfig:
   reuse: true
 machineList:
   - ip: 10.1.1.1
-    username: bob
-    passwd: bob123
-    #port can be skip if using default ssh port 22
-    #port: 22
+    username: xxx
+    passwd: xxx
+    port: 22

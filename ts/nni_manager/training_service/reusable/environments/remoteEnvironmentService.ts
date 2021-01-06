@@ -271,9 +271,9 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         environment.command, { encoding: 'utf8' });
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
-        // Execute command in remote machine
+        // Execute command in remote machine, set isInteractive=true to run script in conda environment
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
-            executor.getScriptName("run")), true, false);
+            executor.getScriptName("run")), true, true);
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
         }

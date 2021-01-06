@@ -27,6 +27,11 @@ def get_records():
     return _records
 
 
+def clear_records():
+    global _records
+    _records = {}
+
+
 def add_record(key, value):
     """
     """
@@ -56,7 +61,7 @@ def _blackbox_cls(cls, module_name, register_format=None):
             # eject un-serializable arguments
             for k in list(full_args.keys()):
                 # The list is not complete and does not support nested cases.
-                if not isinstance(full_args[k], (int, float, str, dict, list)):
+                if not isinstance(full_args[k], (int, float, str, dict, list, tuple)):
                     if not (register_format == 'full' and k == 'model'):
                         # no warning if it is base model in trainer
                         warnings.warn(f'{cls} has un-serializable arguments {k} whose value is {full_args[k]}. \
