@@ -26,7 +26,6 @@ remoteConfig:
   reuse: true
 machineList:
   - ip: 10.1.1.1
-    username: bob
-    passwd: bob123
-    #port can be skip if using default ssh port 22
-    #port: 22
+    username: xxx
+    passwd: xxx
+    port: 22

@@ -5,7 +5,7 @@ import socket
 from subprocess import Popen
 from threading import Thread
 import time
-from typing import Optional, overload
+from typing import Optional, Union, List, overload
 
 import colorama
 import psutil
@@ -54,7 +54,7 @@ class Experiment:
         ...
 
     @overload
-    def __init__(self, tuner: Tuner, training_service: str) -> None:
+    def __init__(self, tuner: Tuner, training_service: Union[str, List[str]]) -> None:
         """
         Prepare an experiment, leaving configuration fields to be set later.
 
@@ -86,7 +86,7 @@ class Experiment:
         self._dispatcher: Optional[MsgDispatcher] = None
         self._dispatcher_thread: Optional[Thread] = None
 
-        if isinstance(config, str):
+        if isinstance(config, (str, list)):
             config, training_service = None, config
 
         if config is None:
