@@ -1,27 +1,27 @@
-searchSpace:
-  momentum:
-    _type: uniform
-    _value: [0, 1]
-  hidden_size:
-    _type: choice
-    _value: [128, 256, 512, 1024]
-  batch_size:
-    _type: choice
-    _value: [16, 32, 64, 128]
-  lr:
-    _type: choice
-    _value: [0.0001, 0.001, 0.01, 0.1]
-trainingService:
-  platform: local
-trialCommand: python3 mnist.py
+authorName: default
+experimentName: example_mnist_pytorch
 trialConcurrency: 1
-trialGpuNumber: 0
+maxExecDuration: 1h
+maxTrialNum: 50
+#choice: local, remote
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
 tuner:
-  name: TPE
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
   classArgs:
+    #choice: maximize, minimize
     optimize_mode: maximize
 assessor:
-  name: Curvefitting
+  #choice: Medianstop, Curvefitting
+  builtinAssessorName: Curvefitting
   classArgs:
     epoch_num: 20
     threshold: 0.9
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
