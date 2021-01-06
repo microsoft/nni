@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import argparse
+import logging
 import os
 import pkg_resources
 from colorama import init
@@ -32,6 +33,8 @@ def nni_info(*args):
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
+    logging.getLogger().setLevel(logging.ERROR)
+
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
     parser.add_argument('--version', '-v', action='store_true')
