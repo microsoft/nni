@@ -82,7 +82,9 @@ jobs:
       docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
       docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
       docker push ${IMAGE_NAME}:$(NNI_RELEASE)
-      [[ $(build_type) != 'rc' ]] && docker push ${IMAGE_NAME}
+      if [[ $(build_type) != 'rc' ]]; then
+        docker push ${IMAGE_NAME}
+      fi
     displayName: Build and upload docker image
 
 - job: macos
