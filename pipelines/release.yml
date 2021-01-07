@@ -16,9 +16,11 @@ jobs:
     displayName: Configure Python version
 
   - script: |
+      echo $(build_type)
+      echo $(NNI_RELEASE)
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^v[0-9](.[0-9])+$ ]]; then
+      if [[ $BRANCH_TAG == v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^v[0-9](.[0-9])+$ ]]; then
         echo 'Build version match branch tag'
       else
         echo 'Build version does not match branch tag'
@@ -28,6 +30,7 @@ jobs:
     displayName: Validate release version number and branch tag
 
   - script: |
+      echo $(build_type)
       echo $(NNI_RELEASE)
       if [[ $(NNI_RELEASE) =~ ^[0-9](.[0-9])+(a|b|rc)[0-9]$ ]]; then
         echo 'Valid prerelease version $(NNI_RELEASE)'
@@ -57,7 +60,7 @@ jobs:
     displayName: Build wheel
 
   - script: |
-      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
         echo 'uploading to pypi...'
         python -m twine upload -u nni -p $(pypi_password) dist/*
       else
@@ -67,7 +70,7 @@ jobs:
     displayName: Upload wheel
 
   - script: |
-      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
         docker login -u msranni -p $(docker_hub_password)
         export IMAGE_NAME=msranni/nni
       else
@@ -79,7 +82,7 @@ jobs:
       docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
       docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
       docker push ${IMAGE_NAME}:$(NNI_RELEASE)
-      [ $(build_type) != 'rc' ] && docker push ${IMAGE_NAME}
+      [[ $(build_type) != 'rc' ]] && docker push ${IMAGE_NAME}
     displayName: Build and upload docker image
 
 - job: macos
@@ -100,7 +103,7 @@ jobs:
     displayName: Build wheel
 
   - script: |
-      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
         echo '## uploading to pypi ##'
         python -m twine upload -u nni -p $(pypi_password) dist/*
       else
