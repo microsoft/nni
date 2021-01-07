@@ -36,7 +36,7 @@ jobs:
         echo 'Invalid build version $(NNI_RELEASE)'
         exit 1
       fi
-    condition: ne( variables['build_type'], 'rerelease' )
+    condition: ne( variables['build_type'], 'release' )
     displayName: Validate prerelease version number
 
 - job: linux
@@ -57,17 +57,17 @@ jobs:
     displayName: Build wheel
 
   - script: |
-      if [ $(build_type) = 'release' ]; then
-        echo 'uploading release package to pypi...'
+      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
+        echo 'uploading to pypi...'
         python -m twine upload -u nni -p $(pypi_password) dist/*
       else
-        echo 'uploading prerelease package to testpypi...'
+        echo 'uploading to testpypi...'
         python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
       fi
     displayName: Upload wheel
 
   - script: |
-      if [ $(build_type) = 'release' ]; then
+      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
         docker login -u msranni -p $(docker_hub_password)
         export IMAGE_NAME=msranni/nni
       else
@@ -78,8 +78,8 @@ jobs:
       echo "## Building ${IMAGE_NAME}:$(NNI_RELEASE) ##"
       docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
       docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
-      docker push ${IMAGE_NAME}
       docker push ${IMAGE_NAME}:$(NNI_RELEASE)
+      [ $(build_type) != 'rc' ] && docker push ${IMAGE_NAME}
     displayName: Build and upload docker image
 
 - job: macos
@@ -100,7 +100,7 @@ jobs:
     displayName: Build wheel
 
   - script: |
-      if [ $(build_type) = 'release' ]; then
+      if [ $(build_type) = 'release' || $(build_type) = 'rc' ]; then
         echo '## uploading to pypi ##'
         python -m twine upload -u nni -p $(pypi_password) dist/*
       else
@@ -127,11 +127,10 @@ jobs:
     displayName: Build wheel
 
   - powershell: |
-      if($env:BUILD_TYPE -eq 'release'){
+      if ($env:BUILD_TYPE -eq 'release' -Or $env:BUILD_TYPE -eq 'rc') {
         Write-Host '## uploading to pypi ##'
         python -m twine upload -u nni -p $(pypi_password) dist/*
-      }
-      else{
+      } else {
         Write-Host '## uploading to testpypi ##'
         python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
       }
