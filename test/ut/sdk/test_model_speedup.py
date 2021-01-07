@@ -305,12 +305,12 @@ class SpeedupTestCase(TestCase):
     # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282
 
     def test_speedup_integration(self):
-        # this test consume very much memory, if the available memory is not enough, skip this test
-        # the test pipeline fails on windows(7GB mem available)
-        ava_mem = psutil.virtual_memory()
-        if ava_mem.total / (1024**3) < 8:
-            print('Skip test_speedup_integration due to memory size')
+        # skip this test on windows(7GB mem available) due to memory limit
+        # Note: hack trick, may be updated in the future
+        if 'win' in sys.platform or 'Win'in sys.platform:
+            print('Skip test_speedup_integration on windows due to memory limit!')
             return
+
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
         for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121' , 'densenet169', 
@@ -392,8 +392,10 @@ class SpeedupTestCase(TestCase):
             (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def tearDown(self):
-        os.remove(MODEL_FILE)
-        os.remove(MASK_FILE)
+        if os.path.exists(MODEL_FILE):
+            os.remove(MODEL_FILE)
+        if os.path.exists(MASK_FILE):
+            os.remove(MASK_FILE)
 
 
 if __name__ == '__main__':
