@@ -36,43 +36,32 @@ After the installation, you may want to enable the auto-completion feature for *
 
 NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
 
-Here is an example script to train a CNN on the MNIST dataset **without NNI**\ :
+Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
 .. code-block:: python
 
-   def run_trial(params):
-       # Input data
-       mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-       # Build network
-       mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
-                                    channel_2_num=params['channel_2_num'],
-                                    conv_size=params['conv_size'],
-                                    hidden_size=params['hidden_size'],
-                                    pool_size=params['pool_size'],
-                                    learning_rate=params['learning_rate'])
-       mnist_network.build_network()
-
-       test_acc = 0.0
-       with tf.Session() as sess:
-           # Train network
-           mnist_network.train(sess, mnist)
-           # Evaluate network
-           test_acc = mnist_network.evaluate(mnist)
-
-   if __name__ == '__main__':
-       params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
-                 'dropout_rate': 0.5,
-                 'channel_1_num': 32,
-                 'channel_2_num': 64,
-                 'conv_size': 5,
-                 'pool_size': 2,
-                 'hidden_size': 1024,
-                 'learning_rate': 1e-4,
-                 'batch_num': 2000,
-                 'batch_size': 32}
-       run_trial(params)
-
-If you want to see the full implementation, please refer to :githublink:`examples/trials/mnist-tfv1/mnist_before.py <examples/trials/mnist-tfv1/mnist_before.py>`.
+    def main(args):
+        # load data
+        train_loader = torch.utils.data.DataLoader(datasets.MNIST(...), batch_size=args['batch_size'], shuffle=True)
+        test_loader = torch.tuils.data.DataLoader(datasets.MNIST(...), batch_size=1000, shuffle=True)
+        # build model
+        model = Net(hidden_size=args['hidden_size'])
+        optimizer = optim.SGD(model.parameters(), lr=args['lr'], momentum=args['momentum'])
+        # train
+        for epoch in range(10):
+            train(args, model, device, train_loader, optimizer, epoch)
+            test_acc = test(args, model, device, test_loader)
+            print(test_acc)
+        print('final accuracy:', test_acc)
+         
+    if __name__ == '__main__':
+        params = {
+            'batch_size': 32,
+            'hidden_size': 128,
+            'lr': 0.001,
+            'momentum': 0.5
+        }
+        main(params)
 
 The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
@@ -96,46 +85,48 @@ If you want to use NNI to automatically train your model and find the optimal hy
 Three steps to start an experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Step 1**\ : Write a ``Search Space`` file in JSON, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
+**Step 1**: Write a ``Search Space`` file in JSON, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
 
 .. code-block:: diff
 
-   -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
-   -   'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
-   + {
-   +     "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]},
-   +     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
-   +     "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
-   +     "batch_size": {"_type":"choice", "_value": [1, 4, 8, 16, 32]},
-   +     "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]}
-   + }
+    -   params = {'batch_size': 32, 'hidden_size': 128, 'lr': 0.001, 'momentum': 0.5}
+    +   {
+    +       "batch_size": {"_type":"choice", "_value": [16, 32, 64, 128]},
+    +       "hidden_size":{"_type":"choice","_value":[128, 256, 512, 1024]},
+    +       "lr":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]},
+    +       "momentum":{"_type":"uniform","_value":[0, 1]}
+    +   }
 
-*Example:* :githublink:`search_space.json <examples/trials/mnist-tfv1/search_space.json>`
+*Example:* :githublink:`search_space.json <examples/trials/mnist-pytorch/search_space.json>`
 
 **Step 2**\ : Modify your ``Trial`` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 .. code-block:: diff
 
-   + import nni
+    + import nni
 
-     def run_trial(params):
-         mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+      def main(args):
+          # load data
+          train_loader = torch.utils.data.DataLoader(datasets.MNIST(...), batch_size=args['batch_size'], shuffle=True)
+          test_loader = torch.tuils.data.DataLoader(datasets.MNIST(...), batch_size=1000, shuffle=True)
+          # build model
+          model = Net(hidden_size=args['hidden_size'])
+          optimizer = optim.SGD(model.parameters(), lr=args['lr'], momentum=args['momentum'])
+          # train
+          for epoch in range(10):
+              train(args, model, device, train_loader, optimizer, epoch)
+              test_acc = test(args, model, device, test_loader)
+    -         print(test_acc)
+    +         nni.report_intermeidate_result(test_acc)
+    -     print('final accuracy:', test_acc)
+    +     nni.report_final_result(test_acc)
+           
+      if __name__ == '__main__':
+    -     params = {'batch_size': 32, 'hidden_size': 128, 'lr': 0.001, 'momentum': 0.5}
+    +     params = nni.get_next_parameter()
+          main(params)
 
-         mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
-         mnist_network.build_network()
-
-         with tf.Session() as sess:
-             mnist_network.train(sess, mnist)
-             test_acc = mnist_network.evaluate(mnist)
-   +         nni.report_final_result(test_acc)
-
-     if __name__ == '__main__':
-   -     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
-   -     'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
-   +     params = nni.get_next_parameter()
-         run_trial(params)
-
-*Example:* :githublink:`mnist.py <examples/trials/mnist-tfv1/mnist.py>`
+*Example:* :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>`
 
 **Step 3**\ : Define a ``config`` file in YAML which declares the ``path`` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
@@ -160,9 +151,9 @@ Three steps to start an experiment
 
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
-*Example:* :githublink:`config.yml <examples/trials/mnist-tfv1/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-tfv1/.nniignore>`
+*Example:* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 
-All the code above is already prepared and stored in :githublink:`examples/trials/mnist-tfv1/ <examples/trials/mnist-tfv1>`.
+All the code above is already prepared and stored in :githublink:`examples/trials/mnist-pytorch/ <examples/trials/mnist-pytorch>`.
 
 Linux and macOS
 ^^^^^^^^^^^^^^^
@@ -171,7 +162,7 @@ Run the **config.yml** file from your command line to start an MNIST experiment.
 
 .. code-block:: bash
 
-   nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+   nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
 Windows
 ^^^^^^^
@@ -180,7 +171,7 @@ Run the **config_windows.yml** file from your command line to start an MNIST exp
 
 .. code-block:: bash
 
-   nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+   nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
 
 .. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
 
