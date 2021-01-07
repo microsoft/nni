@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import gc
 import sys
 import numpy as np
 import torch
@@ -353,6 +354,11 @@ class SpeedupTestCase(TestCase):
                     model_name, speeded_sum)
                 assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                     (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+                # Clear the memory, else it may fail on the windows pipeline(only 7GB avalilable memory)
+                del net
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                gc.collect()
 
     def test_channel_prune(self):
         orig_net = resnet18(num_classes=10).to(device)
