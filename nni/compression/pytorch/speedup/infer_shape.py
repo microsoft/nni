@@ -959,9 +959,7 @@ def conv2d_inshape(module_masks, mask):
         # mask conflict should be solved by fix_mask_conflict before speedup
 
         assert module_masks.input_mask == mask
-        
-        # assert module_masks.input_mask <= mask
-        # module_masks.input_mask.merge(mask)
+
     # shape changes pass through depths wise conv layers
     m = module_masks.module
     if m.in_channels == m.out_channels == m.groups:
