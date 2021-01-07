@@ -26,9 +26,9 @@ from sklearn.pipeline import make_pipeline
 from sklearn.linear_model import LogisticRegression
 
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.algorithms.feature_selection import SelectFromModel
+from sklearn.feature_selection import SelectFromModel
 
-from nni.feature_engineering.gradient_selector import FeatureGradientSelector
+from nni.algorithms.feature_engineering.gradient_selector import FeatureGradientSelector
 
 
 def test():
