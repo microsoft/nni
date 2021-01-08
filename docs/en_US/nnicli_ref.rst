@@ -1,14 +1,14 @@
 NNI Client
 ==========
 
-NNI client is a python API of ``nnictl``\ , which implements the most commonly used commands. Users can use this API to control their experiments, collect experiment results and conduct advanced analyses based on experiment results in python code directly instead of using command line. Here is an example:
+NNI client is a python API of ``nnictl``, which implements the most commonly used commands. Users can use this API to control their experiments, collect experiment results and conduct advanced analyses based on experiment results in python code directly instead of using command line. Here is an example:
 
 .. code-block:: bash
 
-   from nni.experiment import Experiment
+   from nni.experiment import LegacyExperiment
 
    # create an experiment instance
-   exp = Experiment() 
+   exp = LegacyExperiment()
 
    # start an experiment, then connect the instance to this experiment
    # you can also use `resume_experiment`, `view_experiment` or `connect_experiment`
