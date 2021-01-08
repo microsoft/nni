@@ -479,7 +479,6 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
 
 def launch_experiment(args, experiment_config, mode, experiment_id):
     '''follow steps to start rest server and start experiment'''
-    nni_config = Config(experiment_id)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
@@ -510,12 +509,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
                                                  mode, experiment_id, foreground, log_dir, log_level)
-    nni_config.set_config('restServerPid', rest_process.pid)
     # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
+    Experiments().add_experiment(experiment_id, args.port, start_time,
+                                 experiment_config['trainingServicePlatform'],
+                                 experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -572,7 +569,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
     else:
         web_ui_url_list = get_local_urls(args.port)
-    nni_config.set_config('webuiUrl', web_ui_url_list)
+    Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
@@ -587,8 +584,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 def create_experiment(args):
     '''start a new experiment'''
     experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    nni_config = Config(experiment_id)
-    nni_config.set_config('experimentId', experiment_id)
     config_path = os.path.abspath(args.config)
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
@@ -610,8 +605,6 @@ def create_experiment(args):
             print_error(f'Config in v1 format validation failed. {repr(e)}')
             exit(1)
 
-    nni_config.set_config('experimentConfig', experiment_config)
-    nni_config.set_config('restServerPort', args.port)
     try:
         launch_experiment(args, experiment_config, 'new', experiment_id)
     except Exception as exception:
@@ -624,8 +617,8 @@ def create_experiment(args):
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
     update_experiment()
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
+    experiments_config = Experiments()
+    experiment_dict = experiments_config.get_all_experiments()
     experiment_id = None
     #find the latest stopped experiment
     if not args.id:
@@ -641,9 +634,8 @@ def manage_stopped_experiment(args, mode):
             exit(1)
         experiment_id = args.id
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
-    nni_config = Config(experiment_id)
-    experiment_config = nni_config.get_config('experimentConfig')
-    nni_config.set_config('restServerPort', args.port)
+    experiment_config = Config(experiment_id, experiment_dict[args.id]['logDir']).get_config()
+    experiments_config.update_experiment(args.id, 'port', args.port)
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:

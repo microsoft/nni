@@ -4,52 +4,30 @@
 import os
 import json
 import shutil
+import sqlite3
 import time
 from .constants import NNICTL_HOME_DIR
 from .command_utils import print_error
 from .common_utils import get_file_lock
+from ...experiment.config.convert import config_v0_to_v1
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, file_path, home_dir=NNICTL_HOME_DIR):
-        config_path = os.path.join(home_dir, str(file_path))
-        os.makedirs(config_path, exist_ok=True)
-        self.config_file = os.path.join(config_path, '.config')
-        self.config = self.read_file()
+    def __init__(self, experiment_id: str, log_dir: str):
+        self.experiment_id = experiment_id
+        self.conn = sqlite3.connect(log_dir)
+        self.cursor = self.conn.cursor()
+        self.refresh_config()
 
-    def get_all_config(self):
-        '''get all of config values'''
-        return json.dumps(self.config, indent=4, sort_keys=True, separators=(',', ':'))
+    def refresh_config(self):
+        '''refresh to get latest config'''
+        sql = 'select * from ExperimentProfile where id=? order by revision DESC'
+        args = (self.experiment_id,)
+        self.config = config_v0_to_v1(json.loads(self.cursor.execute(sql, args).fetchall()[0][0]))
 
-    def set_config(self, key, value):
-        '''set {key:value} paris to self.config'''
-        self.config = self.read_file()
-        self.config[key] = value
-        self.write_file()
-
-    def get_config(self, key):
+    def get_config(self):
         '''get a value according to key'''
-        return self.config.get(key)
-
-    def write_file(self):
-        '''save config to local file'''
-        if self.config:
-            try:
-                with open(self.config_file, 'w') as file:
-                    json.dump(self.config, file, indent=4)
-            except IOError as error:
-                print('Error:', error)
-                return
-
-    def read_file(self):
-        '''load config from local file'''
-        if os.path.exists(self.config_file):
-            try:
-                with open(self.config_file, 'r') as file:
-                    return json.load(file)
-            except ValueError:
-                return {}
-        return {}
+        return self.config
 
 class Experiments:
     '''Maintain experiment list'''

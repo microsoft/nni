@@ -252,8 +252,9 @@ def trial_ls(args):
         return
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
-    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
+    experiment_id = get_config_filename(args)
+    rest_port = experiment_dict.get(experiment_id).get('port')
+    rest_pid = experiment_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -284,8 +285,9 @@ def trial_kill(args):
     '''List trial'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
-    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
+    experiment_id = get_config_filename(args)
+    rest_port = experiment_dict.get(experiment_id).get('port')
+    rest_pid = experiment_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -316,8 +318,9 @@ def list_experiment(args):
     '''Get experiment information'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
-    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
+    experiment_id = get_config_filename(args)
+    rest_port = experiment_dict.get(experiment_id).get('port')
+    rest_pid = experiment_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -446,7 +449,7 @@ def log_trial(args):
 def get_config(args):
     '''get config info'''
     nni_config = Config(get_config_filename(args))
-    print(nni_config.get_all_config())
+    print(nni_config.get_config())
 
 def webui_url(args):
     '''show the url of web ui'''
@@ -758,8 +761,9 @@ def export_trials_data(args):
 
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
-    rest_pid = experiment_dict.get(get_config_filename(args)).get('pid')
+    experiment_id = get_config_filename(args)
+    rest_port = experiment_dict.get(experiment_id).get('port')
+    rest_pid = experiment_dict.get(experiment_id).get('pid')
 
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
@@ -1011,7 +1015,6 @@ def load_experiment(args):
         print_warning('%s exist, will not load search_space file' % target_path)
 
     # Step6. Create experiment metadata
-    nni_config.set_config('experimentConfig', nnictl_exp_config)
     experiment_config.add_experiment(experiment_id,
                                      experiment_metadata.get('port'),
                                      experiment_metadata.get('startTime'),
