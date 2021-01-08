@@ -80,8 +80,8 @@ jobs:
 
       echo "## Building ${IMAGE_NAME}:$(NNI_RELEASE) ##"
       docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
-      docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
-      docker push ${IMAGE_NAME}:$(NNI_RELEASE)
+      docker tag ${IMAGE_NAME} ${IMAGE_NAME}:v$(NNI_RELEASE)
+      docker push ${IMAGE_NAME}:v$(NNI_RELEASE)
       if [[ $(build_type) != 'rc' ]]; then
         docker push ${IMAGE_NAME}
       fi
