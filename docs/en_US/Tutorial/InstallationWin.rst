@@ -52,7 +52,7 @@ Verify installation
 
   .. code-block:: bat
 
-       git clone -b v1.9 https://github.com/Microsoft/nni.git
+       git clone -b v2.0 https://github.com/Microsoft/nni.git
 
 * 
   Run the MNIST example.
