@@ -45,7 +45,7 @@ After training, you get accuracy of the pruned model. You can export model weigh
 
    pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
-The complete code of model compression examples can be found :githublink:`here <examples/model_compress/model_prune_torch.py>`.
+The complete code of model compression examples can be found :githublink:`here <examples/model_compress/pruning/model_prune_torch.py>`.
 
 Speed up the model
 ^^^^^^^^^^^^^^^^^^

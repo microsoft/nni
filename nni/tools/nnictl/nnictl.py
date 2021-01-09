@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import argparse
+import logging
 import os
 import pkg_resources
 from colorama import init
@@ -32,6 +33,8 @@ def nni_info(*args):
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
+    logging.getLogger().setLevel(logging.ERROR)
+
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
     parser.add_argument('--version', '-v', action='store_true')
@@ -243,12 +246,9 @@ def parse_args():
     def show_messsage_for_nnictl_package(args):
         print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
 
-    parser_package_subparsers = subparsers.add_parser('package', help='control nni tuner and assessor packages').add_subparsers()
-    parser_package_subparsers.add_parser('install', help='install packages').set_defaults(func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('uninstall', help='uninstall packages').set_defaults(func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('show', help='show the information of packages').set_defaults(
-        func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('list', help='list installed packages').set_defaults(func=show_messsage_for_nnictl_package)
+    parser_package_subparsers = subparsers.add_parser('package', help='control nni tuner and assessor packages')
+    parser_package_subparsers.add_argument('args', help='all subcommands have deprecated, nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage', nargs=argparse.REMAINDER)
+    parser_package_subparsers.set_defaults(func=show_messsage_for_nnictl_package)
 
     #parse tensorboard command
     parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')

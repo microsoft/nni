@@ -121,6 +121,8 @@ class PyTorchOperation(Operation):
             return f'{output} = {value}'
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
+        elif self.type == 'prim::GetAttr':
+            return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
         elif self.type == 'aten::__getitem__':
@@ -133,8 +135,7 @@ class PyTorchOperation(Operation):
             assert len(inputs) == 2
             return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
         elif self.type == 'aten::add':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]} + {inputs[1]}'
+            return f'{output} = ' + ' + '.join(inputs)
         elif self.type == OpTypeName.MergedSlice:
             assert (len(inputs) - 1) % 4 == 0
             slices = []
@@ -151,6 +152,8 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}.view({inputs[1]})'
         elif self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
+        elif self.type == 'aten::Bool':
+            return f'{output} = bool({inputs[0]})'
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 

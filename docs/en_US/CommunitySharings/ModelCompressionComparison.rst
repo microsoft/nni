@@ -50,24 +50,24 @@ The experiment result are shown in the following figures:
 CIFAR-10, VGG16:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_vgg16.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_vgg16.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
    :alt: 
 
 
 CIFAR-10, ResNet18:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet18.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet18.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
    :alt: 
 
 
 CIFAR-10, ResNet50:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet50.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet50.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
    :alt: 
 
 

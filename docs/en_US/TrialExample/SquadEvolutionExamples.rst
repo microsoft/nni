@@ -120,7 +120,7 @@ Modify ``nni/examples/trials/ga_squad/config_pai.yml``\ , here is the default co
    #Your nni_manager ip
    nniManagerIp: 10.10.10.10
    tuner:
-     codeDir: https://github.com/Microsoft/nni/tree/v1.9/examples/tuners/ga_customer_tuner
+     codeDir: https://github.com/Microsoft/nni/tree/v2.0/examples/tuners/ga_customer_tuner
      classFileName: customer_tuner.py
      className: CustomerTuner
      classArgs:

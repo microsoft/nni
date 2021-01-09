@@ -11,3 +11,4 @@ References
     NNI Annotation <Tutorial/AnnotationSpec>
     SDK API References <sdk_reference>
     Supported Framework Library <SupportedFramework_Library>
+    Launch from python <Tutorial/HowToLaunchFromPython>

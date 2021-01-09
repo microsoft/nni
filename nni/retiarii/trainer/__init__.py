@@ -1,2 +1,2 @@
-from .interface import BaseTrainer
+from .interface import BaseTrainer, BaseOneShotTrainer
 from .pytorch import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer

@@ -211,7 +211,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
                 <div className='succeed-padding'>
-                    <div>{item.port !== undefined ? item.port : '--'}</div>
+                    <div className={item.status === 'STOPPED' ? 'gray-port' : ''}>
+                        {item.port !== undefined ? item.port : '--'}
+                    </div>
                 </div>
             )
         },
