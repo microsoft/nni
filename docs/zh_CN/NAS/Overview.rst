@@ -55,13 +55,14 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
    * - `SPOS </NAS/SPOS.html>`__
      - 论文 `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。
    * - `CDARTS </NAS/CDARTS.html>`__
-     - `Cyclic Differentiable Architecture Search <https://arxiv.org/abs/****>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
+     - `Cyclic Differentiable Architecture Search <https://arxiv.org/pdf/2006.10724.pdf>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
    * - `ProxylessNAS </NAS/Proxylessnas.html>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。
    * - `TextNAS </NAS/TextNAS.html>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. 这是专门用于文本表示的神经网络架构搜索算法。
-
-
+   * - `Cream </NAS/Cream.html>`__
+     - `Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__ 一种使用知识蒸馏从搜索空间中寻找优先路径的算法。可以有效、快速地搜索出优先路径，且不需要使用进化算法。在ImageNet上取得了优异性能，尤其是搜索小模型（<200M Flops的模型）。
+    
 One-shot 算法 **独立运行，不需要 nnictl**。 NNI 支持 PyTorch 和 TensorFlow 2.x。
 
 这是运行示例的一些常见依赖项。 PyTorch 需要高于 1.2 才能使用 ``BoolTensor``。
