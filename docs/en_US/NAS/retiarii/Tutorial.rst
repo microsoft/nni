@@ -23,26 +23,8 @@ Define Base Model
 
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. There are only two small differences.
 
-* Use our wrapped ``nn`` for PyTorch modules instead of ``torch.nn``. Specifically, users can simply replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn``
-* Add the decorator ``@blackbox_module`` to some module classes. Below we explain why this decorator is needed and what module classes should be decorated.
-
-**@blackbox_module**: To understand this decorator, we first briefly explain how our framework works: it converts user defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a module class in the following cases:
-
-* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module. The following ``MyModule`` should be decorated.
-
-  .. code-block:: python
-
-    @blackbox_module
-    class MyModule(nn.Module):
-      def __init__(self):
-        ...
-      def forward(self, x):
-        for i in range(10): # <- adhoc loop
-          ...
-
-* The candidate ops in ``LayerChoice`` should be decorated as blackbox module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated.
-* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
-* If no mutation is targeted on a module, this module *can be* decorated as a blackbox module.
+* Replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` for PyTorch modules, such as ``nn.Conv2d``, ``nn.ReLU``.
+* Some **user-defined** modules should be decorated with ``@blackbox_module``. For example, user-defined module used in ``LayerChoice`` should be decorated.Users can refer to `here <#blackbox-module>`__ for detailed usage instruction of ``@blackbox_module``.
 
 Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
 
@@ -71,13 +53,13 @@ Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A base model is only one concrete model not a model space. To define model space, we provide APIs and primitives for users to express how the base model can be mutated.
+A base model is only one concrete model not a model space. We provide APIs and primitives for users to express how the base model can be mutated, i.e., a model space which includes many models.
 
 **Express mutations in an inlined manner**
 
-For easy usability and also backward compatibility, we provide some APIs for users to easily express possible mutations during defining a base model. The APIs can be used just like PyTorch module.
+For easy usability and also backward compatibility, we provide some APIs for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one is chosen in each explored model. *Note that the candidates should be decorated as blackbox module.*
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that the candidate is a user-defined module, it should be decorated as blackbox module.*
 
   .. code-block:: python
 
@@ -101,7 +83,7 @@ For easy usability and also backward compatibility, we provide some APIs for use
     # invoked in `forward` function, choose one from the three
     out = self.input_switch([tensor1, tensor2, tensor3])
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of blackbox modules and the wrapped ``nn`` modules. *Note that it has not been officially supported.*
+* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of the modules in ``nn.modules`` and ``@blackbox_module`` decorated user-defined modules. *Note that it has not been officially supported.*
 
   .. code-block:: python
 
@@ -114,9 +96,9 @@ Detailed API description and usage can be found `here <./ApiReference.rst>`__\. 
 
 **Express mutations with mutators**
 
-Though easy-to-use, inline mutations have limited expressiveness, as it has to be embedded in model definition. To greatly improve expressiveness and flexibility, we provide primitives for users to write *Mutator* to flexibly express how they want to mutate base model. Mutator stands above base model, thus has full ability to edit the model.
+Though easy-to-use, inline mutations have limited expressiveness, some model spaces cannot be expressed. To improve expressiveness and flexibility, we provide primitives for users to write *Mutator* to express how they want to mutate base model more flexibly. Mutator stands above base model, thus has full ability to edit the model.
 
-Users can instantiate several mutators as below, the mutators will be sequentially applied to the base model one after another to generate a new model during experiment running.
+Users can instantiate several mutators as below, the mutators will be sequentially applied to the base model one after another for sampling a new model.
 
 .. code-block:: python
 
@@ -124,7 +106,7 @@ Users can instantiate several mutators as below, the mutators will be sequential
   applied_mutators.append(BlockMutator('mutable_0'))
   applied_mutators.append(BlockMutator('mutable_1'))
 
-``BlockMutator`` is defined by users to express how to mutate the base model. User defined mutator should inherit ``Mutator`` class, and implement mutation logic in the member function ``mutate``.
+``BlockMutator`` is defined by users to express how to mutate the base model. User-defined mutator should inherit ``Mutator`` class, and implement mutation logic in the member function ``mutate``.
 
 .. code-block:: python
 
@@ -143,7 +125,7 @@ Users can instantiate several mutators as below, the mutators will be sequential
 
 The input of ``mutate`` is graph IR of the base model (please refer to `here <./ApiReference.rst>`__ for the format and APIs of the IR), users can mutate the graph with its member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
 
-For mutator to easily target on a node (i.e., PyTorch module), we provide a placeholder module called ``nn.Placeholder``. If you want to mutate a module, you can define this module with ``nn.Placeholder``, and use mutator to mutate this placeholder to give it a real operation.
+Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
 
 .. code-block:: python
 
@@ -161,7 +143,7 @@ For mutator to easily target on a node (i.e., PyTorch module), we provide a plac
 Explore the Defined Model Space
 -------------------------------
 
-After model space is defined, it is time to explore this model space efficiently. Users can choose proper search and training approach to explore the model space.
+After model space is defined, it is time to explore this model space. Users can choose proper search and training approach to explore the model space.
 
 Create a Trainer and Exploration Strategy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,7 +151,7 @@ Create a Trainer and Exploration Strategy
 **Classic search approach:**
 In this approach, trainer is for training each explored model, while strategy is for sampling the models. Both trainer and strategy are required to explore the model space.
 
-**Oneshot (Weight-sharing) search approach:**
+**Oneshot (weight-sharing) search approach:**
 In this approach, users only need a oneshot trainer, because this trainer takes charge of both search and training.
 
 In the following table, we listed the available trainers and strategies.
@@ -232,9 +214,36 @@ The complete code of a simple MNIST example can be found :githublink:`here <test
 Visualize your experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment, please refer to `here <../../Tutorial/WebUI.rst>`__ for details. If users are using oneshot trainer, they can refer to `here <../Visualization.rst>`__ for how to visualize their experiments.
+Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../../Tutorial/WebUI.rst>`__ for details. If users are using oneshot trainer, they can refer to `here <../Visualization.rst>`__ for how to visualize their experiments.
 
-FAQ
----
+Export the best model found in your experiment
+----------------------------------------------
 
-TBD
+If you are using *classic search approach*, you can simply find out the best one from WebUI.
+
+If you are using *oneshot (weight-sharing) search approach*, you can invole ``exp.export_top_models`` to output several best models that are found in the experiment.
+
+Advanced and FAQ
+----------------
+
+.. _blackbox-module:
+
+**Blackbox Module**
+
+To understand the decorator ``blackbox_module``, we first briefly explain how our framework works: it converts user-defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user-defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a user-defined module class in the following cases:
+
+* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module. The following ``MyModule`` should be decorated.
+
+  .. code-block:: python
+
+    @blackbox_module
+    class MyModule(nn.Module):
+      def __init__(self):
+        ...
+      def forward(self, x):
+        for i in range(10): # <- adhoc loop
+          ...
+
+* The candidate ops in ``LayerChoice`` should be decorated as blackbox module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated if they are user defined modules.
+* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
+* If no mutation is targeted on a module, this module *can be* decorated as a blackbox module.
