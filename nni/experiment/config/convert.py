@@ -294,9 +294,9 @@ def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
         request_data['clusterMetaData'].append(
-            {'key':'codeDir', 'value':experiment_config['trial']['codeDir']})
+            {'key': 'local_config', 'value': experiment_config['LocalConfig']})
         request_data['clusterMetaData'].append(
-            {'key': 'command', 'value': experiment_config['trial']['command']})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'remote':
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
