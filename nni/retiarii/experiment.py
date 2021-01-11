@@ -16,7 +16,7 @@ from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
 from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
-from .trainer.interface import BaseTrainer
+from .trainer.interface import BaseTrainer, BaseOneShotTrainer
 from .strategies.strategy import BaseStrategy
 from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
 
@@ -172,11 +172,16 @@ class RetiariiExperiment(Experiment):
             self.config = config
             super().run(port, debug)
 
-    def export_top_models(self, top_n: int):
+    def export_top_models(self, top_n: int = 1):
         """
         export several top performing models
         """
-        raise NotImplementedError
+        if top_n != 1:
+            _logger.warning('Only support top_n is 1 for now.')
+        if isinstance(self.trainer, BaseOneShotTrainer):
+            self.trainer.export()
+        else:
+            _logger.info('For this experiment, you can find out the best one from WebUI.')
 
     def retrain_model(self, model):
         """
