@@ -39,7 +39,7 @@ class Experiments:
             self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
-                       tag=[], pid=None, webuiUrl=[], logDir=[]):
+                       tag=[], pid=None, webuiUrl=[], logDir=''):
         '''set {key:value} pairs to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()

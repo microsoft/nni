@@ -306,12 +306,12 @@ def trial_kill(args):
 def trial_codegen(args):
     '''Generate code for a specific trial'''
     print_warning('Currently, this command is only for nni nas programming interface.')
-    exp_id = check_experiment_id(args)
-    nni_config = Config(get_config_filename(args))
-    if not nni_config.get_config('experimentConfig')['useAnnotation']:
+    exp_id = get_config_filename(args)
+    experiment_config = Config(exp_id, Experiments().get_all_experiments()[exp_id]['logDir']).get_config()
+    if not experiment_config.get('useAnnotation'):
         print_error('The experiment is not using annotation')
         exit(1)
-    code_dir = nni_config.get_config('experimentConfig')['trial']['codeDir']
+    code_dir = experiment_config['trial']['codeDir']
     expand_annotations(code_dir, './exp_%s_trial_%s_code'%(exp_id, args.trial_id), exp_id, args.trial_id)
 
 def list_experiment(args):
@@ -404,9 +404,12 @@ def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
     trial_id_list = []
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    experiment_id = get_config_filename(args)
+    rest_port = experiment_dict.get(experiment_id).get('port')
+    rest_pid = experiment_dict.get(experiment_id).get('pid')
+    experiment_config = Config(experiment_id, experiment_dict.get(experiment_id).get('logDir')).get_config()
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -422,7 +425,7 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
-    is_adl = nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl'
+    is_adl = experiment_config.get('trainingServicePlatform') == 'adl'
     if is_adl and not args.trial_id:
         print_error('Trial ID is required to retrieve the log for adl. Please specify it with "--trial_id".')
         exit(1)
@@ -431,7 +434,7 @@ def log_trial(args):
             print_error('Trial id {0} not correct, please check your command!'.format(args.trial_id))
             exit(1)
         if is_adl:
-            log_trial_adl_helper(args, nni_config.get_config('experimentId'))
+            log_trial_adl_helper(args, experiment_id)
             # adl has its own way to log trial, and it thus returns right after the helper returns
             return
         if trial_id_path_dict.get(args.trial_id):
@@ -448,13 +451,15 @@ def log_trial(args):
 
 def get_config(args):
     '''get config info'''
-    nni_config = Config(get_config_filename(args))
-    print(nni_config.get_config())
+    experiment_id = get_config_filename(args)
+    experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
+    print(experiment_config)
 
 def webui_url(args):
     '''show the url of web ui'''
-    nni_config = Config(get_config_filename(args))
-    print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
+    experiment_id = get_config_filename(args)
+    experiment_dict = Experiments().get_all_experiments()
+    print_normal('{0} {1}'.format('Web UI url:', ' '.join(experiment_dict[experiment_id].get('webuiUrl'))))
 
 def webui_nas(args):
     '''launch nas ui'''
@@ -545,23 +550,23 @@ def experiment_clean(args):
         else:
             break
     for experiment_id in experiment_id_list:
-        nni_config = Config(experiment_id)
-        platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
-        experiment_id = nni_config.get_config('experimentId')
+        experiment_id = get_config_filename(args)
+        experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
+        platform = experiment_config.get('trainingServicePlatform')
         if platform == 'remote':
-            machine_list = nni_config.get_config('experimentConfig').get('machineList')
+            machine_list = experiment_config.get('machineList')
             remote_clean(machine_list, experiment_id)
         elif platform == 'pai':
-            host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')
-            user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
-            output_dir = nni_config.get_config('experimentConfig').get('trial').get('outputDir')
+            host = experiment_config.get('paiConfig').get('host')
+            user_name = experiment_config.get('paiConfig').get('userName')
+            output_dir = experiment_config.get('trial').get('outputDir')
             hdfs_clean(host, user_name, output_dir, experiment_id)
         elif platform != 'local':
-            #TODO: support all platforms
+            # TODO: support all platforms
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
-        #clean local data
-        local_base_dir = nni_config.get_config('experimentConfig').get('logDir')
+        # clean local data
+        local_base_dir = experiment_config.get('logDir')
         if not local_base_dir:
             local_base_dir = NNI_HOME_DIR
         local_experiment_dir = os.path.join(local_base_dir, experiment_id)
@@ -841,10 +846,8 @@ def save_experiment(args):
         print_error('Can only save stopped experiment!')
         exit(1)
     print_normal('Saving...')
-    nni_config = Config(args.id)
-    logDir = os.path.join(NNI_HOME_DIR, args.id)
-    if nni_config.get_config('logDir'):
-        logDir = os.path.join(nni_config.get_config('logDir'), args.id)
+    experiment_config = Config(args.id, experiment_dict[args.id]['logDir']).get_config()
+    logDir = os.path.join(experiment_dict[args.id]['logDir'], args.id)
     temp_root_dir = generate_temp_dir()
 
     # Step1. Copy logDir to temp folder
@@ -866,15 +869,14 @@ def save_experiment(args):
         exit(1)
     nnictl_log_dir = os.path.join(NNI_HOME_DIR, args.id, 'log')
     shutil.copytree(nnictl_log_dir, os.path.join(temp_nnictl_dir, args.id, 'log'))
-    shutil.copy(os.path.join(NNI_HOME_DIR, args.id, '.config'), os.path.join(temp_nnictl_dir, args.id, '.config'))
 
     # Step3. Copy code dir
     if args.saveCodeDir:
         temp_code_dir = os.path.join(temp_root_dir, 'code')
-        shutil.copytree(nni_config.get_config('experimentConfig')['trial']['codeDir'], temp_code_dir)
+        shutil.copytree(experiment_config['trial']['codeDir'], temp_code_dir)
 
     # Step4. Copy searchSpace file
-    search_space_path = nni_config.get_config('experimentConfig').get('searchSpacePath')
+    search_space_path = experiment_config.get('searchSpacePath')
     if search_space_path:
         if not os.path.exists(search_space_path):
             print_warning('search space %s does not exist!' % search_space_path)
@@ -932,8 +934,8 @@ def load_experiment(args):
         print_error('Invalid nnictl metadata file: %s' % err)
         shutil.rmtree(temp_root_dir)
         exit(1)
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
+    experiments_config = Experiments()
+    experiment_dict = experiments_config.get_all_experiments()
     experiment_id = experiment_metadata.get('id')
     if experiment_id in experiment_dict:
         print_error('Invalid: experiment id already exist!')
@@ -952,19 +954,19 @@ def load_experiment(args):
     shutil.copytree(src_path, dest_path)
 
     # Step3. Copy experiment data
-    nni_config = Config(experiment_id)
-    nnictl_exp_config = nni_config.get_config('experimentConfig')
-    if args.logDir:
-        logDir = args.logDir
-        nnictl_exp_config['logDir'] = logDir
-    else:
-        if nnictl_exp_config.get('logDir'):
-            logDir = nnictl_exp_config['logDir']
-        else:
-            logDir = NNI_HOME_DIR
     os.rename(os.path.join(temp_root_dir, 'experiment'), os.path.join(temp_root_dir, experiment_id))
     src_path = os.path.join(os.path.join(temp_root_dir, experiment_id))
-    dest_path = os.path.join(os.path.join(logDir, experiment_id))
+    experiment_config = Config(experiment_id, temp_root_dir).get_config()
+    if args.logDir:
+        logDir = args.logDir
+        experiment_config['logDir'] = logDir
+    else:
+        if experiment_config.get('logDir'):
+            logDir = experiment_config['logDir']
+        else:
+            logDir = NNI_HOME_DIR
+
+    dest_path = os.path.join(logDir, experiment_id)
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
     shutil.copytree(src_path, dest_path)
@@ -974,7 +976,7 @@ def load_experiment(args):
     if not os.path.isabs(codeDir):
         codeDir = os.path.join(os.getcwd(), codeDir)
         print_normal('Expand codeDir to %s' % codeDir)
-    nnictl_exp_config['trial']['codeDir'] = codeDir
+    experiment_config['trial']['codeDir'] = codeDir
     archive_code_dir = os.path.join(temp_root_dir, 'code')
     if os.path.exists(archive_code_dir):
         file_list = os.listdir(archive_code_dir)
@@ -990,42 +992,42 @@ def load_experiment(args):
                 shutil.copy(src_path, target_path)
 
     # Step5. Copy searchSpace file
-    archive_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
-    if args.searchSpacePath:
-        target_path = os.path.expanduser(args.searchSpacePath)
-    else:
-        # set default path to codeDir
-        target_path = os.path.join(codeDir, 'search_space.json')
-    if not os.path.isabs(target_path):
-        target_path = os.path.join(os.getcwd(), target_path)
-        print_normal('Expand search space path to %s' % target_path)
-    nnictl_exp_config['searchSpacePath'] = target_path
-    # if the path already has a search space file, use the original one, otherwise use archived one
-    if not os.path.isfile(target_path):
-        if len(os.listdir(archive_search_space_dir)) == 0:
-            print_error('Archive file does not contain search space file!')
-            exit(1)
-        else:
-            for file in os.listdir(archive_search_space_dir):
-                source_path = os.path.join(archive_search_space_dir, file)
-                os.makedirs(os.path.dirname(target_path), exist_ok=True)
-                shutil.copyfile(source_path, target_path)
-                break
-    elif not args.searchSpacePath:
-        print_warning('%s exist, will not load search_space file' % target_path)
+    # archive_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
+    # if args.searchSpacePath:
+    #     target_path = os.path.expanduser(args.searchSpacePath)
+    # else:
+    #     # set default path to codeDir
+    #     target_path = os.path.join(codeDir, 'search_space.json')
+    # if not os.path.isabs(target_path):
+    #     target_path = os.path.join(os.getcwd(), target_path)
+    #     print_normal('Expand search space path to %s' % target_path)
+    # experiment_config['searchSpacePath'] = target_path
+    # # if the path already has a search space file, use the original one, otherwise use archived one
+    # if not os.path.isfile(target_path):
+    #     if len(os.listdir(archive_search_space_dir)) == 0:
+    #         print_error('Archive file does not contain search space file!')
+    #         exit(1)
+    #     else:
+    #         for file in os.listdir(archive_search_space_dir):
+    #             source_path = os.path.join(archive_search_space_dir, file)
+    #             os.makedirs(os.path.dirname(target_path), exist_ok=True)
+    #             shutil.copyfile(source_path, target_path)
+    #             break
+    # elif not args.searchSpacePath:
+    #     print_warning('%s exist, will not load search_space file' % target_path)
 
     # Step6. Create experiment metadata
-    experiment_config.add_experiment(experiment_id,
-                                     experiment_metadata.get('port'),
-                                     experiment_metadata.get('startTime'),
-                                     experiment_metadata.get('platform'),
-                                     experiment_metadata.get('experimentName'),
-                                     experiment_metadata.get('endTime'),
-                                     experiment_metadata.get('status'),
-                                     experiment_metadata.get('tag'),
-                                     experiment_metadata.get('pid'),
-                                     experiment_metadata.get('webUrl'),
-                                     experiment_metadata.get('logDir'))
+    experiments_config.add_experiment(experiment_id,
+                                      experiment_metadata.get('port'),
+                                      experiment_metadata.get('startTime'),
+                                      experiment_metadata.get('platform'),
+                                      experiment_metadata.get('experimentName'),
+                                      experiment_metadata.get('endTime'),
+                                      experiment_metadata.get('status'),
+                                      experiment_metadata.get('tag'),
+                                      experiment_metadata.get('pid'),
+                                      experiment_metadata.get('webUrl'),
+                                      logDir)
     print_normal('Load experiment %s succsss!' % experiment_id)
 
     # Step6. Cleanup temp data
