@@ -179,7 +179,7 @@ class RetiariiExperiment(Experiment):
         if top_n != 1:
             _logger.warning('Only support top_n is 1 for now.')
         if isinstance(self.trainer, BaseOneShotTrainer):
-            self.trainer.export()
+            return self.trainer.export()
         else:
             _logger.info('For this experiment, you can find out the best one from WebUI.')
 
