@@ -14,19 +14,21 @@ Major updates
 Neural architecture search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Support Retiarii: an improved NAS framework(experimental)
+* Support an improved NAS framework: Retiarii (experimental)
 
   * Feature roadmap (TODO)
-  * Related Issues and PR (label: retiarii-2.0)
-  * Documentation (#3221 #3282 #3287)
+  * Related issues and pull requests (label: retiarii-2.0)
+  * Documentations (#3221 #3282 #3287)
 
+* Support a new NAS algorithm: Cream (#2705)
 * Add one NAS NLP benchmark (#3140)
 
 Training service
 ^^^^^^^^^^^^^^^^
 
 * Support hybrid training service (#3097 #3251)
-* Support Custom Kubernetes Namespace in AdaptDL Mode (#3176)
+* Support a new training service implementation for Kubernetes (#3022, thanks external contributors Petuum)
+* Support custom Kubernetes namespace in AdaptDL mode (#3176)
 
 Model compression
 ^^^^^^^^^^^^^^^^^
@@ -43,14 +45,14 @@ WebUI & nnictl
 * Update the layout of overview page (#3046 #3123)
 * Update right nav bar, log position and expanded icons for table (#3069 #3103)
 * Update experiment management backend (#3081)
-* unify nnictl port type (3142)
+* Unify nnictl port type (3142)
 
 
 Others
 ^^^^^^
 
 * Support launch an experiment from Python code (#3111 #3210 #3263)
-* Reorganize python package, package hierarchy, source code directory hierarchy (#2962 #2987 #3037)
+* Reorganize Python package, package hierarchy, source code directory hierarchy (#2962 #2987 #3037)
 * Refactor builtin/customized tuner installation (#3134)
 * Add experiment configuration V2 (#3138)
 * Change SIGKILL to SIGTERM in local mode to cancel a trial job (#3173)
@@ -63,14 +65,14 @@ Others
 UT & IT
 -------
 
-* Add Linux IT pipeline (#3068)
+* Add Linux integration test pipeline (#3068)
 * Update unit test and integration test for code hierarchy refactor (#3037 #3088)
 * Update integration test for AdaptDL (#3153)
 
 Documentation
 -------------
 
-* Port markdown docs to rst and introduce ``githublink`` (#3107)
+* Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
 * List related research and publications (#3150)
 * Add quantized model export description (#3192)
 * Add launch from python code doc (#3217)
@@ -86,14 +88,14 @@ Bug fixes
 * Fix ``_compute_hessian`` bug in Pytorch NAS Darts (#3058, thanks external contributor @hroken)
 * Fix bug of advisor and assesor written backwards on webui (#3070)
 * Fix bug of conv1d in the cdarts utils (#3073, thanks external contributor @athaker)
-* Fix unknow trial report to resume experiment (#3096)
+* Fix unknown trial report to resume experiment (#3096)
 * Fix kill command under windows (#3106)
 * Fix Lazy Logging (#3108, thanks external contributor @HarshCasper)
 * Fix checkpoint load error and stop updating paramters in evaluation stage (#3124, thanks external contributor @eedalong)
 * Fix quant grad function calculation error (#3160, thanks external contributor @eedalong)
 * Fix potential bug in quantize device (#3212, thanks external contributor @eedalong)
 * Fix bug for speedup module and enhance the Ut for speedup (#3279)
-* and Others
+* and others
 
 
 Release 1.9 - 10/22/2020
