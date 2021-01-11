@@ -129,16 +129,16 @@ def start_tensorboard(args):
     if args.id is None:
         args.id = experiment_id
     experiments_config = Experiments()
-    experiment_dict = experiments_config.get_all_experiments()
-    if experiment_dict[args.id]["status"] == "STOPPED":
+    experiments_dict = experiments_config.get_all_experiments()
+    if experiments_dict[args.id]["status"] == "STOPPED":
         print_error("Experiment {} is stopped...".format(args.id))
         return
-    experiment_config = Config(args.id, experiment_dict[args.id]['logDir']).get_config()
+    experiment_config = Config(args.id, experiments_dict[args.id]['logDir']).get_config()
     if experiment_config.get('trainingServicePlatform') == 'adl':
         adl_tensorboard_helper(args)
         return
-    rest_port = experiment_dict[args.id]['port']
-    rest_pid = experiment_dict[args.id]['pid']
+    rest_port = experiments_dict[args.id]['port']
+    rest_pid = experiments_dict[args.id]['pid']
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
