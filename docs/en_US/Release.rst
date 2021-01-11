@@ -27,7 +27,7 @@ Training service
 ^^^^^^^^^^^^^^^^
 
 * Support hybrid training service (#3097 #3251)
-* Support a new training service implementation for Kubernetes (#3022, thanks external contributors Petuum)
+* Support a new training service implementation for Kubernetes (#3022, thanks external contributors Petuum @pw2393)
 * Support custom Kubernetes namespace in AdaptDL mode (#3176)
 
 Model compression
