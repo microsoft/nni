@@ -6,7 +6,7 @@ import json
 import shutil
 import sqlite3
 import time
-from .constants import NNICTL_HOME_DIR
+from .constants import NNI_HOME_DIR
 from .command_utils import print_error
 from .common_utils import get_file_lock
 from ...experiment.config.convert import config_v0_to_v1
@@ -31,7 +31,7 @@ class Config:
 
 class Experiments:
     '''Maintain experiment list'''
-    def __init__(self, home_dir=NNICTL_HOME_DIR):
+    def __init__(self, home_dir=NNI_HOME_DIR):
         os.makedirs(home_dir, exist_ok=True)
         self.experiment_file = os.path.join(home_dir, '.experiment')
         self.lock = get_file_lock(self.experiment_file, stale=2)
@@ -78,7 +78,7 @@ class Experiments:
                 self.experiments.pop(expId)
                 fileName = expId
                 if fileName:
-                    logPath = os.path.join(NNICTL_HOME_DIR, fileName)
+                    logPath = os.path.join(NNI_HOME_DIR, fileName)
                     try:
                         shutil.rmtree(logPath)
                     except FileNotFoundError:

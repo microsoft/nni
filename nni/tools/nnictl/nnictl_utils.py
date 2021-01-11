@@ -19,8 +19,8 @@ import nni_node
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
-from .constants import NNICTL_HOME_DIR, NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
-     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
+from .constants import NNI_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, EXPERIMENT_MONITOR_INFO, \
+     TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process, get_yml_content, generate_temp_dir
 from .common_utils import print_green
 from .command_utils import check_output_command, kill_command
@@ -353,9 +353,9 @@ def log_internal(args, filetype):
     '''internal function to call get_log_content'''
     file_name = get_config_filename(args)
     if filetype == 'stdout':
-        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'log', 'nnictl_stdout.log')
+        file_full_path = os.path.join(NNI_HOME_DIR, file_name, 'log', 'nnictl_stdout.log')
     else:
-        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'log', 'nnictl_stderr.log')
+        file_full_path = os.path.join(NNI_HOME_DIR, file_name, 'log', 'nnictl_stderr.log')
     print(check_output_command(file_full_path, head=args.head, tail=args.tail))
 
 def log_stdout(args):
@@ -864,9 +864,9 @@ def save_experiment(args):
     except IOError:
         print_error('Write file to %s failed!' % os.path.join(temp_nnictl_dir, '.experiment'))
         exit(1)
-    nnictl_log_dir = os.path.join(NNICTL_HOME_DIR, args.id, 'log')
+    nnictl_log_dir = os.path.join(NNI_HOME_DIR, args.id, 'log')
     shutil.copytree(nnictl_log_dir, os.path.join(temp_nnictl_dir, args.id, 'log'))
-    shutil.copy(os.path.join(NNICTL_HOME_DIR, args.id, '.config'), os.path.join(temp_nnictl_dir, args.id, '.config'))
+    shutil.copy(os.path.join(NNI_HOME_DIR, args.id, '.config'), os.path.join(temp_nnictl_dir, args.id, '.config'))
 
     # Step3. Copy code dir
     if args.saveCodeDir:
@@ -946,7 +946,7 @@ def load_experiment(args):
 
     # Step2. Copy nnictl metadata
     src_path = os.path.join(nnictl_temp_dir, experiment_id)
-    dest_path = os.path.join(NNICTL_HOME_DIR, experiment_id)
+    dest_path = os.path.join(NNI_HOME_DIR, experiment_id)
     if os.path.exists(dest_path):
         shutil.rmtree(dest_path)
     shutil.copytree(src_path, dest_path)
