@@ -15,6 +15,12 @@ $pageMargin: 24px;
 .experimentList {
 	padding: $pageMargin 42px;
 
+	.ms-DetailsRow {
+		&:hover, &:focus {
+			background: #F3F2F1 !important;
+		}
+	}
+
 	.box {
 		margin-top: 20px;
 
@@ -65,14 +71,7 @@ $pageMargin: 24px;
 	}
 
 	.toAnotherExp {
-
-		&:hover {
-			color: #333231 !important;
-		}
-
-		&:hover {
-			color:  #615f5d !important;
-		}
+		color: #0071bc !important;
 	}
 
 	.ms-DetailsRow:focus {
@@ -81,5 +80,5 @@ $pageMargin: 24px;
 }
 
 .gray-port {
-	color: #E2E2E2;
+	color: #bebebe;
 }

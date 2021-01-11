@@ -132,7 +132,6 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 compact={true}
                                 selectionMode={0} // close selector function
                                 className='table'
-                                onActiveItemChanged={this.experimentClicked}
                             />
                         </Stack>
                     </Stack>
@@ -259,15 +258,6 @@ class Experiment extends React.Component<{}, ExpListState> {
             )
         }
     ];
-
-    private experimentClicked = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
-        if (item.status !== 'STOPPED' && item.port !== undefined) {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            const webuiPortal = `${protocol}//${hostname}:${item.port}/oview`;
-            window.open(webuiPortal);
-        }
-    };
 
     private clickFilter(_e: any): void {
         const { hideFilter } = this.state;
