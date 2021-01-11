@@ -498,7 +498,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
+    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False

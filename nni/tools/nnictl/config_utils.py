@@ -15,7 +15,7 @@ class Config:
     '''a util class to load and save config'''
     def __init__(self, experiment_id: str, log_dir: str):
         self.experiment_id = experiment_id
-        self.conn = sqlite3.connect(log_dir)
+        self.conn = sqlite3.connect(os.path.join(log_dir, experiment_id, 'db', 'nni.sqlite'))
         self.cursor = self.conn.cursor()
         self.refresh_config()
 
