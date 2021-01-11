@@ -24,7 +24,7 @@ Define Base Model
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. There are only two small differences.
 
 * Replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` for PyTorch modules, such as ``nn.Conv2d``, ``nn.ReLU``.
-* Some **user-defined** modules should be decorated with ``@blackbox_module``. For example, user-defined module used in ``LayerChoice`` should be decorated.Users can refer to `here <#blackbox-module>`__ for detailed usage instruction of ``@blackbox_module``.
+* Some **user-defined** modules should be decorated with ``@blackbox_module``. For example, user-defined module used in ``LayerChoice`` should be decorated. Users can refer to `here <#blackbox-module>`__ for detailed usage instruction of ``@blackbox_module``.
 
 Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
 
