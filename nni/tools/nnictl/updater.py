@@ -23,11 +23,12 @@ def validate_file(path):
 
 def validate_dispatcher(args):
     '''validate if the dispatcher of the experiment supports importing data'''
-    nni_config = Config(get_config_filename(args)).get_config()
-    if nni_config.get('tuner') and nni_config['tuner'].get('builtinTunerName'):
-        dispatcher_name = nni_config['tuner']['builtinTunerName']
-    elif nni_config.get('advisor') and nni_config['advisor'].get('builtinAdvisorName'):
-        dispatcher_name = nni_config['advisor']['builtinAdvisorName']
+    experiment_id = get_config_filename(args)
+    experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
+    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
+        dispatcher_name = experiment_config['tuner']['builtinTunerName']
+    elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
+        dispatcher_name = experiment_config['advisor']['builtinAdvisorName']
     else: # otherwise it should be a customized one
         return
     if dispatcher_name not in TUNERS_SUPPORTING_IMPORT_DATA:
