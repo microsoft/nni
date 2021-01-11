@@ -618,7 +618,7 @@ def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
     update_experiment()
     experiments_config = Experiments()
-    experiment_dict = experiments_config.get_all_experiments()
+    experiments_dict = experiments_config.get_all_experiments()
     experiment_id = None
     #find the latest stopped experiment
     if not args.id:
@@ -626,15 +626,15 @@ def manage_stopped_experiment(args, mode):
         'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
         exit(1)
     else:
-        if experiment_dict.get(args.id) is None:
+        if experiments_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)
             exit(1)
-        if experiment_dict[args.id]['status'] != 'STOPPED':
+        if experiments_dict[args.id]['status'] != 'STOPPED':
             print_error('Only stopped experiments can be {0}ed!'.format(mode))
             exit(1)
         experiment_id = args.id
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
-    experiment_config = Config(experiment_id, experiment_dict[args.id]['logDir']).get_config()
+    experiment_config = Config(experiment_id, experiments_dict[args.id]['logDir']).get_config()
     experiments_config.update_experiment(args.id, 'port', args.port)
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
