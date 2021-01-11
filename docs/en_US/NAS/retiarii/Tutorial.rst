@@ -59,7 +59,7 @@ A base model is only one concrete model not a model space. We provide APIs and p
 
 For easy usability and also backward compatibility, we provide some APIs for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that the candidate is a user-defined module, it should be decorated as blackbox module.*
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as `blackbox module <#blackbox-module>`__. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
 
   .. code-block:: python
 
