@@ -55,11 +55,13 @@ NNI currently supports the one-shot NAS algorithms listed below and is adding mo
    * - `SPOS <SPOS.rst>`__
      - `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ constructs a simplified supernet trained with a uniform path sampling method and applies an evolutionary algorithm to efficiently search for the best-performing architectures.
    * - `CDARTS <CDARTS.rst>`__
-     - `Cyclic Differentiable Architecture Search <https://arxiv.org/abs/****>`__ builds a cyclic feedback mechanism between the search and evaluation networks. It introduces a cyclic differentiable architecture search framework which integrates the two networks into a unified architecture.
+     - `Cyclic Differentiable Architecture Search <https://arxiv.org/pdf/2006.10724.pdf>`__ builds a cyclic feedback mechanism between the search and evaluation networks. It introduces a cyclic differentiable architecture search framework which integrates the two networks into a unified architecture.
    * - `ProxylessNAS <Proxylessnas.rst>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms.
    * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. It is a neural architecture search algorithm tailored for text representation.
+   * - `Cream </NAS/Cream.html>`__
+     - `Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search  <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__. It is a new NAS algorithm distilling prioritized paths in search space, without using evolutionary algorithms. Achieving competitive performance on ImageNet, especially for small models (e.g. <200 M Flops).
 
 
 One-shot algorithms run **standalone without nnictl**. NNI supports both PyTorch and Tensorflow 2.X.
