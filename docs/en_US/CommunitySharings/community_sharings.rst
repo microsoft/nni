@@ -22,8 +22,7 @@ External Repositories and References
 With authors' permission, we listed a set of NNI usage examples and relevant articles.
 
 External Repositories
-=====================
-   * Run `ENAS <https://nni.readthedocs.io/en/latest/NAS/ENAS.html>`__ with NNI
+===================== 
    * `Hyperparameter Tuning for Matrix Factorization <https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb>`__ with NNI
    * `scikit-nni <https://github.com/ksachdeva/scikit-nni>`__ Hyper-parameter search for scikit-learn pipelines using NNI
 
