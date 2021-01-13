@@ -301,45 +301,21 @@ You can use these commands to get more information about the experiment
     <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
 </table>
 
-## **Contributing**
-This project welcomes contributions and suggestions. Most contributions require you to agree to a Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us the rights to use your contribution. For details, visit https://cla.microsoft.com.
+## **Rleases and Contributing**
+NNI has a monthly release cycle (major releases). Please let us know if you encounter a bug by [filling an issue](https://github.com/microsoft/nni/issues/new/choose).
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions provided by the bot. You will only need to do this once across all repos using our CLA.
+We apprecicate all contributions. If you are planning to contribute any bug-fixes, please do so without further discussions.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the Code of [Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact opencode@microsoft.com with any additional questions or comments.
+If you plan to contribute new features, new tuners, new training services, etc. please first open an issue or reuse an exisiting issue, and discuss the feature with us. We will discuss with you on the issue timely or set up conference calls if needed.
 
-After getting familiar with contribution agreements, you are ready to create your first PR =), follow the NNI developer tutorials to get start:
+To learn more about making a contribution to NNI, please refer to our [How-to contribution page](https://github.com/microsoft/nni/wiki/How-to-contribute). 
 
-* We recommend new contributors to start with simple issues: [good first issue](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or [help-wanted](https://github.com/microsoft/nni/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22).
-* [NNI developer environment installation tutorial](docs/en_US/Tutorial/SetupNniDeveloperEnvironment.rst)
-* [How to debug](docs/en_US/Tutorial/HowToDebug.rst)
-* If you have any questions on usage, review [FAQ](https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/FAQ.rst) first, if there are no relevant issues and answers to your question, try contact NNI dev team and users in [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) or [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
-* [Customize your own Tuner](docs/en_US/Tuner/CustomizeTuner.rst)
-* [Implement customized TrainingService](docs/en_US/TrainingService/HowToImplementTrainingService.rst)
-* [Implement a new NAS trainer on NNI](docs/en_US/NAS/Advanced.rst)
-* [Customize your own Advisor](docs/en_US/Tuner/CustomizeAdvisor.rst)
+We appreciate all contributions and thanks all the contributors!
+<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://notes.haifengjin.com/img/contributors.svg" /></a>
 
-## **External Repositories and References**
-With authors' permission, we listed a set of NNI usage examples and relevant articles.
-
-* ### **External Repositories** ###
-   * Run [ENAS](examples/nas/enas/README.md) with NNI
-   * [Automatic Feature Engineering](examples/feature_engineering/auto-feature-engineering/README.md) with NNI
-   * [Hyperparameter Tuning for Matrix Factorization](https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb) with NNI
-   * [scikit-nni](https://github.com/ksachdeva/scikit-nni) Hyper-parameter search for scikit-learn pipelines using NNI
-* ### **Relevant Articles** ###
-  * [Hyper Parameter Optimization Comparison](docs/en_US/CommunitySharings/HpoComparison.rst)
-  * [Neural Architecture Search Comparison](docs/en_US/CommunitySharings/NasComparison.rst)
-  * [Parallelizing a Sequential Algorithm TPE](docs/en_US/CommunitySharings/ParallelizingTpeSearch.rst)
-  * [Automatically tuning SVD with NNI](docs/en_US/CommunitySharings/RecommendersSvd.rst)
-  * [Automatically tuning SPTAG with NNI](docs/en_US/CommunitySharings/SptagAutoTune.rst)
-  * [Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI](https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1)
-  * **Blog (in Chinese)** - [AutoML tools (Advisor, NNI and Google Vizier) comparison](http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90) by [@gaocegege](https://github.com/gaocegege) - 总结与分析 section of design and implementation of kubeflow/katib
-  * **Blog (in Chinese)** - [A summary of NNI new capabilities in 2019](https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA) by @squirrelsc
 
 ## **Feedback**
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
-* Ask a question with NNI tags on [Stack Overflow](https://stackoverflow.com/questions/tagged/nni?sort=Newest&edited=true).
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 
 Join IM discussion groups:
