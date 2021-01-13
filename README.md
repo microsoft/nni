@@ -301,17 +301,16 @@ You can use these commands to get more information about the experiment
     <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
 </table>
 
-## **Rleases and Contributing**
+## **Releases and Contributing**
 NNI has a monthly release cycle (major releases). Please let us know if you encounter a bug by [filling an issue](https://github.com/microsoft/nni/issues/new/choose).
 
-We apprecicate all contributions. If you are planning to contribute any bug-fixes, please do so without further discussions.
+We appreciate all contributions. If you are planning to contribute any bug-fixes, please do so without further discussions.
 
 If you plan to contribute new features, new tuners, new training services, etc. please first open an issue or reuse an exisiting issue, and discuss the feature with us. We will discuss with you on the issue timely or set up conference calls if needed.
 
-To learn more about making a contribution to NNI, please refer to our [How-to contribution page](https://github.com/microsoft/nni/wiki/How-to-contribute). 
+To learn more about making a contribution to NNI, please refer to our [How-to contribution page](https://nni.readthedocs.io/en/stable/contribution.html). 
 
-We appreciate all contributions and thanks all the contributors!
-<a href="https://github.com/keras-team/autokeras/graphs/contributors"><img src="https://notes.haifengjin.com/img/contributors.svg" /></a>
+We appreciate all contributions and thank all the contributors!
 
 
 ## **Feedback**
