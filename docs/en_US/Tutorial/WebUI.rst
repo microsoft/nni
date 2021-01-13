@@ -20,7 +20,7 @@ Click the tab ``All experiments`` on the nav bar.
 
 
 
-* When you want to see more details about an experiments you could click the row or trial id, look that:
+* When you want to see more details about an experiment you could click the trial id, look that:
 
 .. image:: ../../img/webui-img/managerExperimentList/toAnotherExp.png
    :target: ../../img/webui-img/managerExperimentList/toAnotherExp.png
