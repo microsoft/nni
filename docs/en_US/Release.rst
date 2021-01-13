@@ -21,39 +21,39 @@ Neural architecture search
   * Documentation (#3221 #3282 #3287)
 
 * Support a new NAS algorithm: Cream (#2705)
-* Add NAS NLP benchmark (#3140)
+* Add a new NAS benchmark for NLP model search (#3140)
 
 Training service
 ^^^^^^^^^^^^^^^^
 
 * Support hybrid training service (#3097 #3251)
-* Support AdlTrainingService implementation for Kubernetes (#3022, thanks external contributors Petuum @pw2393)
+* Support AdlTrainingService, a new training service based on Kubernetes (#3022, thanks external contributors Petuum @pw2393)
 
 
 Model compression
 ^^^^^^^^^^^^^^^^^
 
-* Support fpgm in pruning schedule (#3110)
-* Update graphutils to support torch v1.7 (#3076)
-* Update flops counter (#3048 #3265)
+* Support pruning schedule for fpgm pruning algorithm (#3110)
+* ModelSpeedup improvement: support torch v1.7 (updated graph_utils.py) (#3076)
+* Improve model compression utility: model flops counter (#3048 #3265)
 
 
 WebUI & nnictl 
 ^^^^^^^^^^^^^^
 
-* Add page to manage all experiments (#3081 #3127)
-* Update the layout of overview page (#3046 #3123)
-* Update right nav bar, log position and expanded icons for table (#3069 #3103)
+* Support experiments management on WebUI, add a web page for it (#3081 #3127)
+* Improve the layout of overview page (#3046 #3123)
+* Add navigation bar on the right for logs and configs; add expanded icons for table (#3069 #3103)
 
 
 Others
 ^^^^^^
 
 * Support launching an experiment from Python code (#3111 #3210 #3263)
-* Reorganize source code directory hierarchy (#2962 #2987 #3037)
 * Refactor builtin/customized tuner installation (#3134)
-* Add experiment configuration V2 (#3138)
-* Change SIGKILL to SIGTERM in local mode to cancel a trial job (#3173)
+* Support new experiment configuration V2 (#3138)
+* Reorganize source code directory hierarchy (#2962 #2987 #3037)
+* Change SIGKILL to SIGTERM in local mode when cancelling trial jobs (#3173)
 * Refector hyperband (#3040)
 
 
@@ -61,26 +61,25 @@ Documentation
 -------------
 
 * Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
-* List related research and publications (#3150)
-* Add quantized model export description (#3192)
-* Remove paiYarn doc and add ``reuse`` config in remote doc (#3253)
+* List related research and publications in doc (#3150)
+* Add tutorial of saving and loading quantized model (#3192)
+* Remove paiYarn doc and add description of ``reuse`` config in remote mode (#3253)
 * Update EfficientNet doc to clarify repo versions (#3158, thanks external contributor @ahundt)
 
 Bug fixes
 ---------
 
-* Fix exp-duration pause timing under no_more_trial status (#3043)
-* Fix bug in nas SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
-* Fix ``_compute_hessian`` bug in Pytorch NAS DARTS (#3058, thanks external contributor @hroken)
-* Fix bug of advisor and assesor written backwards on webui (#3070)
+* Fix exp-duration pause timing under NO_MORE_TRIAL status (#3043)
+* Fix bug in NAS SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
+* Fix ``_compute_hessian`` bug in NAS DARTS (PyTorch version) (#3058, thanks external contributor @hroken)
 * Fix bug of conv1d in the cdarts utils (#3073, thanks external contributor @athaker)
-* Fix unknown trial report to resume experiment (#3096)
+* Fix the handling of unknown trials when resuming an experiment (#3096)
 * Fix bug of kill command under Windows (#3106)
 * Fix lazy logging (#3108, thanks external contributor @HarshCasper)
-* Fix checkpoint load error and stop updating paramters in evaluation stage (#3124, thanks external contributor @eedalong)
+* Fix checkpoint load and save issue in QAT quantizer (#3124, thanks external contributor @eedalong)
 * Fix quant grad function calculation error (#3160, thanks external contributor @eedalong)
-* Fix potential bug in quantize device (#3212, thanks external contributor @eedalong)
-* Fix bug for speedup module and enhance the Ut for speedup (#3279)
+* Fix device assignment bug in quantization algorithm (#3212, thanks external contributor @eedalong)
+* Fix bug in ModelSpeedup and enhance UT for it (#3279)
 * and others
 
 
