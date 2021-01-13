@@ -16,7 +16,7 @@ Neural architecture search
 
 * Support an improved NAS framework: Retiarii (experimental)
 
-  * Feature roadmap (#3301)
+  * Feature roadmap (`issue #3301 <https://github.com/microsoft/nni/issues/3301>`__)
   * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.0>`__
   * Documentation (#3221 #3282 #3287)
 
