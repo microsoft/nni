@@ -18,17 +18,17 @@ Neural architecture search
 
   * Feature roadmap (TODO)
   * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.0>`__
-  * Documentations (#3221 #3282 #3287)
+  * Documentation (#3221 #3282 #3287)
 
 * Support a new NAS algorithm: Cream (#2705)
-* Add one NAS NLP benchmark (#3140)
+* Add NAS NLP benchmark (#3140)
 
 Training service
 ^^^^^^^^^^^^^^^^
 
 * Support hybrid training service (#3097 #3251)
-* Support a new training service implementation for Kubernetes (#3022, thanks external contributors Petuum @pw2393)
-* Support custom Kubernetes namespace in AdaptDL mode (#3176)
+* Support AdlTrainingService implementation for Kubernetes (#3022, thanks external contributors Petuum @pw2393)
+
 
 Model compression
 ^^^^^^^^^^^^^^^^^
@@ -41,31 +41,21 @@ Model compression
 WebUI & nnictl 
 ^^^^^^^^^^^^^^
 
-* Add all experiments management page (#3081 #3127)
+* Add page to manage all experiments (#3081 #3127)
 * Update the layout of overview page (#3046 #3123)
 * Update right nav bar, log position and expanded icons for table (#3069 #3103)
-* Unify nnictl port type (#3142)
 
 
 Others
 ^^^^^^
 
 * Support launching an experiment from Python code (#3111 #3210 #3263)
-* Reorganize Python package, package hierarchy, source code directory hierarchy (#2962 #2987 #3037)
+* Reorganize source code directory hierarchy (#2962 #2987 #3037)
 * Refactor builtin/customized tuner installation (#3134)
 * Add experiment configuration V2 (#3138)
 * Change SIGKILL to SIGTERM in local mode to cancel a trial job (#3173)
 * Refector hyperband (#3040)
-* Refactor HPO tuner code hierarchy (#3187)
-* Unify the names of trail job id (#3053)
 
-
-UT & IT
--------
-
-* Add Linux integration test pipeline (#3068)
-* Update unit test and integration test for code hierarchy refactor (#3037 #3088)
-* Update integration test for AdaptDL (#3153)
 
 Documentation
 -------------
@@ -73,9 +63,7 @@ Documentation
 * Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
 * List related research and publications (#3150)
 * Add quantized model export description (#3192)
-* Add documentation for launching from python code (#3217)
 * Remove paiYarn doc and add ``reuse`` config in remote doc (#3253)
-* Change quick start example to PyTorch and update installation from source doc (#3266)
 * Update EfficientNet doc to clarify repo versions (#3158, thanks external contributor @ahundt)
 
 Bug fixes
@@ -83,7 +71,7 @@ Bug fixes
 
 * Fix exp-duration pause timing under no_more_trial status (#3043)
 * Fix bug in nas SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
-* Fix ``_compute_hessian`` bug in Pytorch NAS Darts (#3058, thanks external contributor @hroken)
+* Fix ``_compute_hessian`` bug in Pytorch NAS DARTS (#3058, thanks external contributor @hroken)
 * Fix bug of advisor and assesor written backwards on webui (#3070)
 * Fix bug of conv1d in the cdarts utils (#3073, thanks external contributor @athaker)
 * Fix unknown trial report to resume experiment (#3096)
