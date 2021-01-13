@@ -28,11 +28,11 @@ External Repositories
 
 Relevant Articles
 =================
-  * `Hyper Parameter Optimization Comparison <docs/en_US/CommunitySharings/HpoComparison.rst>`__ 
-  * `Neural Architecture Search Comparison <docs/en_US/CommunitySharings/NasComparison.rst>`__ 
-  * `Parallelizing a Sequential Algorithm TPE <docs/en_US/CommunitySharings/ParallelizingTpeSearch.rst>`__ 
-  * `Automatically tuning SVD with NNI <docs/en_US/CommunitySharings/RecommendersSvd.rst>`__ 
-  * `Automatically tuning SPTAG with NNI <docs/en_US/CommunitySharings/SptagAutoTune.rst>`__ 
+  * `Hyper Parameter Optimization Comparison <./HpoComparison.rst>`__ 
+  * `Neural Architecture Search Comparison <./NasComparison.rst>`__ 
+  * `Parallelizing a Sequential Algorithm TPE <./ParallelizingTpeSearch.rst>`__ 
+  * `Automatically tuning SVD with NNI <./RecommendersSvd.rst>`__ 
+  * `Automatically tuning SPTAG with NNI <./SptagAutoTune.rst>`__ 
   * `Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI <https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1>`__ 
   * `(in Chinese) AutoML tools (Advisor, NNI and Google Vizier) comparison <http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90>`__  
   * `(in Chinese) A summary of NNI new capabilities in 2019 <https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA>`__
