@@ -50,7 +50,7 @@ extensions = [
 ]
 
 # Add mock modules
-autodoc_mock_imports = ['apex']
+autodoc_mock_imports = ['apex', 'nni_node']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
