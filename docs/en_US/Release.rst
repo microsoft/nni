@@ -26,7 +26,7 @@ Neural architecture search
 Training service
 ^^^^^^^^^^^^^^^^
 
-* Support hybrid training service (#3097 #3251)
+* Support hybrid training service (#3097 #3251 #3252)
 * Support AdlTrainingService, a new training service based on Kubernetes (#3022, thanks external contributors Petuum @pw2393)
 
 
@@ -51,7 +51,7 @@ Others
 
 * Support launching an experiment from Python code (#3111 #3210 #3263)
 * Refactor builtin/customized tuner installation (#3134)
-* Support new experiment configuration V2 (#3138)
+* Support new experiment configuration V2 (#3138 #3248 #3251)
 * Reorganize source code directory hierarchy (#2962 #2987 #3037)
 * Change SIGKILL to SIGTERM in local mode when cancelling trial jobs (#3173)
 * Refector hyperband (#3040)
@@ -80,7 +80,7 @@ Bug fixes
 * Fix quant grad function calculation error (#3160, thanks external contributor @eedalong)
 * Fix device assignment bug in quantization algorithm (#3212, thanks external contributor @eedalong)
 * Fix bug in ModelSpeedup and enhance UT for it (#3279)
-* and others
+* and others (#3063 #3065 #3098 #3109 #3125 #3143 #3156 #3168 #3175 #3180 #3181 #3183 #3203 #3205 #3207 #3214 #3216 #3219 #3223 #3224 #3230 #3237 #3239 #3240 #3245 #3247 #3255 #3257 #3258 #3262 #3263 #3267 #3269 #3271 #3279 #3283 #3289 #3290 #3295)
 
 
 Release 1.9 - 10/22/2020
