@@ -37,7 +37,7 @@ Usage
    out = model(dummy_input)
    print('elapsed time: ', time.time() - start)
 
-For complete examples please refer to :githublink:`the code <examples/model_compress/model_speedup.py>`
+For complete examples please refer to :githublink:`the code <examples/model_compress/pruning/model_speedup.py>`
 
 NOTE: The current implementation supports PyTorch 1.3.1 or newer.
 
@@ -51,7 +51,7 @@ For PyTorch we can only replace modules, if functions in ``forward`` should be r
 Speedup Results of Examples
 ---------------------------
 
-The code of these experiments can be found :githublink:`here <examples/model_compress/model_speedup.py>`.
+The code of these experiments can be found :githublink:`here <examples/model_compress/pruning/model_speedup.py>`.
 
 slim pruner example
 ^^^^^^^^^^^^^^^^^^^
@@ -188,3 +188,13 @@ input tensor: ``torch.randn(64, 3, 32, 32)``
      - 0.12421
      - 0.087113
 
+
+SimulatedAnnealing pruner example
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this experiment, we use SimulatedAnnealing pruner to prune the resnet18 on the cifar10 dataset.
+We measure the latencies and accuracies of the pruned model under different sparsity ratios, as shown in the following figure.
+The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(128, 3, 32, 32)``.
+
+
+.. image:: ../../img/SA_latency_accuracy.png

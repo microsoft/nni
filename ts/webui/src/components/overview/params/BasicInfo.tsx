@@ -36,7 +36,7 @@ export const BasicInfo = (): any => {
                         <span className={`${EXPERIMENT.status} status-text`}>{EXPERIMENT.status}</span>
                         {EXPERIMENT.status === 'ERROR' ? (
                             <div>
-                                <div className={styles.buttonArea} ref={ref}>
+                                <div className={`${styles.buttonArea} error-info-icon`} ref={ref}>
                                     <IconButton
                                         iconProps={{ iconName: 'info' }}
                                         onClick={isCalloutVisible ? onDismiss : showCallout}

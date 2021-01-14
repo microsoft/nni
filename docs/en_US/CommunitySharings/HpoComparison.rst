@@ -229,9 +229,9 @@ Storage performance
 
 **Latency**\ : each IO request will take some time to complete, this is called the average latency. There are several factors that would affect this time including network connection quality and hard disk IO performance.
 
-**IOPS**\ :** IO operations per second**\ , which means the amount of *read or write operations* that could be done in one seconds time.
+**IOPS**\ : **IO operations per second**\ , which means the amount of *read or write operations* that could be done in one seconds time.
 
-**IO size**\ :** the size of each IO request**. Depending on the operating system and the application/service that needs disk access it will issue a request to read or write a certain amount of data at the same time.
+**IO size**\ : **the size of each IO request**. Depending on the operating system and the application/service that needs disk access it will issue a request to read or write a certain amount of data at the same time.
 
 **Throughput (in MB/s) = Average IO size x IOPS** 
 

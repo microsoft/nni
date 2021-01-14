@@ -46,7 +46,6 @@
     "react-json-tree": "^0.11.2",
     "react-monaco-editor": "^0.32.1",
     "react-paginate": "^6.3.2",
-    "react-pagination": "^1.0.0",
     "react-responsive": "^8.1.1",
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
@@ -115,6 +114,10 @@
   },
   "resolutions": {
     "npm": ">=6.14.4",
-    "yargs": ">=16.0.3"
+    "yargs": ">=16.0.3",
+    "acorn": ">=8.0.4",
+    "node-forge": ">=0.10.0",
+    "y18n": ">=5.0.5",
+    "serialize-javascript": ">=5.0.1"
   }
 }

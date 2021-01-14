@@ -45,7 +45,7 @@ using the downloading script:
 Or Download manually
 
 
-#. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
+#. download ``dev-v1.1.json`` and ``train-v1.1.json`` `here <https://rajpurkar.github.io/SQuAD-explorer/>`__
 
 .. code-block:: bash
 
@@ -53,7 +53,7 @@ Or Download manually
    wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 
 
-#. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
+#. download ``glove.840B.300d.txt`` `here <https://nlp.stanford.edu/projects/glove/>`__
 
 .. code-block:: bash
 
@@ -87,7 +87,7 @@ Modify ``nni/examples/trials/ga_squad/config.yml``\ , here is the default config
      codeDir: ~/nni/examples/trials/ga_squad
      gpuNum: 0
 
-In the "trial" part, if you want to use GPU to perform the architecture search, change ``gpuNum`` from ``0`` to ``1``. You need to increase the ``maxTrialNum`` and ``maxExecDuration``\ , according to how long you want to wait for the search result.
+In the **trial** part, if you want to use GPU to perform the architecture search, change ``gpuNum`` from ``0`` to ``1``. You need to increase the ``maxTrialNum`` and ``maxExecDuration``\ , according to how long you want to wait for the search result.
 
 2.3 submit this job
 ^^^^^^^^^^^^^^^^^^^
@@ -120,7 +120,7 @@ Modify ``nni/examples/trials/ga_squad/config_pai.yml``\ , here is the default co
    #Your nni_manager ip
    nniManagerIp: 10.10.10.10
    tuner:
-     codeDir: https://github.com/Microsoft/nni/tree/v1.9/examples/tuners/ga_customer_tuner
+     codeDir: https://github.com/Microsoft/nni/tree/v2.0/examples/tuners/ga_customer_tuner
      classFileName: customer_tuner.py
      className: CustomerTuner
      classArgs:

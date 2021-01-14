@@ -1,0 +1,24 @@
+experimentName: example_mnist
+trialConcurrency: 3
+maxExperimentDuration: 1h
+maxTrialNumber: 10
+searchSpaceFile: search_space.json
+
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+
+trainingService:
+  - platform: local
+  - platform: remote
+    reuseMode: true
+    machineList:
+      - host: 10.1.1.1
+        user: xxx
+        password: xxx
+        #port can be skip if using default ssh port 22
+        port: 22

@@ -14,7 +14,7 @@ logger = logging.getLogger("nni.textnas")
 
 def get_length(mask):
     length = torch.sum(mask, 1)
-    length = length.long()
+    length = length.long().cpu()
     return length
 
 
