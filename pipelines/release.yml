@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+trigger: none
+pr: none
+
 jobs:
 - job: validate_version_number
   pool:
@@ -13,9 +16,11 @@ jobs:
     displayName: Configure Python version
 
   - script: |
+      echo $(build_type)
+      echo $(NNI_RELEASE)
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^v[0-9](.[0-9])+$ ]]; then
+      if [[ $BRANCH_TAG == v$(NNI_RELEASE) && $(NNI_RELEASE) =~ ^[0-9](.[0-9])+$ ]]; then
         echo 'Build version match branch tag'
       else
         echo 'Build version does not match branch tag'
@@ -25,15 +30,16 @@ jobs:
     displayName: Validate release version number and branch tag
 
   - script: |
+      echo $(build_type)
       echo $(NNI_RELEASE)
-      if [[ $(NNI_RELEASE) =~ ^[0-9](.[0-9])+a[0-9]$ ]]; then
+      if [[ $(NNI_RELEASE) =~ ^[0-9](.[0-9])+(a|b|rc)[0-9]$ ]]; then
         echo 'Valid prerelease version $(NNI_RELEASE)'
         echo `git describe --tags --abbrev=0`
       else
         echo 'Invalid build version $(NNI_RELEASE)'
         exit 1
       fi
-    condition: ne( variables['build_type'], 'rerelease' )
+    condition: ne( variables['build_type'], 'release' )
     displayName: Validate prerelease version number
 
 - job: linux
@@ -49,22 +55,22 @@ jobs:
     displayName: Configure Python version
 
   - script: |
-      python -m pip install --upgrade pip setuptools twine
+      python -m pip install --upgrade pip setuptools wheel twine
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
-
-      if [ $(build_type) = 'release' ]
-        echo 'uploading release package to pypi...'
-        python -m twine upload -u nni -p $(pypi_password) dist/*
-      then
-      else
-        echo 'uploading prerelease package to testpypi...'
-        python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
-      fi
-    displayName: Build and upload wheel
+    displayName: Build wheel
 
   - script: |
-      if [ $(build_type) = 'release' ]
-      then
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
+        echo 'uploading to pypi...'
+        python -m twine upload -u nni -p $(pypi_password) dist/*
+      else
+        echo 'uploading to testpypi...'
+        python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
+      fi
+    displayName: Upload wheel
+
+  - script: |
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
         docker login -u msranni -p $(docker_hub_password)
         export IMAGE_NAME=msranni/nni
       else
@@ -74,9 +80,11 @@ jobs:
 
       echo "## Building ${IMAGE_NAME}:$(NNI_RELEASE) ##"
       docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t ${IMAGE_NAME} .
-      docker tag ${IMAGE_NAME} ${IMAGE_NAME}:$(NNI_RELEASE)
-      docker push ${IMAGE_NAME}
-      docker push ${IMAGE_NAME}:$(NNI_RELEASE)
+      docker tag ${IMAGE_NAME} ${IMAGE_NAME}:v$(NNI_RELEASE)
+      docker push ${IMAGE_NAME}:v$(NNI_RELEASE)
+      if [[ $(build_type) != 'rc' ]]; then
+        docker push ${IMAGE_NAME}
+      fi
     displayName: Build and upload docker image
 
 - job: macos
@@ -92,18 +100,19 @@ jobs:
     displayName: Configure Python version
 
   - script: |
-      python -m pip install --upgrade pip setuptools twine
+      python -m pip install --upgrade pip setuptools wheel twine
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
+    displayName: Build wheel
 
-      if [ $(build_type) = 'release' ]
+  - script: |
+      if [[ $(build_type) == 'release' || $(build_type) == 'rc' ]]; then
         echo '## uploading to pypi ##'
         python -m twine upload -u nni -p $(pypi_password) dist/*
-      then
       else
         echo '## uploading to testpypi ##'
         python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
       fi
-    displayName: Build and upload wheel
+    displayName: Upload wheel
 
 - job: windows
   dependsOn: validate_version_number
@@ -118,15 +127,16 @@ jobs:
     displayName: Configure Python version
 
   - powershell: |
-      python -m pip install --upgrade pip setuptools twine
+      python -m pip install --upgrade pip setuptools wheel twine
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
+    displayName: Build wheel
 
-      if($env:BUILD_TYPE -eq 'release'){
+  - powershell: |
+      if ($env:BUILD_TYPE -eq 'release' -Or $env:BUILD_TYPE -eq 'rc') {
         Write-Host '## uploading to pypi ##'
         python -m twine upload -u nni -p $(pypi_password) dist/*
-      }
-      else{
+      } else {
         Write-Host '## uploading to testpypi ##'
         python -m twine upload -u nni -p $(pypi_password) --repository-url https://test.pypi.org/legacy/ dist/*
       }
-    displayName: Build and upload wheel
+    displayName: Upload wheel

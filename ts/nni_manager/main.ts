@@ -37,7 +37,7 @@ function initStartupInfo(
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
-    const routerPlatformMode = ['remote', 'pai', 'aml', 'heterogeneous'];
+    const routerPlatformMode = ['remote', 'pai', 'aml', 'hybrid'];
     if (routerPlatformMode.includes(platformMode)) {
         Container.bind(TrainingService)
             .to(RouterTrainingService)
@@ -97,7 +97,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/adl/heterogeneous> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -117,7 +117,7 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'heterogeneous'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

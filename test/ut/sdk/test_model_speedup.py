@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import psutil
 import sys
 import numpy as np
 import torch
@@ -128,6 +129,18 @@ def generate_random_sparsity(model):
                              'sparsity': sparsity})
     return cfg_list
 
+def generate_random_sparsity_v2(model):
+    """
+    Only select 50% layers to prune.
+    """
+    cfg_list = []
+    for name, module in model.named_modules():
+        if isinstance(module, nn.Conv2d):
+            if np.random.uniform(0, 1.0) > 0.5:
+                sparsity = np.random.uniform(0.5, 0.99)
+                cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
+                             'sparsity': sparsity})
+    return cfg_list
 
 def zero_bn_bias(model):
     with torch.no_grad():
@@ -292,52 +305,62 @@ class SpeedupTestCase(TestCase):
     # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282
 
     def test_speedup_integration(self):
-        for model_name in ['resnet18', 'squeezenet1_1', 
-                           'mobilenet_v2', 'densenet121',
+        # skip this test on windows(7GB mem available) due to memory limit
+        # Note: hack trick, may be updated in the future
+        if 'win' in sys.platform or 'Win'in sys.platform:
+            print('Skip test_speedup_integration on windows due to memory limit!')
+            return
+
+        Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
+
+        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121' , 'densenet169', 
                            # 'inception_v3' inception is too large and may fail the pipeline
-                           'densenet169', 'resnet50']:
-            kwargs = {
-                'pretrained': True
-            }
-            if model_name == 'resnet50':
-                # testing multiple groups
+                            'resnet50']:
+                            
+            for gen_cfg_func in Gen_cfg_funcs:
                 kwargs = {
-                    'pretrained': False,
-                    'groups': 4
+                    'pretrained': True
                 }
+                if model_name == 'resnet50':
+                    # testing multiple groups
+                    kwargs = {
+                        'pretrained': False,
+                        'groups': 4
+                    }
+                Model = getattr(models, model_name)
+                net = Model(**kwargs).to(device)
+                speedup_model = Model(**kwargs).to(device)
+                net.eval()  # this line is necessary
+                speedup_model.eval()
+                # random generate the prune config for the pruner
+                cfgs = gen_cfg_func(net)
+                print("Testing {} with compression config \n {}".format(model_name, cfgs))
+                pruner = L1FilterPruner(net, cfgs)
+                pruner.compress()
+                pruner.export_model(MODEL_FILE, MASK_FILE)
+                pruner._unwrap_model()
+                state_dict = torch.load(MODEL_FILE)
+                speedup_model.load_state_dict(state_dict)
+                zero_bn_bias(net)
+                zero_bn_bias(speedup_model)
 
-            Model = getattr(models, model_name)
-            net = Model(**kwargs).to(device)
-            speedup_model = Model(**kwargs).to(device)
-            net.eval()  # this line is necessary
-            speedup_model.eval()
-            # random generate the prune config for the pruner
-            cfgs = generate_random_sparsity(net)
-            pruner = L1FilterPruner(net, cfgs)
-            pruner.compress()
-            pruner.export_model(MODEL_FILE, MASK_FILE)
-            pruner._unwrap_model()
-            state_dict = torch.load(MODEL_FILE)
-            speedup_model.load_state_dict(state_dict)
-            zero_bn_bias(net)
-            zero_bn_bias(speedup_model)
+                data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
+                ms = ModelSpeedup(speedup_model, data, MASK_FILE)
+                ms.speedup_model()
 
-            data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
-            ms = ModelSpeedup(speedup_model, data, MASK_FILE)
-            ms.speedup_model()
+                speedup_model.eval()
 
-            speedup_model.eval()
+                ori_out = net(data)
+                speeded_out = speedup_model(data)
+                ori_sum = torch.sum(ori_out).item()
+                speeded_sum = torch.sum(speeded_out).item()
+                print('Sum of the output of %s (before speedup):' %
+                    model_name, ori_sum)
+                print('Sum of the output of %s (after speedup):' %
+                    model_name, speeded_sum)
+                assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
+                    (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
-            ori_out = net(data)
-            speeded_out = speedup_model(data)
-            ori_sum = torch.sum(ori_out).item()
-            speeded_sum = torch.sum(speeded_out).item()
-            print('Sum of the output of %s (before speedup):' %
-                  model_name, ori_sum)
-            print('Sum of the output of %s (after speedup):' %
-                  model_name, speeded_sum)
-            assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
-                   (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def test_channel_prune(self):
         orig_net = resnet18(num_classes=10).to(device)
@@ -369,8 +392,10 @@ class SpeedupTestCase(TestCase):
             (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
     def tearDown(self):
-        os.remove(MODEL_FILE)
-        os.remove(MASK_FILE)
+        if os.path.exists(MODEL_FILE):
+            os.remove(MODEL_FILE)
+        if os.path.exists(MASK_FILE):
+            os.remove(MASK_FILE)
 
 
 if __name__ == '__main__':

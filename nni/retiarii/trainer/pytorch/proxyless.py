@@ -157,6 +157,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
             module.to(self.device)
 
         self.optimizer = optimizer
+        # we do not support deduplicate control parameters with same label (like DARTS) yet.
         self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate,
                                            weight_decay=0, betas=(0, 0.999), eps=1e-8)
         self._init_dataloader()

@@ -49,7 +49,7 @@ If you want to implement a customized feature selector, you need to:
 
 
 #. Inherit the base FeatureSelector class
-#. Implement *fit* and _get_selected*features* function
+#. Implement *fit* and _get_selected *features* function
 #. Integrate with sklearn (Optional)
 
 Here is an example:
@@ -64,7 +64,7 @@ Here is an example:
        def __init__(self, ...):
        ...
 
-**2. Implement *fit* and _get_selected*features* Function**
+**2. Implement fit and _get_selected features Function**
 
 .. code-block:: python
 

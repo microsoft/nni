@@ -71,7 +71,7 @@ You can view example for more information
 User configuration for QAT Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of ``config_list`` <./QuickStart.rst>`__.
+common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
 
 configuration needed by this algorithm :
 
@@ -157,7 +157,7 @@ PyTorch code
    quantizer = BNNQuantizer(model, configure_list)
    model = quantizer.compress()
 
-You can view example :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/BNN_quantizer_cifar10.py>` for more information.
+You can view example :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` for more information.
 
 User configuration for BNN Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,4 +181,4 @@ We implemented one of the experiments in `Binarized Neural Networks: Training De
      - 86.93%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/BNN_quantizer_cifar10.py>` 
+The experiments code can be found at :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 
