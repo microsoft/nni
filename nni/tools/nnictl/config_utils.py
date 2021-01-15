@@ -9,7 +9,71 @@ import time
 from .constants import NNI_HOME_DIR
 from .command_utils import print_error
 from .common_utils import get_file_lock
-from ...experiment.config.convert import config_v0_to_v1
+
+def config_v0_to_v1(config: dict) -> dict:
+    if 'clusterMetaData' not in config:
+        return config
+    elif 'trainingServicePlatform' in config:
+        import copy
+        experiment_config = copy.deepcopy(config)
+        if experiment_config['trainingServicePlatform'] == 'hybrid':
+            inverse_config = {'hybridConfig': experiment_config['clusterMetaData']['hybrid_config']}
+            platform_list = inverse_config['hybridConfig']['trainingServicePlatforms']
+            for platform in platform_list:
+                inverse_config.update(_inverse_cluster_metadata(platform, experiment_config['clusterMetaData']))
+            experiment_config.update(inverse_config)
+        else:
+            inverse_config = _inverse_cluster_metadata(experiment_config['trainingServicePlatform'], experiment_config['clusterMetaData'])
+            experiment_config.update(inverse_config)
+        experiment_config.pop('clusterMetaData')
+        return experiment_config
+    else:
+        raise RuntimeError('experiment config key `trainingServicePlatform` not found')
+
+def _inverse_cluster_metadata(platform: str, metadata_config: list) -> dict:
+    inverse_config = {}
+    if platform == 'local':
+        inverse_config['trial'] = {}
+        for kv in metadata_config:
+            if kv['key'] == 'local_config':
+                inverse_config['localConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+    elif platform == 'remote':
+        for kv in metadata_config:
+            if kv['key'] == 'machine_list':
+                inverse_config['machineList'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+            elif kv['key'] == 'remote_config':
+                inverse_config['remoteConfig'] = kv['value']
+    elif platform == 'pai':
+        for kv in metadata_config:
+            if kv['key'] == 'pai_config':
+                inverse_config['paiConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+    elif platform == 'kubeflow':
+        for kv in metadata_config:
+            if kv['key'] == 'kubeflow_config':
+                inverse_config['kubeflowConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+    elif platform == 'frameworkcontroller':
+        for kv in metadata_config:
+            if kv['key'] == 'frameworkcontroller_config':
+                inverse_config['frameworkcontrollerConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+    elif platform == 'aml':
+        for kv in metadata_config:
+            if kv['key'] == 'aml_config':
+                inverse_config['amlConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
+    else:
+        raise RuntimeError('training service platform not found')
+    return inverse_config
 
 class Config:
     '''a util class to load and save config'''
@@ -76,13 +140,6 @@ class Experiments:
             self.experiments = self.read_file()
             if expId in self.experiments:
                 self.experiments.pop(expId)
-                fileName = expId
-                if fileName:
-                    logPath = os.path.join(NNI_HOME_DIR, fileName)
-                    try:
-                        shutil.rmtree(logPath)
-                    except FileNotFoundError:
-                        print_error('{0} does not exist.'.format(logPath))
             self.write_file()
 
     def get_all_experiments(self):
