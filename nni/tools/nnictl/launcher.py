@@ -375,8 +375,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['logCollection'] = experiment_config.get('logCollection')
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
-        request_data['clusterMetaData'].append(
-            {'key': 'local_config', 'value': experiment_config['LocalConfig']})
+        if experiment_config.get('localConfig'):
+            request_data['clusterMetaData'].append(
+                {'key': 'local_config', 'value': experiment_config['localConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'remote':

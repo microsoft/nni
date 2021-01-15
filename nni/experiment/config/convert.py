@@ -293,8 +293,9 @@ def to_rest_json(config: ExperimentConfig) -> Dict[str, Any]:
         request_data['logCollection'] = experiment_config.get('logCollection')
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
-        request_data['clusterMetaData'].append(
-            {'key': 'local_config', 'value': experiment_config['LocalConfig']})
+        if experiment_config.get('localConfig'):
+            request_data['clusterMetaData'].append(
+                {'key': 'local_config', 'value': experiment_config['localConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'remote':
@@ -354,10 +355,10 @@ def _inverse_cluster_metadata(platform: str, metadata_config: list) -> Dict[str,
     if platform == 'local':
         inverse_config['trial'] = {}
         for kv in metadata_config:
-            if kv['key'] == 'codeDir':
-                inverse_config['trial']['codeDir'] = kv['value']
-            elif kv['key'] == 'command':
-                inverse_config['trial']['command'] = kv['value']
+            if kv['key'] == 'local_config':
+                inverse_config['localConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
     elif platform == 'remote':
         for kv in metadata_config:
             if kv['key'] == 'machine_list':
@@ -366,12 +367,6 @@ def _inverse_cluster_metadata(platform: str, metadata_config: list) -> Dict[str,
                 inverse_config['trial'] = kv['value']
             elif kv['key'] == 'remote_config':
                 inverse_config['remoteConfig'] = kv['value']
-    elif platform == 'pai':
-        for kv in metadata_config:
-            if kv['key'] == 'pai_config':
-                inverse_config['paiConfig'] = kv['value']
-            elif kv['key'] == 'trial_config':
-                inverse_config['trial'] = kv['value']
     elif platform == 'pai':
         for kv in metadata_config:
             if kv['key'] == 'pai_config':
