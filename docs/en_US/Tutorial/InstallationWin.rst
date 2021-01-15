@@ -40,29 +40,26 @@ If you want to contribute to NNI, refer to `setup development environment <Setup
 
   .. code-block:: bat
 
-       git clone -b v1.9 https://github.com/Microsoft/nni.git
+       git clone -b v2.0 https://github.com/Microsoft/nni.git
        cd nni
-       powershell -ExecutionPolicy Bypass -file install.ps1
+       python setup.py develop
 
 Verify installation
 -------------------
-
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
-
 
 * 
   Clone examples within source code.
 
   .. code-block:: bat
 
-       git clone -b v1.9 https://github.com/Microsoft/nni.git
+       git clone -b v2.0 https://github.com/Microsoft/nni.git
 
 * 
   Run the MNIST example.
 
   .. code-block:: bat
 
-       nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+       nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
 
     Note:  If you are familiar with other frameworks, you can choose corresponding example under ``examples\trials``. It needs to change trial command ``python3`` to ``python`` in each example YAML, since default installation has ``python.exe``\ , not ``python3.exe`` executable.
 

@@ -5,6 +5,84 @@
 ChangeLog
 =========
 
+Release 2.0 - 13/1/2021
+=======================
+
+Major updates
+-------------
+
+Neural architecture search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Support an improved NAS framework: Retiarii (experimental)
+
+  * Feature roadmap (`issue #3301 <https://github.com/microsoft/nni/issues/3301>`__)
+  * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.0>`__
+  * Documentation (#3221 #3282 #3287)
+
+* Support a new NAS algorithm: Cream (#2705)
+* Add a new NAS benchmark for NLP model search (#3140)
+
+Training service
+^^^^^^^^^^^^^^^^
+
+* Support hybrid training service (#3097 #3251 #3252)
+* Support AdlTrainingService, a new training service based on Kubernetes (#3022, thanks external contributors Petuum @pw2393)
+
+
+Model compression
+^^^^^^^^^^^^^^^^^
+
+* Support pruning schedule for fpgm pruning algorithm (#3110)
+* ModelSpeedup improvement: support torch v1.7 (updated graph_utils.py) (#3076)
+* Improve model compression utility: model flops counter (#3048 #3265)
+
+
+WebUI & nnictl 
+^^^^^^^^^^^^^^
+
+* Support experiments management on WebUI, add a web page for it (#3081 #3127)
+* Improve the layout of overview page (#3046 #3123)
+* Add navigation bar on the right for logs and configs; add expanded icons for table (#3069 #3103)
+
+
+Others
+^^^^^^
+
+* Support launching an experiment from Python code (#3111 #3210 #3263)
+* Refactor builtin/customized tuner installation (#3134)
+* Support new experiment configuration V2 (#3138 #3248 #3251)
+* Reorganize source code directory hierarchy (#2962 #2987 #3037)
+* Change SIGKILL to SIGTERM in local mode when cancelling trial jobs (#3173)
+* Refector hyperband (#3040)
+
+
+Documentation
+-------------
+
+* Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
+* List related research and publications in doc (#3150)
+* Add tutorial of saving and loading quantized model (#3192)
+* Remove paiYarn doc and add description of ``reuse`` config in remote mode (#3253)
+* Update EfficientNet doc to clarify repo versions (#3158, thanks external contributor @ahundt)
+
+Bug fixes
+---------
+
+* Fix exp-duration pause timing under NO_MORE_TRIAL status (#3043)
+* Fix bug in NAS SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
+* Fix ``_compute_hessian`` bug in NAS DARTS (PyTorch version) (#3058, thanks external contributor @hroken)
+* Fix bug of conv1d in the cdarts utils (#3073, thanks external contributor @athaker)
+* Fix the handling of unknown trials when resuming an experiment (#3096)
+* Fix bug of kill command under Windows (#3106)
+* Fix lazy logging (#3108, thanks external contributor @HarshCasper)
+* Fix checkpoint load and save issue in QAT quantizer (#3124, thanks external contributor @eedalong)
+* Fix quant grad function calculation error (#3160, thanks external contributor @eedalong)
+* Fix device assignment bug in quantization algorithm (#3212, thanks external contributor @eedalong)
+* Fix bug in ModelSpeedup and enhance UT for it (#3279)
+* and others (#3063 #3065 #3098 #3109 #3125 #3143 #3156 #3168 #3175 #3180 #3181 #3183 #3203 #3205 #3207 #3214 #3216 #3219 #3223 #3224 #3230 #3237 #3239 #3240 #3245 #3247 #3255 #3257 #3258 #3262 #3263 #3267 #3269 #3271 #3279 #3283 #3289 #3290 #3295)
+
+
 Release 1.9 - 10/22/2020
 ========================
 

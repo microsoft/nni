@@ -101,7 +101,7 @@ __C.AUGMENTATION.SMOOTHING = 0.1  # label smoothing parameters
 # batch norm parameters (only works with gen_efficientnet based models
 # currently)
 __C.BATCHNORM = CN()
-__C.BATCHNORM.SYNC_BN = True
+__C.BATCHNORM.SYNC_BN = False
 __C.BATCHNORM.BN_TF = False
 __C.BATCHNORM.BN_MOMENTUM = 0.1  # batchnorm momentum override
 __C.BATCHNORM.BN_EPS = 1e-5  # batchnorm eps override

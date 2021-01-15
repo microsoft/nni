@@ -20,13 +20,31 @@ Install NNI through source code
 
   If you are interested in special or the latest code versions, you can install NNI through source code.
 
-  Prerequisites: ``python 64-bit >=3.6``\ , ``git``\ , ``wget``
+  Prerequisites: ``python 64-bit >=3.6``, ``git``
 
 .. code-block:: bash
 
-     git clone -b v1.9 https://github.com/Microsoft/nni.git
+     git clone -b v2.0 https://github.com/Microsoft/nni.git
      cd nni
-     ./install.sh
+     python3 -m pip install --upgrade pip setuptools
+     python3 setup.py develop
+
+Build wheel package from NNI source code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The previous section shows how to install NNI in `development mode <https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html>`__.
+If you want to perform a persist install instead, we recommend to build your own wheel package and install from wheel.
+
+.. code-block:: bash
+
+    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    cd nni
+    export NNI_RELEASE=2.0
+    python3 -m pip install --upgrade pip setuptools wheel
+    python3 setup.py clean --all
+    python3 setup.py build_ts
+    python3 setup.py bdist_wheel -p manylinux1_x86_64
+    python3 -m pip install dist/nni-2.0-py3-none-manylinux1_x86_64.whl
 
 Use NNI in a docker image
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -36,22 +54,19 @@ Use NNI in a docker image
 Verify installation
 -------------------
 
-The following example is built on TensorFlow 1.x. Make sure **TensorFlow 1.x is used** when running it.
-
-
 * 
   Download the examples via cloning the source code.
 
   .. code-block:: bash
 
-     git clone -b v1.9 https://github.com/Microsoft/nni.git
+     git clone -b v2.0 https://github.com/Microsoft/nni.git
 
 * 
   Run the MNIST example.
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
 * 
   Wait for the message ``INFO: Successfully started experiment!`` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the ``Web UI url``.
