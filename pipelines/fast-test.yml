@@ -2,9 +2,9 @@
 # so that a bug in any module will cause at least one platform to fail quickly.
 
 stages:
-- stage: Lint
+- stage: lint
   jobs:
-  - job: Python & Documentation
+  - job: python
     pool:
       vmImage: ubuntu-latest
 
@@ -35,7 +35,7 @@ stages:
         python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
       displayName: Pylint and flake8
 
-  - job: Typescript
+  - job: typescript
     pool:
       vmImage: ubuntu-latest
   
@@ -51,7 +51,7 @@ stages:
       displayName: ESLint (WebUI)
 
 
-- stage: Test
+- stage: test
   jobs:
   - job: ubuntu_latest
     pool:
