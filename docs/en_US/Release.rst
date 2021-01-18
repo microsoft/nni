@@ -2,8 +2,8 @@
    :format: html
 
 
-ChangeLog
-=========
+Change Log
+==========
 
 Release 2.0 - 1/14/2021
 -----------------------
