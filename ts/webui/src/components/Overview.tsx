@@ -60,11 +60,9 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        // const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
-        // const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
-
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
+        
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
