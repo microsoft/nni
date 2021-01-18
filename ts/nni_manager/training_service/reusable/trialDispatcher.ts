@@ -34,7 +34,7 @@ import { TrialDetail } from './trial';
  * and expose trial as trial job to upper level.
 **/
 @component.Singleton
-class TrialDispatcher implements TrainingService {
+class TrialDispatcher extends TrainingService {
     private readonly log: Logger;
     private readonly isDeveloping: boolean = false;
     private stopping: boolean = false;
@@ -75,6 +75,7 @@ class TrialDispatcher implements TrainingService {
     private isLoggedNoGpuAvailable: boolean = false;
 
     constructor() {
+        super();
         this.log = getLogger();
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();

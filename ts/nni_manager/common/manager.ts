@@ -59,14 +59,16 @@ interface ExperimentParams {
     }[];
 }
 
-interface AlgorithmConfig {
+class AlgorithmConfig {
     name?: string;
     className?: string;
     codeDirectory?: string;
     classArgs?: object;
+
+    get includeIntermediateResults(): boolean { return false; }
 }
 
-interface ExperimentConfig {
+class ExperimentConfig {
     experimentName?: string;
     searchSpace: any;
     trialCommand: string;
@@ -82,9 +84,15 @@ interface ExperimentConfig {
     experimentWorkingDirectory?: string;
     tunerGpuIndices?: number[];
     tuner?: AlgorithmConfig;
-    accessor?: AlgorithmConfig;
+    assessor?: AlgorithmConfig;
     advisor?: AlgorithmConfig;
-    trainingService: object;
+    trainingService: any;
+
+    get multiPhase(): boolean { return false; }
+    get versionCheck(): boolean { return false; }
+    get logCollection(): boolean { return false; }
+
+    constructor() { throw new Error('trying to construct ExperimentConfig'); }
 }
 
 interface ExperimentProfile {
@@ -137,4 +145,4 @@ abstract class Manager {
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };
+export { Manager, ExperimentConfig, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

@@ -38,7 +38,7 @@ import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
  * Training Service implementation for Remote Machine (Linux)
  */
 @component.Singleton
-class RemoteMachineTrainingService implements TrainingService {
+class RemoteMachineTrainingService extends TrainingService {
     private readonly initExecutorId = "initConnection";
     private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
     private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
@@ -60,6 +60,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private sshConnectionPromises: any[];
 
     constructor(@component.Inject timer: ObservableTimer) {
+        super()
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialExecutorManagerMap = new Map<string, ExecutorManager>();

@@ -113,6 +113,10 @@ def _check_rest_server(port: int, retry: int = 3) -> None:
 
 
 def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
+    if config.training_service.platform == 'local':
+        rest.post(port, '/experiment', config.json())
+        return
+
     for cluster_metadata in convert.to_cluster_metadata(config):
         rest.put(port, '/experiment/cluster-metadata', cluster_metadata)
     rest.post(port, '/experiment', convert.to_rest_json(config))

@@ -19,7 +19,7 @@ import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { ExperimentParams, Manager } from './manager';
+import { ExperimentConfig, ExperimentParams, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
@@ -158,7 +158,7 @@ function getCmdPy(): string {
  * @param expParams: experiment startup parameters
  *
  */
-function getMsgDispatcherCommand(expParams: ExperimentParams): string {
+function getMsgDispatcherCommand(expParams: ExperimentParams | ExperimentConfig): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
     return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;

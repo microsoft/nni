@@ -29,7 +29,7 @@ import { DLTSTrialConfig } from './dltsTrialConfig';
 import { DLTSTrialJobDetail } from './dltsTrialJobDetail';
 
 @component.Singleton
-class DLTSTrainingService implements TrainingService {
+class DLTSTrainingService extends TrainingService {
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     //private readonly expRootDir: string;
@@ -49,6 +49,7 @@ class DLTSTrainingService implements TrainingService {
     private dltsTrialConfig?: DLTSTrialConfig;
 
     constructor() {
+        super();
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map();

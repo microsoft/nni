@@ -25,11 +25,12 @@ import { HeterogenousConfig } from './heterogenous/heterogenousConfig';
  * The final goal is to support reusable training job in higher level than training service.
  */
 @component.Singleton
-class RouterTrainingService implements TrainingService {
+class RouterTrainingService extends TrainingService {
     protected readonly log!: Logger;
     private internalTrainingService: TrainingService | undefined;
 
     constructor() {
+        super();
         this.log = getLogger();
     }
 

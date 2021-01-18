@@ -26,7 +26,7 @@ import { PAIClusterConfig, PAITrialJobDetail } from './paiConfig';
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-abstract class PAITrainingService implements TrainingService {
+abstract class PAITrainingService extends TrainingService {
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
     protected readonly trialJobsMap: Map<string, PAITrialJobDetail>;
@@ -50,6 +50,7 @@ abstract class PAITrainingService implements TrainingService {
     protected protocol: string = 'http';
 
     constructor() {
+        super();
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();

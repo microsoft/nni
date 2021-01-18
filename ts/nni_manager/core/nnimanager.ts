@@ -12,7 +12,7 @@ import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
-    ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
+    ExperimentConfig, ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
@@ -25,6 +25,22 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
+
+function maxTrialNum(exp: any): number {
+    if (exp.trainingService === undefined) {
+        return exp.maxTrialNum;
+    } else {
+        return exp.maxTrialNumber || 999;
+    }
+}
+
+function maxExecDuration(exp: any): number {
+    if (exp.trainingService === undefined) {
+        return exp.maxExecDuration;
+    } else {
+        return 99999;
+    }
+}
 
 /**
  * NNIManager which implements Manager interface
@@ -87,13 +103,13 @@ class NNIManager implements Manager {
                 this.updateTrialConcurrency(experimentProfile.params.trialConcurrency);
                 break;
             case 'MAX_EXEC_DURATION':
-                this.updateMaxExecDuration(experimentProfile.params.maxExecDuration);
+                this.updateMaxExecDuration((experimentProfile.params as any).maxExecDuration);
                 break;
             case 'SEARCH_SPACE':
                 this.updateSearchSpace(experimentProfile.params.searchSpace);
                 break;
             case 'MAX_TRIAL_NUM':
-                this.updateMaxTrialNum(experimentProfile.params.maxTrialNum);
+                this.updateMaxTrialNum(maxTrialNum(experimentProfile.params));
                 break;
             default:
                 throw new Error('Error: unrecognized updateType');
@@ -128,7 +144,7 @@ class NNIManager implements Manager {
         if (this.readonly) {
             return Promise.reject(new Error('Error: can not add customized trial job in readonly mode!'));
         }
-        if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+        if (this.currSubmittedTrialNum >= maxTrialNum(this.experimentProfile.params)) {
             return Promise.reject(new Error('reach maxTrialNum'));
         }
 
@@ -182,8 +198,8 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
         }
 
-        if (expParams.trainingService !== undefined) {  // this is v2 config
-            this.trainingService.initConfig(expParams);
+        if ((expParams as any).trainingService !== undefined) {  // this is v2 config
+            this.trainingService.initConfig(expParams as ExperimentConfig);
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
@@ -214,7 +230,7 @@ class NNIManager implements Manager {
         if (readonly) {
             return Promise.resolve();
         }
-        const expParams: ExperimentParams = this.experimentProfile.params;
+        const expParams: ExperimentParams = this.experimentProfile.params as ExperimentParams;
 
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
@@ -255,8 +271,8 @@ class NNIManager implements Manager {
         }
         this.trialDataForTuner = JSON.stringify(trialData);
 
-        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
-            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+        if (this.experimentProfile.execDuration < maxExecDuration(this.experimentProfile.params) &&
+            this.currSubmittedTrialNum < maxTrialNum(this.experimentProfile.params) &&
             this.experimentProfile.endTime) {
             delete this.experimentProfile.endTime;
         }
@@ -406,10 +422,15 @@ class NNIManager implements Manager {
     private getGpuEnvvarValue(): string {
         let cudaDevices: string | undefined;
 
-        if (this.experimentProfile.params.advisor !== undefined) {
-            cudaDevices = this.experimentProfile.params.advisor.gpuIndices;
+        if (this.experimentProfile.params instanceof ExperimentConfig) {
+            const config = this.experimentProfile.params as ExperimentConfig;
+            if (config.tunerGpuIndices) {
+                cudaDevices = config.tunerGpuIndices.join(',');
+            }
+        } else if (this.experimentProfile.params.advisor !== undefined) {
+            cudaDevices = (this.experimentProfile.params.advisor as any).gpuIndices;
         } else if (this.experimentProfile.params.tuner !== undefined) {
-            cudaDevices = this.experimentProfile.params.tuner.gpuIndices;
+            cudaDevices = (this.experimentProfile.params.tuner as any).gpuIndices;
         }
 
         if (cudaDevices === undefined) {
@@ -428,12 +449,16 @@ class NNIManager implements Manager {
     }
 
     private updateMaxExecDuration(duration: number): void {
-        this.experimentProfile.params.maxExecDuration = duration;
+        (this.experimentProfile.params as any).maxExecDuration = duration;
 
         return;
     }
 
     private updateSearchSpace(searchSpace: string): void {
+        if (typeof searchSpace !== 'string') {  // FIXME: tmp hack
+            searchSpace = JSON.stringify(searchSpace);
+        }
+
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
@@ -444,7 +469,7 @@ class NNIManager implements Manager {
     }
 
     private updateMaxTrialNum(maxTrialNum: number): void {
-        this.experimentProfile.params.maxTrialNum = maxTrialNum;
+        (this.experimentProfile.params as any).maxTrialNum = maxTrialNum;  // FIXME: new config
 
         return;
     }
@@ -603,8 +628,8 @@ class NNIManager implements Manager {
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL' ||
                 this.status.status === 'TUNER_NO_MORE_TRIAL', `Actual status: ${this.status.status}`);
-            if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
-                this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+            if (this.experimentProfile.execDuration > maxExecDuration(this.experimentProfile.params) ||
+                this.currSubmittedTrialNum >= maxTrialNum(this.experimentProfile.params)) {
                 if (this.status.status !== 'DONE') {
                     this.setStatus('NO_MORE_TRIAL');
                     waitSubmittedToFinish = this.currSubmittedTrialNum;
@@ -628,7 +653,7 @@ class NNIManager implements Manager {
                 }
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
                     if (this.waitingTrials.length === 0 ||
-                        this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+                        this.currSubmittedTrialNum >= maxTrialNum(this.experimentProfile.params)) {
                         break;
                     }
                     const form = this.waitingTrials.shift() as TrialJobApplicationForm;
@@ -699,9 +724,13 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        this.log.debug(`Send tuner command: INITIALIZE: ${this.experimentProfile.params.searchSpace}`);
+        let searchSpace = this.experimentProfile.params.searchSpace;
+        if (typeof searchSpace !== 'string') {  // FIXME: tmp hack
+            searchSpace = JSON.stringify(searchSpace);
+        }
+        this.log.debug(`Send tuner command: INITIALIZE: ${searchSpace}`);
         // Tuner need to be initialized with search space before generating any hyper parameters
-        this.dispatcher.sendCommand(INITIALIZE, this.experimentProfile.params.searchSpace);
+        this.dispatcher.sendCommand(INITIALIZE, searchSpace);
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
@@ -724,7 +753,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        if (this.experimentProfile.params.multiThread) {
+        if ((this.experimentProfile.params as any).multiThread) {
             // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
             // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
             // sequentially.
@@ -854,16 +883,12 @@ class NNIManager implements Manager {
         // create checkpoint directory
         await mkDirP(chkpDir);
         // assign this directory to exp profile's checkpointDir
-        if (this.experimentProfile.params.advisor) {
-            this.experimentProfile.params.advisor.checkpointDir = chkpDir;
+        for (let algoType of ['tuner', 'assessor', 'advisor']) {
+            const algoParams = (this.experimentProfile.params as any)[algoType];
+            if (algoParams && algoParams.checkpointDir !== undefined) {
+                algoParams.checkpointDir = chkpDir;
+            }
         }
-        if (this.experimentProfile.params.tuner) {
-            this.experimentProfile.params.tuner.checkpointDir = chkpDir;
-        }
-        if (this.experimentProfile.params.assessor) {
-            this.experimentProfile.params.assessor.checkpointDir = chkpDir;
-        }
-
         return Promise.resolve(chkpDir);
     }
 }

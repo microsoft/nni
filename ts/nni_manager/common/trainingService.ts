@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { ExperimentConfig } from './manager';
+
 /**
  * define TrialJobStatus
  */
@@ -87,7 +89,7 @@ abstract class TrainingService {
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
-    public abstract initConfig(config: ExperimentConfig);
+    public async initConfig(config: ExperimentConfig): Promise<void> { }
 }
 
 /**
