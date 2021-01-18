@@ -5,7 +5,7 @@ import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
-import Accuracy from './overview/Accuracy';
+import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import { BasicInfo } from './overview/params/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
@@ -60,8 +60,8 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
-        const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
+        // const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
+        // const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
 
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
@@ -167,7 +167,12 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </div>
                                     </Stack>
                                     <div className='overviewChart'>
-                                        <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} />
+                                        <DefaultPoint
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            visible={true}
+                                            chartHeight={300}
+                                            isHasbestCurve={false}
+                                        />
                                         <SuccessTable
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
                                             updateOverviewPage={updateOverviewPage}

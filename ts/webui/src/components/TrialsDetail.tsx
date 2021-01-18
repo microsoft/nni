@@ -7,7 +7,6 @@ import Duration from './trial-detail/Duration';
 import Para from './trial-detail/Para';
 import Intermediate from './trial-detail/Intermediate';
 import TableList from './trial-detail/TableList';
-import '../static/style/trialsDetail.scss';
 import '../static/style/search.scss';
 
 interface TrialDetailState {
@@ -53,7 +52,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                                 <PivotItem headerText='Default metric' itemIcon='HomeGroup' key='Default metric'>
                                     <Stack className='graph'>
-                                        <DefaultPoint trialIds={trialIds} visible={whichChart === 'Default metric'} />
+                                        <DefaultPoint
+                                            trialIds={trialIds}
+                                            visible={whichChart === 'Default metric'}
+                                            isHasbestCurve={true}
+                                            chartHeight={402}
+                                        />
                                     </Stack>
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfhyper} key="2"> */}

@@ -6,8 +6,13 @@ import { isManagerExperimentPage } from './static/function';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
 import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
+const echarts = require('echarts/lib/echarts');
+echarts.registerTheme('my_theme', {
+    color: '#3c8dbc'
+});
 import './App.scss';
 import './static/style/common.scss';
+import './static/style/trialsDetail.scss';
 
 interface AppState {
     interval: number;

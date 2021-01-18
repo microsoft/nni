@@ -25,6 +25,8 @@ const EmptyGraph = {
 interface DefaultPointProps {
     trialIds: string[];
     visible: boolean;
+    chartHeight: number;
+    isHasbestCurve: boolean;
 }
 
 interface DefaultPointState {
@@ -69,6 +71,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             tooltip: {
                 trigger: 'item',
                 enterable: true,
+                confine: true, // confirm always show tooltip box rather than hidden by background 
                 position: (point: number[], data: TooltipForAccuracy): number[] => [
                     data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
                     80
@@ -149,21 +152,24 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     render(): React.ReactNode {
+        const { isHasbestCurve, chartHeight } = this.props;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
         const onEvents = { dataZoom: this.metricDataZoom };
 
         return (
             <div>
-                <Stack horizontalAlign='end' className='default-metric'>
-                    <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
-                </Stack>
+                {isHasbestCurve && (
+                    <Stack horizontalAlign='end' className='default-metric'>
+                        <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
+                    </Stack>
+                )}
                 <div className='default-metric-graph'>
                     <ReactEcharts
                         option={graph}
                         style={{
                             width: '100%',
-                            height: 402,
+                            height: chartHeight,
                             margin: '0 auto'
                         }}
                         theme='my_theme'
