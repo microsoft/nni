@@ -5,7 +5,7 @@
 ChangeLog
 =========
 
-Release 2.0 - 13/1/2021
+Release 2.0 - 1/14/2021
 =======================
 
 Major updates
