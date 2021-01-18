@@ -3,6 +3,7 @@
 
 stages:
 - stage: Lint
+  jobs:
   - job: Python & Documentation
     pool:
       vmImage: ubuntu-latest
@@ -24,7 +25,7 @@ stages:
     - script: |
         cd docs/en_US
         sphinx-build -M html . _build -W --keep-going -T
-      displayName: Sphinx
+      displayName: Sphinx  # TODO: rstcheck
 
     - script: |
         set -e
