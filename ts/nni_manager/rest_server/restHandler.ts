@@ -159,7 +159,8 @@ class NNIRestHandler {
     }
 
     private startExperiment(router: Router): void {
-        router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
+        // FIXME: add joi back after port complete
+        router.post('/experiment', (req: Request, res: Response) => {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({

@@ -100,84 +100,90 @@ function usage(): void {
     <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
-const strPort: string = parseArg(['--port', '-p']);
-if (!strPort || strPort.length === 0) {
-    usage();
-    process.exit(1);
-}
-
-const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
-    console.log(`FATAL: foreground property should only be true or false`);
-    usage();
-    process.exit(1);
-}
-const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
-
-const port: number = parseInt(strPort, 10);
-
-const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
-    console.log(`FATAL: unknown mode: ${mode}`);
-    usage();
-    process.exit(1);
-}
-
-const startMode: string = parseArg(['--start_mode', '-s']);
-if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
-    console.log(`FATAL: unknown start_mode: ${startMode}`);
-    usage();
-    process.exit(1);
-}
-
-const experimentId: string = parseArg(['--experiment_id', '-id']);
-if (experimentId.trim().length < 1) {
-    console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
-    usage();
-    process.exit(1);
-}
-
-const logDir: string = parseArg(['--log_dir', '-ld']);
-if (logDir.length > 0) {
-    if (!fs.existsSync(logDir)) {
-        console.log(`FATAL: log_dir ${logDir} does not exist`);
+function main(): void {
+    const strPort: string = parseArg(['--port', '-p']);
+    if (!strPort || strPort.length === 0) {
+        usage();
+        process.exit(1);
     }
-}
 
-const logLevel: string = parseArg(['--log_level', '-ll']);
-if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
-    console.log(`FATAL: invalid log_level: ${logLevel}`);
-}
+    const foregroundArg: string = parseArg(['--foreground', '-f']);
+    if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+        console.log(`FATAL: foreground property should only be true or false`);
+        usage();
+        process.exit(1);
+    }
+    const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
 
-const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
-    console.log(`FATAL: readonly property should only be true or false`);
-    usage();
-    process.exit(1);
-}
-const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+    const port: number = parseInt(strPort, 10);
 
-const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
+    const mode: string = parseArg(['--mode', '-m']);
+    if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
+        console.log(`FATAL: unknown mode: ${mode}`);
+        usage();
+        process.exit(1);
+    }
 
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
+    const startMode: string = parseArg(['--start_mode', '-s']);
+    if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
+        console.log(`FATAL: unknown start_mode: ${startMode}`);
+        usage();
+        process.exit(1);
+    }
 
-mkDirP(getLogDir())
-    .then(async () => {
-        try {
-            await initContainer(foreground, mode);
-            const restServer: NNIRestServer = component.get(NNIRestServer);
-            await restServer.start();
-            const log: Logger = getLogger();
-            log.info(`Rest server listening on: ${restServer.endPoint}`);
-        } catch (err) {
-            const log: Logger = getLogger();
-            log.error(`${err.stack}`);
-            throw err;
+    const experimentId: string = parseArg(['--experiment_id', '-id']);
+    if (experimentId.trim().length < 1) {
+        console.log(`FATAL: cannot resume the experiment, invalid experiment_id: ${experimentId}`);
+        usage();
+        process.exit(1);
+    }
+
+    const logDir: string = parseArg(['--log_dir', '-ld']);
+    if (logDir.length > 0) {
+        if (!fs.existsSync(logDir)) {
+            console.log(`FATAL: log_dir ${logDir} does not exist`);
         }
-    })
-    .catch((err: Error) => {
-        console.error(`Failed to create log dir: ${err.stack}`);
-    });
+    }
+
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
+        console.log(`FATAL: invalid log_level: ${logLevel}`);
+    }
+
+    const readonlyArg: string = parseArg(['--readonly', '-r']);
+    if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+        console.log(`FATAL: readonly property should only be true or false`);
+        usage();
+        process.exit(1);
+    }
+    const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+
+    const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
+
+    initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
+
+    mkDirP(getLogDir())
+        .then(async () => {
+            try {
+                await initContainer(foreground, mode);
+                const restServer: NNIRestServer = component.get(NNIRestServer);
+                await restServer.start();
+                const log: Logger = getLogger();
+                log.info(`Rest server listening on: ${restServer.endPoint}`);
+            } catch (err) {
+                const log: Logger = getLogger();
+                log.error(`${err.stack}`);
+                throw err;
+            }
+        })
+        .catch((err: Error) => {
+            console.error(`Failed to create log dir: ${err.stack}`);
+        });
+
+    process.on('SIGTERM', cleanUp);
+    process.on('SIGBREAK', cleanUp);
+    process.on('SIGINT', cleanUp);
+}
 
 async function cleanUp(): Promise<void> {
     const log: Logger = getLogger();
@@ -200,6 +206,4 @@ async function cleanUp(): Promise<void> {
     }
 }
 
-process.on('SIGTERM', cleanUp);
-process.on('SIGBREAK', cleanUp);
-process.on('SIGINT', cleanUp);
+main();

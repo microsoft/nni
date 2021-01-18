@@ -272,51 +272,38 @@ class LocalTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        if (!this.initialized) {
-            this.rootDir = getExperimentRootDir();
-            if (!fs.existsSync(this.rootDir)) {
-                await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
-            }
-            this.initialized = true;
-        }
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.localTrialConfig = <TrialConfig>JSON.parse(value);
-                // Parse trial config failed, throw Error
-                if (this.localTrialConfig === undefined) {
-                    throw new Error('trial config parsed failed');
-                }
-                if (this.localTrialConfig.gpuNum !== undefined) {
-                    this.log.info(`required GPU number is ${this.localTrialConfig.gpuNum}`);
-                    if (this.gpuScheduler === undefined && this.localTrialConfig.gpuNum > 0) {
-                        this.gpuScheduler = new GPUScheduler();
-                    }
-                }
-                break;
-            case TrialConfigMetadataKey.LOCAL_CONFIG:
-                this.localConfig = <LocalConfig>JSON.parse(value);
-                this.log.info(`Specified GPU indices: ${this.localConfig.gpuIndices}`);
-                if (this.localConfig.gpuIndices !== undefined) {
-                    this.designatedGpuIndices = new Set(this.localConfig.gpuIndices.split(',')
-                            .map((x: string) => parseInt(x, 10)));
-                    if (this.designatedGpuIndices.size === 0) {
-                        throw new Error('gpuIndices can not be empty if specified.');
-                    }
-                }
-                if (this.localConfig.maxTrialNumPerGpu !== undefined) {
-                    this.maxTrialNumPerGpu = this.localConfig.maxTrialNumPerGpu;
-                }
+    // FIXME: hybrid
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        assert(!this.initialized);
+        this.initialized = true;
 
-                if (this.localConfig.useActiveGpu !== undefined) {
-                    this.useActiveGpu = this.localConfig.useActiveGpu;
-                }
-                break;
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                this.isMultiPhase = (value === 'true' || value === 'True');
-                break;
-            default:
+        this.localTrialConfig = {
+            command: config.trialCommand,
+            codeDir: config.trialCodeDirectory,
+            gpuNum: config.trialGpuNumber,
+        };
+        if (config.trialGpuNumber > 0) {
+            this.gpuScheduler = new GPUScheduler();
         }
+
+        let gpuIndices: string | undefined;
+        if (config.trainingService.gpuIndices !== undefined) {
+            gpuIndices = config.trainingService.gpuIndices.join(',');
+            this.log.info(`Specified GPU indices: ${gpuIndices}`);
+            this.designatedGpuIndices = new Set(config.trainingService.gpuIndices);
+            assert(config.trainingService.gpuIndices.size > 0);
+        }
+        this.maxTrialNumPerGpu = config.trainingService.maxTrialNumberPerGpu;
+        this.useActiveGpu = config.trainingService.useActiveGpu;
+        this.localConfig = {
+            maxTrialNumPerGpu: config.trainingService.maxTrialNumberPerGpu,
+            gpuIndices: gpuIndices,
+            useActiveGpu: config.trainingService.useActiveGpu,
+        };
+    }
+
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
+        throw new Error(`local: setClusterMetadata(${key}, ${value})`);
     }
 
     public getClusterMetadata(key: string): Promise<string> {

@@ -163,7 +163,7 @@ class NNIManager implements Manager {
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
     }
 
-    public async startExperiment(expParams: ExperimentParams): Promise<string> {
+    public async startExperiment(expParams: ExperimentParams | ExperimentConfig): Promise<string> {
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
         this.experimentProfile.params = expParams;
         await this.storeExperimentProfile();
@@ -180,6 +180,10 @@ class NNIManager implements Manager {
         // Set up logCollection config
         if (expParams.logCollection !== undefined) {
             this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
+        }
+
+        if (expParams.trainingService !== undefined) {  // this is v2 config
+            this.trainingService.initConfig(expParams);
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams);

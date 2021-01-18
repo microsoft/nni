@@ -59,8 +59,36 @@ interface ExperimentParams {
     }[];
 }
 
+interface AlgorithmConfig {
+    name?: string;
+    className?: string;
+    codeDirectory?: string;
+    classArgs?: object;
+}
+
+interface ExperimentConfig {
+    experimentName?: string;
+    searchSpace: any;
+    trialCommand: string;
+    trialCodeDirectory: string;
+    trialConcurrency: number;
+    trialGpuNumber?: number;
+    maxExperimentDuration?: string;
+    maxTrialNumber?: number;
+    nniManagerIp?: string;
+    useAnnotation?: boolean;
+    debug?: boolean;
+    logLevel?: string;
+    experimentWorkingDirectory?: string;
+    tunerGpuIndices?: number[];
+    tuner?: AlgorithmConfig;
+    accessor?: AlgorithmConfig;
+    advisor?: AlgorithmConfig;
+    trainingService: object;
+}
+
 interface ExperimentProfile {
-    params: ExperimentParams;
+    params: ExperimentParams | ExperimentConfig;
     id: string;
     execDuration: number;
     logDir?: string;
