@@ -990,32 +990,7 @@ def load_experiment(args):
             else:
                 shutil.copy(src_path, target_path)
 
-    # Step5. Copy searchSpace file
-    # archive_search_space_dir = os.path.join(temp_root_dir, 'searchSpace')
-    # if args.searchSpacePath:
-    #     target_path = os.path.expanduser(args.searchSpacePath)
-    # else:
-    #     # set default path to codeDir
-    #     target_path = os.path.join(codeDir, 'search_space.json')
-    # if not os.path.isabs(target_path):
-    #     target_path = os.path.join(os.getcwd(), target_path)
-    #     print_normal('Expand search space path to %s' % target_path)
-    # experiment_config['searchSpacePath'] = target_path
-    # # if the path already has a search space file, use the original one, otherwise use archived one
-    # if not os.path.isfile(target_path):
-    #     if len(os.listdir(archive_search_space_dir)) == 0:
-    #         print_error('Archive file does not contain search space file!')
-    #         exit(1)
-    #     else:
-    #         for file in os.listdir(archive_search_space_dir):
-    #             source_path = os.path.join(archive_search_space_dir, file)
-    #             os.makedirs(os.path.dirname(target_path), exist_ok=True)
-    #             shutil.copyfile(source_path, target_path)
-    #             break
-    # elif not args.searchSpacePath:
-    #     print_warning('%s exist, will not load search_space file' % target_path)
-
-    # Step6. Create experiment metadata
+    # Step5. Create experiment metadata
     experiments_config.add_experiment(experiment_id,
                                       experiment_metadata.get('port'),
                                       experiment_metadata.get('startTime'),
