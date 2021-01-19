@@ -61,6 +61,8 @@ def main():
 
 
 def _run_advisor(exp_params):
+    if 'name' in exp_params['advisor']:
+        exp_params['advisor']['builtinAdvisorName'] = exp_params['advisor']['name']
     if exp_params.get('advisor').get('builtinAdvisorName'):
         dispatcher = create_builtin_class_instance(
             exp_params.get('advisor').get('builtinAdvisorName'),
@@ -78,6 +80,9 @@ def _run_advisor(exp_params):
 
 
 def _create_tuner(exp_params):
+    # TODO: customized tuner loading
+    if 'name' in exp_params['tuner']:
+        exp_params['tuner']['builtinTunerName'] = exp_params['tuner']['name']
     if exp_params.get('tuner').get('builtinTunerName'):
         tuner = create_builtin_class_instance(
             exp_params.get('tuner').get('builtinTunerName'),
@@ -91,6 +96,8 @@ def _create_tuner(exp_params):
 
 
 def _create_assessor(exp_params):
+    if 'name' in exp_params['assessor']:
+        exp_params['assessor']['builtinAssessorName'] = exp_params['assessor']['name']
     if exp_params.get('assessor').get('builtinAssessorName'):
         assessor = create_builtin_class_instance(
             exp_params.get('assessor').get('builtinAssessorName'),

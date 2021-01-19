@@ -119,4 +119,5 @@ def validate_all_content(experiment_config, config_path):
 
     NNIConfigSchema().validate(experiment_config)
 
-    experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
+    if experiment_config['trainingServicePlatform'] != 'local':
+        experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])

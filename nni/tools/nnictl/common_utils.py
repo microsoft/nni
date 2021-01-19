@@ -44,6 +44,7 @@ def get_json_content(file_path):
 def print_error(*content):
     '''Print error information to screen'''
     print(Fore.RED + ERROR_INFO + ' '.join([str(c) for c in content]) + Fore.RESET)
+    raise
 
 def print_green(*content):
     '''Print information to screen in green'''

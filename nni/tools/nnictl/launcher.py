@@ -114,23 +114,6 @@ def set_trial_config(experiment_config, port, config_file_name):
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
 
-def set_local_config(experiment_config, port, config_file_name):
-    '''set local configuration'''
-    request_data = dict()
-    if experiment_config.get('localConfig'):
-        request_data['local_config'] = experiment_config['localConfig']
-        response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
-        err_message = ''
-        if not response or not check_response(response):
-            if response is not None:
-                err_message = response.text
-                _, stderr_full_path = get_log_path(config_file_name)
-                with open(stderr_full_path, 'a+') as fout:
-                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-            return False, err_message
-
-    return set_trial_config(experiment_config, port, config_file_name), None
-
 def set_adl_config(experiment_config, port, config_file_name):
     '''set adl configuration'''
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
@@ -335,6 +318,22 @@ def set_hybrid_config(experiment_config, port, config_file_name):
 
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
+    if experiment_config['trainingServicePlatform'] == 'local':
+        print(experiment_config)
+        from nni.experiment.config.v1.local import convert_to_v2
+        v2 = convert_to_v2(experiment_config).json()
+        response = rest_post(experiment_url(port), json.dumps(v2), REST_TIME_OUT, show_error=True)
+        print(response.text)
+        if check_response(response):
+            return response
+        else:
+            _, stderr_full_path = get_log_path(config_file_name)
+            if response is not None:
+                with open(stderr_full_path, 'a+') as fout:
+                    fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+                print_error('Setting experiment error, error message is {}'.format(response.text))
+            return None
+
     request_data = dict()
     request_data['authorName'] = experiment_config['authorName']
     request_data['experimentName'] = experiment_config['experimentName']
@@ -447,7 +446,7 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
     if platform == 'adl':
         config_result, err_msg = set_adl_config(experiment_config, port, config_file_name)
     elif platform == 'local':
-        config_result, err_msg = set_local_config(experiment_config, port, config_file_name)
+        config_result, err_msg = True, None
     elif platform == 'remote':
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)
     elif platform == 'pai':

@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from ruamel import yaml
+
 from .base import ConfigBase, PathLike
 from . import util
 
@@ -63,7 +65,7 @@ class ExperimentConfig(ConfigBase):
     experiment_working_directory: Optional[PathLike] = None
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
     tuner: Optional[_AlgorithmConfig] = None
-    accessor: Optional[_AlgorithmConfig] = None
+    assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
 
@@ -89,6 +91,14 @@ class ExperimentConfig(ConfigBase):
         if self.trial_gpu_number and hasattr(self.training_service, 'use_active_gpu'):
             if self.training_service.use_active_gpu is None:
                 raise ValueError('Please set "use_active_gpu"')
+
+    def canonical(self):
+        ret = super().canonical()
+        if ret.search_space_file is not None:
+            ret.search_space = yaml.safe_load(open(ret.search_space_file))
+            ret.search_space_file = None
+        return ret
+
 
 ## End of public API ##
 
@@ -127,8 +137,8 @@ def _validate_for_exp(config: ExperimentConfig) -> None:
         raise ValueError('ExperimentConfig: annotation is not supported in this mode')
     if util.count(config.search_space, config.search_space_file) != 1:
         raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
-    if util.count(config.tuner, config.accessor, config.advisor) != 0:
-        raise ValueError('ExperimentConfig: tuner, accessor, and advisor must not be set in for this mode')
+    if util.count(config.tuner, config.assessor, config.advisor) != 0:
+        raise ValueError('ExperimentConfig: tuner, assessor, and advisor must not be set in for this mode')
     if config.tuner_gpu_indices is not None:
         raise ValueError('ExperimentConfig: tuner_gpu_indices is not supported in this mode')
 
