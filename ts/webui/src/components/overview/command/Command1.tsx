@@ -14,6 +14,9 @@ export const Command1 = (): any => {
         if (tuner.builtinTunerName !== undefined) {
             builtinName.push(tuner.builtinTunerName);
         }
+        if (tuner.className !== undefined) {
+            builtinName.push(tuner.className);
+        }
     }
 
     if (advisor !== undefined) {
@@ -30,6 +33,9 @@ export const Command1 = (): any => {
         title.push('Assessor');
         if (assessor.builtinAssessorName !== undefined) {
             builtinName.push(assessor.builtinAssessorName);
+        }
+        if (assessor.className !== undefined) {
+            builtinName.push(assessor.className);
         }
     }
 
