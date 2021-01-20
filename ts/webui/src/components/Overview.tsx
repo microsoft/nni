@@ -62,7 +62,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
-        
+
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
@@ -169,7 +169,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
                                             visible={true}
                                             chartHeight={300}
-                                            isHasbestCurve={false}
+                                            hasBestCurve={false}
                                         />
                                         <SuccessTable
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}

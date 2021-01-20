@@ -26,7 +26,7 @@ interface DefaultPointProps {
     trialIds: string[];
     visible: boolean;
     chartHeight: number;
-    isHasbestCurve: boolean;
+    hasBestCurve: boolean;
 }
 
 interface DefaultPointState {
@@ -71,7 +71,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                confine: true, // confirm always show tooltip box rather than hidden by background 
+                confine: true, // confirm always show tooltip box rather than hidden by background
                 position: (point: number[], data: TooltipForAccuracy): number[] => [
                     data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
                     80
@@ -152,14 +152,14 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     render(): React.ReactNode {
-        const { isHasbestCurve, chartHeight } = this.props;
+        const { hasBestCurve, chartHeight } = this.props;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
         const onEvents = { dataZoom: this.metricDataZoom };
 
         return (
             <div>
-                {isHasbestCurve && (
+                {hasBestCurve && (
                     <Stack horizontalAlign='end' className='default-metric'>
                         <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
                     </Stack>

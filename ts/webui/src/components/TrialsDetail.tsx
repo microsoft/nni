@@ -55,7 +55,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                         <DefaultPoint
                                             trialIds={trialIds}
                                             visible={whichChart === 'Default metric'}
-                                            isHasbestCurve={true}
+                                            hasBestCurve={true}
                                             chartHeight={402}
                                         />
                                     </Stack>
