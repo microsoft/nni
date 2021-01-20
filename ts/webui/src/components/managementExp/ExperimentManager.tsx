@@ -312,7 +312,6 @@ class Experiment extends React.Component<{}, ExpListState> {
      */
     private commonSelectString = (data: AllExperimentList[], field: string): AllExperimentList[] => {
         const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        const hasStatus = selectedStatus.length === 0 ? false : true;
         const hasPlatform = selectedPlatform === '' ? false : true;
         const hasStartDate = selectedStartDate === undefined ? false : true;
         const hasEndDate = selectedEndDate === undefined ? false : true;
@@ -323,18 +322,14 @@ class Experiment extends React.Component<{}, ExpListState> {
             }
         }
         if (field === 'platform') {
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = filterByStatusOrPlatform(selectedStatus, 'status', data);
         }
 
         if (field === '') {
             if (hasPlatform) {
                 data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
             }
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = filterByStatusOrPlatform(selectedStatus, 'status', data);
         }
 
         if (hasStartDate) {
@@ -356,19 +351,12 @@ class Experiment extends React.Component<{}, ExpListState> {
             const newSelectedStatus = item.selected
                 ? [...selectedStatus, item.key as string]
                 : selectedStatus.filter(key => key !== item.key);
-            if (newSelectedStatus.length !== 0) {
-                let result = filterByStatusOrPlatform(newSelectedStatus, 'status', searchSource);
-                result = this.commonSelectString(result, 'status');
-                this.setState({
-                    selectedStatus: newSelectedStatus,
-                    source: getSortedSource(result, sortInfo)
-                });
-            } else {
-                this.setState({
-                    selectedStatus: newSelectedStatus,
-                    source: searchSource
-                });
-            }
+            let result = filterByStatusOrPlatform(newSelectedStatus, 'status', searchSource);
+            result = this.commonSelectString(result, 'status');
+            this.setState({
+                selectedStatus: newSelectedStatus,
+                source: getSortedSource(result, sortInfo)
+            });
         }
     };
 
@@ -391,7 +379,6 @@ class Experiment extends React.Component<{}, ExpListState> {
                 searchSource,
                 sortInfo
             } = this.state;
-            const hasStatus = selectedStatus.length === 0 ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
             const hasStartDate = selectedStartDate === undefined ? false : true;
             const hasEndDate = selectedEndDate === undefined ? false : true;
@@ -399,9 +386,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             if (type === 'start') {
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                 result = searchSource.filter(item => compareDate(new Date(item.startTime), date));
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
+                result = filterByStatusOrPlatform(selectedStatus, 'status', result);
                 if (hasPlatform) {
                     result = result.filter(temp => temp.platform === selectedPlatform);
                 }
@@ -415,10 +400,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 }));
             } else {
                 result = searchSource.filter(item => compareDate(new Date(item.endTime), date));
-
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
+                result = filterByStatusOrPlatform(selectedStatus, 'status', result);
                 if (hasPlatform) {
                     result = result.filter(temp => temp.platform === selectedPlatform);
                 }

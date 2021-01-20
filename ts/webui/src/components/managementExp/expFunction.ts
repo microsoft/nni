@@ -22,8 +22,12 @@ const filterByStatusOrPlatform = (
 ): AllExperimentList[] => {
     if (typeof val === 'string') {
         return data.filter(temp => temp[type] === val);
-    } else {
+    } else if (val.length !== 0) {
+        console.info(data.filter(temp => val.includes(temp[type]))); // eslint-disable-line
         return data.filter(temp => val.includes(temp[type]));
+    } else {
+        // 没有选择 status 这一列里的任何一个状态
+        return data;
     }
 };
 
