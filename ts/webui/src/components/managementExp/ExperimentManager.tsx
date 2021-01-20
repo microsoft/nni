@@ -23,7 +23,7 @@ interface ExpListState {
     errorMessage: string;
     hideFilter: boolean;
     searchInputVal: string;
-    selectedStatus: string;
+    selectedStatus: string[];
     selectedPlatform: string;
     selectedStartDate?: Date;
     selectedEndDate?: Date;
@@ -40,9 +40,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             platform: [],
             columns: this.columns,
             errorMessage: '',
-            hideFilter: true,
+            hideFilter: false, // 方便dev
             searchInputVal: '',
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             source: [], // data in table
             originExperimentList: [], // api /experiments-info
@@ -312,7 +312,7 @@ class Experiment extends React.Component<{}, ExpListState> {
      */
     private commonSelectString = (data: AllExperimentList[], field: string): AllExperimentList[] => {
         const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        const hasStatus = selectedStatus === '' ? false : true;
+        const hasStatus = selectedStatus.length === 0 ? false : true;
         const hasPlatform = selectedPlatform === '' ? false : true;
         const hasStartDate = selectedStartDate === undefined ? false : true;
         const hasEndDate = selectedEndDate === undefined ? false : true;
@@ -352,10 +352,23 @@ class Experiment extends React.Component<{}, ExpListState> {
     // status platform startTime endTime
     private selectStatus = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            const { searchSource, sortInfo } = this.state;
-            let result = filterByStatusOrPlatform(item.key, 'status', searchSource);
-            result = this.commonSelectString(result, 'status');
-            this.setState({ selectedStatus: item.key, source: getSortedSource(result, sortInfo) });
+            const { searchSource, sortInfo, selectedStatus } = this.state;
+            const newSelectedStatus = item.selected
+                ? [...selectedStatus, item.key as string]
+                : selectedStatus.filter(key => key !== item.key);
+            if (newSelectedStatus.length !== 0) {
+                let result = filterByStatusOrPlatform(newSelectedStatus, 'status', searchSource);
+                result = this.commonSelectString(result, 'status');
+                this.setState({
+                    selectedStatus: newSelectedStatus,
+                    source: getSortedSource(result, sortInfo)
+                });
+            } else {
+                this.setState({
+                    selectedStatus: newSelectedStatus,
+                    source: searchSource
+                });
+            }
         }
     };
 
@@ -378,7 +391,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 searchSource,
                 sortInfo
             } = this.state;
-            const hasStatus = selectedStatus === '' ? false : true;
+            const hasStatus = selectedStatus.length === 0 ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
             const hasStartDate = selectedStartDate === undefined ? false : true;
             const hasEndDate = selectedEndDate === undefined ? false : true;
@@ -434,7 +447,7 @@ class Experiment extends React.Component<{}, ExpListState> {
         );
         this.setState(() => ({
             source: getSortedSource(result, sortInfo),
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             selectedStartDate: undefined,
             selectedEndDate: undefined

@@ -5,7 +5,7 @@ import { fillOptions } from './expFunction';
 
 interface FilterBtnsProps {
     platform: string[];
-    selectedStatus: string;
+    selectedStatus: string[];
     selectedPlatform: string;
     selectedStartDate: Date;
     selectedEndDate: Date;
@@ -37,7 +37,10 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
             <React.Fragment>
                 <Dropdown
                     label='Status'
-                    selectedKey={selectedStatus}
+                    // selectedKey -> single choice
+                    // selectedKeys -> multiy
+                    selectedKeys={selectedStatus}
+                    multiSelect
                     onChange={selectStatus.bind(this)}
                     placeholder='Select an option'
                     options={fillOptions(EXPERIMENTSTATUS)}
