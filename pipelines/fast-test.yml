@@ -15,13 +15,14 @@ stages:
       displayName: Configure Python version
 
     - script: |
-        set -e
         sudo apt-get install -y pandoc
-        python -m pip install --upgrade pygments
-        python -m pip install pylint flake8
-        python -m pip install "torch==1.7.1+cpu" "torchvision==0.8.2+cpu" -f https://download.pytorch.org/whl/torch_stable.html
-        python -m pip install tensorflow gym onnx peewee thop graphviz
-        python -m pip install sphinx sphinx-argparse sphinx-rtd-theme sphinxcontrib-websupport nbsphinx
+      displayName: Install apt packages
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/develop.txt
+        python -m pip install -r dependencies/required.txt
+        python -m pip install -r dependencies/recommended.txt
       displayName: Install requirements
 
     - script: |
