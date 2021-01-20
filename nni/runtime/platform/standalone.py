@@ -22,7 +22,7 @@ def get_next_parameter():
         colorama.Style.BRIGHT,
         colorama.Fore.RED,
         'Running NNI code without runtime. ',
-        'Check following tutorial if you are new to NNI: ',
+        'Check the following tutorial if you are new to NNI: ',
         colorama.Fore.YELLOW,
         'https://nni.readthedocs.io/en/stable/Tutorial/QuickStart.html#id1',
         colorama.Style.RESET_ALL
