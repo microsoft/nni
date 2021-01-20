@@ -10,7 +10,7 @@ from typing import Optional, Tuple
 import colorama
 
 import nni.runtime.protocol
-import nni_node
+import nni_node  # pylint: disable=import-error
 
 from .config import ExperimentConfig
 from .config import convert

@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from subprocess import Popen
 from pyhdfs import HdfsClient
 from nni.tools.annotation import expand_annotations
-import nni_node
+import nni_node  # pylint: disable=import-error
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
