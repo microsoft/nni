@@ -20,7 +20,6 @@ const filterByStatusOrPlatform = (
     type: string,
     data: AllExperimentList[]
 ): AllExperimentList[] => {
-    
     if (typeof val === 'string' && val !== '') {
         return data.filter(temp => temp[type] === val);
     }
