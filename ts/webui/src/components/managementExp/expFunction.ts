@@ -20,15 +20,16 @@ const filterByStatusOrPlatform = (
     type: string,
     data: AllExperimentList[]
 ): AllExperimentList[] => {
-    if (typeof val === 'string') {
+    
+    if (typeof val === 'string' && val !== '') {
         return data.filter(temp => temp[type] === val);
-    } else if (val.length !== 0) {
-        console.info(data.filter(temp => val.includes(temp[type]))); // eslint-disable-line
-        return data.filter(temp => val.includes(temp[type]));
-    } else {
-        // 没有选择 status 这一列里的任何一个状态
-        return data;
     }
+
+    if (Array.isArray(val) && val.length !== 0) {
+        return data.filter(temp => val.includes(temp[type]));
+    }
+
+    return data;
 };
 
 function fillOptions(arr: string[]): any {
