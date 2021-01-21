@@ -167,6 +167,7 @@ class GraphConverter:
         # key: tensor (%out.1), value: node (this node)
         output_remap = {}
 
+        # ===================handle control flow: if===================
         def handle_if_condition(cond_tensor):
             """
             to calculate the condition, we only deal with the following op types by tracing back
@@ -219,6 +220,112 @@ class GraphConverter:
                 last_block_node = handle_single_node(node)
             return last_block_node
 
+        # ===================handle function call===================
+        def handle_function_callmethod(node):
+            # get and handle the first input, which should be an nn.Module
+            assert node.hasAttribute('name')
+            if node.s('name') == 'forward':
+                # node.inputsAt(0).type() is <class 'torch._C.ClassType'>
+                submodule_type_str = self._remove_mangle(node.inputsAt(0).type().str())
+                submodule = node.inputsAt(0).node()
+                assert submodule.kind() == 'prim::GetAttr'
+                assert submodule.hasAttribute('name')
+                submodule_name = submodule.s('name')
+
+                if submodule.inputsAt(0).debugName() == 'self':
+                    # module is usually instantiated in __init__.
+                    # when calling a module in forward,
+                    # prim::GetAttr is used to obtain the module in torch script.
+                    # therefore, we do this check for a module. example below:
+                    # %25 : __torch__.xxx = prim::GetAttr[name="input_switch"](%self)
+                    # %27 : Tensor = prim::CallMethod[name="forward"](%25, %out.1)
+                    assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(
+                        submodule_name, script_module._modules.keys())
+
+                    submodule_full_name = build_full_name(module_name, submodule_name)
+                    submodule_obj = getattr(module, submodule_name)
+                    subgraph, sub_m_attrs = self.convert_module(script_module._modules[submodule_name],
+                                                                submodule_obj,
+                                                                submodule_full_name, ir_model)
+                else:
+                    # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
+                    # %10 : __torch__.darts_model.Cell = prim::GetAttr[name="0"](%8)
+                    # %s1.4 : Tensor = prim::CallMethod[name="forward"](%10, %4, %4)
+                    if submodule.inputsAt(0).type().name() == 'ModuleList':
+                        # handle ModuleList
+                        predecessor = submodule.inputsAt(0).node()
+                        assert predecessor.kind() == 'prim::GetAttr'
+                        assert predecessor.hasAttribute('name')
+                        assert predecessor.inputsAt(0).debugName() == 'self'
+                        predecessor_name = predecessor.s('name')
+                        # FIXME: exchange
+                        submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
+                        predecessor_obj = getattr(module, predecessor_name)
+                        submodule_obj = getattr(predecessor_obj, submodule_name)
+                        subgraph, sub_m_attrs = self.convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
+                                                                    submodule_obj, submodule_full_name, ir_model)
+                    else:
+                        raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
+
+                # TODO: match subgraph with maintained graphs
+                # build cell
+                if subgraph is None:
+                    # if we do not parse this module's graph, we create Node for this module
+                    subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
+                    if isinstance(submodule_obj, Placeholder):
+                        subcell.update_label(submodule_obj.label)
+                    elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
+                        subcell.update_label(sub_m_attrs['label'])
+                else:
+                    # Graph already created, create Cell for it
+                    new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
+                    subcell = ir_graph.add_node(submodule_full_name, new_cell)
+                node_index[node] = subcell
+                # connect the cell into graph
+                self._add_edge(ir_graph, node, graph_inputs, node_index, subcell, output_remap, ignore_first=True)
+            else:
+                # handle normal member function
+                assert hasattr(script_module, node.s('name'))
+                # TODO: support non member functions
+                assert node.inputsAt(0).debugName() == 'self'
+                #print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
+                script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
+                
+                # step #1: generate graph ir for this method
+                method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
+                method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
+                                                    module_name, ir_model, method_ir_graph)
+                for _output in script_method.graph.outputs():
+                    method_ir_graph._add_output(_convert_name(_output.debugName()))
+                    predecessor_node_outputs = [o for o in _output.node().outputs()]
+                    if len(predecessor_node_outputs) == 1:
+                        src_node_idx = None
+                    else:
+                        src_node_idx = predecessor_node_outputs.index(_output)
+                    method_ir_graph.add_edge(head=(method_node_index[_output.node()], src_node_idx),
+                                    tail=(method_ir_graph.output_node, None))
+                self.refine_graph(method_ir_graph)
+
+                # step #2: merge this graph to its module graph
+                for h_node in method_ir_graph.hidden_nodes:
+                    h_node.graph = ir_graph
+                    ir_graph.hidden_nodes.append(h_node)
+                for edge in method_ir_graph.edges:
+                    edge.graph = ir_graph
+                    if edge.head == method_ir_graph.input_node:
+                        slot = edge.head_slot
+                        edge.head = node_index[node.inputsAt(slot).node()]
+                        # TODO: verify whether slot must be 0
+                        edge.head_slot = 0
+                    if edge.tail == method_ir_graph.output_node:
+                        # since the following nodes have not been created, skip this edge
+                        # edge.head is the output node of this method
+                        node_index[node] = edge.head
+                        continue
+                    ir_graph.edges.append(edge)
+                raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
+
+        # ===================handle each single node===================
         def handle_single_node(node):
             """
             Parameters
@@ -232,69 +339,7 @@ class GraphConverter:
                 the created node ir
             """
             if node.kind() == 'prim::CallMethod':
-                # get and handle the first input, which should be an nn.Module
-                assert node.hasAttribute('name')
-                if node.s('name') == 'forward':
-                    # node.inputsAt(0).type() is <class 'torch._C.ClassType'>
-                    submodule_type_str = self._remove_mangle(node.inputsAt(0).type().str())
-                    submodule = node.inputsAt(0).node()
-                    assert submodule.kind() == 'prim::GetAttr'
-                    assert submodule.hasAttribute('name')
-                    submodule_name = submodule.s('name')
-
-                    if submodule.inputsAt(0).debugName() == 'self':
-                        # module is usually instantiated in __init__.
-                        # when calling a module in forward,
-                        # prim::GetAttr is used to obtain the module in torch script.
-                        # therefore, we do this check for a module. example below:
-                        # %25 : __torch__.xxx = prim::GetAttr[name="input_switch"](%self)
-                        # %27 : Tensor = prim::CallMethod[name="forward"](%25, %out.1)
-                        assert submodule_name in script_module._modules, "submodule_name: {} not in script_module {}".format(
-                            submodule_name, script_module._modules.keys())
-
-                        submodule_full_name = build_full_name(module_name, submodule_name)
-                        submodule_obj = getattr(module, submodule_name)
-                        subgraph, sub_m_attrs = self.convert_module(script_module._modules[submodule_name],
-                                                                    submodule_obj,
-                                                                    submodule_full_name, ir_model)
-                    else:
-                        # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
-                        # %10 : __torch__.darts_model.Cell = prim::GetAttr[name="0"](%8)
-                        # %s1.4 : Tensor = prim::CallMethod[name="forward"](%10, %4, %4)
-                        if submodule.inputsAt(0).type().name() == 'ModuleList':
-                            # handle ModuleList
-                            predecessor = submodule.inputsAt(0).node()
-                            assert predecessor.kind() == 'prim::GetAttr'
-                            assert predecessor.hasAttribute('name')
-                            assert predecessor.inputsAt(0).debugName() == 'self'
-                            predecessor_name = predecessor.s('name')
-                            # FIXME: exchange
-                            submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
-                            predecessor_obj = getattr(module, predecessor_name)
-                            submodule_obj = getattr(predecessor_obj, submodule_name)
-                            subgraph, sub_m_attrs = self.convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
-                                                                        submodule_obj, submodule_full_name, ir_model)
-                        else:
-                            raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
-
-                    # TODO: match subgraph with maintained graphs
-                    # build cell
-                    if subgraph is None:
-                        # if we do not parse this module's graph, we create Node for this module
-                        subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
-                        if isinstance(submodule_obj, Placeholder):
-                            subcell.update_label(submodule_obj.label)
-                        elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
-                            subcell.update_label(sub_m_attrs['label'])
-                    else:
-                        # Graph already created, create Cell for it
-                        new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
-                        subcell = ir_graph.add_node(submodule_full_name, new_cell)
-                    node_index[node] = subcell
-                    # connect the cell into graph
-                    self._add_edge(ir_graph, node, graph_inputs, node_index, subcell, output_remap, ignore_first=True)
-                else:
-                    raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
+                handle_function_callmethod(node)
             elif node.kind() == 'prim::CallFunction':
                 func_type_str = self._remove_mangle(node.inputsAt(0).type().str())
                 func = node.inputsAt(0).node()
@@ -428,6 +473,8 @@ class GraphConverter:
         m_attrs['label'] = module.label
         return m_attrs
 
+    #def create_one_graph_ir(self):
+
     def convert_module(self, script_module, module, module_name, ir_model):
         """
         Convert a module to its graph ir (i.e., Graph) along with its input arguments
@@ -475,6 +522,7 @@ class GraphConverter:
 
         # handle TorchScript graph
         sm_graph = script_module.graph
+        #print(sm_graph)
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
 

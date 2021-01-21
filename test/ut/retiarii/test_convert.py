@@ -453,7 +453,7 @@ class TestConvert(unittest.TestCase):
     def test_torchvision_resnet18(self):
         self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
 
-    @unittest.skip('Unsupported CallMethod _forward_impl')  # FIXME
+    #@unittest.skip('Unsupported CallMethod _forward_impl')  # FIXME
     def test_resnet(self):
         def conv1x1(in_planes, out_planes, stride=1):
             """1x1 convolution"""
