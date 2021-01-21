@@ -321,10 +321,12 @@ class Experiment extends React.Component<{}, ExpListState> {
         }
 
         if (field === '') {
-            data = [
-                ...filterByStatusOrPlatform(selectedPlatform, 'platform', data),
-                ...filterByStatusOrPlatform(selectedStatus, 'status', data)
-            ];
+            data = Array.from(
+                new Set([
+                    ...filterByStatusOrPlatform(selectedPlatform, 'platform', data),
+                    ...filterByStatusOrPlatform(selectedStatus, 'status', data)
+                ])
+            );
         }
 
         data = data.filter(
