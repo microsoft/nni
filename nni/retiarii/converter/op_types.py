@@ -34,7 +34,8 @@ BasicOpsPT = {
     'aten::empty': 'Empty',
     'aten::zeros': 'Zeros',
     'aten::chunk': 'Chunk',
-    'aten::add_': 'Add_'  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
+    'aten::add_': 'Add_',  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
+    'aten::flatten': 'Flatten'
 }
 
 BasicOpsTF = {}

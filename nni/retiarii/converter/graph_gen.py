@@ -19,6 +19,33 @@ class GraphConverter:
         self.global_graph_id = 0
         self.modules_arg = get_records()
 
+    def _add_edge_handle_source_node(self, _input, graph_inputs, ir_graph, output_remap, node_index):
+        if _input in graph_inputs:
+            idx = graph_inputs.index(_input)
+            src_node = ir_graph.input_node
+            src_node_idx = idx
+        elif _input in output_remap:
+            assert output_remap[_input].kind() == 'aten::append'
+            predecessor_node = output_remap[_input]
+            assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
+            src_node_idx = None
+            src_node = node_index[predecessor_node]
+            assert isinstance(src_node, Node)
+        else:
+            predecessor_node = _input.node()
+            assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
+            # find out the index of _input in the outputs of predecessor_node
+            predecessor_outputs = [_output for _output in predecessor_node.outputs()]
+            if len(predecessor_outputs) == 1:
+                idx = None
+            else:
+                idx = predecessor_outputs.index(_input)
+            ir_predecessor_node = node_index[predecessor_node]
+            src_node_idx = idx
+            assert isinstance(ir_predecessor_node, Node)
+            src_node = ir_predecessor_node
+        return src_node, src_node_idx
+
     def _add_edge(self, ir_graph, node, graph_inputs, node_index, new_node, output_remap, ignore_first=False):
         """
         Parameters
@@ -42,30 +69,7 @@ class GraphConverter:
                 continue
 
             # handle source node
-            if _input in graph_inputs:
-                idx = graph_inputs.index(_input)
-                src_node = ir_graph.input_node
-                src_node_idx = idx
-            elif _input in output_remap:
-                assert output_remap[_input].kind() == 'aten::append'
-                predecessor_node = output_remap[_input]
-                assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
-                src_node_idx = None
-                src_node = node_index[predecessor_node]
-                assert isinstance(src_node, Node)
-            else:
-                predecessor_node = _input.node()
-                assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
-                # find out the index of _input in the outputs of predecessor_node
-                predecessor_outputs = [_output for _output in predecessor_node.outputs()]
-                if len(predecessor_outputs) == 1:
-                    idx = None
-                else:
-                    idx = predecessor_outputs.index(_input)
-                ir_predecessor_node = node_index[predecessor_node]
-                src_node_idx = idx
-                assert isinstance(ir_predecessor_node, Node)
-                src_node = ir_predecessor_node
+            src_node, src_node_idx = self._add_edge_handle_source_node(_input, graph_inputs, ir_graph, output_remap, node_index)
 
             # handle destination node
             dst_node = new_node
@@ -288,7 +292,7 @@ class GraphConverter:
                 assert hasattr(script_module, node.s('name'))
                 # TODO: support non member functions
                 assert node.inputsAt(0).debugName() == 'self'
-                #print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
+                print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
                 script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
                 
                 # step #1: generate graph ir for this method
@@ -313,17 +317,23 @@ class GraphConverter:
                 for edge in method_ir_graph.edges:
                     edge.graph = ir_graph
                     if edge.head == method_ir_graph.input_node:
-                        slot = edge.head_slot
-                        edge.head = node_index[node.inputsAt(slot).node()]
-                        # TODO: verify whether slot must be 0
-                        edge.head_slot = 0
+                        #print('slot: ', slot)
+                        #print(node.inputsAt(slot))
+                        #print(node.inputsAt(slot).node())
+                        #print(node)
+                        # this is a member method, 'self' is the first argument, thus +1
+                        _input = node.inputsAt(edge.head_slot + 1)
+                        src_node, src_node_idx = self._add_edge_handle_source_node(_input, graph_inputs, ir_graph, output_remap, node_index)
+                        edge.head = src_node
+                        edge.head_slot = src_node_idx
                     if edge.tail == method_ir_graph.output_node:
                         # since the following nodes have not been created, skip this edge
                         # edge.head is the output node of this method
+                        # TODO: check whether there could be multiple output nodes???
                         node_index[node] = edge.head
                         continue
                     ir_graph.edges.append(edge)
-                raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
+                #raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
 
         # ===================handle each single node===================
         def handle_single_node(node):
@@ -522,7 +532,7 @@ class GraphConverter:
 
         # handle TorchScript graph
         sm_graph = script_module.graph
-        #print(sm_graph)
+        print(sm_graph)
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
 
