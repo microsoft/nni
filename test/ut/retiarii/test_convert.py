@@ -449,9 +449,12 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(VAE().eval(), (torch.rand(128, 1, 28, 28),))
 
-    @unittest.skip('torchvision models are not supported yet')  # FIXME
+    #@unittest.skip('torchvision models are not supported yet')  # FIXME
     def test_torchvision_resnet18(self):
+        from nni.retiarii.nn.pytorch.inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        inject_pytorch_nn()
         self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
+        remove_inject_pytorch_nn()
 
     #@unittest.skip('Unsupported CallMethod _forward_impl')  # FIXME
     def test_resnet(self):
