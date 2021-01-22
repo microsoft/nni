@@ -1,34 +1,15 @@
 import * as React from 'react';
 import axios from 'axios';
 import { WEBUIDOC, MANAGER_IP } from '../static/const';
-import {
-    Stack,
-    initializeIcons,
-    StackItem,
-    CommandBarButton,
-    IContextualMenuProps,
-    IStackTokens,
-    IStackStyles
-} from '@fluentui/react';
+import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
+import { Link } from 'react-router-dom';
+import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from './buttons/Icon';
 import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
-import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
+import { stackTokens, stackStyle } from './NavConst';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
-
-initializeIcons();
-const stackTokens: IStackTokens = {
-    childrenGap: 15
-};
-const stackStyle: IStackStyles = {
-    root: {
-        minWidth: 400,
-        height: 56,
-        display: 'flex',
-        verticalAlign: 'center'
-    }
-};
 
 interface NavState {
     version: string;
@@ -133,42 +114,50 @@ class NavCon extends React.Component<NavProps, NavState> {
         };
         return (
             <Stack horizontal className='nav'>
-                <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                    <span className='desktop-logo'>{NNILOGO}</span>
-                    <span className='left-right-margin'>{OVERVIEWTABS}</span>
-                    <span>{DETAILTABS}</span>
-                </StackItem>
-                <StackItem grow={70} className='navOptions'>
-                    <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
-                        {/* refresh button danyi*/}
-                        {/* TODO: fix bug */}
-                        {/* <CommandBarButton
-                            iconProps={{ iconName: 'sync' }}
-                            text="Refresh"
-                            onClick={this.props.refreshFunction}
-                        /> */}
-                        <div className='nav-refresh'>
+                <React.Fragment>
+                    <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
+                        <span className='desktop-logo'>{NNILOGO}</span>
+                        <span className='left-right-margin'>{OVERVIEWTABS}</span>
+                        <span>{DETAILTABS}</span>
+                    </StackItem>
+                    <StackItem grow={70} className='navOptions'>
+                        <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                            {/* refresh button danyi*/}
+                            {/* TODO: fix bug */}
+                            {/* <CommandBarButton
+                                        iconProps={{ iconName: 'sync' }}
+                                        text="Refresh"
+                                        onClick={this.props.refreshFunction}
+                                    /> */}
+                            <div className='nav-refresh'>
+                                <CommandBarButton
+                                    iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
+                                    text={refreshText}
+                                    menuProps={this.refreshProps}
+                                />
+                                <div className='nav-refresh-num'>{refreshFrequency}</div>
+                            </div>
                             <CommandBarButton
-                                iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
-                                text={refreshText}
-                                menuProps={this.refreshProps}
+                                iconProps={{ iconName: 'ShowResults' }}
+                                text='Experiment summary'
+                                onClick={this.showExpcontent}
                             />
-                            <div className='nav-refresh-num'>{refreshFrequency}</div>
-                        </div>
-                        <CommandBarButton
-                            iconProps={{ iconName: 'ShowResults' }}
-                            text='Experiment summary'
-                            onClick={this.showExpcontent}
+                            <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
+                            <Link to='/experiment' className='experiment'>
+                                <div className='expNavTitle'>
+                                    <span>All experiments</span>
+                                    {ChevronRightMed}
+                                </div>
+                            </Link>
+                        </Stack>
+                    </StackItem>
+                    {isvisibleExperimentDrawer && (
+                        <ExperimentSummaryPanel
+                            closeExpDrawer={this.closeExpDrawer}
+                            experimentProfile={EXPERIMENT.profile}
                         />
-                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                    </Stack>
-                </StackItem>
-                {isvisibleExperimentDrawer && (
-                    <ExperimentSummaryPanel
-                        closeExpDrawer={this.closeExpDrawer}
-                        experimentProfile={EXPERIMENT.profile}
-                    />
-                )}
+                    )}
+                </React.Fragment>
             </Stack>
         );
     }

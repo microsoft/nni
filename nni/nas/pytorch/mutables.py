@@ -109,7 +109,13 @@ class MutableScope(Mutable):
     def __init__(self, key):
         super().__init__(key=key)
 
+    def _check_built(self):
+        return True  # bypass the test because it's deprecated
+
     def __call__(self, *args, **kwargs):
+        if not hasattr(self, 'mutator'):
+            return super().__call__(*args, **kwargs)
+        warnings.warn("`MutableScope` is deprecated in Retiarii.", DeprecationWarning)
         try:
             self._check_built()
             self.mutator.enter_mutable_scope(self)

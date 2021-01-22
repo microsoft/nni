@@ -11,21 +11,20 @@ import sys
 from collections import deque
 from unittest import TestCase, main
 
-from nni.algorithms.hpo.batch_tuner.batch_tuner import BatchTuner
-from nni.algorithms.hpo.evolution_tuner.evolution_tuner import EvolutionTuner
-from nni.algorithms.hpo.gp_tuner.gp_tuner import GPTuner
-from nni.algorithms.hpo.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
-from nni.algorithms.hpo.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
-from nni.algorithms.hpo.metis_tuner.metis_tuner import MetisTuner
-from nni.algorithms.hpo.pbt_tuner.pbt_tuner import PBTTuner
-from nni.algorithms.hpo.regularized_evolution_tuner.regularized_evolution_tuner import RegularizedEvolutionTuner
+from nni.algorithms.hpo.batch_tuner import BatchTuner
+from nni.algorithms.hpo.evolution_tuner import EvolutionTuner
+from nni.algorithms.hpo.gp_tuner import GPTuner
+from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
+from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
+from nni.algorithms.hpo.metis_tuner import MetisTuner
+from nni.algorithms.hpo.pbt_tuner import PBTTuner
+from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionTuner
 from nni.runtime.msg_dispatcher import _pack_parameter, MsgDispatcher
 
 if sys.platform != 'win32':
-    from nni.algorithms.hpo.smac_tuner.smac_tuner import SMACTuner
+    from nni.algorithms.hpo.smac_tuner import SMACTuner
 
 from nni.tuner import Tuner
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('test_tuner')

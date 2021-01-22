@@ -19,6 +19,9 @@ const LineChart = <Icon iconName='LineChart' />;
 const Edit = <Icon iconName='Edit' />;
 const CheckMark = <Icon iconName='CheckMark' />;
 const Cancel = <Icon iconName='Cancel' />;
+const ReplyAll = { iconName: 'ReplyAll' };
+const RevToggleKey = { iconName: 'RevToggleKey' };
+const ChevronRightMed = <Icon iconName='ChevronRightMed' />;
 
 export {
     infoIcon,
@@ -37,5 +40,8 @@ export {
     LineChart,
     Edit,
     CheckMark,
-    Cancel
+    Cancel,
+    ReplyAll,
+    RevToggleKey,
+    ChevronRightMed
 };

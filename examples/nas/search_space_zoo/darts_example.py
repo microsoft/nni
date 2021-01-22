@@ -10,7 +10,7 @@ import torch.nn as nn
 
 import datasets
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
-from nni.nas.pytorch.darts import DartsTrainer
+from nni.algorithms.nas.pytorch.darts import DartsTrainer
 from utils import accuracy
 
 from nni.nas.pytorch.search_space_zoo import DartsCell

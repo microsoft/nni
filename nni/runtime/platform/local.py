@@ -7,7 +7,6 @@ import json
 import time
 import subprocess
 
-from ..common import init_logger
 from ..env_vars import trial_env_vars
 from nni.utils import to_json
 
@@ -20,10 +19,8 @@ _outputdir = trial_env_vars.NNI_OUTPUT_DIR
 if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
 
+_reuse_mode = trial_env_vars.REUSE_MODE
 _nni_platform = trial_env_vars.NNI_PLATFORM
-if _nni_platform == 'local':
-    _log_file_path = os.path.join(_outputdir, 'trial.log')
-    init_logger(_log_file_path)
 
 _multiphase = trial_env_vars.MULTI_PHASE
 
@@ -62,7 +59,7 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    if _nni_platform != 'local':
+    if _nni_platform != 'local' or _reuse_mode in ('true', 'True'):
         assert len(string) < 1000000, 'Metric too long'
         print("NNISDK_MEb'%s'" % (string), flush=True)
     else:

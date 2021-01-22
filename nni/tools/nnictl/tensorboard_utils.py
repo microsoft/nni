@@ -10,8 +10,8 @@ from .rest_utils import rest_get, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, get_local_urls
 from .constants import REST_TIME_OUT
-from .common_utils import print_normal, print_error, print_green, detect_process, detect_port, check_tensorboard_version
-from .nnictl_utils import check_experiment_id, check_experiment_id
+from .common_utils import print_normal, print_warning, print_error, print_green, detect_process, detect_port, check_tensorboard_version
+from .nnictl_utils import check_experiment_id
 from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
 
 def parse_log_path(args, trial_content):
@@ -70,7 +70,7 @@ def format_tensorboard_log_path(path_list):
         new_path_list.append('name%d:%s' % (index + 1, value))
     return ','.join(new_path_list)
 
-def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
+def start_tensorboard_process(args, experiment_id, path_list, temp_nni_path):
     '''call cmds to start tensorboard process in local machine'''
     if detect_port(args.port):
         print_error('Port %s is used by another process, please reset port!' % str(args.port))
@@ -83,21 +83,19 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
     url_list = get_local_urls(args.port)
     print_green('Start tensorboard success!')
     print_normal('Tensorboard urls: ' + '     '.join(url_list))
-    tensorboard_process_pid_list = nni_config.get_config('tensorboardPidList')
+    experiment_config = Experiments()
+    tensorboard_process_pid_list = experiment_config.get_all_experiments().get(experiment_id).get('tensorboardPidList')
     if tensorboard_process_pid_list is None:
         tensorboard_process_pid_list = [tensorboard_process.pid]
     else:
         tensorboard_process_pid_list.append(tensorboard_process.pid)
-    nni_config.set_config('tensorboardPidList', tensorboard_process_pid_list)
+    experiment_config.update_experiment(experiment_id, 'tensorboardPidList', tensorboard_process_pid_list)
 
 def stop_tensorboard(args):
     '''stop tensorboard'''
     experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
-    tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+    tensorboard_pid_list = experiment_config.get_all_experiments().get(experiment_id).get('tensorboardPidList')
     if tensorboard_pid_list:
         for tensorboard_pid in tensorboard_pid_list:
             try:
@@ -105,19 +103,40 @@ def stop_tensorboard(args):
                 call(cmds)
             except Exception as exception:
                 print_error(exception)
-        nni_config.set_config('tensorboardPidList', [])
+        experiment_config.update_experiment(experiment_id, 'tensorboardPidList', [])
         print_normal('Stop tensorboard success!')
     else:
         print_error('No tensorboard configuration!')
 
+def adl_tensorboard_helper(args):
+    '''start tensorboard on adl'''
+    import subprocess
+    if args.trial_id is not None:
+        print_warning('Tensorboard on adl platform will show all trials. No trial ids needed.')
+    cmd = "kubectl port-forward --address 0.0.0.0 deployment/{} {}:{}".format(
+        "adaptdl-tensorboard" + "-" + args.id.lower(),
+        args.port,
+        6006
+    )
+    print_green('Tensorboard is accessible at 0.0.0.0:{port} or localhost:{port}'.format(port=args.port))
+    subprocess.run(args=cmd, shell=True)
 
 def start_tensorboard(args):
     '''start tensorboard'''
     experiment_id = check_experiment_id(args)
+    if not experiment_id:
+        return
+    if args.id is None:
+        args.id = experiment_id
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    config_file_name = experiment_dict[experiment_id]['fileName']
-    nni_config = Config(config_file_name)
+    if experiment_dict[args.id]["status"] == "STOPPED":
+        print_error("Experiment {} is stopped...".format(args.id))
+        return
+    nni_config = Config(args.id)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'adl':
+        adl_tensorboard_helper(args)
+        return
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -144,4 +163,4 @@ def start_tensorboard(args):
     os.makedirs(temp_nni_path, exist_ok=True)
 
     path_list = get_path_list(args, nni_config, trial_content, temp_nni_path)
-    start_tensorboard_process(args, nni_config, path_list, temp_nni_path)
+    start_tensorboard_process(args, experiment_id, path_list, temp_nni_path)

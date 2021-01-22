@@ -6,7 +6,7 @@ import logging
 import os
 import netifaces
 from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_builtin_algo_meta
+from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_registered_algo_meta
 from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
 from .common_utils import get_yml_content, print_warning
 
@@ -75,8 +75,8 @@ class AlgoSchema:
     def validate_class_args(self, class_args, algo_type, builtin_name):
         if not builtin_name or not class_args:
             return
-        meta = get_builtin_algo_meta(algo_type+'s', builtin_name)
-        if meta and 'accept_class_args' in meta and meta['accept_class_args'] == False:
+        meta = get_registered_algo_meta(builtin_name, algo_type+'s')
+        if meta and 'acceptClassArgs' in meta and meta['acceptClassArgs'] == False:
             raise SchemaError('classArgs is not allowed.')
 
         logging.getLogger('nni.protocol').setLevel(logging.ERROR)  # we know IPC is not there, don't complain
@@ -124,7 +124,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml'),
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'hybrid'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -208,7 +208,7 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-    'paiConfig': {
+    Optional('paiConfig'): {
         'userName': setType('userName', str),
         Or('passWord', 'token', only_one=True): str,
         'host': setType('host', str),
@@ -252,13 +252,61 @@ aml_trial_schema = {
 }
 
 aml_config_schema = {
-    'amlConfig': {
+    Optional('amlConfig'): {
         'subscriptionId': setType('subscriptionId', str),
         'resourceGroup': setType('resourceGroup', str),
         'workspaceName': setType('workspaceName', str),
         'computeTarget': setType('computeTarget', str),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool),
+    }
+}
+
+hybrid_trial_schema = {
+    'trial': {
+        'codeDir': setPathCheck('codeDir'),
+        Optional('nniManagerNFSMountPath'): setPathCheck('nniManagerNFSMountPath'),
+        Optional('containerNFSMountPath'): setType('containerNFSMountPath', str),
+        Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
+        'command': setType('command', str),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memoryMB'): setType('memoryMB', int),
+        Optional('image'): setType('image', str),
+        Optional('virtualCluster'): setType('virtualCluster', str),
+        Optional('paiStorageConfigName'): setType('paiStorageConfigName', str),
+        Optional('paiConfigPath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'paiConfigPath')
+    }
+}
+
+hybrid_config_schema = {
+    'hybridConfig': {
+        'trainingServicePlatforms': ['local', 'remote', 'pai', 'aml']
+    }
+}
+
+adl_trial_schema = {
+    'trial':{
+        'codeDir': setType('codeDir', str),
+        'command': setType('command', str),
+        'gpuNum': setNumberRange('gpuNum', int, 0, 99999),
+        'image': setType('image', str),
+        Optional('namespace'): setType('namespace', str),
+        Optional('imagePullSecrets'): [{
+            'name': setType('name', str)
+        }],
+        Optional('nfs'): {
+            'server': setType('server', str),
+            'path': setType('path', str),
+            'containerMountPath': setType('containerMountPath', str)
+        },
+        Optional('adaptive'): setType('adaptive', bool),
+        Optional('checkpoint'): {
+            'storageClass': setType('storageClass', str),
+            'storageSize': setType('storageSize', str)
+        },
+        Optional('cpuNum'): setNumberRange('cpuNum', int, 0, 99999),
+        Optional('memorySize'): setType('memorySize', str)
     }
 }
 
@@ -379,7 +427,7 @@ remote_config_schema = {
 }
 
 machine_list_schema = {
-    'machineList': [Or(
+    Optional('machineList'): [Or(
         {
             'ip': setType('ip', str),
             Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -404,6 +452,7 @@ machine_list_schema = {
 }
 
 training_service_schema_dict = {
+    'adl': Schema({**common_schema, **adl_trial_schema}),
     'local': Schema({**common_schema, **common_trial_schema}),
     'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema, **remote_config_schema}),
     'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
@@ -412,6 +461,8 @@ training_service_schema_dict = {
     'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
+    'hybrid': Schema({**common_schema, **hybrid_trial_schema, **hybrid_config_schema, **machine_list_schema,
+                             **pai_config_schema, **aml_config_schema, **remote_config_schema}),
 }
 
 
@@ -428,6 +479,7 @@ class NNIConfigSchema:
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
         self.validate_eth0_device(experiment_config)
+        self.validate_hybrid_platforms(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -537,3 +589,16 @@ class NNIConfigSchema:
                 and not experiment_config.get('nniManagerIp') \
                 and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
+    
+    def validate_hybrid_platforms(self, experiment_config):
+        required_config_name_map = {
+            'remote': 'machineList',
+            'aml': 'amlConfig',
+            'pai': 'paiConfig'
+        }
+        if experiment_config.get('trainingServicePlatform') == 'hybrid':
+            for platform in experiment_config['hybridConfig']['trainingServicePlatforms']:
+                config_name = required_config_name_map.get(platform)
+                if config_name and not experiment_config.get(config_name):
+                    raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
+                

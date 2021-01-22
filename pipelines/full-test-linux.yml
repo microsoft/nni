@@ -1,0 +1,72 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: linux
+  pool: NNI CI GPU3
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      echo "##vso[task.setvariable variable=NNI_RELEASE]999.$(date -u +%Y%m%d%H%M%S)"
+
+      python3 -m pip install --upgrade pip setuptools
+      python3 -m pip install pytest
+    displayName: Prepare
+
+  - script: |
+      set -e
+      python3 setup.py build_ts
+      python3 setup.py bdist_wheel -p manylinux1_x86_64
+      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB,PPOTuner]
+    displayName: Install NNI
+
+  - script: |
+      set -e
+      python3 -m pip install scikit-learn==0.23.2
+      python3 -m pip install torchvision==0.4.2
+      python3 -m pip install torch==1.3.1
+      python3 -m pip install keras==2.1.6
+      python3 -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
+      python3 -m pip install thop
+      sudo apt-get install swig -y
+    displayName: Install extra dependencies
+
+  - script: |
+      set -e
+      cd examples/tuners/customized_tuner
+      python3 setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install customized tuner
+
+  - script: |
+      set -e
+      (cd test && python3 -m pytest ut)
+      export PATH=$PATH:$PWD/toolchain/yarn/bin
+      export CI=true
+      (cd ts/nni_manager && yarn test)
+      (cd ts/nasui && yarn test)
+    displayName: Unit test
+    continueOnError: true
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+    displayName: Integration test
+    continueOnError: true
+
+  - script: |
+      cd test
+      source scripts/nas.sh
+    displayName: NAS test
+    continueOnError: true
+
+  - script: |
+      cd test
+      source scripts/model_compression.sh
+    displayName: Model compression test

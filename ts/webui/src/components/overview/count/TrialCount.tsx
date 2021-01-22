@@ -5,7 +5,7 @@ import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../
 import { EditExperimentParam } from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
-import { leftProgress, trialCountItem2, progressHeight } from './commonStyle';
+import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
 
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
@@ -22,7 +22,7 @@ export const TrialCount = (): any => {
                 const { updateOverviewPage } = value;
                 return (
                     <React.Fragment>
-                        <Stack horizontal horizontalAlign='space-between' className='ExpDuration'>
+                        <Stack horizontal className='ExpDuration'>
                             <div style={leftProgress}>
                                 <TooltipHost
                                     content={`${bar2.toString()} trials`}
@@ -49,7 +49,36 @@ export const TrialCount = (): any => {
                                     <span>{maxTrialNum}</span>
                                 </div>
                             </div>
-                            <div style={trialCountItem2}>
+                        </Stack>
+                        <Stack horizontal className='marginTop'>
+                            <div style={leftProgress}>
+                                <Stack horizontal className='status-count' gap={60}>
+                                    <div>
+                                        <span>Running</span>
+                                        <p>{count.get('RUNNING')}</p>
+                                    </div>
+                                    <div>
+                                        <span>Succeeded</span>
+                                        <p>{count.get('SUCCEEDED')}</p>
+                                    </div>
+                                    <div>
+                                        <span>Stopped</span>
+                                        <p>{stoppedCount}</p>
+                                    </div>
+                                </Stack>
+                                <Stack horizontal className='status-count marginTop' gap={80}>
+                                    <div>
+                                        <span>Failed</span>
+                                        <p>{count.get('FAILED')}</p>
+                                    </div>
+                                    <div>
+                                        <span>Waiting</span>
+                                        <p>{count.get('WAITING')}</p>
+                                    </div>
+                                </Stack>
+                            </div>
+
+                            <div style={rightEidtParam}>
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,
@@ -65,42 +94,22 @@ export const TrialCount = (): any => {
                                         <EditExperimentParam />
                                     </div>
                                 </EditExpeParamContext.Provider>
-                                <EditExpeParamContext.Provider
-                                    value={{
-                                        title: 'Concurrency',
-                                        field: 'trialConcurrency',
-                                        editType: CONTROLTYPE[2],
-                                        // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
-                                        maxExecDuration: '',
-                                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
-                                        trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
-                                        updateOverviewPage
-                                    }}
-                                >
-                                    <EditExperimentParam />
-                                </EditExpeParamContext.Provider>
-                            </div>
-                        </Stack>
-                        <Stack horizontal horizontalAlign='space-between' className='trialStatus'>
-                            <div className='basic'>
-                                <p>Running</p>
-                                <div>{count.get('RUNNING')}</div>
-                            </div>
-                            <div className='basic'>
-                                <p>Succeeded</p>
-                                <div>{count.get('SUCCEEDED')}</div>
-                            </div>
-                            <div className='basic'>
-                                <p>Stopped</p>
-                                <div>{stoppedCount}</div>
-                            </div>
-                            <div className='basic'>
-                                <p>Failed</p>
-                                <div>{count.get('FAILED')}</div>
-                            </div>
-                            <div className='basic'>
-                                <p>Waiting</p>
-                                <div>{count.get('WAITING')}</div>
+                                <div className='concurrency'>
+                                    <EditExpeParamContext.Provider
+                                        value={{
+                                            title: 'Concurrency',
+                                            field: 'trialConcurrency',
+                                            editType: CONTROLTYPE[2],
+                                            // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
+                                            maxExecDuration: '',
+                                            maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                            trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
+                                            updateOverviewPage
+                                        }}
+                                    >
+                                        <EditExperimentParam />
+                                    </EditExpeParamContext.Provider>
+                                </div>
                             </div>
                         </Stack>
                     </React.Fragment>

@@ -61,6 +61,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 const temp = source[item];
                 trialIntermediate.push({
                     name: temp.id,
+                    trialNum: temp.sequenceId,
                     data: temp.description.intermediate,
                     type: 'line',
                     hyperPara: temp.description.parameters
@@ -94,13 +95,18 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     },
                     formatter: function(data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
-                        let obj = {};
+                        let parameters = {};
+                        let trialNum = 0;
                         const temp = trialIntermediate.find(key => key.name === trialId);
                         if (temp !== undefined) {
-                            obj = temp.hyperPara;
+                            parameters = temp.hyperPara;
+                            trialNum = temp.trialNum;
                         }
                         return (
                             '<div class="tooldetailAccuracy">' +
+                            '<div>Trial No.: ' +
+                            trialNum +
+                            '</div>' +
                             '<div>Trial ID: ' +
                             trialId +
                             '</div>' +
@@ -109,7 +115,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             '</div>' +
                             '<div>Parameters: ' +
                             '<pre>' +
-                            JSON.stringify(obj, null, 4) +
+                            JSON.stringify(parameters, null, 4) +
                             '</pre>' +
                             '</div>' +
                             '</div>'

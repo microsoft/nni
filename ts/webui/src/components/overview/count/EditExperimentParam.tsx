@@ -168,7 +168,7 @@ export const EditExperimentParam = (): any => {
                             return (
                                 <React.Fragment>
                                     <div className={`${editClassName} editparam`}>
-                                        <span>{value.title}</span>
+                                        <div className='title'>{value.title}</div>
                                         <input
                                             className={`${value.field} editparam-Input`}
                                             ref={DurationInputRef}

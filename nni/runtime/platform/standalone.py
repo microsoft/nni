@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import colorama
 import logging
+import warnings
 import json_tricks
-
-from ..common import init_standalone_logger
 
 __all__ = [
     'get_next_parameter',
@@ -14,12 +14,20 @@ __all__ = [
     'send_metric',
 ]
 
-init_standalone_logger()
 _logger = logging.getLogger('nni')
 
 
 def get_next_parameter():
-    _logger.warning('Requesting parameter without NNI framework, returning empty dict')
+    warning_message = ''.join([
+        colorama.Style.BRIGHT,
+        colorama.Fore.RED,
+        'Running NNI code without runtime. ',
+        'Check the following tutorial if you are new to NNI: ',
+        colorama.Fore.YELLOW,
+        'https://nni.readthedocs.io/en/stable/Tutorial/QuickStart.html#id1',
+        colorama.Style.RESET_ALL
+    ])
+    warnings.warn(warning_message, RuntimeWarning)
     return {
         'parameter_id': None,
         'parameters': {}

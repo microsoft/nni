@@ -23,7 +23,8 @@ export namespace ValidationSchemas {
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
-                useActiveGpu: joi.boolean()
+                useActiveGpu: joi.boolean(),
+                reuse: joi.boolean()
             }),
             trial_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 image: joi.string().min(1),
@@ -32,6 +33,9 @@ export namespace ValidationSchemas {
                 outputDir: joi.string(),
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
+                // ############## adl cpu and memory config ###############
+                memorySize: joi.string(),
+                // ########################################################
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
@@ -93,6 +97,21 @@ export namespace ValidationSchemas {
                         minFailedTaskCount: joi.number(),
                         minSucceededTaskCount: joi.number()
                     })
+                }),
+                imagePullSecrets: joi.array({
+                    name: joi.string().min(1).required()
+                }),
+                // ############## adl ###############
+                namespace: joi.string(),
+                adaptive: joi.boolean(),
+                checkpoint: joi.object({
+                    storageClass: joi.string().min(1).required(),
+                    storageSize: joi.string().min(1).required()
+                }),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required(),
+                    containerMountPath: joi.string().min(1).required()
                 })
             }),
             pai_yarn_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
@@ -163,6 +182,9 @@ export namespace ValidationSchemas {
                 computeTarget: joi.string().min(1),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
+            }),
+            hybrid_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                trainingServicePlatforms: joi.array(),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)

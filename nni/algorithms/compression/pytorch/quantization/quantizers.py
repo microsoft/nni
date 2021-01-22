@@ -41,7 +41,7 @@ class NaiveQuantizer(Quantizer):
         wrapper.module.weight = weight
         return weight
 
-def update_ema(biased_ema, value, decay, step):
+def update_ema(biased_ema, value, decay):
     """
     calculate biased stat and unbiased stat in each step using exponential moving average method
 
@@ -53,16 +53,13 @@ def update_ema(biased_ema, value, decay, step):
         current stat value
     decay : float
         the weight of previous stat value, larger means smoother curve
-    step : int
-        current step
 
     Returns
     -------
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    unbiased_ema = biased_ema / (1 - decay ** step)  # Bias correction
-    return biased_ema, unbiased_ema
+    return biased_ema 
 
 
 def update_quantization_param(bits, rmin, rmax):
@@ -73,9 +70,9 @@ def update_quantization_param(bits, rmin, rmax):
     ----------
     bits : int
         quantization bits length
-    rmin : float
+    rmin : Tensor
         min value of real value
-    rmax : float
+    rmax : Tensor
         max value of real value
 
     Returns
@@ -85,12 +82,11 @@ def update_quantization_param(bits, rmin, rmax):
     # extend the [min, max] interval to ensure that it contains 0.
     # Otherwise, we would not meet the requirement that 0 be an exactly
     # representable value.
-    rmin = min(rmin, 0)
-    rmax = max(rmax, 0)
+    rmin = torch.min(rmin, torch.Tensor([0]).to(rmin.device))
+    rmax = torch.max(rmax, torch.Tensor([0]).to(rmin.device))
+    qmin = torch.Tensor([0]).to(rmin.device)
+    qmax = torch.Tensor([(1 << bits) - 1]).to(rmin.device)
 
-    # the min and max quantized values, as floating-point values
-    qmin = 0
-    qmax = (1 << bits) - 1
     # First determine the scale.
     scale = (rmax - rmin) / (qmax - qmin)
 
@@ -98,7 +94,6 @@ def update_quantization_param(bits, rmin, rmax):
     initial_zero_point = qmin - rmin / scale
 
     # Now we need to nudge the zero point to be an integer
-    nudged_zero_point = 0
     if initial_zero_point < qmin:
         nudged_zero_point = qmin
     elif initial_zero_point > qmax:
@@ -114,6 +109,15 @@ def get_bits_length(config, quant_type):
         return config["quant_bits"]
     else:
         return config["quant_bits"].get(quant_type)
+
+
+class QATGrad(QuantGrad):
+    @staticmethod
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
+        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
+        mask = (tensor_q < qmin) | (tensor_q > qmax)
+        grad_output[mask] = 0
+        return grad_output
 
 
 class QAT_Quantizer(Quantizer):
@@ -143,11 +147,12 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
-        self.steps = 1
+        self.quant_grad = QATGrad
         modules_to_compress = self.get_modules_to_compress()
+        self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
-            layer.module.register_buffer("zero_point", None)
-            layer.module.register_buffer("scale", None)
+            layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
+            layer.module.register_buffer("scale", torch.Tensor([1.0]))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
@@ -187,13 +192,15 @@ class QAT_Quantizer(Quantizer):
             quantization bits length
         op : torch.nn.Module
             target module
-        real_val : float
+        real_val : Tensor
             real value to be quantized
 
         Returns
         -------
-        float
+        Tensor
         """
+        op.zero_point = op.zero_point.to(real_val.device)
+        op.scale = op.scale.to(real_val.device)
         transformed_val = op.zero_point + real_val / op.scale
         qmin = 0
         qmax = (1 << bits) - 1
@@ -229,7 +236,8 @@ class QAT_Quantizer(Quantizer):
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
-        if quant_start_step > self.steps:
+        # we dont update weight in evaluation stage
+        if quant_start_step > self.bound_model.steps or not wrapper.training:
             return weight
 
         # if bias exists, quantize bias to uint32
@@ -258,15 +266,18 @@ class QAT_Quantizer(Quantizer):
         quant_start_step = config.get('quant_start_step', 0)
         assert output_bits >= 1, "quant bits length should be at least 1"
 
-        if quant_start_step > self.steps:
+        if quant_start_step > self.bound_model.steps:
+            module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
             return output
 
-        current_min, current_max = torch.min(output), torch.max(output)
-        module.tracked_min_biased, module.tracked_min = update_ema(module.tracked_min_biased, current_min,
-                                                                   module.ema_decay, self.steps)
-        module.tracked_max_biased, module.tracked_max = update_ema(module.tracked_max_biased, current_max,
-                                                                   module.ema_decay, self.steps)
-        module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min, module.tracked_max)
+        # we dont update output quantization parameters in evaluation stage
+        if wrapper.training:
+            current_min, current_max = torch.min(output), torch.max(output)
+            module.tracked_min_biased = update_ema(module.tracked_min_biased, current_min,
+                                                                       module.ema_decay)
+            module.tracked_max_biased = update_ema(module.tracked_max_biased, current_max,
+                                                                       module.ema_decay)
+            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_biased, module.tracked_max_biased)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -279,7 +290,7 @@ class QAT_Quantizer(Quantizer):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
-        self.steps += 1
+        self.bound_model.steps +=1
 
 
 class DoReFaQuantizer(Quantizer):
@@ -330,7 +341,7 @@ class DoReFaQuantizer(Quantizer):
 
 class ClipGrad(QuantGrad):
     @staticmethod
-    def quant_backward(tensor, grad_output, quant_type):
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
         if quant_type == QuantType.QUANT_OUTPUT:
             grad_output[torch.abs(tensor) > 1] = 0
         return grad_output

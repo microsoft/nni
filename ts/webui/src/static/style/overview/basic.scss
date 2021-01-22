@@ -1,0 +1,31 @@
+.status {
+    height: 21px;
+    color: #0573bc;
+    font-size: 20px;
+    font-weight: 600;
+
+    .status-text {
+        display: inline-block;
+    }
+}
+
+/* for overview page: status error info icon's style */
+.error-info-icon {
+    position: relative;
+    top: -4px;
+}
+
+/* error body font-color */
+.color {
+    color: #333 !important;
+}
+
+.inputBox {
+    height: 32px;
+    margin-top: 5px;
+}
+
+/* office-fabric-ui progressIndicator */
+.ms-ProgressIndicator-itemProgress {
+    padding: 0;
+}

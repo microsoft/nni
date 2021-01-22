@@ -3,15 +3,13 @@
 
 import * as chai from 'chai';
 import * as path from 'path';
-import { Scope } from "typescript-ioc";
-import * as component from '../../../common/component';
 import { getLogger, Logger } from "../../../common/log";
 import { TrialJobApplicationForm, TrialJobStatus } from '../../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, uniqueString } from '../../../common/utils';
 import { INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, SEND_TRIAL_JOB_PARAMETER, TRIAL_END, GPU_INFO } from '../../../core/commands';
 import { TrialConfigMetadataKey } from '../../../training_service/common/trialConfigMetadataKey';
-import { Command } from '../commandChannel';
-import { EnvironmentInformation, EnvironmentService } from "../environment";
+import { Command, CommandChannel } from '../commandChannel';
+import { Channel, EnvironmentInformation, EnvironmentService } from "../environment";
 import { TrialDetail } from '../trial';
 import { TrialDispatcher } from "../trialDispatcher";
 import { UtCommandChannel } from './utCommandChannel';
@@ -54,7 +52,7 @@ async function waitResult<TResult>(callback: () => Promise<TResult | undefined>,
     return undefined;
 }
 
-async function waitResultMust<TResult>(callback: () => Promise<TResult | undefined>, waitMs: number = 1000, interval: number = 1): Promise<TResult> {
+async function waitResultMust<TResult>(callback: () => Promise<TResult | undefined>, waitMs: number = 10000, interval: number = 1): Promise<TResult> {
     const result = await waitResult(callback, waitMs, interval, true);
     // this error should be thrown in waitResult already.
     if (result === undefined) {
@@ -201,16 +199,21 @@ describe('Unit Test for TrialDispatcher', () => {
             nniManagerIp: "127.0.0.1",
         }
         trialDispatcher = new TrialDispatcher();
-        component.Container.bind(EnvironmentService)
-            .to(UtEnvironmentService)
-            .scope(Scope.Singleton);
 
         await trialDispatcher.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, JSON.stringify(trialConfig));
         await trialDispatcher.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, JSON.stringify(nniManagerIpConfig));
-        trialRunPromise = trialDispatcher.run();
+        // set ut environment
+        let environmentServiceList: EnvironmentService[] = [];
+        environmentService = new UtEnvironmentService();
+        environmentServiceList.push(environmentService);
+        trialDispatcher.environmentServiceList = environmentServiceList;
+        // set ut command channel
+        environmentService.initCommandChannel(trialDispatcher.commandEmitter);
+        commandChannel = environmentService.getCommandChannel as UtCommandChannel;
+        trialDispatcher.commandChannelSet = new Set<CommandChannel>().add(environmentService.getCommandChannel);
+        trialDispatcher.environmentMaintenceLoopInterval = 1000;
 
-        environmentService = component.get(EnvironmentService) as UtEnvironmentService;
-        commandChannel = environmentService.testGetCommandChannel();
+        trialRunPromise = trialDispatcher.run();
     });
 
     afterEach(async () => {
@@ -258,9 +261,6 @@ describe('Unit Test for TrialDispatcher', () => {
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, -1);
-        await waitResultMust<true>(async () => {
-            return environment.status === 'USER_CANCELED' ? true : undefined;
-        });
 
         chai.assert.equal(environmentService.testGetEnvironments().size, 2, "as env not reused, so only 2 envs should be here.");
         const trials = await trialDispatcher.listTrialJobs();
@@ -433,12 +433,10 @@ describe('Unit Test for TrialDispatcher', () => {
         let environment = await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);
         await verifyTrialResult(commandChannel, trialDetail, 0);
-
         environmentService.testSetEnvironmentStatus(environment, 'SUCCEEDED');
         await waitResultMust<boolean>(async () => {
             return environment.status === 'SUCCEEDED' ? true : undefined;
         });
-
         trialDetail = await newTrial(trialDispatcher);
         await waitEnvironment(2, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);

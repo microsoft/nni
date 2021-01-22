@@ -377,6 +377,5 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve(folderUriInAzure);
     }
-     
 }
 export { KubernetesTrainingService };
