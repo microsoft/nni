@@ -61,21 +61,24 @@ dependencies = [
     'hyperopt==0.1.2',
     'json_tricks',
     'netifaces',
-    'numpy',
     'psutil',
     'ruamel.yaml',
     'requests',
     'responses',
-    'scipy',
     'schema',
     'PythonWebHDFS',
     'colorama',
     'scikit-learn>=0.23.2',
-    'pkginfo',
     'websockets',
-    'prettytable'
+    'filelock',
+    'prettytable',
+    'dataclasses ; python_version < "3.7"',
+    'numpy < 1.19.4 ; sys_platform == "win32"',
+    'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
+    'numpy ; sys.platform != "win32" and python_version >= "3.7"',
+    'scipy < 1.6 ; python_version < "3.7"',
+    'scipy ; python_version >= "3.7"',
 ]
-
 
 release = os.environ.get('NNI_RELEASE')
 
@@ -101,12 +104,17 @@ def _setup():
 
         packages = _find_python_packages(),
         package_data = {
-            'nni': ['**/requirements.txt'],
+            'nni': _find_requirements_txt() + _find_default_config(),  # setuptools issue #1806
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
         python_requires = '>=3.6',
         install_requires = dependencies,
+        extras_require = {
+            'SMAC': ['ConfigSpaceNNI', 'smac4nni'],
+            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.12.0'],
+            'PPOTuner': ['enum34', 'gym']
+        },
         setup_requires = ['requests'],
 
         entry_points = {
@@ -127,26 +135,35 @@ def _setup():
 def _find_python_packages():
     packages = []
     for dirpath, dirnames, filenames in os.walk('nni'):
-        if '/__pycache__' not in dirpath:
+        if '/__pycache__' not in dirpath and '/.mypy_cache' not in dirpath and '/default_config' not in dirpath:
             packages.append(dirpath.replace('/', '.'))
     return sorted(packages) + ['nni_node']
 
+def _find_requirements_txt():
+    requirement_files = []
+    for dirpath, dirnames, filenames in os.walk('nni'):
+        if 'requirements.txt' in filenames:
+            requirement_files.append(os.path.join(dirpath[len('nni/'):], 'requirements.txt'))
+    return requirement_files
+
+def _find_default_config():
+    return ['runtime/default_config/' + name for name in os.listdir('nni/runtime/default_config')]
+
 def _find_node_files():
     if not os.path.exists('nni_node'):
-        if release and 'built_ts' not in sys.argv:
-            sys.exit('ERROR: To build a release version, run "python setup.py built_ts" first')
+        if release and 'build_ts' not in sys.argv and 'clean' not in sys.argv:
+            sys.exit('ERROR: To build a release version, run "python setup.py build_ts" first')
         return []
     files = []
     for dirpath, dirnames, filenames in os.walk('nni_node'):
         for filename in filenames:
-            files.append((dirpath + '/' + filename)[len('nni_node/'):])
+            files.append(os.path.join(dirpath[len('nni_node/'):], filename))
     if '__init__.py' in files:
         files.remove('__init__.py')
     return sorted(files)
 
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
-
 
 class BuildTs(Command):
     description = 'build TypeScript modules'
@@ -164,21 +181,25 @@ class BuildTs(Command):
 
 class Build(build):
     def run(self):
-        assert release, 'Please set environment variable "NNI_RELEASE=<release_version>"'
-        assert os.path.isfile('nni_node/main.js'), 'Please run "build_ts" before "build"'
-        assert not os.path.islink('nni_node/main.js'), 'This is a development build'
+        if not release:
+            sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
+        if os.path.islink('nni_node/main.js'):
+            sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+        open('nni/version.py', 'w').write(f"__version__ = '{release}'")
         super().run()
 
 class Develop(develop):
     user_options = develop.user_options + [
-        ('no-user', None, 'Prevent automatically adding "--user"')
+        ('no-user', None, 'Prevent automatically adding "--user"'),
+        ('skip-ts', None, 'Prevent building TypeScript modules')
     ]
 
-    boolean_options = develop.boolean_options + ['no-user']
+    boolean_options = develop.boolean_options + ['no-user', 'skip-ts']
 
     def initialize_options(self):
         super().initialize_options()
         self.no_user = None
+        self.skip_ts = None
 
     def finalize_options(self):
         # if `--user` or `--no-user` is explicitly set, do nothing
@@ -188,7 +209,9 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
-        setup_ts.build(release=None)
+        open('nni/version.py', 'w').write("__version__ = '999.dev0'")
+        if not self.skip_ts:
+            setup_ts.build(release=None)
         super().run()
 
 class Clean(clean):
@@ -223,4 +246,5 @@ _temp_files = [
 ]
 
 
-_setup()
+if __name__ == '__main__':
+    _setup()

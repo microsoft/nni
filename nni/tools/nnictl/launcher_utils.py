@@ -32,6 +32,8 @@ def parse_time(time):
 def parse_path(experiment_config, config_path):
     '''Parse path in config file'''
     expand_path(experiment_config, 'searchSpacePath')
+    if experiment_config.get('logDir'):
+        expand_path(experiment_config, 'logDir')
     if experiment_config.get('trial'):
         expand_path(experiment_config['trial'], 'codeDir')
         if experiment_config['trial'].get('authFile'):
@@ -61,12 +63,16 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         expand_path(experiment_config['trial'], 'paiConfigPath')
 
-    #if users use relative path, convert it to absolute path
+    # If users use relative path, convert it to absolute path.
     root_path = os.path.dirname(config_path)
     if experiment_config.get('searchSpacePath'):
         parse_relative_path(root_path, experiment_config, 'searchSpacePath')
+    if experiment_config.get('logDir'):
+        parse_relative_path(root_path, experiment_config, 'logDir')
     if experiment_config.get('trial'):
-        parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
+        # In AdaptDL mode, 'codeDir' shouldn't be parsed because it points to the path in the container.
+        if experiment_config.get('trainingServicePlatform') != 'adl':
+            parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
         if experiment_config['trial'].get('authFile'):
             parse_relative_path(root_path, experiment_config['trial'], 'authFile')
         if experiment_config['trial'].get('ps'):
@@ -99,7 +105,9 @@ def set_default_values(experiment_config):
         experiment_config['maxExecDuration'] = '999d'
     if experiment_config.get('maxTrialNum') is None:
         experiment_config['maxTrialNum'] = 99999
-    if experiment_config['trainingServicePlatform'] == 'remote':
+    if experiment_config['trainingServicePlatform'] == 'remote' or \
+       experiment_config['trainingServicePlatform'] == 'hybrid' and \
+       'remote' in experiment_config['hybridConfig']['trainingServicePlatforms']:
         for index in range(len(experiment_config['machineList'])):
             if experiment_config['machineList'][index].get('port') is None:
                 experiment_config['machineList'][index]['port'] = 22

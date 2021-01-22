@@ -7,7 +7,7 @@ from tensorflow.keras.optimizers import SGD
 
 import nni
 from nni.nas.tensorflow.mutables import LayerChoice, InputChoice
-from nni.nas.tensorflow.classic_nas import get_and_apply_next_architecture
+from nni.algorithms.nas.tensorflow.classic_nas import get_and_apply_next_architecture
 
 tf.get_logger().setLevel('ERROR')
 

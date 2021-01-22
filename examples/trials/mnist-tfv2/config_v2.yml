@@ -1,0 +1,26 @@
+searchSpace:
+  dropout_rate:
+    _type: uniform
+    _value: [0.5, 0.9]
+  conv_size:
+    _type: choice
+    _value: [2, 3, 5, 7]
+  hidden_size:
+    _type: choice
+    _value: [128, 512, 1024]
+  batch_size:
+    _type: choice
+    _value: [16, 32]
+  learning_rate:
+    _type: choice
+    _value: [0.0001, 0.001, 0.01, 0.1]
+trainingService:
+  platform: local
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
+trialConcurrency: 1
+trialGpuNumber: 0
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
