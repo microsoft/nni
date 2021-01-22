@@ -80,14 +80,13 @@ class Config:
     def __init__(self, experiment_id: str, log_dir: str):
         self.experiment_id = experiment_id
         self.conn = sqlite3.connect(os.path.join(log_dir, experiment_id, 'db', 'nni.sqlite'))
-        self.cursor = self.conn.cursor()
         self.refresh_config()
 
     def refresh_config(self):
         '''refresh to get latest config'''
-        sql = 'select * from ExperimentProfile where id=? order by revision DESC'
+        sql = 'select params from ExperimentProfile where id=? order by revision DESC'
         args = (self.experiment_id,)
-        self.config = config_v0_to_v1(json.loads(self.cursor.execute(sql, args).fetchall()[0][0]))
+        self.config = config_v0_to_v1(json.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
 
     def get_config(self):
         '''get a value according to key'''
