@@ -35,7 +35,8 @@ stages:
 
     - script: |
         set -e
-        python -m pip install -U -r dependencies/develop.txt
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/recommended.txt
       displayName: Install requirements

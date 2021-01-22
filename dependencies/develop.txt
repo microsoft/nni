@@ -1,5 +1,3 @@
-setuptools
-pip
 pylint
 flake8
 sphinx
@@ -9,4 +7,3 @@ sphinxcontrib-websupport
 nbsphinx
 pytest
 coverage
-wheel
