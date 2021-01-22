@@ -7,6 +7,7 @@ Examples for basic pruners
 import argparse
 
 import os
+import time
 import argparse
 import torch
 import torch.nn as nn
@@ -19,6 +20,7 @@ from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 
 import nni
+from nni.compression.pytorch import apply_compression_results, ModelSpeedup
 from nni.algorithms.compression.pytorch.pruning import (
     LevelPruner,
     SlimPruner,
@@ -39,31 +41,41 @@ str2pruner = {
     'apoz': ActivationAPoZRankFilterPruner
 }
 
+def get_dummy_input(args, device):
+    if args.dataset == 'mnist':
+        dummy_input = torch.randn([args.test_batch_size, 1, 28, 28]).to(device)
+    elif args.dataset in ['cifar10', 'imagenet']:
+        dummy_input = torch.randn([args.test_batch_size, 3, 32, 32]).to(device)
+    return dummy_input
+
 def get_pruner(model, pruner_name, device, optimizer=None, dependency_aware=False):
-    def _get_dummy_input(args, device):
-        if args.dataset == 'mnist':
-            dummy_input = torch.randn([args.test_batch_size, 1, 28, 28]).to(device)
-        elif args.dataset in ['cifar10', 'imagenet']:
-            dummy_input = torch.randn([args.test_batch_size, 3, 32, 32]).to(device)
-        return dummy_input
 
     pruner_cls = str2pruner[pruner_name]
 
     if pruner_name == 'level':
-        op_types = ['default']
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['default']
+        }]
+    if pruner_name == 'l1_filter':
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['default'],
+        }]
     elif pruner_name == 'slim':
-        op_types = ['BatchNorm2d']
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['BatchNorm2d'],
+        }]
     else:
-        op_types = ['Conv2d']
-
-    config_list = [{
-        'sparsity': args.sparsity,
-        'op_types': op_types
-    }]
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['Conv2d']
+        }]
 
     kw_args = {}
     if dependency_aware:
-        dummy_input = _get_dummy_input(args, device)
+        dummy_input = get_dummy_input(args, device)
         print('Enable the dependency_aware mode')
         # note that, not all pruners support the dependency_aware mode
         kw_args['dependency_aware'] = True
@@ -121,7 +133,6 @@ def get_trained_model_optimizer(args, device, train_loader, test_loader, criteri
     if args.model == 'LeNet':
         model = LeNet().to(device)
         if args.pretrained_model_dir is not None:
-            model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1e-4)
         else:
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
@@ -129,7 +140,6 @@ def get_trained_model_optimizer(args, device, train_loader, test_loader, criteri
     elif args.model == 'vgg16':
         model = VGG(depth=16).to(device)
         if args.pretrained_model_dir is not None:
-            model.load_state_dict(torch.load(args.pretrained_model_dir))
             optimizer = torch.optim.SGD(model.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
         else:
             optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
@@ -150,7 +160,6 @@ def get_trained_model_optimizer(args, device, train_loader, test_loader, criteri
     print('start pre-training...')
     if args.pretrained_model_dir is None:
         best_acc = 0
-        best_epoch = 0
         for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
@@ -161,15 +170,21 @@ def get_trained_model_optimizer(args, device, train_loader, test_loader, criteri
                 state_dict = model.state_dict()
 
         model.load_state_dict(state_dict)
-        print('Best acc:', best_acc)
-        print('Best epoch:', best_epoch)
+        acc = best_acc
 
         torch.save(state_dict, os.path.join(args.experiment_data_dir, f'pretrain_{args.dataset}_{args.model}.pth'))
         print('Model trained saved to %s' % args.experiment_data_dir)
-
+    else:
+        model.load_state_dict(torch.load(args.pretrained_model_dir))
+        best_acc = test(args, model, device, criterion, test_loader)
+        
+    print('Pretrained model acc:', best_acc)
     return model, optimizer
 
-
+def updateBN(model):
+    for m in model.modules():
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
@@ -179,6 +194,10 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch):
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
+
+        if args.pruner == 'slim':
+            updateBN(model)
+
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -212,6 +231,7 @@ def main(args):
 
     # prepare model and data
     train_loader, test_loader, criterion = get_data(args.dataset, args.data_dir, args.batch_size, args.test_batch_size)
+
     model, optimizer = get_trained_model_optimizer(args, device, train_loader, test_loader, criterion).to(device)
 
     print('start pruning...')
@@ -220,11 +240,8 @@ def main(args):
     mask_path = os.path.join(args.experiment_data_dir, 'mask_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
 
-    optimizer_finetune = torch.optim.SGD(
-        model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
-
     best_top1 = 0
-    pruner = get_pruner(model, args.pruner, device, optimizer_finetune, args.dependency_aware)
+    pruner = get_pruner(model, args.pruner, device, optimizer, args.dependency_aware)
     model = pruner.compress()
 
     if args.multi_gpu and torch.cuda.device_count() > 1:
@@ -233,13 +250,29 @@ def main(args):
     for epoch in range(args.prune_epochs):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
-        train(args, model, device, train_loader, optimizer_finetune)
+        train(args, model, device, train_loader, optimizer)
         top1 = test(args, model, device, test_loader)
         if top1 > best_top1:
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path=model_path, mask_path=mask_path)
+
+    if args.speed_up:
+        dummy_input = get_dummy_input(args, device)
+        
+        apply_compression_results(model, mask_path, device)
+        start = time.time()
+        for _ in range(32):
+            use_mask_out = model(dummy_input)
+        print('elapsed time when use mask: ', time.time() - start)
+
+        m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
+        m_speedup.speedup_model()
+        start = time.time()
+        for _ in range(32):
+            use_speedup_out = model(dummy_input)
+        print('elapsed time when use speedup: ', time.time() - start)
 
 if __name__ == '__main__':
     def str2bool(s):
