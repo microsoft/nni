@@ -1,3 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+'''
+Examples for basic pruners
+'''
+
+import argparse
+
 import os
 import argparse
 import torch
@@ -5,8 +13,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
-from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 

@@ -1,3 +1,9 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+'''
+Examples for level pruner on mnist
+'''
+
 from __future__ import print_function
 import argparse
 import torch
