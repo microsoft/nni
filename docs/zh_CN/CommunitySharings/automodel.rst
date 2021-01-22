@@ -8,6 +8,6 @@ NNI 可以应用于各种模型调优任务。 一些最先进的模型搜索算
     :maxdepth: 1
 
     SVD 自动调优 <RecommendersSvd>
-    NNI 中的 EfficientNet <./TrialExample/EfficientNet>
-    用于阅读理解的自动模型架构搜索<../TrialExample/SquadEvolutionExamples>
-    TPE 的并行优化<ParallelizingTpeSearch>
+    NNI 中的 EfficientNet <../TrialExample/EfficientNet>
+    用于阅读理解的自动模型架构搜索 <../TrialExample/SquadEvolutionExamples>
+    TPE 的并行优化 <ParallelizingTpeSearch>

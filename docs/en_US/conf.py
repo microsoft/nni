@@ -21,13 +21,13 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information ---------------------------------------------------
 
 project = 'NNI'
-copyright = '2020, Microsoft'
+copyright = '2021, Microsoft'
 author = 'Microsoft'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.9'
+release = 'v2.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -50,7 +50,7 @@ extensions = [
 ]
 
 # Add mock modules
-autodoc_mock_imports = ['apex']
+autodoc_mock_imports = ['apex', 'nni_node']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

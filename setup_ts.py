@@ -196,6 +196,7 @@ def copy_nni_node(version):
         package_json['version'] = version
     json.dump(package_json, open('nni_node/package.json', 'w'), indent=2)
 
+    # reinstall without development dependencies
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
@@ -226,9 +227,9 @@ def _symlink(target_file, link_location):
 
 def _print(*args):
     if sys.platform == 'win32':
-        print(*args)
+        print(*args, flush=True)
     else:
-        print('\033[1;36m#', *args, '\033[0m')
+        print('\033[1;36m#', *args, '\033[0m', flush=True)
 
 
 generated_files = [

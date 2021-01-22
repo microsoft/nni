@@ -1,7 +1,7 @@
 GradientFeatureSelector
 -----------------------
 
-The algorithm in GradientFeatureSelector comes from `"Feature Gradients: Scalable Feature Selection via Discrete Relaxation" <https://arxiv.org/pdf/1908.10382.pdf>`__.
+The algorithm in GradientFeatureSelector comes from `Feature Gradients: Scalable Feature Selection via Discrete Relaxation <https://arxiv.org/pdf/1908.10382.pdf>`__.
 
 GradientFeatureSelector, a gradient-based search algorithm
 for feature selection. 
@@ -90,7 +90,7 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
 * 
   **device** (str, optional, default = 'cpu') - 'cpu' to run on CPU and 'cuda' to run on GPU. Runs much faster on GPU
 
-**Requirement of ``fit`` FuncArgs**
+**Requirement of fit FuncArgs**
 
 
 * 
@@ -102,6 +102,6 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
 * 
   **groups** (array-like, optional, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].
 
-**Requirement of ``get_selected_features`` FuncArgs**
+**Requirement of get_selected_features FuncArgs**
 
  For now, the ``get_selected_features`` function has no parameters.

@@ -8,7 +8,7 @@ Miscellaneous utility functions.
 import math
 import os.path
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List
 
 PathLike = Union[Path, str]
 
@@ -29,12 +29,26 @@ def canonical_path(path: Optional[PathLike]) -> Optional[str]:
 def count(*values) -> int:
     return sum(value is not None and value is not False for value in values)
 
-def training_service_config_factory(platform: str, **kwargs): # -> TrainingServiceConfig
+def training_service_config_factory(platform: Union[str, List[str]] = None, config: Union[List, Dict] = None): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
-    for cls in TrainingServiceConfig.__subclasses__():
-        if cls.platform == platform:
-            return cls(**kwargs)
-    raise ValueError(f'Unrecognized platform {platform}')
+    ts_configs = []
+    if platform is not None:
+        assert config is None
+        platforms = platform if isinstance(platform, list) else [platform]
+        for cls in TrainingServiceConfig.__subclasses__():
+            if cls.platform in platforms:
+                ts_configs.append(cls())
+        if len(ts_configs) < len(platforms):
+            raise RuntimeError('There is unrecognized platform!')
+    else:
+        assert config is not None
+        supported_platforms = {cls.platform: cls for cls in TrainingServiceConfig.__subclasses__()}
+        configs = config if isinstance(config, list) else [config]
+        for conf in configs:
+            if conf['platform'] not in supported_platforms:
+                raise RuntimeError(f'Unrecognized platform {conf["platform"]}')
+            ts_configs.append(supported_platforms[conf['platform']](**conf))
+    return ts_configs if len(ts_configs) > 1 else ts_configs[0]
 
 def load_config(Type, value):
     if isinstance(value, list):

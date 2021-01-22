@@ -61,7 +61,7 @@ To avoid over-fitting in **CIFAR-10**\ , we also compare the models in the other
 
 We do not change the default fine-tuning technique in their source code. In order to match each task, the codes of input image shape and output numbers are changed.
 
-Search phase time for all NAS methods is **two days** as well as the retrain time.  Average results are reported based on** three repeat times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of RAM and one 2.60GHz CPU (Intel E5-2690).
+Search phase time for all NAS methods is **two days** as well as the retrain time.  Average results are reported based on **three repeat times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of RAM and one 2.60GHz CPU (Intel E5-2690).
 
 For NAO, it requires too much computing resources, so we only use NAO-WS which provides the pipeline script.
 

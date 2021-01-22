@@ -7,7 +7,7 @@
 <div>
   <div class="chinese"><a href="https://nni.readthedocs.io/en/latest/">English</a></div>
   <b>NNI (Neural Network Intelligence)</b> 是一个轻量但强大的工具包，帮助用户<b>自动</b>的进行
-  <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程</a>，<a href="{{ pathto('NAS/Overview') }}">神经网络架构搜索</a>， <a href="{{ pathto('Tuner/BuiltinTuner') }}">超参调优</a>以及<a href="{{ pathto('Compressor/Overview') }}">模型压缩</a>。
+  <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程</a>，<a href="{{ pathto('NAS/Overview') }}">神经网络架构搜索</a>， <a href="{{ pathto('Tuner/BuiltinTuner') }}">超参调优</a>以及<a href="{{ pathto('Compression/Overview') }}">模型压缩</a>。
 </div>
 <p class="topMargin">
   NNI 管理自动机器学习 (AutoML) 的 Experiment，
@@ -151,18 +151,18 @@
             <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
           </ul>
         </ul>
-        <a href="{{ pathto('Compressor/Overview') }}">模型压缩</a>
+        <a href="{{ pathto('Compression/Overview') }}">模型压缩</a>
         <ul class="firstUl">
           <div><b>剪枝</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Pruner') }}">AGP Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">Slim Pruner</a></li>
-            <li><a href="{{ pathto('Compressor/Pruner') }}">FPGM Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">AGP Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">Slim Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}">FPGM Pruner</a></li>
           </ul>
           <div><b>量化</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">QAT Quantizer</a></li>
-            <li><a href="{{ pathto('Compressor/Quantizer') }}">DoReFa Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}">QAT Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}">DoReFa Quantizer</a></li>
           </ul>
         </ul>
         <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程（测试版）</a>
@@ -361,18 +361,19 @@ You can use these commands to get more information about the experiment
     <li>在 NNI 中运行 <a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
     <li>
       <a
-        href="https://github.com/microsoft/nni/blob/master/examples/feature_engineering/auto-feature-engineering/README_zh_CN.md">NNI 中的自动特征工程</a>
+        href="https://github.com/microsoft/nni/blob/master/examples/feature_engineering/auto-feature-engineering/README.rst">Automatic
+        Feature Engineering</a> with NNI
     </li>
     <li>使用 NNI 的 <a
-        href="https://github.com/microsoft/recommenders/blob/master/notebooks/04_model_select_and_optimize/nni_surprise_svd.ipynb">矩阵分解超参调优</a></li>
+        href="https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb">矩阵分解超参调优</a></li>
     <li><a href="https://github.com/ksachdeva/scikit-nni">scikit-nni</a> 使用 NNI 为 scikit-learn 开发的超参搜索。</li>
   </ul>
 
   <!-- Relevant Articles -->
   <ul>
     <h2>相关文章</h2>
-    <li><a href="{{ pathto('CommunitySharings/HpoComparision') }}">超参数优化的对比</a></li>
-    <li><a href="{{ pathto('CommunitySharings/NasComparision') }}">神经网络结构搜索的对比</a></li>
+    <li><a href="{{ pathto('CommunitySharings/HpoComparison') }}">超参数优化的对比</a></li>
+    <li><a href="{{ pathto('CommunitySharings/NasComparison') }}">神经网络结构搜索的对比</a></li>
     <li><a href="{{ pathto('CommunitySharings/ParallelizingTpeSearch') }}">并行化顺序算法：TPE</a>
     </li>
     <li><a href="{{ pathto('CommunitySharings/RecommendersSvd') }}">使用 NNI 为 SVD 自动调参</a></li>
@@ -450,7 +451,7 @@ You can use these commands to get more information about the experiment
 <!-- License -->
 <div>
   <h1 class="title">许可协议</h1>
-  <p>代码库遵循 <a href="https://github.com/microsoft/nni/blob/master/LICENSE">MIT 许可协议</a></p>
+  <p>The entire codebase is under <a href="https://github.com/microsoft/nni/blob/master/LICENSE">MIT license</a></p>
 </div>
 </div>
 {% endblock %}

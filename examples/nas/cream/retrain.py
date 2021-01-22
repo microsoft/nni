@@ -139,8 +139,8 @@ def main():
             '[Model-{}] Flops: {} Params: {}'.format(cfg.NET.SELECTION, macs, params))
 
     # create optimizer
-    optimizer = create_optimizer(cfg, model)
     model = model.cuda()
+    optimizer = create_optimizer(cfg, model)
 
     # optionally resume from a checkpoint
     resume_state, resume_epoch = {}, None

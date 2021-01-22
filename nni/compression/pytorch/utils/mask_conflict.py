@@ -31,6 +31,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
         # if the input is the path of the mask_file
         assert os.path.exists(masks)
         masks = torch.load(masks)
+    assert len(masks) > 0,  'Mask tensor cannot be empty'
     # if the user uses the model and dummy_input to trace the model, we
     # should get the traced model handly, so that, we only trace the
     # model once, GroupMaskConflict and ChannelMaskConflict will reuse
@@ -127,6 +128,7 @@ class CatMaskPadding(MaskFix):
             for layer in layers:
                 if layer in self.masks:
                     continue
+
                 module = name_to_module[layer]
                 w_shape = module.weight.data.size()
                 w_mask = torch.ones(w_shape).to(device)
@@ -136,6 +138,7 @@ class CatMaskPadding(MaskFix):
                     b_shape = module.bias.data.size()
                     b_mask = torch.ones(b_shape).to(device)
                 self.masks[layer] = {'weight': w_mask, 'bias': b_mask}
+
         return self.masks
 
 
@@ -250,6 +253,10 @@ class ChannelMaskConflict(MaskFix):
                 self.model, self.dummy_input, self.traced)
         depen_sets = channel_depen.dependency_sets
         sum_idx = (1, 2, 3) if self.conv_prune_dim == 0 else (0, 2, 3)
+
+        (_tmp_name, _tmp_tensor) = list(self.masks.items())[0]
+        device = _tmp_tensor['weight'].device
+
         for dset in depen_sets:
             if len(dset) <= 1:
                 continue
@@ -301,7 +308,7 @@ class ChannelMaskConflict(MaskFix):
 
             for i, dim_mask in enumerate(channel_masks):
                 if dim_mask is None:
-                    channel_masks[i] = torch.ones(num_channels).int()
+                    channel_masks[i] = torch.ones(num_channels).int().to(device)
 
             # merge masks with 'or'
             merged_channel_mask = channel_masks[0].clone()

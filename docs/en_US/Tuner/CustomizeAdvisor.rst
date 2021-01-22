@@ -17,7 +17,9 @@ If a user want to implement a customized Advisor, she/he only needs to:
        def __init__(self, ...):
            ...
 
-**2. Implement the methods with prefix ``handle_`` except ``handle_request``**.. You might find `docs </sdk_reference.html#nni.runtime.msg_dispatcher_base.MsgDispatcherBase>`__ for ``MsgDispatcherBase`` helpful.
+**2. Implement the methods with prefix "handle_" except "handle_request""**
+
+You might find `docs <../autotune_ref.rst#Advisor>`__ for ``MsgDispatcherBase`` helpful.
 
 **3. Configure your customized Advisor in experiment YAML config file.**
 

@@ -1,5 +1,4 @@
 import logging
-import time
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,19 +6,23 @@ from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
 
-from ..experiment import Experiment, TrainingServiceConfig, launcher, rest
+from ..experiment import Experiment, TrainingServiceConfig
 from ..experiment.config.base import ConfigBase, PathLike
 from ..experiment.config import util
 from ..experiment.pipe import Pipe
+
 from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
 from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
-from .trainer.interface import BaseTrainer
+from .trainer.interface import BaseTrainer, BaseOneShotTrainer
 from .strategies.strategy import BaseStrategy
+from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
 
 _logger = logging.getLogger(__name__)
+
+OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
 
 @dataclass(init=False)
@@ -43,7 +46,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(training_service_platform)
+            self.training_service = util.training_service_config_factory(platform = training_service_platform)
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
@@ -76,7 +79,7 @@ _validation_rules = {
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: Model, trainer: BaseTrainer,
-                 applied_mutators: Mutator, strategy: BaseStrategy):
+                 applied_mutators: Mutator = None, strategy: BaseStrategy = None):
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
 
@@ -87,6 +90,7 @@ class RetiariiExperiment(Experiment):
         self.recorded_module_args = get_records()
 
         self._dispatcher = RetiariiAdvisor()
+        self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
@@ -103,7 +107,10 @@ class RetiariiExperiment(Experiment):
             mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
             applied_mutators.append(mutator)
         for node in ic_nodes:
-            mutator = InputChoiceMutator(node.name, node.operation.parameters['n_chosen'])
+            mutator = InputChoiceMutator(node.name,
+                                         node.operation.parameters['n_candidates'],
+                                         node.operation.parameters['n_chosen'],
+                                         node.operation.parameters['reduction'])
             applied_mutators.append(mutator)
         return applied_mutators
 
@@ -114,14 +121,17 @@ class RetiariiExperiment(Experiment):
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
-        base_model = convert_to_graph(script_module, self.base_model, self.recorded_module_args)
+        base_model_ir = convert_to_graph(script_module, self.base_model)
 
-        assert id(self.trainer) in self.recorded_module_args
-        trainer_config = self.recorded_module_args[id(self.trainer)]
-        base_model.apply_trainer(trainer_config['modulename'], trainer_config['args'])
+        recorded_module_args = get_records()
+        if id(self.trainer) not in recorded_module_args:
+            raise KeyError('Your trainer is not found in registered classes. You might have forgotten to \
+                register your customized trainer with @register_trainer decorator.')
+        trainer_config = recorded_module_args[id(self.trainer)]
+        base_model_ir.apply_trainer(trainer_config['modulename'], trainer_config['args'])
 
         # handle inline mutations
-        mutators = self._process_inline_mutation(base_model)
+        mutators = self._process_inline_mutation(base_model_ir)
         if mutators is not None and self.applied_mutators:
             raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, \
                 do not use mutators when you use LayerChoice/InputChoice')
@@ -129,10 +139,10 @@ class RetiariiExperiment(Experiment):
             self.applied_mutators = mutators
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy.run, args=(base_model, self.applied_mutators)).start()
+        Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators)).start()
         _logger.info('Strategy started!')
 
-    def start(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> None:
+    def start(self, port: int = 8080, debug: bool = False) -> None:
         """
         Start the experiment in background.
         This method will raise exception on failure.
@@ -144,54 +154,37 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        # FIXME:
-        if debug:
-            logging.getLogger('nni').setLevel(logging.DEBUG)
-
-        self._proc, self._pipe = launcher.start_experiment(config, port, debug)
-        assert self._proc is not None
-        assert self._pipe is not None
-
-        self.port = port  # port will be None if start up failed
-
-        # dispatcher must be created after pipe initialized
-        # the logic to launch dispatcher in background should be refactored into dispatcher api
-        Thread(target=self._dispatcher.run).start()
-
+        super().start(port, debug)
         self._start_strategy()
 
-        # TODO: register experiment management metadata
+    def _create_dispatcher(self):
+        return self._dispatcher
 
-    def stop(self) -> None:
-        """
-        Stop background experiment.
-        """
-        self._proc.kill()
-        self._pipe.close()
-
-        self.port = None
-        self._proc = None
-        self._pipe = None
-
-    def run(self, config: RetiariiExeConfig, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        self.config = config
-        self.start(config, port, debug)
-        try:
-            while True:
-                time.sleep(10)
-                status = self.get_status()
-                # TODO: double check the status
-                if status in ['ERROR', 'STOPPED', 'NO_MORE_TRIAL']:
-                    return status
-        finally:
-            self.stop()
+        if isinstance(self.trainer, OneShotTrainers):
+            self.trainer.fit()
+        else:
+            assert config is not None, 'You are using classic search mode, config cannot be None!'
+            self.config = config
+            super().run(port, debug)
 
-    def get_status(self) -> str:
-        if self.port is None:
-            raise RuntimeError('Experiment is not running')
-        resp = rest.get(self.port, '/check-status')
-        return resp['status']
+    def export_top_models(self, top_n: int = 1):
+        """
+        export several top performing models
+        """
+        if top_n != 1:
+            _logger.warning('Only support top_n is 1 for now.')
+        if isinstance(self.trainer, BaseOneShotTrainer):
+            return self.trainer.export()
+        else:
+            _logger.info('For this experiment, you can find out the best one from WebUI.')
+
+    def retrain_model(self, model):
+        """
+        this function retrains the exported model, and test it to output test accuracy
+        """
+        raise NotImplementedError

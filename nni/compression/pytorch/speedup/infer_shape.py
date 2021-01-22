@@ -273,7 +273,8 @@ infer_from_inshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -308,7 +309,8 @@ infer_from_outshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_outshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_outshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_outshape(module_masks, mask)
 }
 
 
@@ -889,23 +891,18 @@ def conv2d_mask(module_masks, mask):
         sum_idx = (1, 2, 3) if dim == 0 else (0, 2, 3)
         index = torch.nonzero(weight_mask.abs().sum(
             sum_idx) != 0, as_tuple=True)[0]
-        if len(index) == weight_mask.shape[dim]:  # full mask
-            index = None
 
-        if index is None:
-            return None, None, None
-        else:
-            index = index.long().to(weight_mask.device)
-            weight_cmask = CoarseMask(num_dim=4)
-            weight_cmask.add_index_mask(dim=dim, index=index)
-            bias_cmask = None
-            if dim == 0 and 'bias' in mask and mask['bias'] is not None:
-                bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
-                assert torch.all(torch.eq(index, bias_index)), \
-                    "bias mask should be consistent with weight mask"
-                bias_cmask = CoarseMask(num_dim=1)
-                bias_cmask.add_index_mask(dim=0, index=bias_index)
-            return index, weight_cmask, bias_cmask
+        index = index.long().to(weight_mask.device)
+        weight_cmask = CoarseMask(num_dim=4)
+        weight_cmask.add_index_mask(dim=dim, index=index)
+        bias_cmask = None
+        if dim == 0 and 'bias' in mask and mask['bias'] is not None:
+            bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
+            assert torch.all(torch.eq(index, bias_index)), \
+                "bias mask should be consistent with weight mask"
+            bias_cmask = CoarseMask(num_dim=1)
+            bias_cmask.add_index_mask(dim=0, index=bias_index)
+        return index, weight_cmask, bias_cmask
 
     index, weight_cmask, bias_cmask = convert_to_coarse_mask(
         mask, dim=conv_prune_dim)
@@ -960,6 +957,7 @@ def conv2d_inshape(module_masks, mask):
         # the same conv layer may be accessed more
         # than once, such as a concat operation.
         # mask conflict should be solved by fix_mask_conflict before speedup
+
         assert module_masks.input_mask == mask
 
     # shape changes pass through depths wise conv layers
