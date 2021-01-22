@@ -75,6 +75,10 @@ testCases:
       command: python3 main.py --epochs 1 --batches 1
       gpuNum: 0
 
+- name: cifar10-pytorch-adl
+  configFile: test/config/examples/cifar10-pytorch-adl.yml
+  trainingService: adl
+
 #- name: nested-ss
 #  configFile: test/config/examples/mnist-nested-search-space.yml
 

@@ -113,7 +113,7 @@ User configuration for Slim Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We implemented one of the experiments in `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\ , we pruned $70\%$ channels in the **VGGNet** for CIFAR-10 in the paper, in which $88.5\%$ parameters are pruned. Our experiments results are as follows:
+We implemented one of the experiments in `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/pdf/1708.06519.pdf>`__\ , we pruned ``70%`` channels in the **VGGNet** for CIFAR-10 in the paper, in which ``88.5%`` parameters are pruned. Our experiments results are as follows:
 
 .. list-table::
    :header-rows: 1
@@ -133,7 +133,7 @@ We implemented one of the experiments in `'Learning Efficient Convolutional Netw
      - 88.5%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/slim_torch_cifar10.py <examples/model_compress/pruning/reproduced/slim_torch_cifar10.py>`
 
 ----
 
@@ -182,7 +182,7 @@ User configuration for FPGM Pruner
 L1Filter Pruner
 ---------------
 
-This is an one-shot pruner, In `'PRUNING FILTERS FOR EFFICIENT CONVNETS' <https://arxiv.org/abs/1608.08710>`__\ , authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
+This is an one-shot pruner, In `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\ , authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
 
 
 .. image:: ../../img/l1filter_pruner.png
@@ -232,7 +232,7 @@ User configuration for L1Filter Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We implemented one of the experiments in `'PRUNING FILTERS FOR EFFICIENT CONVNETS' <https://arxiv.org/abs/1608.08710>`__ with **L1FilterPruner**\ , we pruned** VGG-16** for CIFAR-10 to** VGG-16-pruned-A** in the paper, in which $64\%$ parameters are pruned. Our experiments results are as follows:
+We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ with **L1FilterPruner**\ , we pruned **VGG-16** for CIFAR-10 to **VGG-16-pruned-A** in the paper, in which ``64%`` parameters are pruned. Our experiments results are as follows:
 
 .. list-table::
    :header-rows: 1
@@ -252,7 +252,7 @@ We implemented one of the experiments in `'PRUNING FILTERS FOR EFFICIENT CONVNET
      - 64.0%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/L1_torch_cifar10.py <examples/model_compress/pruning/reproduced/L1_torch_cifar10.py>`
 
 ----
 
@@ -316,7 +316,7 @@ PyTorch code
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for ActivationAPoZRankFilter Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -330,7 +330,7 @@ User configuration for ActivationAPoZRankFilter Pruner
 ActivationMeanRankFilter Pruner
 -------------------------------
 
-ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper\ `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
+ActivationMeanRankFilterPruner is a pruner which prunes the filters with the smallest importance criterion ``mean activation`` calculated from the output activations of convolution layers to achieve a preset level of network sparsity. The pruning criterion ``mean activation`` is explained in section 2.2 of the paper `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__. Other pruning criteria mentioned in this paper will be supported in future release.
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
@@ -351,7 +351,7 @@ PyTorch code
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for ActivationMeanRankFilterPruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -471,7 +471,7 @@ PyTorch code
 
    pruner.update_epoch(epoch)
 
-You can view :githublink:`example <examples/model_compress/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
 
 User configuration for AGP Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -511,7 +511,7 @@ PyTorch code
    pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,base_algo='l1', experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for NetAdapt Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -552,7 +552,7 @@ PyTorch code
    pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_algo='l1', cool_down_rate=0.9, experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for SimulatedAnnealing Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -582,7 +582,7 @@ PyTorch code
 
 .. code-block:: python
 
-   from nni.algorithms.compression.pytorch.pruning import ADMMPruner
+   from nni.algorithms.compression.pytorch.pruning import AutoCompressPruner
    config_list = [{
            'sparsity': 0.5,
            'op_types': ['Conv2d']
@@ -593,7 +593,7 @@ PyTorch code
                cool_down_rate=0.9, admm_num_iterations=30, admm_training_epochs=5, experiment_data_dir='./')
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for AutoCompress Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -631,9 +631,9 @@ PyTorch code
    pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/amc/>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/amc/>` for more information.
 
-User configuration for AutoCompress Pruner
+User configuration for AMC Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
@@ -659,7 +659,7 @@ We implemented one of the experiments in `AMC: AutoML for Model Compression and 
      - 50%
 
 
-The experiments code can be found at :githublink:`examples/model_compress <examples/model_compress/amc/>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/ <examples/model_compress/pruning/amc/>`
 
 ADMM Pruner
 -----------
@@ -693,7 +693,7 @@ PyTorch code
    pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
    pruner.compress()
 
-You can view :githublink:`example <examples/model_compress/auto_pruners_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
 
 User configuration for ADMM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -754,7 +754,7 @@ User configuration for LotteryTicket Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/pruning/reproduced/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png

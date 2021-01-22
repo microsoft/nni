@@ -28,8 +28,10 @@ class Mutator:
     """
     Mutates graphs in model to generate new model.
     `Mutator` class will be used in two places:
-      1. Inherit `Mutator` to implement graph mutation logic.
-      2. Use `Mutator` subclass to implement NAS strategy.
+
+        1. Inherit `Mutator` to implement graph mutation logic.
+        2. Use `Mutator` subclass to implement NAS strategy.
+
     In scenario 1, the subclass should implement `Mutator.mutate()` interface with `Mutator.choice()`.
     In scenario 2, strategy should use constructor or `Mutator.bind_sampler()` to initialize subclass,
     and then use `Mutator.apply()` to mutate model.
@@ -104,6 +106,7 @@ class _RecorderSampler(Sampler):
         self.recorded_candidates.append(candidates)
         return candidates[0]
 
+
 # the following is for inline mutation
 
 
@@ -122,14 +125,16 @@ class LayerChoiceMutator(Mutator):
 
 
 class InputChoiceMutator(Mutator):
-    def __init__(self, node_name: str, n_chosen: int):
+    def __init__(self, node_name: str, n_candidates: int, n_chosen: int, reduction: str):
         super().__init__()
         self.node_name = node_name
+        self.n_candidates = n_candidates
         self.n_chosen = n_chosen
+        self.reduction = reduction
 
     def mutate(self, model):
         target = model.get_node_by_name(self.node_name)
-        candidates = [i for i in range(self.n_chosen)]
-        chosen = self.choice(candidates)
+        candidates = [i for i in range(self.n_candidates)]
+        chosen = [self.choice(candidates) for _ in range(self.n_chosen)]
         target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',
-                                {'chosen': chosen})
+                                {'chosen': chosen, 'reduction': self.reduction})

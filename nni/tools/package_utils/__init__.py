@@ -216,7 +216,7 @@ def read_registerd_algo_meta():
     config_file = get_registered_algo_config_path()
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f, Loader=yaml.Loader)
+            config = yaml.load(f, Loader=yaml.SafeLoader)
     else:
         config = defaultdict(list)
     for t in ALGO_TYPES:

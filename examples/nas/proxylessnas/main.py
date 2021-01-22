@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -102,6 +103,7 @@ if __name__ == "__main__":
                                    log_frequency=10)
         trainer.fit()
         print('Final architecture:', trainer.export())
+        json.dump(trainer.export(), open('checkpoint.json', 'w'))
     elif args.train_mode == 'search_v1':
         # this is architecture search
         logger.info('Creating ProxylessNasTrainer...')

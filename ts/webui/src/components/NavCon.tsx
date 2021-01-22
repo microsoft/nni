@@ -145,7 +145,7 @@ class NavCon extends React.Component<NavProps, NavState> {
                             <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
                             <Link to='/experiment' className='experiment'>
                                 <div className='expNavTitle'>
-                                    <span>All experiment</span>
+                                    <span>All experiments</span>
                                     {ChevronRightMed}
                                 </div>
                             </Link>

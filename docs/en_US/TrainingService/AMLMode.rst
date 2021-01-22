@@ -42,7 +42,7 @@ Step 7. Open a command line and install AML package environment.
 Run an experiment
 -----------------
 
-Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's content is like:
+Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's content is like:
 
 .. code-block:: yaml
 
@@ -81,9 +81,8 @@ Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have
 * image
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
-    .. code-block:: bash
 
-       Note: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
+.. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
 
 amlConfig:
 
@@ -119,10 +118,10 @@ Run the following commands to start the example experiment:
 .. code-block:: bash
 
    git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
-   cd nni/examples/trials/mnist-tfv1
+   cd nni/examples/trials/mnist-pytorch
 
    # modify config_aml.yml ...
 
    nnictl create --config config_aml.yml
 
-Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v1.9``.
+Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.0``.

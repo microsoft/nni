@@ -69,7 +69,6 @@ dependencies = [
     'PythonWebHDFS',
     'colorama',
     'scikit-learn>=0.23.2',
-    'pkginfo',
     'websockets',
     'filelock',
     'prettytable',
@@ -112,11 +111,8 @@ def _setup():
         python_requires = '>=3.6',
         install_requires = dependencies,
         extras_require = {
-            'SMAC': [
-                'ConfigSpaceNNI @ git+https://github.com/QuanluZhang/ConfigSpace.git',
-                'smac @ git+https://github.com/QuanluZhang/SMAC3.git'
-            ],
-            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
+            'SMAC': ['ConfigSpaceNNI', 'smac4nni'],
+            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.12.0'],
             'PPOTuner': ['enum34', 'gym']
         },
         setup_requires = ['requests'],
@@ -189,6 +185,7 @@ class Build(build):
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
+        open('nni/version.py', 'w').write(f"__version__ = '{release}'")
         super().run()
 
 class Develop(develop):
@@ -212,6 +209,7 @@ class Develop(develop):
         super().finalize_options()
 
     def run(self):
+        open('nni/version.py', 'w').write("__version__ = '999.dev0'")
         if not self.skip_ts:
             setup_ts.build(release=None)
         super().run()
