@@ -12,7 +12,7 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../../pai/paiConfig';
-import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
+import { NNIPAITrialConfig } from '../../pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { StorageService } from '../storageService';
 
@@ -25,7 +25,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger();
     private paiClusterConfig: PAIClusterConfig | undefined;
-    private paiTrialConfig: NNIPAIK8STrialConfig | undefined;
+    private paiTrialConfig: NNIPAITrialConfig | undefined;
     private paiJobConfig: any;
     private paiToken?: string;
     private protocol: string = 'http';
@@ -62,7 +62,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     this.log.error('pai cluster config is not initialized');
                     break;
                 }
-                this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
+                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
 
                 const storageService = component.get<StorageService>(StorageService);

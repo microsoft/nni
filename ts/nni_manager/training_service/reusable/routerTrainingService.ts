@@ -11,7 +11,7 @@ import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetri
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
-import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
+import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -131,7 +131,7 @@ class RouterTrainingService implements TrainingService {
                     await this.internalTrainingService.setClusterMetadata('platform_list', 'pai');
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
-                    this.internalTrainingService = component.get(PAIK8STrainingService);
+                    this.internalTrainingService = component.get(PAITrainingService);
                 }
             } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
                 this.internalTrainingService = component.get(TrialDispatcher);
