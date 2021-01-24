@@ -54,7 +54,7 @@ class CommonUtilsTestCase(TestCase):
     @responses.activate
     def test_get_experiment_port(self):
         args = generate_args()
-        self.assertEqual('8080', get_experiment_port(args))
+        self.assertEqual(8080, get_experiment_port(args))
     
     @responses.activate
     def test_check_rest(self):
