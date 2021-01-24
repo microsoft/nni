@@ -92,9 +92,15 @@ class GraphConverter:
                                      node.kind(), attrs)
         return new_node
 
-    def handle_prim_attr_node(self, node):
+    def handle_prim_attr_node(self, node, module):
         assert node.hasAttribute('name')
-        attrs = {'name': node.s('name'), 'input': node.inputsAt(0).debugName()}
+        value = None
+        if node.inputsAt(0).debugName() == 'self':
+            _val = getattr(module, node.s('name'))
+            # TODO: serialize complex data type, and output proper error message
+            if isinstance(_val, (int, float, str, bool)):
+                value = _val
+        attrs = {'name': node.s('name'), 'input': node.inputsAt(0).debugName(), 'value': value}
         return node.kind(), attrs
 
     def _remove_mangle(self, module_type_str):
@@ -194,6 +200,9 @@ class GraphConverter:
                     left = _generate_expr(tensor.node().inputsAt(0))
                     right = _generate_expr(tensor.node().inputsAt(1))
                     return f'({left} == {right})'
+                elif tensor.node().kind() == 'aten::Bool':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'bool({value})'
                 else:
                     raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition')
             expr = _generate_expr(cond_tensor)
@@ -222,6 +231,28 @@ class GraphConverter:
             last_block_node = None
             for node in blocks[chosen_block].nodes():
                 last_block_node = handle_single_node(node)
+            #%30 : Tensor = prim::If(%3) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:436:16
+            #block0():
+            #    %6 : Tensor = aten::mul(%logvar.1, %4) # <string>:3:9
+            #    %std.1 : Tensor = aten::exp(%6) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:437:26
+            #    %eps.1 : Tensor = aten::randn_like(%std.1, %9, %9, %9, %9, %9) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:438:26
+            #    %17 : Tensor = aten::mul(%eps.1, %std.1) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:439:27
+            #    %20 : Tensor = aten::add_(%17, %mu.1, %19) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:439:27
+            #    -> (%20)
+            #block1():
+            #    -> (%mu.1)
+            if last_block_node is None:
+                # create an identity node
+                print(dir(blocks[chosen_block]))
+                print([i for i in blocks[chosen_block].outputs()])
+                print(blocks[chosen_block].returnNode())
+                print(type(blocks[chosen_block].returnNode()))
+                print([i for i in blocks[chosen_block].returnNode().outputs()])
+                print([i for i in blocks[chosen_block].returnNode().inputs()])
+                self.global_seq += 1
+                new_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
+                self._add_edge(ir_graph, blocks[chosen_block].returnNode(), graph_inputs, node_index, new_node, output_remap)
+                last_block_node = new_node
             return last_block_node
 
         # ===================handle function call===================
@@ -292,11 +323,12 @@ class GraphConverter:
                 assert hasattr(script_module, node.s('name'))
                 # TODO: support non member functions
                 assert node.inputsAt(0).debugName() == 'self'
-                print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
+                #print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
                 script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
                 
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
+                print(script_method.graph)
                 method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
                                                     module_name, ir_model, method_ir_graph)
                 for _output in script_method.graph.outputs():
@@ -306,6 +338,9 @@ class GraphConverter:
                         src_node_idx = None
                     else:
                         src_node_idx = predecessor_node_outputs.index(_output)
+                    print('output: ', method_ir_graph.output_node)
+                    print('input: ', method_node_index[_output.node()])
+                    print('input: ', _output.node())
                     method_ir_graph.add_edge(head=(method_node_index[_output.node()], src_node_idx),
                                     tail=(method_ir_graph.output_node, None))
                 self.refine_graph(method_ir_graph)
@@ -370,6 +405,21 @@ class GraphConverter:
                 new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListConstruct, self.global_seq), node.kind())
                 node_index[node] = new_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
+            elif node.kind() == 'prim::ListUnpack':
+                self.global_seq += 1
+                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListUnpack, self.global_seq), node.kind())
+                node_index[node] = new_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
+            elif node.kind() == 'prim::TupleConstruct':
+                self.global_seq += 1
+                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleConstruct, self.global_seq), node.kind())
+                node_index[node] = new_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
+            elif node.kind() == 'prim::TupleUnpack':
+                self.global_seq += 1
+                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleUnpack, self.global_seq), node.kind())
+                node_index[node] = new_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
             elif node.kind() == 'aten::append':
                 self.global_seq += 1
                 aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
@@ -378,12 +428,15 @@ class GraphConverter:
                 output_remap[node.inputsAt(0)] = node
             elif node.kind().startswith('aten::'):
                 # handle aten::XXX
+                #if node.kind() == 'aten::sigmoid':
+                #    print('zzql: ', node)
+                #    exit(1)
                 self.global_seq += 1
                 aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
                 node_index[node] = aten_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             elif node.kind() == 'prim::GetAttr':
-                node_type, attrs = self.handle_prim_attr_node(node)
+                node_type, attrs = self.handle_prim_attr_node(node, module)
                 self.global_seq += 1
                 new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Attr, self.global_seq),
                                              node_type, attrs)

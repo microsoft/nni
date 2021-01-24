@@ -27,8 +27,9 @@ def wrap_module(original_class):
     return original_class
 
 def unwrap_module(wrapped_class):
-    wrapped_class.__init__ = wrapped_class.bak_init_for_inject
-    delattr(wrapped_class, "bak_init_for_inject")
+    if hasattr(wrapped_class, 'bak_init_for_inject'):
+        wrapped_class.__init__ = wrapped_class.bak_init_for_inject
+        delattr(wrapped_class, 'bak_init_for_inject')
     return None
 
 def remove_inject_pytorch_nn():

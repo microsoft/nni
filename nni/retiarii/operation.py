@@ -121,8 +121,18 @@ class PyTorchOperation(Operation):
             return f'{output} = {value}'
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
+        elif self.type == 'prim::TupleConstruct':
+            inputs_str = ','.join(inputs)
+            return f'{output} = ({inputs_str})'
+        elif self.type == 'prim::TupleUnpack':
+            # have single output here, because the following code uses index to access the unpacked values
+            assert len(inputs) == 1
+            return f'{output} = {inputs[0]}'
         elif self.type == 'prim::GetAttr':
-            return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
+            if self.parameters['value'] is not None:
+                return f"{output} = {self.parameters['value']}"
+            else:
+                return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
         elif self.type == 'aten::__getitem__':
@@ -135,7 +145,19 @@ class PyTorchOperation(Operation):
             assert len(inputs) == 2
             return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
         elif self.type == 'aten::add':
-            return f'{output} = ' + ' + '.join(inputs)
+            # TODO: verify the correctness
+            #return f'{output} = ' + ' + '.join(inputs)
+            if len(inputs) == 2:
+                return f'{output} = {inputs[0]}.add({inputs[1]})'
+            else:
+                assert len(inputs) == 3
+                return f'{output} = {inputs[0]}.add({inputs[1]}, alpha={inputs[2]})'
+        elif self.type == 'aten::add_':
+            if len(inputs) == 2:
+                return f'{output} = {inputs[0]}.add_({inputs[1]})'
+            else:
+                assert len(inputs) == 3
+                return f'{output} = {inputs[0]}.add_({inputs[1]}, alpha={inputs[2]})'
         elif self.type == OpTypeName.MergedSlice:
             assert (len(inputs) - 1) % 4 == 0
             slices = []
@@ -154,6 +176,15 @@ class PyTorchOperation(Operation):
             raise RuntimeError('not supposed to have aten::slice operation')
         elif self.type == 'aten::Bool':
             return f'{output} = bool({inputs[0]})'
+        elif self.type == 'aten::flatten':
+            return f'{output} = torch.flatten({inputs[0]}, {inputs[1]}, {inputs[2]})'
+        elif self.type == 'aten::sigmoid':
+            assert len(inputs) == 1
+            return f'{output} = torch.sigmoid({inputs[0]})'
+        elif self.type == 'noop_identity':
+            # this operator type is added by us
+            assert len(inputs) == 1
+            return f'{output} = {inputs[0]}'
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 

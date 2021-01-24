@@ -10,6 +10,9 @@ class OpTypeName(str, Enum):
     Attr = 'Attr'
     Constant = 'Constant'
     ListConstruct = 'ListConstruct'
+    ListUnpack = 'ListUnpack'
+    TupleConstruct = 'TupleConstruct'
+    TupleUnpack = 'TupleUnpack'
     LayerChoice = 'LayerChoice'
     InputChoice = 'InputChoice'
     ValueChoice = 'ValueChoice'
@@ -35,7 +38,8 @@ BasicOpsPT = {
     'aten::zeros': 'Zeros',
     'aten::chunk': 'Chunk',
     'aten::add_': 'Add_',  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
-    'aten::flatten': 'Flatten'
+    'aten::flatten': 'Flatten',
+    'aten::sigmoid': 'Sigmoid'
 }
 
 BasicOpsTF = {}
