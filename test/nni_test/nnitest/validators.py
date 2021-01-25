@@ -93,7 +93,7 @@ class NnicliValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         print(rest_endpoint)
         exp = Experiment()
-        exp.connect_experiment(rest_endpoint)
+        exp.connect_experiment(int(rest_endpoint.split(':')[-1]))
         print(exp.get_job_statistics())
         print(exp.get_experiment_status())
         print(exp.list_trial_jobs())

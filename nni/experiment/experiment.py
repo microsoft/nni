@@ -77,23 +77,35 @@ class Experiment:
         """
         ...
 
-    def __init__(self, tuner: Tuner, config=None, training_service=None):
-        self.config: ExperimentConfig
+    @overload
+    def __init__(self) -> None:
+        """
+        Prepare an empty experiment, for `connect_experiment`.
+
+        Use `Experiment.connect_experiment` to manage experiment.
+
+        """
+        ...
+
+    def __init__(self, tuner=None, config=None, training_service=None):
+        self.config: Optional[ExperimentConfig] = None
         self.id: Optional[str] = None
         self.port: Optional[int] = None
-        self.tuner: Tuner = tuner
+        self.tuner: Optional[Tuner] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
         self._dispatcher: Optional[MsgDispatcher] = None
         self._dispatcher_thread: Optional[Thread] = None
 
-        if isinstance(config, (str, list)):
-            config, training_service = None, config
+        if isinstance(tuner, Tuner):
+            self.tuner = tuner
+            if isinstance(config, (str, list)):
+                config, training_service = None, config
 
-        if config is None:
-            self.config = ExperimentConfig(training_service)
-        else:
-            self.config = config
+            if config is None:
+                self.config = ExperimentConfig(training_service)
+            else:
+                self.config = config
 
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
@@ -193,6 +205,19 @@ class Experiment:
             _logger.warning('KeyboardInterrupt detected')
         finally:
             self.stop()
+
+
+    def connect_experiment(self, port: int):
+        """
+        Connect to an existing experiment.
+
+        Parameters
+        ----------
+        port
+            The port of web UI.
+        """
+        self.port = port
+        self.get_status()
 
 
     def _experiment_rest_get(self, port: int, api: str) -> Any:
