@@ -14,14 +14,16 @@ _logger = logging.getLogger(__name__)
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
-    def __init__(self, n_model_per_graph=4) -> None:
+    def __init__(self, available_devices = None) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
-        self.n_model_per_graph = n_model_per_graph
+        self.available_devices = available_devices if available_devices else []
         self._optimizers = [DedupInputOptimizer()]
         self._original_models = {}
         self._original_model_to_multi_model = {}
+
+        self.resources = 0
 
         # register advisor callbacks
         advisor = get_advisor()
@@ -61,7 +63,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         #     if node.graph.model not in unique_models:
         #         unique_models.add(node.graph.model)
         # return [m for m in unique_models]
-        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan)
+        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
         phy_models_and_placements = []
         for multi_model in grouped_models:
             model, model_placement = logical_plan.assemble(multi_model)
@@ -79,12 +81,15 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._listeners.append(listener)
 
     def _send_trial_callback(self, paramater: dict) -> None:
-        for listener in self._listeners:
-            listener.on_resource_used(0)  # FIXME: find the real resource id
+        if self.resources <= 0:
+            _logger.warning('There is no available resource, but trial is submitted.')
+        print(paramater)
+        self.resources -= paramater['training_kwargs']['n_model']
+        _logger.info('on_resource_used: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
-        for listener in self._listeners:
-            listener.on_resource_available([0] * num_trials)  # FIXME: find the real resource id
+        self.resources += num_trials
+        _logger.info('on_resource_available: %d', self.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]
@@ -143,8 +148,15 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
 class AssemblePolicy:
     @staticmethod
-    def group(logical_plan):
+    def group(logical_plan, available_devices):
+        #TODO: Packing multiple model in one GPU
+        # Currently, we only support one model per GPU
+        all_grouped_models = []
         group_model = {}
+        assert(len(available_devices) > 0) # There should be at least 1 device, set in CGO_DEVICES
         for idx, m in enumerate(logical_plan.models):
-            group_model[m] = PhysicalDevice('server', f'cuda:{idx}')
-        return [group_model]
+            group_model[m] = PhysicalDevice('server', available_devices[idx % len(available_devices)])
+            if len(group_model) == len(available_devices) or idx == len(logical_plan.models)-1:
+                all_grouped_models.append(group_model)
+                group_model = {}
+        return all_grouped_models

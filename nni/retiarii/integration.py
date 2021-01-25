@@ -63,8 +63,9 @@ class RetiariiAdvisor(MsgDispatcherBase):
         set_execution_engine(engine)
 
     def _create_execution_engine(self):
-        if os.environ.get('CGO') == 'true':
-            return CGOExecutionEngine()
+        if 'CGO_DEVICES' in os.environ:
+            available_devices = os.environ.get('CGO_DEVICES').split(',')
+            return CGOExecutionEngine(available_devices=available_devices)
         else:
             return BaseExecutionEngine()
 
@@ -132,6 +133,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
+        assert isinstance(value, str)
         value = json_tricks.loads(value)
         if isinstance(value, dict):
             if 'default' in value:

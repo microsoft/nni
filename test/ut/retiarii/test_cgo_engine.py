@@ -1,26 +1,18 @@
 import json
 import os
-import sys
 import threading
 import unittest
-import logging
 import time
 import torch
 
 from pathlib import Path
 
+import nni
 from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
-from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
-from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
-from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii import Model, Node
+from nni.retiarii import Model
 
 from nni.retiarii import Model, submit_models
-from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.integration import RetiariiAdvisor
-from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
-from nni.retiarii.utils import import_
-
 
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'converted_mnist_pytorch.json'
@@ -35,18 +27,20 @@ def _load_mnist(n_models: int = 1):
         return models
 
 
-@unittest.skip('Skipped in this version')
 class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
-        os.environ['CGO'] = 'true'
+        os.environ['CGO_DEVICES'] = 'cuda:0,cuda:1,cuda:2,cuda:3'
+        nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
-        from nni.runtime import protocol, platform
+        from nni.runtime import protocol
         import nni.runtime.platform.test as tt
         protocol._out_file = open('generated/debug_protocol_out_file.py', 'wb')
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
         models = _load_mnist(2)
+        nni.retiarii.integration_api._advisor = None
+        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         submit_models(*models)
 
@@ -66,6 +60,8 @@ class CGOEngineTest(unittest.TestCase):
                     metric = tt.get_last_metric()
                     if metric == last_metric:
                         continue
+                    if 'value' in metric:
+                        metric['value'] = json.dumps(metric['value'])
                     advisor.handle_report_metric_data(metric)
                     last_metric = metric
                 if not trial_thread.is_alive():
