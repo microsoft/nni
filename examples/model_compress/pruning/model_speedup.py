@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from models.cifar10.vgg import VGG
+from models.mnist.lenet import LeNet
 from nni.compression.pytorch import apply_compression_results, ModelSpeedup
 
 torch.manual_seed(0)
@@ -15,9 +16,9 @@ compare_results = True
 
 config = {
     'apoz': {
-        'model_name': 'vgg16',
-        'input_shape': [64, 3, 32, 32],
-        'masks_file': './experiment_data/mask_vgg16_cifar10_apoz.pth'
+        'model_name': 'lenet',
+        'input_shape': [64, 1, 28, 28],
+        'masks_file': './experiment_data/mask_lenet_mnist_apoz.pth'
     },
     'l1filter': {
         'model_name': 'vgg16',
@@ -25,14 +26,14 @@ config = {
         'masks_file': './experiment_data/mask_vgg16_cifar10_l1filter.pth'
     },
     'fpgm': {
-        'model_name': 'naive',
-        'input_shape': [64, 1, 28, 28],
-        'masks_file': './experiment_data/mask_naive_mnist_fpgm.pth'
+        'model_name': 'vgg16',
+        'input_shape': [64, 3, 32, 32],
+        'masks_file': './experiment_data/mask_vgg16_cifar10_fpgm.pth'
     },
     'slim': {
         'model_name': 'vgg19',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': './experiment_data/mask_vgg19_cifar10_slim.pth' #'mask_vgg19_cifar10.pth'
+        'masks_file': './experiment_data/mask_vgg19_cifar10_slim.pth'
     }
 }
 
@@ -46,9 +47,9 @@ def model_inference(config):
         model = VGG(depth=16)
     elif config['model_name'] == 'vgg19':
         model = VGG(depth=19)
-    elif config['model_name'] == 'naive':
-        from model_prune_torch import NaiveModel
-        model = NaiveModel()
+    elif config['model_name'] == 'lenet':
+        model = LeNet()
+
     model.to(device)
     model.eval()
 

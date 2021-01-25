@@ -368,8 +368,6 @@ if __name__ == '__main__':
                         help='Whether to speed-up the pruned model')
 
     # knowledge distillation
-    parser.add_argument('--kd', type=str2bool, default=False,
-                        help='Whether to diistill the pruned model')
     parser.add_argument('--kd_T', type=float, default=4,
                         help='temperature for KD distillation')
 

@@ -141,7 +141,7 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
     return train_loader, test_loader, criterion
 
 def get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion):
-    if args.model == 'LeNet':
+    if args.model == 'lenet':
         model = LeNet().to(device)
         if args.pretrained_model_dir is None:
             optimizer = torch.optim.Adadelta(model.parameters(), lr=1)
@@ -276,7 +276,8 @@ def main(args):
         # reload the best checkpoint for speed-up
         args.pretrained_model_dir = model_path
         model, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
-
+        model.eval()
+        
         dummy_input = get_dummy_input(args, device)
         apply_compression_results(model, mask_path, device)
 
@@ -352,13 +353,6 @@ if __name__ == '__main__':
     # speed-up
     parser.add_argument('--speed-up', type=str2bool, default=False,
                         help='Whether to speed-up the pruned model')
-
-    # knowledge distillation
-    parser.add_argument('--kd', type=str2bool, default=False,
-                        help='Whether to diistill the pruned model')
-    parser.add_argument('--kd_T', type=float, default=4,
-                        help='temperature for KD distillation')
-
 
     args = parser.parse_args()
     main(args)
