@@ -167,7 +167,6 @@ class Overview extends React.Component<{}, OverviewState> {
                                     <div className='overviewChart'>
                                         <DefaultPoint
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
-                                            visible={true}
                                             chartHeight={300}
                                             hasBestCurve={false}
                                         />

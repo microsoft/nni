@@ -24,7 +24,6 @@ const EmptyGraph = {
 
 interface DefaultPointProps {
     trialIds: string[];
-    visible: boolean;
     chartHeight: number;
     hasBestCurve: boolean;
 }
@@ -48,10 +47,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     loadDefault = (ev: React.MouseEvent<HTMLElement>, checked?: boolean): void => {
         this.setState({ bestCurveEnabled: checked });
     };
-
-    shouldComponentUpdate(nextProps: DefaultPointProps): boolean {
-        return nextProps.visible;
-    }
 
     metricDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
