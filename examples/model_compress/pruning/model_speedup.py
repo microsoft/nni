@@ -17,22 +17,22 @@ config = {
     'apoz': {
         'model_name': 'vgg16',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': './checkpoints/mask_vgg16_cifar10_apoz.pth'
+        'masks_file': './experiment_data/mask_vgg16_cifar10_apoz.pth'
     },
     'l1filter': {
         'model_name': 'vgg16',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': './checkpoints/mask_vgg16_cifar10_l1filter.pth'
+        'masks_file': './experiment_data/mask_vgg16_cifar10_l1filter.pth'
     },
     'fpgm': {
         'model_name': 'naive',
         'input_shape': [64, 1, 28, 28],
-        'masks_file': './checkpoints/mask_naive_mnist_fpgm.pth'
+        'masks_file': './experiment_data/mask_naive_mnist_fpgm.pth'
     },
     'slim': {
         'model_name': 'vgg19',
         'input_shape': [64, 3, 32, 32],
-        'masks_file': './checkpoints/mask_vgg19_cifar10_slim.pth' #'mask_vgg19_cifar10.pth'
+        'masks_file': './experiment_data/mask_vgg19_cifar10_slim.pth' #'mask_vgg19_cifar10.pth'
     }
 }
 

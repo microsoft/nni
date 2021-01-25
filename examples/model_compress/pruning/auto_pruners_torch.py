@@ -224,8 +224,13 @@ def main(args):
         'op_types': op_types
     }]
     dummy_input = get_dummy_input(args, device)
-
-    if args.pruner == 'NetAdaptPruner':
+    if args.pruner == 'L1FilterPruner':
+        pruner = L1FilterPruner(model, config_list)
+    elif args.pruner == 'L2FilterPruner':
+        pruner = L2FilterPruner(model, config_list)
+    elif args.pruner == 'FPGMPruner':
+        pruner = FPGMPruner(model, config_list)
+    elif args.pruner == 'NetAdaptPruner':
         pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,
                                 base_algo=args.base_algo, experiment_data_dir=args.experiment_data_dir)
     elif args.pruner == 'ADMMPruner':

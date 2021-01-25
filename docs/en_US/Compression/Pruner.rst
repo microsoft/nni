@@ -1,7 +1,7 @@
 Supported Pruning Algorithms on NNI
 ===================================
 
-We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network.** Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the** pruning schedule**.
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
 
 **Fine-grained Pruning**
 
@@ -20,7 +20,6 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `Taylor FO On Weight Pruner <#taylorfoweightfilter-pruner>`__
 
 **Pruning Schedule**
-
 
 * `AGP Pruner <#agp-pruner>`__
 * `NetAdapt Pruner <#netadapt-pruner>`__
@@ -45,15 +44,6 @@ We first sort the weights in the specified layer by their absolute values. And t
 Usage
 ^^^^^
 
-Tensorflow code
-
-.. code-block:: python
-
-   from nni.algorithms.compression.tensorflow.pruning import LevelPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-   pruner = LevelPruner(model, config_list)
-   pruner.compress()
-
 PyTorch code
 
 .. code-block:: python
@@ -70,26 +60,10 @@ User configuration for Level Pruner
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.LevelPruner
 
-Tensorflow
-""""""""""
-
-..  autoclass:: nni.algorithms.compression.tensorflow.pruning.LevelPruner
-
 Slim Pruner
 -----------
-
-This is an one-shot pruner, In `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\ , authors Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan and Changshui Zhang.
-
-
-.. image:: ../../img/slim_pruner.png
-   :target: ../../img/slim_pruner.png
-   :alt: 
-
-
-..
-
-   Slim Pruner **prunes channels in the convolution layers by masking corresponding scaling factors in the later BN layers**\ , L1 regularization on the scaling factors should be applied in batch normalization (BN) layers while training, scaling factors of BN layers are** globally ranked** while pruning, so the sparse model can be automatically found given sparsity.
-
+This is an one-shot pruner, which add L1 regularization on the scaling factors of batch normalization (BN) layers while training.
+For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
 
 Usage
 ^^^^^
@@ -124,36 +98,29 @@ We implemented one of the experiments in `Learning Efficient Convolutional Netwo
      - Parameters
      - Pruned
    * - VGGNet
-     - 6.34/6.40
+     - 6.34/6.69
      - 20.04M
      - 
    * - Pruned-VGGNet
-     - 6.20/6.26
+     - 6.20/6.19
      - 2.03M
      - 88.5%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/slim_torch_cifar10.py <examples/model_compress/pruning/reproduced/slim_torch_cifar10.py>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>`
+
+.. code-block:: python
+
+   python basic_pruners_torch.py --pruner slim --model vgg19 --sparsity 0.7
+
 
 ----
 
 FPGM Pruner
 -----------
 
-This is an one-shot pruner, FPGM Pruner is an implementation of paper `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__
-
-FPGMPruner prune filters with the smallest geometric median.
-
- 
-.. image:: ../../img/fpgm_fig1.png
-   :target: ../../img/fpgm_fig1.png
-   :alt: 
-
-
-..
-
-   Previous works utilized “smaller-norm-less-important” criterion to prune filters with smaller norm values in a convolutional neural network. In this paper, we analyze this norm-based criterion and point out that its effectiveness depends on two requirements that are not always met: (1) the norm deviation of the filters should be large; (2) the minimum norm of the filters should be small. To solve this problem, we propose a novel filter pruning method, namely Filter Pruning via Geometric Median (FPGM), to compress the model regardless of those two requirements. Unlike previous methods, FPGM compresses CNN models by pruning filters with redundancy, rather than those with “relatively less” importance. 
-
+This is an one-shot pruner, which prune filters with the smallest geometric median
+For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
@@ -182,20 +149,10 @@ User configuration for FPGM Pruner
 L1Filter Pruner
 ---------------
 
-This is an one-shot pruner, In `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\ , authors Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet and Hans Peter Graf.
-
-
-.. image:: ../../img/l1filter_pruner.png
-   :target: ../../img/l1filter_pruner.png
-   :alt: 
-
+This is an one-shot pruner, which prune the filters prunes filters in the **convolution layers**.
 
 ..
-
-   L1Filter Pruner prunes filters in the **convolution layers**
-
    The procedure of pruning m filters from the ith convolutional layer is as follows:
-
 
    #. For each filter :math:`F_{i,j}`, calculate the sum of its absolute kernel weights :math:`s_j=\sum_{l=1}^{n_i}\sum|K_l|`.
 
@@ -206,6 +163,9 @@ This is an one-shot pruner, In `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://
 
    #. A new kernel matrix is created for both the :math:`i`-th and :math:`i+1`-th layers, and the remaining kernel
       weights are copied to the new model.
+
+For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\.
+
 
 
 In addition, we also provide a dependency-aware mode for the L1FilterPruner. For more details about the dependency-aware mode, please reference `dependency-aware mode <./DependencyAware.rst>`__.
@@ -252,7 +212,11 @@ We implemented one of the experiments in `PRUNING FILTERS FOR EFFICIENT CONVNETS
      - 64.0%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/pruning/reproduced/L1_torch_cifar10.py <examples/model_compress/pruning/reproduced/L1_torch_cifar10.py>`
+The experiments code can be found at :githublink:`examples/model_compress/pruning/basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>`
+
+.. code-block:: python
+
+   python basic_pruners_torch.py --pruner l1_filter --model vgg16
 
 ----
 
@@ -291,10 +255,7 @@ ActivationAPoZRankFilter Pruner is a pruner which prunes the filters with the sm
 
 The APoZ is defined as:
 
-
-.. image:: ../../img/apoz.png
-   :target: ../../img/apoz.png
-   :alt: 
+:math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
 
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
@@ -316,7 +277,7 @@ PyTorch code
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/basic_pruners_torch.py>` for more information.
 
 User configuration for ActivationAPoZRankFilter Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -351,7 +312,7 @@ PyTorch code
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
 
-You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
+You can view :githublink:`example <examples/model_compress/pruning/basic_pruners_torch.py>` for more information.
 
 User configuration for ActivationMeanRankFilterPruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -369,13 +330,7 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 
 ..
 
-
-
-
-
-.. image:: ../../img/importance_estimation_sum.png
-   :target: ../../img/importance_estimation_sum.png
-   :alt: 
+:math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
 
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
@@ -407,24 +362,17 @@ User configuration for TaylorFOWeightFilter Pruner
 AGP Pruner
 ----------
 
-This is an iterative pruner, In `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\ , authors Michael Zhu and Suyog Gupta provide an algorithm to prune the weight gradually.
+This is an iterative pruner, which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
 
-..
+:math:`s_{t}=s_{f}+\left(s_{i}-s_{f}\right)\left(1-\frac{t-t_{0}}{n \Delta t}\right)^{3} \text { for } t \in\left\{t_{0}, t_{0}+\Delta t, \ldots, t_{0}+n \Delta t\right\}`
 
-   We introduce a new automated gradual pruning algorithm in which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
-
-   .. image:: ../../img/agp_pruner.png
-      :target: ../../img/agp_pruner.png
-      :alt: 
-
-
-   The binary weight masks are updated every ∆t steps as the network is trained to gradually increase the sparsity of the network while allowing the network training steps to recover from any pruning-induced loss in accuracy. In our experience, varying the pruning frequency ∆t between 100 and 1000 training steps had a negligible impact on the final model quality. Once the model achieves the target sparsity sf , the weight masks are no longer updated. The intuition behind this sparsity function in equation (1).
+For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
 
 
 Usage
 ^^^^^
 
-You can prune all weight from 0% to 80% sparsity in 10 epoch with the code below.
+You can prune all weights from 0% to 80% sparsity in 10 epoch with the code below.
 
 PyTorch code
 
@@ -471,7 +419,8 @@ PyTorch code
 
    pruner.update_epoch(epoch)
 
-You can view :githublink:`example <examples/model_compress/pruning/model_prune_torch.py>` for more information.
+You can view :githublink:`mnist example <examples/model_compress/pruning/basic_pruners_torch.py>` for more information.
+
 
 User configuration for AGP Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -489,11 +438,6 @@ NetAdapt allows a user to automatically simplify a pretrained network to meet th
 Given the overall sparsity, NetAdapt will automatically generate the sparsities distribution among different layers by iterative pruning.
 
 For more details, please refer to `NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications <https://arxiv.org/abs/1804.03230>`__.
-
-
-.. image:: ../../img/algo_NetAdapt.png
-   :target: ../../img/algo_NetAdapt.png
-   :alt: 
 
 
 Usage
@@ -608,11 +552,6 @@ AMC Pruner
 AMC pruner leverages reinforcement learning to provide the model compression policy.
 This learning-based compression policy outperforms conventional rule-based compression policy by having higher compression ratio,
 better preserving the accuracy and freeing human labor.
-
-
-.. image:: ../../img/amc_pruner.jpg
-   :target: ../../img/amc_pruner.jpg
-   :alt: 
 
 
 For more details, please refer to `AMC: AutoML for Model Compression and Acceleration on Mobile Devices <https://arxiv.org/pdf/1802.03494.pdf>`__.
@@ -742,7 +681,6 @@ PyTorch code
 
 The above configuration means that there are 5 times of iterative pruning. As the 5 times iterative pruning are executed in the same run, LotteryTicketPruner needs ``model`` and ``optimizer`` (\ **Note that should add ``lr_scheduler`` if used**\ ) to reset their states every time a new prune iteration starts. Please use ``get_prune_iterations`` to get the pruning iterations, and invoke ``prune_iteration_start`` at the beginning of each iteration. ``epoch_num`` is better to be large enough for model convergence, because the hypothesis is that the performance (accuracy) got in latter rounds with high sparsity could be comparable with that got in the first round.
 
-*Tensorflow version will be supported later.*
 
 User configuration for LotteryTicket Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -754,7 +692,7 @@ User configuration for LotteryTicket Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
-We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/pruning/reproduced/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
+We try to reproduce the experiment result of the fully connected network on MNIST using the same configuration as in the paper. The code can be referred :githublink:`here <examples/model_compress/pruning/lottery_torch_mnist_fc.py>`. In this experiment, we prune 10 times, for each pruning we train the pruned model for 50 epochs.
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png

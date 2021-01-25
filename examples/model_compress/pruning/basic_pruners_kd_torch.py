@@ -15,6 +15,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
+from copy import deepcopy
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
@@ -138,7 +139,11 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
             ])),
             batch_size=batch_size, shuffle=False, **kwargs)
         criterion = torch.nn.CrossEntropyLoss()
-    return train_loader, test_loader, criterion
+
+    criterion_kd = DistillKL(args.kd_T)
+    criterions = [criterion ,criterion_kd]
+
+    return train_loader, test_loader, criterions
 
 def get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion):
     if args.model == 'LeNet':
@@ -161,52 +166,56 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
     else:
         raise ValueError("model not recognized")
 
+    model_s = deepcopy(model)
+    model_t = deepcopy(model)
+
+    module_list = nn.ModuleList([])
+    module_list.append(model_s)
+    module_list.append(model_t)
+
     if args.pretrained_model_dir is None:
-        print('start pre-training...')
-        best_acc = 0
-        for epoch in range(args.pretrain_epochs):
-            train(args, model, device, train_loader, criterion, optimizer, epoch)
-            scheduler.step()
-            acc = test(args, model, device, criterion, test_loader)
-            if acc > best_acc:
-                best_acc = acc
-                state_dict = model.state_dict()
-
-        model.load_state_dict(state_dict)
-        acc = best_acc
-
-        torch.save(state_dict, os.path.join(args.experiment_data_dir, f'pretrain_{args.dataset}_{args.model}.pth'))
-        print('Model trained saved to %s' % args.experiment_data_dir)
+        raise NotImplementedError('please load pretrained model first')
 
     else:
-        model.load_state_dict(torch.load(args.pretrained_model_dir))
-        best_acc = test(args, model, device, criterion, test_loader)
+        model_t.load_state_dict(torch.load(args.pretrained_model_dir))
+        best_acc = test(args, model_t, device, criterion, test_loader)
 
     # setup new opotimizer for fine-tuning
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     scheduler = MultiStepLR(
                 optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
         
-    print('Pretrained model acc:', best_acc)
-    return model, optimizer, scheduler
+    print('Pretrained teacher model acc:', best_acc)
+
+    return module_list, optimizer, scheduler
 
 def updateBN(model):
     for m in model.modules():
         if isinstance(m, nn.BatchNorm2d):
             m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch):
-    model.train()
+def train(args, models, device, train_loader, criterions, optimizer, epoch):
+    # model.train()
+    model_s = models[0].train()
+    model_t = models[-1].eval()
+    cri_cls = criterions[0]
+    cri_kd = criterions[1]
+
+
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
-        output = model(data)
-        loss = criterion(output, target)
+        output_s = model_s(data)
+        output_t = model_t(data)
+
+        loss_cls = cri_cls(output_s, target)
+        loss_kd = cri_kd(output_s, output_t)
+        loss = loss_cls + loss_kd
         loss.backward()
 
         if args.pruner == 'slim':
             # L1 regularization on BN layer
-            updateBN(model)
+            updateBN(model_s)
 
         optimizer.step()
         if batch_idx % args.log_interval == 0:
@@ -220,11 +229,12 @@ def test(args, model, device, criterion, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
+    cri_cls = criterion[0]
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += criterion(output, target).item()
+            test_loss += cri_cls(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
@@ -241,8 +251,7 @@ def main(args):
 
     # prepare model and data
     train_loader, test_loader, criterion = get_data(args.dataset, args.data_dir, args.batch_size, args.test_batch_size)
-
-    model, optimizer, scheduler = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
+    models, optimizer, scheduler = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
 
     print('start pruning...')
     model_path = os.path.join(args.experiment_data_dir, 'pruned_{}_{}_{}.pth'.format(
@@ -251,21 +260,25 @@ def main(args):
         args.model, args.dataset, args.pruner))
 
     best_top1 = 0
-    pruner = get_pruner(model, args.pruner, device, optimizer, args.dependency_aware)
-    model = pruner.compress()
+    pruner = get_pruner(models[0], args.pruner, device, optimizer, args.dependency_aware)
+    model_s = pruner.compress()
 
     if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
+        model_s = nn.DataParallel(model_s)
+
+    models[0] = model_s
 
     if args.test_only:
-        test(args, model, device, criterion, test_loader)
+        test(args, model_s, device, criterion, test_loader)
 
     for epoch in range(args.fine_tune_epochs):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
-        train(args, model, device, train_loader, criterion, optimizer, epoch)
+        train(args, models, device, train_loader, criterion, optimizer, epoch)
         scheduler.step()
-        top1 = test(args, model, device, criterion, test_loader)
+
+        # test student only
+        top1 = test(args, models[0], device, criterion, test_loader)
         if top1 > best_top1:
             best_top1 = top1
             # Export the best model, 'model_path' stores state_dict of the pruned model,
@@ -275,8 +288,9 @@ def main(args):
     if args.speed_up:
         # reload the best checkpoint for speed-up
         args.pretrained_model_dir = model_path
-        model, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
-
+        models, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
+        
+        model = models[-1]
         dummy_input = get_dummy_input(args, device)
         apply_compression_results(model, mask_path, device)
 
