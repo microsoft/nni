@@ -167,7 +167,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                             height: chartHeight,
                             margin: '0 auto'
                         }}
-                        theme='my_theme'
+                        theme='nni_theme'
                         notMerge={true} // update now
                         onEvents={onEvents}
                     />

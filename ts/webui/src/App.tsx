@@ -7,7 +7,7 @@ import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
 import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
 const echarts = require('echarts/lib/echarts');
-echarts.registerTheme('my_theme', {
+echarts.registerTheme('nni_theme', {
     color: '#3c8dbc'
 });
 import './App.scss';

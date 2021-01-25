@@ -189,7 +189,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 <ReactEcharts
                     option={durationSource}
                     style={{ width: '94%', height: 412, margin: '0 auto', marginTop: 15 }}
-                    theme='my_theme'
+                    theme='nni_theme'
                     notMerge={true} // update now
                     onEvents={onEvents}
                 />
