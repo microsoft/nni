@@ -91,16 +91,13 @@ export class AMLEnvironmentService extends EnvironmentService {
                 case 'COMPLETED':
                 case 'SUCCEEDED':
                     environment.setStatus('SUCCEEDED');
-                    this.stopEnvironment(environment);
                     break;
                 case 'FAILED':
                     environment.setStatus('FAILED');
-                    this.stopEnvironment(environment);
                     return Promise.reject(`AML: job ${environment.envId} is failed!`);
                 case 'STOPPED':
                 case 'STOPPING':
                     environment.setStatus('USER_CANCELED');
-                    this.stopEnvironment(environment);
                     break;
                 default:
                     environment.setStatus('UNKNOWN');
