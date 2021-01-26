@@ -205,25 +205,6 @@ def set_pai_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_pai_yarn_config(experiment_config, port, config_file_name):
-    '''set paiYarn configuration'''
-    pai_yarn_config_data = dict()
-    pai_yarn_config_data['pai_yarn_config'] = experiment_config['paiYarnConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_yarn_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
 def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration'''
     kubeflow_config_data = dict()
@@ -395,11 +376,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'paiYarn':
-        request_data['clusterMetaData'].append(
-            {'key': 'pai_yarn_config', 'value': experiment_config['paiYarnConfig']})
-        request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
         request_data['clusterMetaData'].append(
             {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
@@ -453,8 +429,6 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)
     elif platform == 'pai':
         config_result, err_msg = set_pai_config(experiment_config, port, config_file_name)
-    elif platform == 'paiYarn':
-        config_result, err_msg = set_pai_yarn_config(experiment_config, port, config_file_name)
     elif platform == 'kubeflow':
         config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
     elif platform == 'frameworkcontroller':
