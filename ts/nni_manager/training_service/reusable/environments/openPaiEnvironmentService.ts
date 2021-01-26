@@ -220,7 +220,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         const deferred: Deferred<void> = new Deferred<void>();
 
         if (environment.isAlive === false) {
-            return deferred.promise;
+            return Promise.resolve();
         }
         if (this.paiClusterConfig === undefined) {
             return Promise.reject(new Error('PAI Cluster config is not initialized'));
