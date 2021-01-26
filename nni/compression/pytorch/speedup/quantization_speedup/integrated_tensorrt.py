@@ -18,10 +18,11 @@ Precision_Dict = {
     32: trt.float32
 }
 
-# This function builds an engine from a Onnx model.
 def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit='float32', strict_datatype=False):
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
-
+        """
+        This function builds an engine from an onnx model.
+        """
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
         builder.max_batch_size = 1
         builder.max_workspace_size = common.GiB(1)
@@ -40,7 +41,7 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
         # Parse onnx model
         with open(model_file, 'rb') as model:
             if not parser.parse(model.read()):
-                print ('ERROR: Failed to parse the ONNX file.')
+                print ('ERROR: Fail to parse the ONNX file.')
                 for error in range(parser.num_errors):
                     print (parser.get_error(error))
                 return None
@@ -62,6 +63,41 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
 class TensorRt:
     def __init__(self, model, onnx_path, input_shape, config=None, extra_layer_bit=32, strict_datatype=False, using_calibrate=True, 
     calibrate_type=None, calib_data=None, calibration_cache = None, batchsize=1, input_names=["actual_input_1"], output_names=["output1"]):
+        """
+        Parameters
+        ----------
+        model : pytorch model
+            The model to speed up by quantization.
+        onnx_path : str
+            The path user want to store onnx model which is converted from pytorch model.
+        input_shape : tuple
+            The input shape of model, shall pass it to torch.onnx.export.
+        config : dict
+            Config recording bit number and name of layers.
+        extra_layer_bit : int
+            Other layers which are not in config will be quantized to corresponding bit number.
+        strict_datatype : bool
+            Whether constrain layer bit to the number given in config or not. If true, all the layer 
+            will be set to given bit strictly. Otherwise, these layers will be set automatically by
+            tensorrt.
+        using_calibrate : bool
+            Whether calibrating during quantization or not. If true, user should provide calibration
+            dataset. If not, user should provide scale and zero_point for each layer. Current version
+            only support using calibrating.
+        calibrate_type : tensorrt.tensorrt.CalibrationAlgoType
+            The algorithm of calibrating. Please refer to https://docs.nvidia.com/deeplearning/
+            tensorrt/api/python_api/infer/Int8/Calibrator.html for detail
+        calibrate_data : numpy array
+            The data using to calibrate quantization model
+        calibration_cache : str
+            The path user want to store calibrate cache file
+        batchsize : int
+            The batch size of calibration and inference
+        input_names : list
+            Input name of onnx model providing for torch.onnx.export to generate onnx model
+        output_name : list
+            Output name of onnx model providing for torch.onnx.export to generate onnx model
+        """
         self.model = model
         self.onnx_path = onnx_path
         self.input_shape = input_shape
@@ -79,6 +115,12 @@ class TensorRt:
         self.onnx_config = {}
 
     def unwrapper(self, model_onnx):
+        """
+        Pytorch model has been wrapped to transfer bit number. Each layer in config will be wrapped
+        in class "LayernameModuleWrapper". Such operation will add two extra nodes for each layer in 
+        config when converting to onnx model. The first node stores layer bit number which will be 
+        added into onnx config. After getting bit number, extra two nodes will be removed.
+        """
         support_op = ['Gemm', 'Conv', 'Relu']
         idx = 0
         import onnx.numpy_helper
@@ -99,6 +141,9 @@ class TensorRt:
         return model_onnx
 
     def tensorrt_build(self):
+        """
+        Get onnx config and build tensorrt engine.
+        """
         assert self.model is not None
         assert self.onnx_path is not None
         assert self.input_shape is not None
@@ -119,6 +164,9 @@ class TensorRt:
         return engine.create_execution_context()
 
     def inference(self, test_data):
+        """
+        Do inference by tensorrt builded engine.
+        """
         elapsed_time = 0
         inputs, outputs, bindings, stream = common.allocate_buffers(self.context.engine)
         result = []

@@ -7,6 +7,19 @@ import numpy as np
 
 class Calibrator(trt.IInt8Calibrator):
     def __init__(self, training_data, cache_file, batch_size=64, algorithm=trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2):
+        """
+        Parameters
+        ----------
+        training_data : numpy array
+            The data using to calibrate quantization model
+        cache_file : str
+            The path user want to store calibrate cache file
+        batchsize : int
+            The batchsize of calibrating process
+        algorithm : tensorrt.tensorrt.CalibrationAlgoType
+            The algorithm of calibrating. Please refer to https://docs.nvidia.com/deeplearning/
+            tensorrt/api/python_api/infer/Int8/Calibrator.html for detail
+        """
         trt.IInt8Calibrator.__init__(self)
 
         self.algorithm = algorithm
@@ -26,7 +39,10 @@ class Calibrator(trt.IInt8Calibrator):
     def get_batch_size(self):
         return self.batch_size
 
-    def get_batch(self, names):
+    def get_batch(self):
+        """
+        This function is used to define the way of feeding calibrating data each batch.
+        """
         if self.current_index + self.batch_size > self.data.shape[0]:
             return None
 
@@ -41,11 +57,16 @@ class Calibrator(trt.IInt8Calibrator):
 
 
     def read_calibration_cache(self):
-        # If there is a cache, use it instead of calibrating again. Otherwise, implicitly return None.
+        """
+        If there is a cache, use it instead of calibrating again. Otherwise, implicitly return None.
+        """
         if os.path.exists(self.cache_file):
             with open(self.cache_file, "rb") as f:
                 return f.read()
 
     def write_calibration_cache(self, cache):
+        """
+        Write calibration cache to specific path.
+        """
         with open(self.cache_file, "wb") as f:
             f.write(cache)
