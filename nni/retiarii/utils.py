@@ -98,7 +98,10 @@ def blackbox(cls, *args, **kwargs):
     """
     # get caller module name
     frm = inspect.stack()[1]
-    module_name = inspect.getmodule(frm[0]).__name__
+    if inspect.getmodule(frm[0]):
+        module_name = inspect.getmodule(frm[0]).__name__
+    else:
+        module_name = inspect.getsourcefile(frm[0])
     return _blackbox_cls(cls, module_name, 'args')(*args, **kwargs)
 
 
@@ -107,7 +110,10 @@ def blackbox_module(cls):
     Register a module. Use it as a decorator.
     """
     frm = inspect.stack()[1]
-    module_name = inspect.getmodule(frm[0]).__name__
+    if inspect.getmodule(frm[0]):
+        module_name = inspect.getmodule(frm[0]).__name__
+    else:
+        module_name = inspect.getsourcefile(frm[0])
     return _blackbox_cls(cls, module_name, 'args')
 
 
@@ -116,7 +122,10 @@ def register_trainer(cls):
     Register a trainer. Use it as a decorator.
     """
     frm = inspect.stack()[1]
-    module_name = inspect.getmodule(frm[0]).__name__
+    if inspect.getmodule(frm[0]):
+        module_name = inspect.getmodule(frm[0]).__name__
+    else:
+        module_name = inspect.getsourcefile(frm[0])
     return _blackbox_cls(cls, module_name, 'full')
 
 
