@@ -1,11 +1,6 @@
-from itertools import chain
 import argparse
-import os
-
 import pycuda.driver as cuda
 import pycuda.autoinit
-import numpy as np
-
 import tensorrt as trt
 
 try:
