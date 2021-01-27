@@ -26,8 +26,8 @@ def unwrapper(model_onnx):
     """
     Fill onnx config and remove wrapper node in onnx
     """
-    # Support Gemm, Conv and Relu
-    support_op = ['Gemm', 'Conv', 'Relu']
+    # Support Gemm and Conv
+    support_op = ['Gemm', 'Conv']
     idx = 0
     onnx_config = {}
     while idx < len(model_onnx.graph.node):
@@ -51,8 +51,8 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
     """
     Convert torch model to onnx model and get layer bit config of onnx model.
     """
-    # Support Gemm, Conv and Relu
-    support_op = [torch.nn.Conv2d, torch.nn.ReLU, torch.nn.ReLU6, torch.nn.Linear]
+    # Support Gemm and Conv
+    support_op = [torch.nn.Conv2d, torch.nn.Linear]
     # Transfer bit number to onnx layer by using wrapper
     for name, module in model.named_modules():
         if config is not None and name in config:
