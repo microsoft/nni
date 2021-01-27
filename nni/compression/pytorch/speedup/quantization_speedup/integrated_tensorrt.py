@@ -114,32 +114,6 @@ class TensorRt:
         self.context = None
         self.onnx_config = {}
 
-    def unwrapper(self, model_onnx):
-        """
-        Pytorch model has been wrapped to transfer bit number. Each layer in config will be wrapped
-        in class "LayernameModuleWrapper". Such operation will add two extra nodes for each layer in 
-        config when converting to onnx model. The first node stores layer bit number which will be 
-        added into onnx config. After getting bit number, extra two nodes will be removed.
-        """
-        support_op = ['Gemm', 'Conv', 'Relu']
-        idx = 0
-        import onnx.numpy_helper
-        while idx < len(model_onnx.graph.node):
-            nd = model_onnx.graph.node[idx]
-            const_nd = model_onnx.graph.node[idx-2]
-            mul_nd = model_onnx.graph.node[idx-1]
-            if nd.name[0:4] in support_op and  idx > 1:
-                const_nd = model_onnx.graph.node[idx-2]
-                mul_nd = model_onnx.graph.node[idx-1]
-                bit = int(onnx.numpy_helper.to_array(const_nd.attribute[0].t))
-                self.onnx_config[nd.name] = bit
-                nd.input[0] = mul_nd.input[0]
-                model_onnx.graph.node.remove(const_nd)
-                model_onnx.graph.node.remove(mul_nd)
-                idx = idx-2
-            idx = idx+1
-        return model_onnx
-
     def tensorrt_build(self):
         """
         Get onnx config and build tensorrt engine.
