@@ -297,15 +297,6 @@ def main(args):
         top1 = test(args, model, device, criterion, test_loader)
 
 if __name__ == '__main__':
-    def str2bool(s):
-        if isinstance(s, bool):
-            return s
-        if s.lower() in ('yes', 'true', 't', 'y', '1'):
-            return True
-        if s.lower() in ('no', 'false', 'f', 'n', '0'):
-            return False
-        raise argparse.ArgumentTypeError('Boolean value expected.')
-
 
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
 
@@ -325,8 +316,6 @@ if __name__ == '__main__':
                         help='input batch size for training')
     parser.add_argument('--test-batch-size', type=int, default=200,
                         help='input batch size for testing')
-    parser.add_argument('--fine-tune', type=str2bool, default=True,
-                        help='whether to fine-tune the pruned model')
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
                         help='epochs to fine tune')
     parser.add_argument('--experiment-data-dir', type=str, default='./experiment_data',
@@ -351,7 +340,7 @@ if __name__ == '__main__':
                         help='pruner to use')
 
     # speed-up
-    parser.add_argument('--speed-up', type=str2bool, default=False,
+    parser.add_argument('--speed-up', action='store_true', default=False,
                         help='Whether to speed-up the pruned model')
 
     args = parser.parse_args()

@@ -1,15 +1,14 @@
 Supported Pruning Algorithms on NNI
 ===================================
 
-We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide an algorithm to control the **pruning schedule**.
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide some algorithms to control the **pruning schedule**.
+
 
 **Fine-grained Pruning**
-
 
 * `Level Pruner <#level-pruner>`__
 
 **Filter Pruning**
-
 
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
@@ -102,7 +101,7 @@ We implemented one of the experiments in `Learning Efficient Convolutional Netwo
      - 20.04M
      - 
    * - Pruned-VGGNet
-     - 6.20/6.19
+     - 6.20/6.34
      - 2.03M
      - 88.5%
 
@@ -111,7 +110,7 @@ The experiments code can be found at :githublink:`examples/model_compress/prunin
 
 .. code-block:: python
 
-   python basic_pruners_torch.py --pruner slim --model vgg19 --sparsity 0.7
+   python basic_pruners_torch.py --pruner slim --model vgg19 --sparsity 0.7 --speed-up
 
 
 ----
@@ -216,7 +215,7 @@ The experiments code can be found at :githublink:`examples/model_compress/prunin
 
 .. code-block:: python
 
-   python basic_pruners_torch.py --pruner l1_filter --model vgg16
+   python basic_pruners_torch.py --pruner l1filter --model vgg16 --speed-up
 
 ----
 
