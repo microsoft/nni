@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 '''
-Examples for level pruner on mnist
+An example for quick start.
+In this example, we use level pruner to prune the LeNet on MNIST.
 '''
 
 from __future__ import print_function

@@ -1,7 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+
 '''
-Examples for basic pruners
+Example for supported basic pruning algorithms.
+In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
+Note that pruners use masks to simiulate the real pruning. In order to obtain a real compressed model, model speed up is required.
+You can also try auto_pruners_torch.py to see the usage of some automatic pruning algorithms.
 '''
 
 import argparse
@@ -40,18 +44,6 @@ str2pruner = {
     'fpgm': FPGMPruner,
     'apoz': ActivationAPoZRankFilterPruner
 }
-
-class DistillKL(nn.Module):
-    """Distilling the Knowledge in a Neural Network"""
-    def __init__(self, T):
-        super(DistillKL, self).__init__()
-        self.T = T
-
-    def forward(self, y_s, y_t):
-        p_s = F.log_softmax(y_s/self.T, dim=1)
-        p_t = F.softmax(y_t/self.T, dim=1)
-        loss = F.kl_div(p_s, p_t, size_average=False) * (self.T**2) / y_s.shape[0]
-        return loss
 
 def get_dummy_input(args, device):
     if args.dataset == 'mnist':
@@ -289,6 +281,10 @@ def main(args):
 
         m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
         m_speedup.speedup_model()
+        speedup_path = os.path.join(args.experiment_data_dir, 'speedup_{}_{}_{}.pth'.format(
+        args.model, args.dataset, args.pruner))
+        torch.save(model.state_dict(), speedup_path)
+
         start = time.time()
         for _ in range(32):
             use_speedup_out = model(dummy_input)
@@ -316,8 +312,6 @@ if __name__ == '__main__':
                         help='input batch size for training')
     parser.add_argument('--test-batch-size', type=int, default=200,
                         help='input batch size for testing')
-    parser.add_argument('--fine-tune-epochs', type=int, default=160,
-                        help='epochs to fine tune')
     parser.add_argument('--experiment-data-dir', type=str, default='./experiment_data',
                         help='For saving output checkpoints')
     parser.add_argument('--log-interval', type=int, default=100, metavar='N',
@@ -339,6 +333,10 @@ if __name__ == '__main__':
                         'fpgm', 'apoz'],
                         help='pruner to use')
 
+    # fine-tuning
+    parser.add_argument('--fine-tune-epochs', type=int, default=160,
+                        help='epochs to fine tune')
+                        
     # speed-up
     parser.add_argument('--speed-up', action='store_true', default=False,
                         help='Whether to speed-up the pruned model')
