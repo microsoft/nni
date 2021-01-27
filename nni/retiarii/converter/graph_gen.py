@@ -200,11 +200,19 @@ class GraphConverter:
                     left = _generate_expr(tensor.node().inputsAt(0))
                     right = _generate_expr(tensor.node().inputsAt(1))
                     return f'({left} == {right})'
+                elif tensor.node().kind() == 'aten::le':
+                    left = _generate_expr(tensor.node().inputsAt(0))
+                    right = _generate_expr(tensor.node().inputsAt(1))
+                    return f'({left} <= {right})'
+                elif tensor.node().kind() == 'aten::__not__':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'(not {value})'
                 elif tensor.node().kind() == 'aten::Bool':
                     value = _generate_expr(tensor.node().inputsAt(0))
                     return f'bool({value})'
                 else:
-                    raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition')
+                    raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition, '\
+                                        'you are suggested to decorate the corresponding class with "@blackbox_module".')
             expr = _generate_expr(cond_tensor)
             return eval(expr)
 
@@ -259,7 +267,8 @@ class GraphConverter:
         def handle_function_callmethod(node):
             # get and handle the first input, which should be an nn.Module
             assert node.hasAttribute('name')
-            if node.s('name') == 'forward':
+            # NOTE: "forward__0" is hacky, LSTM instance is parsed to call forward__0 in torchscript
+            if node.s('name') in ['forward', 'forward__0']:
                 # node.inputsAt(0).type() is <class 'torch._C.ClassType'>
                 submodule_type_str = self._remove_mangle(node.inputsAt(0).type().str())
                 submodule = node.inputsAt(0).node()
@@ -428,7 +437,7 @@ class GraphConverter:
                 output_remap[node.inputsAt(0)] = node
             elif node.kind().startswith('aten::'):
                 # handle aten::XXX
-                #if node.kind() == 'aten::sigmoid':
+                #if node.kind() == 'aten::detach':
                 #    print('zzql: ', node)
                 #    exit(1)
                 self.global_seq += 1
@@ -573,7 +582,7 @@ class GraphConverter:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.Placeholder:
             m_attrs = self.modules_arg[id(module)]
-        elif original_type_name in torch.nn.__dict__:
+        elif module.__class__.__module__.startswith('torch.nn') and original_type_name in torch.nn.__dict__:
             # this is a basic module from pytorch, no need to parse its graph
             assert id(module) in self.modules_arg, f'{original_type_name} arguments are not recorded'
             m_attrs = self.modules_arg[id(module)]

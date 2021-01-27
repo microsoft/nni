@@ -35,6 +35,18 @@ class MnistNet(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
+@blackbox_module
+class Linear(nn.Module):
+    def __init__(self, d_embed, d_proj):
+        super().__init__()
+        self.linear = nn.Linear(d_embed, d_proj)
+
+    def forward(self, input):
+        if len(input.size()) <= 2:
+            return self.linear(input)
+        size = input.size()[:2]
+        out = self.linear(input.view(size[0] * size[1], -1))
+        return out.view(size[0], size[1], -1)
 
 class TestConvert(unittest.TestCase):
     @staticmethod
@@ -52,6 +64,8 @@ class TestConvert(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
+        print(model_code)
+        exit(1)
         from nni.retiarii.nn.pytorch.inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
@@ -136,7 +150,6 @@ class TestConvert(unittest.TestCase):
         model = DCGANGenerator(nz, ngf, nc)
         self.checkExportImport(model, input)
 
-    #@unittest.skip('this test has a if condition that needs to be handle')  # FIXME
     def test_neural_style(self):
         class TransformerNet(nn.Module):
             def __init__(self):
@@ -256,50 +269,42 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(Policy(), (torch.rand(1, 4),))
 
-    @unittest.skip('Replaced init error.')  # FIXME
+    #@unittest.skip('Replaced init error.')  # FIXME
     def test_snli(self):
-        class Bottle(nn.Module):
-
-            def forward(self, input):
-                if len(input.size()) <= 2:
-                    return super(Bottle, self).forward(input)
-                size = input.size()[:2]
-                out = super(Bottle, self).forward(input.view(size[0] * size[1], -1))
-                return out.view(size[0], size[1], -1)
-
-        class Linear(Bottle, nn.Linear):
-            pass
 
         class Encoder(nn.Module):
 
             def __init__(self, config):
                 super(Encoder, self).__init__()
-                self.config = config
-                input_size = config.d_proj if config.projection else config.d_embed
-                dropout = 0 if config.n_layers == 1 else config.dp_ratio
-                self.rnn = nn.LSTM(input_size=input_size, hidden_size=config.d_hidden,
-                                   num_layers=config.n_layers, dropout=dropout,
-                                   bidirectional=config.birnn)
+                #self.config = config
+                input_size = config["d_proj"] if config["projection"] else config["d_embed"]
+                dropout = 0 if config["n_layers"] == 1 else config["dp_ratio"]
+                self.rnn = nn.LSTM(input_size=input_size, hidden_size=config["d_hidden"],
+                                   num_layers=config["n_layers"], dropout=dropout,
+                                   bidirectional=config["birnn"])
+                self.n_cells = config["n_cells"]
+                self.d_hidden = config["d_hidden"]
+                self.birnn = config["birnn"]
 
             def forward(self, inputs):
                 batch_size = inputs.size()[1]
-                state_shape = self.config.n_cells, batch_size, self.config.d_hidden
+                state_shape = self.n_cells, batch_size, self.d_hidden
                 h0 = c0 = inputs.new_zeros(state_shape)
                 outputs, (ht, ct) = self.rnn(inputs, (h0, c0))
-                return ht[-1] if not self.config.birnn else ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
+                return ht[-1] if not self.birnn else ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
 
         class SNLIClassifier(nn.Module):
 
             def __init__(self, config):
                 super(SNLIClassifier, self).__init__()
-                self.config = config
-                self.embed = nn.Embedding(config.n_embed, config.d_embed)
-                self.projection = Linear(config.d_embed, config.d_proj)
+                #self.config = config
+                self.embed = nn.Embedding(config["n_embed"], config["d_embed"])
+                self.projection = Linear(config["d_embed"], config["d_proj"])
                 self.encoder = Encoder(config)
-                self.dropout = nn.Dropout(p=config.dp_ratio)
+                self.dropout = nn.Dropout(p=config["dp_ratio"])
                 self.relu = nn.ReLU()
-                seq_in_size = 2 * config.d_hidden
-                if self.config.birnn:
+                seq_in_size = 2 * config["d_hidden"]
+                if config["birnn"]:
                     seq_in_size *= 2
                 lin_config = [seq_in_size] * 2
                 self.out = nn.Sequential(
@@ -312,15 +317,17 @@ class TestConvert(unittest.TestCase):
                     Linear(*lin_config),
                     self.relu,
                     self.dropout,
-                    Linear(seq_in_size, config.d_out))
+                    Linear(seq_in_size, config["d_out"]))
+                self.fix_emb = config["fix_emb"]
+                self.project = config["projection"]
 
             def forward(self, premise, hypothesis):
                 prem_embed = self.embed(premise)
                 hypo_embed = self.embed(hypothesis)
-                if self.config.fix_emb:
+                if self.fix_emb:
                     prem_embed = prem_embed.detach()
                     hypo_embed = hypo_embed.detach()
-                if self.config.projection:
+                if self.project:
                     prem_embed = self.relu(self.projection(prem_embed))
                     hypo_embed = self.relu(self.projection(hypo_embed))
                 premise = self.encoder(prem_embed)
@@ -328,23 +335,27 @@ class TestConvert(unittest.TestCase):
                 scores = self.out(torch.cat([premise, hypothesis], 1))
                 return scores
 
-        class Config:
-            n_embed = 100
-            d_embed = 100
-            d_proj = 300
-            dp_ratio = 0.0  # For deterministic testing TODO: change by fixing seed in checkTrace?
-            d_hidden = 30
-            birnn = True
-            d_out = 300
-            fix_emb = True
-            projection = True
-            n_layers = 2
-            n_cells = 4  # 2 * n_layers because birnn = True
+        Config = {
+            "n_embed": 100,
+            "d_embed": 100,
+            "d_proj": 300,
+            "dp_ratio": 0.0,  # For deterministic testing TOD": change by fixing seed in checkTrace?,
+            "d_hidden": 30,
+            "birnn": True,
+            "d_out": 300,
+            "fix_emb": True,
+            "projection": True,
+            "n_layers": 2,
+            "n_cells": 4  # 2 * n_layers because birnn = True,
+        }
+
+        #from nni.retiarii.nn.pytorch.inject_nn import inject_pytorch_nn
+        #inject_pytorch_nn()
 
         premise = torch.LongTensor(48, 64).random_(0, 100)
         hypothesis = torch.LongTensor(24, 64).random_(0, 100)
 
-        self.checkExportImport(SNLIClassifier(Config()), (premise, hypothesis))
+        self.checkExportImport(SNLIClassifier(Config), (premise, hypothesis))
 
     def test_super_resolution(self):
         class Net(nn.Module):

@@ -167,8 +167,10 @@ class PyTorchOperation(Operation):
             slice_str = ','.join(slices)
             return f'{output} = {inputs[0]}[{slice_str}]'
         elif self.type == 'aten::size':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]}.size({inputs[1]})'
+            if len(inputs) == 2:
+                return f'{output} = {inputs[0]}.size({inputs[1]})'
+            else:
+                return f'{output} = {inputs[0]}.size()'
         elif self.type == 'aten::view':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]}.view({inputs[1]})'
@@ -181,6 +183,19 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::sigmoid':
             assert len(inputs) == 1
             return f'{output} = torch.sigmoid({inputs[0]})'
+        elif self.type == 'aten::__not__':
+            return f'{output} = not {inputs[0]}'
+        elif self.type == 'aten::new_zeros':
+            # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
+            # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
+            # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
+            return f'{output} = {inputs[0]}.new_zeros({inputs[1]}, {inputs[2]}, {inputs[4]}, {inputs[5]})'
+        elif self.type == 'aten::transpose':
+            return f'{output} = {inputs[0]}.transpose({inputs[1]}, {inputs[2]})'
+        elif self.type == 'aten::contiguous':
+            return f'{output} = {inputs[0]}.contiguous({inputs[1]})'
+        elif self.type == 'aten::detach':
+            return f'{output} = {inputs[0]}.detach()'
         elif self.type == 'noop_identity':
             # this operator type is added by us
             assert len(inputs) == 1

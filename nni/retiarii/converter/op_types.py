@@ -39,7 +39,13 @@ BasicOpsPT = {
     'aten::chunk': 'Chunk',
     'aten::add_': 'Add_',  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
     'aten::flatten': 'Flatten',
-    'aten::sigmoid': 'Sigmoid'
+    'aten::sigmoid': 'Sigmoid',
+    'aten::detach': 'Detach',
+    'aten::le': 'Le',
+    'aten::new_zeros': 'NewZeros',
+    'aten::__not__': 'not',
+    'aten::transpose': 'Transpose',
+    'aten::contiguous': 'Contiguous'
 }
 
 BasicOpsTF = {}

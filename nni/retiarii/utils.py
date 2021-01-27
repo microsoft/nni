@@ -108,6 +108,12 @@ def blackbox_module(cls):
     """
     frm = inspect.stack()[1]
     module_name = inspect.getmodule(frm[0]).__name__
+    # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
+    # to make LSTM's source code can be found, we should assign original LSTM's __module__ to 
+    # the wrapped LSTM's __module__
+    # TODO: find out all the modules that have the same requirement as LSTM
+    if f'{cls.__module__}.{cls.__name__}' == 'torch.nn.modules.rnn.LSTM':
+        module_name = cls.__module__
     return _blackbox_cls(cls, module_name, 'args')
 
 
