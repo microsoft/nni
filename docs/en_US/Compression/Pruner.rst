@@ -61,7 +61,7 @@ User configuration for Level Pruner
 
 Slim Pruner
 -----------
-This is an one-shot pruner, which add L1 regularization on the scaling factors of batch normalization (BN) layers while training.
+This is an one-shot pruner, which adds L1 regularization on the scaling factors of batch normalization (BN) layers while training.
 For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
 
 Usage
@@ -118,7 +118,7 @@ The experiments code can be found at :githublink:`examples/model_compress/prunin
 FPGM Pruner
 -----------
 
-This is an one-shot pruner, which prune filters with the smallest geometric median
+This is an one-shot pruner, which prunes filters with the smallest geometric median
 For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
@@ -148,7 +148,7 @@ User configuration for FPGM Pruner
 L1Filter Pruner
 ---------------
 
-This is an one-shot pruner, which prune the filters prunes filters in the **convolution layers**.
+This is an one-shot pruner, which prunes the filters prunes filters in the **convolution layers**.
 
 ..
    The procedure of pruning m filters from the ith convolutional layer is as follows:
@@ -361,9 +361,9 @@ User configuration for TaylorFOWeightFilter Pruner
 AGP Pruner
 ----------
 
-This is an iterative pruner, which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step t0 and with pruning frequency ∆t:
+This is an iterative pruner, which the sparsity is increased from an initial sparsity value si (usually 0) to a final sparsity value sf over a span of n pruning steps, starting at training step :math:`t_{0}` and with pruning frequency :math:`\Delta t`:
 
-:math:`s_{t}=s_{f}+\left(s_{i}-s_{f}\right)\left(1-\frac{t-t_{0}}{n \Delta t}\right)^{3} \text { for } t \in\left\{t_{0}, t_{0}+\Delta t, \ldots, t_{0}+n \Delta t\right\}`
+:math:`s_{t}=s_{f}+\left(s_{i}-s_{f}\right)\left(1-\frac{t-t_{0}}{n \Delta t}\right)^{3} \text { for } t \in\left\{t_{0}, t_{0}+\Delta t, \ldots, t_{0} + n \Delta t\right\}`
 
 For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
 
