@@ -5,8 +5,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 import numpy as np
 from torchvision import datasets, transforms
 
-import integrated_tensorrt
 from integrated_tensorrt import CalibrateType
+from backend import BackendEngine
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -321,14 +321,15 @@ def main():
     input_names = ["actual_input_1"]+ [ "learned_%d" % i for i in range(16) ]
     output_names = ["output1"]
     calibration_cache = "cifar_calibration.cache"
-
     test_set, test_labels = get_testset()
+    backend = 'tensorrt'
 
-    integrated_trt = integrated_tensorrt.TensorRt(model, onnx_path, input_shape, config=config, extra_layer_bit=32, strict_datatype=True, using_calibrate=True, 
-    calibrate_type=CalibrateType.ENTROPY2, calib_data=test_set, calibration_cache = calibration_cache, batchsize=batch_size, input_names=input_names, output_names=output_names)
-    integrated_trt.tensorrt_build()
+    engine = BackendEngine(backend, model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
+        strict_datatype=True, using_calibrate=True, calibrate_type=CalibrateType.ENTROPY2, calib_data=test_set, 
+        calibration_cache = calibration_cache, batchsize=batch_size, input_names=input_names, output_names=output_names)
+    engine.build()
+    output, time = engine.inference(test_set)
 
-    output, time = integrated_trt.inference(test_set)
     check_accuracy(output, test_labels)
     print("elapsed_time: ", time)
     
