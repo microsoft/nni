@@ -63,6 +63,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return false;
     }
 
+    public get useSharedStorage(): boolean {
+        return false;
+    }
+
     public get getName(): string {
         return 'remote';
     }

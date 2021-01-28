@@ -40,6 +40,10 @@ export class AMLEnvironmentService extends EnvironmentService {
         return false;
     }
 
+    public get useSharedStorage(): boolean {
+        return false;
+    }
+
     public initCommandChannel(eventEmitter: EventEmitter): void {
         this.commandChannel = new AMLCommandChannel(eventEmitter);
     }

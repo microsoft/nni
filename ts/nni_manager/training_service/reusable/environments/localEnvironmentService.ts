@@ -37,6 +37,10 @@ export class LocalEnvironmentService extends EnvironmentService {
         return false;
     }
 
+    public get useSharedStorage(): boolean {
+        return false;
+    }
+
     public get getName(): string {
         return 'local';
     }

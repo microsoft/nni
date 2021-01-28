@@ -7,6 +7,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Writable } from 'stream';
+import { Container, Scope } from 'typescript-ioc';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
@@ -26,6 +27,8 @@ import { EnvironmentServiceFactory } from './environments/environmentServiceFact
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
+import { SharedStorageService, SharedStorageConfig } from './sharedStorage';
+import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { TrialDetail } from './trial';
 
 
@@ -73,6 +76,10 @@ class TrialDispatcher implements TrainingService {
     // uses to reduce log count.
     private isLoggedNoMoreEnvironment: boolean = false;
     private isLoggedNoGpuAvailable: boolean = false;
+
+    // uses to mark whether to use shared storage
+    private useSharedStorage: boolean = false;
+    private fileCopyCompleted: boolean = false;
 
     constructor() {
         this.log = getLogger();
@@ -195,7 +202,14 @@ class TrialDispatcher implements TrainingService {
     
             this.log.info(`TrialDispatcher: copying code and settings.`);
             let storageService: StorageService;
-            if (environmentService.hasStorageService) {
+            if (environmentService.useSharedStorage) {
+                if (this.fileCopyCompleted) {
+                    this.log.debug(`TrialDispatcher: file already copy to shared storage.`);
+                    continue;
+                }
+                this.log.debug(`TrialDispatcher: use shared storage service.`);
+                storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            } else if (environmentService.hasStorageService) {
                 this.log.debug(`TrialDispatcher: use existing storage service.`);
                 storageService = component.get<StorageService>(StorageService);
             } else {
@@ -222,6 +236,10 @@ class TrialDispatcher implements TrainingService {
                     trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
                 }
                 await storageService.copyDirectory(trialToolsPath, envDir, true);
+            }
+
+            if (environmentService.useSharedStorage) {
+                this.fileCopyCompleted = true;
             }
         }
         // start channel
@@ -260,7 +278,6 @@ class TrialDispatcher implements TrainingService {
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.enableVersionCheck = (value === 'true' || value === 'True');
-                
                 break;
             case TrialConfigMetadataKey.LOG_COLLECTION:
                 this.logCollection = value;
@@ -279,7 +296,7 @@ class TrialDispatcher implements TrainingService {
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.trialConfig.codeDir);
                 break;
-            case TrialConfigMetadataKey.PLATFORM_LIST: {
+            case TrialConfigMetadataKey.PLATFORM_LIST:
                 const platforms: string[] = value.split(",");
                 for(const platform of platforms) {
                     const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
@@ -289,7 +306,16 @@ class TrialDispatcher implements TrainingService {
                     this.commandChannelSet.add(environmentService.getCommandChannel);
                     this.environmentServiceList.push(environmentService);
                 }
-            }
+                this.setClusterMetadata('shared_storage_config', `{"storageType":"NFS","localMountPoint":"/mnt/sharedfolder","remoteMountPoint":"nni-sharedfolder","nfsServer":"40.121.81.141","exportedDirectory":"/mnt/sharedfolder","userMounted":"true"}`);
+                break;
+            case TrialConfigMetadataKey.SHARED_STORAGE_CONFIG:
+                if (this.useSharedStorage === false) {
+                    await this.initializeSharedStorage(key, value);
+                } else {
+                    const errorMessage = `Already has set shared storage.`;
+                    this.log.error(errorMessage);
+                }
+                break;
         }
         for(const environmentService of this.environmentServiceList) {
             await environmentService.config(key, value);
@@ -621,7 +647,7 @@ class TrialDispatcher implements TrainingService {
 
         }
     }
-    
+
     // Schedule a environment platform for environment
     private selectEnvironmentService(): EnvironmentService | undefined {
         const validEnvironmentServiceList = [];
@@ -636,7 +662,7 @@ class TrialDispatcher implements TrainingService {
         // Random scheduler
         return randomSelect(validEnvironmentServiceList);
     }
-    
+
     private async prefetchEnvironments (): Promise<void> {
         for (const environmentService of this.environmentServiceList) {
             const number = environmentService.prefetchedEnvironmentCount;
@@ -881,6 +907,24 @@ class TrialDispatcher implements TrainingService {
                 break;
         }
         this.shouldUpdateTrials = true;
+    }
+
+    private async initializeSharedStorage(key: string, value: string): Promise<void> {
+        const storageType = (<SharedStorageConfig>JSON.parse(value)).storageType;
+        switch (storageType) {
+            case 'NFS':
+                Container.bind(SharedStorageService)
+                         .to(NFSSharedStorageService)
+                         .scope(Scope.Singleton);
+                break;
+            default:
+                const errorMessage = `Shared storage type '${storageType}' not support.`;
+                this.log.error(errorMessage)
+                return Promise.reject(errorMessage);
+        }
+        await component.get<SharedStorageService>(SharedStorageService).config(key, value);
+        this.useSharedStorage = true;
+        return Promise.resolve();
     }
 }
 
