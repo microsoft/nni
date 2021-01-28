@@ -73,11 +73,11 @@ export class NFSSharedStorageService extends SharedStorageService {
     }
 
     public get localMountCommand(): string {
-        return `mkdir -p ${this.localMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.localMountPoint}`;
+        return `sudo apt-get update && sudo apt-get -y install nfs-common && mkdir -p ${this.localMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.localMountPoint}`;
     }
 
     public get remoteMountCommand(): string {
-        return `mkdir -p ${this.remoteMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.remoteMountPoint}`;
+        return `sudo apt-get update && sudo apt-get -y install nfs-common && mkdir -p ${this.remoteMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.remoteMountPoint}`;
     }
 
     public get remoteWorkingRoot(): string {

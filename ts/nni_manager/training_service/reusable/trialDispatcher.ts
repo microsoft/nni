@@ -306,7 +306,6 @@ class TrialDispatcher implements TrainingService {
                     this.commandChannelSet.add(environmentService.getCommandChannel);
                     this.environmentServiceList.push(environmentService);
                 }
-                this.setClusterMetadata('shared_storage_config', `{"storageType":"NFS","localMountPoint":"/mnt/sharedfolder","remoteMountPoint":"nni-sharedfolder","nfsServer":"40.121.81.141","exportedDirectory":"/mnt/sharedfolder","userMounted":"true"}`);
                 break;
             case TrialConfigMetadataKey.SHARED_STORAGE_CONFIG:
                 if (this.useSharedStorage === false) {
