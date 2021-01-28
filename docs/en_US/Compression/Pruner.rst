@@ -1,7 +1,7 @@
 Supported Pruning Algorithms on NNI
 ===================================
 
-We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter.  We also provide some algorithms to control the **pruning schedule**.
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized haredware or software to speed up the sparse network. **Filter Pruning** achieves acceleratation by removing the entire filter. Some pruning algorithms use one-shot method that prune weights at once based on an importance metric. Other pruning algorithms control the **pruning schedule** that prune weights during optimization, including some automatic pruning algorithms.
 
 
 **Fine-grained Pruning**
@@ -28,7 +28,6 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `Sensitivity Pruner <#sensitivity-pruner>`__
 
 **Others**
-
 
 * `ADMM Pruner <#admm-pruner>`__
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
@@ -61,8 +60,7 @@ User configuration for Level Pruner
 
 Slim Pruner
 -----------
-This is an one-shot pruner, which adds L1 regularization on the scaling factors of batch normalization (BN) layers while training.
-For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
+This is an one-shot pruner, which adds sparsity regularization on the scaling factors of batch normalization (BN) layers durting training to identify unimportant channels. . The channels with small scaling factor values will be pruned. For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
 
 Usage
 ^^^^^
@@ -118,7 +116,7 @@ The experiments code can be found at :githublink:`examples/model_compress/prunin
 FPGM Pruner
 -----------
 
-This is an one-shot pruner, which prunes filters with the smallest geometric median
+This is an one-shot pruner, which prunes filters with the smallest geometric median. FPGM chooses the filters with the most replaceable contribution.
 For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
@@ -148,7 +146,7 @@ User configuration for FPGM Pruner
 L1Filter Pruner
 ---------------
 
-This is an one-shot pruner, which prunes the filters prunes filters in the **convolution layers**.
+This is an one-shot pruner, which prunes the filters in the **convolution layers**.
 
 ..
    The procedure of pruning m filters from the ith convolutional layer is as follows:
@@ -418,7 +416,11 @@ PyTorch code
 
    pruner.update_epoch(epoch)
 
-You can view :githublink:`mnist example <examples/model_compress/pruning/basic_pruners_torch.py>` for more information.
+You can view :githublink:`mnist example <examples/model_compress/pruning/naive_example_torch.py>` for a quick start.
+
+.. code-block:: python
+
+   python naive_example_torch.py
 
 
 User configuration for AGP Pruner

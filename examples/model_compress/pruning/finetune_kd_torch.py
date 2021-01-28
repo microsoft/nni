@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 '''
 An exmaple for fine-tuning the pruend model with KD.
-Run basic_pruners_torch.py without fine-tune and toggle speed-up first to get the pruend model.
+Run basic_pruners_torch.py first to get the pruend model.
 '''
 
 import argparse
@@ -20,10 +20,10 @@ from copy import deepcopy
 
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
-from .basic_pruners_torch import get_data
+from basic_pruners_torch import get_data
 
 import nni
-from nni.compression.pytorch import apply_compression_results, ModelSpeedup
+from nni.compression.pytorch import apply_compression_results, ModelSpeedup, get_dummy_input
 
 class DistillKL(nn.Module):
     """Distilling the Knowledge in a Neural Network"""
@@ -37,13 +37,6 @@ class DistillKL(nn.Module):
         loss = F.kl_div(p_s, p_t, size_average=False) * (self.T**2) / y_s.shape[0]
         return loss
 
-def get_dummy_input(args, device):
-    if args.dataset == 'mnist':
-        dummy_input = torch.randn([args.test_batch_size, 1, 28, 28]).to(device)
-    elif args.dataset in ['cifar10', 'imagenet']:
-        dummy_input = torch.randn([args.test_batch_size, 3, 32, 32]).to(device)
-    return dummy_input
-
 def get_model_optimizer_scheduler(args, device, test_loader, criterion):
     if args.model == 'LeNet':
         model = LeNet().to(device)
@@ -55,19 +48,28 @@ def get_model_optimizer_scheduler(args, device, test_loader, criterion):
         raise ValueError("model not recognized")
 
     # In this example, we set the architecture of teacher and student to be the same. It is feasible to set a different teacher architecture.
-    model_s = deepcopy(model)
-    model_t = deepcopy(model)
-
-    module_list = nn.ModuleList([])
-    module_list.append(model_s)
-    module_list.append(model_t)
-
     if args.teacher_model_dir is None:
         raise NotImplementedError('please load pretrained teacher model first')
 
     else:
-        model_t.load_state_dict(torch.load(args.teacher_model_dir))
-        best_acc = test(args, model_t, device, criterion, test_loader)
+        model.load_state_dict(torch.load(args.teacher_model_dir))
+        best_acc = test(args, model, device, criterion, test_loader)
+
+    model_t = deepcopy(model)
+    model_s = deepcopy(model)
+
+    if args.student_model_dir is not None:
+        # load the pruned student model checkpoint
+        model_s.load_state_dict(torch.load(args.student_model_dir))
+
+    dummy_input = get_dummy_input(args, device)
+    m_speedup = ModelSpeedup(model_s, dummy_input, args.mask_path, device)
+    m_speedup.speedup_model()
+
+
+    module_list = nn.ModuleList([])
+    module_list.append(model_s)
+    module_list.append(model_t)
 
     # setup opotimizer for fine-tuning studeng model
     optimizer = torch.optim.SGD(model_s.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
@@ -78,12 +80,12 @@ def get_model_optimizer_scheduler(args, device, test_loader, criterion):
     return module_list, optimizer, scheduler
 
 
-def train(args, models, device, train_loader, criterions, optimizer, epoch):
+def train(args, models, device, train_loader, criterion, optimizer, epoch):
     # model.train()
     model_s = models[0].train()
     model_t = models[-1].eval()
-    cri_cls = criterions[0]
-    cri_kd = criterions[1]
+    cri_cls = criterion
+    cri_kd = DistillKL(args.kd_T)
 
 
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -109,12 +111,11 @@ def test(args, model, device, criterion, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
-    cri_cls = criterion[0]
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
-            test_loss += cri_cls(output, target).item()
+            test_loss += criterion(output, target).item()
             pred = output.argmax(dim=1, keepdim=True)
             correct += pred.eq(target.view_as(pred)).sum().item()
     test_loss /= len(test_loader.dataset)
@@ -162,9 +163,11 @@ if __name__ == '__main__':
                         choices=['LeNet', 'vgg16' ,'vgg19', 'resnet18'],
                         help='model to use')
     parser.add_argument('--teacher-model-dir', type=str, default=None,
-                        help='path to pretrained teacher model')
+                        help='path to the pretrained teacher model checkpoint')
+    parser.add_argument('--mask-path', type=str, default=None,
+                        help='path to the pruend student model mask file')
     parser.add_argument('--student-model-dir', type=str, default=None,
-                        help='path to the pruend student model')
+                        help='path to the pruend student model checkpoint')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training')
     parser.add_argument('--test-batch-size', type=int, default=200,
@@ -177,20 +180,9 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status')
     parser.add_argument('--dry-run', action='store_true', default=False,
                         help='quickly check a single pass')
-    parser.add_argument('--multi-gpu', action='store_true', default=False,
-                        help='run on mulitple gpus')
     parser.add_argument('--test-only', action='store_true', default=False,
                         help='run test only')
 
-    # pruner
-    parser.add_argument('--sparsity', type=float, default=0.5,
-                        help='target overall target sparsity')
-    parser.add_argument('--dependency-aware', action='store_true', default=False,
-                        help='toggle dependency aware mode')
-    parser.add_argument('--pruner', type=str, default='l1filter',
-                        choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                        'fpgm', 'apoz'],
-                        help='pruner to use')
 
     # knowledge distillation
     parser.add_argument('--kd_T', type=float, default=4,

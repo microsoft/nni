@@ -4,7 +4,7 @@ Knowledge Distillation on NNI
 KnowledgeDistill
 ----------------
 
-Knoiwledge Distillation (KD) is proposed in `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ ,  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student. KD is often used to fine-tune the pruned model.
+Knowledge Distillation (KD) is proposed in `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ ,  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student. KD is often used to fine-tune the pruned model.
 
 
 .. image:: ../../img/distill.png
@@ -35,4 +35,9 @@ PyTorch code
          loss.backward()
 
 
-The complete code can be found :githublink:`here <examples/model_compress/pruning/basic_pruners_kd_torch.py>`
+The complete code for fine-tuning the pruend model can be found :githublink:`here <examples/model_compress/pruning/finetune_kd_torch.py>`
+
+.. code-block:: python
+      python finetune_kd_torch.py --model [model name] --teacher-model-dir [pretrained checkpoint path]  --student-model-dir [pruend checkpoint path] --mask-path [mask file path]
+
+

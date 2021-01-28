@@ -23,6 +23,8 @@ from torchvision import datasets, transforms
 from models.mnist.lenet import LeNet
 from models.cifar10.vgg import VGG
 
+from nni.compression.pytorch.utils.counter import count_flops_params
+
 import nni
 from nni.compression.pytorch import apply_compression_results, ModelSpeedup
 from nni.algorithms.compression.pytorch.pruning import (
@@ -236,6 +238,10 @@ def main(args):
 
     model, optimizer, scheduler = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
 
+    dummy_input = get_dummy_input(args, device)
+    flops, params, results = count_flops_params(model, dummy_input)
+    print(f"FLOPs: {flops}, params: {params}")
+
     print('start pruning...')
     model_path = os.path.join(args.experiment_data_dir, 'pruned_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
@@ -270,7 +276,6 @@ def main(args):
         model, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
         model.eval()
         
-        dummy_input = get_dummy_input(args, device)
         apply_compression_results(model, mask_path, device)
 
         # test model speed
@@ -281,9 +286,9 @@ def main(args):
 
         m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
         m_speedup.speedup_model()
-        speedup_path = os.path.join(args.experiment_data_dir, 'speedup_{}_{}_{}.pth'.format(
-        args.model, args.dataset, args.pruner))
-        torch.save(model.state_dict(), speedup_path)
+
+        flops, params, results = count_flops_params(model, dummy_input)
+        print(f"FLOPs: {flops}, params: {params}")
 
         start = time.time()
         for _ in range(32):
