@@ -2,14 +2,15 @@
 # Licensed under the MIT license.
 
 '''
-Example for supported basic pruning algorithms.
+NNI example for supported basic pruning algorithms.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
 Note that pruners use masks to simiulate the real pruning. In order to obtain a real compressed model, model speed up is required.
 You can also try auto_pruners_torch.py to see the usage of some automatic pruning algorithms.
+
 '''
+import logging
 
 import argparse
-
 import os
 import time
 import argparse
@@ -36,6 +37,10 @@ from nni.algorithms.compression.pytorch.pruning import (
     AGPPruner,
     ActivationAPoZRankFilterPruner
 )
+
+
+_logger = logging.getLogger('mnist_example')
+_logger.setLevel(logging.INFO)
 
 str2pruner = {
     'level': LevelPruner,
@@ -159,7 +164,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
         print('start pre-training...')
         best_acc = 0
         for epoch in range(args.pretrain_epochs):
-            train(args, model, device, train_loader, criterion, optimizer, epoch)
+            train(args, model, device, train_loader, criterion, optimizer, epoch, sparse_bn=True if args.pruner == 'slim' else False)
             scheduler.step()
             acc = test(args, model, device, criterion, test_loader)
             if acc > best_acc:
@@ -189,7 +194,7 @@ def updateBN(model):
         if isinstance(m, nn.BatchNorm2d):
             m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch):
+def train(args, model, device, train_loader, criterion, optimizer, epoch, sparse_bn=False):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -198,7 +203,7 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch):
         loss = criterion(output, target)
         loss.backward()
 
-        if args.pruner == 'slim':
+        if sparse_bn:
             # L1 regularization on BN layer
             updateBN(model)
 
@@ -248,7 +253,7 @@ def main(args):
     mask_path = os.path.join(args.experiment_data_dir, 'mask_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
 
-    best_top1 = 0
+    
     pruner = get_pruner(model, args.pruner, device, optimizer, args.dependency_aware)
     model = pruner.compress()
 
@@ -258,6 +263,7 @@ def main(args):
     if args.test_only:
         test(args, model, device, criterion, test_loader)
 
+    best_top1 = 0
     for epoch in range(args.fine_tune_epochs):
         pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
@@ -269,6 +275,9 @@ def main(args):
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path=model_path, mask_path=mask_path)
+
+    if args.nni:
+        nni.report_final_result(best_top1)
 
     if args.speed_up:
         # reload the best checkpoint for speed-up
@@ -344,7 +353,18 @@ if __name__ == '__main__':
                         
     # speed-up
     parser.add_argument('--speed-up', action='store_true', default=False,
-                        help='Whether to speed-up the pruned model')
+                        help='whether to speed-up the pruned model')
+
+    parser.add_argument('--nni', action='store_true', default=False, 
+                        help="whether to tune the pruners using NNi tuners")
 
     args = parser.parse_args()
+
+    if args.nni:
+         params = nni.get_next_parameter()
+         print(params)
+         args.sparsity = params['sparsity']
+         args.pruner = params['pruner']
+         args.model = params['pruner']
+
     main(args)

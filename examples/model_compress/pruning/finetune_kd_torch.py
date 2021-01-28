@@ -1,7 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+
 '''
-An exmaple for fine-tuning the pruend model with KD.
+NNI exmaple for fine-tuning the pruend model with KD.
 Run basic_pruners_torch.py first to get the pruend model.
 '''
 

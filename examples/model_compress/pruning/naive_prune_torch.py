@@ -1,11 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+
 '''
-An example for quick start.
+NNI example for quick start of pruning.
 In this example, we use level pruner to prune the LeNet on MNIST.
 '''
 
-from __future__ import print_function
+import logging
+
 import argparse
 import torch
 import torch.nn as nn
@@ -16,6 +18,10 @@ from torch.optim.lr_scheduler import StepLR
 from models.mnist.lenet import LeNet
 from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
+import nni
+
+_logger = logging.getLogger('mnist_example')
+_logger.setLevel(logging.INFO)
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -74,9 +80,9 @@ def main(args):
         transforms.Normalize((0.1307,), (0.3081,))
         ])
 
-    dataset1 = datasets.MNIST('/data', train=True, download=True,
+    dataset1 = datasets.MNIST('./data', train=True, download=True,
                        transform=transform)
-    dataset2 = datasets.MNIST('/data', train=False,
+    dataset2 = datasets.MNIST('./data', train=False,
                        transform=transform)
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
@@ -90,7 +96,7 @@ def main(args):
         train(args, model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
         scheduler.step()
-
+        
     torch.save(model.state_dict(), "pretrain_mnist_lenet.pt")
 
     print('start pruning...')
@@ -98,7 +104,7 @@ def main(args):
 
     # create pruner
     prune_config = [{
-        'sparsity': 0.5,
+        'sparsity': args.sparsity,
         'op_types': ['default'],
     }]
 
@@ -117,7 +123,6 @@ def main(args):
             # Export the best model, 'model_path' stores state_dict of the pruned model,
             # mask_path stores mask_dict of the pruned model
             pruner.export_model(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt')
-
 
 if __name__ == '__main__':
      # Training settings
@@ -140,7 +145,9 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                         help='how many batches to wait before logging training status')
-
+    parser.add_argument('--sparsity', type=float, default=0.5,
+                        help='target overall target sparsity')
     args = parser.parse_args()
+
 
     main(args)

@@ -1,3 +1,10 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+'''
+NNI exmaple for reproducing Lottery Ticket Hypothesis.
+'''
+
 import argparse
 import copy
 import torch
