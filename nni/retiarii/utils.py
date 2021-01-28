@@ -1,7 +1,9 @@
+import os
 import inspect
 import warnings
 from collections import defaultdict
 from typing import Any
+from pathlib import Path
 
 
 def import_(target: str, allow_none: bool = False) -> Any:
@@ -108,6 +110,12 @@ def blackbox_module(cls):
     """
     frm = inspect.stack()[1]
     module_name = inspect.getmodule(frm[0]).__name__
+    if module_name == '__main__':
+        main_file_path = Path(inspect.getsourcefile(frm[0]))
+        if main_file_path.parents[0] != Path('.'):
+            raise RuntimeError(f'you are using "{main_file_path}" to launch your experiment, '
+                               f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
+        module_name = main_file_path.stem
     # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
     # to make LSTM's source code can be found, we should assign original LSTM's __module__ to 
     # the wrapped LSTM's __module__

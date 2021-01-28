@@ -110,6 +110,8 @@ class PyTorchOperation(Operation):
         from .converter.op_types import OpTypeName
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
+        elif self.type == 'shared':
+            return f'{output} = self.{field}({", ".join(inputs)})'
         elif self.type.startswith('Function.'):
             func_name = self.type[len('Function.'):]
             return f'{output} = F.{func_name}({", ".join(inputs)})'
@@ -189,17 +191,19 @@ class PyTorchOperation(Operation):
             # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
             # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
             # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
-            return f'{output} = {inputs[0]}.new_zeros({inputs[1]}, {inputs[2]}, {inputs[4]}, {inputs[5]})'
+            # TODO: check requires_grad when it is true!!!
+            return f'{output} = {inputs[0]}.new_zeros({inputs[1]}, dtype={inputs[2]}, device={inputs[4]})'
         elif self.type == 'aten::transpose':
             return f'{output} = {inputs[0]}.transpose({inputs[1]}, {inputs[2]})'
         elif self.type == 'aten::contiguous':
-            return f'{output} = {inputs[0]}.contiguous({inputs[1]})'
+            # TODO: find out the value mapping
+            #return f'{output} = {inputs[0]}.contiguous(memory_format={inputs[1]})'
+            return f'{output} = {inputs[0]}.contiguous(memory_format=torch.contiguous_format)'
         elif self.type == 'aten::detach':
             return f'{output} = {inputs[0]}.detach()'
         elif self.type == 'noop_identity':
             # this operator type is added by us
-            assert len(inputs) == 1
-            return f'{output} = {inputs[0]}'
+            return f'{output} = {", ".join(inputs)}'
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 

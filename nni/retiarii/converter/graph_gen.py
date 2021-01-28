@@ -5,7 +5,7 @@ import torch
 
 from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
-from ..operation import Cell
+from ..operation import Cell, Operation
 from ..utils import get_records
 from .op_types import MODULE_EXCEPT_LIST, BasicOpsPT, OpTypeName
 from .utils import _convert_name, build_full_name
@@ -134,7 +134,10 @@ class GraphConverter:
         for hidden_node in to_removes:
             hidden_node.remove()
 
-    def handle_graph_nodes(self, script_module, sm_graph, module, module_name, ir_model, ir_graph):
+    def handle_graph_nodes(self, script_module, sm_graph,
+                           module, module_name,
+                           ir_model, ir_graph,
+                           shared_module_index=None):
         """
         Convert torch script node to our node ir, and build our graph ir
 
@@ -152,6 +155,10 @@ class GraphConverter:
             the whole graph ir
         ir_graph : Graph
             the graph ir of ```module```
+        shared_module_index : dict
+            it is used for knowing which module has been created an ir node,
+            if created and invoked again, then the new ir node can simply reference that ir node.
+            this way we can identify shared modules (i.e., one module invoked multiple times in `forward` function)
 
         Returns
         -------
@@ -169,6 +176,8 @@ class GraphConverter:
             ir_graph._add_input(_convert_name(_input.debugName()))
 
         node_index = {}  # graph node to graph ir node
+        if shared_module_index is None:
+            shared_module_index = {}
 
         # some node does not have output but it modifies a variable, for example aten::append
         # %17 : Tensor[] = aten::append(%out.1, %16)
@@ -249,18 +258,18 @@ class GraphConverter:
             #    -> (%20)
             #block1():
             #    -> (%mu.1)
-            if last_block_node is None:
-                # create an identity node
-                print(dir(blocks[chosen_block]))
-                print([i for i in blocks[chosen_block].outputs()])
-                print(blocks[chosen_block].returnNode())
-                print(type(blocks[chosen_block].returnNode()))
-                print([i for i in blocks[chosen_block].returnNode().outputs()])
-                print([i for i in blocks[chosen_block].returnNode().inputs()])
-                self.global_seq += 1
-                new_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
-                self._add_edge(ir_graph, blocks[chosen_block].returnNode(), graph_inputs, node_index, new_node, output_remap)
-                last_block_node = new_node
+            #if last_block_node is None:
+            # create an identity node
+            #print(dir(blocks[chosen_block]))
+            #print([i for i in blocks[chosen_block].outputs()])
+            #print(blocks[chosen_block].returnNode())
+            #print(type(blocks[chosen_block].returnNode()))
+            #print([i for i in blocks[chosen_block].returnNode().outputs()])
+            #print([i for i in blocks[chosen_block].returnNode().inputs()])
+            self.global_seq += 1
+            new_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
+            self._add_edge(ir_graph, blocks[chosen_block].returnNode(), graph_inputs, node_index, new_node, output_remap)
+            last_block_node = new_node
             return last_block_node
 
         # ===================handle function call===================
@@ -302,7 +311,7 @@ class GraphConverter:
                         assert predecessor.hasAttribute('name')
                         assert predecessor.inputsAt(0).debugName() == 'self'
                         predecessor_name = predecessor.s('name')
-                        # FIXME: exchange
+                        # TODO: exchange submodule_name and predecessor_name
                         submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
                         predecessor_obj = getattr(module, predecessor_name)
                         submodule_obj = getattr(predecessor_obj, submodule_name)
@@ -311,19 +320,31 @@ class GraphConverter:
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
-                # TODO: match subgraph with maintained graphs
-                # build cell
-                if subgraph is None:
-                    # if we do not parse this module's graph, we create Node for this module
-                    subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
-                    if isinstance(submodule_obj, Placeholder):
-                        subcell.update_label(submodule_obj.label)
-                    elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
-                        subcell.update_label(sub_m_attrs['label'])
+                if submodule_full_name in shared_module_index:
+                    # this module is invoked more than once, the ir node has already been created
+                    # create a reference node for it.
+                    # example: {"name": "conv2", "operation": {"type": "shared", "parameters": {"reference": "conv1"}}}
+                    #print('shared module index: ', shared_module_index)
+                    #print('current module: ', submodule_full_name)
+                    #print('module_name: ', module_name)
+                    self.global_seq += 1
+                    shared_node_name = build_full_name(submodule_full_name, '', self.global_seq)
+                    shared_type_operation = Operation.new('shared', {'reference': submodule_full_name})
+                    subcell = ir_graph.add_node(shared_node_name, shared_type_operation)
                 else:
-                    # Graph already created, create Cell for it
-                    new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
-                    subcell = ir_graph.add_node(submodule_full_name, new_cell)
+                    # this module is processed for the first time, build cell for it
+                    if subgraph is None:
+                        # if we do not parse this module's graph, we create Node for this module
+                        subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
+                        if isinstance(submodule_obj, Placeholder):
+                            subcell.update_label(submodule_obj.label)
+                        elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
+                            subcell.update_label(sub_m_attrs['label'])
+                    else:
+                        # Graph already created, create Cell for it
+                        new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
+                        subcell = ir_graph.add_node(submodule_full_name, new_cell)
+                    shared_module_index[submodule_full_name] = subcell
                 node_index[node] = subcell
                 # connect the cell into graph
                 self._add_edge(ir_graph, node, graph_inputs, node_index, subcell, output_remap, ignore_first=True)
@@ -339,7 +360,7 @@ class GraphConverter:
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
                 print(script_method.graph)
                 method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
-                                                    module_name, ir_model, method_ir_graph)
+                                                    module_name, ir_model, method_ir_graph, shared_module_index)
                 for _output in script_method.graph.outputs():
                     method_ir_graph._add_output(_convert_name(_output.debugName()))
                     predecessor_node_outputs = [o for o in _output.node().outputs()]
@@ -347,9 +368,9 @@ class GraphConverter:
                         src_node_idx = None
                     else:
                         src_node_idx = predecessor_node_outputs.index(_output)
-                    print('output: ', method_ir_graph.output_node)
-                    print('input: ', method_node_index[_output.node()])
-                    print('input: ', _output.node())
+                    #print('output: ', method_ir_graph.output_node)
+                    #print('input: ', method_node_index[_output.node()])
+                    #print('input: ', _output.node())
                     method_ir_graph.add_edge(head=(method_node_index[_output.node()], src_node_idx),
                                     tail=(method_ir_graph.output_node, None))
                 self.refine_graph(method_ir_graph)
@@ -533,7 +554,7 @@ class GraphConverter:
             assert isinstance(self.modules_arg[id(cand)], dict)
             cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
             choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
-        m_attrs[f'choices'] = choices
+        m_attrs['choices'] = choices
         m_attrs['label'] = module.label
         return m_attrs
 
@@ -544,8 +565,6 @@ class GraphConverter:
         m_attrs['reduction'] = module.reduction
         m_attrs['label'] = module.label
         return m_attrs
-
-    #def create_one_graph_ir(self):
 
     def convert_module(self, script_module, module, module_name, ir_model):
         """

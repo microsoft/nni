@@ -80,6 +80,9 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     node_codes = []
     for node in nodes:
         if node.operation:
+            if node.operation.type == 'shared':
+                print('shareddd: ', node)
+                continue
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
@@ -104,7 +107,10 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             inputs = _format_inputs(node)
             inputs = _remove_prefix(inputs, graph_name)
             node_name = _remove_prefix(node.name, graph_name)
-            edge_codes.append(node.operation.to_forward_code(node_name, node_name, inputs))
+            submodule_name = node_name
+            if node.operation.type == 'shared':
+                submodule_name = _remove_prefix(node.operation.parameters['reference'], graph_name)
+            edge_codes.append(node.operation.to_forward_code(submodule_name, node_name, inputs))
 
     output_names = _format_inputs(graph.output_node)
     output_names = _remove_prefix(output_names, graph_name)
