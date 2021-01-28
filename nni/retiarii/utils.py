@@ -37,7 +37,7 @@ def add_record(key, value):
     """
     global _records
     if _records is not None:
-        assert key not in _records, '{} already in _records'.format(key)
+        assert key not in _records, f'{key} already in _records. Conflict: {_records[key]}'
         _records[key] = value
 
 
@@ -50,6 +50,7 @@ def del_record(key):
 def _blackbox_cls(cls, module_name, register_format=None):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
+            print('init', type(self), id(self))
             argname_list = list(inspect.signature(cls).parameters.keys())
             full_args = {}
             full_args.update(kwargs)
@@ -77,6 +78,7 @@ def _blackbox_cls(cls, module_name, register_format=None):
             super().__init__(*args, **kwargs)
 
         def __del__(self):
+            print('del', type(self), id(self))
             del_record(id(self))
 
     # using module_name instead of cls.__module__ because it's more natural to see where the module gets wrapped
