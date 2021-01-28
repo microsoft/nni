@@ -6,8 +6,6 @@ import torch.nn as nn
 
 from ...utils import add_record, blackbox_module, uid, version_larger_equal
 
-_logger = logging.getLogger(__name__)
-
 # NOTE: support pytorch version >= 1.5.0
 
 __all__ = [
@@ -38,91 +36,6 @@ if version_larger_equal(torch.__version__, '1.6.0'):
 
 if version_larger_equal(torch.__version__, '1.7.0'):
     __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
-
-
-class LayerChoice(nn.Module):
-    def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
-        super(LayerChoice, self).__init__()
-        self.op_candidates = op_candidates
-        self.label = key if key is not None else f'layerchoice_{uid()}'
-        self.key = self.label  # deprecated, for backward compatibility
-        for i, module in enumerate(op_candidates):  # deprecated, for backward compatibility
-            self.add_module(str(i), module)
-        if reduction or return_mask:
-            _logger.warning('input arguments `reduction` and `return_mask` are deprecated!')
-
-    def forward(self, x):
-        return x
-
-
-class InputChoice(nn.Module):
-    def __init__(self, n_candidates=None, choose_from=None, n_chosen=1,
-                 reduction="sum", return_mask=False, key=None):
-        super(InputChoice, self).__init__()
-        self.n_candidates = n_candidates
-        self.n_chosen = n_chosen
-        self.reduction = reduction
-        self.label = key if key is not None else f'inputchoice_{uid()}'
-        self.key = self.label  # deprecated, for backward compatibility
-        if choose_from or return_mask:
-            _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
-
-    def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
-        # fake return
-        return torch.tensor(candidate_inputs)  # pylint: disable=not-callable
-
-
-class ValueChoice:
-    """
-    The instance of this class can only be used as input argument,
-    when instantiating a pytorch module.
-    TODO: can also be used in training approach
-    """
-
-    def __init__(self, candidate_values: List[Any]):
-        self.candidate_values = candidate_values
-
-
-class Placeholder(nn.Module):
-    def __init__(self, label, related_info):
-        add_record(id(self), related_info)
-        self.label = label
-        self.related_info = related_info
-        super(Placeholder, self).__init__()
-
-    def forward(self, x):
-        return x
-
-
-class ChosenInputs(nn.Module):
-    """
-    """
-
-    def __init__(self, chosen: List[int], reduction: str):
-        super().__init__()
-        self.chosen = chosen
-        self.reduction = reduction
-
-    def forward(self, candidate_inputs):
-        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
-
-    def _tensor_reduction(self, reduction_type, tensor_list):
-        if reduction_type == "none":
-            return tensor_list
-        if not tensor_list:
-            return None  # empty. return None for now
-        if len(tensor_list) == 1:
-            return tensor_list[0]
-        if reduction_type == "sum":
-            return sum(tensor_list)
-        if reduction_type == "mean":
-            return sum(tensor_list) / len(tensor_list)
-        if reduction_type == "concat":
-            return torch.cat(tensor_list, dim=1)
-        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
-
-
-# the following are pytorch modules
 
 
 Module = nn.Module

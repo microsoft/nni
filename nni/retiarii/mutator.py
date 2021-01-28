@@ -136,5 +136,5 @@ class InputChoiceMutator(Mutator):
         target = model.get_node_by_name(self.node_name)
         candidates = [i for i in range(self.n_candidates)]
         chosen = [self.choice(candidates) for _ in range(self.n_chosen)]
-        target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',
+        target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
                                 {'chosen': chosen, 'reduction': self.reduction})
