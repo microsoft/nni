@@ -13,8 +13,9 @@ import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
+import { ExperimentConfig } from '../../common/manager';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType, TrainingService
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
@@ -28,7 +29,7 @@ const fs = require('fs');
 /**
  * Training Service implementation for Kubernetes
  */
-abstract class KubernetesTrainingService {
+abstract class KubernetesTrainingService extends TrainingService {
     protected readonly NNI_KUBERNETES_TRIAL_LABEL: string = 'nni-kubernetes-trial';
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
@@ -43,17 +44,18 @@ abstract class KubernetesTrainingService {
     protected azureStorageShare?: string;
     protected azureStorageSecretName?: string;
     protected azureStorageAccountName?: string;
-    protected nniManagerIpConfig?: NNIManagerIpConfig;
+    protected nniManagerIp?: string;
     protected readonly genericK8sClient: GeneralK8sClient;
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck: boolean = true;
-    protected logCollection: string;
+    protected logCollection: string = 'none';
     protected copyExpCodeDirPromise?: Promise<string>;
     protected expContainerCodeFolder: string;
 
     constructor() {
+        super();
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
@@ -275,7 +277,7 @@ abstract class KubernetesTrainingService {
         if (gpuNum === 0) {
             nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.nniManagerIp ? this.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const runScript: string = String.Format(
             kubernetesScriptFormat,
@@ -376,6 +378,10 @@ abstract class KubernetesTrainingService {
             return Promise.resolve('');
         }
         return Promise.resolve(folderUriInAzure);
+    }
+
+    public updateTrialJob(trialJobId: string, form: any): Promise<TrialJobDetail> {
+        throw new Error('not implemented');
     }
 }
 export { KubernetesTrainingService };

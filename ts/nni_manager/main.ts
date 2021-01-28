@@ -25,7 +25,6 @@ import { AdlTrainingService } from './training_service/kubernetes/adl/adlTrainin
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { LocalTrainingService } from './training_service/local/localTrainingService';
 import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
-import { PAIYarnTrainingService } from './training_service/pai/paiYarn/paiYarnTrainingService';
 import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 
@@ -45,10 +44,6 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
     } else if (platformMode === 'local') {
         Container.bind(TrainingService)
             .to(LocalTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'paiYarn') {
-        Container.bind(TrainingService)
-            .to(PAIYarnTrainingService)
             .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService)
@@ -97,7 +92,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/paiYarn/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 function main(): void {
@@ -118,7 +113,7 @@ function main(): void {
     const port: number = parseInt(strPort, 10);
 
     const mode: string = parseArg(['--mode', '-m']);
-    if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
+    if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
         console.log(`FATAL: unknown mode: ${mode}`);
         usage();
         process.exit(1);

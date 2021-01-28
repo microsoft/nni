@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import { MethodNotImplementedError } from '../../../common/errors';
+import { ExperimentConfig } from '../../../common/manager';
 import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
     KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig
 } from '../kubernetesConfig';
@@ -152,24 +153,20 @@ export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
 }
 
 export class KubeflowTrialConfigFactory {
-    public static generateKubeflowTrialConfig(jsonObject: object, operator: KubeflowOperator): KubeflowTrialConfig {
-        if (operator === 'tf-operator') {
-            const kubeflowTrialConfigObject: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>jsonObject;
-
+    public static generateKubeflowTrialConfig(config: ExperimentConfig): KubeflowTrialConfig {
+        if (config.trainingService.operator === 'tf-operator') {
             return new KubeflowTrialConfigTensorflow(
-                kubeflowTrialConfigObject.codeDir,
-                kubeflowTrialConfigObject.worker,
-                kubeflowTrialConfigObject.ps
+                config.trialCodeDirectory,
+                config.trainingService.worker,
+                config.trainingService.parameterServer
             );
-        } else if (operator === 'pytorch-operator') {
-            const kubeflowTrialConfigObject: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>jsonObject;
-
+        } else if (config.trainingService.operator === 'pytorch-operator') {
             return new KubeflowTrialConfigPytorch(
-                kubeflowTrialConfigObject.codeDir,
-                kubeflowTrialConfigObject.master,
-                kubeflowTrialConfigObject.worker
+                config.trialCodeDirectory,
+                config.trainingService.master,
+                config.trainingService.worker
             );
         }
-        throw new Error(`Invalid json object ${jsonObject}`);
+        throw new Error(`Invalid json object ${config}`);
     }
 }

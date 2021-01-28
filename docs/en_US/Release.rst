@@ -2,17 +2,17 @@
    :format: html
 
 
-ChangeLog
-=========
+Change Log
+==========
 
-Release 2.0 - 13/1/2021
-=======================
+Release 2.0 - 1/14/2021
+-----------------------
 
 Major updates
--------------
+^^^^^^^^^^^^^
 
 Neural architecture search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 * Support an improved NAS framework: Retiarii (experimental)
 
@@ -24,14 +24,14 @@ Neural architecture search
 * Add a new NAS benchmark for NLP model search (#3140)
 
 Training service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 * Support hybrid training service (#3097 #3251 #3252)
 * Support AdlTrainingService, a new training service based on Kubernetes (#3022, thanks external contributors Petuum @pw2393)
 
 
 Model compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 * Support pruning schedule for fpgm pruning algorithm (#3110)
 * ModelSpeedup improvement: support torch v1.7 (updated graph_utils.py) (#3076)
@@ -39,7 +39,7 @@ Model compression
 
 
 WebUI & nnictl 
-^^^^^^^^^^^^^^
+""""""""""""""
 
 * Support experiments management on WebUI, add a web page for it (#3081 #3127)
 * Improve the layout of overview page (#3046 #3123)
@@ -47,7 +47,7 @@ WebUI & nnictl
 
 
 Others
-^^^^^^
+""""""
 
 * Support launching an experiment from Python code (#3111 #3210 #3263)
 * Refactor builtin/customized tuner installation (#3134)
@@ -58,7 +58,7 @@ Others
 
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 * Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
 * List related research and publications in doc (#3150)
@@ -67,7 +67,7 @@ Documentation
 * Update EfficientNet doc to clarify repo versions (#3158, thanks external contributor @ahundt)
 
 Bug fixes
----------
+^^^^^^^^^
 
 * Fix exp-duration pause timing under NO_MORE_TRIAL status (#3043)
 * Fix bug in NAS SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
@@ -84,20 +84,20 @@ Bug fixes
 
 
 Release 1.9 - 10/22/2020
-========================
+------------------------
 
 Major updates
--------------
+^^^^^^^^^^^^^
 
 Neural architecture search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 
 * Support regularized evolution algorithm for NAS scenario (#2802)
 * Add NASBench201 in search space zoo (#2766)
 
 Model compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * AMC pruner improvement: support resnet, support reproduction of the experiments (default parameters in our example code) in AMC paper (#2876 #2906)
@@ -107,7 +107,7 @@ Model compression
 * Support quantizing bias in QAT quantizer (#2914)
 
 Training service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Support configuring python environment using "preCommand" in remote mode (#2875)
@@ -115,7 +115,7 @@ Training service
 * Support reuse mode for remote training service (#2923)
 
 WebUI & nnictl
-^^^^^^^^^^^^^^
+""""""""""""""
 
 
 * The "Overview" page on WebUI is redesigned with new layout (#2914)
@@ -125,7 +125,7 @@ WebUI & nnictl
 * Support nnictl command auto-completion (#2857)
 
 UT & IT
--------
+^^^^^^^
 
 
 * Add integration test for experiment import and export (#2878)
@@ -133,13 +133,13 @@ UT & IT
 * Add unit test for nnictl (#2912)
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Refactor of the document for model compression (#2919)
 
 Bug fixes
----------
+^^^^^^^^^
 
 
 * Bug fix of naïve evolution tuner, correctly deal with trial fails (#2695)
@@ -150,13 +150,13 @@ Bug fixes
 * Support boolean type for "choice" hyper-parameter when customizing trial configuration on WebUI (#3003)
 
 Release 1.8 - 8/27/2020
-=======================
+-----------------------
 
 Major updates
--------------
+^^^^^^^^^^^^^
 
 Training service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Access trial log directly on WebUI (local mode only) (#2718)
@@ -167,7 +167,7 @@ Training service
 * Add more log information when copying data in OpenPAI mode (#2702)
 
 WebUI, nnictl and nnicli
-^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 
 
 * Improve hyper-parameter parallel coordinates plot (#2691) (#2759)
@@ -180,14 +180,14 @@ WebUI, nnictl and nnicli
 * Improve the user experience of `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md>`__ with `examples <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
 
 Neural architecture search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 
 * `Search space zoo: ENAS and DARTS <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/NAS/SearchSpaceZoo.md>`__ (#2589)
 * API to query intermediate results in NAS benchmark (#2728)
 
 Model compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * Support the List/Tuple Construct/Unpack operation for TorchModuleGraph (#2609)
@@ -198,26 +198,26 @@ Model compression
 * TensorFlow v2 support in model compression (#2755)
 
 Backward incompatible changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""
 
 
 * Update the default experiment folder from ``$HOME/nni/experiments`` to ``$HOME/nni-experiments``. If you want to view the experiments created by previous NNI releases, you can move the experiments folders from  ``$HOME/nni/experiments`` to ``$HOME/nni-experiments`` manually. (#2686) (#2753)
 * Dropped support for Python 3.5 and scikit-learn 0.20 (#2778) (#2777) (2783) (#2787) (#2788) (#2790)
 
 Others
-^^^^^^
+""""""
 
 
 * Upgrade TensorFlow version in Docker image (#2732) (#2735) (#2720)
 
 Examples
---------
+^^^^^^^^
 
 
 * Remove gpuNum in assessor examples (#2641)
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Improve customized tuner documentation (#2628)
@@ -230,7 +230,7 @@ Documentation
 * Improve documentation structure for model compression (#2676)
 
 Bug fixes
----------
+^^^^^^^^^
 
 
 * Fix mkdir error in training service (#2673)
@@ -246,13 +246,13 @@ Bug fixes
 * Fix nnictl experiment delete (#2791)
 
 Release 1.7 - 7/8/2020
-======================
+----------------------
 
 Major Features
---------------
+^^^^^^^^^^^^^^
 
 Training Service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Support AML(Azure Machine Learning) platform as NNI training service.
@@ -260,7 +260,7 @@ Training Service
 * `Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.md#how-to-use-training-service>`__.
 
 Neural Architecture Search (NAS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""
 
 
 * 
@@ -270,7 +270,7 @@ Neural Architecture Search (NAS)
   `Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.md>`__.
 
 Model Compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * Improve Model Speedup: track more dependencies among layers and automatically resolve mask conflict, support the speedup of pruned resnet.
@@ -283,19 +283,19 @@ Model Compression
   Update lottery ticket pruner to export winning ticket.
 
 Examples
-^^^^^^^^
+""""""""
 
 
 * Automatically optimize tensor operators on NNI with a new `customized tuner OpEvo <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.md>`__.
 
 Built-in tuners/assessors/advisors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""""
 
 
 * `Allow customized tuners/assessor/advisors to be installed as built-in algorithms <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.md>`__.
 
 WebUI
-^^^^^
+"""""
 
 
 * Support visualizing nested search space more friendly.
@@ -303,14 +303,14 @@ WebUI
 * Enhancements to trial duration display.
 
 Others
-^^^^^^
+""""""
 
 
 * Provide utility function to merge parameters received from NNI
 * Support setting paiStorageConfigName in pai mode
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Improve `documentation for model compression <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md>`__
@@ -320,7 +320,7 @@ Documentation
 * Homepage migration to readthedoc.
 
 Bug Fixes
----------
+^^^^^^^^^
 
 
 * Fix bug for model graph with shared nn.Module

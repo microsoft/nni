@@ -9,8 +9,8 @@ from typing import Optional, Tuple
 
 import colorama
 
+import nni_node  # pylint: disable=import-error
 import nni.runtime.protocol
-import nni_node
 
 from .config import ExperimentConfig
 from .config import convert
@@ -113,15 +113,9 @@ def _check_rest_server(port: int, retry: int = 3) -> None:
 
 
 def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
-    if config.training_service.platform == 'local':
-        rest.post(port, '/experiment', config.json())
-        return
-
-    for cluster_metadata in convert.to_cluster_metadata(config):
-        rest.put(port, '/experiment/cluster-metadata', cluster_metadata)
-    rest.post(port, '/experiment', convert.to_rest_json(config))
+    rest.post(port, '/experiment', config.json())
 
 
 def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str, name: str, pid: int, logDir: str) -> None:
-    experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)
+    experiments_config = Experiments()
+    experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)

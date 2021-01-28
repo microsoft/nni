@@ -4,8 +4,6 @@
 import os
 from colorama import Fore
 
-NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), 'nni-experiments')
-
 NNI_HOME_DIR = os.path.join(os.path.expanduser('~'), 'nni-experiments')
 
 ERROR_INFO = 'ERROR: '

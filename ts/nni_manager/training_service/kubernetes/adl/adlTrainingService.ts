@@ -8,6 +8,7 @@ import * as component from '../../../common/component';
 
 import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { ExperimentConfig } from '../../../common/manager';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
@@ -246,7 +247,7 @@ done
             throw new Error('Adl rest server port is undefined');
         }
 
-        if (this.nniManagerIpConfig === undefined) {
+        if (this.nniManagerIp === undefined) {
             throw new Error('Adl nniManager ip config is undefined');
         }
 
@@ -256,7 +257,6 @@ done
         const hyperParameters: string = form.hyperParameters.value;
         const hyperParametersFile: string = generateParamFileName(form.hyperParameters);
         const nniManagerPort: string = this.kubernetesRestServerPort.toString();
-        const nniManagerIp: string = this.nniManagerIpConfig.nniManagerIp;
         let nniManagerVersion: string = '';
         if (this.versionCheck) {
             nniManagerVersion = await getVersion();
@@ -288,7 +288,7 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
             runScriptTemplate, codeDir, outputDir,
             jobId, expId, seqId, nvidiaScript,
             hyperParameters, hyperParametersFile, command,
-            nniManagerIp, nniManagerPort, nniManagerVersion,
+            this.nniManagerIp, nniManagerPort, nniManagerVersion,
             this.logCollection);
         return Promise.resolve(runScript);
     }
@@ -305,56 +305,21 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
         }
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        this.log.info('SetCluster ' + key + ', ' +value);
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                this.adlTrialConfig = <AdlTrialConfig>JSON.parse(value);
-                let namespace: string = 'default';
-                if (this.adlTrialConfig.namespace !== undefined) {
-                    namespace = this.adlTrialConfig.namespace;
-                }
-                this.genericK8sClient.setNamespace = namespace;
-                this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
-                break;
-            }
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            default:
-        }
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        this.log.info(`initConfig ${config}`);
 
-        return Promise.resolve();
+        this.nniManagerIp = config.nniManagerIp;
+
+        this.adlTrialConfig = <AdlTrialConfig>config.trainingService;
+        let namespace: string = 'default';
+        if (this.adlTrialConfig.namespace !== undefined) {
+            namespace = this.adlTrialConfig.namespace;
+        }
+        this.genericK8sClient.setNamespace = namespace;
+        this.kubernetesCRDClient = AdlClientFactory.createClient(namespace);
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
-        let result: string;
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (this.adlTrialConfig === undefined) {
-                    return Promise.reject(`${key} is not set yet`);
-                }
 
-                result = JSON.stringify(this.adlTrialConfig);
-                break;
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                if (this.nniManagerIpConfig === undefined) {
-                    return Promise.reject(`${key} is not set yet`);
-                }
-
-                result = JSON.stringify(this.nniManagerIpConfig);
-                break;
-            default:
-                return Promise.reject(`${key} not set`);
-        }
-
-        return Promise.resolve(result);
-    }
 }
+
 export { AdlTrainingService };

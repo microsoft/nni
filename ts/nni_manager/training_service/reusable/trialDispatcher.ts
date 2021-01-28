@@ -12,6 +12,7 @@ import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { ExperimentConfig } from '../../common/manager';
 import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
@@ -45,7 +46,7 @@ class TrialDispatcher extends TrainingService {
 
     private enableVersionCheck: boolean = true;
 
-    private trialConfig: TrialConfig | undefined;
+    private config?: ExperimentConfig;
 
     private readonly trials: Map<string, TrialDetail>;
     private readonly environments: Map<string, EnvironmentInformation>;
@@ -121,8 +122,8 @@ class TrialDispatcher extends TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialDetail> {
-        if (this.trialConfig === undefined) {
-            throw new Error(`trialConfig not initialized!`);
+        if (this.config === undefined) {
+            throw new Error(`config not initialized!`);
         }
 
         const trialId: string = uniqueString(5);
@@ -175,8 +176,8 @@ class TrialDispatcher extends TrainingService {
     }
 
     public async run(): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error(`trial config shouldn't be undefined in run()`);
+        if (this.config === undefined) {
+            throw new Error(`config shouldn't be undefined in run()`);
         }
         for(const environmentService of this.environmentServiceList) {
             
@@ -185,7 +186,7 @@ class TrialDispatcher extends TrainingService {
             runnerSettings.nniManagerPort = getBasePort() + 1;
             runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;
-            runnerSettings.command = this.trialConfig.command;
+            runnerSettings.command = this.config!.trialCommand;
             runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
             runnerSettings.logCollection = this.logCollection;
             runnerSettings.platform = environmentService.getName;
@@ -203,10 +204,10 @@ class TrialDispatcher extends TrainingService {
                 this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
                 storageService = new MountedStorageService();
                 const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
-                storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
+                storageService.initialize(this.config.trialCodeDirectory, environmentLocalTempFolder);
             }
             // Copy the compressed file to remoteDirectory and delete it
-            const codeDir = path.resolve(this.trialConfig.codeDir);
+            const codeDir = path.resolve(this.config.trialCodeDirectory);
             const envDir = storageService.joinPath("envs");
             const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
             storageService.rename(codeFileName, "nni-code.tar.gz");
@@ -254,51 +255,33 @@ class TrialDispatcher extends TrainingService {
         return true;
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIp = (<NNIManagerIpConfig>JSON.parse(value)).nniManagerIp;
-                break;
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.enableVersionCheck = (value === 'true' || value === 'True');
-                
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.trialConfig = <TrialConfig>JSON.parse(value);
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        this.nniManagerIp = config.nniManagerIp;
 
-                if (this.trialConfig.reuseEnvironment !== undefined) {
-                    this.reuseEnvironment = this.trialConfig.reuseEnvironment;
-                }
-                if (this.trialConfig.gpuNum !== undefined && this.trialConfig.gpuNum > 0) {
-                    this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
-                    this.enableGpuScheduler = true;
-                }
+        this.enableVersionCheck = !config.debug;
 
-                // Validate to make sure codeDir doesn't have too many files
-                await validateCodeDir(this.trialConfig.codeDir);
-                break;
-            case TrialConfigMetadataKey.PLATFORM_LIST: {
-                const platforms: string[] = value.split(",");
-                for(const platform of platforms) {
-                    const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
-                    environmentService.initCommandChannel(this.commandEmitter);
-                    this.environmentMaintenceLoopInterval =
-                      Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);
-                    this.commandChannelSet.add(environmentService.getCommandChannel);
-                    this.environmentServiceList.push(environmentService);
-                }
-            }
+        this.logCollection = 'none';
+
+        this.config = config;
+
+        this.reuseEnvironment = !!config.trainingService.reuseMode;
+        if (config.trialGpuNumber !== undefined && config.trialGpuNumber > 0) {
+            this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
+            this.enableGpuScheduler = true;
         }
-        for(const environmentService of this.environmentServiceList) {
-            await environmentService.config(key, value);
-        }
-    }
 
-    public getClusterMetadata(_key: string): Promise<string> {
-        throw new Error('Not implemented!');
+        // Validate to make sure codeDir doesn't have too many files
+        await validateCodeDir(config.trialCodeDirectory);
+
+        const platforms: string[] = config.trainingService.platforms.split(",");
+        for(const platform of platforms) {
+            const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
+            environmentService.initCommandChannel(this.commandEmitter);
+            this.environmentMaintenceLoopInterval =
+                Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);
+            this.commandChannelSet.add(environmentService.getCommandChannel);
+            this.environmentServiceList.push(environmentService);
+        }
     }
 
     public async cleanUp(): Promise<void> {
@@ -532,7 +515,7 @@ class TrialDispatcher extends TrainingService {
                     if (undefined === trial) {
                         throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
                     }
-                    const gpuNum = this.trialConfig ? this.trialConfig.gpuNum : undefined;
+                    const gpuNum = this.config ? this.config.trialGpuNumber : undefined;
                     const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, gpuNum, trial);
                     switch (result.resultType) {
                         case ScheduleResultType.REQUIRE_EXCEED_TOTAL:
@@ -676,7 +659,7 @@ class TrialDispatcher extends TrainingService {
     }
 
     private async allocateEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
-        if (this.trialConfig === undefined) {
+        if (this.config === undefined) {
             throw new Error(`TrialDispatcher: trialConfig shouldn't be undefined in allocateEnvironment.`);
         }
 
@@ -691,7 +674,7 @@ class TrialDispatcher extends TrainingService {
         // convert assigned gpus to string for nvidia visible settings
         // undefined means no constraint, [] means no gpu visible.
         let gpuIndices: string | undefined = undefined;
-        if (undefined !== this.trialConfig.gpuNum) {
+        if (undefined !== this.config.trialGpuNumber) {
             const gpuArray: number[] = [];
             if (undefined !== trial.assignedGpus) {
                 trial.assignedGpus.map((value) => {

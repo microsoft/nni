@@ -9,6 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { ExperimentConfig } from '../../../common/manager';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
@@ -117,65 +118,40 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return Promise.resolve(trialJobDetail);
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
-            case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG: {
-                const frameworkcontrollerClusterJsonObject: any = JSON.parse(value);
-                this.fcClusterConfig = FrameworkControllerClusterConfigFactory
-                  .generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
-                if (this.fcClusterConfig.storageType === 'azureStorage') {
-                    const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
-                      <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
-                    this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
-                    this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
-                    await this.createAzureStorage(
-                        azureFrameworkControllerClusterConfig.keyVault.vaultName,
-                        azureFrameworkControllerClusterConfig.keyVault.name
-                    );
-                } else if (this.fcClusterConfig.storageType === 'nfs') {
-                    const nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS =
-                      <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
-                    await this.createNFSStorage(
-                        nfsFrameworkControllerClusterConfig.nfs.server,
-                        nfsFrameworkControllerClusterConfig.nfs.path
-                    );
-                }
-                this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient();
-                break;
-            }
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                const frameworkcontrollerTrialJsonObjsect: any = JSON.parse(value);
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        this.nniManagerIp = config.nniManagerIp;
 
-                this.fcTrialConfig = new FrameworkControllerTrialConfig(
-                    frameworkcontrollerTrialJsonObjsect.codeDir,
-                    frameworkcontrollerTrialJsonObjsect.taskRoles
-                );
-
-                // Validate to make sure codeDir doesn't have too many files
-                try {
-                    await validateCodeDir(this.fcTrialConfig.codeDir);
-                    //upload codeDir to storage
-                    this.copyExpCodeDirPromise = this.uploadFolder(this.fcTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
-                } catch (error) {
-                    this.log.error(error);
-
-                    return Promise.reject(new Error(error));
-                }
-                break;
-            }
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            default:
+        const frameworkcontrollerClusterJsonObject: any = config.trainingService;
+        this.fcClusterConfig = FrameworkControllerClusterConfigFactory
+        .generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
+        if (this.fcClusterConfig.storageType === 'azureStorage') {
+            const azureFrameworkControllerClusterConfig: FrameworkControllerClusterConfigAzure =
+                <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
+            this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
+            this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
+            await this.createAzureStorage(
+                azureFrameworkControllerClusterConfig.keyVault.vaultName,
+                azureFrameworkControllerClusterConfig.keyVault.name
+            );
+        } else if (this.fcClusterConfig.storageType === 'nfs') {
+            const nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS =
+                <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
+            await this.createNFSStorage(
+                nfsFrameworkControllerClusterConfig.nfs.server,
+                nfsFrameworkControllerClusterConfig.nfs.path
+            );
         }
+        this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient();
 
-        return Promise.resolve();
+        this.fcTrialConfig = new FrameworkControllerTrialConfig(
+            config.trialCodeDirectory,
+            config.trainingService.taskRoles
+        );
+
+        this.log.info("Validate to make sure codeDir doesn't have too many files");
+        await validateCodeDir(this.fcTrialConfig.codeDir);
+        //upload codeDir to storage
+        this.copyExpCodeDirPromise = this.uploadFolder(this.fcTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
     }
 
     /**

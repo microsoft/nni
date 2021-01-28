@@ -7,11 +7,12 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors'
+import { ExperimentConfig } from '../../common/manager'
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
-import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
+import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -94,79 +95,20 @@ class RouterTrainingService extends TrainingService {
         await this.internalTrainingService.cancelTrialJob(trialJobId, isEarlyStopped);
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        if (this.internalTrainingService === undefined) {
-            // Need to refactor configuration, remove hybrid_config field in the future
-            if (key === TrialConfigMetadataKey.HYBRID_CONFIG){
-                this.internalTrainingService = component.get(TrialDispatcher);
-                const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("internalTrainingService not initialized!");
-                }
-                // Initialize storageService for pai, only support singleton for now, need refactor
-                if (heterogenousConfig.trainingServicePlatforms.includes('pai')) {
-                    Container.bind(StorageService)
-                    .to(MountedStorageService)
-                    .scope(Scope.Singleton);
-                }
-                await this.internalTrainingService.setClusterMetadata('platform_list', 
-                    heterogenousConfig.trainingServicePlatforms.join(','));
-            } else if (key === TrialConfigMetadataKey.LOCAL_CONFIG) {
-                this.internalTrainingService = component.get(TrialDispatcher);
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("internalTrainingService not initialized!");
-                }
-                await this.internalTrainingService.setClusterMetadata('platform_list', 'local');
-            } else if (key === TrialConfigMetadataKey.PAI_CLUSTER_CONFIG) {
-                const config = <PAIClusterConfig>JSON.parse(value);
-                if (config.reuse === true) {
-                    this.log.info(`reuse flag enabled, use EnvironmentManager.`);
-                    this.internalTrainingService = component.get(TrialDispatcher);
-                    // TODO to support other storages later.
-                    Container.bind(StorageService)
-                        .to(MountedStorageService)
-                        .scope(Scope.Singleton);
-                    if (this.internalTrainingService === undefined) {
-                        throw new Error("internalTrainingService not initialized!");
-                    }
-                    await this.internalTrainingService.setClusterMetadata('platform_list', 'pai');
-                } else {
-                    this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
-                    this.internalTrainingService = component.get(PAIK8STrainingService);
-                }
-            } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
-                this.internalTrainingService = component.get(TrialDispatcher);
-                if (this.internalTrainingService === undefined) {
-                    throw new Error("internalTrainingService not initialized!");
-                }
-                await this.internalTrainingService.setClusterMetadata('platform_list', 'aml');
-            } else if (key === TrialConfigMetadataKey.REMOTE_CONFIG) {
-                const config = <RemoteConfig>JSON.parse(value);
-                if (config.reuse === true) {
-                    this.log.info(`reuse flag enabled, use EnvironmentManager.`);
-                    this.internalTrainingService = component.get(TrialDispatcher);
-                    if (this.internalTrainingService === undefined) {
-                        throw new Error("internalTrainingService not initialized!");
-                    }
-                    await this.internalTrainingService.setClusterMetadata('platform_list', 'remote');
-                } else {
-                    this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
-                    this.internalTrainingService = component.get(RemoteMachineTrainingService);
-                }
-            }
-        }
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        this.internalTrainingService = component.get(TrialDispatcher);
         if (this.internalTrainingService === undefined) {
             throw new Error("internalTrainingService not initialized!");
         }
-        await this.internalTrainingService.setClusterMetadata(key, value);
-        
-    }
 
-    public async getClusterMetadata(key: string): Promise<string> {
-        if (this.internalTrainingService === undefined) {
-            throw new Error("TrainingService is not assigned!");
+        if (config.trainingService.platform === 'hybrid') {
+            // Initialize storageService for pai, only support singleton for now, need refactor
+            if (config.trainingService.platforms.includes('openpai')) {
+                Container.bind(StorageService).to(MountedStorageService).scope(Scope.Singleton);
+            }
         }
-        return await this.internalTrainingService.getClusterMetadata(key);
+
+        await this.internalTrainingService.initConfig(config);
     }
 
     public async cleanUp(): Promise<void> {

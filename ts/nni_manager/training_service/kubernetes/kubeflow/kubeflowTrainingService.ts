@@ -10,6 +10,7 @@ import * as path from 'path';
 import * as component from '../../../common/component';
 
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { ExperimentConfig } from '../../../common/manager';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
@@ -113,70 +114,46 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobDetail);
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
+    public async initConfig(config: ExperimentConfig): Promise<void> {
+        this.nniManagerIp = config.nniManagerIp;
 
-            case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG: {
-                const kubeflowClusterJsonObject: object = JSON.parse(value);
-                this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
-                if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
-                    const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
-                    this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
-                    this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-                    await this.createAzureStorage(
-                        azureKubeflowClusterConfig.keyVault.vaultName,
-                        azureKubeflowClusterConfig.keyVault.name
-                    );
-                } else if (this.kubeflowClusterConfig.storageType === 'nfs') {
-                    const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
-                    await this.createNFSStorage(
-                        nfsKubeflowClusterConfig.nfs.server,
-                        nfsKubeflowClusterConfig.nfs.path
-                    );
-                }
-                this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
-                    this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
-                break;
-            }
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                if (this.kubeflowClusterConfig === undefined) {
-                    this.log.error('kubeflow cluster config is not initialized');
+        const kubeflowClusterJsonObject: object = config.trainingService;
+        this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
+        if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
+            const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
+            this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
+            this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
+            await this.createAzureStorage(
+                azureKubeflowClusterConfig.keyVault.vaultName,
+                azureKubeflowClusterConfig.keyVault.name
+            );
+        } else if (this.kubeflowClusterConfig.storageType === 'nfs') {
+            const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
+            await this.createNFSStorage(
+                nfsKubeflowClusterConfig.nfs.server,
+                nfsKubeflowClusterConfig.nfs.path
+            );
+        }
+        this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
+            this.kubeflowClusterConfig.operator, this.kubeflowClusterConfig.apiVersion);
 
-                    return Promise.reject(new Error('kubeflow cluster config is not initialized'));
-                }
-
-                assert(this.kubeflowClusterConfig !== undefined);
-                const kubeflowTrialJsonObjsect: object = JSON.parse(value);
-                this.kubeflowTrialConfig = KubeflowTrialConfigFactory.generateKubeflowTrialConfig(
-                    kubeflowTrialJsonObjsect,
-                    this.kubeflowClusterConfig.operator
-                );
-
-                // Validate to make sure codeDir doesn't have too many files
-                try {
-                    await validateCodeDir(this.kubeflowTrialConfig.codeDir);
-                    //upload codeDir to storage
-                    this.copyExpCodeDirPromise = this.uploadFolder(this.kubeflowTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
-                } catch (error) {
-                    this.log.error(error);
-
-                    return Promise.reject(new Error(error));
-                }
-                break;
-            }
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            default:
+        if (this.kubeflowClusterConfig === undefined) {
+            this.log.error('kubeflow cluster config is not initialized');
+            throw new Error('kubeflow cluster config is not initialized');
         }
 
-        return Promise.resolve();
+        assert(this.kubeflowClusterConfig !== undefined);
+        this.kubeflowTrialConfig = KubeflowTrialConfigFactory.generateKubeflowTrialConfig(config);
+
+        // Validate to make sure codeDir doesn't have too many files
+        try {
+            await validateCodeDir(this.kubeflowTrialConfig.codeDir);
+            //upload codeDir to storage
+            this.copyExpCodeDirPromise = this.uploadFolder(this.kubeflowTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
+        } catch (error) {
+            this.log.error(error);
+            throw error;
+        }
     }
 
     /**

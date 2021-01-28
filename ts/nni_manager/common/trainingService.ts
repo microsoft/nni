@@ -82,11 +82,11 @@ abstract class TrainingService {
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
-    public abstract get isMultiPhaseJobSupported(): boolean;
+    public get isMultiPhaseJobSupported(): boolean { return false; }
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
-    public abstract setClusterMetadata(key: string, value: string): Promise<void>;
-    public abstract getClusterMetadata(key: string): Promise<string>;
+    public async setClusterMetadata(key: string, value: string): Promise<void> { throw new Error(); }
+    public async getClusterMetadata(key: string): Promise<string> { throw new Error(); }
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
     public async initConfig(config: ExperimentConfig): Promise<void> { }
