@@ -137,7 +137,7 @@ class InputChoice(nn.Module):
     Parameters
     ----------
     n_candidates : int
-        Number of inputs to choose from.
+        Number of inputs to choose from. It is required.
     n_chosen : int
         Recommended inputs to choose. If None, mutator is instructed to select any.
     reduction : str
@@ -146,7 +146,7 @@ class InputChoice(nn.Module):
         Identifier of the input choice.
     """
 
-    def __init__(self, n_candidates: int = None, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
+    def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -215,16 +215,16 @@ class ChosenInputs(nn.Module):
         return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
 
     def _tensor_reduction(self, reduction_type, tensor_list):
-        if reduction_type == "none":
+        if reduction_type == 'none':
             return tensor_list
         if not tensor_list:
             return None  # empty. return None for now
         if len(tensor_list) == 1:
             return tensor_list[0]
-        if reduction_type == "sum":
+        if reduction_type == 'sum':
             return sum(tensor_list)
-        if reduction_type == "mean":
+        if reduction_type == 'mean':
             return sum(tensor_list) / len(tensor_list)
-        if reduction_type == "concat":
+        if reduction_type == 'concat':
             return torch.cat(tensor_list, dim=1)
-        raise ValueError("Unrecognized reduction policy: \"{}\"".format(reduction_type))
+        raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')

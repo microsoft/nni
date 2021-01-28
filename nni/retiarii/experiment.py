@@ -18,11 +18,9 @@ from .converter import convert_to_graph
 from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
 from .trainer.interface import BaseTrainer, BaseOneShotTrainer
 from .strategies.strategy import BaseStrategy
-from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
+from .trainer import BaseOneShotTrainer
 
 _logger = logging.getLogger(__name__)
-
-OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
 
 @dataclass(init=False)
@@ -165,7 +163,7 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if isinstance(self.trainer, OneShotTrainers):
+        if isinstance(self.trainer, BaseOneShotTrainer):
             self.trainer.fit()
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
