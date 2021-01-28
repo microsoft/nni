@@ -3,6 +3,8 @@ import warnings
 from collections import defaultdict
 from typing import Any
 
+from packaging import version
+
 
 def import_(target: str, allow_none: bool = False) -> Any:
     if target is None:
@@ -13,10 +15,7 @@ def import_(target: str, allow_none: bool = False) -> Any:
 
 
 def version_larger_equal(a: str, b: str) -> bool:
-    # TODO: refactor later
-    a = a.split('+')[0]
-    b = b.split('+')[0]
-    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
+    return version.parse(a) >= version.parse(b)
 
 
 _records = {}
