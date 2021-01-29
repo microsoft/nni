@@ -1,0 +1,8 @@
+tensorflow == 1.15.4
+torch == 1.5+cpu -f https://download.pytorch.org/whl/torch_stable.html
+torchvision >= 0.6+cpu -f https://download.pytorch.org/whl/torch_stable.html
+keras == 2.1.6
+onnx
+peewee
+thop
+gym

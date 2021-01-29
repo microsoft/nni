@@ -119,8 +119,6 @@ stages:
     pool:
       vmImage: ubuntu-latest
 
-    # This platform tests lint and doc first.
-
     steps:
     - task: UsePythonVersion@0
       inputs:
@@ -128,10 +126,24 @@ stages:
       displayName: Configure Python version
 
     - script: |
+        sudo apt-get install -y pandoc
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
+    - script: |
         set -e
-        python -m pip install --upgrade pip setuptools
-        python -m pip install pytest coverage
-        python -m pip install pylint flake8
+        python -m pip install -U -r dependencies/setup.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python tools
 
@@ -141,40 +153,9 @@ stages:
 
     - script: |
         set -e
-        cd ts/nni_manager
-        yarn eslint
-        cd ../webui
-        yarn eslint
-      displayName: ESLint
-
-    # FIXME: temporarily fixed to pytorch 1.6 as 1.7 won't work with compression
-
-    - script: |
-        set -e
-        sudo apt-get install -y pandoc
-        python -m pip install --upgrade pygments
-        python -m pip install "torch==1.6.0+cpu" "torchvision==0.7.0+cpu" -f https://download.pytorch.org/whl/torch_stable.html
-        python -m pip install tensorflow
-        python -m pip install gym onnx peewee thop graphviz
-        python -m pip install sphinx sphinx-argparse sphinx-rtd-theme sphinxcontrib-websupport nbsphinx
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+        python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[SMAC,BOHB]
       displayName: Install extra dependencies
-
-    - script: |
-        set -e
-        python -m pylint --rcfile pylintrc nni
-        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-      displayName: pylint and flake8
-
-    - script: |
-        cd docs/en_US
-        sphinx-build -M html . _build -W --keep-going -T
-      displayName: Check Sphinx documentation
 
     - script: |
         set -e
@@ -214,9 +195,24 @@ stages:
       displayName: Configure Python version
 
     - script: |
+        sudo apt-get install -y pandoc
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
+    - script: |
         set -e
-        python -m pip install --upgrade pip setuptools
-        python -m pip install pytest coverage
+        python -m pip install -U -r dependencies/setup.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python tools
 
@@ -226,11 +222,7 @@ stages:
 
     - script: |
         set -e
-        python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-        python -m pip install tensorflow==1.15.4
-        python -m pip install keras==2.1.6
-        python -m pip install gym onnx peewee
-        sudo apt-get install swig -y
+        python -m pip install -r dependencies/recommended_legacy.txt
         python -m pip install -e .[SMAC,BOHB]
       displayName: Install extra dependencies
 
@@ -264,6 +256,21 @@ stages:
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
+
+    - script: |
+        brew install swig@3
+        rm -f /usr/local/bin/swig
+        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      displayName: Install brew packages
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
 
     - script: |
         set -e
