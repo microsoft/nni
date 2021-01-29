@@ -118,13 +118,12 @@ export class AMLEnvironmentService extends EnvironmentService {
         if (!fs.existsSync(environmentLocalTempFolder)) {
             await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
         }
-        if (environment.useSharedStorage) {
+        if (amlEnvironment.useSharedStorage) {
             const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
             const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
-            environment.command = `import os\nos.system('${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}')`;
-        } else {
-            environment.command = `import os\nos.system('${amlEnvironment.command}')`;
+            amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`;
         }
+        environment.command = `import os\nos.system('${amlEnvironment.command}')`;
         environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
         environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
