@@ -38,13 +38,9 @@ import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
 import { Trial } from '../../static/model/trial';
 
-const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
-echarts.registerTheme('my_theme', {
-    color: '#3c8dbc'
-});
 
 type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
 const searchOptionLiterals = {

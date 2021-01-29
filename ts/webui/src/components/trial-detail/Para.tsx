@@ -24,7 +24,6 @@ interface ParaState {
 interface ParaProps {
     trials: Array<TableObj>;
     searchSpace: SearchSpace;
-    whichChart: string;
 }
 
 class Para extends React.Component<ParaProps, ParaState> {
@@ -81,10 +80,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     componentDidUpdate(prevProps: ParaProps): void {
         // FIXME: redundant update
         if (this.props.trials !== prevProps.trials || this.props.searchSpace !== prevProps.searchSpace) {
-            const { whichChart } = this.props;
-            if (whichChart === 'Hyper-parameter') {
-                this.renderParallelCoordinates();
-            }
+            this.renderParallelCoordinates();
         }
     }
 
