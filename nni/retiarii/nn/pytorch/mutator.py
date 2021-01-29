@@ -1,68 +1,88 @@
 from typing import Any, List, Union
 
 from ...mutator import Mutator
-from ...graph import Model
+from ...graph import Model, Node
 
 
 class LayerChoiceMutator(Mutator):
-    def __init__(self, node_name: str, candidates: List[Any]):
+    def __init__(self, nodes: List[Node]):
         super().__init__()
-        self.node_name = node_name
-        self.candidates = candidates
+        self.nodes = nodes
 
     def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        indexes = [i for i in range(len(self.candidates))]
-        chosen_index = self.choice(indexes)
-        chosen_cand = self.candidates[chosen_index]
-        target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
+        n_candidates = len(self.nodes[0].operation.parameters['candidates'])
+        indices = list(range(n_candidates))
+        chosen_index = self.choice(indices)
+        for node in self.nodes:
+            target = model.get_node_by_name(node.name)
+            chosen_cand = target.operation.parameters['candidates'][chosen_index]
+            target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
 
 
 class InputChoiceMutator(Mutator):
-    def __init__(self, node_name: str, n_candidates: int, n_chosen: int, reduction: str):
+    def __init__(self, nodes: List[Node]):
         super().__init__()
-        self.node_name = node_name
-        self.n_candidates = n_candidates
-        self.n_chosen = n_chosen
-        self.reduction = reduction
+        self.nodes = nodes
 
     def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        candidates = [i for i in range(self.n_candidates)]
-        chosen = [self.choice(candidates) for _ in range(self.n_chosen)]
-        target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
-                                {'chosen': chosen, 'reduction': self.reduction})
+        n_candidates = self.nodes[0].operation.parameters['n_candidates']
+        n_chosen =  self.nodes[0].operation.parameters['n_chosen']
+        candidates = list(range(n_candidates))
+        chosen = [self.choice(candidates) for _ in range(n_chosen)]
+        for node in self.nodes:
+            target = model.get_node_by_name(node.name)
+            target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
+                                    {'chosen': chosen, 'reduction': node.operation.parameters['reduction']})
 
 
 class ValueChoiceMutator(Mutator):
-    def __init__(self, node_name: str, candidates: List[Any]):
+    def __init__(self, nodes: List[Node], candidates: List[Any]):
         super().__init__()
-        self.node_name = node_name
+        self.nodes = nodes
         self.candidates = candidates
 
     def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
         chosen = self.choice(self.candidates)
-        target.update_operation('prim::Constant', {'value': chosen})
+        for node in self.nodes:
+            target = model.get_node_by_name(node.name)
+            target.update_operation('prim::Constant', {'value': chosen})
 
 
 def process_inline_mutation(model: Model) -> Union[None, List[Mutator]]:
-    lc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice')
-    ic_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice')
-    vc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice')
+    lc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice'))
+    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
+    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice'))
     if not lc_nodes and not ic_nodes and not vc_nodes:
         return None
     applied_mutators = []
-    for node in lc_nodes:
-        mutator = LayerChoiceMutator(node.name, node.operation.parameters['candidates'])
+    for node_list in lc_nodes:
+        assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
+            'Layer choice with the same label must have the same number of candidates.'
+        mutator = LayerChoiceMutator(node_list)
         applied_mutators.append(mutator)
-    for node in ic_nodes:
-        mutator = InputChoiceMutator(node.name,
-                                     node.operation.parameters['n_candidates'],
-                                     node.operation.parameters['n_chosen'],
-                                     node.operation.parameters['reduction'])
+    for node_list in ic_nodes:
+        assert _is_all_equal(map(lambda node: node.operation.parameters['n_candidates'], node_list)) and \
+            _is_all_equal(map(lambda node: node.operation.parameters['n_chosen'], node_list)), \
+            'Input choice with the same label must have the same number of candidates.'
+        mutator = InputChoiceMutator(node_list)
         applied_mutators.append(mutator)
-    for node in vc_nodes:
-        mutator = ValueChoiceMutator(node.name, node.operation.parameters['candidates'])
+    for node_list in vc_nodes:
+        assert _is_all_equal(map(lambda node: node.operation.parameters['candidates'], node_list)), \
+            'Value choice with the same label must have the same candidates.'
+        mutator = ValueChoiceMutator(node_list, node_list[0].operation.parameters['candidates'])
         applied_mutators.append(mutator)
     return applied_mutators
+
+
+def _is_all_equal(lst):
+    return all([lst[0] == t for t in lst])
+
+
+def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
+    result = {}
+    for node in nodes:
+        label = node.operation.parameters['label']
+        if label not in result:
+            result[label] = []
+        result[label].append(node)
+    return list(result.values())

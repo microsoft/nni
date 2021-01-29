@@ -127,7 +127,7 @@ class LayerChoice(nn.Module):
         return list(self)
 
     def forward(self, x):
-        # TODO: add warning when executing in standalone
+        warnings.warn('You should be run forward of this module directly.')
         return x
 
 
@@ -183,7 +183,7 @@ class InputChoice(nn.Module):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
-        # TODO: add warning when executing in standalone
+        warnings.warn('You should be run forward of this module directly.')
         return candidate_inputs[0]
 
 
@@ -202,14 +202,14 @@ class ValueChoice(nn.Module):
             def forward(self, x: torch.Tensor, depth: int):
                 ...
 
-            class Net(nn.Module):
-                def __init__(self):
-                    super().__init__()
-                    self.depth = nn.ValueChoice([2, 3, 4])
-                    self.conv = DynamicDepthModule()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.depth = nn.ValueChoice([2, 3, 4])
+                self.conv = DynamicDepthModule()
 
-                def forward(self, x):
-                    return self.conv(x, self.depth())
+            def forward(self, x):
+                return self.conv(x, self.depth())
 
     The following use case is currently not supported because ValueChoice cannot be called in ``__init__``.
     Please use LayerChoice as a workaround.
@@ -238,7 +238,7 @@ class ValueChoice(nn.Module):
         return self._label
 
     def forward(self):
-        # TODO: add warning when executing in standalone
+        warnings.warn('You should be run forward of this module directly.')
         return 0
 
 
