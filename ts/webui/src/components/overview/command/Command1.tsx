@@ -11,26 +11,17 @@ export const Command1 = (): any => {
     const builtinName: string[] = [];
     if (tuner !== undefined) {
         title.push('Tuner');
-        if (tuner.builtinTunerName !== undefined) {
-            builtinName.push(tuner.builtinTunerName);
-        }
+        builtinName.push(tuner.builtinTunerName || tuner.className || 'unknown');
     }
 
     if (advisor !== undefined) {
         title.push('Advisor');
-        if (advisor.builtinAdvisorName !== undefined) {
-            builtinName.push(advisor.builtinAdvisorName);
-        }
-        if (advisor.className !== undefined) {
-            builtinName.push(advisor.className);
-        }
+        builtinName.push(advisor.builtinAdvisorName || advisor.className || 'unknown');
     }
 
     if (assessor !== undefined) {
         title.push('Assessor');
-        if (assessor.builtinAssessorName !== undefined) {
-            builtinName.push(assessor.builtinAssessorName);
-        }
+        builtinName.push(assessor.builtinAssessorName || assessor.className || 'unknown');
     }
 
     return (

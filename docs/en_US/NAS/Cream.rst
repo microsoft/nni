@@ -1,7 +1,7 @@
 Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search
 =======================================================================================
 
-* `Paper <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__ 
+* `Paper <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__
 * `Models-Google Drive <https://drive.google.com/drive/folders/1NLGAbBF9bA1IUAxKlk2VjgRXhr6RHvRW?usp=sharing>`__
 * `Models-Baidu Disk (PWD: wqw6) <https://pan.baidu.com/s/1TqQNm2s14oEdyNPimw3T9g>`__
 * `BibTex <https://scholar.googleusercontent.com/scholar.bib?q=info:ICWVXc_SsKAJ:scholar.google.com/&output=citation&scisdr=CgUmooXfEMfTi0cV5aU:AAGBfm0AAAAAX7sQ_aXoamdKRaBI12tAVN8REq1VKNwM&scisig=AAGBfm0AAAAAX7sQ_RdYtp6BSro3zgbXVJU2MCgsG730&scisf=4&ct=citation&cd=-1&hl=ja>`__

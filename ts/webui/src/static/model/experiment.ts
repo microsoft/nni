@@ -128,7 +128,19 @@ class Experiment {
 
     get optimizeMode(): string {
         const tuner = this.profile.params.tuner;
-        return tuner && tuner.classArgs && tuner.classArgs.optimize_mode ? tuner.classArgs.optimize_mode : 'unknown';
+        const advisor = this.profile.params.advisor;
+        const assessor = this.profile.params.assessor;
+        const resultTuner =
+            tuner && tuner.classArgs && tuner.classArgs.optimize_mode ? tuner.classArgs.optimize_mode : undefined;
+        const resultAdvisor =
+            advisor && advisor.classArgs && advisor.classArgs.optimize_mode
+                ? advisor.classArgs.optimize_mode
+                : undefined;
+        const resultAssessor =
+            assessor && assessor.classArgs && assessor.classArgs.optimize_mode
+                ? assessor.classArgs.optimize_mode
+                : undefined;
+        return resultTuner || resultAdvisor || resultAssessor || 'unknown';
     }
 
     get trainingServicePlatform(): string {

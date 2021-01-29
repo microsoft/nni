@@ -204,39 +204,6 @@ class Overview extends React.Component<{}, OverviewState> {
         return bestTrials;
     }
 
-    private generateAccuracyGraph(bestTrials: Trial[]): object {
-        const xSequence = bestTrials.map(trial => trial.sequenceId);
-        const ySequence = bestTrials.map(trial => trial.accuracy);
-
-        return {
-            // support max show 0.0000000
-            grid: {
-                x: 60,
-                y: 40
-            },
-            tooltip: {
-                trigger: 'item'
-            },
-            xAxis: {
-                name: 'Trial',
-                type: 'category',
-                data: xSequence
-            },
-            yAxis: {
-                name: 'Default metric',
-                type: 'value',
-                scale: true,
-                data: ySequence
-            },
-            series: [
-                {
-                    symbolSize: 6,
-                    type: 'scatter',
-                    data: ySequence
-                }
-            ]
-        };
-    }
 }
 
 export default Overview;
