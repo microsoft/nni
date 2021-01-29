@@ -254,8 +254,6 @@ if __name__ == '__main__':
         exit(1)
     check_version(args)
     try:
-        if NNI_PLATFORM == 'paiYarn' and is_multi_phase():
-            fetch_parameter_file(args)
         if NNI_PLATFORM == 'adl':
             _set_adaptdl_signal_handler()
         main_loop(args)

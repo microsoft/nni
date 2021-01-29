@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 try:
-    from .version import __version__
+    from .version import __version__  # pylint: disable=import-error
 except ModuleNotFoundError:
     __version__ = '999.dev0'
 
