@@ -37,8 +37,6 @@ class FilterBtns extends React.Component<FilterBtnsProps, {}> {
             <React.Fragment>
                 <Dropdown
                     label='Status'
-                    // selectedKey -> single choice
-                    // selectedKeys -> multiy
                     selectedKeys={selectedStatus}
                     multiSelect
                     onChange={selectStatus.bind(this)}
