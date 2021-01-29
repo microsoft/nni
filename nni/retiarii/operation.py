@@ -106,7 +106,20 @@ class PyTorchOperation(Operation):
             return f'self.{field} = {self._to_class_name()}({kw_params})'
         return None
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        """
+        Parameters
+        ----------
+        field : str
+            the name of member submodule
+        output : str
+            the output name (lvalue) of this line of code
+        inputs : List[str]
+            variables used in this line of code
+        inputs_value : List[Any]
+            some variables are actually constant, their real values are recorded in ```inputs_value```.
+            if not constant, we simply put None at the corresponding index
+        """
         from .converter.op_types import OpTypeName
         if self._to_class_name() is not None:
             return f'{output} = self.{field}({", ".join(inputs)})'
@@ -192,13 +205,16 @@ class PyTorchOperation(Operation):
             # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
             # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
             # TODO: check requires_grad when it is true!!!
+            # TODO: thus we should write unittest to check correctness in case different pytorch versions have unknown updates
             return f'{output} = {inputs[0]}.new_zeros({inputs[1]}, dtype={inputs[2]}, device={inputs[4]})'
         elif self.type == 'aten::transpose':
             return f'{output} = {inputs[0]}.transpose({inputs[1]}, {inputs[2]})'
         elif self.type == 'aten::contiguous':
-            # TODO: find out the value mapping
-            #return f'{output} = {inputs[0]}.contiguous(memory_format={inputs[1]})'
-            return f'{output} = {inputs[0]}.contiguous(memory_format=torch.contiguous_format)'
+            # TODO: TODO write unittest for it
+            # defined in pytorch/c10/core/MemoryFormat.h
+            mem_format = {0: 'torch.contiguous_format', 1: 'torch.preserve_format', 2: 'torch.channels_last'}
+            assert inputs_value[1] in [0, 1, 2]
+            return f'{output} = {inputs[0]}.contiguous(memory_format={mem_format[inputs_value[1]]})'
         elif self.type == 'aten::detach':
             return f'{output} = {inputs[0]}.detach()'
         elif self.type == 'noop_identity':
