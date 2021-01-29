@@ -4,7 +4,7 @@ from typing import Any, List
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, blackbox_module, uid, version_larger_equal
+from ...utils import add_record, blackbox_module, del_record, uid, version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0
 
@@ -45,11 +45,17 @@ class Sequential(nn.Sequential):
         add_record(id(self), {})
         super(Sequential, self).__init__(*args)
 
+    def __del__(self):
+        del_record(id(self))
+
 
 class ModuleList(nn.ModuleList):
     def __init__(self, *args):
         add_record(id(self), {})
         super(ModuleList, self).__init__(*args)
+
+    def __del__(self):
+        del_record(id(self))
 
 
 Identity = blackbox_module(nn.Identity)
