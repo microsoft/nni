@@ -59,7 +59,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     };
 
     pointClick = (params: any): void => {
-        console.info(params);
         if (window.location.pathname === '/oview') {
             this.props.changeExpandRowIDs(params.data[2], 'chart');
         }

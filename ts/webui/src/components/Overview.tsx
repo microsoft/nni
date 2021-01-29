@@ -203,7 +203,6 @@ class Overview extends React.Component<{}, OverviewState> {
         }
         return bestTrials;
     }
-
 }
 
 export default Overview;

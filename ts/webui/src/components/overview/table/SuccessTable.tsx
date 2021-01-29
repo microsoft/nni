@@ -56,14 +56,10 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         const { columns, source, sortInfo } = this.state;
         const keepSortedSource = copyAndSort(source, sortInfo.field, sortInfo.isDescend);
         const isNoneData = source.length === 0 ? true : false;
-        console.info(this.props.expandRowIDs);
+
         return (
             <div id='succTable'>
-                <ScrollablePane
-                    className='scrollPanel'
-                    scrollbarVisibility={ScrollbarVisibility.auto}
-                    initialScrollPosition={1000}
-                >
+                <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
                     <DetailsList
                         columns={columns}
                         items={keepSortedSource}
