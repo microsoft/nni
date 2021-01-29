@@ -1,6 +1,7 @@
-from typing import Any, List
+from typing import Any, List, Union
 
 from ...mutator import Mutator
+from ...graph import Model
 
 
 class LayerChoiceMutator(Mutator):
@@ -43,3 +44,25 @@ class ValueChoiceMutator(Mutator):
         target = model.get_node_by_name(self.node_name)
         chosen = self.choice(self.candidates)
         target.update_operation('prim::Constant', {'value': chosen})
+
+
+def process_inline_mutation(model: Model) -> Union[None, List[Mutator]]:
+    lc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
+    ic_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
+    vc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.ValueChoice')
+    if not lc_nodes and not ic_nodes and not vc_nodes:
+        return None
+    applied_mutators = []
+    for node in lc_nodes:
+        mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
+        applied_mutators.append(mutator)
+    for node in ic_nodes:
+        mutator = InputChoiceMutator(node.name,
+                                     node.operation.parameters['n_candidates'],
+                                     node.operation.parameters['n_chosen'],
+                                     node.operation.parameters['reduction'])
+        applied_mutators.append(mutator)
+    for node in vc_nodes:
+        mutator = ValueChoiceMutator(node.name, node.operation.parameters['candidates'])
+        applied_mutators.append(mutator)
+    return applied_mutators

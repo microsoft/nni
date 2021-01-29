@@ -92,33 +92,10 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-    def _process_inline_mutation(self, base_model):
-        """
-        the mutators are order independent
-        """
-        from .nn.pytorch.mutator import LayerChoiceMutator, InputChoiceMutator, ValueChoiceMutator
-        lc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
-        ic_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
-        vc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.ValueChoice')
-        if not lc_nodes and not ic_nodes and not vc_nodes:
-            return None
-        applied_mutators = []
-        for node in lc_nodes:
-            mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
-            applied_mutators.append(mutator)
-        for node in ic_nodes:
-            mutator = InputChoiceMutator(node.name,
-                                         node.operation.parameters['n_candidates'],
-                                         node.operation.parameters['n_chosen'],
-                                         node.operation.parameters['reduction'])
-            applied_mutators.append(mutator)
-        for node in vc_nodes:
-            mutator = ValueChoiceMutator(node.name, node.operation.parameters['candidates'])
-            applied_mutators.append(mutator)
-        return applied_mutators
-
     def _start_strategy(self):
         import torch
+        from .nn.pytorch.mutator import process_inline_mutation
+
         try:
             script_module = torch.jit.script(self.base_model)
         except Exception as e:
@@ -134,7 +111,7 @@ class RetiariiExperiment(Experiment):
         base_model_ir.apply_trainer(trainer_config['modulename'], trainer_config['args'])
 
         # handle inline mutations
-        mutators = self._process_inline_mutation(base_model_ir)
+        mutators = process_inline_mutation(base_model_ir)
         if mutators is not None and self.applied_mutators:
             raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, \
                 do not use mutators when you use LayerChoice/InputChoice')

@@ -9,7 +9,6 @@ from ...utils import add_record, blackbox_module, uid, version_larger_equal
 # NOTE: support pytorch version >= 1.5.0
 
 __all__ = [
-    'LayerChoice', 'InputChoice', 'Placeholder',
     'Module', 'Sequential', 'ModuleList',  # TODO: 'ModuleDict', 'ParameterList', 'ParameterDict',
     'Identity', 'Linear', 'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d',
     'ConvTranspose2d', 'ConvTranspose3d', 'Threshold', 'ReLU', 'Hardtanh', 'ReLU6',
