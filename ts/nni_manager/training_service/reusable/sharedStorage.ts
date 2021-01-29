@@ -9,12 +9,13 @@ export type SharedStorageType = 'NFS' | 'AzureBlob'
 
 export interface SharedStorageConfig {
     readonly storageType: SharedStorageType;
-    readonly localMountPoint: string;
+    readonly localMountPoint?: string;
     readonly remoteMountPoint: string;
 }
 
 export abstract class SharedStorageService {
     public abstract config(key: string, value: string): Promise<void>;
+    public abstract get canLocalMounted(): boolean;
     public abstract get storageService(): StorageService;
     public abstract get localMountCommand(): string;
     public abstract get remoteMountCommand(): string;

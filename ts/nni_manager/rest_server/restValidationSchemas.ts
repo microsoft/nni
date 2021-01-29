@@ -198,7 +198,7 @@ export namespace ValidationSchemas {
                 remoteMountPoint: joi.string(),
                 nfsServer: joi.string(),
                 exportedDirectory: joi.string(),
-                userMounted: joi.boolean()
+                hasLocalMounted: joi.boolean()
             })
         }
     };

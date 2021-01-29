@@ -95,13 +95,16 @@ export class LocalEnvironmentService extends EnvironmentService {
         }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
         let localWorkingRoot: string;
-        if (environment.useSharedStorage) {
-            localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+        const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
+        if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
+            localWorkingRoot = sharedStorageService.localWorkingRoot;
         } else {
             localWorkingRoot = this.experimentRootDir;
         }
         const localEnvCodeFolder: string = path.join(localWorkingRoot, "envs");
-        if (!environment.useSharedStorage) {
+        if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {
+            await sharedStorageService.storageService.copyDirectoryBack("envs", localEnvCodeFolder)
+        } else if (!environment.useSharedStorage) {
             const localTempFolder: string = path.join(localWorkingRoot, this.experimentId,
                 "environment-temp", "envs");
             await execCopydir(localTempFolder, localEnvCodeFolder);

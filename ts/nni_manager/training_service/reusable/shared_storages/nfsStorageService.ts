@@ -19,16 +19,16 @@ class NFSSharedStorageConfig implements SharedStorageConfig {
 
     public nfsServer: string;
     public exportedDirectory: string;
-    public userMounted: boolean;
+    public hasLocalMounted: boolean;
 
     constructor(storageType: SharedStorageType, localMountPoint: string, remoteMountPoint: string,
-                nfsServer: string, exportedDirectory: string, userMounted: boolean) {
+                nfsServer: string, exportedDirectory: string, hasLocalMounted: boolean) {
         this.storageType = storageType;
         this.localMountPoint = localMountPoint;
         this.remoteMountPoint = remoteMountPoint;
         this.nfsServer = nfsServer;
         this.exportedDirectory = exportedDirectory;
-        this.userMounted = userMounted;
+        this.hasLocalMounted = hasLocalMounted;
     }
 }
 
@@ -60,12 +60,16 @@ export class NFSSharedStorageService extends SharedStorageService {
             this.storageType = nfsConfig.storageType;
             this.nfsServer = nfsConfig.nfsServer;
             this.exportedDirectory = nfsConfig.exportedDirectory;
-            if ( nfsConfig.userMounted === false ) {
+            if ( nfsConfig.hasLocalMounted === false ) {
                 await this.helpLocalMount();
             }
 
             this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         }
+    }
+
+    public get canLocalMounted(): boolean{
+        return true;
     }
 
     public get storageService(): MountedStorageService {

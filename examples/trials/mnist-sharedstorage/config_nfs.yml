@@ -31,4 +31,4 @@ sharedStorage:
   exportedDirectory: ${nfs/exported/directory}
   # true means you have already mount this storage on localMountPoint
   # false means nni will try to mount this storage on localMountPoint
-  userMounted: true
+  hasLocalMounted: true
