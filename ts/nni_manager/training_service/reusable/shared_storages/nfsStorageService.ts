@@ -80,6 +80,10 @@ export class NFSSharedStorageService extends SharedStorageService {
         return `sudo apt-get update && sudo apt-get -y install nfs-common && mkdir -p ${this.remoteMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.remoteMountPoint}`;
     }
 
+    public get localWorkingRoot(): string {
+        return `${this.localMountPoint}/nni/${this.experimentId}`;
+    }
+
     public get remoteWorkingRoot(): string {
         return `${this.remoteMountPoint}/nni/${this.experimentId}`;
     }

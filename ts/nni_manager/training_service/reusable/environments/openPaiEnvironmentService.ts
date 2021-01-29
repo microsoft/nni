@@ -46,10 +46,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return true;
     }
 
-    public get useSharedStorage(): boolean {
-        return true;
-    }
-
     public get getName(): string {
         return 'pai';
     }
@@ -184,7 +180,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
         // Step 1. Prepare PAI job configuration
         let environmentRoot: string;
-        if (this.useSharedStorage) {
+        if (environment.useSharedStorage) {
             environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
             environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand} && cd ${environmentRoot} && ${environment.command}`;
         } else {

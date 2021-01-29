@@ -77,6 +77,8 @@ export class EnvironmentInformation {
 
     public environmentService?: EnvironmentService;
 
+    public useSharedStorage?: boolean;
+
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
         this.id = id;
@@ -125,7 +127,6 @@ export class EnvironmentInformation {
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
-    public abstract get useSharedStorage(): boolean;
     public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;

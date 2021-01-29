@@ -14,6 +14,7 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive } from '../../../common/utils';
 import { execMkdir, runScript, execCopydir } from '../../common/util';
+import { SharedStorageService } from '../sharedStorage'
 
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
@@ -97,18 +98,27 @@ export class LocalEnvironmentService extends EnvironmentService {
             throw new Error('Local trial config is not initialized');
         }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,
-            "environment-temp", "envs");
-        const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
+        let localWorkingRoot: string;
+        if (this.useSharedStorage) {
+            localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+        } else {
+            localWorkingRoot = this.experimentRootDir;
+        }
+        const localEnvCodeFolder: string = path.join(localWorkingRoot, "envs");
+        if (!this.useSharedStorage) {
+            const localTempFolder: string = path.join(localWorkingRoot, this.experimentId,
+                "environment-temp", "envs");
+            await execCopydir(localTempFolder, localEnvCodeFolder);
+        }
         environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
         await execMkdir(environment.runnerWorkingFolder);
-        await execCopydir(localTempFolder, localEnvCodeFolder);
-        environment.command = `cd ${this.experimentRootDir} && \
-${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+       
+        environment.command = `cd ${localWorkingRoot} && \
+            ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+            1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+            && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
         await fs.promises.writeFile(path.join(localEnvCodeFolder, 'nni_run.sh'),
-        environment.command, { encoding: 'utf8', mode: 0o777 }),
+            environment.command, { encoding: 'utf8', mode: 0o777 }),
         // Execute command in local machine
         runScript(path.join(localEnvCodeFolder, 'nni_run.sh'));
         environment.trackingUrl = `${environment.runnerWorkingFolder}`;

@@ -202,7 +202,7 @@ class TrialDispatcher implements TrainingService {
     
             this.log.info(`TrialDispatcher: copying code and settings.`);
             let storageService: StorageService;
-            if (environmentService.useSharedStorage) {
+            if (this.useSharedStorage) {
                 if (this.fileCopyCompleted) {
                     this.log.debug(`TrialDispatcher: file already copy to shared storage.`);
                     continue;
@@ -238,7 +238,7 @@ class TrialDispatcher implements TrainingService {
                 await storageService.copyDirectory(trialToolsPath, envDir, true);
             }
 
-            if (environmentService.useSharedStorage) {
+            if (this.useSharedStorage) {
                 this.fileCopyCompleted = true;
             }
         }
@@ -685,6 +685,8 @@ class TrialDispatcher implements TrainingService {
         }
 
         environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
+
+        environment.useSharedStorage = this.useSharedStorage;
 
         await environmentService.startEnvironment(environment);
         this.environments.set(environment.id, environment);
