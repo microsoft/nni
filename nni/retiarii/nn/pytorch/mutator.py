@@ -47,14 +47,14 @@ class ValueChoiceMutator(Mutator):
 
 
 def process_inline_mutation(model: Model) -> Union[None, List[Mutator]]:
-    lc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
-    ic_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
-    vc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.ValueChoice')
+    lc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice')
+    ic_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice')
+    vc_nodes = model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice')
     if not lc_nodes and not ic_nodes and not vc_nodes:
         return None
     applied_mutators = []
     for node in lc_nodes:
-        mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
+        mutator = LayerChoiceMutator(node.name, node.operation.parameters['candidates'])
         applied_mutators.append(mutator)
     for node in ic_nodes:
         mutator = InputChoiceMutator(node.name,

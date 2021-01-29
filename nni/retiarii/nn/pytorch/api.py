@@ -78,7 +78,12 @@ class LayerChoice(nn.Module):
 
     @property
     def key(self):
-        warnings.warn('Using key to access the identifier of LayerChoice is deprecated. Please use label instead.')
+        return self._key()
+
+    @torch.jit.ignore
+    def _key(self):
+        warnings.warn('Using key to access the identifier of LayerChoice is deprecated. Please use label instead.',
+                      category=DeprecationWarning)
         return self._label
 
     @property
@@ -114,7 +119,11 @@ class LayerChoice(nn.Module):
 
     @property
     def choices(self):
-        warnings.warn("layer_choice.choices is deprecated. Use `list(layer_choice)` instead.", DeprecationWarning)
+        return self._choices()
+
+    @torch.jit.ignore
+    def _choices(self):
+        warnings.warn("layer_choice.choices is deprecated. Use `list(layer_choice)` instead.", category=DeprecationWarning)
         return list(self)
 
     def forward(self, x):
@@ -162,7 +171,11 @@ class InputChoice(nn.Module):
 
     @property
     def key(self):
-        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.')
+        return self._key()
+
+    @torch.jit.ignore
+    def _key(self):
+        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.', category=DeprecationWarning)
         return self._label
 
     @property
@@ -180,14 +193,49 @@ class ValueChoice(nn.Module):
 
     Should initialize the values to choose from in init and call the module in forward to get the chosen value.
 
+    Therefore, a common use should be, pass the ValueChoice to a blackbox module like this:
+
+    .. code-block:: python
+
+        @blackbox_module
+        class DynamicDepthModule(nn.Module):
+            def forward(self, x: torch.Tensor, depth: int):
+                ...
+
+            class Net(nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.depth = nn.ValueChoice([2, 3, 4])
+                    self.conv = DynamicDepthModule()
+
+                def forward(self, x):
+                    return self.conv(x, self.depth())
+
+    The following use case is currently not supported because ValueChoice cannot be called in ``__init__``.
+    Please use LayerChoice as a workaround.
+
+    .. code-block:: python
+
+        # in __init__ code
+        self.kernel_size = nn.ValueChoice([3, 5])
+        self.conv = nn.Conv2d(3, self.out_channels, kernel_size=self.kernel_size())
+
     Parameters
     ----------
     candidates : list
         List of values to choose from.
+    label : str
+        Identifier of the value choice.
     """
 
-    def __init__(self, candidates: List[Any]):
+    def __init__(self, candidates: List[Any], label: str = None):
+        super().__init__()
         self.candidates = candidates
+        self._label = label if label is not None else f'valuechoice_{uid()}'
+
+    @property
+    def label(self):
+        return self._label
 
     def forward(self):
         # TODO: add warning when executing in standalone
@@ -195,7 +243,7 @@ class ValueChoice(nn.Module):
 
 
 class Placeholder(nn.Module):
-    # docstring: TODO
+    # TODO: docstring
 
     def __init__(self, label, related_info):
         add_record(id(self), related_info)
