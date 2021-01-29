@@ -38,6 +38,7 @@ PyTorch code
 The complete code for fine-tuning the pruend model can be found :githublink:`here <examples/model_compress/pruning/finetune_kd_torch.py>`
 
 .. code-block:: python
+
       python finetune_kd_torch.py --model [model name] --teacher-model-dir [pretrained checkpoint path]  --student-model-dir [pruend checkpoint path] --mask-path [mask file path]
 
 
