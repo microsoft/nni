@@ -13,13 +13,13 @@ __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenIn
 
 class LayerChoice(nn.Module):
     """
-    Layer choice selects one of the ``op_candidates``, then apply it on inputs and return results.
+    Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
     Layer choice does not allow itself to be nested.
 
     Parameters
     ----------
-    op_candidates : list of nn.Module or OrderedDict
+    candidates : list of nn.Module or OrderedDict
         A module list to be selected from.
     label : str
         Identifier of the layer choice.
@@ -36,7 +36,7 @@ class LayerChoice(nn.Module):
 
     Notes
     -----
-    ``op_candidates`` can be a list of modules or a ordered dict of named modules, for example,
+    ``candidates`` can be a list of modules or a ordered dict of named modules, for example,
 
     .. code-block:: python
 
@@ -50,7 +50,7 @@ class LayerChoice(nn.Module):
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
-    def __init__(self, op_candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
+    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
         super(LayerChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -59,22 +59,22 @@ class LayerChoice(nn.Module):
             warnings.warn(f'"return_mask" is deprecated. Ignoring...')
         if 'reduction' in kwargs:
             warnings.warn(f'"reduction" is deprecated. Ignoring...')
-        self.op_candidates = op_candidates
+        self.candidates = candidates
         self._label = label if label is not None else f'layerchoice_{uid()}'
 
         self.names = []
-        if isinstance(op_candidates, OrderedDict):
-            for name, module in op_candidates.items():
+        if isinstance(candidates, OrderedDict):
+            for name, module in candidates.items():
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.add_module(name, module)
                 self.names.append(name)
-        elif isinstance(op_candidates, list):
-            for i, module in enumerate(op_candidates):
+        elif isinstance(candidates, list):
+            for i, module in enumerate(candidates):
                 self.add_module(str(i), module)
                 self.names.append(str(i))
         else:
-            raise TypeError("Unsupported op_candidates type: {}".format(type(op_candidates)))
+            raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
 
     @property
     def key(self):
@@ -170,18 +170,28 @@ class InputChoice(nn.Module):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
+        # TODO: add warning when executing in standalone
         return candidate_inputs[0]
 
 
-class ValueChoice:
+class ValueChoice(nn.Module):
     """
-    The instance of this class can only be used as input argument,
-    when instantiating a pytorch module.
-    TODO: can also be used in training approach
+    ValueChoice is to choose one from ``candidates``.
+
+    Should initialize the values to choose from in init and call the module in forward to get the chosen value.
+
+    Parameters
+    ----------
+    candidates : list
+        List of values to choose from.
     """
 
-    def __init__(self, candidate_values: List[Any]):
-        self.candidate_values = candidate_values
+    def __init__(self, candidates: List[Any]):
+        self.candidates = candidates
+
+    def forward(self):
+        # TODO: add warning when executing in standalone
+        return 0
 
 
 class Placeholder(nn.Module):

@@ -418,7 +418,7 @@ class GraphConverter:
             cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
             choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
         return {
-            'choices': choices,
+            'candidates': choices,
             'label': module.label
         }
 
@@ -431,7 +431,10 @@ class GraphConverter:
         }
 
     def _handle_valuechoice(self, module):
-        return {'choices': module.value_candidates}
+        return {
+            'candidates': module.candidates,
+            'label': module.label
+        }
 
     def convert_module(self, script_module, module, module_name, ir_model):
         """

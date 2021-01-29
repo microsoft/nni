@@ -15,7 +15,7 @@ from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
-from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
+from .mutator import Mutator
 from .trainer.interface import BaseTrainer, BaseOneShotTrainer
 from .strategies.strategy import BaseStrategy
 from .trainer import BaseOneShotTrainer
@@ -96,9 +96,11 @@ class RetiariiExperiment(Experiment):
         """
         the mutators are order independent
         """
+        from .nn.pytorch.mutator import LayerChoiceMutator, InputChoiceMutator, ValueChoiceMutator
         lc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
         ic_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
-        if not lc_nodes and not ic_nodes:
+        vc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.ValueChoice')
+        if not lc_nodes and not ic_nodes and not vc_nodes:
             return None
         applied_mutators = []
         for node in lc_nodes:
@@ -109,6 +111,9 @@ class RetiariiExperiment(Experiment):
                                          node.operation.parameters['n_candidates'],
                                          node.operation.parameters['n_chosen'],
                                          node.operation.parameters['reduction'])
+            applied_mutators.append(mutator)
+        for node in vc_nodes:
+            mutator = ValueChoiceMutator(node.name, node.operation.parameters['candidates'])
             applied_mutators.append(mutator)
         return applied_mutators
 

@@ -105,36 +105,3 @@ class _RecorderSampler(Sampler):
     def choice(self, candidates: List[Choice], *args) -> Choice:
         self.recorded_candidates.append(candidates)
         return candidates[0]
-
-
-# the following is for inline mutation
-
-
-class LayerChoiceMutator(Mutator):
-    def __init__(self, node_name: str, candidates: List):
-        super().__init__()
-        self.node_name = node_name
-        self.candidates = candidates
-
-    def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        indexes = [i for i in range(len(self.candidates))]
-        chosen_index = self.choice(indexes)
-        chosen_cand = self.candidates[chosen_index]
-        target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
-
-
-class InputChoiceMutator(Mutator):
-    def __init__(self, node_name: str, n_candidates: int, n_chosen: int, reduction: str):
-        super().__init__()
-        self.node_name = node_name
-        self.n_candidates = n_candidates
-        self.n_chosen = n_chosen
-        self.reduction = reduction
-
-    def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        candidates = [i for i in range(self.n_candidates)]
-        chosen = [self.choice(candidates) for _ in range(self.n_chosen)]
-        target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
-                                {'chosen': chosen, 'reduction': self.reduction})
