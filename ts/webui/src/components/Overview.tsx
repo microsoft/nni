@@ -70,8 +70,10 @@ class Overview extends React.Component<{}, OverviewState> {
                         metricGraphMode,
                         bestTrialEntries,
                         maxDurationUnit,
+                        expandRowIDs,
                         updateOverviewPage,
-                        changeMaxDurationUnit
+                        changeMaxDurationUnit,
+                        changeExpandRowIDs
                     } = value;
                     const maxActive = metricGraphMode === 'max' ? 'active' : '';
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
@@ -169,10 +171,13 @@ class Overview extends React.Component<{}, OverviewState> {
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
                                             chartHeight={300}
                                             hasBestCurve={false}
+                                            changeExpandRowIDs={changeExpandRowIDs}
                                         />
                                         <SuccessTable
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
                                             updateOverviewPage={updateOverviewPage}
+                                            expandRowIDs={expandRowIDs}
+                                            changeExpandRowIDs={changeExpandRowIDs}
                                         />
                                     </div>
                                 </div>

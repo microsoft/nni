@@ -26,6 +26,7 @@ interface DefaultPointProps {
     trialIds: string[];
     chartHeight: number;
     hasBestCurve: boolean;
+    changeExpandRowIDs: Function;
 }
 
 interface DefaultPointState {
@@ -57,7 +58,14 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         }
     };
 
-    generateGraphConfig(maxSequenceId: number): any {
+    pointClick = (params: any): void => {
+        console.info(params);
+        if (window.location.pathname === '/oview') {
+            this.props.changeExpandRowIDs(params.data[2], 'chart');
+        }
+    };
+
+    generateGraphConfig(_maxSequenceId: number): any {
         const { startY, endY } = this.state;
         return {
             grid: {
@@ -67,10 +75,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 trigger: 'item',
                 enterable: true,
                 confine: true, // confirm always show tooltip box rather than hidden by background
-                position: (point: number[], data: TooltipForAccuracy): number[] => [
-                    data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
-                    80
-                ],
                 formatter: (data: TooltipForAccuracy): React.ReactNode => {
                     return (
                         '<div class="tooldetailAccuracy">' +
@@ -150,7 +154,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         const { hasBestCurve, chartHeight } = this.props;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
-        const onEvents = { dataZoom: this.metricDataZoom };
+        const onEvents = { dataZoom: this.metricDataZoom, click: this.pointClick };
 
         return (
             <div>
