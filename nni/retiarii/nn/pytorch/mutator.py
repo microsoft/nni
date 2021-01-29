@@ -1,4 +1,4 @@
-from typing import Any, List, Union
+from typing import Any, List, Optional
 
 from ...mutator import Mutator
 from ...graph import Model, Node
@@ -15,7 +15,7 @@ class LayerChoiceMutator(Mutator):
         chosen_index = self.choice(indices)
         for node in self.nodes:
             target = model.get_node_by_name(node.name)
-            chosen_cand = target.operation.parameters['candidates'][chosen_index]
+            chosen_cand = node.operation.parameters['candidates'][chosen_index]
             target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
 
 
@@ -48,34 +48,43 @@ class ValueChoiceMutator(Mutator):
             target.update_operation('prim::Constant', {'value': chosen})
 
 
-def process_inline_mutation(model: Model) -> Union[None, List[Mutator]]:
-    lc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice'))
-    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
-    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice'))
-    if not lc_nodes and not ic_nodes and not vc_nodes:
-        return None
+def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
+
+    lc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice'))
     for node_list in lc_nodes:
         assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
             'Layer choice with the same label must have the same number of candidates.'
         mutator = LayerChoiceMutator(node_list)
         applied_mutators.append(mutator)
+
+    ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
     for node_list in ic_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['n_candidates'], node_list)) and \
             _is_all_equal(map(lambda node: node.operation.parameters['n_chosen'], node_list)), \
             'Input choice with the same label must have the same number of candidates.'
         mutator = InputChoiceMutator(node_list)
         applied_mutators.append(mutator)
+
+    vc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.ValueChoice'))
     for node_list in vc_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['candidates'], node_list)), \
             'Value choice with the same label must have the same candidates.'
         mutator = ValueChoiceMutator(node_list, node_list[0].operation.parameters['candidates'])
         applied_mutators.append(mutator)
-    return applied_mutators
+
+    if applied_mutators:
+        return applied_mutators
+    return None
 
 
 def _is_all_equal(lst):
-    return all([lst[0] == t for t in lst])
+    last = None
+    for x in lst:
+        if last is not None and last != x:
+            return False
+        last = x
+    return True
 
 
 def _group_by_label(nodes: List[Node]) -> List[List[Node]]:

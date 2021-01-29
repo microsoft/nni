@@ -175,7 +175,8 @@ class InputChoice(nn.Module):
 
     @torch.jit.ignore
     def _key(self):
-        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.', category=DeprecationWarning)
+        warnings.warn('Using key to access the identifier of InputChoice is deprecated. Please use label instead.',
+                      category=DeprecationWarning)
         return self._label
 
     @property

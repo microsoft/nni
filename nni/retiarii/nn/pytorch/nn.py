@@ -1,10 +1,7 @@
-import logging
-from typing import Any, List
-
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, blackbox_module, del_record, uid, version_larger_equal
+from ...utils import add_record, blackbox_module, del_record, version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0
 

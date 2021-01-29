@@ -1,3 +1,4 @@
+import random
 import unittest
 
 import nni.retiarii.nn.pytorch as nn
@@ -16,6 +17,15 @@ class EnuemrateSampler(Sampler):
         choice = candidates[self.index % len(candidates)]
         self.index += 1
         return choice
+
+
+class RandomSampler(Sampler):
+    def __init__(self):
+        self.counter = 0
+
+    def choice(self, candidates, *args, **kwargs):
+        self.counter += 1
+        return random.choice(candidates)
 
 
 @blackbox_module
@@ -91,6 +101,35 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).size(),
                          torch.Size([1, 5, 3, 3]))
 
+    def test_chosen_inputs(self):
+        class Net(nn.Module):
+            def __init__(self, reduction):
+                super().__init__()
+                self.conv1 = nn.Conv2d(3, 3, kernel_size=1)
+                self.conv2 = nn.Conv2d(3, 3, kernel_size=1)
+                self.input = nn.InputChoice(2, n_chosen=2, reduction=reduction)
+
+            def forward(self, x):
+                x1 = self.conv1(x)
+                x2 = self.conv2(x)
+                return self.input([x1, x2])
+
+        for reduction in ['none', 'sum', 'mean', 'concat']:
+            model = self._convert_to_ir(Net(reduction))
+            mutators = process_inline_mutation(model)
+            self.assertEqual(len(mutators), 1)
+            mutator = mutators[0].bind_sampler(EnuemrateSampler())
+            model = mutator.apply(model)
+            result = self._get_converted_pytorch_model(model)(torch.randn(1, 3, 3, 3))
+            if reduction == 'none':
+                self.assertEqual(len(result), 2)
+                self.assertEqual(result[0].size(), torch.Size([1, 3, 3, 3]))
+                self.assertEqual(result[1].size(), torch.Size([1, 3, 3, 3]))
+            elif reduction == 'concat':
+                self.assertEqual(result.size(), torch.Size([1, 6, 3, 3]))
+            else:
+                self.assertEqual(result.size(), torch.Size([1, 3, 3, 3]))
+
     def test_value_choice(self):
         class Net(nn.Module):
             def __init__(self):
@@ -112,3 +151,44 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).size(),
                          torch.Size([1, 5, 3, 3]))
 
+    def test_shared(self):
+        class Net(nn.Module):
+            def __init__(self, shared=True):
+                super().__init__()
+                labels = ['x', 'x'] if shared else [None, None]
+                self.module1 = nn.LayerChoice([
+                    nn.Conv2d(3, 3, kernel_size=1),
+                    nn.Conv2d(3, 5, kernel_size=1)
+                ], label=labels[0])
+                self.module2 = nn.LayerChoice([
+                    nn.Conv2d(3, 3, kernel_size=1),
+                    nn.Conv2d(3, 5, kernel_size=1)
+                ], label=labels[1])
+
+            def forward(self, x):
+                return self.module1(x) + self.module2(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        sampler = RandomSampler()
+        mutator = mutators[0].bind_sampler(sampler)
+        self.assertEqual(self._get_converted_pytorch_model(mutator.apply(model))(torch.randn(1, 3, 3, 3)).size(0), 1)
+        self.assertEqual(sampler.counter, 1)
+
+        model = self._convert_to_ir(Net(shared=False))
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 2)
+        sampler = RandomSampler()
+        # repeat test. Expectation: sometimes succeeds, sometimes fails.
+        failed_count = 0
+        for i in range(30):
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertEqual(sampler.counter, 2 * (i + 1))
+            try:
+                self._get_converted_pytorch_model(model)(torch.randn(1, 3, 3, 3))
+            except RuntimeError:
+                failed_count += 1
+        self.assertGreater(failed_count, 0)
+        self.assertLess(failed_count, 30)
