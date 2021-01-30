@@ -315,8 +315,8 @@ class CG_BOHB:
         # Refit KDE for the current budget
         idx = np.argsort(train_losses)
 
-        train_data_good = self.impute_conditional_data(train_configs[idx[:n_good]])
-        train_data_bad = self.impute_conditional_data(train_configs[idx[n_good:n_good+n_bad]])
+        train_data_good = self.impute_conditional_data(train_configs[idx[:n_good]])  # Window 0 to n_good
+        train_data_bad = self.impute_conditional_data(train_configs[idx[n_good:]])   # Window n_good to end.
 
         if train_data_good.shape[0] <= train_data_good.shape[1]:
             return
