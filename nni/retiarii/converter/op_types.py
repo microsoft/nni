@@ -45,7 +45,8 @@ BasicOpsPT = {
     'aten::new_zeros': 'NewZeros',
     'aten::__not__': 'not',
     'aten::transpose': 'Transpose',
-    'aten::contiguous': 'Contiguous'
+    'aten::contiguous': 'Contiguous',
+    'aten::new_full': 'NewFull'
 }
 
 BasicOpsTF = {}

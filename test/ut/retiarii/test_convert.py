@@ -35,6 +35,7 @@ class MnistNet(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
+# NOTE: blackbox module cannot be placed within class or function
 @blackbox_module
 class Linear(nn.Module):
     def __init__(self, d_embed, d_proj):
@@ -269,7 +270,6 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(Policy(), (torch.rand(1, 4),))
 
-    #@unittest.skip('Replaced init error.')  # FIXME
     def test_snli(self):
 
         class Encoder(nn.Module):
@@ -380,7 +380,7 @@ class TestConvert(unittest.TestCase):
         net = Net(upscale_factor=4)
         self.checkExportImport(net, (torch.rand(5, 1, 32, 32),))
 
-    #@unittest.skip('Need to support operator prim::ListUnpack')  # FIXME
+    @unittest.skip('Need to support Loop')  # FIXME
     def test_time_sequence_prediction(self):
         class Sequence(nn.Module): #torch.jit.ScriptModule
             def __init__(self):
@@ -427,6 +427,7 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(Traced(), (torch.rand(3, 4),))
 
+    @unittest.skip('incorrectly assigned weights')  # FIXME
     def test_vae(self):
         class VAE(nn.Module):
             def __init__(self):
@@ -581,3 +582,15 @@ class TestConvert(unittest.TestCase):
         x = torch.ones(1, 3, 224, 224)
         model = torchvision.models.AlexNet()
         self.checkExportImport(model, (x,))
+
+    # skip torch.Tensor.new_tensor as it is not supported by jit
+
+    def test_basic_new_full(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                # requires_grad is not supported by jit
+                # aten::new_full(Tensor self, int[] size, Scalar fill_value, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor):
+                # Keyword argument requires_grad unknown.
+                out = x.new_full((3, 4), 3.141592, dtype=torch.float32, device=torch.device('cpu'))
+                return out
+        self.checkExportImport(SimpleOp(), (torch.ones((2,), dtype=torch.float64), ))

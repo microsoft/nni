@@ -4,6 +4,30 @@ from . import debug_configs
 
 __all__ = ['Operation', 'Cell']
 
+mem_format = [
+    'torch.contiguous_format',      # 0
+    'torch.preserve_format',        # 1
+    'torch.channels_last',          # 2
+]
+
+# this snippet is copied from torch/onnx/symbolic_helper.py,
+# the original definition is in c10/core/ScalarType.h
+# This indicates each scalar type's corresponding
+scalar_type_to_pytorch_type = [
+    'torch.uint8',        # 0
+    'torch.int8',         # 1
+    'torch.short',        # 2
+    'torch.int',          # 3
+    'torch.int64',        # 4
+    'torch.half',         # 5
+    'torch.float',        # 6
+    'torch.double',       # 7
+    'torch.complex32',    # 8
+    'torch.complex64',    # 9
+    'torch.complex128',   # 10
+    'torch.bool',         # 11
+]
+
 
 def _convert_name(name: str) -> str:
     """
@@ -129,11 +153,18 @@ class PyTorchOperation(Operation):
             func_name = self.type[len('Function.'):]
             return f'{output} = F.{func_name}({", ".join(inputs)})'
         elif self.type == 'prim::Constant':
-            if self.parameters:
+            # TODO: refactor this part, maybe we can remove the code gen of prim::Constant
+            # TODO: deal with all the types
+            if self.parameters['type'] == 'None':
+                return f'{output} = None'
+            elif self.parameters['type'] in ('int', 'float'):
+                return f'{output} = {self.parameters["value"]}'
+            elif self.parameters['type'] == 'Device':
                 value = self.parameters['value']
+                return f'{output} = torch.device("{value}")'
             else:
-                value = None
-            return f'{output} = {value}'
+                raise RuntimeError(f'unsupported type of prim::Constant: {self.parameters["type"]}')
+            print('zql value: ', value, type(value))
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'prim::TupleConstruct':
@@ -212,11 +243,13 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::contiguous':
             # TODO: TODO write unittest for it
             # defined in pytorch/c10/core/MemoryFormat.h
-            mem_format = {0: 'torch.contiguous_format', 1: 'torch.preserve_format', 2: 'torch.channels_last'}
             assert inputs_value[1] in [0, 1, 2]
             return f'{output} = {inputs[0]}.contiguous(memory_format={mem_format[inputs_value[1]]})'
         elif self.type == 'aten::detach':
             return f'{output} = {inputs[0]}.detach()'
+        elif self.type == 'aten::new_full':
+            device_str = f', device=torch.device({inputs[5]})' if inputs_value[5] is not None else ''
+            return f'{output} = {inputs[0]}.new_full({inputs[1]}, {inputs[2]}, dtype={scalar_type_to_pytorch_type[inputs_value[3]]}{device_str})'
         elif self.type == 'noop_identity':
             # this operator type is added by us
             return f'{output} = {", ".join(inputs)}'

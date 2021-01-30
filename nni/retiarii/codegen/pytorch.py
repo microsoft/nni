@@ -89,7 +89,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     for node in nodes:
         if node.operation:
             if node.operation.type == 'shared':
-                print('shareddd: ', node)
+                #print('shareddd: ', node)
                 continue
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:

@@ -67,26 +67,27 @@ class GraphConverter:
             if ignore_first:
                 ignore_first = False
                 continue
-
             # handle source node
             src_node, src_node_idx = self._add_edge_handle_source_node(_input, graph_inputs, ir_graph, output_remap, node_index)
-
             # handle destination node
             dst_node = new_node
             if is_single_input:
                 dst_node_idx = None
             else:
                 dst_node_idx = new_node_input_idx
-
             # create edge
             ir_graph.add_edge(head=(src_node, src_node_idx), tail=(dst_node, dst_node_idx))
 
             new_node_input_idx += 1
 
     def create_prim_constant_node(self, ir_graph, node, module_name):
-        attrs = {}
-        if node.outputsAt(0).toIValue() is not None:
-            attrs = {'value': node.outputsAt(0).toIValue()}
+        #print('zqlllll: ', type(node.outputsAt(0).type().kind()), node.outputsAt(0).type().str(), node.outputsAt(0).toIValue())
+        # NOTE: compare with string because the type is defined in pytorch c code. `.kind()` can also be used here
+        if node.outputsAt(0).type().str() == 'None':
+            attrs = {'type': 'None'}
+        else:
+            assert node.outputsAt(0).toIValue() is not None
+            attrs = {'type': node.outputsAt(0).type().str(), 'value': node.outputsAt(0).toIValue()}
         self.global_seq += 1
         new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Constant, self.global_seq),
                                      node.kind(), attrs)
@@ -358,7 +359,7 @@ class GraphConverter:
                 
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
-                print(script_method.graph)
+                #print(script_method.graph)
                 method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
                                                     module_name, ir_model, method_ir_graph, shared_module_index)
                 for _output in script_method.graph.outputs():
@@ -458,7 +459,7 @@ class GraphConverter:
                 output_remap[node.inputsAt(0)] = node
             elif node.kind().startswith('aten::'):
                 # handle aten::XXX
-                #if node.kind() == 'aten::detach':
+                #if node.kind() == 'aten::new_full':
                 #    print('zzql: ', node)
                 #    exit(1)
                 self.global_seq += 1
