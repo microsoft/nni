@@ -310,6 +310,7 @@ class CG_BOHB:
         train_losses = np.array(self.losses[budget])
 
         n_good = max(self.min_points_in_model, (self.top_n_percent * train_configs.shape[0])//100)
+        n_bad = max(self.min_points_in_model, ((100-self.top_n_percent)*train_configs.shape[0])//100)
 
         # Refit KDE for the current budget
         idx = np.argsort(train_losses)
