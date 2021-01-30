@@ -2,6 +2,7 @@ import inspect
 import warnings
 from collections import defaultdict
 from typing import Any
+from pathlib import Path
 
 
 def import_(target: str, allow_none: bool = False) -> Any:
@@ -98,10 +99,7 @@ def blackbox(cls, *args, **kwargs):
     """
     # get caller module name
     frm = inspect.stack()[1]
-    if inspect.getmodule(frm[0]):
-        module_name = inspect.getmodule(frm[0]).__name__
-    else:
-        module_name = inspect.getsourcefile(frm[0])
+    module_name = inspect.getmodule(frm[0]).__name__
     return _blackbox_cls(cls, module_name, 'args')(*args, **kwargs)
 
 
@@ -110,10 +108,18 @@ def blackbox_module(cls):
     Register a module. Use it as a decorator.
     """
     frm = inspect.stack()[1]
-    if inspect.getmodule(frm[0]):
-        module_name = inspect.getmodule(frm[0]).__name__
-    else:
-        module_name = inspect.getsourcefile(frm[0])
+
+    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given black box module, '
+                                                     'please define it explicitly in a .py file.')
+    module_name = inspect.getmodule(frm[0]).__name__
+
+    if module_name == '__main__':
+        main_file_path = Path(inspect.getsourcefile(frm[0]))
+        if main_file_path.parents[0] != Path('.'):
+            raise RuntimeError(f'you are using "{main_file_path}" to launch your experiment, '
+                               f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
+        module_name = main_file_path.stem
+
     return _blackbox_cls(cls, module_name, 'args')
 
 
@@ -122,10 +128,9 @@ def register_trainer(cls):
     Register a trainer. Use it as a decorator.
     """
     frm = inspect.stack()[1]
-    if inspect.getmodule(frm[0]):
-        module_name = inspect.getmodule(frm[0]).__name__
-    else:
-        module_name = inspect.getsourcefile(frm[0])
+    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given trainer, '
+                                                     'please define it explicitly in a .py file.')
+    module_name = inspect.getmodule(frm[0]).__name__
     return _blackbox_cls(cls, module_name, 'full')
 
 
