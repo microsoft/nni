@@ -81,7 +81,6 @@ class GraphConverter:
             new_node_input_idx += 1
 
     def create_prim_constant_node(self, ir_graph, node, module_name):
-        #print('zqlllll: ', type(node.outputsAt(0).type().kind()), node.outputsAt(0).type().str(), node.outputsAt(0).toIValue())
         # NOTE: compare with string because the type is defined in pytorch c code. `.kind()` can also be used here
         if node.outputsAt(0).type().str() == 'None':
             attrs = {'type': 'None'}
@@ -451,21 +450,6 @@ class GraphConverter:
                 new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleUnpack, self.global_seq), node.kind())
                 node_index[node] = new_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
-            elif node.kind() == 'aten::append':
-                self.global_seq += 1
-                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
-                node_index[node] = aten_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
-                output_remap[node.inputsAt(0)] = node
-            elif node.kind().startswith('aten::'):
-                # handle aten::XXX
-                #if node.kind() == 'aten::new_full':
-                #    print('zzql: ', node)
-                #    exit(1)
-                self.global_seq += 1
-                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
-                node_index[node] = aten_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             elif node.kind() == 'prim::GetAttr':
                 node_type, attrs = self.handle_prim_attr_node(node, module)
                 self.global_seq += 1
@@ -479,6 +463,29 @@ class GraphConverter:
             elif node.kind() == 'prim::Loop':
                 # refer to https://gist.github.com/liuzhe-lz/90c35d9dd6fd7f3f32544940151ab186
                 raise RuntimeError('Loop has not been supported yet!')
+            elif node.kind().startswith('prim::'):
+                if node.kind() == 'prim::is_cuda':
+                    print('zzql: ', node)
+                    #exit(1)
+                self.global_seq += 1
+                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
+                node_index[node] = aten_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
+            elif node.kind() == 'aten::append':
+                self.global_seq += 1
+                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
+                node_index[node] = aten_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
+                output_remap[node.inputsAt(0)] = node
+            elif node.kind().startswith('aten::'):
+                # handle aten::XXX
+                if node.kind() == 'aten::abs':
+                    print('zzql: ', node)
+                    #exit(1)
+                self.global_seq += 1
+                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
+                node_index[node] = aten_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             else:
                 raise RuntimeError('Unsupported kind: {}'.format(node.kind()))
 

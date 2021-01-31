@@ -157,7 +157,7 @@ class PyTorchOperation(Operation):
             # TODO: deal with all the types
             if self.parameters['type'] == 'None':
                 return f'{output} = None'
-            elif self.parameters['type'] in ('int', 'float'):
+            elif self.parameters['type'] in ('int', 'float', 'bool'):
                 return f'{output} = {self.parameters["value"]}'
             elif self.parameters['type'] == 'Device':
                 value = self.parameters['value']
@@ -179,6 +179,8 @@ class PyTorchOperation(Operation):
                 return f"{output} = {self.parameters['value']}"
             else:
                 return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
+        elif self.type == 'prim::is_cuda':
+            return f'{output} = {inputs[0]}.is_cuda'
         elif self.type == 'aten::mean':
             return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
         elif self.type == 'aten::__getitem__':
@@ -231,17 +233,9 @@ class PyTorchOperation(Operation):
             return f'{output} = torch.sigmoid({inputs[0]})'
         elif self.type == 'aten::__not__':
             return f'{output} = not {inputs[0]}'
-        elif self.type == 'aten::new_zeros':
-            # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
-            # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
-            # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
-            # TODO: check requires_grad when it is true!!!
-            # TODO: thus we should write unittest to check correctness in case different pytorch versions have unknown updates
-            return f'{output} = {inputs[0]}.new_zeros({inputs[1]}, dtype={inputs[2]}, device={inputs[4]})'
         elif self.type == 'aten::transpose':
             return f'{output} = {inputs[0]}.transpose({inputs[1]}, {inputs[2]})'
         elif self.type == 'aten::contiguous':
-            # TODO: TODO write unittest for it
             # defined in pytorch/c10/core/MemoryFormat.h
             assert inputs_value[1] in [0, 1, 2]
             return f'{output} = {inputs[0]}.contiguous(memory_format={mem_format[inputs_value[1]]})'
@@ -249,7 +243,43 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}.detach()'
         elif self.type == 'aten::new_full':
             device_str = f', device=torch.device({inputs[5]})' if inputs_value[5] is not None else ''
-            return f'{output} = {inputs[0]}.new_full({inputs[1]}, {inputs[2]}, dtype={scalar_type_to_pytorch_type[inputs_value[3]]}{device_str})'
+            dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[3]]}' if inputs_value[3] is not None else ''
+            return f'{output} = {inputs[0]}.new_full({inputs[1]}, {inputs[2]}{dtype_str}{device_str})'
+        elif self.type == 'aten::new_empty':
+            device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''
+            dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
+            return f'{output} = {inputs[0]}.new_empty({inputs[1]}{dtype_str}{device_str})'
+        elif self.type == 'aten::new_zeros':
+            # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
+            # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
+            # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
+            # TODO: check requires_grad when it is true!!!
+            device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''
+            dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
+            return f'{output} = {inputs[0]}.new_zeros({inputs[1]}{dtype_str}{device_str})'
+        elif self.type == 'aten::tensor':
+            device_str = f', device=torch.device({inputs[2]})' if inputs_value[2] is not None else ''
+            dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[1]]}' if inputs_value[1] is not None else ''
+            req_grad_str = f', requires_grad={inputs[3]}' if inputs_value[3] else ''
+            return f'{output} = torch.tensor({inputs[0]}{dtype_str}{device_str}{req_grad_str})'
+        elif self.type == 'aten::abs':
+            return f'{output} = {inputs[0]}.abs()'
+        elif self.type == 'aten::abs_':
+            return f'{output} = {inputs[0]}.abs_()'
+        elif self.type == 'aten::acos':
+            return f'{output} = {inputs[0]}.acos()'
+        elif self.type == 'aten::acos_':
+            return f'{output} = {inputs[0]}.acos_()'
+        elif self.type == 'aten::addbmm':
+            return f'{output} = {inputs[0]}.addbmm({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
+        elif self.type == 'aten::addcdiv':
+            return f'{output} = {inputs[0]}.addcdiv({inputs[1]}, {inputs[2]}, value={inputs[3]})'
+        elif self.type == 'aten::addcmul':
+            return f'{output} = {inputs[0]}.addcmul({inputs[1]}, {inputs[2]}, value={inputs[3]})'
+        elif self.type == 'aten::addmm':
+            return f'{output} = {inputs[0]}.addmm({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
+        elif self.type == 'aten::addmv':
+            return f'{output} = {inputs[0]}.addmv({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
         elif self.type == 'noop_identity':
             # this operator type is added by us
             return f'{output} = {", ".join(inputs)}'
