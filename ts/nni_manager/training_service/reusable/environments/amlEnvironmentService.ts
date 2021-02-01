@@ -123,9 +123,9 @@ export class AMLEnvironmentService extends EnvironmentService {
             const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
             amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`;
         }
-        environment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
-        environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+        amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        amlEnvironment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
+        amlEnvironment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,

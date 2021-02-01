@@ -296,7 +296,7 @@ class TrialDispatcher implements TrainingService {
                 // Validate to make sure codeDir doesn't have too many files
                 await validateCodeDir(this.trialConfig.codeDir);
                 break;
-            case TrialConfigMetadataKey.PLATFORM_LIST:
+            case TrialConfigMetadataKey.PLATFORM_LIST: {
                 const platforms: string[] = value.split(",");
                 for(const platform of platforms) {
                     const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
@@ -307,6 +307,7 @@ class TrialDispatcher implements TrainingService {
                     this.environmentServiceList.push(environmentService);
                 }
                 break;
+            }
             case TrialConfigMetadataKey.SHARED_STORAGE_CONFIG:
                 if (this.useSharedStorage === false) {
                     await this.initializeSharedStorage(key, value);
@@ -918,10 +919,11 @@ class TrialDispatcher implements TrainingService {
                          .to(NFSSharedStorageService)
                          .scope(Scope.Singleton);
                 break;
-            default:
+            default: {
                 const errorMessage = `Shared storage type '${storageType}' not support.`;
                 this.log.error(errorMessage)
                 return Promise.reject(errorMessage);
+            }
         }
         await component.get<SharedStorageService>(SharedStorageService).config(key, value);
         this.useSharedStorage = true;
