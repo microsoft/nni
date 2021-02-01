@@ -5,8 +5,8 @@ from torch.optim.lr_scheduler import MultiStepLR
 import numpy as np
 from torchvision import datasets, transforms
 
-from integrated_tensorrt import CalibrateType
-from backend import BackendEngine
+from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType
+from nni.compression.pytorch.speedup.quantization_speedup.backend import BackendEngine
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -274,7 +274,7 @@ def main():
         batch_size=200, shuffle=False)
     model = resnet18()
     model.to(device)
-    train_epoch = 100
+    train_epoch = 1
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     scheduler = MultiStepLR(
         optimizer, milestones=[int(train_epoch*0.5), int(train_epoch*0.75)], gamma=0.1)
@@ -286,30 +286,21 @@ def main():
 
     config = {
         'conv1':8,
-        'relu':8,
         'layer1.0.conv1':8,
-        'layer1.0.relu':8,
         'layer1.0.conv2':8,
-        'layer1.1.conv1':8,
-        'layer1.1.relu':8,
+        'layer1.1.conv1':32,
         'layer1.1.conv2':8,
         'layer2.0.conv1':8,
-        'layer2.0.relu':8,
-        'layer2.0.conv2':8,
+        'layer2.0.conv2':32,
         'layer2.1.conv1':8,
-        'layer2.1.relu':8,
         'layer2.1.conv2':8,
-        'layer3.0.conv1':8,
-        'layer3.0.relu':8,
-        'layer3.0.conv2':8,
+        'layer3.0.conv1':32,
+        'layer3.0.conv2':32,
         'layer3.1.conv1':8,
-        'layer3.1.relu':8,
         'layer3.1.conv2':8,
-        'layer4.0.conv1':8,
-        'layer4.0.relu':8,
-        'layer4.0.conv2':8,
+        'layer4.0.conv1':32,
+        'layer4.0.conv2':32,
         'layer4.1.conv1':8,
-        'layer4.1.relu':8,
         'layer4.1.conv2':8,
         'fc':32,
     }

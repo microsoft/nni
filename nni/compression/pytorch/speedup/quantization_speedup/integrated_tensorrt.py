@@ -1,7 +1,7 @@
 import tensorrt as trt
-import frontend_to_onnx as fonnx
-import calibrator
-import common
+import nni.compression.pytorch.speedup.quantization_speedup.frontend_to_onnx as fonnx
+import nni.compression.pytorch.speedup.quantization_speedup.calibrator as calibrator
+import nni.compression.pytorch.speedup.quantization_speedup.common as common
 import time
 
 TRT_LOGGER = trt.Logger()
@@ -30,6 +30,7 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
         if extra_layer_bit is 32 and config is None:
             pass
         elif extra_layer_bit is 8 and config is None:
+            # entire model in 8bit mode
             builder.int8_mode = True
             builder.int8_calibrator = calib
         else:

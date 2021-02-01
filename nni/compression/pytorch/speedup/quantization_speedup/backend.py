@@ -1,5 +1,5 @@
-import integrated_tensorrt
-from integrated_tensorrt import CalibrateType
+import nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt as integrated_tensorrt
+from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType
 
 class BackendEngine:
     def __init__(self, backend, model, onnx_path, input_shape, config=None, extra_layer_bit=32, 

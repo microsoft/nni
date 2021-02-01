@@ -39,7 +39,7 @@ class Calibrator(trt.IInt8Calibrator):
     def get_batch_size(self):
         return self.batch_size
 
-    def get_batch(self):
+    def get_batch(self, names):
         """
         This function is used to define the way of feeding calibrating data each batch.
         """
