@@ -315,6 +315,11 @@ class GraphConverter:
                 new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListConstruct, self.global_seq), node.kind())
                 node_index[node] = new_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
+            elif node.kind() == 'prim::TupleConstruct':
+                self.global_seq += 1
+                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleConstruct, self.global_seq), node.kind())
+                node_index[node] = new_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
             elif node.kind() == 'aten::append':
                 self.global_seq += 1
                 aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
