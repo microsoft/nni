@@ -49,7 +49,12 @@ class TestConvert(unittest.TestCase):
         if check_value:
             self.assertEqual(len(converted_output), len(expected_output))
             for a, b in zip(converted_output, expected_output):
-                self.assertLess((a - b).abs().max().item(), 1E-4)
+                if hasattr(a, 'dtype') and a.dtype == torch.bool:
+                    self.assertEqual((a ^ b), False)
+                elif isinstance((a - b), int):
+                    self.assertEqual((a - b), 0)
+                else:
+                    self.assertLess((a - b).abs().max().item(), 1E-4)
         return converted_model
 
     # skip torch.Tensor.new_tensor as it is not supported by jit
@@ -84,7 +89,7 @@ class TestConvert(unittest.TestCase):
         class SimpleOp(nn.Module):
             def forward(self, x):
                 return torch.tensor([x.is_cuda], dtype=torch.bool, device=torch.device('cpu'))
-        self.checkExportImport(SimpleOp(), (torch.tensor((), dtype=torch.int32), ), check_value=False)
+        self.checkExportImport(SimpleOp(), (torch.tensor((), dtype=torch.int32), ))
 
     # is_quantized
     # is_meta
@@ -113,15 +118,21 @@ class TestConvert(unittest.TestCase):
     #    __Acos1 = x__1.acos()
     #    __TupleConstruct4 = (__Acos1,__Acos2,__Acos_3)
     #    return __TupleConstruct4
-    def test_basic_acos(self):
+    def test_basic_acos_asin_atan(self):
         class SimpleOp(nn.Module):
-            def forward(self, x):
+            def forward(self, x, y):
                 out1 = x.acos()
                 out2 = torch.acos(x)
                 # TODO: add back this line
                 #out3 = x.acos_()
-                return out1, out2#, out3
-        self.checkExportImport(SimpleOp(), (torch.tensor([-1.0, -0.5, 0.2]), ))
+                out3 = x.asin()
+                out4 = torch.asin(x)
+                out5 = x.atan()
+                out6 = torch.atan(x)
+                out7 = x.atan2(y)
+                out8 = torch.atan2(x, y)
+                return out1, out2, out3, out4, out5, out6, out7, out8
+        self.checkExportImport(SimpleOp(), (torch.tensor([-1.0, -0.5, 0.2]), torch.tensor([1.0, 0.6, -0.3]), ))
 
     # arccos is not supported by jit
 
@@ -137,12 +148,15 @@ class TestConvert(unittest.TestCase):
 
     def test_basic_addbmm(self):
         class SimpleOp(nn.Module):
-            def forward(self, x, y, z):
+            def forward(self, x, y, z, m):
                 out1 = x.addbmm(y, z, beta=2, alpha=3)
                 out2 = torch.addbmm(x, y, z, beta=2, alpha=3)
                 #out3 = x.addbmm_(y, z, beta=2, alpha=3)
-                return out1, out2#, out3
-        self.checkExportImport(SimpleOp(), (torch.randn(3, 5), torch.randn(10, 3, 4), torch.randn(10, 4, 5), ))
+                out3 = m.baddbmm(y, z, beta=2, alpha=3)
+                out4 = torch.baddbmm(m, y, z, beta=2, alpha=3)
+                out5 = torch.bmm(y, z) # deterministic is not supported by jit
+                return out1, out2, out3, out4, out5
+        self.checkExportImport(SimpleOp(), (torch.randn(3, 5), torch.randn(10, 3, 4), torch.randn(10, 4, 5), torch.randn(10, 3, 5), ))
 
     def test_basic_addcdiv(self):
         class SimpleOp(nn.Module):
@@ -179,37 +193,90 @@ class TestConvert(unittest.TestCase):
                 return out1, out2
         self.checkExportImport(SimpleOp(), (torch.randn(2), torch.randn(2, 3), torch.randn(3), ))
         
+    def test_basic_addr(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x, y, z):
+                out1 = x.addr(y, z, beta=2, alpha=3)
+                out2 = torch.addr(x, y, z, beta=2, alpha=3)
+                return out1, out2
+        self.checkExportImport(SimpleOp(), (torch.zeros(3, 2), torch.arange(1., 4.), torch.arange(1., 3.), ))
+
+    def test_basic_allclose(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x, y):
+                out1 = x.allclose(y, rtol=1e-05, atol=1e-08, equal_nan=False)
+                out2 = torch.allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False)
+                return out1, out2
+        self.checkExportImport(SimpleOp(), (torch.tensor([10000., 1e-07]), torch.tensor([10000.1, 1e-08]), ))
+        
+    def test_basic_angle(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out1 = x.angle()
+                out2 = torch.angle(x)
+                return out1, out2
+        self.checkExportImport(SimpleOp(), (torch.tensor([-1 + 1j, -2 + 2j, 3 - 3j]), ))
+
+    # skip apply_(callable) for now
+
+    def test_basic_argmax_argmin(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out1 = x.argmax()
+                out2 = torch.argmax(x)
+                out3 = x.argmax(dim=1)
+                out4 = torch.argmax(x, dim=1)
+                out5 = x.argmax(dim=1, keepdim=True)
+                o1 = x.argmin()
+                o2 = torch.argmin(x)
+                o3 = x.argmin(dim=1)
+                o4 = x.argmin(dim=1, keepdim=True)
+                return out1, out2, out3, out4, out5, o1, o2, o3, o4
+        self.checkExportImport(SimpleOp(), (torch.randn(4, 4), ))
+        
+    def test_basic_argsort(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out1 = x.argsort()
+                out2 = x.argsort(dim=1)
+                out3 = x.argsort(dim=1, descending=True)
+                out4 = torch.argsort(x, dim=1, descending=True)
+                return out1, out2, out3, out4
+        self.checkExportImport(SimpleOp(), (torch.randn(4, 4), ))
+
+    # skip backward(gradient=None, retain_graph=None, create_graph=False)
+        
+    def test_basic_bernoulli(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                # generator=torch.Generator() is not supported by jit
+                out = x.bernoulli()
+                return out
+        self.checkExportImport(SimpleOp(), (torch.ones(3, 3), ))
+
+    # bfloat16/bool/byte/char is not supported by jit
+
+    def test_basic_bincount(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x, y):
+                out1 = x.bincount()
+                out2 = torch.bincount(x)
+                out3 = x.bincount(weights=y)
+                out4 = x.bincount(weights=y, minlength=2)
+                return out1, out2, out3, out4
+        self.checkExportImport(SimpleOp(), (torch.randint(0, 8, (5,), dtype=torch.int64), torch.linspace(0, 1, steps=5), ))
+        
+    def test_basic_bitwise(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x, y):
+                out1 = x.bitwise_not()
+                out2 = x.bitwise_and(y)
+                out3 = x.bitwise_or(y)
+                out4 = x.bitwise_xor(y)
+                return out1, out2, out3, out4
+        self.checkExportImport(SimpleOp(), (torch.tensor([-1, -2, 3], dtype=torch.int8), torch.tensor([1, 0, 3], dtype=torch.int8), ))
+
     '''def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
                 return

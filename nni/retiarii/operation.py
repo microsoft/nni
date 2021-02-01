@@ -270,8 +270,16 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}.acos()'
         elif self.type == 'aten::acos_':
             return f'{output} = {inputs[0]}.acos_()'
+        elif self.type == 'aten::asin':
+            return f'{output} = {inputs[0]}.asin()'
+        elif self.type == 'aten::atan':
+            return f'{output} = {inputs[0]}.atan()'
+        elif self.type == 'aten::atan2':
+            return f'{output} = {inputs[0]}.atan2({inputs[1]})'
         elif self.type == 'aten::addbmm':
             return f'{output} = {inputs[0]}.addbmm({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
+        elif self.type == 'aten::baddbmm':
+            return f'{output} = {inputs[0]}.baddbmm({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
         elif self.type == 'aten::addcdiv':
             return f'{output} = {inputs[0]}.addcdiv({inputs[1]}, {inputs[2]}, value={inputs[3]})'
         elif self.type == 'aten::addcmul':
@@ -280,6 +288,33 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}.addmm({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
         elif self.type == 'aten::addmv':
             return f'{output} = {inputs[0]}.addmv({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
+        elif self.type == 'aten::bmm':
+            return f'{output} = {inputs[0]}.bmm({inputs[1]})'
+        elif self.type == 'aten::addr':
+            return f'{output} = {inputs[0]}.addr({inputs[1]}, {inputs[2]}, beta={inputs[3]}, alpha={inputs[4]})'
+        elif self.type == 'aten::allclose':
+            return f'{output} = {inputs[0]}.allclose({inputs[1]}, rtol={inputs[2]}, atol={inputs[3]}, equal_nan={inputs[4]})'
+        elif self.type == 'aten::angle':
+            return f'{output} = {inputs[0]}.angle()'
+        elif self.type == 'aten::argmax':
+            return f'{output} = {inputs[0]}.argmax(dim={inputs[1]}, keepdim={inputs[2]})'
+        elif self.type == 'aten::argmin':
+            return f'{output} = {inputs[0]}.argmin(dim={inputs[1]}, keepdim={inputs[2]})'
+        elif self.type == 'aten::argsort':
+            return f'{output} = {inputs[0]}.argsort(dim={inputs[1]}, descending={inputs[2]})'
+        elif self.type == 'aten::bernoulli':
+            assert inputs_value[1] is None
+            return f'{output} = {inputs[0]}.bernoulli()'
+        elif self.type == 'aten::bincount':
+            return f'{output} = {inputs[0]}.bincount(weights={inputs[1]}, minlength={inputs[2]})'
+        elif self.type == 'aten::bitwise_not':
+            return f'{output} = {inputs[0]}.bitwise_not()'
+        elif self.type == 'aten::bitwise_and':
+            return f'{output} = {inputs[0]}.bitwise_and({inputs[1]})'
+        elif self.type == 'aten::bitwise_or':
+            return f'{output} = {inputs[0]}.bitwise_or({inputs[1]})'
+        elif self.type == 'aten::bitwise_xor':
+            return f'{output} = {inputs[0]}.bitwise_xor({inputs[1]})'
         elif self.type == 'noop_identity':
             # this operator type is added by us
             return f'{output} = {", ".join(inputs)}'
