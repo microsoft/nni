@@ -122,6 +122,8 @@ export class AMLEnvironmentService extends EnvironmentService {
             const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
             const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
             amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`;
+        } else {
+            amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
         amlEnvironment.useActiveGpu = this.amlClusterConfig.useActiveGpu;

@@ -297,6 +297,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (environment.isAlive === false) {
+            return Promise.resolve();
+        }
+
         const executor = await this.getExecutor(environment.id);
 
         if (environment.status === 'UNKNOWN') {

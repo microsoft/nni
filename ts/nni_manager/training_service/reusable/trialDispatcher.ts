@@ -336,14 +336,12 @@ class TrialDispatcher implements TrainingService {
 
         for (let index = 0; index < environments.length; index++) {
             const environment = environments[index];
-            if (environment.isAlive === true) {
-                this.log.info(`stopping environment ${environment.id}...`);
-                if (environment.environmentService === undefined) {
-                    throw new Error(`${environment.id} do not have environmentService!`);
-                }
-                await environment.environmentService.stopEnvironment(environment);
-                this.log.info(`stopped environment ${environment.id}.`);
+            this.log.info(`stopping environment ${environment.id}...`);
+            if (environment.environmentService === undefined) {
+                throw new Error(`${environment.id} do not have environmentService!`);
             }
+            await environment.environmentService.stopEnvironment(environment);
+            this.log.info(`stopped environment ${environment.id}.`);
         }
         this.commandEmitter.off("command", this.handleCommand);
         for (const commandChannel of this.commandChannelSet) {
