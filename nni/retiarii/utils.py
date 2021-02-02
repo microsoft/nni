@@ -1,8 +1,11 @@
+import functools
 import inspect
 import warnings
 from collections import defaultdict
 from typing import Any
 from pathlib import Path
+
+import json_tricks
 
 
 def import_(target: str, allow_none: bool = False) -> Any:
@@ -18,6 +21,28 @@ def version_larger_equal(a: str, b: str) -> bool:
     a = a.split('+')[0]
     b = b.split('+')[0]
     return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
+
+
+def _blackbox_class_instance_encode(obj, primitives=False):
+    assert not primitives, 'Encoding with primitives is not supported.'
+    if hasattr(obj, '__class__') and hasattr(obj, '__init_parameters__'):
+        return {
+            '__instance_type__': _get_full_class_name(obj.__class__.__module__, obj.__class__.__name__),
+            'arguments': obj.__init_parameters__
+        }
+    return obj
+
+
+def _blackbox_class_instance_decode(obj):
+    if '__instance_type__' in obj and 'arguments' in obj:
+        return import_(obj['__instance_type__'])(**obj['arguments'])
+    return obj
+
+
+json_loads = functools.partial(json_tricks.loads, extra_obj_pairs_hooks=[_blackbox_class_instance_decode])
+json_dumps = functools.partial(json_tricks.dumps, extra_obj_encoders=[_blackbox_class_instance_encode])
+json_load = functools.partial(json_tricks.load, extra_obj_pairs_hooks=[_blackbox_class_instance_decode])
+json_dump = functools.partial(json_tricks.dump, extra_obj_encoders=[_blackbox_class_instance_encode])
 
 
 _records = {}
@@ -51,7 +76,7 @@ def del_record(key):
 def _blackbox_cls(cls, module_name, register_format=None):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
-            argname_list = list(inspect.signature(cls).parameters.keys())
+            argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
             full_args = {}
             full_args.update(kwargs)
 
@@ -59,20 +84,10 @@ def _blackbox_cls(cls, module_name, register_format=None):
             for argname, value in zip(argname_list, args):
                 full_args[argname] = value
 
-            # eject un-serializable arguments
-            for k in list(full_args.keys()):
-                # The list is not complete and does not support nested cases.
-                if not isinstance(full_args[k], (int, float, str, dict, list, tuple)):
-                    if not (register_format == 'full' and k == 'model'):
-                        # no warning if it is base model in trainer
-                        warnings.warn(f'{cls} has un-serializable arguments {k} whose value is {full_args[k]}. \
-                            This is not supported. You can ignore this warning if you are passing the model to trainer.')
-                    full_args.pop(k)
-
             if register_format == 'args':
                 add_record(id(self), full_args)
             elif register_format == 'full':
-                full_class_name = cls.__module__ + '.' + cls.__name__
+                full_class_name = _get_full_class_name(cls.__module__, cls.__name__)
                 add_record(id(self), {'modulename': full_class_name, 'args': full_args})
 
             self.__init_parameters__ = full_args
@@ -99,41 +114,21 @@ def blackbox(cls, *args, **kwargs):
     .. code-block:: python
         self.op = blackbox(MyCustomOp, hidden_units=128)
     """
-    # get caller module name
-    frm = inspect.stack()[1]
-    module_name = inspect.getmodule(frm[0]).__name__
-    return _blackbox_cls(cls, module_name, 'args')(*args, **kwargs)
+    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'blackbox'), 'args')(*args, **kwargs)
 
 
 def blackbox_module(cls):
     """
     Register a module. Use it as a decorator.
     """
-    frm = inspect.stack()[1]
-
-    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given black box module, '
-                                                     'please define it explicitly in a .py file.')
-    module_name = inspect.getmodule(frm[0]).__name__
-
-    if module_name == '__main__':
-        main_file_path = Path(inspect.getsourcefile(frm[0]))
-        if main_file_path.parents[0] != Path('.'):
-            raise RuntimeError(f'you are using "{main_file_path}" to launch your experiment, '
-                               f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
-        module_name = main_file_path.stem
-
-    return _blackbox_cls(cls, module_name, 'args')
+    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'module'), 'args')
 
 
 def register_trainer(cls):
     """
     Register a trainer. Use it as a decorator.
     """
-    frm = inspect.stack()[1]
-    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given trainer, '
-                                                     'please define it explicitly in a .py file.')
-    module_name = inspect.getmodule(frm[0]).__name__
-    return _blackbox_cls(cls, module_name, 'full')
+    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'trainer'), 'full')
 
 
 _last_uid = defaultdict(int)
@@ -142,3 +137,22 @@ _last_uid = defaultdict(int)
 def uid(namespace: str = 'default') -> int:
     _last_uid[namespace] += 1
     return _last_uid[namespace]
+
+
+def _get_module_name(cls, inspect_stack, placeholder):
+    frm = inspect_stack[1]
+    # assert (inspect.getmodule(frm[0]) is not None), (f'Unable to locate the definition of the given {placeholder}, '
+    #                                                  'please define it explicitly in a .py file.')
+    # module_name = inspect.getmodule(frm[0]).__name__
+    module_name = cls.__module__
+    if module_name == '__main__':
+        main_file_path = Path(inspect.getsourcefile(frm[0]))
+        if main_file_path.parents[0] != Path('.'):
+            raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
+                               f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
+        module_name = main_file_path.stem
+    return module_name
+
+
+def _get_full_class_name(module_name, class_name):
+    return module_name + '.' + class_name
