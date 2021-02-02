@@ -331,8 +331,8 @@ class Experiment extends React.Component<{}, ExpListState> {
 
         data = data.filter(
             item =>
-                (selectedStartDate !== undefined ? compareDate(new Date(item.startTime), selectedStartDate) : true) &&
-                (selectedEndDate !== undefined ? compareDate(new Date(item.endTime), selectedEndDate) : true)
+                (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate)) &&
+                (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
         );
 
         return data;
@@ -385,7 +385,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 result = result.filter(
                     item =>
                         compareDate(new Date(item.startTime), date) &&
-                        (selectedEndDate !== undefined ? compareDate(new Date(item.endTime), selectedEndDate) : true)
+                        (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
                 );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
@@ -395,9 +395,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                 result = result.filter(
                     item =>
                         compareDate(new Date(item.endTime), date) &&
-                        (selectedStartDate !== undefined
-                            ? compareDate(new Date(item.startTime), selectedStartDate)
-                            : true)
+                        (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate))
                 );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
