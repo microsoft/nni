@@ -150,6 +150,9 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::view':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]}.view({inputs[1]})'
+        elif self.type == 'aten::reshape':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}.reshape({inputs[1]})'
         elif self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
         elif self.type == 'aten::Bool':
