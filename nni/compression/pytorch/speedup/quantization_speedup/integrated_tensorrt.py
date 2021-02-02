@@ -27,9 +27,9 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
         builder.max_batch_size = 1
         builder.max_workspace_size = common.GiB(1)
 
-        if extra_layer_bit is 32 and config is None:
+        if extra_layer_bit == 32 and config is None:
             pass
-        elif extra_layer_bit is 8 and config is None:
+        elif extra_layer_bit == 8 and config is None:
             # entire model in 8bit mode
             builder.int8_mode = True
             builder.int8_calibrator = calib

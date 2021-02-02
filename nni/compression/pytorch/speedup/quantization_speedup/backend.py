@@ -44,7 +44,7 @@ class BackendEngine:
             Output name of onnx model providing for torch.onnx.export to generate onnx model
         """
         self.backend = backend
-        if self.backend is 'tensorrt':
+        if self.backend == 'tensorrt':
             self.engine = integrated_tensorrt.TensorRt(model, onnx_path, input_shape, config=config, 
                 extra_layer_bit=32, strict_datatype=True, using_calibrate=True, calibrate_type=CalibrateType.ENTROPY2, 
                 calib_data=calib_data, calibration_cache = calibration_cache, batchsize=batchsize, 
@@ -54,7 +54,7 @@ class BackendEngine:
             # self.engine = NewBackend(*args)
     
     def build(self):
-        if self.backend is 'tensorrt':
+        if self.backend == 'tensorrt':
             self.engine.tensorrt_build()
         else:
             raise NameError('Only support tensorrt as backend now.')
