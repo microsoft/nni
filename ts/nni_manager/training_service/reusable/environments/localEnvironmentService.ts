@@ -111,6 +111,10 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (environment.isAlive === false) {
+            return Promise.resolve();
+        }
+
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
         tkill(Number(pid), 'SIGKILL');
