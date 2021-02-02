@@ -4,7 +4,7 @@ import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react
 
 function DialogDetail(props): any {
 
-    const { visible, message, func } = props;
+    const { message, func } = props;
     const dialogContentProps = {
         type: DialogType.normal,
         title: 'Tensorboard',
@@ -14,20 +14,19 @@ function DialogDetail(props): any {
 
     return (
         <Dialog
-            hidden={!visible}
+            hidden={false}
             // onDismiss={toggleHideDialog}
             dialogContentProps={dialogContentProps}
             className='dialog'
         >
             <DialogFooter>
-                <PrimaryButton onClick={(): void => { func(false) }} text="Close" />
+                <PrimaryButton onClick={(): void => { func(false) || func() }} text="Close" />
             </DialogFooter>
         </Dialog>
     );
 }
 
 DialogDetail.propTypes = {
-    visible: PropTypes.bool,
     message: PropTypes.string,
     func: PropTypes.func,
 };

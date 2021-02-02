@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     DefaultButton,
     Dropdown,
@@ -12,9 +13,9 @@ import {
     TooltipHost,
     DirectionalHint
 } from '@fluentui/react';
-import React from 'react';
+import axios from 'axios';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
+import { TOOLTIP_BACKGROUND_COLOR, MANAGER_IP } from '../../static/const';
 import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
 import { TableObj, SortInfo } from '../../static/interface';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
@@ -26,6 +27,7 @@ import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
 import { Trial } from '../../static/model/trial';
+import DialogDetail from '../modals/tensorboard/DialogDetail';
 import '../../static/style/button.scss';
 import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
@@ -89,6 +91,8 @@ interface TableListState {
     intermediateDialogTrial: TableObj | undefined;
     copiedTrialId: string | undefined;
     sortInfo: SortInfo;
+    visibleDialog: boolean;
+    dialogContent: string;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -110,7 +114,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowIds: [],
             intermediateDialogTrial: undefined,
             copiedTrialId: undefined,
-            sortInfo: { field: '', isDescend: true }
+            sortInfo: { field: '', isDescend: true },
+            visibleDialog: false,
+            dialogContent: ''
         };
 
         this._selection = new Selection({
@@ -401,8 +407,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         {blocked}
                     </PrimaryButton>
                 ) : (
-                    <KillJob trial={record} />
-                )}
+                        <KillJob trial={record} />
+                    )}
                 <PrimaryButton
                     className='detail-button-operation'
                     title='Customized trial'
@@ -415,6 +421,49 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 </PrimaryButton>
             </Stack>
         );
+    }
+
+    private seeTrialTensorboard = (): void => {
+        /**
+         * 	1. Start new tensorboard
+                Request: POST /api/v1/tensorboard
+                Parameters:
+                {
+                    "trials": "trialId1, trialId2"
+                }
+                Response if success:
+                Status:201
+                {
+                tensorboardId: "id"
+                }
+                Response if failed:
+                Status 400
+                {
+                Message:"error message"
+                }
+
+        */
+        const { selectedRowIds } = this.state;
+        this.setState({ tensorboardPanelVisible: true });
+        axios(`${MANAGER_IP}/tensorboard`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            data: {
+                trials: selectedRowIds.toString()
+            }
+        })
+            .then(res => {
+                if (res.status === 201) {
+                    this.setState({ tensorboardPanelVisible: true });
+                }
+            })
+            .catch(error => {
+                this.setState({ visibleDialog: true, dialogContent: error.message || 'Tensorboard start failed' });
+            });
+    }
+
+    private closeDialog = (): void => {
+        this.setState({ visibleDialog: false});
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
@@ -438,7 +487,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             displayedColumns,
             selectedRowIds,
             intermediateDialogTrial,
-            copiedTrialId
+            copiedTrialId,
+            visibleDialog,
+            dialogContent
         } = this.state;
         console.info('detail');
         console.info(selectedRowIds);
@@ -461,9 +512,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <DefaultButton
                             text='Tensorboard'
                             className='allList-compare elementMarginLeft'
-                            onClick={(): void => {
-                                this.setState({ tensorboardPanelVisible: true });
-                            }}
+                            onClick={(): void => this.seeTrialTensorboard()}
                             disabled={selectedRowIds.length === 0}
                         />
                     </StackItem>
@@ -488,11 +537,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             <input
                                 type='text'
                                 className='allList-search-input'
-                                placeholder={`Search by ${
-                                    ['id', 'trialnum'].includes(searchType)
+                                placeholder={`Search by ${['id', 'trialnum'].includes(searchType)
                                         ? searchOptionLiterals[searchType]
                                         : searchType
-                                }`}
+                                    }`}
                                 onChange={this._updateSearchText.bind(this)}
                                 style={{ width: 230 }}
                             />
@@ -565,6 +613,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         this.setState({ copiedTrialId: undefined });
                     }}
                 />
+                {/* for all trials tensorboard failed modal */}
+                {visibleDialog &&
+                    <DialogDetail
+                        message={dialogContent}
+                        func={this.closeDialog}
+                    />}
             </div>
         );
     }

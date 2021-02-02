@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 import { Stack, Panel, StackItem, PrimaryButton, DetailsList, IColumn, IconButton } from '@fluentui/react';
 import DialogDetail from './DialogDetail';
-import axios from 'axios';
-import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
 import { MANAGER_IP } from '../../../static/const';
+import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
 import '../../../static/style/tensorboard.scss';
 
 function Tensorboard(props): any {
@@ -118,28 +118,8 @@ function Tensorboard(props): any {
             setDialogContent(`Failed to stopped trial ${id}'s tensorboard`);
         }
         setVisibleDialog(true);
-
     }
 
-    /**
-     * 	1. Start new tensorboard
-            Request: POST /api/v1/tensorboard
-            Parameters:
-            {
-                "trials": "trialId1, trialId2"
-            }
-            Response if success:
-            Status:201
-            {
-            tensorboardId: "id"
-            }
-            Response if failed:
-            Status 400
-            {
-            Message:"error message"
-            }
-
-     */
     return (
         <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={onHideDialog}>
             <div className='panel'>
@@ -164,7 +144,6 @@ function Tensorboard(props): any {
             </div>
             {visibleDialog &&
                 <DialogDetail
-                    visible={visibleDialog}
                     message={dialogContent}
                     func={setVisibleDialog}
                 />}
