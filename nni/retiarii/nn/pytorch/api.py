@@ -127,7 +127,7 @@ class LayerChoice(nn.Module):
         return list(self)
 
     def forward(self, x):
-        warnings.warn('You should be run forward of this module directly.')
+        warnings.warn('You should not run forward of this module directly.')
         return x
 
 
@@ -150,7 +150,7 @@ class InputChoice(nn.Module):
     n_chosen : int
         Recommended inputs to choose. If None, mutator is instructed to select any.
     reduction : str
-        ``mean``, ``concat``, ``sum`` or ``none``. See :class:`LayerChoice`.
+        ``mean``, ``concat``, ``sum`` or ``none``.
     label : str
         Identifier of the input choice.
     """
@@ -167,6 +167,7 @@ class InputChoice(nn.Module):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
+        assert self.reduction in ['mean', 'concat', 'sum', 'none']
         self._label = label if label is not None else f'inputchoice_{uid()}'
 
     @property
@@ -184,7 +185,7 @@ class InputChoice(nn.Module):
         return self._label
 
     def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
-        warnings.warn('You should be run forward of this module directly.')
+        warnings.warn('You should not run forward of this module directly.')
         return candidate_inputs[0]
 
 
@@ -194,23 +195,17 @@ class ValueChoice(nn.Module):
 
     Should initialize the values to choose from in init and call the module in forward to get the chosen value.
 
-    Therefore, a common use should be, pass the ValueChoice to a blackbox module like this:
+    A common use is to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```. For example,
 
     .. code-block:: python
-
-        @blackbox_module
-        class DynamicDepthModule(nn.Module):
-            def forward(self, x: torch.Tensor, depth: int):
-                ...
 
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.depth = nn.ValueChoice([2, 3, 4])
-                self.conv = DynamicDepthModule()
+                self.dropout_rate = nn.ValueChoice([0., 1.])
 
             def forward(self, x):
-                return self.conv(x, self.depth())
+                return F.dropout(x, self.dropout_rate())
 
     The following use case is currently not supported because ValueChoice cannot be called in ``__init__``.
     Please use LayerChoice as a workaround.
@@ -239,8 +234,8 @@ class ValueChoice(nn.Module):
         return self._label
 
     def forward(self):
-        warnings.warn('You should be run forward of this module directly.')
-        return 0
+        warnings.warn('You should not run forward of this module directly.')
+        return self.candidates[0]
 
 
 class Placeholder(nn.Module):
