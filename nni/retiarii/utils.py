@@ -74,6 +74,8 @@ def _blackbox_cls(cls, module_name, register_format=None):
                 full_class_name = cls.__module__ + '.' + cls.__name__
                 add_record(id(self), {'modulename': full_class_name, 'args': full_args})
 
+            self.__init_parameters__ = full_args
+
             super().__init__(*args, **kwargs)
 
         def __del__(self):
