@@ -1,0 +1,14 @@
+$cicleBg: #009EE7;
+$size: 24px;
+
+.circle {
+    display:inline-block;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+    color: #fff;
+    line-height: $size;
+    text-align: center;
+    background: $cicleBg;
+    margin-left: 4px;
+}

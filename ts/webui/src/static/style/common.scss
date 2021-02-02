@@ -1,3 +1,5 @@
+$themeBlue: #0071bc;
+
 .ellipsis {
 	overflow: hidden;
 	white-space: nowrap;
@@ -24,4 +26,19 @@
 	& i:hover {
 		cursor: pointer;
 	}
+}
+
+.elementMarginLeft {
+	margin-left: 10px;
+}
+
+.operationBtn {
+	i {
+		color: $themeBlue;
+	}
+}
+
+/* for table row border */
+.ms-List-cell {
+	border-bottom: 1px solid #EEECEA;
 }

@@ -4,6 +4,10 @@ initializeIcons();
 
 const infoIcon = <Icon iconName='info' />;
 const warining = <Icon iconName='Warning' />;
+// const deleteIcon = <Icon iconName='Delete' />;
+// const openInNewWindow = <Icon iconName='OpenInNewWindow' />;
+// const deleteIcon = { iconName: 'Delete' };
+// const openInNewWindow = { iconName: 'OpenInNewWindow' };
 const errorBadge = <Icon iconName='ErrorBadge' />;
 const completed = <Icon iconName='Completed' />;
 const blocked = <Icon iconName='StatusCircleBlock' />;
@@ -26,6 +30,8 @@ const ChevronRightMed = <Icon iconName='ChevronRightMed' />;
 export {
     infoIcon,
     warining,
+    // deleteIcon,
+    // openInNewWindow,
     errorBadge,
     completed,
     blocked,

@@ -17,10 +17,15 @@ import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
 import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
 import { TableObj, SortInfo } from '../../static/interface';
-import '../../static/style/search.scss';
-import '../../static/style/tableStatus.css';
-import '../../static/style/logPath.scss';
-import '../../static/style/table.scss';
+import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
+import ChangeColumnComponent from '../modals/ChangeColumnComponent';
+import Compare from '../modals/Compare';
+import Customize from '../modals/CustomizedTrial';
+import Tensorboard from '../modals/tensorboard/Tensorboard';
+import KillJob from '../modals/Killjob';
+import ExpandableDetails from '../public-child/ExpandableDetails';
+import PaginationTable from '../public-child/PaginationTable';
+import { Trial } from '../../static/model/trial';
 import '../../static/style/button.scss';
 import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
@@ -29,14 +34,6 @@ import '../../static/style/search.scss';
 import '../../static/style/table.scss';
 import '../../static/style/tableStatus.css';
 import '../../static/style/overview/overviewTitle.scss';
-import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
-import ChangeColumnComponent from '../modals/ChangeColumnComponent';
-import Compare from '../modals/Compare';
-import Customize from '../modals/CustomizedTrial';
-import KillJob from '../modals/Killjob';
-import ExpandableDetails from '../public-child/ExpandableDetails';
-import PaginationTable from '../public-child/PaginationTable';
-import { Trial } from '../../static/model/trial';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -88,6 +85,7 @@ interface TableListState {
     selectedRowIds: string[];
     customizeColumnsDialogVisible: boolean;
     compareDialogVisible: boolean;
+    tensorboardPanelVisible: boolean;
     intermediateDialogTrial: TableObj | undefined;
     copiedTrialId: string | undefined;
     sortInfo: SortInfo;
@@ -108,6 +106,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchText: '',
             customizeColumnsDialogVisible: false,
             compareDialogVisible: false,
+            tensorboardPanelVisible: false,
             selectedRowIds: [],
             intermediateDialogTrial: undefined,
             copiedTrialId: undefined,
@@ -435,12 +434,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchType,
             customizeColumnsDialogVisible,
             compareDialogVisible,
+            tensorboardPanelVisible,
             displayedColumns,
             selectedRowIds,
             intermediateDialogTrial,
             copiedTrialId
         } = this.state;
-
+        console.info('detail');
+        console.info(selectedRowIds);
         return (
             <div id='tableList'>
                 <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
@@ -454,6 +455,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             className='allList-compare'
                             onClick={(): void => {
                                 this.setState({ compareDialogVisible: true });
+                            }}
+                            disabled={selectedRowIds.length === 0}
+                        />
+                        <DefaultButton
+                            text='Tensorboard'
+                            className='allList-compare elementMarginLeft'
+                            onClick={(): void => {
+                                this.setState({ tensorboardPanelVisible: true });
                             }}
                             disabled={selectedRowIds.length === 0}
                         />
@@ -514,6 +523,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         trials={this.props.tableSource.filter(trial => selectedRowIds.includes(trial.id))}
                         onHideDialog={(): void => {
                             this.setState({ compareDialogVisible: false });
+                        }}
+                    />
+                )}
+                {tensorboardPanelVisible && (
+                    <Tensorboard
+                        trialIDs={selectedRowIds}
+                        onHideDialog={(): void => {
+                            this.setState({ tensorboardPanelVisible: false });
                         }}
                     />
                 )}
