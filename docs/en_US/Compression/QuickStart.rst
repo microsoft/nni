@@ -45,7 +45,7 @@ After training, you get accuracy of the pruned model. You can export model weigh
 
    pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
-Please refer :githublink:`mnist example <examples/model_compress/pruning/mnist_torch.py>` for quick start.
+Please refer :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for quick start.
 
 Speed up the model
 ^^^^^^^^^^^^^^^^^^

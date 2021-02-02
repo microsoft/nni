@@ -22,7 +22,7 @@ Therefore ``{ 'sparsity': 0.5, 'op_types': ['Conv2d'] }``\ means that **all laye
 Then, make this automatic
 -------------------------
 
-The previous example manually choosed L2FilterPruner and pruned with a specified sparsity. Different sparsity and different pruners may have different effect on different models. This process can be done with NNI tuners.
+The previous example manually chose L2FilterPruner and pruned with a specified sparsity. Different sparsity and different pruners may have different effect on different models. This process can be done with NNI tuners.
 
 Firstly, modify our codes for few lines
 
@@ -39,7 +39,8 @@ Firstly, modify our codes for few lines
     model, pruner = get_model_pruner(model_name, pruner_name, sparsity)
     pruner.compress()
 
-    # after testing
+    train(model)  # your code for fine-tuning the model
+    acc = test(model)  # test the fine-tuned model
     nni.report_final_results(acc)
 
 Then, define a ``config`` file in YAML to automatically tuning model, pruning algorithm and sparisty.
@@ -63,6 +64,12 @@ Then, define a ``config`` file in YAML to automatically tuning model, pruning al
     trialConcurrency: 1
     trialGpuNumber: 0
     tuner:
-    name: grid
+      name: grid
 
 The full example can be found :githublink:`here <examples/model_compress/pruning/config.yml>`
+
+Finally, start the searching via
+
+.. code-block:: bash
+
+   nnictl create -c config.yml

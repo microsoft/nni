@@ -90,7 +90,7 @@ def main(args):
     model = LeNet().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
-    print('start pre-training...')
+    print('start pre-training')
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
@@ -99,7 +99,7 @@ def main(args):
         
     torch.save(model.state_dict(), "pretrain_mnist_lenet.pt")
 
-    print('start pruning...')
+    print('start pruning')
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01)
 
     # create pruner

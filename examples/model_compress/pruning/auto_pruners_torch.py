@@ -3,7 +3,7 @@
 
 '''
 Example for supported automatic pruning algorithms.
-In this example, we present the usage of automatic pruners (NetAdapt, AutoCompressPruner). L1, L2, FPGM pruners are aims for comparsion.
+In this example, we present the usage of automatic pruners (NetAdapt, AutoCompressPruner). L1, L2, FPGM pruners are also executed for comparison purpose.
 '''
 
 import argparse

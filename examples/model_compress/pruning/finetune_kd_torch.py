@@ -2,8 +2,8 @@
 # Licensed under the MIT license.
 
 '''
-NNI exmaple for fine-tuning the pruend model with KD.
-Run basic_pruners_torch.py first to get the pruend model.
+NNI exmaple for fine-tuning the pruned model with KD.
+Run basic_pruners_torch.py first to get the masks of the pruned model. Then pass the mask as argument for model speedup. The compressed model is further used for fine-tuning.
 '''
 
 import argparse
@@ -24,7 +24,7 @@ from models.cifar10.vgg import VGG
 from basic_pruners_torch import get_data
 
 import nni
-from nni.compression.pytorch import apply_compression_results, ModelSpeedup, get_dummy_input
+from nni.compression.pytorch import ModelSpeedup, get_dummy_input
 
 class DistillKL(nn.Module):
     """Distilling the Knowledge in a Neural Network"""
@@ -166,9 +166,9 @@ if __name__ == '__main__':
     parser.add_argument('--teacher-model-dir', type=str, default=None,
                         help='path to the pretrained teacher model checkpoint')
     parser.add_argument('--mask-path', type=str, default=None,
-                        help='path to the pruend student model mask file')
+                        help='path to the pruned student model mask file')
     parser.add_argument('--student-model-dir', type=str, default=None,
-                        help='path to the pruend student model checkpoint')
+                        help='path to the pruned student model checkpoint')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training')
     parser.add_argument('--test-batch-size', type=int, default=200,

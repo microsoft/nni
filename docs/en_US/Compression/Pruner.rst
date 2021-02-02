@@ -58,9 +58,14 @@ User configuration for Level Pruner
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.LevelPruner
 
+**TensorFlow**
+
+..  autoclass:: nni.algorithms.compression.tensorflow.pruning.LevelPruner
+
+
 Slim Pruner
 -----------
-This is an one-shot pruner, which adds sparsity regularization on the scaling factors of batch normalization (BN) layers durting training to identify unimportant channels. . The channels with small scaling factor values will be pruned. For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
+This is an one-shot pruner, which adds sparsity regularization on the scaling factors of batch normalization (BN) layers durting training to identify unimportant channels. The channels with small scaling factor values will be pruned. For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
 
 Usage
 ^^^^^
@@ -415,12 +420,6 @@ PyTorch code
 .. code-block:: python
 
    pruner.update_epoch(epoch)
-
-You can view :githublink:`mnist example <examples/model_compress/pruning/naive_example_torch.py>` for a quick start.
-
-.. code-block:: python
-
-   python naive_example_torch.py
 
 
 User configuration for AGP Pruner
