@@ -141,9 +141,6 @@ def uid(namespace: str = 'default') -> int:
 
 def _get_module_name(cls, inspect_stack, placeholder):
     frm = inspect_stack[1]
-    # assert (inspect.getmodule(frm[0]) is not None), (f'Unable to locate the definition of the given {placeholder}, '
-    #                                                  'please define it explicitly in a .py file.')
-    # module_name = inspect.getmodule(frm[0]).__name__
     module_name = cls.__module__
     if module_name == '__main__':
         main_file_path = Path(inspect.getsourcefile(frm[0]))
