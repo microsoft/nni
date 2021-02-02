@@ -4,14 +4,13 @@ import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react
 
 function DialogDetail(props): any {
 
-    const {status, visible, func} = props;
+    const { visible, message, func } = props;
     const dialogContentProps = {
         type: DialogType.normal,
-        title: 'Tensorboard progress',
+        title: 'Tensorboard',
         closeButtonAriaLabel: 'Close',
-        subText: `Please waiting some time to see tensorboard because this trial's tensorboard status is ${status}`,
+        subText: message
     };
-    console.info('dialog');
 
     return (
         <Dialog
@@ -21,15 +20,15 @@ function DialogDetail(props): any {
             className='dialog'
         >
             <DialogFooter>
-                <PrimaryButton onClick={() => {func(false)}} text="Close" />
+                <PrimaryButton onClick={(): void => { func(false) }} text="Close" />
             </DialogFooter>
         </Dialog>
     );
 }
 
 DialogDetail.propTypes = {
-    status: PropTypes.string,
     visible: PropTypes.bool,
+    message: PropTypes.string,
     func: PropTypes.func,
 };
 

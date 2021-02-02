@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, Panel, StackItem, PrimaryButton, DetailsList, IColumn, IconButton } from '@fluentui/react';
 import DialogDetail from './DialogDetail';
+import axios from 'axios';
 import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
 import { MANAGER_IP } from '../../../static/const';
 import '../../../static/style/tensorboard.scss';
@@ -12,7 +13,7 @@ function Tensorboard(props): any {
     const [deleteIDs, setDeleteIDs] = useState([] as string[]);
     const [trialCount, setTrialCount] = useState(trialIDs.length - deleteIDs.length);
     const [source, setSource] = useState([]);
-    const [status, setStatus] = useState(''); // trial tensorboard status
+    const [dialogContent, setDialogContent] = useState(''); // trial tensorboard api error
     const [visibleDialog, setVisibleDialog] = useState(false);
 
     const columns: IColumn[] = [
@@ -53,12 +54,12 @@ function Tensorboard(props): any {
                 <IconButton
                     iconProps={{ iconName: 'OpenInNewWindow' }}
                     title="open"
-                    onClick={() => openTrialTensorboard(record.id)}
+                    onClick={(): Promise<void> => openTrialTensorboard(record.id)}
                 />
                 <IconButton
                     iconProps={{ iconName: 'Delete' }}
                     title="delete"
-                    onClick={() => deleteOneTrialTensorboard(record.id)}
+                    onClick={(): Promise<void> => deleteOneTrialTensorboard(record.id)}
                 />
             </Stack>
         );
@@ -74,10 +75,10 @@ function Tensorboard(props): any {
                 "url": "tensorboard url"
             }
         */
-    //    效果演示代码
-    //    await setStatus('downloag');
-    //    await setVisibleDialog(true);
-       console.info(id);
+        //    效果演示代码
+        //    await setStatus('downloag');
+        //    await setVisibleDialog(true);
+        console.info(id);
         await requestAxios(`${MANAGER_IP}/tensorboard/:${id}`)
             .then(data => {
                 if (data.status !== 'downloading data') {
@@ -85,18 +86,18 @@ function Tensorboard(props): any {
                     window.open(data.url);
                 } else {
                     // 提示trial正在起tensorboard, 展示当前状态，
-                    setStatus(data.status);
+                    setDialogContent(`Please waiting some time to see tensorboard because this trial's tensorboard status is ${status}`);
                     setVisibleDialog(true);
                 }
             })
-            .catch(_error => {
-                // 页面展示error message
-                alert('youwenti');
-                // TODO: 提示有问题，请重新点击
+            .catch(error => {
+                // 提示有问题，请重新点击
+                setDialogContent(error.message);
+                setVisibleDialog(true);
             });
     }
 
-    function deleteOneTrialTensorboard(id: string): void {
+    async function deleteOneTrialTensorboard(id: string): Promise<void> {
         /**
          * 	4. Stop tensorboard
                 Request: DELETE /api/v1/tensorboard/:id
@@ -104,12 +105,19 @@ function Tensorboard(props): any {
                 {
                     status: "stopping"
                 }
-         */
-        const a = deleteIDs;
-        a.push(id);
-        setDeleteIDs(a);
-        setTrialCount(trialIDs.length - a.length);
-        console.info('dele op');
+        */
+
+        const response = await axios.delete(`${MANAGER_IP}/tensorboard/:${id}`);
+        if (response.status === 200) {
+            const a = deleteIDs;
+            a.push(id);
+            setDeleteIDs(a);
+            setTrialCount(trialIDs.length - a.length);
+            setDialogContent(`Had stopped trial ${id}'s tensorboard`);
+        } else {
+            setDialogContent(`Failed to stopped trial ${id}'s tensorboard`);
+        }
+        setVisibleDialog(true);
 
     }
 
@@ -154,7 +162,12 @@ function Tensorboard(props): any {
                     </StackItem>
                 </Stack>
             </div>
-            {visibleDialog && <DialogDetail status={status} visible={visibleDialog} func={setVisibleDialog}/>}
+            {visibleDialog &&
+                <DialogDetail
+                    visible={visibleDialog}
+                    message={dialogContent}
+                    func={setVisibleDialog}
+                />}
         </Panel>
     );
 }
