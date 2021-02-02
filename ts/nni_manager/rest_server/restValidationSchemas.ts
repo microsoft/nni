@@ -198,7 +198,11 @@ export namespace ValidationSchemas {
                 remoteMountPoint: joi.string(),
                 nfsServer: joi.string(),
                 exportedDirectory: joi.string(),
-                hasLocalMounted: joi.boolean()
+                storageAccountName: joi.string(),
+                storageAccountKey: joi.string(),
+                containerName: joi.string(),
+                resourceGroupName: joi.string(),
+                localMounted: joi.string()
             })
         }
     };

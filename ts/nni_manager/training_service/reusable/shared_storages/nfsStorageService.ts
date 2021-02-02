@@ -6,7 +6,7 @@
 import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
-import { SharedStorageService, SharedStorageConfig, SharedStorageType } from '../sharedStorage'
+import { SharedStorageService, SharedStorageConfig, SharedStorageType, LocalMountedType } from '../sharedStorage'
 import { MountedStorageService } from '../storages/mountedStorageService';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { getLogger, Logger } from '../../../common/log';
@@ -19,16 +19,16 @@ class NFSSharedStorageConfig implements SharedStorageConfig {
 
     public nfsServer: string;
     public exportedDirectory: string;
-    public hasLocalMounted: boolean;
+    public localMounted: LocalMountedType;
 
     constructor(storageType: SharedStorageType, localMountPoint: string, remoteMountPoint: string,
-                nfsServer: string, exportedDirectory: string, hasLocalMounted: boolean) {
+                nfsServer: string, exportedDirectory: string, localMounted: LocalMountedType) {
         this.storageType = storageType;
         this.localMountPoint = localMountPoint;
         this.remoteMountPoint = remoteMountPoint;
         this.nfsServer = nfsServer;
         this.exportedDirectory = exportedDirectory;
-        this.hasLocalMounted = hasLocalMounted;
+        this.localMounted = localMounted;
     }
 }
 
@@ -60,12 +60,17 @@ export class NFSSharedStorageService extends SharedStorageService {
             this.storageType = nfsConfig.storageType;
             this.nfsServer = nfsConfig.nfsServer;
             this.exportedDirectory = nfsConfig.exportedDirectory;
-            if ( nfsConfig.hasLocalMounted === false ) {
+            if (nfsConfig.localMounted === 'nnimount') {
                 await this.helpLocalMount();
+            } else if (nfsConfig.localMounted === 'nomount') {
+                const errorMessage = `${this.storageType} Shared Storage:  ${this.storageType} not Support 'nomount'.`;
+                this.log.error(errorMessage);
+                return Promise.reject(errorMessage);
             }
 
             this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         }
+        return Promise.resolve();
     }
 
     public get canLocalMounted(): boolean{
@@ -100,7 +105,10 @@ export class NFSSharedStorageService extends SharedStorageService {
         }
 
         try {
-            await cpp.exec(this.localMountCommand);
+            const result = await cpp.exec(this.localMountCommand);
+            if (result.stderr) {
+                throw new Error(result.stderr);
+            }
         } catch (error) {
             const errorMessage: string = `${this.storageType} Shared Storage: Mount ${this.nfsServer}:${this.exportedDirectory} to ${this.localMountPoint} failed, error is ${error}`;
             this.log.error(errorMessage);

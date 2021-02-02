@@ -6,6 +6,7 @@
 import { StorageService } from './storageService'
 
 export type SharedStorageType = 'NFS' | 'AzureBlob'
+export type LocalMountedType = 'usermount' | 'nnimount' | 'nomount'
 
 export interface SharedStorageConfig {
     readonly storageType: SharedStorageType;

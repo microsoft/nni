@@ -24,11 +24,12 @@ amlConfig:
   workspaceName: ${replace_to_your_workspaceName}
   computeTarget: ${replace_to_your_computeTarget}
 sharedStorage:
-  storageType: NFS
+  storageType: AzureBlob
   localMountPoint: ${your/local/mount/point}
   remoteMountPoint: ${your/remote/mount/point}
-  nfsServer: ${nfs-server-ip}
-  exportedDirectory: ${nfs/exported/directory}
+  resourceGroupName: ${replace_to_your_resourceGroupName}
+  storageAccountName: ${replace_to_your_storageAccountName}
+  containerName: ${replace_to_your_containerName}
   # usermount means you have already mount this storage on localMountPoint
   # nnimount means nni will try to mount this storage on localMountPoint
   # nomount means storage will not mount in local machine, will support partial storages in the future 

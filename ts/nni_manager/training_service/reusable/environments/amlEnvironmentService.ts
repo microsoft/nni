@@ -121,7 +121,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         if (amlEnvironment.useSharedStorage) {
             const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
             const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
-            amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`;
+            amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`.replace(/"/g, `\\"`);
         } else {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }

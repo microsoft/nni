@@ -29,6 +29,7 @@ import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { SharedStorageService, SharedStorageConfig } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
+import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
 
 
@@ -915,6 +916,11 @@ class TrialDispatcher implements TrainingService {
             case 'NFS':
                 Container.bind(SharedStorageService)
                          .to(NFSSharedStorageService)
+                         .scope(Scope.Singleton);
+                break;
+            case 'AzureBlob':
+                Container.bind(SharedStorageService)
+                         .to(AzureBlobSharedStorageService)
                          .scope(Scope.Singleton);
                 break;
             default: {
