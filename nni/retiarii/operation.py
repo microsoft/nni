@@ -121,6 +121,8 @@ class PyTorchOperation(Operation):
             return f'{output} = {value}'
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
+        elif self.type == 'prim::TupleConstruct':
+            return f'{output} = ({", ".join(inputs)})'
         elif self.type == 'prim::GetAttr':
             return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
         elif self.type == 'aten::mean':

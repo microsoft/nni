@@ -10,6 +10,7 @@ class OpTypeName(str, Enum):
     Attr = 'Attr'
     Constant = 'Constant'
     ListConstruct = 'ListConstruct'
+    TupleConstruct = 'TupleConstruct'
     LayerChoice = 'LayerChoice'
     InputChoice = 'InputChoice'
     ValueChoice = 'ValueChoice'
