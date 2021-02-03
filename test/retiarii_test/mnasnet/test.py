@@ -3,7 +3,7 @@ import sys
 import torch
 from pathlib import Path
 
-from nni.retiarii.trainer import PyTorchImageClassificationTrainer
+from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 
 from base_mnasnet import MNASNet
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig

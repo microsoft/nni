@@ -4,7 +4,7 @@ import nni.retiarii.nn.pytorch as nn
 import torch.nn.functional as F
 from nni.retiarii.experiment import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.strategies import RandomStrategy
-from nni.retiarii.trainer import PyTorchImageClassificationTrainer
+from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 
 
 class Net(nn.Module):
