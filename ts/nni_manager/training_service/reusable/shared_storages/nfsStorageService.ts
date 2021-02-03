@@ -12,6 +12,24 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { getLogger, Logger } from '../../../common/log';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 
+const INSTALL_NFS_CLIENT = `
+#!/bin/bash
+if [ -n "$(command -v apt-get)" ]
+then
+    sudo apt-get update
+    sudo apt-get install -y nfs-common
+elif [ -n "$(command -v yum)" ]
+then
+    sudo yum install -y nfs-utils
+elif [ -n "$(command -v dnf)" ]
+then
+    sudo dnf install -y nfs-utils
+else
+    echo "Unknown package management."
+    exit 1
+fi
+`
+
 class NFSSharedStorageConfig implements SharedStorageConfig {
     public storageType: SharedStorageType;
     public localMountPoint: string;
@@ -82,11 +100,28 @@ export class NFSSharedStorageService extends SharedStorageService {
     }
 
     public get localMountCommand(): string {
-        return `sudo apt-get update && sudo apt-get -y install nfs-common && mkdir -p ${this.localMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.localMountPoint}`;
+        if (this.localMountPoint) {
+            return this.getCommand(this.localMountPoint);
+        } else {
+            this.log.error(`${this.storageType} Shared Storage: localMountPoint is not initialized.`);
+            return '';
+        }
     }
 
     public get remoteMountCommand(): string {
-        return `sudo apt-get update && sudo apt-get -y install nfs-common && mkdir -p ${this.remoteMountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${this.remoteMountPoint}`;
+        if (this.remoteMountPoint) {
+            return this.getCommand(this.remoteMountPoint);
+        } else {
+            this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
+            return '';
+        }
+    }
+
+    private getCommand(mountPoint: string): string {
+        const install = `rm -f nni_install_nfsclient.sh && touch nni_install_nfsclient.sh && echo "${INSTALL_NFS_CLIENT.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> nni_install_nfsclient.sh && bash nni_install_nfsclient.sh`;
+        const mount = `mkdir -p ${mountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${mountPoint}`;
+        const clean = `rm -f nni_install_nfsclient.sh`;
+        return `${install} && ${mount} && ${clean}`;
     }
 
     public get localWorkingRoot(): string {

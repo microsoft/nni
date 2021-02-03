@@ -27,11 +27,12 @@ elif [ -n "$(command -v yum)" ]
 then
     sudo yum install -y redhat-lsb
 else
-echo "Unknown package management."
+    echo "Unknown package management."
+    exit 1
 fi
 
-id=$(lsb_release -a | grep "Distributor ID:" | cut -c16- | sed s/[[:space:]]//g)
-version=$(lsb_release -a | grep "Release:" | cut -c9- | sed s/[[:space:]]//g)
+id=$(lsb_release -i | cut -c16- | sed s/[[:space:]]//g)
+version=$(lsb_release -r | cut -c9- | sed s/[[:space:]]//g)
 
 if [ $id = "Ubuntu" ]
 then
@@ -39,12 +40,13 @@ then
     sudo dpkg -i packages-microsoft-prod.deb
     sudo apt-get update
     sudo apt-get install -y blobfuse fuse
-elif [ $id = "CentOS" ] || [ $id = "RedHat" ] || [ $id = "rhel" ]
+elif [ $id = "CentOS" ] || [ $id = "RHEL" ]
 then
     sudo rpm -Uvh https://packages.microsoft.com/config/rhel/$(echo $version | cut -c1)/packages-microsoft-prod.rpm
     sudo yum install -y blobfuse fuse
 else
     echo "Not support distributor."
+    exit 1
 fi
 `
 
