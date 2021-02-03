@@ -9,7 +9,7 @@ from enum import Enum
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import uid, import_
+from .utils import get_class_full_name, import_, uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -27,7 +27,9 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 
 class TrainingConfig(abc.ABC):
     """
-    Training config of a model.
+    Training config of a model. A training config should define where the training code is, and the configuration of
+    training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
+    or tune-able parameters (such as learning rate), depending on the implementation of training code.
 
     Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
     For example, functional training config might directly import the function and call the function.
@@ -138,12 +140,15 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_training_config':
                 Graph._load(model, graph_name, graph_data)._register()
-        model.training_config = TrainingConfig._load(ir['_training_config'])
+        model.training_config = TrainingConfig._load_with_type(ir['_training_config']['__type__'], ir['_training_config'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        ret['_training_config'] = self.training_config._dump()
+        ret['_training_config'] = {
+            '__type__': get_class_full_name(self.training_config.__class__),
+            **self.training_config._dump()
+        }
         return ret
 
     def apply_trainer(self, module, args) -> None:

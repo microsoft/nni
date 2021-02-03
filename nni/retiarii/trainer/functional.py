@@ -30,3 +30,6 @@ class FunctionalTraining(TrainingConfig):
 
     def _execute(self, model_cls):
         return import_(self.function)(model_cls, **self.arguments)
+
+    def __eq__(self, other):
+        return self.function == other.function and self.arguments == other.arguments

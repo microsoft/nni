@@ -1,24 +1,25 @@
 import logging
-
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
 from threading import Thread
 from typing import Any, Optional
 
-from ..experiment import Experiment, TrainingServiceConfig
-from ..experiment.config.base import ConfigBase, PathLike
-from ..experiment.config import util
-from ..experiment.pipe import Pipe
+import torch
+from nni.experiment import Experiment, TrainingServiceConfig
+from nni.experiment.config import util
+from nni.experiment.config.base import ConfigBase, PathLike
+from nni.experiment.pipe import Pipe
 
-from .graph import Model
-from .utils import get_records
-from .integration import RetiariiAdvisor
-from .converter import convert_to_graph
-from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
-from .trainer.interface import BaseTrainer, BaseOneShotTrainer
-from .strategies.strategy import BaseStrategy
-from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
+from ..converter import convert_to_graph
+from ..graph import Model
+from ..integration import RetiariiAdvisor
+from ..mutator import InputChoiceMutator, LayerChoiceMutator, Mutator
+from ..strategies.strategy import BaseStrategy
+from ..trainer.interface import BaseOneShotTrainer, BaseTrainer
+from ..trainer.pytorch import (DartsTrainer, EnasTrainer, ProxylessTrainer,
+                               RandomTrainer, SinglePathTrainer)
+from ..utils import get_records
 
 _logger = logging.getLogger(__name__)
 
@@ -115,7 +116,6 @@ class RetiariiExperiment(Experiment):
         return applied_mutators
 
     def _start_strategy(self):
-        import torch
         try:
             script_module = torch.jit.script(self.base_model)
         except Exception as e:
