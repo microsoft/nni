@@ -3,7 +3,7 @@
 
 'use strict';
 
-export type KubernetesStorageKind = 'nfs' | 'azureStorage';
+export type KubernetesStorageKind = 'nfs' | 'azureStorage' | 'pvc';
 import { MethodNotImplementedError } from '../../common/errors';
 
 export abstract class KubernetesClusterConfig {
@@ -90,11 +90,37 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     }
 }
 
-export class KubernetesClusterConfigFactory {
+export class KubernetesClusterConfigPVC extends KubernetesClusterConfig {
+    public readonly pvc: PVCConfig;
 
+    constructor(
+        apiVersion: string,
+        pvc: PVCConfig,
+        storage?: KubernetesStorageKind
+    ) {
+        super(apiVersion, storage);
+        this.pvc = pvc;
+    }
+
+    public get storageType(): KubernetesStorageKind {
+        return 'pvc';
+    }
+
+    public static getInstance(jsonObject: object): KubernetesClusterConfigPVC {
+        const kubernetesClusterConfigObjectPVC: KubernetesClusterConfigPVC =
+          <KubernetesClusterConfigPVC> jsonObject;
+
+        return new KubernetesClusterConfigPVC(
+            kubernetesClusterConfigObjectPVC.apiVersion,
+            kubernetesClusterConfigObjectPVC.pvc,
+            kubernetesClusterConfigObjectPVC.storage
+        );
+    }
+}
+export class KubernetesClusterConfigFactory {
     public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
-         const storageConfig: StorageConfig = <StorageConfig>jsonObject;
-         switch (storageConfig.storage) {
+        const storageConfig: StorageConfig = <StorageConfig>jsonObject;
+        switch (storageConfig.storage) {
             case 'azureStorage':
                 return KubernetesClusterConfigAzure.getInstance(jsonObject);
             case 'nfs':
@@ -102,7 +128,7 @@ export class KubernetesClusterConfigFactory {
                 return KubernetesClusterConfigNFS.getInstance(jsonObject);
             default:
                 throw new Error(`Invalid json object ${jsonObject}`);
-         }
+        }
     }
 }
 
@@ -117,6 +143,18 @@ export class NFSConfig {
 
     constructor(server: string, path: string) {
         this.server = server;
+        this.path = path;
+    }
+}
+
+/**
+ * PVC configuration to store Kubernetes job related files
+ */
+export class PVCConfig {
+    // Path of the mounted pvc
+    public readonly path: string;
+
+    constructor(path: string) {
         this.path = path;
     }
 }

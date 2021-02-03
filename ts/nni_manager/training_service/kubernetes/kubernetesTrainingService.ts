@@ -309,6 +309,18 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
+    protected async createPVCStorage(pvcPath: string): Promise<void> {
+        try {
+            await cpp.exec(`sudo ln -s ${pvcPath} ${this.trialLocalNFSTempFolder}`);
+        } catch (error) {
+            const linkError: string = `Linking ${pvcPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+            this.log.error(linkError);
+
+            return Promise.reject(linkError);
+        }
+
+        return Promise.resolve();
+    }
 
     protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
         if(filePath === undefined || filePath === '') {
@@ -337,7 +349,7 @@ abstract class KubernetesTrainingService {
         );
         return registrySecretName;
     }
-    
+
     /**
      * upload local directory to azureStorage
      * @param srcDirectory the source directory of local folder
@@ -349,7 +361,7 @@ abstract class KubernetesTrainingService {
             throw new Error('azureStorageClient is not initialized');
         }
         let retryCount: number = 1;
-        if(uploadRetryCount) {
+        if (uploadRetryCount) {
             retryCount = uploadRetryCount;
         }
         let uploadSuccess: boolean = false;
@@ -358,7 +370,7 @@ abstract class KubernetesTrainingService {
             do {
                 uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
                     this.azureStorageClient,
-                    `${destDirectory}`, 
+                    `${destDirectory}`,
                     this.azureStorageShare,
                     `${srcDirectory}`);
                 if (!uploadSuccess) {
