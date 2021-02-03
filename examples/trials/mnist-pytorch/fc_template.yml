@@ -1,0 +1,88 @@
+apiVersion: frameworkcontroller.microsoft.com/v1
+kind: Framework
+metadata:
+  name: tensorflowdistributedtrainingwithcpu
+  namespace: default
+spec:
+  executionType: Start
+  retryPolicy:
+    fancyRetryPolicy: true
+    maxRetryCount: 2
+  taskRoles:
+  - name: ps
+    taskNumber: 2
+    frameworkAttemptCompletionPolicy:
+      minFailedTaskCount: 1
+      minSucceededTaskCount: -1
+    task:
+      retryPolicy:
+        fancyRetryPolicy: false
+        maxRetryCount: 0
+      # Large timeout to force delete Pod as it may break the stateful batch.
+      podGracefulDeletionTimeoutSec: 1800
+      pod:
+        spec:
+          restartPolicy: Never
+          hostNetwork: false
+          containers:
+          - name: tensorflow
+            image: frameworkcontroller/tensorflow-examples:cpu
+            workingDir: /tensorflow/benchmarks/scripts/tf_cnn_benchmarks
+            command: []
+            ports:
+            - containerPort: 4001
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+            - name: data-volume
+              mountPath: /mnt/data
+          serviceAccountName: frameworkbarrier
+          initContainers:
+          - name: frameworkbarrier
+            image: frameworkcontroller/frameworkbarrier
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+          volumes:
+          - name: frameworkbarrier-volume
+            emptyDir: {}
+          - name: data-volume
+  - name: worker
+    taskNumber: 3
+    frameworkAttemptCompletionPolicy:
+      minFailedTaskCount: 1
+      minSucceededTaskCount: 3
+    task:
+      retryPolicy:
+        fancyRetryPolicy: false
+        maxRetryCount: 0
+      podGracefulDeletionTimeoutSec: 1800
+      pod:
+        spec:
+          restartPolicy: Never
+          hostNetwork: false
+          containers:
+          - name: tensorflow
+            image: frameworkcontroller/tensorflow-examples:cpu
+            workingDir: /tensorflow/benchmarks/scripts/tf_cnn_benchmarks
+            command: []
+            ports:
+            - containerPort: 5001
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+            - name: data-volume
+              mountPath: /mnt/data
+          serviceAccountName: frameworkbarrier
+          initContainers:
+          - name: frameworkbarrier
+            image: frameworkcontroller/frameworkbarrier
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+          volumes:
+          - name: frameworkbarrier-volume
+            emptyDir: {}
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: nni-storage
