@@ -77,7 +77,14 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
+def test_type():
+    assert json_dumps(torch.optim.Adam) == '{"__typename__": "torch.optim.adam.Adam"}'
+    assert json_loads('{"__typename__": "torch.optim.adam.Adam"}') == torch.optim.Adam
+    assert json_dumps(Foo) == '{"__typename__": "test_serializer.Foo"}'
+
+
 if __name__ == '__main__':
     test_blackbox()
     test_blackbox_module()
     test_dataset()
+    test_type()

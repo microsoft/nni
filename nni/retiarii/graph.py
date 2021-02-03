@@ -9,7 +9,7 @@ from enum import Enum
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import get_class_full_name, import_, uid
+from .utils import get_full_class_name, import_, uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -146,14 +146,10 @@ class Model:
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
         ret['_training_config'] = {
-            '__type__': get_class_full_name(self.training_config.__class__),
+            '__type__': get_full_class_name(self.training_config.__class__),
             **self.training_config._dump()
         }
         return ret
-
-    def apply_trainer(self, module, args) -> None:
-        # TODO: rethink the way of specifying a trainer
-        self.training_config = TrainingConfig(module, args)
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """

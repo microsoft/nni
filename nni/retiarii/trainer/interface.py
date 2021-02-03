@@ -2,6 +2,11 @@ import abc
 from typing import Any
 
 
+class BaseTrainer(abc.ABC):
+    # Deprecated class
+    pass
+
+
 class BaseOneShotTrainer(abc.ABC):
     """
     Build many (possibly all) architectures into a full graph, search (with train) and export the best.

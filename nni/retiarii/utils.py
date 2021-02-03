@@ -23,6 +23,8 @@ def version_larger_equal(a: str, b: str) -> bool:
     return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 
+### This is a patch of json-tricks to make it more useful to us ###
+
 def _blackbox_class_instance_encode(obj, primitives=False):
     assert not primitives, 'Encoding with primitives is not supported.'
     if hasattr(obj, '__class__') and hasattr(obj, '__init_parameters__'):
@@ -34,15 +36,30 @@ def _blackbox_class_instance_encode(obj, primitives=False):
 
 
 def _blackbox_class_instance_decode(obj):
-    if '__type__' in obj and 'arguments' in obj:
+    if isinstance(obj, dict) and '__type__' in obj and 'arguments' in obj:
         return import_(obj['__type__'])(**obj['arguments'])
     return obj
 
 
-json_loads = functools.partial(json_tricks.loads, extra_obj_pairs_hooks=[_blackbox_class_instance_decode])
-json_dumps = functools.partial(json_tricks.dumps, extra_obj_encoders=[_blackbox_class_instance_encode])
-json_load = functools.partial(json_tricks.load, extra_obj_pairs_hooks=[_blackbox_class_instance_decode])
-json_dump = functools.partial(json_tricks.dump, extra_obj_encoders=[_blackbox_class_instance_encode])
+def _type_encode(obj, primitives=False):
+    assert not primitives, 'Encoding with primitives is not supported.'
+    if isinstance(obj, type):
+        return {'__typename__': get_full_class_name(obj, relocate_module=True)}
+    return obj
+
+
+def _type_decode(obj):
+    if isinstance(obj, dict) and '__typename__' in obj:
+        return import_(obj['__typename__'])
+    return obj
+
+
+json_loads = functools.partial(json_tricks.loads, extra_obj_pairs_hooks=[_blackbox_class_instance_decode, _type_decode])
+json_dumps = functools.partial(json_tricks.dumps, extra_obj_encoders=[_blackbox_class_instance_encode, _type_encode])
+json_load = functools.partial(json_tricks.load, extra_obj_pairs_hooks=[_blackbox_class_instance_decode, _type_decode])
+json_dump = functools.partial(json_tricks.dump, extra_obj_encoders=[_blackbox_class_instance_encode, _type_encode])
+
+### End of json-tricks patch ###
 
 
 _records = {}
@@ -73,7 +90,7 @@ def del_record(key):
         _records.pop(key, None)
 
 
-def _blackbox_cls(cls, module_name, register_format=None):
+def _blackbox_cls(cls):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
             argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
@@ -84,11 +101,7 @@ def _blackbox_cls(cls, module_name, register_format=None):
             for argname, value in zip(argname_list, args):
                 full_args[argname] = value
 
-            if register_format == 'args':
-                add_record(id(self), full_args)
-            elif register_format == 'full':
-                full_class_name = get_full_class_name(cls)
-                add_record(id(self), {'modulename': full_class_name, 'args': full_args})
+            add_record(id(self), full_args)  # for compatibility. Will remove soon.
 
             self.__init_parameters__ = full_args
 
@@ -97,9 +110,7 @@ def _blackbox_cls(cls, module_name, register_format=None):
         def __del__(self):
             del_record(id(self))
 
-    # using module_name instead of cls.__module__ because it's more natural to see where the module gets wrapped
-    # instead of simply putting torch.nn or etc.
-    wrapper.__module__ = module_name
+    wrapper.__module__ = _get_module_name(cls)
     wrapper.__name__ = cls.__name__
     wrapper.__qualname__ = cls.__qualname__
     wrapper.__init__.__doc__ = cls.__init__.__doc__
@@ -114,21 +125,21 @@ def blackbox(cls, *args, **kwargs):
     .. code-block:: python
         self.op = blackbox(MyCustomOp, hidden_units=128)
     """
-    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'blackbox'), 'args')(*args, **kwargs)
+    return _blackbox_cls(cls)(*args, **kwargs)
 
 
 def blackbox_module(cls):
     """
     Register a module. Use it as a decorator.
     """
-    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'module'), 'args')
+    return _blackbox_cls(cls)
 
 
 def register_trainer(cls):
     """
     Register a trainer. Use it as a decorator.
     """
-    return _blackbox_cls(cls, _get_module_name(cls, inspect.stack(), 'trainer'), 'full')
+    return _blackbox_cls(cls)
 
 
 _last_uid = defaultdict(int)
@@ -139,17 +150,21 @@ def uid(namespace: str = 'default') -> int:
     return _last_uid[namespace]
 
 
-def _get_module_name(cls, inspect_stack, placeholder):
-    frm = inspect_stack[1]
+def _get_module_name(cls):
     module_name = cls.__module__
     if module_name == '__main__':
-        main_file_path = Path(inspect.getsourcefile(frm[0]))
-        if main_file_path.parents[0] != Path('.'):
-            raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
-                               f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
-        module_name = main_file_path.stem
+        # infer the module name with inspect
+        for frm in inspect.stack():
+            if inspect.getmodule(frm[0]).__name__ == '__main__':
+                # main module found
+                main_file_path = Path(inspect.getsourcefile(frm[0]))
+                if main_file_path.parents[0] != Path('.'):
+                    raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
+                                    f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
+                module_name = main_file_path.stem
     return module_name
 
 
-def get_full_class_name(cls):
-    return cls.__module__ + '.' + cls.__name__
+def get_full_class_name(cls, relocate_module=False):
+    module_name = _get_module_name(cls) if relocate_module else cls.__module__
+    return module_name + '.' + cls.__name__
