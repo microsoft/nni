@@ -370,7 +370,7 @@ kubeflow_config_schema = {
 frameworkcontroller_trial_schema = {
     'trial': {
         'codeDir':  setPathCheck('codeDir'),
-        'taskRoles': [{
+        Optional('taskRoles'): [{
             'name': setType('name', str),
             'taskNum': setType('taskNum', int),
             'frameworkAttemptCompletionPolicy': {
@@ -395,11 +395,11 @@ frameworkcontroller_config_schema = {
             'server': setType('server', str),
             'path': setType('path', str)
         }
-    }, {Optional('configPath'): setType('configPath', str), {
-            Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
-            Optional('serviceAccountName'): setType('serviceAccountName', str),
-            Optional('configPath'): setType('configPath', str),
-            'pvc': {'path': setType('server', str)},
+    }, {Optional('configPath'): setType('configPath', str),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
+        Optional('serviceAccountName'): setType('serviceAccountName', str),
+        Optional('configPath'): setType('configPath', str),
+        'pvc': {'path': setType('server', str)},
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
