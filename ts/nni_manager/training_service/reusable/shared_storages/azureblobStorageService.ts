@@ -157,7 +157,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
         const prepare = `sudo mkdir /mnt/resource/nniblobfusetmp -p && rm -f nni_fuse_connection.cfg && touch nni_fuse_connection.cfg && echo "accountName ${this.storageAccountName}\\naccountKey ${this.storageAccountKey}\\ncontainerName ${this.containerName}" >> nni_fuse_connection.cfg`;
         const mount = `mkdir -p ${mountPoint} && sudo blobfuse ${mountPoint} --tmp-path=/mnt/resource/nniblobfusetmp  --config-file=$(pwd)/nni_fuse_connection.cfg -o attr_timeout=240 -o entry_timeout=240 -o negative_timeout=120 -o allow_other`;
         const clean = `rm -f nni_install_fuseblob.sh nni_fuse_connection.cfg`;
-        return `${install} && ${prepare} && ${mount}`;
+        return `${install} && ${prepare} && ${mount} && ${clean}`;
     }
 
     public get localWorkingRoot(): string {
