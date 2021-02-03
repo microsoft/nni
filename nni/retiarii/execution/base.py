@@ -23,7 +23,7 @@ class BaseGraphData:
         }
 
     @staticmethod
-    def load(data) -> BaseGraphData:
+    def load(data) -> 'BaseGraphData':
         return BaseGraphData(data['model_script'], data['training_config'])
 
 

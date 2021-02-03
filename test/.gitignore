@@ -9,3 +9,4 @@ _generated_model_*.py
 _generated_model
 data
 generated
+lightning_logs

@@ -15,11 +15,9 @@ from ...utils import blackbox_module
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'SupervisedLearning']
 
 
-@abc.ABC
 class LightningModule(pl.LightningModule):
-    @abc.abstractmethod
     def set_model(self, model_cls):
-        pass
+        self.model = model_cls()
 
 
 Trainer = blackbox_module(pl.Trainer)
@@ -82,7 +80,7 @@ class Lightning(TrainingConfig):
 
 @blackbox_module
 class SupervisedLearning(LightningModule):
-    def __init__(self, criterion=nn.CrossEntropyLoss,
+    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.0001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):
@@ -102,33 +100,18 @@ class SupervisedLearning(LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = self.criterion(y_hat, y)
-        tensorboard_logs = {'train_loss': loss}
-        progress_bar_metrics = tensorboard_logs
-        return {'loss': loss, 'log': tensorboard_logs, 'progress_bar': progress_bar_metrics}
+        self.log('train_loss', loss, on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        return loss
 
     def validation_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        # TODO: report accuracy
-        return {'val_loss': self.criterion(y_hat, y)}
-
-    def validation_epoch_end(self, outputs):
-        val_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': val_loss}
-        progress_bar_metrics = tensorboard_logs
-        nni.report_intermediate_result(val_loss)
-        return {'val_loss': val_loss, 'log': tensorboard_logs, 'progress_bar': progress_bar_metrics}
+        self.log('val_loss', self.criterion(y_hat, y), on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
     def test_step(self, batch, batch_idx):
         x, y = batch
         y_hat = self(x)
-        return {'test_loss': self.criterion(y_hat, y)}
-
-    def test_epoch_end(self, outputs):
-        test_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
-        tensorboard_logs = {'test_mse_loss': test_loss}
-        progress_bar_metrics = tensorboard_logs
-        return {'test_loss': test_loss, 'log': tensorboard_logs, 'progress_bar': progress_bar_metrics}
+        self.log('test_loss', self.criterion(y_hat, y), on_step=True, on_epoch=True, prog_bar=True, logger=True)
 
     def configure_optimizers(self):
-        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate)
+        return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)
