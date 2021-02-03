@@ -34,3 +34,7 @@ def receive_trial_parameters() -> dict:
     """
     params = nni.get_next_parameter()
     return params
+
+
+def get_experiment_id() -> str:
+    return nni.get_experiment_id()

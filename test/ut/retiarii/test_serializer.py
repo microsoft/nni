@@ -46,11 +46,11 @@ def test_dataset():
     dataloader = blackbox(DataLoader, dataset, batch_size=10)
 
     dumped_ans = {
-        "__instance_type__": "torch.utils.data.dataloader.DataLoader",
+        "__type__": "torch.utils.data.dataloader.DataLoader",
         "arguments": {
             "batch_size": 10,
             "dataset": {
-                "__instance_type__": "torchvision.datasets.mnist.MNIST",
+                "__type__": "torchvision.datasets.mnist.MNIST",
                 "arguments": {"root": "data/mnist", "train": False, "download": True}
             }
         }
@@ -64,6 +64,13 @@ def test_dataset():
                            transforms.Compose,
                            [blackbox(transforms.ToTensor), blackbox(transforms.Normalize, (0.1307,), (0.3081,))]
                        ))
+    dataloader = blackbox(DataLoader, dataset, batch_size=10)
+    x, y = next(iter(json_loads(json_dumps(dataloader))))
+    assert x.size() == torch.Size([10, 1, 28, 28])
+    assert y.size() == torch.Size([10])
+
+    dataset = blackbox(MNIST, root='data/mnist', train=False, download=True,
+                       transform=transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]))
     dataloader = blackbox(DataLoader, dataset, batch_size=10)
     x, y = next(iter(json_loads(json_dumps(dataloader))))
     assert x.size() == torch.Size([10, 1, 28, 28])

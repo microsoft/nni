@@ -105,11 +105,12 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
         random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        file_name = f'_generated_model_{random_str}.py'
+        file_name = f'_generated_model/{random_str}.py'
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
         trainer_cls = utils.import_(graph_data.training_module)
-        model_cls = utils.import_(f'_generated_model_{random_str}._model')
+        model_cls = utils.import_(f'_generated_model.{random_str}._model')
         trainer_instance = trainer_cls(model=model_cls(), **graph_data.training_kwargs)
         trainer_instance.fit()
         os.remove(file_name)

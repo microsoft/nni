@@ -27,15 +27,15 @@ def _blackbox_class_instance_encode(obj, primitives=False):
     assert not primitives, 'Encoding with primitives is not supported.'
     if hasattr(obj, '__class__') and hasattr(obj, '__init_parameters__'):
         return {
-            '__instance_type__': _get_full_class_name(obj.__class__.__module__, obj.__class__.__name__),
+            '__type__': get_full_class_name(obj.__class__),
             'arguments': obj.__init_parameters__
         }
     return obj
 
 
 def _blackbox_class_instance_decode(obj):
-    if '__instance_type__' in obj and 'arguments' in obj:
-        return import_(obj['__instance_type__'])(**obj['arguments'])
+    if '__type__' in obj and 'arguments' in obj:
+        return import_(obj['__type__'])(**obj['arguments'])
     return obj
 
 
@@ -87,7 +87,7 @@ def _blackbox_cls(cls, module_name, register_format=None):
             if register_format == 'args':
                 add_record(id(self), full_args)
             elif register_format == 'full':
-                full_class_name = _get_full_class_name(cls.__module__, cls.__name__)
+                full_class_name = get_full_class_name(cls)
                 add_record(id(self), {'modulename': full_class_name, 'args': full_args})
 
             self.__init_parameters__ = full_args
@@ -151,5 +151,5 @@ def _get_module_name(cls, inspect_stack, placeholder):
     return module_name
 
 
-def _get_full_class_name(module_name, class_name):
-    return module_name + '.' + class_name
+def get_full_class_name(cls):
+    return cls.__module__ + '.' + cls.__name__

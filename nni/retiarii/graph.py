@@ -2,13 +2,14 @@
 Model representation.
 """
 
+import abc
 import copy
-from enum import Enum
 import json
+from enum import Enum
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import uid
+from .utils import uid, import_
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -24,40 +25,40 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 """
 
 
-class TrainingConfig:
+class TrainingConfig(abc.ABC):
     """
-    Training training_config of a model.
+    Training config of a model.
 
-    Module will be imported, initialized with generated model and arguments in ``kwargs``.
-
-    Attributes
-    ----------
-    module
-        Trainer module
-    kwargs
-        Trainer keyword arguments
+    Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
+    For example, functional training config might directly import the function and call the function.
     """
-
-    def __init__(self, module: str, kwargs: Dict[str, Any]):
-        self.module = module
-        self.kwargs = kwargs
 
     def __repr__(self):
-        return f'TrainingConfig(module={self.module}, kwargs={self.kwargs})'
+        items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
+        return f'{self.__class__.__name__}({items})'
+
+    @abc.abstractstaticmethod
+    def _load(ir: Any) -> 'TrainingConfig':
+        pass
 
     @staticmethod
-    def _load(ir: Any) -> 'TrainingConfig':
-        return TrainingConfig(ir['module'], ir.get('kwargs', {}))
+    def _load_with_type(type_name: str, ir: Any) -> 'TrainingConfig':
+        config_cls = import_(type_name)
+        assert issubclass(config_cls, TrainingConfig)
+        return config_cls._load(ir)
 
+    @abc.abstractmethod
     def _dump(self) -> Any:
-        return {
-            'module': self.module,
-            'kwargs': self.kwargs
-        }
+        pass
 
-    def __eq__(self, other):
-        return self.module == other.module and \
-            self.kwargs == other.kwargs
+    @abc.abstractmethod
+    def _execute(self, model: type) -> Any:
+        pass
+
+    @abc.abstractmethod
+    def __eq__(self, other) -> bool:
+        pass
+
 
 
 class Model:
