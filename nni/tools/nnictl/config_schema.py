@@ -4,11 +4,17 @@
 import json
 import logging
 import os
+
 import netifaces
-from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_registered_algo_meta
-from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
+from nni.tools.package_utils import (
+    create_validator_instance,
+    get_all_builtin_names,
+    get_registered_algo_meta,
+)
+from schema import And, Optional, Or, Regex, Schema, SchemaError
+
 from .common_utils import get_yml_content, print_warning
+from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
 
 
 def setType(key, valueType):
@@ -171,9 +177,9 @@ pai_yarn_trial_schema = {
         Optional('virtualCluster'): setType('virtualCluster', str),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('portList'): [{
-            "label": setType('label', str),
-            "beginAt": setType('beginAt', int),
-            "portNumber": setType('portNumber', int)
+            'label': setType('label', str),
+            'beginAt': setType('beginAt', int),
+            'portNumber': setType('portNumber', int)
         }]
     }
 }
@@ -383,12 +389,17 @@ frameworkcontroller_trial_schema = {
 
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig': Or({
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
         }
+    }, {Optional('configPath'): setType('configPath', str), {
+            Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
+            Optional('serviceAccountName'): setType('serviceAccountName', str),
+            Optional('configPath'): setType('configPath', str),
+            'pvc': {'path': setType('server', str)},
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
@@ -576,7 +587,7 @@ class NNIConfigSchema:
                 and not experiment_config.get('nniManagerIp') \
                 and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
-    
+
     def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {
             'remote': 'machineList',
@@ -588,4 +599,4 @@ class NNIConfigSchema:
                 config_name = required_config_name_map.get(platform)
                 if config_name and not experiment_config.get(config_name):
                     raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
-                
+
