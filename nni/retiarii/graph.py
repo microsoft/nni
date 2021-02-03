@@ -54,7 +54,7 @@ class TrainingConfig(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def _execute(self, model: type) -> Any:
+    def _execute(self, model_cls: type) -> Any:
         pass
 
     @abc.abstractmethod
