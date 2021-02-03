@@ -55,7 +55,7 @@ class TrialMetricData:
     sequence: int
     data: dict
 
-    def __init__(self, timestamp: int, trialJobId: str, parameterId: int, type: str, sequence: int, data: str):
+    def __init__(self, timestamp: int, trialJobId: str, parameterId: int, type: str, sequence: int, data: str): # pylint: disable=W0622
         self.timestamp = timestamp
         self.trialJobId = trialJobId
         self.parameterId = parameterId
