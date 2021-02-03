@@ -6,7 +6,7 @@ from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
                            OriginNode, PhysicalDevice)
 
-_supported_training_modules = ['nni.retiarii.trainer.PyTorchImageClassificationTrainer']
+_supported_training_modules = ['nni.retiarii.trainer.pytorch.PyTorchImageClassificationTrainer']
 
 
 class DedupInputNode(AbstractLogicalNode):
