@@ -1,5 +1,4 @@
 from ..graph import TrainingConfig
-from ..utils import import_
 
 
 class FunctionalTraining(TrainingConfig):

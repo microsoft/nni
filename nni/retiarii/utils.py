@@ -1,6 +1,5 @@
 import functools
 import inspect
-import warnings
 from collections import defaultdict
 from typing import Any
 from pathlib import Path

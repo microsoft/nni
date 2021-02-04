@@ -1,13 +1,12 @@
 import warnings
 from typing import Dict, Union, Optional, List
 
-import nni
 import pytorch_lightning as pl
-import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
+import nni
 from ...graph import TrainingConfig
 from ...utils import blackbox_module
 
