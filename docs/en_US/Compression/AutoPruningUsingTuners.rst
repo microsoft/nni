@@ -22,7 +22,7 @@ Therefore ``{ 'sparsity': 0.5, 'op_types': ['Conv2d'] }``\ means that **all laye
 Then, make this automatic
 -------------------------
 
-The previous example manually chose L2FilterPruner and pruned with a specified sparsity. Different sparsity and different pruners may have different effect on different models. This process can be done with NNI tuners.
+The previous example manually chose L2FilterPruner and pruned with a specified sparsity. Different sparsity and different pruners may have different effects on different models. This process can be done with NNI tuners.
 
 Firstly, modify our codes for few lines
 
@@ -43,7 +43,7 @@ Firstly, modify our codes for few lines
     acc = test(model)  # test the fine-tuned model
     nni.report_final_results(acc)
 
-Then, define a ``config`` file in YAML to automatically tuning model, pruning algorithm and sparisty.
+Then, define a ``config`` file in YAML to automatically tuning model, pruning algorithm and sparsity.
 
 .. code-block:: yaml
 
