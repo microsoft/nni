@@ -112,6 +112,6 @@ def test_functional():
 
 
 if __name__ == '__main__':
-    # test_mnist()
-    # test_diabetes()
+    test_mnist()
+    test_diabetes()
     test_functional()
