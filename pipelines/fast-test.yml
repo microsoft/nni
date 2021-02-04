@@ -155,7 +155,7 @@ stages:
         python -m pip install --upgrade pygments
         python -m pip install "torch==1.6.0+cpu" "torchvision==0.7.0+cpu" -f https://download.pytorch.org/whl/torch_stable.html
         python -m pip install tensorflow
-        python -m pip install gym onnx peewee thop graphviz
+        python -m pip install gym onnx peewee thop graphviz pytorch-lightning
         python -m pip install sphinx sphinx-argparse sphinx-rtd-theme sphinxcontrib-websupport nbsphinx
         sudo apt-get remove swig -y
         sudo apt-get install swig3.0 -y
@@ -229,7 +229,7 @@ stages:
         python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
         python -m pip install tensorflow==1.15.4
         python -m pip install keras==2.1.6
-        python -m pip install gym onnx peewee
+        python -m pip install gym onnx peewee pytorch-lightning
         sudo apt-get install swig -y
         python -m pip install -e .[SMAC,BOHB]
       displayName: Install extra dependencies
@@ -286,7 +286,7 @@ stages:
     - script: |
         set -e
         # pytorch Mac binary does not support CUDA, default is cpu version
-        python -m pip install torchvision==0.6.0 torch==1.5.0
+        python -m pip install torchvision==0.6.0 torch==1.5.0 pytorch-lightning
         python -m pip install tensorflow==2.3.1
         brew install swig@3
         rm -f /usr/local/bin/swig
@@ -330,7 +330,7 @@ stages:
 
     - script: |
         python -m pip install scikit-learn==0.23.2
-        python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+        python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu  pytorch-lightning -f https://download.pytorch.org/whl/torch_stable.html
         python -m pip install tensorflow==2.3.1
       displayName: Install extra dependencies
 
