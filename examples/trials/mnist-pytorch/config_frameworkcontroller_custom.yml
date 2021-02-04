@@ -25,5 +25,6 @@ trial:
 frameworkcontrollerConfig:
   configPath: fc_template.yml
   storage: pvc
+  namespace: "default"
   pvc:
-    path: {your path pvc mountPath here}
+    path: "/tmp/data"

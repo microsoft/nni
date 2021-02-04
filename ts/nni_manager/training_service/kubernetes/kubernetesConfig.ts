@@ -4,15 +4,17 @@
 'use strict';
 
 export type KubernetesStorageKind = 'nfs' | 'azureStorage' | 'pvc';
-import { MethodNotImplementedError } from '../../common/errors';
+import {MethodNotImplementedError} from '../../common/errors';
 
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
+    public readonly namespace?: string;
 
-    constructor(apiVersion: string, storage?: KubernetesStorageKind) {
+    constructor(apiVersion: string, storage?: KubernetesStorageKind, namespace?: string) {
         this.storage = storage;
         this.apiVersion = apiVersion;
+        this.namespace = namespace
     }
 
     public get storageType(): KubernetesStorageKind {
@@ -32,11 +34,12 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     public readonly nfs: NFSConfig;
 
     constructor(
-            apiVersion: string,
-            nfs: NFSConfig,
-            storage?: KubernetesStorageKind
-        ) {
-        super(apiVersion, storage);
+        apiVersion: string,
+        nfs: NFSConfig,
+        storage?: KubernetesStorageKind,
+        namespace?: string
+    ) {
+        super(apiVersion, storage, namespace);
         this.nfs = nfs;
     }
 
@@ -50,7 +53,8 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
         return new KubernetesClusterConfigNFS(
             kubernetesClusterConfigObjectNFS.apiVersion,
             kubernetesClusterConfigObjectNFS.nfs,
-            kubernetesClusterConfigObjectNFS.storage
+            kubernetesClusterConfigObjectNFS.storage,
+            kubernetesClusterConfigObjectNFS.namespace
         );
     }
 }
@@ -61,13 +65,15 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly uploadRetryCount: number | undefined;
 
     constructor(
-            apiVersion: string,
-            keyVault: KeyVaultConfig,
-            azureStorage: AzureStorage,
-            storage?: KubernetesStorageKind,
-            uploadRetryCount?: number
-        ) {
-        super(apiVersion, storage);
+        apiVersion: string,
+        keyVault: KeyVaultConfig,
+        azureStorage: AzureStorage,
+        storage?: KubernetesStorageKind,
+        uploadRetryCount?: number,
+        namespace?: string,
+
+    ) {
+        super(apiVersion, storage, namespace);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
         this.uploadRetryCount = uploadRetryCount;
@@ -85,7 +91,8 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
             kubernetesClusterConfigObjectAzure.keyVault,
             kubernetesClusterConfigObjectAzure.azureStorage,
             kubernetesClusterConfigObjectAzure.storage,
-            kubernetesClusterConfigObjectAzure.uploadRetryCount
+            kubernetesClusterConfigObjectAzure.uploadRetryCount,
+            kubernetesClusterConfigObjectAzure.namespace
         );
     }
 }
@@ -96,9 +103,10 @@ export class KubernetesClusterConfigPVC extends KubernetesClusterConfig {
     constructor(
         apiVersion: string,
         pvc: PVCConfig,
-        storage?: KubernetesStorageKind
+        storage?: KubernetesStorageKind,
+        namespace?: string,
     ) {
-        super(apiVersion, storage);
+        super(apiVersion, storage, namespace);
         this.pvc = pvc;
     }
 
@@ -108,12 +116,12 @@ export class KubernetesClusterConfigPVC extends KubernetesClusterConfig {
 
     public static getInstance(jsonObject: object): KubernetesClusterConfigPVC {
         const kubernetesClusterConfigObjectPVC: KubernetesClusterConfigPVC =
-          <KubernetesClusterConfigPVC> jsonObject;
-
+            <KubernetesClusterConfigPVC>jsonObject;
         return new KubernetesClusterConfigPVC(
             kubernetesClusterConfigObjectPVC.apiVersion,
             kubernetesClusterConfigObjectPVC.pvc,
-            kubernetesClusterConfigObjectPVC.storage
+            kubernetesClusterConfigObjectPVC.storage,
+            kubernetesClusterConfigObjectPVC.namespace
         );
     }
 }
@@ -123,6 +131,8 @@ export class KubernetesClusterConfigFactory {
         switch (storageConfig.storage) {
             case 'azureStorage':
                 return KubernetesClusterConfigAzure.getInstance(jsonObject);
+            case 'pvc':
+                return KubernetesClusterConfigPVC.getInstance(jsonObject);
             case 'nfs':
             case undefined:
                 return KubernetesClusterConfigNFS.getInstance(jsonObject);
@@ -213,7 +223,7 @@ export class KubernetesTrialConfigTemplate {
     public readonly gpuNum: number;
 
     constructor(command: string, gpuNum: number,
-                cpuNum: number, memoryMB: number, image: string, privateRegistryAuthPath?: string) {
+        cpuNum: number, memoryMB: number, image: string, privateRegistryAuthPath?: string) {
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;

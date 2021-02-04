@@ -1,7 +1,7 @@
 apiVersion: frameworkcontroller.microsoft.com/v1
 kind: Framework
 metadata:
-  name: tensorflowdistributedtrainingwithcpu
+  name: pytorchcpu
   namespace: default
 spec:
   executionType: Start
@@ -25,17 +25,16 @@ spec:
           restartPolicy: Never
           hostNetwork: false
           containers:
-          - name: tensorflow
-            image: frameworkcontroller/tensorflow-examples:cpu
-            workingDir: /tensorflow/benchmarks/scripts/tf_cnn_benchmarks
-            command: []
+          - name: mnist-pytorch
+            image: msranni/nni:latest
+            command: ["python3", "mnist.py"]
             ports:
             - containerPort: 4001
             volumeMounts:
             - name: frameworkbarrier-volume
               mountPath: /mnt/frameworkbarrier
             - name: data-volume
-              mountPath: /mnt/data
+              mountPath: /tmp/data
           serviceAccountName: frameworkbarrier
           initContainers:
           - name: frameworkbarrier
@@ -47,6 +46,8 @@ spec:
           - name: frameworkbarrier-volume
             emptyDir: {}
           - name: data-volume
+            persistentVolumeClaim:
+              claimName: nni-storage
   - name: worker
     taskNumber: 3
     frameworkAttemptCompletionPolicy:
@@ -62,17 +63,16 @@ spec:
           restartPolicy: Never
           hostNetwork: false
           containers:
-          - name: tensorflow
-            image: frameworkcontroller/tensorflow-examples:cpu
-            workingDir: /tensorflow/benchmarks/scripts/tf_cnn_benchmarks
-            command: []
+          - name: mnist-pytorch
+            image: msranni/nni:latest
+            command: ["python", "mnist.py"]
             ports:
             - containerPort: 5001
             volumeMounts:
             - name: frameworkbarrier-volume
               mountPath: /mnt/frameworkbarrier
             - name: data-volume
-              mountPath: /mnt/data
+              mountPath: /tmp/data
           serviceAccountName: frameworkbarrier
           initContainers:
           - name: frameworkbarrier

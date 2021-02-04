@@ -394,14 +394,16 @@ frameworkcontroller_config_schema = {
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
-        }
+        },
+        Optional('namespace'): setType('namespace', str),
     }, {Optional('configPath'): setType('configPath', str),
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         Optional('configPath'): setType('configPath', str),
         'pvc': {'path': setType('server', str)},
+        Optional('namespace'): setType('namespace', str),
     }, {
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
             'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
@@ -415,7 +417,8 @@ frameworkcontroller_config_schema = {
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
                               error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
-        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
+        Optional('namespace'): setType('namespace', str),
     })
 }
 

@@ -7,21 +7,21 @@ import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
 import * as azureStorage from 'azure-storage';
-import { EventEmitter } from 'events';
-import { Base64 } from 'js-base64';
-import { String } from 'typescript-string-operations';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import {EventEmitter} from 'events';
+import {Base64} from 'js-base64';
+import {String} from 'typescript-string-operations';
+import {getExperimentId} from '../../common/experimentStartupInfo';
+import {getLogger, Logger} from '../../common/log';
+import {MethodNotImplementedError} from '../../common/errors';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
-import { AzureStorageClientUtility } from './azureStorageClientUtils';
-import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
-import { KubernetesClusterConfig } from './kubernetesConfig';
-import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
-import { KubernetesJobRestServer } from './kubernetesJobRestServer';
+import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
+import {AzureStorageClientUtility} from './azureStorageClientUtils';
+import {GeneralK8sClient, KubernetesCRDClient} from './kubernetesApiClient';
+import {KubernetesClusterConfig} from './kubernetesConfig';
+import {kubernetesScriptFormat, KubernetesTrialJobDetail} from './kubernetesData';
+import {KubernetesJobRestServer} from './kubernetesJobRestServer';
 
 const fs = require('fs');
 
@@ -124,7 +124,7 @@ abstract class KubernetesTrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail: KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: KubernetesTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
@@ -168,7 +168,7 @@ abstract class KubernetesTrainingService {
                 try {
                     await this.cancelTrialJob(trialJobId);
                 } catch (error) {
-                  // DONT throw error during cleanup
+                    // DONT throw error during cleanup
                 }
                 kubernetesTrialJob.status = 'SYS_CANCELED';
             }
@@ -230,14 +230,16 @@ abstract class KubernetesTrainingService {
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
             this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                            .toLowerCase());
+                .toLowerCase());
+
+            const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
                     kind: 'Secret',
                     metadata: {
                         name: this.azureStorageSecretName,
-                        namespace: 'default',
+                        namespace: namespace,
                         labels: {
                             app: this.NNI_KUBERNETES_TRIAL_LABEL,
                             expId: getExperimentId()
@@ -267,7 +269,7 @@ abstract class KubernetesTrainingService {
      * @param trialSequenceId sequence id
      */
     protected async generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string,
-                                      command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
+        command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
         let nvidiaScript: string = '';
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
@@ -323,19 +325,20 @@ abstract class KubernetesTrainingService {
     }
 
     protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
-        if(filePath === undefined || filePath === '') {
+        if (filePath === undefined || filePath === '') {
             return undefined;
         }
         const body = fs.readFileSync(filePath).toString('base64');
         const registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                            .toLowerCase());
+            .toLowerCase());
+        const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
         await this.genericK8sClient.createSecret(
             {
                 apiVersion: 'v1',
                 kind: 'Secret',
                 metadata: {
                     name: registrySecretName,
-                    namespace: 'default',
+                    namespace: namespace,
                     labels: {
                         app: this.NNI_KUBERNETES_TRIAL_LABEL,
                         expId: getExperimentId()
@@ -390,4 +393,4 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(folderUriInAzure);
     }
 }
-export { KubernetesTrainingService };
+export {KubernetesTrainingService};
