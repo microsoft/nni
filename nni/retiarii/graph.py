@@ -46,7 +46,7 @@ class TrainingConfig(abc.ABC):
     @staticmethod
     def _load_with_type(type_name: str, ir: Any) -> 'Optional[TrainingConfig]':
         if type_name == '_debug_no_trainer':
-            return None
+            return DebugTraining()
         config_cls = import_(type_name)
         assert issubclass(config_cls, TrainingConfig)
         return config_cls._load(ir)
@@ -62,7 +62,6 @@ class TrainingConfig(abc.ABC):
     @abc.abstractmethod
     def __eq__(self, other) -> bool:
         pass
-
 
 
 class Model:
@@ -672,3 +671,17 @@ class IllegalGraphError(ValueError):
             graph = graph._dump()
         with open('generated/debug.json', 'w') as dump_file:
             json.dump(graph, dump_file, indent=4)
+
+
+class DebugTraining(TrainingConfig):
+    def _load(ir: Any) -> 'DebugTraining':
+        return DebugTraining()
+
+    def _dump(self) -> Any:
+        return {'__type__': '_debug_no_trainer'}
+
+    def _execute(self, model_cls: type) -> Any:
+        pass
+
+    def __eq__(self, other) -> bool:
+        return True

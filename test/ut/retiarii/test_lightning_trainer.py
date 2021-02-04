@@ -78,9 +78,15 @@ def _foo(model_cls):
     assert model_cls == MNISTModel
 
 
-def test_mnist():
+def _reset():
+    # this is to not affect other tests in sdk
+    nni.trial._intermediate_seq = 0
     nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
     nni.runtime.platform.test._last_metric = None
+
+
+def test_mnist():
+    _reset()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
@@ -91,9 +97,11 @@ def test_mnist():
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     lightning._execute(MNISTModel)
     assert _get_final_result() > 0.7
+    _reset()
 
 
 def test_diabetes():
+    _reset()
     nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
     nni.runtime.platform.test._last_metric = None
     train_dataset = DiabetesDataset(train=True)
@@ -105,6 +113,7 @@ def test_diabetes():
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=20))
     lightning._execute(FCNet(train_dataset.x.shape[1], 1))
     assert _get_final_result() < 2e4
+    _reset()
 
 
 def test_functional():
