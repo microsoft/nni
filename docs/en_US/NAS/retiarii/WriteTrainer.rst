@@ -9,6 +9,8 @@ Trainers are necessary to evaluate the performance of new explored models. In NA
 Classic trainers
 ----------------
 
+It's recommended to use PyTorch-Lightning...
+
 All classic trainers need to inherit ``nni.retiarii.trainer.BaseTrainer``, implement the ``fit`` method and decorated with ``@register_trainer`` if it is intended to be used together with Retiarii. The decorator serialize the trainer that is used and its argument to fit for the requirements of NNI.
 
 The init function of trainer should take model as its first argument, and the rest of the arguments should be named (``*args`` and ``**kwargs`` may not work as expected) and JSON serializable. This means, currently, passing a complex object like ``torchvision.datasets.ImageNet()`` is not supported. Trainer should use NNI standard API to communicate with tuning algorithms. This includes ``nni.report_intermediate_result`` for periodical metrics and ``nni.report_final_result`` for final metrics.
@@ -47,7 +49,7 @@ An example is as follows:
 One-shot trainers
 -----------------
 
-One-shot trainers should inheirt ``nni.retiarii.trainer.BaseOneShotTrainer``, which is basically same as ``BaseTrainer``, but only with one extra method ``export()``, which is expected to return the searched best architecture.
+One-shot trainers should inheirt ``nni.retiarii.trainer.BaseOneShotTrainer``, and need to implement ``fit()`` (used to conduct the fitting and searching process) and ``export()`` method (used to return the searched best architecture).
 
 Writing a one-shot trainer is very different to classic trainers. First of all, there are no more restrictions on init method arguments, any Python arguments are acceptable. Secondly, the model feeded into one-shot trainers might be a model with Retiarii-specific modules, such as LayerChoice and InputChoice. Such model cannot directly forward-propagate and trainers need to decide how to handle those modules.
 
@@ -55,7 +57,7 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
 
 .. code-block::python
 
-    from nni.retiarii.trainer import BaseOneShotTrainer
+    from nni.retiarii.trainer.pytorch import BaseOneShotTrainer
     from nni.retiarii.trainer.pytorch.utils import replace_layer_choice, replace_input_choice
 
 

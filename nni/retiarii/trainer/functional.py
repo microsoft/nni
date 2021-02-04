@@ -14,8 +14,8 @@ class FunctionalTraining(TrainingConfig):
         Keyword arguments for the function other than model.
     """
 
-    def __init__(self, _function_name, **kwargs):
-        self.function = _function_name
+    def __init__(self, function, **kwargs):
+        self.function = function
         self.arguments = kwargs
 
     @staticmethod
@@ -29,7 +29,7 @@ class FunctionalTraining(TrainingConfig):
         }
 
     def _execute(self, model_cls):
-        return import_(self.function)(model_cls, **self.arguments)
+        return self.function(model_cls, **self.arguments)
 
     def __eq__(self, other):
         return self.function == other.function and self.arguments == other.arguments
