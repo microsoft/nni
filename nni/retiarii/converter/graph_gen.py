@@ -563,16 +563,10 @@ class GraphConverter:
             assert isinstance(self.modules_arg[id(cand)], dict)
             cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
             choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
-<<<<<<< HEAD
-        m_attrs['choices'] = choices
-        m_attrs['label'] = module.label
-        return m_attrs
-=======
         return {
             'candidates': choices,
             'label': module.label
         }
->>>>>>> 5946b4a4ae24714211b5b29aa9096bc0ee7ed570
 
     def _handle_inputchoice(self, module):
         return {
