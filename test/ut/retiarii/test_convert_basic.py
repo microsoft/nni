@@ -124,14 +124,14 @@ class TestConvert(unittest.TestCase):
                 out1 = x.acos()
                 out2 = torch.acos(x)
                 # TODO: add back this line
-                #out3 = x.acos_()
+                #out = x.acos_()
                 out3 = x.asin()
                 out4 = torch.asin(x)
                 out5 = x.atan()
                 out6 = torch.atan(x)
                 out7 = x.atan2(y)
                 out8 = torch.atan2(x, y)
-                return out1, out2, out3, out4, out5, out6, out7, out8
+                return out1, out2, out3, out4, out5, out6, out7, out8#, out
         self.checkExportImport(SimpleOp(), (torch.tensor([-1.0, -0.5, 0.2]), torch.tensor([1.0, 0.6, -0.3]), ))
 
     # arccos is not supported by jit
