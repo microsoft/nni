@@ -26,4 +26,4 @@ frameworkcontrollerConfig:
   configPath: fc_template.yml
   storage: pvc
   pvc:
-    path: /tmp/data
+    path: {your path pvc mountPath here}
