@@ -12,7 +12,7 @@ from ...graph import TrainingConfig
 from ...utils import blackbox_module
 
 
-__all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification']
+__all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
 
 
 class LightningModule(pl.LightningModule):
