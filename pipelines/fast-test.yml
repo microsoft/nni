@@ -7,23 +7,19 @@ stages:
   - job: docs
     pool:
       vmImage: ubuntu-latest
-
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
-
     - script: |
         sudo apt-get install -y pandoc
         sudo apt-get remove swig -y
         sudo apt-get install swig3.0 -y
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       displayName: Install apt packages
-
     - task: Cache@2
       inputs:
         key: 'python | "$(Agent.OS)" | dependencies/*.txt'
@@ -32,15 +28,14 @@ stages:
           python
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
-
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
         python -m pip install -r dependencies/develop.txt
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
       displayName: Install requirements
-
     - script: |
         cd docs/en_US
         sphinx-build -M html . _build -W --keep-going -T
@@ -49,22 +44,18 @@ stages:
   - job: python
     pool:
       vmImage: ubuntu-latest
-
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
-
     - script: |
         sudo apt-get remove swig -y
         sudo apt-get install swig3.0 -y
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       displayName: Install apt packages
-
     - task: Cache@2
       inputs:
         key: 'python | "$(Agent.OS)" | dependencies/*.txt'
@@ -73,19 +64,16 @@ stages:
           python
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
-
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
         python -m pip install -r dependencies/develop.txt
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
       displayName: Install requirements
-
-
     - script: python -m pylint --rcfile pylintrc nni
       displayName: pylint
-
     - script: |
         set -e
         python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
@@ -96,7 +84,6 @@ stages:
   - job: typescript
     pool:
       vmImage: ubuntu-latest
-  
     steps:
     - script: |
         set -e
@@ -104,7 +91,6 @@ stages:
         yarn
         yarn eslint
       displayName: ESLint (NNI Manager)
-    
     - script: |
         set -e
         cd ts/webui
@@ -118,6 +104,9 @@ stages:
   - job: ubuntu_latest
     pool:
       vmImage: ubuntu-latest
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     steps:
     - task: UsePythonVersion@0
@@ -140,6 +129,14 @@ stages:
           python
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
+
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
 
     - script: |
         set -e
@@ -154,7 +151,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
       displayName: Install extra dependencies
 
     - script: |
@@ -181,13 +178,14 @@ stages:
         python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
       displayName: Simple integration test
 
-
   - job: ubuntu_legacy
     pool:
       vmImage: ubuntu-18.04
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     # This platform runs integration test first.
-
     steps:
     - task: UsePythonVersion@0
       inputs:
@@ -210,6 +208,14 @@ stages:
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
 
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
@@ -223,7 +229,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended_legacy.txt
-        python -m pip install -e .[SMAC,BOHB]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
       displayName: Install extra dependencies
 
     - script: |
@@ -244,10 +250,12 @@ stages:
         CI=true yarn test
       displayName: TypeScript unit test
 
-
   - job: macos
     pool:
       vmImage: macOS-10.15
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     # This platform runs TypeScript unit test first.
 
@@ -272,11 +280,18 @@ stages:
         path: $(PIP_CACHE_DIR)
       displayName: Cache pip packages
 
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+
     - script: |
         set -e
+        python -m pip install -U -r dependencies/setup.txt
         echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-        python -m pip install --upgrade pip setuptools wheel
-        python -m pip install pytest coverage
       displayName: Install Python tools
 
     - script: |
@@ -292,13 +307,8 @@ stages:
 
     - script: |
         set -e
-        # pytorch Mac binary does not support CUDA, default is cpu version
-        python -m pip install torchvision==0.6.0 torch==1.5.0
-        python -m pip install tensorflow==2.3.1
-        brew install swig@3
-        rm -f /usr/local/bin/swig
-        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-        python -m pip install -e .[SMAC]
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
       displayName: Install extra dependencies
 
     - script: |
@@ -311,12 +321,12 @@ stages:
         python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
       displayName: Simple integration test
 
-
-  # FIXME: Windows UT is still under debugging
-
   - job: windows
     pool:
       vmImage: windows-2019
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     # This platform runs Python unit test first.
 
@@ -326,9 +336,24 @@ stages:
         versionSpec: 3.8
       displayName: Configure Python version
 
-    - script: |
-        python -m pip install --upgrade pip setuptools
-        python -m pip install pytest coverage
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+
+    - script: python -m pip install -U -r dependencies/setup.txt
       displayName: Install Python tools
 
     - script: |
@@ -336,9 +361,7 @@ stages:
       displayName: Install NNI
 
     - script: |
-        python -m pip install scikit-learn==0.23.2
-        python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-        python -m pip install tensorflow==2.3.1
+        python -m pip install -r dependencies/recommended.txt
       displayName: Install extra dependencies
 
     - script: |

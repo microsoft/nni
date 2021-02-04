@@ -1,3 +1,5 @@
+# Recommended because some non-commonly-used modules/examples depend on those packages.
+
 tensorflow
 torch >= 1.6+cpu, != 1.7+cpu -f https://download.pytorch.org/whl/torch_stable.html
 torchvision >= 0.8+cpu -f https://download.pytorch.org/whl/torch_stable.html
@@ -5,18 +7,3 @@ onnx
 peewee
 thop
 graphviz
-
-# the following content will be read by setup.py.
-# please follow the logic in setup.py.
-
-# SMAC
-ConfigSpaceNNI
-smac4nni
-
-# BOHB
-ConfigSpace==0.4.7
-statsmodels==0.12.0
-
-# PPOTuner
-enum34
-gym
