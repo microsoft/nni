@@ -141,6 +141,7 @@ stages:
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python tools
 
@@ -219,6 +220,7 @@ stages:
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python tools
 
@@ -291,6 +293,7 @@ stages:
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
         echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       displayName: Install Python tools
 
@@ -353,7 +356,10 @@ stages:
         path: $(YARN_CACHE_FOLDER)
       displayName: Cache yarn packages
 
-    - script: python -m pip install -U -r dependencies/setup.txt
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
       displayName: Install Python tools
 
     - script: |
