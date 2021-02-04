@@ -45,7 +45,8 @@ class ValueChoiceMutator(Mutator):
         chosen = self.choice(self.candidates)
         for node in self.nodes:
             target = model.get_node_by_name(node.name)
-            target.update_operation('prim::Constant', {'value': chosen})
+            # FIXME: use 'None' as type for now
+            target.update_operation('prim::Constant', {'type': 'None', 'value': chosen})
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
