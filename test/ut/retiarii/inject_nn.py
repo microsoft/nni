@@ -4,7 +4,7 @@ import logging
 import torch
 import torch.nn as nn
 
-from nni.retiarii.utils import add_record, version_larger_equal
+from nni.retiarii.utils import add_record, del_record, version_larger_equal
 
 _logger = logging.getLogger(__name__)
 
@@ -13,6 +13,12 @@ def wrap_module(original_class):
     argname_list = list(inspect.signature(original_class).parameters.keys())
     # Make copy of original __init__, so we can call it without recursion
     original_class.bak_init_for_inject = orig_init
+    if hasattr(original_class, '__del__'):
+        orig_del = original_class.__del__
+        original_class.bak_del_for_inject = orig_del
+    else:
+        orig_del = None
+        original_class.bak_del_for_inject = None
 
     def __init__(self, *args, **kws):
         full_args = {}
@@ -23,13 +29,23 @@ def wrap_module(original_class):
 
         orig_init(self, *args, **kws)  # Call the original __init__
 
+    def __del__(self):
+        del_record(id(self))
+        if orig_del is not None:
+            orig_del()
+
     original_class.__init__ = __init__  # Set the class' __init__ to the new one
+    original_class.__del__ = __del__
     return original_class
 
 def unwrap_module(wrapped_class):
     if hasattr(wrapped_class, 'bak_init_for_inject'):
         wrapped_class.__init__ = wrapped_class.bak_init_for_inject
         delattr(wrapped_class, 'bak_init_for_inject')
+    if hasattr(wrapped_class, 'bak_del_for_inject'):
+        if wrapped_class.bak_del_for_inject is not None:
+            wrapped_class.__del__ = wrapped_class.bak_del_for_inject
+        delattr(wrapped_class, 'bak_del_for_inject')
     return None
 
 def remove_inject_pytorch_nn():

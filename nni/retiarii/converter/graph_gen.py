@@ -86,7 +86,6 @@ class GraphConverter:
         if node.outputsAt(0).type().str() == 'None':
             attrs = {'type': 'None'}
         else:
-            assert node.outputsAt(0).toIValue() is not None
             attrs = {'type': node.outputsAt(0).type().str(), 'value': node.outputsAt(0).toIValue()}
         self.global_seq += 1
         new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.Constant, self.global_seq),
