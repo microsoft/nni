@@ -253,7 +253,7 @@ class PyTorchOperation(Operation):
             return f'{output} = {inputs[0]}.new_empty({inputs[1]}{dtype_str}{device_str})'
         elif self.type == 'aten::new_zeros':
             # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
-            # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None, 
+            # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None,
             # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
             # TODO: check requires_grad when it is true!!!
             device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''

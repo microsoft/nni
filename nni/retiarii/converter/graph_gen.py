@@ -249,16 +249,6 @@ class GraphConverter:
             last_block_node = None
             for node in blocks[chosen_block].nodes():
                 last_block_node = handle_single_node(node)
-            #%30 : Tensor = prim::If(%3) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:436:16
-            #block0():
-            #    %6 : Tensor = aten::mul(%logvar.1, %4) # <string>:3:9
-            #    %std.1 : Tensor = aten::exp(%6) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:437:26
-            #    %eps.1 : Tensor = aten::randn_like(%std.1, %9, %9, %9, %9, %9) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:438:26
-            #    %17 : Tensor = aten::mul(%eps.1, %std.1) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:439:27
-            #    %20 : Tensor = aten::add_(%17, %mu.1, %19) # /home/quzha/nni/nni/test/ut/retiarii/test_convert.py:439:27
-            #    -> (%20)
-            #block1():
-            #    -> (%mu.1)
             self.global_seq += 1
             new_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
             self._add_edge(ir_graph, blocks[chosen_block].returnNode(), graph_inputs, node_index, new_node, output_remap)
@@ -344,7 +334,7 @@ class GraphConverter:
                 # TODO: support non member functions
                 assert node.inputsAt(0).debugName() == 'self'
                 script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
-                
+
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
                 method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
