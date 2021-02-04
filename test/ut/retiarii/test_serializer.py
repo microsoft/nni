@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 import sys
 
 import torch
@@ -7,6 +8,8 @@ from nni.retiarii import json_dumps, json_loads, blackbox
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
+
+sys.path.insert(0, Path(__file__).parent.as_posix())
 
 from imported.model import ImportTest
 
@@ -80,7 +83,7 @@ def test_dataset():
 def test_type():
     assert json_dumps(torch.optim.Adam) == '{"__typename__": "torch.optim.adam.Adam"}'
     assert json_loads('{"__typename__": "torch.optim.adam.Adam"}') == torch.optim.Adam
-    assert json_dumps(Foo) == '{"__typename__": "test_serializer.Foo"}'
+    assert re.match(r'{"__typename__": "(.*)test_serializer.Foo"}', json_dumps(Foo))
 
 
 if __name__ == '__main__':

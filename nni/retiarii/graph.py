@@ -44,7 +44,9 @@ class TrainingConfig(abc.ABC):
         pass
 
     @staticmethod
-    def _load_with_type(type_name: str, ir: Any) -> 'TrainingConfig':
+    def _load_with_type(type_name: str, ir: Any) -> 'Optional[TrainingConfig]':
+        if type_name == '_debug_no_trainer':
+            return None
         config_cls = import_(type_name)
         assert issubclass(config_cls, TrainingConfig)
         return config_cls._load(ir)
