@@ -33,7 +33,7 @@ class TestConvert(unittest.TestCase):
         model_code = model_to_pytorch_script(model_ir)
         #print('zql: ', model_code)
         #exit(1)
-        from nni.retiarii.nn.pytorch.inject_nn import remove_inject_pytorch_nn
+        from inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
         exec_vars = {}

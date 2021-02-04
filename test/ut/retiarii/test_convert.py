@@ -67,7 +67,7 @@ class TestConvert(unittest.TestCase):
         model_code = model_to_pytorch_script(model_ir)
         #print('zql: ', model_code)
         #exit(1)
-        from nni.retiarii.nn.pytorch.inject_nn import remove_inject_pytorch_nn
+        from inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
         exec_vars = {}
@@ -349,9 +349,6 @@ class TestConvert(unittest.TestCase):
             "n_cells": 4  # 2 * n_layers because birnn = True,
         }
 
-        #from nni.retiarii.nn.pytorch.inject_nn import inject_pytorch_nn
-        #inject_pytorch_nn()
-
         premise = torch.LongTensor(48, 64).random_(0, 100)
         hypothesis = torch.LongTensor(24, 64).random_(0, 100)
 
@@ -463,7 +460,7 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(VAE().eval(), (torch.rand(128, 1, 28, 28),))
 
     def test_torchvision_resnet18(self):
-        from nni.retiarii.nn.pytorch.inject_nn import inject_pytorch_nn
+        from inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
         self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
 
@@ -577,20 +574,8 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(resnet18, (torch.randn(1, 3, 224, 224),))
 
     def test_alexnet(self):
-        from nni.retiarii.nn.pytorch.inject_nn import inject_pytorch_nn
+        from inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
         x = torch.ones(1, 3, 224, 224)
         model = torchvision.models.AlexNet()
         self.checkExportImport(model, (x,))
-
-    # skip torch.Tensor.new_tensor as it is not supported by jit
-
-    def test_basic_new_full(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                # requires_grad is not supported by jit
-                # aten::new_full(Tensor self, int[] size, Scalar fill_value, *, int? dtype=None, int? layout=None, Device? device=None, bool? pin_memory=None) -> (Tensor):
-                # Keyword argument requires_grad unknown.
-                out = x.new_full((3, 4), 3.141592, dtype=torch.float32, device=torch.device('cpu'))
-                return out
-        self.checkExportImport(SimpleOp(), (torch.ones((2,), dtype=torch.float64), ))

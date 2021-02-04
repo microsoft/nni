@@ -33,6 +33,22 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
 
 
 def _format_inputs(node: Node) -> List[str]:
+    """
+    Format the inputs of a given node
+
+    Parameters
+    ----------
+    node : Node
+        a graph node, get and format its inputs
+
+    Returns
+    -------
+    list
+        the list of input names
+    list
+        the list of input values, if an input is simple type, record its value,
+        otherwise the value is None
+    """
     edges = _sorted_incoming_edges(node)
     inputs = []
     inputs_value = []
@@ -89,7 +105,6 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     for node in nodes:
         if node.operation:
             if node.operation.type == 'shared':
-                #print('shareddd: ', node)
                 continue
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:

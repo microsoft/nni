@@ -4,7 +4,7 @@ import logging
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, version_larger_equal
+from nni.retiarii.utils import add_record, version_larger_equal
 
 _logger = logging.getLogger(__name__)
 

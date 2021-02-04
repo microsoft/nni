@@ -81,7 +81,8 @@ class GraphConverter:
             new_node_input_idx += 1
 
     def create_prim_constant_node(self, ir_graph, node, module_name):
-        # NOTE: compare with string because the type is defined in pytorch c code. `.kind()` can also be used here
+        # NOTE: compare with string not type, because the type is defined in pytorch C code.
+        # `.kind()` can also be used here
         if node.outputsAt(0).type().str() == 'None':
             attrs = {'type': 'None'}
         else:
@@ -258,14 +259,6 @@ class GraphConverter:
             #    -> (%20)
             #block1():
             #    -> (%mu.1)
-            #if last_block_node is None:
-            # create an identity node
-            #print(dir(blocks[chosen_block]))
-            #print([i for i in blocks[chosen_block].outputs()])
-            #print(blocks[chosen_block].returnNode())
-            #print(type(blocks[chosen_block].returnNode()))
-            #print([i for i in blocks[chosen_block].returnNode().outputs()])
-            #print([i for i in blocks[chosen_block].returnNode().inputs()])
             self.global_seq += 1
             new_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
             self._add_edge(ir_graph, blocks[chosen_block].returnNode(), graph_inputs, node_index, new_node, output_remap)
@@ -324,9 +317,6 @@ class GraphConverter:
                     # this module is invoked more than once, the ir node has already been created
                     # create a reference node for it.
                     # example: {"name": "conv2", "operation": {"type": "shared", "parameters": {"reference": "conv1"}}}
-                    #print('shared module index: ', shared_module_index)
-                    #print('current module: ', submodule_full_name)
-                    #print('module_name: ', module_name)
                     self.global_seq += 1
                     shared_node_name = build_full_name(submodule_full_name, '', self.global_seq)
                     shared_type_operation = Operation.new('shared', {'reference': submodule_full_name})
@@ -353,12 +343,10 @@ class GraphConverter:
                 assert hasattr(script_module, node.s('name'))
                 # TODO: support non member functions
                 assert node.inputsAt(0).debugName() == 'self'
-                #print('zql', script_module, dir(script_module), script_module._forward_impl.graph, type(script_module._forward_impl))
                 script_method = getattr(script_module, node.s('name')) # <class 'torch._C.ScriptMethod'>
                 
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
-                #print(script_method.graph)
                 method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
                                                     module_name, ir_model, method_ir_graph, shared_module_index)
                 for _output in script_method.graph.outputs():
@@ -368,9 +356,6 @@ class GraphConverter:
                         src_node_idx = None
                     else:
                         src_node_idx = predecessor_node_outputs.index(_output)
-                    #print('output: ', method_ir_graph.output_node)
-                    #print('input: ', method_node_index[_output.node()])
-                    #print('input: ', _output.node())
                     method_ir_graph.add_edge(head=(method_node_index[_output.node()], src_node_idx),
                                     tail=(method_ir_graph.output_node, None))
                 self.refine_graph(method_ir_graph)
@@ -382,10 +367,6 @@ class GraphConverter:
                 for edge in method_ir_graph.edges:
                     edge.graph = ir_graph
                     if edge.head == method_ir_graph.input_node:
-                        #print('slot: ', slot)
-                        #print(node.inputsAt(slot))
-                        #print(node.inputsAt(slot).node())
-                        #print(node)
                         # this is a member method, 'self' is the first argument, thus +1
                         _input = node.inputsAt(edge.head_slot + 1)
                         src_node, src_node_idx = self._add_edge_handle_source_node(_input, graph_inputs, ir_graph, output_remap, node_index)
@@ -398,7 +379,6 @@ class GraphConverter:
                         node_index[node] = edge.head
                         continue
                     ir_graph.edges.append(edge)
-                #raise RuntimeError('unsupported CallMethod {}'.format(node.s('name')))
 
         # ===================handle each single node===================
         def handle_single_node(node):
@@ -464,9 +444,6 @@ class GraphConverter:
                 # refer to https://gist.github.com/liuzhe-lz/90c35d9dd6fd7f3f32544940151ab186
                 raise RuntimeError('Loop has not been supported yet!')
             elif node.kind().startswith('prim::'):
-                if node.kind() == 'prim::is_cuda':
-                    print('zzql: ', node)
-                    #exit(1)
                 self.global_seq += 1
                 aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
                 node_index[node] = aten_node
@@ -479,9 +456,6 @@ class GraphConverter:
                 output_remap[node.inputsAt(0)] = node
             elif node.kind().startswith('aten::'):
                 # handle aten::XXX
-                if node.kind() == 'aten::abs':
-                    print('zzql: ', node)
-                    #exit(1)
                 self.global_seq += 1
                 aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
                 node_index[node] = aten_node
@@ -631,7 +605,6 @@ class GraphConverter:
 
         # handle TorchScript graph
         sm_graph = script_module.graph
-        print(sm_graph)
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
 
