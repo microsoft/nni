@@ -674,6 +674,7 @@ class IllegalGraphError(ValueError):
 
 
 class DebugTraining(TrainingConfig):
+    @staticmethod
     def _load(ir: Any) -> 'DebugTraining':
         return DebugTraining()
 
