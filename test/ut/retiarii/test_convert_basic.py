@@ -31,8 +31,7 @@ class TestConvert(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
-        #print('zql: ', model_code)
-        #exit(1)
+
         from inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
@@ -45,7 +44,6 @@ class TestConvert(unittest.TestCase):
         with torch.no_grad():
             expected_output = model.eval()(*input)
             converted_output = converted_model.eval()(*input)
-        #print('check zql: ', expected_output, converted_output)
         if check_value:
             self.assertEqual(len(converted_output), len(expected_output))
             for a, b in zip(converted_output, expected_output):
@@ -275,15 +273,3 @@ class TestConvert(unittest.TestCase):
                 out4 = x.bitwise_xor(y)
                 return out1, out2, out3, out4
         self.checkExportImport(SimpleOp(), (torch.tensor([-1, -2, 3], dtype=torch.int8), torch.tensor([1, 0, 3], dtype=torch.int8), ))
-
-    '''def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )
-        
-    def test_basic_(self):
-        class SimpleOp(nn.Module):
-            def forward(self, x):
-                return
-        self.checkExportImport(SimpleOp(), )'''

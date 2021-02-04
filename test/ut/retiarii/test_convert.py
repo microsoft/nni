@@ -65,8 +65,7 @@ class TestConvert(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
-        #print('zql: ', model_code)
-        #exit(1)
+
         from inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
