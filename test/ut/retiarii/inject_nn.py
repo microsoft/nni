@@ -32,7 +32,7 @@ def wrap_module(original_class):
     def __del__(self):
         del_record(id(self))
         if orig_del is not None:
-            orig_del()
+            orig_del(self)
 
     original_class.__init__ = __init__  # Set the class' __init__ to the new one
     original_class.__del__ = __del__

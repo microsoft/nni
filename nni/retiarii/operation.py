@@ -66,6 +66,10 @@ class Operation:
 
     @classmethod
     def _find_subclass(cls, subclass_name):
+        if cls.to_class_name(subclass_name) is not None:
+            subclass_name = 'ModuleOperator'
+        if cls.is_functional(subclass_name):
+            subclass_name = 'FunctionalOperator'
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_ori_type_name') and \
                 subclass_name in subclass._ori_type_name:
@@ -84,6 +88,19 @@ class Operation:
 
 
 class PyTorchOperation(Operation):
+    @classmethod
+    def to_class_name(cls, type_name) -> str:
+        if type_name.startswith('__torch__.'):
+            return type_name[len('__torch__.'):]
+        elif type_name.startswith('__mutated__.'):
+            return type_name[len('__mutated__.'):]
+        else:
+            return None
+
+    @classmethod
+    def is_functional(cls, type_name) -> bool:
+        return type_name.startswith('Function.')
+
     def _to_class_name(self) -> str:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):]
@@ -126,32 +143,7 @@ class PyTorchOperation(Operation):
         str
             generated code line
         """
-        from .converter.op_types import OpTypeName
-        if self._to_class_name() is not None:
-            return f'{output} = self.{field}({", ".join(inputs)})'
-        elif self.type == 'shared':
-            return f'{output} = self.{field}({", ".join(inputs)})'
-        elif self.type.startswith('Function.'):
-            func_name = self.type[len('Function.'):]
-            return f'{output} = F.{func_name}({", ".join(inputs)})'
-        elif self.type == 'aten::__getitem__':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]}[{inputs[1]}]'
-        elif self.type == 'aten::append':
-            assert len(inputs) == 2
-            return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
-        elif self.type == 'aten::cat':
-            assert len(inputs) == 2
-            return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
-        elif self.type == OpTypeName.MergedSlice:
-            assert (len(inputs) - 1) % 4 == 0
-            slices = []
-            dim = int((len(inputs) - 1) / 4)
-            for i in range(dim):
-                slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
-            slice_str = ','.join(slices)
-            return f'{output} = {inputs[0]}[{slice_str}]'
-        elif self.type == 'aten::slice':
+        if self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
@@ -206,6 +198,8 @@ class Cell(PyTorchOperation):
         # TODO: ugly, think about how to refactor this part
         return _convert_name(self.cell_name)
 
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = self.{field}({", ".join(inputs)})'
 
 class _IOPseudoOperation(Operation):
     """

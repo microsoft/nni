@@ -26,6 +26,16 @@ scalar_type_to_pytorch_type = [
     'torch.bool',         # 11
 ]
 
+class ModuleOperator(PyTorchOperation):
+    _ori_type_name = ['ModuleOperator', 'shared']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = self.{field}({", ".join(inputs)})'
+
+class FunctionalOperator(PyTorchOperation):
+    _ori_type_name = ['FunctionalOperator']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        func_name = self.type[len('Function.'):]
+        return f'{output} = F.{func_name}({", ".join(inputs)})'
 
 class PrimConstant(PyTorchOperation):
     _ori_type_name = ['prim::Constant']
@@ -206,3 +216,31 @@ class NoopIdentity(PyTorchOperation):
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         return f'{output} = {", ".join(inputs)}'
 
+class AtenGetitem(PyTorchOperation):
+    _ori_type_name = ['aten::__getitem__']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        assert len(inputs) == 2
+        return f'{output} = {inputs[0]}[{inputs[1]}]'
+
+class AtenAppend(PyTorchOperation):
+    _ori_type_name = ['aten::append']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        assert len(inputs) == 2
+        return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
+
+class AtenCat(PyTorchOperation):
+    _ori_type_name = ['aten::cat']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        assert len(inputs) == 2
+        return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
+
+class MergedSlice(PyTorchOperation):
+    _ori_type_name = ['MergedSlice']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        assert (len(inputs) - 1) % 4 == 0
+        slices = []
+        dim = int((len(inputs) - 1) / 4)
+        for i in range(dim):
+            slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
+        slice_str = ','.join(slices)
+        return f'{output} = {inputs[0]}[{slice_str}]'
