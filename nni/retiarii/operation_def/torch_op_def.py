@@ -1,4 +1,4 @@
-from typing import (Any, Dict, List)
+from typing import (Any, List)
 from ..operation import PyTorchOperation
 
 
