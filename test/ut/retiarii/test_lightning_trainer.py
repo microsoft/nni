@@ -1,14 +1,24 @@
+import json
+
+import nni
 import nni.retiarii.trainer.pytorch.lightning as pl
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from nni.retiarii import blackbox_module as bm
-from torch.utils.data import DataLoader
+from sklearn.datasets import load_diabetes
+from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
+debug = False
+
+progress_bar_refresh_rate = 0
+if debug:
+    progress_bar_refresh_rate = 1
+
 
 class MNISTModel(nn.Module):
-
     def __init__(self):
         super().__init__()
         self.layer_1 = nn.Linear(28 * 28, 128)
@@ -22,15 +32,74 @@ class MNISTModel(nn.Module):
         return x
 
 
-def test_lightning_trainer():
+class FCNet(nn.Module):
+    def __init__(self, input_size, output_size):
+        super().__init__()
+        self.l1 = nn.Linear(input_size, 5)
+        self.relu = nn.ReLU()
+        self.l2 = nn.Linear(5, output_size)
+
+    def forward(self, x):
+        output = self.l1(x)
+        output = self.relu(output)
+        output = self.l2(output)
+        return output.view(-1)
+
+
+@bm
+class DiabetesDataset(Dataset):
+    def __init__(self, train=True):
+        data = load_diabetes()
+        self.x = torch.tensor(data['data'], dtype=torch.float32)
+        self.y = torch.tensor(data['target'], dtype=torch.float32)
+        self.length = self.x.shape[0]
+        split = int(self.length * 0.8)
+        if train:
+            self.x = self.x[:split]
+            self.y = self.y[:split]
+        else:
+            self.x = self.x[split:]
+            self.y = self.y[split:]
+        self.length = len(self.y)
+
+    def __getitem__(self, idx):
+        return self.x[idx], self.y[idx]
+
+    def __len__(self):
+        return self.length
+
+
+def _get_final_result():
+    return float(json.loads(nni.runtime.platform.test._last_metric)['value'])
+
+
+def test_mnist():
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
-    test_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
-    lightning = pl.Lightning(pl.SupervisedLearning(), pl.Trainer(max_epochs=10, limit_val_batches=0.0),
+    train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
+    test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
+    lightning = pl.Lightning(pl.Classification(),
+                             pl.Trainer(max_epochs=2, limit_train_batches=0.25,  # for faster training
+                                        progress_bar_refresh_rate=progress_bar_refresh_rate),
                              train_dataloader=DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=DataLoader(test_dataset, batch_size=100))
     lightning._execute(MNISTModel)
+    assert _get_final_result() > 0.7
+
+
+def test_diabetes():
+    nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
+    train_dataset = DiabetesDataset(train=True)
+    test_dataset = DiabetesDataset(train=False)
+    lightning = pl.Lightning(pl.Regression(optimizer=torch.optim.SGD),
+                             pl.Trainer(max_epochs=100,
+                                        progress_bar_refresh_rate=progress_bar_refresh_rate),
+                             train_dataloader=DataLoader(train_dataset, batch_size=20),
+                             val_dataloaders=DataLoader(test_dataset, batch_size=20))
+    lightning._execute(FCNet(train_dataset.x.shape[1], 1))
+    assert _get_final_result() < 2e4
 
 
 if __name__ == '__main__':
-    test_lightning_trainer()
+    test_mnist()
+    test_diabetes()
