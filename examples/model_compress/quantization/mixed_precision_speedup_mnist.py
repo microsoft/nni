@@ -3,8 +3,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 import numpy as np
 
-from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType
-from nni.compression.pytorch.speedup.quantization_speedup.backend import BackendEngine
+from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType, TensorRTModelSpeedUp
 
 class Mnist(torch.nn.Module):
     def __init__(self):
@@ -110,9 +109,8 @@ def main():
     output_names = ["output1"]
     calibration_cache = "mnist.cache"
     test_set, test_labels = get_testset(trans, test_loader)
-    backend = 'tensorrt'
 
-    engine = BackendEngine(backend, model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
+    engine = TensorRTModelSpeedUp(model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
         strict_datatype=True, using_calibrate=True, calibrate_type=CalibrateType.ENTROPY2, calib_data=test_set, 
         calibration_cache = calibration_cache, batchsize=batch_size, input_names=input_names, output_names=output_names)
     engine.build()

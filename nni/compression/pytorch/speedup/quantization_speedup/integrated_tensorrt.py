@@ -1,7 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import tensorrt as trt
 import nni.compression.pytorch.speedup.quantization_speedup.frontend_to_onnx as fonnx
 import nni.compression.pytorch.speedup.quantization_speedup.calibrator as calibrator
 import nni.compression.pytorch.speedup.quantization_speedup.common as common
+from nni.compression.pytorch.speedup.quantization_speedup.backend import BaseModelSpeedup
 import time
 
 TRT_LOGGER = trt.Logger()
@@ -61,7 +65,7 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
         engine = builder.build_cuda_engine(network)
         return engine
 
-class TensorRt:
+class TensorRTModelSpeedUp(BaseModelSpeedup):
     def __init__(self, model, onnx_path, input_shape, config=None, extra_layer_bit=32, strict_datatype=False, using_calibrate=True, 
     calibrate_type=None, calib_data=None, calibration_cache = None, batchsize=1, input_names=["actual_input_1"], output_names=["output1"]):
         """
@@ -99,6 +103,7 @@ class TensorRt:
         output_name : list
             Output name of onnx model providing for torch.onnx.export to generate onnx model
         """
+        super().__init__(model, config)
         self.model = model
         self.onnx_path = onnx_path
         self.input_shape = input_shape
@@ -115,7 +120,7 @@ class TensorRt:
         self.context = None
         self.onnx_config = {}
 
-    def tensorrt_build(self):
+    def build(self):
         """
         Get onnx config and build tensorrt engine.
         """

@@ -5,8 +5,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 import numpy as np
 from torchvision import datasets, transforms
 
-from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType
-from nni.compression.pytorch.speedup.quantization_speedup.backend import BackendEngine
+from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType, TensorRTModelSpeedUp
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -313,9 +312,8 @@ def main():
     output_names = ["output1"]
     calibration_cache = "cifar_calibration.cache"
     test_set, test_labels = get_testset()
-    backend = 'tensorrt'
 
-    engine = BackendEngine(backend, model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
+    engine = TensorRTModelSpeedUp(model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
         strict_datatype=True, using_calibrate=True, calibrate_type=CalibrateType.ENTROPY2, calib_data=test_set, 
         calibration_cache = calibration_cache, batchsize=batch_size, input_names=input_names, output_names=output_names)
     engine.build()
