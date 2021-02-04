@@ -7,7 +7,7 @@ from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
 from ..operation import Cell, Operation
 from ..utils import get_records
-from .op_types import MODULE_EXCEPT_LIST, BasicOpsPT, OpTypeName
+from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import _convert_name, build_full_name
 
 _logger = logging.getLogger(__name__)
@@ -400,24 +400,10 @@ class GraphConverter:
             elif node.kind() == 'prim::Constant':
                 new_node = self.create_prim_constant_node(ir_graph, node, module_name)
                 node_index[node] = new_node
-            elif node.kind() == 'prim::ListConstruct':
+            elif node.kind() in ['prim::ListConstruct', 'prim::ListUnpack', 'prim::TupleConstruct', 'prim::TupleUnpack']:
                 self.global_seq += 1
-                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListConstruct, self.global_seq), node.kind())
-                node_index[node] = new_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
-            elif node.kind() == 'prim::ListUnpack':
-                self.global_seq += 1
-                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.ListUnpack, self.global_seq), node.kind())
-                node_index[node] = new_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
-            elif node.kind() == 'prim::TupleConstruct':
-                self.global_seq += 1
-                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleConstruct, self.global_seq), node.kind())
-                node_index[node] = new_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
-            elif node.kind() == 'prim::TupleUnpack':
-                self.global_seq += 1
-                new_node = ir_graph.add_node(build_full_name(module_name, OpTypeName.TupleUnpack, self.global_seq), node.kind())
+                prim_op_name = node.kind().split('::')[-1]
+                new_node = ir_graph.add_node(build_full_name(module_name, prim_op_name, self.global_seq), node.kind())
                 node_index[node] = new_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, new_node, output_remap)
             elif node.kind() == 'prim::GetAttr':
@@ -435,19 +421,22 @@ class GraphConverter:
                 raise RuntimeError('Loop has not been supported yet!')
             elif node.kind().startswith('prim::'):
                 self.global_seq += 1
-                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
-                node_index[node] = aten_node
-                self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
+                prim_op_name = node.kind().replace('::', '__')
+                prim_node = ir_graph.add_node(build_full_name(module_name, prim_op_name, self.global_seq), node.kind())
+                node_index[node] = prim_node
+                self._add_edge(ir_graph, node, graph_inputs, node_index, prim_node, output_remap)
             elif node.kind() == 'aten::append':
                 self.global_seq += 1
-                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
+                aten_op_name = node.kind().replace('::', '__')
+                aten_node = ir_graph.add_node(build_full_name(module_name, aten_op_name, self.global_seq), node.kind())
                 node_index[node] = aten_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
                 output_remap[node.inputsAt(0)] = node
             elif node.kind().startswith('aten::'):
                 # handle aten::XXX
                 self.global_seq += 1
-                aten_node = ir_graph.add_node(build_full_name(module_name, BasicOpsPT[node.kind()], self.global_seq), node.kind())
+                aten_op_name = node.kind().replace('::', '__')
+                aten_node = ir_graph.add_node(build_full_name(module_name, aten_op_name, self.global_seq), node.kind())
                 node_index[node] = aten_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             else:
@@ -595,6 +584,7 @@ class GraphConverter:
 
         # handle TorchScript graph
         sm_graph = script_module.graph
+        print(sm_graph)
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
 

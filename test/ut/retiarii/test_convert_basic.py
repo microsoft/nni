@@ -104,9 +104,9 @@ class TestConvert(unittest.TestCase):
                 out1 = x.abs()
                 out11 = x.absolute()
                 out2 = torch.abs(x)
-                out3 = x.abs_()
-                out33 = x.absolute_()
-                return out1, out11, out2, out3, out33
+                #out3 = x.abs_()
+                #out33 = x.absolute_()
+                return out1, out11, out2#, out3, out33
         self.checkExportImport(SimpleOp(), (torch.tensor([-1, -2, 3]), ))
 
     # TODO: topological sort should be improved
@@ -273,3 +273,12 @@ class TestConvert(unittest.TestCase):
                 out4 = x.bitwise_xor(y)
                 return out1, out2, out3, out4
         self.checkExportImport(SimpleOp(), (torch.tensor([-1, -2, 3], dtype=torch.int8), torch.tensor([1, 0, 3], dtype=torch.int8), ))
+
+    # cauchy_ is not supported yet
+
+    def test_ceil(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out1 = x.ceil()
+                return out1
+        self.checkExportImport(SimpleOp(), (torch.randn(4), ))
