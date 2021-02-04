@@ -161,6 +161,7 @@ def _get_module_name(cls):
                     raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
                                     f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
                 module_name = main_file_path.stem
+                break
     return module_name
 
 
