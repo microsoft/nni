@@ -58,6 +58,8 @@ class Lightning(TrainingConfig):
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}.'
+        assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
+        assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         self.module = lightning_module
         self.trainer = trainer
         self.train_dataloader = train_dataloader
@@ -81,6 +83,14 @@ class Lightning(TrainingConfig):
 
     def __eq__(self, other):
         return self.function == other.function and self.arguments == other.arguments
+
+
+def _check_dataloader(dataloader):
+    if dataloader is None:
+        return True
+    if isinstance(dataloader, list):
+        return all([_check_dataloader(d) for d in dataloader])
+    return isinstance(dataloader, DataLoader)
 
 
 ### The following are some commonly used Lightning modules ###

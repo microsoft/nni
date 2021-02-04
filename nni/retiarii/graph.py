@@ -103,7 +103,7 @@ class Model:
 
         self._root_graph_name: str = '_model'
         self.graphs: Dict[str, Graph] = {}
-        self.training_config: TrainingConfig = TrainingConfig('foo', {})
+        self.training_config: Optional[TrainingConfig] = None
 
         self.history: List[Model] = []
 

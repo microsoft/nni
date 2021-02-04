@@ -1,10 +1,14 @@
 import random
 
 import nni.retiarii.nn.pytorch as nn
+import nni.retiarii.trainer.pytorch.lightning as pl
 import torch.nn.functional as F
-from nni.retiarii.experiment import RetiariiExeConfig, RetiariiExperiment
+from nni.retiarii import blackbox_module as bm
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from nni.retiarii.strategies import RandomStrategy
-from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
+from torch.utils.data import DataLoader
+from torchvision import transforms
+from torchvision.datasets import MNIST
 
 
 class Net(nn.Module):
@@ -31,15 +35,17 @@ class Net(nn.Module):
 
 if __name__ == '__main__':
     base_model = Net(128)
-    trainer = PyTorchImageClassificationTrainer(base_model, dataset_cls="MNIST",
-                                                dataset_kwargs={"root": "data/mnist", "download": True},
-                                                dataloader_kwargs={"batch_size": 32},
-                                                optimizer_kwargs={"lr": 1e-3},
-                                                trainer_kwargs={"max_epochs": 1})
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
+    test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
+    lightning = pl.Lightning(pl.Classification(),
+                             pl.Trainer(max_epochs=2),
+                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
 
     simple_startegy = RandomStrategy()
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_startegy)
+    exp = RetiariiExperiment(base_model, lightning, [], simple_startegy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'
