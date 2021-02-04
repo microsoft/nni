@@ -554,25 +554,39 @@ class GraphConverter:
         self.merge_aten_slices(ir_graph)
 
     def _handle_layerchoice(self, module):
-        m_attrs = {}
-        candidates = module.op_candidates
         choices = []
-        for cand in candidates:
-            assert id(cand) in self.modules_arg, 'id not exist: {}'.format(id(cand))
+        for cand in list(module):
+            assert id(cand) in self.modules_arg, \
+                f'Module not recorded: {id(cand)}. ' \
+                'Try to import from `retiarii.nn` if you are using torch.nn module or ' \
+                'annotate your customized module with @blackbox_module.'
             assert isinstance(self.modules_arg[id(cand)], dict)
             cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
             choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
+<<<<<<< HEAD
         m_attrs['choices'] = choices
         m_attrs['label'] = module.label
         return m_attrs
+=======
+        return {
+            'candidates': choices,
+            'label': module.label
+        }
+>>>>>>> 5946b4a4ae24714211b5b29aa9096bc0ee7ed570
 
     def _handle_inputchoice(self, module):
-        m_attrs = {}
-        m_attrs['n_candidates'] = module.n_candidates
-        m_attrs['n_chosen'] = module.n_chosen
-        m_attrs['reduction'] = module.reduction
-        m_attrs['label'] = module.label
-        return m_attrs
+        return {
+            'n_candidates': module.n_candidates,
+            'n_chosen': module.n_chosen,
+            'reduction': module.reduction,
+            'label': module.label
+        }
+
+    def _handle_valuechoice(self, module):
+        return {
+            'candidates': module.candidates,
+            'label': module.label
+        }
 
     def convert_module(self, script_module, module, module_name, ir_model):
         """
@@ -607,6 +621,8 @@ class GraphConverter:
             m_attrs = self._handle_layerchoice(module)
         elif original_type_name == OpTypeName.InputChoice:
             m_attrs = self._handle_inputchoice(module)
+        elif original_type_name == OpTypeName.ValueChoice:
+            m_attrs = self._handle_valuechoice(module)
         elif original_type_name == OpTypeName.Placeholder:
             m_attrs = self.modules_arg[id(module)]
         elif module.__class__.__module__.startswith('torch.nn') and original_type_name in torch.nn.__dict__:

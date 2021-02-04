@@ -109,6 +109,9 @@ def blackbox_module(cls):
     Register a module. Use it as a decorator.
     """
     frm = inspect.stack()[1]
+
+    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given black box module, '
+                                                     'please define it explicitly in a .py file.')
     module_name = inspect.getmodule(frm[0]).__name__
     if module_name == '__main__':
         main_file_path = Path(inspect.getsourcefile(frm[0]))
@@ -130,6 +133,8 @@ def register_trainer(cls):
     Register a trainer. Use it as a decorator.
     """
     frm = inspect.stack()[1]
+    assert (inspect.getmodule(frm[0]) is not None), ('unable to locate the definition of the given trainer, '
+                                                     'please define it explicitly in a .py file.')
     module_name = inspect.getmodule(frm[0]).__name__
     return _blackbox_cls(cls, module_name, 'full')
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.strategies import TPEStrategy, RandomStrategy
-from nni.retiarii.trainer import PyTorchImageClassificationTrainer
+from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 
 from darts_model import CNN
 

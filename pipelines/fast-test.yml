@@ -24,14 +24,14 @@ stages:
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       displayName: Install apt packages
 
-    # - task: Cache@2
-    #   inputs:
-    #     key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-    #     restoreKeys: | 
-    #       python | "$(Agent.OS)"
-    #       python
-    #     path: $(PIP_CACHE_DIR)
-    #   displayName: Cache pip packages
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
 
     - script: |
         set -e
@@ -65,14 +65,14 @@ stages:
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       displayName: Install apt packages
 
-    # - task: Cache@2
-    #   inputs:
-    #     key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-    #     restoreKeys: | 
-    #       python | "$(Agent.OS)"
-    #       python
-    #     path: $(PIP_CACHE_DIR)
-    #   displayName: Cache pip packages
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
 
     - script: |
         set -e

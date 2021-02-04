@@ -32,6 +32,7 @@ BasicOpsPT = {
     'aten::cat': 'Cat',
     'aten::size': 'Size',
     'aten::view': 'View',
+    'aten::reshape': 'Reshape',
     'aten::eq': 'Eq',
     'aten::Bool': 'Bool',
     'aten::empty': 'Empty',

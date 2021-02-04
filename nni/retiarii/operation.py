@@ -168,8 +168,7 @@ class PyTorchOperation(Operation):
         elif self.type == 'prim::ListConstruct':
             return f'{output} = [{", ".join(inputs)}]'
         elif self.type == 'prim::TupleConstruct':
-            inputs_str = ','.join(inputs)
-            return f'{output} = ({inputs_str})'
+            return f'{output} = ({", ".join(inputs)})'
         elif self.type == 'prim::TupleUnpack':
             # have single output here, because the following code uses index to access the unpacked values
             assert len(inputs) == 1
@@ -222,6 +221,9 @@ class PyTorchOperation(Operation):
         elif self.type == 'aten::view':
             assert len(inputs) == 2
             return f'{output} = {inputs[0]}.view({inputs[1]})'
+        elif self.type == 'aten::reshape':
+            assert len(inputs) == 2
+            return f'{output} = {inputs[0]}.reshape({inputs[1]})'
         elif self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
         elif self.type == 'aten::Bool':
