@@ -81,8 +81,8 @@ Strategies
 Retiarii Experiments
 --------------------
 
-..  autoclass:: nni.retiarii.experiment.RetiariiExperiment
+..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExperiment
     :members:
 
-..  autoclass:: nni.retiarii.experiment.RetiariiExeConfig
+..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:
