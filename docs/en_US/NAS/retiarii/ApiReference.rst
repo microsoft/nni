@@ -12,6 +12,12 @@ Inline Mutation APIs
 ..  autoclass:: nni.retiarii.nn.pytorch.InputChoice
     :members:
 
+..  autoclass:: nni.retiarii.nn.pytorch.ValueChoice
+    :members:
+
+..  autoclass:: nni.retiarii.nn.pytorch.ChosenInputs
+    :members:
+
 Graph Mutation APIs
 -------------------
 
@@ -36,10 +42,10 @@ Graph Mutation APIs
 Trainers
 --------
 
-..  autoclass:: nni.retiarii.trainer.PyTorchImageClassificationTrainer
+..  autoclass:: nni.retiarii.trainer.pytorch.PyTorchImageClassificationTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.PyTorchMultiModelTrainer
+..  autoclass:: nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer
     :members:
 
 Oneshot Trainers

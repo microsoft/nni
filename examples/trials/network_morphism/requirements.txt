@@ -1,4 +1,4 @@
-numpy==1.19.3
+numpy==1.18.5
 tensorflow==1.15.4
 torchvision==0.2.1
 Keras==2.3.1
