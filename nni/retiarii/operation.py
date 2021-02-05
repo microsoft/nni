@@ -66,13 +66,8 @@ class Operation:
 
     @classmethod
     def _find_subclass(cls, subclass_name):
-        if cls.to_class_name(subclass_name) is not None:
-            subclass_name = 'ModuleOperator'
-        if cls.is_functional(subclass_name):
-            subclass_name = 'FunctionalOperator'
         for subclass in cls.__subclasses__():
-            if hasattr(subclass, '_ori_type_name') and \
-                subclass_name in subclass._ori_type_name:
+            if subclass.__name__ == subclass_name:
                 return subclass
         return cls
 
@@ -88,6 +83,18 @@ class Operation:
 
 
 class PyTorchOperation(Operation):
+    @classmethod
+    def _find_subclass(cls, subclass_name):
+        if cls.to_class_name(subclass_name) is not None:
+            subclass_name = 'ModuleOperator'
+        if cls.is_functional(subclass_name):
+            subclass_name = 'FunctionalOperator'
+        for subclass in cls.__subclasses__():
+            if hasattr(subclass, '_ori_type_name') and \
+                subclass_name in subclass._ori_type_name:
+                return subclass
+        return cls
+
     @classmethod
     def to_class_name(cls, type_name) -> str:
         if type_name.startswith('__torch__.'):
