@@ -1,8 +1,9 @@
 # Recommended because some non-commonly-used modules/examples depend on those packages.
 
 tensorflow
-torch >= 1.6+cpu, != 1.7+cpu -f https://download.pytorch.org/whl/torch_stable.html
-torchvision >= 0.7+cpu, != 0.8+cpu -f https://download.pytorch.org/whl/torch_stable.html
+# PyTorch 1.7 has compatibility issue with model compression.
+torch >= 1.6+cpu, != 1.7.0+cpu, != 1.7.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+torchvision >= 0.7+cpu, != 0.8.0+cpu, != 0.8.1+cpu, != 0.8.2+cpu -f https://download.pytorch.org/whl/torch_stable.html
 onnx
 peewee
 thop
