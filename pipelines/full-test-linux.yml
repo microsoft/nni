@@ -44,27 +44,27 @@ jobs:
       nnictl algo register --meta meta_file.yml
     displayName: Install customized tuner
 
-  # - script: |
-  #     set -e
-  #     (cd test && python3 -m pytest ut)
-  #     export PATH=$PATH:$PWD/toolchain/yarn/bin
-  #     export CI=true
-  #     (cd ts/nni_manager && yarn test)
-  #     (cd ts/nasui && yarn test)
-  #   displayName: Unit test
-  #   continueOnError: true
+  - script: |
+      set -e
+      (cd test && python3 -m pytest ut)
+      export PATH=$PATH:$PWD/toolchain/yarn/bin
+      export CI=true
+      (cd ts/nni_manager && yarn test)
+      (cd ts/nasui && yarn test)
+    displayName: Unit test
+    continueOnError: true
 
-  # - script: |
-  #     cd test
-  #     python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
-  #   displayName: Integration test
-  #   continueOnError: true
+  - script: |
+      cd test
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+    displayName: Integration test
+    continueOnError: true
 
-  # - script: |
-  #     cd test
-  #     source scripts/nas.sh
-  #   displayName: NAS test
-  #   continueOnError: true
+  - script: |
+      cd test
+      source scripts/nas.sh
+    displayName: NAS test
+    continueOnError: true
 
   - script: |
       cd test
