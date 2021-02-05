@@ -7,7 +7,7 @@ echo "===========================Testing: pruning and speedup===================
 cd ${CWD}/../examples/model_compress
 
 echo "testing fpgm pruning and speedup..."
-python3 pruning/basic_pruners_torch.py --pruner fpgm --pretrain-epochs 1 --fine-tune-epochs 1 --model lenet --dataset mnist
+python3 pruning/basic_pruners_torch.py --pruner fpgm --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
 python3 pruning/model_speedup.py --example_name fpgm
 
 echo "testing slim pruning and speedup..."
@@ -19,7 +19,7 @@ python3 pruning/basic_pruners_torch.py --pruner l1filter --pretrain-epochs 1 --f
 python3 pruning/model_speedup.py --example_name l1filter
 
 echo "testing apoz pruning and speedup..."
-python3 pruning/basic_pruners_torch.py --pruner apoz --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
+python3 pruning/basic_pruners_torch.py --pruner apoz --pretrain-epochs 1 --fine-tune-epochs 1 --model lenet --dataset mnist
 python3 pruning/model_speedup.py --example_name apoz
 
 echo 'testing level pruner pruning'
