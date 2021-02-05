@@ -24,6 +24,7 @@ EXPERIMENT_URL = API_ROOT_URL + '/experiment'
 STATUS_URL = API_ROOT_URL + '/check-status'
 TRIAL_JOBS_URL = API_ROOT_URL + '/trial-jobs'
 METRICS_URL = API_ROOT_URL + '/metric-data'
+GET_IMPORTED_DATA_URL = API_ROOT_URL + '/experiment/imported-data'
 
 def read_last_line(file_name):
     '''read last line of a file and return None if file not found'''
@@ -71,7 +72,7 @@ def get_experiment_dir(experiment_url=None, experiment_id=None):
     assert any([experiment_url, experiment_id])
     if experiment_id is None:
         experiment_id = get_experiment_id(experiment_url)
-    return os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
+    return os.path.join(os.path.expanduser('~'), 'nni-experiments', experiment_id)
 
 def get_nni_log_dir(experiment_url=None, experiment_id=None):
     '''get nni's log directory from nni's experiment url'''
@@ -123,7 +124,7 @@ def print_file_content(filepath):
 def print_trial_job_log(training_service, trial_jobs_url):
     trial_jobs = get_trial_jobs(trial_jobs_url)
     for trial_job in trial_jobs:
-        trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['id'])
+        trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['trialJobId'])
         log_files = ['stderr', 'trial.log'] if training_service == 'local' else ['stdout_log_collection.log']
         for log_file in log_files:
             print_file_content(os.path.join(trial_log_dir, log_file))

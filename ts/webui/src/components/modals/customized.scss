@@ -1,0 +1,106 @@
+/* resubmit confirm modal style */
+.resubmit {
+    .title {
+        font-size: 16px;
+        color: #000;
+
+        .color-warn,
+        .color-error {
+            color: red;
+        }
+
+        i {
+            margin-right: 10px;
+        }
+    }
+
+    .hint {
+        padding: 15px 0;
+        color: #333;
+        margin-left: 30px;
+    }
+
+    .color-succ {
+        color: green;
+    }
+}
+
+.hyper-box {
+    padding: 16px 18px 16px 16px;
+}
+
+.hyper-form {
+    margin-bottom: 10px;
+
+    .title {
+        font-size: 14px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 40px;
+    }
+
+    .inputs {
+        height: 32px;
+    }
+
+    input {
+        padding-left: 5px;
+        height: 32px;
+    }
+}
+
+.tag-input {
+    margin-top: 25px;
+}
+
+/* submit & cancel buttons style */
+.modal-button {
+    text-align: right;
+    height: 28px;
+
+    /* cancel button style */
+    .cancelSty {
+        width: 80px;
+        background-color: #dadada;
+        border: none;
+        color: #333;
+    }
+
+    .cancelSty:hover,
+    .cancelSty:active,
+    .cancelSty:focus {
+        background-color: #dadada;
+    }
+
+    .distance {
+        margin-right: 8px;
+    }
+}
+
+.center {
+    text-align: center;
+}
+
+.icon-color {
+    i {
+        color: green;
+    }
+}
+
+.icon-error {
+    i {
+        color: red;
+    }
+}
+
+.icon-color,
+.icon-error {
+    i {
+        margin-right: 10px;
+        position: relative;
+        top: 5px;
+    }
+}
+
+.ms-Dialog-subText {
+    color: #333;
+}

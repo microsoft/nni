@@ -1,0 +1,108 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+variables:
+  worker: remote_nni-ci-gpu-03
+
+# variables set on VSO: (for security concern)
+#   manager_ip
+#   worker_ip
+#   password_in_docker
+
+jobs:
+- job: remote_linux2linux
+  pool: NNI CI REMOTE CLI
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+
+      echo "Working directory: ${PWD}"
+      echo "NNI version: ${NNI_RELEASE}"
+
+      python3 -m pip install --upgrade pip setuptools
+    displayName: Prepare
+
+  - script: |
+      set -e
+      python3 test/vso_tools/install_nni.py $(NNI_RELEASE) SMAC,BOHB
+
+      cd examples/tuners/customized_tuner
+      python3 setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install NNI
+
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      sourceFolder: dist
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
+      overwrite: true
+    displayName: Copy wheel to remote machine
+    timeoutInMinutes: 10
+
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      contents: Dockerfile
+      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      overwrite: true
+    displayName: Copy dockerfile to remote machine
+    timeoutInMinutes: 10
+
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      sourceFolder: test
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
+      overwrite: true
+    displayName: Copy test scripts to remote machine
+    timeoutInMinutes: 10
+
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+    displayName: Install NNI and run docker on Linux worker
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts remote \
+          --remote_reuse false \
+          --remote_user nni \
+          --remote_host $(worker_ip) \
+          --remote_port $(docker_port) \
+          --remote_pwd $(password_in_docker) \
+          --nni_manager_ip $(manager_ip)
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+    displayName: Integration test
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts remote \
+          --remote_reuse true \
+          --remote_user nni \
+          --remote_host $(worker_ip) \
+          --remote_port $(docker_port) \
+          --remote_pwd $(password_in_docker) \
+          --nni_manager_ip $(manager_ip)
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+    displayName: Integration test (reuse mode)
+
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
+    condition: always()
+    displayName: Stop docker

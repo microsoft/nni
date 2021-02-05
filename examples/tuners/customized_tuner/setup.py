@@ -8,14 +8,12 @@ setuptools.setup(
     version = '0.1',
     packages = setuptools.find_packages(exclude=['*test*']),
 
-    python_requires = '>=3.5',
+    python_requires = '>=3.6',
     classifiers = [
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
-        'Operating System :: ',
-        'NNI Package :: tuner :: demotuner :: demo_tuner.DemoTuner :: demo_tuner.MyClassArgsValidator'
+        'Operating System :: '
     ],
-
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'NNI control for Neural Network Intelligence project',
