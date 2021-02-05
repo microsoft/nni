@@ -631,8 +631,9 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
-                    this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
+                    this.trialJobs.set(trialJobDetail.id, Snapshot);
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(
