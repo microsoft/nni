@@ -24,7 +24,6 @@ interface IntermediateState {
 
 interface IntermediateProps {
     source: Array<TableObj>;
-    whichChart: string;
 }
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
@@ -230,20 +229,18 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     componentDidUpdate(prevProps: IntermediateProps, prevState: any): void {
         if (this.props.source !== prevProps.source || this.state.isFilter !== prevState.isFilter) {
             const { isFilter, filterSource } = this.state;
-            const { whichChart, source } = this.props;
+            const { source } = this.props;
 
-            if (whichChart === 'Intermediate result') {
-                if (isFilter === true) {
-                    const pointVal = this.pointInput !== null ? this.pointInput.value : '';
-                    const minVal = this.minValInput !== null ? this.minValInput.value : '';
-                    if (pointVal === '' && minVal === '') {
-                        this.drawIntermediate(source);
-                    } else {
-                        this.drawIntermediate(filterSource);
-                    }
-                } else {
+            if (isFilter === true) {
+                const pointVal = this.pointInput !== null ? this.pointInput.value : '';
+                const minVal = this.minValInput !== null ? this.minValInput.value : '';
+                if (pointVal === '' && minVal === '') {
                     this.drawIntermediate(source);
+                } else {
+                    this.drawIntermediate(filterSource);
                 }
+            } else {
+                this.drawIntermediate(source);
             }
         }
     }

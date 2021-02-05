@@ -4,6 +4,7 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
+import {TrialConfig} from '../common/trialConfig';
 
 export class PAIClusterConfig {
     public readonly userName: string;
@@ -69,5 +70,39 @@ export class PAITrialJobDetail implements TrialJobDetail {
         this.tags = [];
         this.logPath = logPath;
         this.paiJobDetailUrl = paiJobDetailUrl;
+    }
+}
+
+export const PAI_TRIAL_COMMAND_FORMAT: string =
+`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} MULTI_PHASE={5} \
+&& NNI_CODE_DIR={6} && mkdir -p $NNI_SYS_DIR/code && cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR/code && sh $NNI_SYS_DIR/install_nni.sh \
+&& cd $NNI_SYS_DIR/code && python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' \
+--nni_manager_version '{10}' --log_collection '{11}' | tee $NNI_OUTPUT_DIR/trial.log`;
+
+/**
+ * PAI trial configuration
+ */
+export class NNIPAITrialConfig extends TrialConfig {
+    public readonly cpuNum: number;
+    public readonly memoryMB: number;
+    public readonly image: string;
+    public virtualCluster?: string;
+    public readonly nniManagerNFSMountPath: string;
+    public readonly containerNFSMountPath: string;
+    public readonly paiStorageConfigName: string;
+    public readonly paiConfigPath?: string;
+
+    constructor(command: string, codeDir: string, gpuNum: number, cpuNum: number, memoryMB: number,
+                image: string, nniManagerNFSMountPath: string, containerNFSMountPath: string,
+                paiStorageConfigName: string, virtualCluster?: string, paiConfigPath?: string) {
+        super(command, codeDir, gpuNum);
+        this.cpuNum = cpuNum;
+        this.memoryMB = memoryMB;
+        this.image = image;
+        this.virtualCluster = virtualCluster;
+        this.nniManagerNFSMountPath = nniManagerNFSMountPath;
+        this.containerNFSMountPath = containerNFSMountPath;
+        this.paiStorageConfigName = paiStorageConfigName;
+        this.paiConfigPath = paiConfigPath;
     }
 }

@@ -28,7 +28,7 @@ from keras.utils import multi_gpu_model, to_categorical
 import keras.backend.tensorflow_backend as KTF
 
 import nni
-from nni.networkmorphism_tuner.graph import json_to_graph
+from nni.algorithms.hpo.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"

@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
+
 '''
-Examples for automatic pruners
+Example for supported automatic pruning algorithms.
+In this example, we present the usage of automatic pruners (NetAdapt, AutoCompressPruner). L1, L2, FPGM pruners are also executed for comparison purpose.
 '''
 
 import argparse
@@ -62,30 +64,6 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
             ])),
             batch_size=batch_size, shuffle=False, **kwargs)
         criterion = torch.nn.CrossEntropyLoss()
-    elif dataset == 'imagenet':
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
-        train_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(os.path.join(data_dir, 'train'),
-                                 transform=transforms.Compose([
-                                     transforms.RandomResizedCrop(224),
-                                     transforms.RandomHorizontalFlip(),
-                                     transforms.ToTensor(),
-                                     normalize,
-                                 ])),
-            batch_size=batch_size, shuffle=True, **kwargs)
-
-        val_loader = torch.utils.data.DataLoader(
-            datasets.ImageFolder(os.path.join(data_dir, 'val'),
-                                 transform=transforms.Compose([
-                                     transforms.Resize(256),
-                                     transforms.CenterCrop(224),
-                                     transforms.ToTensor(),
-                                     normalize,
-                                 ])),
-            batch_size=test_batch_size, shuffle=True, **kwargs)
-        criterion = torch.nn.CrossEntropyLoss()
-
     return train_loader, val_loader, criterion
 
 
@@ -248,7 +226,6 @@ def main(args):
         'op_types': op_types
     }]
     dummy_input = get_dummy_input(args, device)
-
     if args.pruner == 'L1FilterPruner':
         pruner = L1FilterPruner(model, config_list)
     elif args.pruner == 'L2FilterPruner':
