@@ -15,14 +15,12 @@ from .graph import Model
 from .utils import get_records
 from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
-from .mutator import Mutator, LayerChoiceMutator, InputChoiceMutator
+from .mutator import Mutator
 from .trainer.interface import BaseTrainer, BaseOneShotTrainer
 from .strategies.strategy import BaseStrategy
-from .trainer.pytorch import DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer
+from .trainer import BaseOneShotTrainer
 
 _logger = logging.getLogger(__name__)
-
-OneShotTrainers = (DartsTrainer, EnasTrainer, ProxylessTrainer, RandomTrainer, SinglePathTrainer)
 
 
 @dataclass(init=False)
@@ -94,28 +92,10 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-    def _process_inline_mutation(self, base_model):
-        """
-        the mutators are order independent
-        """
-        lc_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.LayerChoice')
-        ic_nodes = base_model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.nn.InputChoice')
-        if not lc_nodes and not ic_nodes:
-            return None
-        applied_mutators = []
-        for node in lc_nodes:
-            mutator = LayerChoiceMutator(node.name, node.operation.parameters['choices'])
-            applied_mutators.append(mutator)
-        for node in ic_nodes:
-            mutator = InputChoiceMutator(node.name,
-                                         node.operation.parameters['n_candidates'],
-                                         node.operation.parameters['n_chosen'],
-                                         node.operation.parameters['reduction'])
-            applied_mutators.append(mutator)
-        return applied_mutators
-
     def _start_strategy(self):
         import torch
+        from .nn.pytorch.mutator import process_inline_mutation
+
         try:
             script_module = torch.jit.script(self.base_model)
         except Exception as e:
@@ -131,7 +111,7 @@ class RetiariiExperiment(Experiment):
         base_model_ir.apply_trainer(trainer_config['modulename'], trainer_config['args'])
 
         # handle inline mutations
-        mutators = self._process_inline_mutation(base_model_ir)
+        mutators = process_inline_mutation(base_model_ir)
         if mutators is not None and self.applied_mutators:
             raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, \
                 do not use mutators when you use LayerChoice/InputChoice')
@@ -165,7 +145,7 @@ class RetiariiExperiment(Experiment):
         Run the experiment.
         This function will block until experiment finish or error.
         """
-        if isinstance(self.trainer, OneShotTrainers):
+        if isinstance(self.trainer, BaseOneShotTrainer):
             self.trainer.fit()
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'

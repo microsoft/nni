@@ -136,6 +136,10 @@ export class LocalEnvironmentService extends EnvironmentService {
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (environment.isAlive === false) {
+            return Promise.resolve();
+        }
+
         const jobpidPath: string = `${path.join(environment.runnerWorkingFolder, 'pid')}`;
         const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
         tkill(Number(pid), 'SIGKILL');

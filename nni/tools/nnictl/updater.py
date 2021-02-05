@@ -23,11 +23,12 @@ def validate_file(path):
 
 def validate_dispatcher(args):
     '''validate if the dispatcher of the experiment supports importing data'''
-    nni_config = Config(get_config_filename(args)).get_config('experimentConfig')
-    if nni_config.get('tuner') and nni_config['tuner'].get('builtinTunerName'):
-        dispatcher_name = nni_config['tuner']['builtinTunerName']
-    elif nni_config.get('advisor') and nni_config['advisor'].get('builtinAdvisorName'):
-        dispatcher_name = nni_config['advisor']['builtinAdvisorName']
+    experiment_id = get_config_filename(args)
+    experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
+    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
+        dispatcher_name = experiment_config['tuner']['builtinTunerName']
+    elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
+        dispatcher_name = experiment_config['advisor']['builtinAdvisorName']
     else: # otherwise it should be a customized one
         return
     if dispatcher_name not in TUNERS_SUPPORTING_IMPORT_DATA:
@@ -58,9 +59,9 @@ def get_query_type(key):
 
 def update_experiment_profile(args, key, value):
     '''call restful server to update experiment profile'''
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    rest_port = experiment_dict.get(get_config_filename(args)).get('port')
+    experiments_config = Experiments()
+    experiments_dict = experiments_config.get_all_experiments()
+    rest_port = experiments_dict.get(get_config_filename(args)).get('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
@@ -117,9 +118,10 @@ def import_data(args):
     validate_dispatcher(args)
     content = load_search_space(args.filename)
 
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
+    experiments_dict = Experiments().get_all_experiments()
+    experiment_id = get_config_filename(args)
+    rest_port = experiments_dict.get(experiment_id).get('port')
+    rest_pid = experiments_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
@@ -137,8 +139,8 @@ def import_data(args):
 
 def import_data_to_restful_server(args, content):
     '''call restful server to import data to the experiment'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
+    experiments_dict = Experiments().get_all_experiments()
+    rest_port = experiments_dict.get(get_config_filename(args)).get('port')
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_post(import_data_url(rest_port), content, REST_TIME_OUT)

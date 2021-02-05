@@ -145,12 +145,15 @@ class PyTorchImageClassificationTrainer(BaseTrainer):
 
     def _train(self):
         for i, batch in enumerate(self._train_dataloader):
+            self._optimizer.zero_grad()
             loss = self.training_step(batch, i)
             loss.backward()
+            self._optimizer.step()
 
     def fit(self) -> None:
         for _ in range(self._trainer_kwargs['max_epochs']):
             self._train()
+            self._validate()
         # assuming val_acc here
         nni.report_final_result(self._validate()['val_acc'])
 
@@ -204,6 +207,7 @@ class PyTorchMultiModelTrainer(BaseTrainer):
         max_epochs = max([x['trainer_kwargs']['max_epochs'] for x in self.kwargs['model_kwargs']])
         for _ in range(max_epochs):
             self._train()
+            self._validate()
         nni.report_final_result(self._validate())
 
     def _train(self):

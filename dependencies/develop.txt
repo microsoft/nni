@@ -1,0 +1,9 @@
+pylint
+flake8
+sphinx
+sphinx-argparse
+sphinx-rtd-theme
+sphinxcontrib-websupport
+nbsphinx
+pytest
+coverage

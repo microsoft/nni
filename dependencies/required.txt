@@ -1,0 +1,21 @@
+astor
+hyperopt==0.1.2
+json_tricks
+netifaces
+psutil
+ruamel.yaml
+requests
+responses
+schema
+PythonWebHDFS
+colorama
+scikit-learn>=0.23.2
+websockets
+filelock
+prettytable
+dataclasses ; python_version < "3.7"
+numpy < 1.19.4 ; sys_platform == "win32"
+numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"
+numpy ; sys.platform != "win32" and python_version >= "3.7"
+scipy < 1.6 ; python_version < "3.7"
+scipy ; python_version >= "3.7"
