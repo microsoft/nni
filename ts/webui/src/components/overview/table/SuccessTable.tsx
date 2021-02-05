@@ -24,14 +24,14 @@ import '../../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     trialIds: string[];
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     updateOverviewPage: () => void;
+    expandRowIDs: Set<string>;
+    changeExpandRowIDs: Function;
 }
 
 interface SuccessTableState {
     columns: IColumn[];
     source: Array<any>;
-    expandRowIdList: Set<string>;
     sortInfo: SortInfo;
 }
 
@@ -41,8 +41,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         this.state = {
             columns: this.columns,
             source: TRIALS.table(this.props.trialIds),
-            sortInfo: { field: '', isDescend: false },
-            expandRowIdList: new Set() // store expanded row's trial id
+            sortInfo: { field: '', isDescend: false }
         };
     }
 
@@ -57,6 +56,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         const { columns, source, sortInfo } = this.state;
         const keepSortedSource = copyAndSort(source, sortInfo.field, sortInfo.isDescend);
         const isNoneData = source.length === 0 ? true : false;
+
         return (
             <div id='succTable'>
                 <ScrollablePane className='scrollPanel' scrollbarVisibility={ScrollbarVisibility.auto}>
@@ -117,7 +117,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     styles={{
                         root: {
                             transition: 'all 0.2s',
-                            transform: `rotate(${this.state.expandRowIdList.has(item.id) ? 90 : 0}deg)`
+                            transform: `rotate(${this.props.expandRowIDs.has(item.id) ? 90 : 0}deg)`
                         }
                     }}
                     className='cursor'
@@ -206,14 +206,14 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     };
 
     private onRenderRow: IDetailsListProps['onRenderRow'] = props => {
-        const { expandRowIdList } = this.state;
+        const { expandRowIDs } = this.props;
         if (props) {
             return (
                 <div>
                     <div>
                         <DetailsRow {...props} />
                     </div>
-                    {Array.from(expandRowIdList).map(
+                    {Array.from(expandRowIDs).map(
                         item => item === props.item.id && <OpenRow key={item} trialId={item} />
                     )}
                 </div>
@@ -223,15 +223,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     };
 
     private expandTrialId = (_event: any, id: string): void => {
-        const { expandRowIdList } = this.state;
-        const { updateOverviewPage } = this.props;
-        const copyExpandList = expandRowIdList;
-        if (copyExpandList.has(id)) {
-            copyExpandList.delete(id);
-        } else {
-            copyExpandList.add(id);
-        }
-        this.setState(() => ({ expandRowIdList: copyExpandList }));
+        const { updateOverviewPage, changeExpandRowIDs } = this.props;
+        changeExpandRowIDs(id);
         updateOverviewPage();
     };
 }

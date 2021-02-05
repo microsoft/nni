@@ -52,7 +52,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                                 <PivotItem headerText='Default metric' itemIcon='HomeGroup' key='Default metric'>
                                     <Stack className='graph'>
-                                        <DefaultPoint trialIds={trialIds} hasBestCurve={true} chartHeight={402} />
+                                        <DefaultPoint
+                                            trialIds={trialIds}
+                                            hasBestCurve={true}
+                                            chartHeight={402}
+                                            changeExpandRowIDs={_value.changeExpandRowIDs}
+                                        />
                                     </Stack>
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
