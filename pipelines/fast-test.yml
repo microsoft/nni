@@ -84,7 +84,16 @@ stages:
   - job: typescript
     pool:
       vmImage: ubuntu-latest
+    variables:
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
     steps:
+      - task: Cache@2
+        inputs:
+          key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+          restoreKeys: |
+            yarn | "$(Agent.OS)"
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache yarn packages
     - script: |
         set -e
         cd ts/nni_manager
@@ -132,7 +141,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -211,7 +220,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -284,7 +293,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -350,7 +359,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
