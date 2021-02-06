@@ -89,7 +89,7 @@ stages:
     steps:
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | **/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -141,7 +141,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | **/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -220,7 +220,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | **/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -293,7 +293,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | **/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -359,7 +359,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/*/yarn.lock'
+        key: 'yarn | "$(Agent.OS)" | **/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
