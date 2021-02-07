@@ -12,6 +12,7 @@ import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
 import '../../App.scss';
+import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/overview/probar.scss';
