@@ -7,6 +7,7 @@ import nni.compression.pytorch.speedup.quantization_speedup.calibrator as calibr
 import nni.compression.pytorch.speedup.quantization_speedup.common as common
 from nni.compression.pytorch.speedup.quantization_speedup.backend import BaseModelSpeedup
 import time
+import numpy as np
 
 TRT_LOGGER = trt.Logger()
 
@@ -147,6 +148,8 @@ class TensorRTModelSpeedUp(BaseModelSpeedup):
         """
         Do inference by tensorrt builded engine.
         """
+        # Numpy dtype should be float32
+        assert test_data.dtype == np.float32
         elapsed_time = 0
         inputs, outputs, bindings, stream = common.allocate_buffers(self.context.engine)
         result = []
