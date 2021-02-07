@@ -32,9 +32,6 @@ class TestConvert(unittest.TestCase):
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
 
-        from .inject_nn import remove_inject_pytorch_nn
-        remove_inject_pytorch_nn()
-
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
         converted_model = exec_vars['converted_model']
