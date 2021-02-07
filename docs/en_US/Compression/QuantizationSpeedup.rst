@@ -99,7 +99,7 @@ Mnist Lenet Example
 ^^^^^^^^^^^^^^^^^^^
 
 on one GTX2080 GPU,
-input tensor: ``torch.randn(128, 3, 32, 32)``
+input tensor: ``torch.randn(128, 1, 28, 28)``
 
 .. list-table::
    :header-rows: 1
