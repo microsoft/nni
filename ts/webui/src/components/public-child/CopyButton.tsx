@@ -14,12 +14,18 @@ const CopyButton = ({ value, hideTooltip }): any => {
                 iconProps={{ iconName: 'Copy' }}
                 styles={{ icon: [{ fontSize: FontSizes.small }] }}
                 onClick={(event: React.SyntheticEvent<EventTarget>): void => {
-                    event.preventDefault();
+                    event.stopPropagation();
                     copy(value);
                     ref.current && (ref as any).current.show();
                     setTimeout(() => {
                         ref.current !== null && (ref as any).current.dismiss();
                     }, COPIED_TOOLTIP_CLOSE_DELAY);
+                }}
+                onMouseDown={(e): void => {
+                    e.stopPropagation();
+                }}
+                onMouseUp={(e): void => {
+                    e.stopPropagation();
                 }}
             />
             <TooltipHost
